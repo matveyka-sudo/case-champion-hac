@@ -9,6 +9,8 @@
 
 Локально на macOS arm64 прошли проверка `uv.lock`, frozen-установка базового набора и групп `notebooks` и `ml` (отдельно и вместе), `uv pip check`, `npm ci`, `npm ls --depth=0` и проверка Compose. В обоих lock-файлах стабильные версии. `npm audit --omit=dev` не выявил уязвимостей. Полный аудит показал 10 записей moderate в инструментах разработки из одной зависимости `minimatch`. Docker Engine был недоступен. Проверка GitHub Actions на runner ожидает публикации. [Бюллетень minimatch](https://github.com/advisories/GHSA-g3hv-75wg-m249).
 
+DEVOPS проводит проверку запуска и повторного подключения к PostgreSQL 17 в отдельном Compose-проекте. FRONTEND разбирает записи npm audit по `minimatch`, проверяет совместимость исправления и при необходимости обновляет npm manifest и lock.
+
 ## Будущие проверки поведения
 
 | Область | Проверка и ожидаемое свойство |

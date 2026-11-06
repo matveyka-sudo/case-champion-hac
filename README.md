@@ -37,7 +37,16 @@ Compose описывает PostgreSQL 17 с локальным портом и �
 
 ## Работа команды
 
-Прочитайте [владельцев путей](docs/OWNERSHIP.md), корневой `AGENTS.md` и инструкции своего модуля. На одной машине используйте отдельную ветку и worktree, либо создайте отдельный клон. У каждой роли есть стартовая задача в `docs/tasks/`. [FRONTEND](docs/tasks/frontend.md) · [DEVOPS](docs/tasks/devops.md) · [BACKEND](docs/tasks/backend.md) · [ML1](docs/tasks/ml1.md) · [ML2](docs/tasks/ml2.md). Claude Code начинает с `CLAUDE.md`.
+У каждой роли своя постоянная ветка `work/<role>`. Общая ветка `dev` служит для интеграции через PR, `main` хранит проверенные версии. Точные ветки, границы ролей и порядок синхронизации описаны в [правилах командной работы](docs/OWNERSHIP.md).
+
+На одном компьютере откройте отдельный worktree своей роли и выполняйте команды установки выше в нём. На другом компьютере создайте свой клон и выберите опубликованную ветку роли. Пример для FRONTEND.
+
+```bash
+git clone --branch work/frontend https://github.com/matveyka-sudo/case-champion-hac.git
+cd case-champion-hac
+```
+
+Замените `work/frontend` своей веткой из таблицы ролей. Окружение устанавливается в рабочем каталоге участника. Перед работой прочитайте корневой `AGENTS.md`, локальные инструкции и стартовую задачу. [FRONTEND](docs/tasks/frontend.md) · [DEVOPS](docs/tasks/devops.md) · [BACKEND](docs/tasks/backend.md) · [ML1](docs/tasks/ml1.md) · [ML2](docs/tasks/ml2.md). Claude Code начинает с `CLAUDE.md`.
 
 - [Архитектура](docs/ARCHITECTURE.md) описывает зависимости и переход к импортируемым Python-пакетам.
 - [Спецификации](packages/contracts/specs/README.md) определяют общие поля и смысл статусов.
