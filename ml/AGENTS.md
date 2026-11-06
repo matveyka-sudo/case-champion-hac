@@ -1,3 +1,3 @@
 # ML2
 
-Own notebooks, experiments, evals, and local documentation. Record data and model versions, evaluation splits, baselines, and actual results. Keep related examples in the same split and leave the final test set out of model and prompt selection. All `pyproject.toml` files and the root `uv.lock` belong to DEVOPS.
+Own notebooks, source audits and data quality experiments. Label research and synthetic results, record data versions, and keep archive checks separate from Russian pilot acceptance. Supply checked cases and evidence to the BACKEND agent owner and ML1. DEVOPS owns every Python manifest and the root lock.

@@ -1,31 +1,26 @@
-# DatasetSnapshot
+# Source, Evidence и SnapshotBundle
 
-ML2 публикует неизменяемый набор после проверки. Engine читает его как вход расчёта. BACKEND регистрирует версию и получает данные для трассировки. Метаданные snapshot и хэши таблиц должны позволять восстановить использованный вход.
+ML2 получает и проверяет входы, публикует неизменяемый bundle и реализует `load_bundle(bundle_id) → AcceptedData`. ML1 считает на AcceptedData, BACKEND проверяет ссылки, обслуживает coverage/evidence и сохраняет версии в runs.
 
-Обязательные поля manifest
-
-| Поля | Содержание |
+| Сущность | Обязательные поля и семантика |
 | --- | --- |
-| `schema_version`, `dataset_version`, `normalizer_version`, `created_at` | Версия схемы, ID неизменяемого входа, версия нормализатора и время публикации в UTC. Изменение записей, покрытия, источников или правил нормализации требует новой версии. |
-| `timezone`, `scope`, `data_origin`, `status` | IANA timezone, заявленная область городов и видов транспорта, даты действия и предполагаемая граница событий. `data_origin` принимает `real`, `synthetic` или `mixed`. |
-| `tables` | Для каждой таблицы имя, относительный путь, SHA-256 и число строк. Пути разрешаются внутри набора. Таблицы Parquet, метаданные и источники фиксируются вместе. |
+| Source | `source_id`, `publisher`, `url`, `license_status`. Статус лицензии явно указывает известность права использования. Публичный адрес сам по себе права не подтверждает. |
+| Evidence | `evidence_id`, `source_id`, `record_id`, `fetched_at` в UTC, `valid_period`, `content_hash`, статус проверки. Период действия отличен от момента загрузки. Неизвестная граница периода остаётся `null`, а запись не доказывает покрытие за этой границей. |
+| SnapshotBundle | `bundle_id`, `timetable_snapshot`, `destinations_snapshot`, `fares_snapshot` (nullable), `transfer_snapshot`, `hashes` нормализованных таблиц, `parser_version`, `acceptance_state`, `coverage`, `completeness_scope`, `completeness_evidence`, `missing_fields`, `accepted_by` и `accepted_at` (обязательны при `accepted`). Набор целей включает origins, destinations и услуги. |
 
-Таблицы и обязательные поля записей
+Нормализованные входы с. 8 и 16
 
-| Таблица | Поля |
+| Таблица | Обязательные данные |
 | --- | --- |
-| `cities` | `city_id`, `name`, `anchor_id`, координаты опорной точки, `source_ids`. Муниципалитет — отдельная сущность. |
-| `stops` | `stop_id`, `name`, координаты, `source_ids`. Привязка к городу при наличии, платформы различаются по ID. |
-| `routes` | `route_id`, `mode` (`rail` или `bus`), `operator_id`, `name`, `source_ids`. |
-| `trips` | `trip_id`, `route_id`, `direction_id`, `service_id`, `source_ids`. Один `trip_id` означает допустимое продолжение поездки внутри этого рейса. Если сквозной проезд не подтверждён, нужен отдельный переход. |
-| `stop_times` | `trip_id`, `stop_id`, `stop_sequence`, `arrival_service_seconds`, `departure_service_seconds`, `pickup_allowed`, `dropoff_allowed`, `source_ids`. Секунды от начала локального дня обслуживания, значения могут быть ≥ 86400. `null` у времени допустим только на конце, где соответствующее событие отсутствует. |
-| `service_calendar` | `service_id`, включительные `start_date`, `end_date`, `weekdays` (ISO 1–7), `source_ids`. |
-| `calendar_exceptions` | `service_id`, `service_date`, `action` (`add` или `remove`), `source_ids`. Одно исключение на календарь и дату, приоритет над базовым правилом. |
-| `transfers` | `transfer_id`, `kind` (`access`, `interchange`, `egress`), типизированные `from_ref` и `to_ref` (городская опорная точка или остановка), `min_seconds`, `status`, `validity`, `source_ids`, `assumption_ids`. Направление обязательно. `status` принимает `allowed`, `forbidden` или `unknown`. `min_seconds` обязателен для `allowed`, иначе `null`. Ограничения платформ, линий или рейсов задаются явно, если применимы. |
-| `sources` | `source_id`, `publisher`, `page_url`, `file_url`, `retrieved_at`, `published_at`, `valid_from`, `valid_to`, `license`, `sha256`, `data_origin`. Неизвестные метаданные равны `null`. Для скачанной копии обязательны точный адрес и digest. Для синтетики фиксируется авторство и допущение, адрес источника допустимо оставить `null`. |
-| `assumptions` | `assumption_id`, описание, границы применения и ссылки на источники, если есть. Допущение не подтверждает реальное расписание. |
-| `coverage` | `coverage_id`, интервал событий и локальных дат обслуживания, область по городу, оператору, режиму, маршруту/остановкам или переходам, `status` (`verified`, `partial`, `unknown`), `source_ids`, `reason`. Описывает календарь, события посадки/высадки и покрытие переходов. Пропущенная область по умолчанию `unknown`. |
+| `origins` / `destinations` | Собственный ID, `city_id`, `anchor_id`, `lon` (−180…180), `lat` (−90…90), `timezone`, `type`, `evidence_ids`. Цель также содержит `entrance_id` и `verification_state`. Центр города не заменяет вход. |
+| `service_offerings` | `destination_id`, `service_type_id`, `eligibility`, `valid_from`, `valid_to`, `service_verified`, `hours_verified`, `evidence_ids`. Состояния услуги и часов раздельно `verified\|absent\|unknown`. Окна и ограничения применимости хранятся с доказательством. |
+| stops / trips | Строковые namespaced `stop_id`, `trip_id`, связь с parent/station и `service_id`, оператор/режим и evidence. Сохранять feed namespace и связь версии с внешним ID. Город, станция и платформа имеют разные ID. |
+| `stop_times` | `trip_id`, `stop_id`, `sequence`, `arrival_seconds`, `departure_seconds`, `service_id`, pickup/dropoff. Допустимы значения >86400. |
+| calendars | `service_id`, интервал локальных сервисных дат, базовое правило и исключения add/remove с evidence, IANA timezone источника. Исключения имеют приоритет. |
+| transfers | `from_id`, `to_id`, `duration_seconds`, `access_state`, `basis`, ограничения и `evidence_ids`. Различать подход, межплатформенную пересадку и выход. |
+| fares при наличии | Размер, валюта, категория пассажира, период, область применения и evidence. Неизвестная цена остаётся неизвестной. |
+| coverage | Территория, режим и даты, конкретная `completeness_scope`, доказательства полноты, известные пропуски и ограничения. Полнота утверждается по области запроса, не по наличию отдельных строк. |
 
-Покрытие по P1 проверяется до конца последнего окна 17 ноября 2026, 20:00 по `Europe/Kaliningrad`, включая календарь предшествующих дат обслуживания, чьи события `24:00+` попадают в окно. Наличие записи рейса доказывает наличие этого рейса при соблюдении календаря. Полнота маршрутов, направлений, дат и пеших связей проверяется отдельно. Подтверждённое отсутствие пути допустимо, когда нет неучтённого участка, который может изменить вывод внутри области профиля.
+Идентичность версии привязана к содержимому, правилам преобразования и принятым доказательствам. Проверяем ключи и ссылки, географию, порядок событий, календарь и объяснения отличий. Жизненный цикл `downloaded → parsed → validated → accepted`, ошибочный вход → `quarantined`. Публикация `accepted` атомарна, старые runs сохраняют свой bundle. Принятая ограниченная область допустима при явных пробелах. Расчётные входы из непринятой версии отклоняются. Неизвестный ID → `404 unknown_id`, неверный вход → `422 invalid_request`, несовместимые версии → `409 incompatible_versions`.
 
-Статусы опубликованного snapshot — `ready`, `partial_data`. Частичный набор содержит явные пробелы и остаётся пригоден для ограниченных расчётов. Публикация отклоняется с `invalid_snapshot` при битых ссылках, дублировании ключей, конфликте календаря, непоследовательном времени или несовпадении хэша. `unsupported_schema` и `dataset_not_found` блокируют загрузку. Даты без подтверждённого срока действия остаются неизвестными.
+Конкретные UTC-события строятся из сервисной даты, целых секунд и зоны источника по семантике GTFS. Проверяются 25:10, переход DST, даты исключений и ночные события предыдущей даты. `weekday` сам по себе не доказывает наличие рейса. В пилоте профиль использует `Europe/Kaliningrad`.
