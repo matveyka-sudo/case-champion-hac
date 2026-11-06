@@ -1,3 +1,3 @@
 # BACKEND
 
-Own `apps/api/`, its migrations, tests, and local documentation. Own canonical contracts and their exports in the separate BACKEND paths. Use parameterized asyncpg SQL at runtime and SQLAlchemy only for Alembic. Run CPU-heavy calculation outside the event loop with bounded concurrency. Coordinate engine semantics with ML1 and data and assistant semantics with ML2. All `pyproject.toml` files and the root `uv.lock` belong to DEVOPS.
+Own HTTP, migrations, API validation, cache, the single job worker and the trace log here. Own the canonical contracts and the product agent in the separate BACKEND paths. REST and tools share validators and use the public engine functions. Keep calculation work outside HTTP request processing. Use parameterized asyncpg SQL at runtime and SQLAlchemy only for Alembic. Coordinate domain semantics with ML1 and accepted data with ML2. DEVOPS owns every Python manifest and the root lock.
