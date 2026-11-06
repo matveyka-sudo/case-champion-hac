@@ -1,0 +1,39 @@
+[project]
+name = "a2-workspace"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+
+[dependency-groups]
+dev = ["httpx", "mypy", "pytest", "pytest-asyncio", "ruff"]
+notebooks = ["ipykernel", "jupyterlab"]
+ml = ["catboost", "scikit-learn"]
+
+[tool.uv]
+package = false
+required-version = ">=0.12.17,<0.13"
+prerelease = "disallow"
+
+
+[tool.uv.workspace]
+members = [
+    "apps/api",
+    "packages/assistant",
+    "packages/contracts",
+    "packages/data_pipeline",
+    "packages/engine",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+testpaths = ["apps/api/tests", "packages"]

@@ -1,0 +1,16 @@
+profile_id = "p1"
+profile_version = "1.0.0"
+purpose = "Дневные межгородские поездки жителей без личного автомобиля"
+timezone = "Europe/Kaliningrad"
+city_ids = ["kaliningrad", "zelenogradsk", "svetlogorsk", "pionersky", "baltiysk", "guryevsk"]
+modes = ["rail", "bus", "walk"]
+start_date = 2026-11-09
+end_date = 2026-11-15
+first_departure = 06:00:00
+last_departure = 20:00:00
+departure_step_minutes = 60
+horizon_hours = 48
+destination_weighting = "uniform"
+slot_weighting = "uniform"
+half_life_minutes = 60
+sensitivity_half_life_minutes = [30, 60, 120]

@@ -1,0 +1,17 @@
+[project]
+name = "a2-api"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "alembic>=1,<2",
+    "asyncpg>=0.30,<1",
+    "fastapi>=0.115,<1",
+    "pydantic>=2,<3",
+    "pydantic-settings>=2,<3",
+    "sqlalchemy>=2,<3",
+    "structlog",
+    "uvicorn[standard]>=0.30,<1",
+]
+
+[tool.uv]
+package = false

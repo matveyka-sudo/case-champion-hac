@@ -1,0 +1,8 @@
+[project]
+name = "a2-data-pipeline"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = ["beautifulsoup4>=4,<5", "httpx", "lxml", "pandas", "pyarrow"]
+
+[tool.uv]
+package = false

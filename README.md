@@ -1,0 +1,47 @@
+# A2 — транспортная доступность
+
+Монорепозиторий для пилота по дневным межгородским поездкам без личного автомобиля. Рабочий профиль P1 охватывает шесть городов Калининградской области. В репозитории подготовлены окружение, границы модулей, спецификации и стартовые задачи. Прикладная реализация начинается в пяти рабочих ветках команды.
+
+## Окружение
+
+Используйте Python 3.12 и uv 0.12.17, Node.js 24.22.2 LTS с npm 11.19.1 и Docker Compose. `.python-version` задаёт версию Python для uv. Для пользователей nvm версия Node записана в `.nvmrc`. Команды Python и Compose выполняются из корня репозитория.
+
+```bash
+uv lock --check
+uv sync --frozen --all-packages --group dev
+uv pip check
+```
+
+Дополнительные группы Python подключаются по задаче. `uv sync` приводит `.venv` к выбранному набору, поэтому для обеих групп используйте последнюю команду.
+
+```bash
+uv sync --frozen --all-packages --group dev --group notebooks
+uv sync --frozen --all-packages --group dev --group ml
+uv sync --frozen --all-packages --group dev --group notebooks --group ml
+```
+
+Следующие команды выполняются из `apps/web/` под Node.js 24.
+
+```bash
+npm ci
+npm ls --depth=0
+```
+
+Compose можно проверить с безопасным примером окружения.
+
+```bash
+docker compose --env-file .env.example config --quiet
+```
+
+Compose описывает PostgreSQL 17 с локальным портом и собственным томом. Для нового worktree создайте свой `.env` по `.env.example`. Выберите свободный `POSTGRES_PORT`, согласуйте с ним `DATABASE_URL`, задайте уникальное имя Compose-проекта и свои порты API и SPA для будущей интеграции. `OPENAI_API_KEY` заполняется только локально, после подключения ассистента. `OPENAI_MODEL` содержит кандидата, которого предстоит проверить.
+
+## Работа команды
+
+Прочитайте [владельцев путей](docs/OWNERSHIP.md), корневой `AGENTS.md` и инструкции своего модуля. На одной машине используйте отдельную ветку и worktree, либо создайте отдельный клон. У каждой роли есть стартовая задача в `docs/tasks/`. [FRONTEND](docs/tasks/frontend.md) · [DEVOPS](docs/tasks/devops.md) · [BACKEND](docs/tasks/backend.md) · [ML1](docs/tasks/ml1.md) · [ML2](docs/tasks/ml2.md). Claude Code начинает с `CLAUDE.md`.
+
+- [Архитектура](docs/ARCHITECTURE.md) описывает зависимости и переход к импортируемым Python-пакетам.
+- [Спецификации](packages/contracts/specs/README.md) определяют общие поля и смысл статусов.
+- [Данные](docs/DATA.md) описывают доступные материалы и пробелы расписаний.
+- [План расчёта и оценки ИИ](docs/ML_PLAN.md) фиксирует профиль и гипотезу.
+- [Приёмка](docs/ACCEPTANCE.md) разделяет проверки окружения и будущие проверки продукта.
+- [Материалы A2](docs/reference/README.md) содержат исследование, матрицу требований и документы организатора.
