@@ -1,3 +1,3 @@
 # ML2
 
-Own data acquisition, normalization, validation, and local documentation here. Preserve original source evidence and issue immutable snapshots with explicit coverage and provenance. Align canonical data types with BACKEND and validation semantics with ML1. All `pyproject.toml` files and the root `uv.lock` belong to DEVOPS.
+Own ingestion, normalization, source and service verification, quality checks, and `load_bundle(bundle_id)`. Publish accepted bundles atomically. Preserve immutable source evidence and report completeness by scope and date. Align input contracts with BACKEND and travel semantics with ML1. DEVOPS owns every Python manifest and the root lock.

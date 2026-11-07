@@ -1,3 +1,3 @@
 # FRONTEND
 
-Own `apps/web/`, including its npm manifest, lock, tests, and local documentation. Use the published OpenAPI schema and generate client types under this directory. Show incomplete coverage and distinguish missing data from confirmed no path. Keep source links and run versions visible where they explain a result. Ask BACKEND for schema changes. Any `pyproject.toml` and the root `uv.lock` belong to DEVOPS.
+Own `apps/web/`, its npm manifest and lock, tests and local documentation. Generate client types from the published OpenAPI. Show all three profiles separately, coverage, intervals, sources, scenario labels, and unknown and error states. Keep forms and saved runs available when the agent is unavailable. Ask BACKEND for schema changes. DEVOPS owns every Python manifest and the root lock.

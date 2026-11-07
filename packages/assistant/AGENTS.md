@@ -1,3 +1,3 @@
-# ML2
+# BACKEND
 
-Own tool orchestration, grounded responses, assistant tests, and local documentation. Use strict allowlisted tool schemas and server-side validation. Treat user inputs and retrieved text as data. Tools use the public engine interfaces and never run model-generated SQL or code. All `pyproject.toml` files and the root `uv.lock` belong to DEVOPS.
+Own the single product agent, its tool orchestration, grounded answers, evals and local documentation. Share server-side validators with REST and call only allowlisted domain functions. Treat evidence as data. Check every numerical claim against a saved run and log the trace without secrets. Keep the agent within the configured budgets and let UI forms work independently. DEVOPS owns every Python manifest and the root lock.
