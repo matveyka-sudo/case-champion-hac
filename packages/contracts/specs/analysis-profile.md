@@ -1,13 +1,5 @@
-# ProfileConfig, TaskCase и TaskSet
-
-DEVOPS согласует D1–D3, ML1 задаёт методику и потребляет схемы, ML2 поставляет точки и цели. BACKEND владеет DTO и публикует профили и наборы задач. UI показывает версию, параметры и допущения, tools передают те же ID.
-
-| Сущность | Обязательные поля |
-| --- | --- |
-| ProfileConfig | `profile_id` из regular/medical/intercity, `profile_version`, `metric_kind`, период, timezone, параметры стартов, цели/услуги, режимы и активные ограничения, веса/правило весов, `basis` (scenario/verified), `assumption_ids` и evidence применимых данных. H и горизонт нужны для intercity. |
-| TaskCase | `case_id` для комбинации origin × цель × дата × окно, `origin_id`, `destination_id` или `service_type_id`, `service_date`, окно, правила поездки, положительный `weight`. Медицинский случай имеет вес услуги, одинаково отобранные учреждения дают альтернативы. |
-| TaskSet | `task_set_hash` общего набора всех origins, hash правил генерации, `profile_id/version`, период, список задач или версионированная ссылка, `assumption_ids`. Набор и веса фиксируются до расчёта, исчезнувшая задача остаётся unknown. |
-
-Предлагаемые даты и параметры D3 перечислены в [плане](../../../docs/ML_PLAN.md). Времена окна локальные с зоной `Europe/Kaliningrad`, передаваемые конкретные моменты имеют offset. Ограничения времени и ходьбы — минуты, горизонт intercity — часы, вес — безразмерный. Изменения области, целей, правил, дат, весов или принятых допущений получают новые версии/hash. База и сценарии пересчитываются по тем же задачам.
-
-Происхождение scenario/verified относится к условиям и входным доказательствам, состояния отдельных условий описывает JourneyResult. Неизвестный ID → 404, несовместимые версии → 409, невалидные параметры → 422. При пустом знаменателе оценка отсутствует. Предложение R для BACKEND — HTTP `422 invalid_request` с доменной причиной `invalid_profile`, без расширения статусов Run.
+# AnalysisRequest
+analysis_kind: urban_passenger | intercity_passenger | urban_cargo | intercity_cargo.
+Городские запросы: city_id, optional area_id. Межгород: territory_level city|region, origin_id, destination_id; два разных объекта одного уровня.
+departure_at с offset; passenger_mode walk|public_transport|private_car только для urban_passenger; categories из config/product.json и priorities low|medium|high только для пассажирского города. cargo_profile_id для грузов. Не принимать пользовательские коэффициенты, H, цены или сценарные операции.
+MethodologyRef: status=pending, version=null пока методика не утверждена. В будущем явная version и parameters. Не подменять недостающие настройки константами.
