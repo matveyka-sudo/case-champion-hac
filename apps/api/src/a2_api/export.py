@@ -10,7 +10,7 @@ from tempfile import TemporaryDirectory
 from a2_contracts import api, common, dataset, journeys, profiles, regions, results, scenarios
 from a2_contracts.common import ContractModel
 
-from .app import create_app
+from .app import API_CONTRACT_VERSION, create_app
 from .configuration import CatalogConfig
 
 MODULES = (api, common, dataset, journeys, profiles, regions, results, scenarios)
@@ -44,7 +44,9 @@ def export_schemas(output: Path) -> None:
         (output / filename).write_bytes(content)
         hashes[filename] = hashlib.sha256(content).hexdigest()
     (output / "manifest.json").write_text(
-        json.dumps({"contract_version": "0.1.0", "sha256": hashes}, sort_keys=True, indent=2)
+        json.dumps(
+            {"contract_version": API_CONTRACT_VERSION, "sha256": hashes}, sort_keys=True, indent=2
+        )
         + "\n",
         encoding="utf-8",
     )

@@ -110,3 +110,16 @@ def test_unexpected_service_error_is_sanitized():
     assert response.status_code == 500
     assert response.json()["error"]["code"] == "internal_error"
     assert "secret-db-password" not in response.text
+
+
+def test_lost_database_connection_is_retryable_503_without_credentials():
+    import asyncpg
+
+    class Disconnected(Services):
+        async def job(self, job_id):
+            raise asyncpg.ConnectionDoesNotExistError("secret_connection_details")
+
+    response = TestClient(create_app(Disconnected())).get("/api/v1/jobs/demo")
+    assert response.status_code == 503
+    assert response.json()["error"]["retryable"] is True
+    assert "secret_connection_details" not in response.text

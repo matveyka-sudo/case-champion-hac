@@ -1,12 +1,11 @@
 """FastAPI boundary. Use create_app(services) to connect real domain adapters."""
 
 import logging
-import os
 from collections.abc import Awaitable, Callable
-from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal, cast
 from uuid import uuid4
 
+import asyncpg  # type: ignore[import-untyped]
 from a2_contracts.api import (
     AnalysisRequest,
     ErrorDetail,
@@ -27,12 +26,14 @@ from fastapi import APIRouter, FastAPI, Header, Query, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
+from starlette.types import Lifespan
 
 from .services import DomainError, Services
 
 BundleQuery = Annotated[str, Query(min_length=1, max_length=200)]
 IdempotencyKey = Annotated[str, Header(min_length=1, max_length=200)]
 logger = logging.getLogger("a2_api")
+API_CONTRACT_VERSION = "0.2.0"
 
 
 def error_response(request: Request, error: DomainError) -> JSONResponse:
@@ -53,9 +54,14 @@ def error_response(request: Request, error: DomainError) -> JSONResponse:
     )
 
 
-def create_app(services: Services | None = None) -> FastAPI:
-    backend = services if services is not None else Services()
-    app = FastAPI(title="A2 accessibility API", version="0.1.0")
+def create_app(
+    services: Services | None = None, *, lifespan: Lifespan[FastAPI] | None = None
+) -> FastAPI:
+    app = FastAPI(title="A2 accessibility API", version=API_CONTRACT_VERSION, lifespan=lifespan)
+    app.state.services = services if services is not None else Services()
+
+    def backend() -> Services:
+        return cast(Services, app.state.services)
 
     @app.middleware("http")
     async def trace(
@@ -64,6 +70,16 @@ def create_app(services: Services | None = None) -> FastAPI:
         request.state.trace_id = str(uuid4())
         try:
             response = await call_next(request)
+        except (asyncpg.PostgresConnectionError, ConnectionError, TimeoutError):
+            return error_response(
+                request,
+                DomainError(
+                    503,
+                    "engine_unavailable",
+                    "Backend database temporarily unavailable",
+                    retryable=True,
+                ),
+            )
         except Exception:
             logger.error("request_failed trace_id=%s", request.state.trace_id)
             return error_response(
@@ -119,61 +135,77 @@ def create_app(services: Services | None = None) -> FastAPI:
 
     @router.get("/profiles")
     async def profiles() -> list[ProfileConfig]:
-        return await backend.profiles()
+        return await backend().profiles()
 
     @router.get("/study-areas")
     async def study_areas() -> list[StudyArea]:
-        return await backend.study_areas()
+        return await backend().study_areas()
 
     @router.get("/places")
     async def places(
         bundle_id: BundleQuery, query: Annotated[str | None, Query(max_length=200)] = None
     ) -> list[Place]:
-        return await backend.places(bundle_id, query)
+        return await backend().places(bundle_id, query)
 
     @router.get("/destinations")
     async def destinations(bundle_id: BundleQuery) -> list[Destination]:
-        return await backend.destinations(bundle_id)
+        return await backend().destinations(bundle_id)
 
     @router.get("/coverage")
     async def coverage(bundle_id: BundleQuery) -> Coverage:
-        return await backend.coverage(bundle_id)
+        return await backend().coverage(bundle_id)
 
     @router.get("/sources")
     async def sources(bundle_id: BundleQuery) -> list[Source]:
-        return await backend.sources(bundle_id)
+        return await backend().sources(bundle_id)
 
     @router.get("/evidence")
     async def evidence(bundle_id: BundleQuery) -> list[Evidence]:
-        return await backend.evidence(bundle_id)
+        return await backend().evidence(bundle_id)
 
     @router.get("/evidence/{evidence_id}")
     async def evidence_record(evidence_id: str, bundle_id: BundleQuery) -> Evidence:
-        return await backend.evidence_record(evidence_id, bundle_id)
+        return await backend().evidence_record(evidence_id, bundle_id)
 
     @router.post("/journeys")
     async def journeys(body: JourneyRequest) -> JourneyResult:
-        return await backend.journeys(body)
+        return await backend().journeys(body)
 
     @router.post("/analyses", status_code=202)
     async def analyses(
         body: AnalysisRequest, request: Request, idempotency_key: IdempotencyKey
     ) -> JobAccepted:
-        return await backend.analyse(body, idempotency_key, request.state.trace_id)
+        return await backend().analyse(body, idempotency_key, request.state.trace_id)
 
     @router.post("/scenario-analyses", status_code=202)
     async def scenarios(
         body: ScenarioRequest, request: Request, idempotency_key: IdempotencyKey
     ) -> JobAccepted:
-        return await backend.scenario(body, idempotency_key, request.state.trace_id)
+        return await backend().scenario(body, idempotency_key, request.state.trace_id)
 
     @router.get("/jobs/{job_id}")
     async def job(job_id: str) -> Job:
-        return await backend.job(job_id)
+        return await backend().job(job_id)
 
     @router.get("/runs/{run_id}")
     async def run(run_id: str) -> ProfileResult | Comparison:
-        return await backend.run(run_id)
+        return await backend().run(run_id)
+
+    @router.get(
+        "/runs/{run_id}/export",
+        response_class=Response,
+        responses={
+            200: {"content": {"application/json": {}, "text/csv": {}}},
+        },
+    )
+    async def export(run_id: str, format: Literal["json", "csv"] = "json") -> Response:
+        media_type, content = await backend().export(run_id, format)
+        # Generated fixed filename avoids echoing user-controlled IDs into HTTP headers.
+        return Response(
+            content,
+            media_type=media_type,
+            headers={"Content-Disposition": f'attachment; filename="a2-result.{format}"'},
+        )
 
     app.include_router(router)
     return app
@@ -181,12 +213,9 @@ def create_app(services: Services | None = None) -> FastAPI:
 
 def create_configured_app() -> FastAPI:
     """Uvicorn factory. Configuration must be explicitly selected by environment."""
-    from .configuration import CatalogServices, load_catalog
+    from .runtime import build_app
 
-    catalog_path = os.environ.get("A2_CATALOG_PATH")
-    if not catalog_path:
-        return create_app()
-    return create_app(CatalogServices(load_catalog(Path(catalog_path))))
+    return build_app()
 
 
 app = create_app()

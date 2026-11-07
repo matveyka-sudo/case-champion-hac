@@ -4,6 +4,8 @@ The default backend is deliberately unavailable. It neither loads development
 fixtures nor acknowledges jobs that no worker can execute.
 """
 
+from typing import Literal
+
 from a2_contracts.api import (
     AnalysisRequest,
     ErrorCode,
@@ -95,4 +97,7 @@ class Services:
         raise unavailable()
 
     async def run(self, run_id: str) -> ProfileResult | Comparison:
+        raise unavailable()
+
+    async def export(self, run_id: str, format: Literal["json", "csv"]) -> tuple[str, bytes]:
         raise unavailable()

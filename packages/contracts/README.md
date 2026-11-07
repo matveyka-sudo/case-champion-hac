@@ -1,4 +1,4 @@
-# Canonical contracts 0.1.0
+# Canonical contracts and API 0.2.0
 
 Import models from `a2_contracts` or their domain submodule. Contracts depend only on Pydantic and the Python standard library, never on FastAPI, the database, engine or model SDK.
 

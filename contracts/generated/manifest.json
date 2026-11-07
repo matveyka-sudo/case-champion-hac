@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.1.0",
+  "contract_version": "0.2.0",
   "sha256": {
     "AcceptedData.serialization.schema.json": "2a543c19528fbd818404c5dc915cc1b6d2c094814b7c89552d93d47a5abdecfe",
     "AcceptedData.validation.schema.json": "2a543c19528fbd818404c5dc915cc1b6d2c094814b7c89552d93d47a5abdecfe",
@@ -103,6 +103,6 @@
     "TripRules.validation.schema.json": "6a55932683c0fb35ce46405153b1cdf03e25d87d8ddecf2b6db95042d8655444",
     "ValidityPeriod.serialization.schema.json": "960927c676a9b55585120f958454f0a78aac2ad5c923a2a27675ae80de0448a9",
     "ValidityPeriod.validation.schema.json": "960927c676a9b55585120f958454f0a78aac2ad5c923a2a27675ae80de0448a9",
-    "openapi.json": "4ae866801339d148d236d537d4d59d9d076d3e6f787fecab1388ce55959b508e"
+    "openapi.json": "49e2cdb70448959fc9eaa007f9838af9a66ec798f59052233167aab97a25cdf7"
   }
 }

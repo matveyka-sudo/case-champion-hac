@@ -1,6 +1,6 @@
-# A2 backend: contract release 0.1.0
+# A2 backend: API and durable jobs 0.2.0
 
-This release implements canonical DTOs, configurable area/profile catalogs, the HTTP validation boundary, synthetic fixtures and reproducible schema export. Calculation adapters, persistent jobs, PostgreSQL migrations and the model agent are subsequent integration stages. An unconfigured service returns a typed 503, never a fake route or job.
+This release implements canonical DTOs, configurable catalogs, the HTTP boundary, PostgreSQL jobs/runs, Alembic migrations, one killable worker, exports and reproducible schemas. Read [the stage 2 setup and handoff](docs/stage2-handoff.md) for database configuration, dependencies and tested behavior. Actual transport/data adapters and the model agent are subsequent stages. An unconfigured calculation service returns typed 503, never a fake route or job.
 
 ## Local environment
 
@@ -8,6 +8,7 @@ Run from repository root. The installed global uv may differ from the version re
 
 ```sh
 uvx --from uv==0.12.17 uv sync --frozen --all-packages --group dev
+uvx --from uv==0.12.17 uv pip install --python .venv/bin/python greenlet==3.5.6
 export PYTHONPATH=packages/contracts/src:apps/api/src
 .venv/bin/uvicorn a2_api.app:create_configured_app --factory --host 127.0.0.1 --port 8033
 ```
@@ -51,4 +52,4 @@ Schemas describe field structure, ranges, nullability and discriminated operatio
 
 New source packages are `packages/contracts/src/a2_contracts` and `apps/api/src/a2_api`, both have `py.typed`. The workspace currently uses `package=false`, so local commands explicitly set `PYTHONPATH`. DEVOPS must enable packaging and declare workspace dependencies before production distribution; BACKEND did not edit any manifest or `uv.lock`.
 
-API entrypoint is `a2_api.app:create_configured_app` with `--factory`; schema entrypoint is `python -m a2_api.export`. Backend uses port 8033 in examples; choose a free role-specific port locally. Add the check commands above to CI after packaging. Worker entrypoint and PostgreSQL migration commands will be handed off once implemented and tested; none are claimed in this release.
+API entrypoint is `a2_api.app:create_configured_app` with `--factory`; schema entrypoint is `python -m a2_api.export`. Backend uses port 8033 in examples; choose a free role-specific port locally. Worker entrypoint is `python -m a2_api.runtime worker`; migrations use `.venv/bin/alembic -c apps/api/alembic.ini upgrade head`. Add checks to CI after packaging. The exact DEVOPS dependency change (`sqlalchemy[asyncio]` + lock update), temporary greenlet setup and remaining adapter integration are documented in `docs/stage2-handoff.md`.

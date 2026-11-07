@@ -32,28 +32,28 @@
 
 Files: `packages/contracts/src/a2_contracts/{common,dataset,profiles,journeys,results,scenarios,api,assistant}.py`, public `__init__.py`; tests and synthetic fixtures in `packages/contracts/tests/` and `packages/contracts/fixtures/`.
 
-- [ ] Write failing tests for offset-aware time, finite values, extra fields, versions, accepted metadata, positive weights, medical/regular requirements and score bounds.
-- [ ] Run tests and observe missing implementation; implement DTOs with shared validation, explicit nullability, documented engineering decisions and public imports.
-- [ ] Validate success and partial fixtures; reject invalid fixture. Tests enforce mandatory provenance/hash/version fields missing from shortened PDF examples.
-- [ ] Keep semantic arithmetic in ML1; validate shape and consistency of supplied results only.
+- [x] Write failing tests for offset-aware time, finite values, extra fields, versions, accepted metadata, positive weights, medical/regular requirements and score bounds.
+- [x] Run tests and observe missing implementation; implement DTOs with shared validation, explicit nullability, documented engineering decisions and public imports.
+- [x] Validate success and partial fixtures; reject invalid fixture. Tests enforce mandatory provenance/hash/version fields missing from shortened PDF examples.
+- [x] Keep semantic arithmetic in ML1; validate shape and consistency of supplied results only.
 
 Files: `apps/api/src/a2_api/{app,services,export}.py`, `apps/api/tests/`, `contracts/generated/`, module READMEs.
 
-- [ ] Write failing API tests for valid requests, malformed JSON/payload, 404/409/503 envelopes, trace ID, and no fixture fallback.
-- [ ] Implement `create_app(services=None)` and documented `/api/v1` routes backed by injectable service interfaces. Default unavailable engine/data returns 503, not jobs that cannot execute.
-- [ ] Implement deterministic `python -m a2_api.export --output PATH`; publish actual FastAPI OpenAPI plus standalone JSON Schemas for canonical models.
-- [ ] Export twice to temporary directories; compare bytes, check all documented operations and valid references.
-- [ ] Run complete pytest suite, ruff and mypy on implemented modules; record exact results, package import workaround and DEVOPS handoff.
+- [x] Write failing API tests for valid requests, malformed JSON/payload, 404/409/503 envelopes, trace ID, and no fixture fallback.
+- [x] Implement `create_app(services=None)` and documented `/api/v1` routes backed by injectable service interfaces. Default unavailable engine/data returns 503, not jobs that cannot execute.
+- [x] Implement deterministic `python -m a2_api.export --output PATH`; publish actual FastAPI OpenAPI plus standalone JSON Schemas for canonical models.
+- [x] Export twice to temporary directories; compare bytes, check all documented operations and valid references.
+- [x] Run complete pytest suite, ruff and mypy on implemented modules; record exact results, package import workaround and DEVOPS handoff.
 
 ## Stage 2: PostgreSQL jobs and one worker
 
 Files: API persistence, migrations, worker and their tests in `apps/api/`.
 
-- [ ] Add migrations for versioned runs, jobs and idempotency; test on a distinct PostgreSQL database.
-- [ ] Atomically register Idempotency-Key + canonical payload hash; repeat returns same job, conflicting payload returns 409 `idempotency_conflict`.
-- [ ] Claim jobs transactionally with one worker, execute engine outside event loop, publish immutable results, retain typed errors and enforce 600-second hard timeout.
-- [ ] Add GET polling and export JSON/CSV, cache keys include all domain versions/parameters/code.
-- [ ] Request DEVOPS packaging/entrypoint changes by exact paths and commands; do not edit manifests yourself.
+- [x] Add migrations for versioned runs, jobs and idempotency; test on a distinct PostgreSQL database.
+- [x] Atomically register Idempotency-Key + canonical payload hash; repeat returns same job, conflicting payload returns 409 `idempotency_conflict`.
+- [x] Claim jobs transactionally with one worker, execute engine outside event loop, publish immutable results, retain typed errors and enforce 600-second hard timeout.
+- [x] Add GET polling and export JSON/CSV, cache keys include all domain versions/parameters/code.
+- [x] Request DEVOPS packaging/entrypoint changes by exact paths and commands; do not edit manifests yourself.
 
 ## Stage 3: tools, agent and trace
 
@@ -80,3 +80,7 @@ Stage 1 is a contract release, not a complete transport service. ML1 supplies `f
 - Final suite: 132 passed. Ruff check/format and strict mypy (14 source files) passed. Two independent exports match; generated exports pass --check.
 - Real-process smoke: Uvicorn factory + explicit synthetic catalog; health/areas/profiles return 200 with trace headers; unavailable coverage returns 503 engine_unavailable. Process shut down after smoke.
 - Stages 2 and 3 remain pending; this record does not claim persistent jobs, migrations, real routing, accepted regional data or a working LLM agent.
+
+## Stage 2 execution record — 2026-11-07
+
+Stage 2 now complete locally: PostgreSQL migrations/jobs/runs, idempotency/cache, one killable version-checked worker, API pool lifecycle, polling and JSON/CSV exports. See `stage2-jobs-plan.md` and `stage2-handoff.md` for decisions, exact commands, regression checks and remaining dependencies. Final result: 194 tests passed on isolated PostgreSQL 17; strict mypy, ruff, pip compatibility and schema-export checks passed. User `.idea` changes and DEVOPS manifests/lock were preserved. Real №4/№5 adapters and Stage 3 agent are still pending; synthetic queue checks do not claim real regional results.

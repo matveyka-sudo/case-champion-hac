@@ -1,6 +1,6 @@
 # Экспорт контрактов
 
-BACKEND публикует здесь OpenAPI из реального FastAPI-приложения и JSON Schema из канонических Pydantic-моделей, версия контракта 0.1.0. FRONTEND использует `openapi.json` для генерации типов. `*.validation.schema.json` описывают вход, `*.serialization.schema.json` — сериализацию; `manifest.json` содержит SHA-256 артефактов без временных меток.
+BACKEND публикует здесь OpenAPI из реального FastAPI-приложения и JSON Schema из канонических Pydantic-моделей, версия контракта 0.2.0. FRONTEND использует `openapi.json` для генерации типов. `*.validation.schema.json` описывают вход, `*.serialization.schema.json` — сериализацию; `manifest.json` содержит SHA-256 артефактов без временных меток.
 
 Из корня репозитория:
 
