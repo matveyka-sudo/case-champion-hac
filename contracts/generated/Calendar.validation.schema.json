@@ -1,0 +1,122 @@
+{
+  "$defs": {
+    "CalendarException": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "operation": {
+          "enum": [
+            "add",
+            "remove"
+          ],
+          "title": "Operation",
+          "type": "string"
+        },
+        "service_date": {
+          "format": "date",
+          "title": "Service Date",
+          "type": "string"
+        }
+      },
+      "required": [
+        "service_date",
+        "operation",
+        "evidence_ids"
+      ],
+      "title": "CalendarException",
+      "type": "object"
+    },
+    "ValidityPeriod": {
+      "additionalProperties": false,
+      "properties": {
+        "valid_from": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid From"
+        },
+        "valid_to": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid To"
+        }
+      },
+      "required": [
+        "valid_from",
+        "valid_to"
+      ],
+      "title": "ValidityPeriod",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "evidence_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "exceptions": {
+      "items": {
+        "$ref": "#/$defs/CalendarException"
+      },
+      "title": "Exceptions",
+      "type": "array"
+    },
+    "service_id": {
+      "minLength": 1,
+      "title": "Service Id",
+      "type": "string"
+    },
+    "timezone": {
+      "minLength": 1,
+      "title": "Timezone",
+      "type": "string"
+    },
+    "valid_period": {
+      "$ref": "#/$defs/ValidityPeriod"
+    },
+    "weekdays": {
+      "items": {
+        "maximum": 6,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "title": "Weekdays",
+      "type": "array"
+    }
+  },
+  "required": [
+    "service_id",
+    "valid_period",
+    "weekdays",
+    "exceptions",
+    "timezone",
+    "evidence_ids"
+  ],
+  "title": "Calendar",
+  "type": "object"
+}

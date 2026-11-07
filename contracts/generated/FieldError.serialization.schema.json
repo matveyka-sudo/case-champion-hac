@@ -1,0 +1,29 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "minLength": 1,
+      "title": "Code",
+      "type": "string"
+    },
+    "location": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Location",
+      "type": "array"
+    },
+    "message": {
+      "minLength": 1,
+      "title": "Message",
+      "type": "string"
+    }
+  },
+  "required": [
+    "location",
+    "code",
+    "message"
+  ],
+  "title": "FieldError",
+  "type": "object"
+}

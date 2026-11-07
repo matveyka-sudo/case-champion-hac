@@ -1,0 +1,236 @@
+{
+  "$defs": {
+    "CompletenessScope": {
+      "additionalProperties": false,
+      "properties": {
+        "destination_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Destination Ids",
+          "type": "array"
+        },
+        "modes": {
+          "items": {
+            "enum": [
+              "rail",
+              "bus",
+              "walk"
+            ],
+            "type": "string"
+          },
+          "title": "Modes",
+          "type": "array"
+        },
+        "origin_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Origin Ids",
+          "type": "array"
+        },
+        "valid_period": {
+          "$ref": "#/$defs/ValidityPeriod"
+        }
+      },
+      "required": [
+        "origin_ids",
+        "destination_ids",
+        "modes",
+        "valid_period"
+      ],
+      "title": "CompletenessScope",
+      "type": "object"
+    },
+    "Coverage": {
+      "additionalProperties": false,
+      "properties": {
+        "is_complete": {
+          "title": "Is Complete",
+          "type": "boolean"
+        },
+        "missing_fields": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Missing Fields",
+          "type": "array"
+        },
+        "scope": {
+          "$ref": "#/$defs/CompletenessScope"
+        }
+      },
+      "required": [
+        "scope",
+        "is_complete",
+        "missing_fields"
+      ],
+      "title": "Coverage",
+      "type": "object"
+    },
+    "ValidityPeriod": {
+      "additionalProperties": false,
+      "properties": {
+        "valid_from": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid From"
+        },
+        "valid_to": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid To"
+        }
+      },
+      "required": [
+        "valid_from",
+        "valid_to"
+      ],
+      "title": "ValidityPeriod",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "acceptance_state": {
+      "enum": [
+        "downloaded",
+        "parsed",
+        "validated",
+        "accepted",
+        "quarantined"
+      ],
+      "title": "Acceptance State",
+      "type": "string"
+    },
+    "accepted_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Accepted At"
+    },
+    "accepted_by": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Accepted By"
+    },
+    "bundle_id": {
+      "minLength": 1,
+      "title": "Bundle Id",
+      "type": "string"
+    },
+    "completeness_evidence": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Completeness Evidence",
+      "type": "array"
+    },
+    "completeness_scope": {
+      "$ref": "#/$defs/CompletenessScope"
+    },
+    "coverage": {
+      "$ref": "#/$defs/Coverage"
+    },
+    "destinations_snapshot": {
+      "minLength": 1,
+      "title": "Destinations Snapshot",
+      "type": "string"
+    },
+    "fares_snapshot": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Fares Snapshot"
+    },
+    "hashes": {
+      "additionalProperties": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "propertyNames": {
+        "minLength": 1
+      },
+      "title": "Hashes",
+      "type": "object"
+    },
+    "missing_fields": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Missing Fields",
+      "type": "array"
+    },
+    "parser_version": {
+      "minLength": 1,
+      "title": "Parser Version",
+      "type": "string"
+    },
+    "timetable_snapshot": {
+      "minLength": 1,
+      "title": "Timetable Snapshot",
+      "type": "string"
+    },
+    "transfer_snapshot": {
+      "minLength": 1,
+      "title": "Transfer Snapshot",
+      "type": "string"
+    }
+  },
+  "required": [
+    "bundle_id",
+    "timetable_snapshot",
+    "destinations_snapshot",
+    "fares_snapshot",
+    "transfer_snapshot",
+    "hashes",
+    "parser_version",
+    "acceptance_state",
+    "coverage",
+    "completeness_scope",
+    "completeness_evidence",
+    "missing_fields",
+    "accepted_by",
+    "accepted_at"
+  ],
+  "title": "SnapshotBundle",
+  "type": "object"
+}
