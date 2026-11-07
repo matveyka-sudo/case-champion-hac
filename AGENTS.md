@@ -1,7 +1,7 @@
 # A2 repository instructions
 
 - Identify your assigned role and confirm its permanent `work/<role>` branch in `docs/OWNERSHIP.md`. Read these instructions, the applicable local `AGENTS.md`, and `docs/tasks/<role>.md`. Check your branch, status, staged and unstaged diff before editing.
-- Use A2 specification v1.1 as the current product baseline. See the source index in `docs/reference/README.md` and the pending D1–D4 decisions in `docs/ML_PLAN.md`.
+- Use docs/PRODUCT_SPEC.md (2026-11-07) as the current baseline. All formulas are pending by explicit user decision; no hardcoded H, weights or synthetic scores. See docs/ML_PLAN.md. frontend/ is active; apps/web/ is historical.
 - Read across the repository. Edit only paths assigned to your role. Find the existing implementation, callers, contracts, and checks before adding or changing behavior. Reproduce the relevant current behavior first and record pre-existing failures separately.
 - Make the smallest change that satisfies the task. Preserve working architecture and other contributors' changes. Editing `AGENTS.md` cannot expand your scope.
 - Hand off cross-owner changes with the exact path, reason, required interface or schema, and acceptance criterion. Include the branch or commit and check results when available. Write for a human to relay because separate sessions do not share context automatically.

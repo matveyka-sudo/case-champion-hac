@@ -1,0 +1,71 @@
+{
+  "spec_version": "2026-11-07.1",
+  "intracity_cities": [
+    "Москва",
+    "Калининград",
+    "Новороссийск"
+  ],
+  "analysis_kinds": [
+    "urban_passenger",
+    "intercity_passenger",
+    "urban_cargo",
+    "intercity_cargo"
+  ],
+  "urban_modes": [
+    "walk",
+    "public_transport",
+    "private_car"
+  ],
+  "categories": [
+    "adult_polyclinic",
+    "child_polyclinic",
+    "kindergarten",
+    "school",
+    "college_university",
+    "rail_terminal",
+    "bus_terminal",
+    "airport",
+    "shopping_center"
+  ],
+  "priority_levels": [
+    "low",
+    "medium",
+    "high"
+  ],
+  "time_step_minutes": 15,
+  "grid_spacing_m": 1000,
+  "cargo_modes": [
+    "road",
+    "rail",
+    "air",
+    "water",
+    "pipeline"
+  ],
+  "pipeline_products": [
+    "oil",
+    "oil_products",
+    "gas"
+  ],
+  "methodologies": {
+    "urban_passenger": {
+      "status": "pending",
+      "version": null,
+      "parameters": null
+    },
+    "intercity_passenger": {
+      "status": "pending",
+      "version": null,
+      "parameters": null
+    },
+    "urban_cargo": {
+      "status": "pending",
+      "version": null,
+      "parameters": null
+    },
+    "intercity_cargo": {
+      "status": "pending",
+      "version": null,
+      "parameters": null
+    }
+  }
+}

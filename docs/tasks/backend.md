@@ -1,7 +1,13 @@
-# BACKEND — канонические DTO и контракт API
+# BACKEND
 
-**Входы и зависимости.** ТЗ 1.1, с. 8–11, 13, 16–17 и [спецификации](../../packages/contracts/specs/README.md). ML2 согласует SnapshotBundle/evidence, ML1 — Journey/ProfileResult/Comparison, DEVOPS — правила D1–D3. Уточните условно обязательные поля, reason codes и единицы до публикации.
+Ветка work/backend. Пути: apps/api/, packages/contracts/, packages/assistant/.
 
-**Пути и выход.** `apps/api/`, `packages/contracts/`, `contracts/generated/`, `packages/assistant/` и этот файл. Сначала создайте канонические DTO, контракт `/api/v1`, три маркированных fixtures success/partial/invalid и настоящий воспроизводимый экспорт OpenAPI/JSON Schema. Следующие задачи — адаптеры API, jobs и один worker, общие REST/tools валидаторы, агент и журнал. Сбор источников и расчёт остаются у ML2 и ML1.
+Источник: ../PRODUCT_SPEC.md; контракты ../../packages/contracts/specs/README.md.
 
-**Приёмка и передача.** Валидатор принимает два допустимых примера, отклоняет invalid с согласованным envelope, версии и nullable поля одинаково трактуются DTO, схемой и потребителями. Два экспорта из одинакового состояния совпадают. Запустите контрактные проверки после появления моделей. Передайте FRONTEND схемы, fixtures, поля polling, а DEVOPS — entrypoints и настройку worker. Агент и его evals у BACKEND, отдельно подтверждаются API-доступ и денежный лимит D4.
+DTO четырёх видов анализа, отдельные Metric и Score, nullable значения, jobs/cache. Серверный allowlist сценариев; AI только объясняет факты. Первым шагом DTO/fixtures, затем настоящий OpenAPI, worker и интеграции.
+
+Зависимости: ML1: engine interface; ML2: snapshots.
+
+Приёмка: Контрактные тесты missing != zero, methodology_pending, conditional fields; воспроизводимый экспорт схем.
+
+Передача: commit, пути, команды/результаты проверок, контрактные изменения и ограничения. Формулы не считать до согласования.

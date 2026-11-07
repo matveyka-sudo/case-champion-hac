@@ -27,11 +27,15 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-          cache-dependency-path: apps/web/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
       - name: Install locked frontend dependencies
-        working-directory: apps/web
+        working-directory: frontend
         run: |
           npm ci
           npm ls --depth=0
+          npm run build
+          npm run lint
+      - name: Validate current product configuration
+        run: python3 scripts/check_product_config.py
       - name: Validate PostgreSQL Compose configuration
         run: docker compose --env-file .env.example config --quiet
