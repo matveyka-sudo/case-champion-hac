@@ -1,3 +1,5 @@
+import { RouteLink } from '../shared/ui/RouteLink';
+
 export function HomePage() {
   return (
     <section className="py-5">
@@ -8,9 +10,9 @@ export function HomePage() {
         Сравнение территорий, разбор поездок и оценка изменений транспортного
         сообщения.
       </p>
-      <a className="btn btn-dark" href="#/atlas">
+      <RouteLink className="btn btn-dark" to="/atlas">
         Открыть атлас
-      </a>
+      </RouteLink>
       <p className="small text-body-secondary mt-4">
         Техническая основа приложения. Визуальный дизайн и остальные сценарии
         будут подключены отдельно.

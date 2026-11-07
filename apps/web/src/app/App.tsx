@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AtlasPage } from '../pages/AtlasPage';
 import { HomePage } from '../pages/HomePage';
 import { useRoute } from './router';
+import { RouteLink } from '../shared/ui/RouteLink';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { staleTime: 60_000, retry: false, refetchOnWindowFocus: false },
@@ -31,30 +32,29 @@ function Routes() {
   const route = useRoute();
   return (
     <>
-      <a
-        className="visually-hidden-focusable"
-        href="#main"
-        onClick={(event) => {
-          event.preventDefault();
+      <button
+        type="button"
+        className="visually-hidden-focusable btn btn-link"
+        onClick={() => {
           document.getElementById('main')?.focus();
         }}
       >
         К содержимому
-      </a>
+      </button>
       <header className="border-bottom">
         <nav
           className="container d-flex align-items-center gap-4 py-3"
           aria-label="Основная навигация"
         >
-          <a className="fw-bold text-dark" href="#/">
+          <RouteLink className="fw-bold text-dark" to="/">
             Waydex
-          </a>
-          <a
-            href="#/atlas"
+          </RouteLink>
+          <RouteLink
+            to="/atlas"
             aria-current={route === '/atlas' ? 'page' : undefined}
           >
             Атлас
-          </a>
+          </RouteLink>
         </nav>
       </header>
       <main id="main" tabIndex={-1} className="container py-4">
@@ -65,7 +65,7 @@ function Routes() {
         ) : (
           <>
             <h1>Страница не найдена</h1>
-            <a href="#/">На главную</a>
+            <RouteLink to="/">На главную</RouteLink>
           </>
         )}
       </main>
