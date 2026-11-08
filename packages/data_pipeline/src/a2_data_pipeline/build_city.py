@@ -294,10 +294,10 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
     if config.seaport_dataset_id:
         seaport_manifest = load_dataset_manifest(config.seaport_dataset_id)
         source_manifests.append(seaport_manifest)
-        operators, facts = freight.load_seaport(
+        record = freight.load_seaport(
             raw_dir() / seaport_manifest.raw_path, config.seaport_name or config.name
         )
-        seaport = (operators, facts, seaport_manifest)
+        seaport = (record, seaport_manifest)
         snapshot_evidence["seaport"] = book.add(
             _dataset_evidence(
                 seaport_manifest,
@@ -334,7 +334,7 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
             config,
             freight_nodes,
             freight_sites,
-            len(seaport[0]) if seaport else None,
+            seaport[0] if seaport else None,
             snapshot_evidence,
         )
     registry_coverage: dict[str, tuple[str, str]] = {}
@@ -438,10 +438,12 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
     else:
         limitations += [
             "Расписания в этот bundle не входят",
-            "Грузовые узлы: порт — территории OSM и операторы из перечня Росморпорта (в OSM "
-            "найдены не все), нефтяные терминалы — по названиям OSM; ж/д станции в карантине: "
-            "грузовые операции не подтверждены",
-            "Грузовые площадки — промзоны и склады OSM по правилам freight-osm-rules-v1, равные "
+            "Грузовые узлы: порт — портовые территории OSM и объекты со словом «порт» в названии в "
+            "границе города с зарегистрированным морским портом; объекты, найденные только по "
+            "скрытому в разметке перечню операторов Росморпорта, в карантине; нефтяные терминалы — "
+            "по названиям OSM; ж/д станции в карантине: грузовые операции не подтверждены",
+            "Узлы за границей города (терминалы порта в соседних муниципалитетах) не включены",
+            f"Грузовые площадки — промзоны и склады OSM по правилам {freight.RULES_VERSION}, равные "
             "веса; реестра предприятий и объёмов нет",
             "Совместимость груза, услуги и подъезда неизвестна; въезд — проекция внутренней точки "
             "контура на дорожную сеть OSM v1, не размеченные ворота; ограничения массы не учтены",
@@ -1508,7 +1510,7 @@ def _access_checks(
     }
 
 
-SeaportRecord = tuple[list[freight.PortOperator], dict[str, Any], DatasetManifest]
+SeaportInput = tuple[freight.SeaportRecord, DatasetManifest]
 
 
 def _freight(
@@ -1516,7 +1518,7 @@ def _freight(
     osm_dir: Path,
     layers: OsmLayers,
     road: WalkNetwork,
-    seaport: SeaportRecord | None,
+    seaport: SeaportInput | None,
     book: EvidenceBook,
     checks: list[dict[str, Any]],
 ) -> tuple[list[FreightNode], list[FreightSite], list[AccessNode], dict[str, Any]]:
@@ -1525,8 +1527,9 @@ def _freight(
     An area is located at its representative point (always inside the contour);
     the access node is the projection of that point onto the main road component,
     a proxy for the gate, not a mapped one. A port node carries the seaport
-    record and, when linked by name, its operator's record from the same page.
-    ``operator`` is that register operator for ports and the OSM tag otherwise.
+    record and, when linked by name, its operator's record from the same page;
+    an operator record from a list the page does not show is ``unknown``, not
+    ``verified``. ``operator`` is that operator for ports and the OSM tag otherwise.
     """
 
     crs = road.crs
@@ -1537,27 +1540,26 @@ def _freight(
         for row in pq.read_table(osm_dir / "pois.parquet").to_pylist()
         if freight.is_rail_station(json.loads(row["tags"]))
     ]
-    operators = seaport[0] if seaport else None
-    facts: dict[str, Any] = seaport[1] if seaport else {}
-    node_drafts, site_drafts, counts = freight.classify(rows, stations, city_utm, crs, operators)
+    record = seaport[0] if seaport else None
+    facts: dict[str, Any] = record.facts if record else {}
+    node_drafts, site_drafts, counts = freight.classify(rows, stations, city_utm, crs, record)
     seaport_evidence: str | None = None
     operator_evidence: dict[str, str] = {}
     if seaport is not None:
-        manifest = seaport[2]
-        port_name = config.seaport_name or config.name
+        record, manifest = seaport
         seaport_evidence = book.add(
             Evidence(
                 evidence_id=f"{manifest.source_id}:seaport-{config.city_id}",
                 source_id=manifest.source_id,
                 dataset_id=manifest.dataset_id,
-                record_id=f"Морской порт {port_name}, рег. № {facts.get('registration_number')}",
+                record_id=f"Морской порт {record.port_name}, рег. № {record.registration_number}",
                 url=str(manifest.source_url),
                 fetched_at=manifest.retrieved_at,
-                content_hash=_hash_json(facts),
+                content_hash=_hash_json(record.facts),
                 verification_state="verified",
             )
         )
-        for operator in seaport[0]:
+        for operator in record.operators:
             digest = hashlib.sha256(operator.name.encode("utf-8")).hexdigest()
             operator_evidence[operator.name] = (
                 f"{manifest.source_id}:seaport-{config.city_id}:operator-{digest[:12]}"
@@ -1565,7 +1567,7 @@ def _freight(
 
     def port_operator(name: str) -> str:
         assert seaport is not None
-        manifest = seaport[2]
+        source, manifest = seaport
         return book.add(
             Evidence(
                 evidence_id=operator_evidence[name],
@@ -1575,7 +1577,7 @@ def _freight(
                 url=str(manifest.source_url),
                 fetched_at=manifest.retrieved_at,
                 content_hash=hashlib.sha256(name.encode("utf-8")).hexdigest(),
-                verification_state="verified",
+                verification_state="verified" if source.operators_published else "unknown",
             )
         )
 
@@ -1664,14 +1666,22 @@ def _freight(
         over_limit=far,
     )
     linked = sorted({n.operator for n in nodes if n.kind == "port" and n.operator})
-    if operators is not None:
+    if record is not None:
+        _check(
+            checks,
+            "seaport_operator_list_published",
+            record.operators_published,
+            "The seaport page shows its stevedore list (not only inside an HTML comment)",
+            severity="warn",
+            operators=len(record.operators),
+        )
         _check(
             checks,
             "seaport_operators_located",
-            len(linked) == len(operators),
+            len(linked) == len(record.operators),
             "Every stevedoring operator of the seaport record has a named OSM object in the city",
             severity="warn",
-            unlinked=[op.name for op in operators if op.name not in linked],
+            unlinked=[op.name for op in record.operators if op.name not in linked],
         )
     summary = {
         "rules": freight.RULES_VERSION,
@@ -1694,8 +1704,13 @@ def _freight(
             "sites": _distances([s.access_distance_m for s in sites]) if sites else None,
         },
         "seaport": (
-            {"record": facts, "operators": len(operators), "linked_operators": linked}
-            if operators is not None
+            {
+                "record": facts,
+                "operators": len(record.operators),
+                "operators_published": record.operators_published,
+                "linked_operators": linked,
+            }
+            if record is not None
             else None
         ),
     }
@@ -1706,7 +1721,7 @@ def _freight_coverage(
     config: CityConfig,
     nodes: list[FreightNode],
     sites: list[FreightSite],
-    seaport_operators: int | None,
+    record: freight.SeaportRecord | None,
     evidence: dict[str, str],
 ) -> list[CoverageRecord]:
     """Freight coverage by node kind: an index for a kind without accepted nodes is unknown."""
@@ -1720,17 +1735,31 @@ def _freight_coverage(
         return any(n.kind == kind and n.status == "accepted" for n in nodes)
 
     linked = len({n.operator for n in nodes if n.kind == "port" and n.operator})
-    port_reason = (
-        "Портовые территории OSM в границе города и объекты операторов по перечню Росморпорта; "
-        f"подписанные объекты в OSM есть у {linked} из {seaport_operators} операторов"
-        if seaport_operators is not None
-        else "Портовые территории OSM без перечня операторов порта"
-    )
+    if record is None:
+        port_reason = "Портовые территории OSM без записи о морском порте: в карантине"
+    else:
+        listed = (
+            "перечень операторов опубликован"
+            if record.operators_published
+            else "перечень операторов на странице скрыт в разметке, объекты только по нему в "
+            "карантине"
+        )
+        port_reason = (
+            "Портовые территории OSM и объекты со словом «порт» в названии в границе города; "
+            f"морской порт {record.port_name} (рег. № {record.registration_number}) по "
+            f"Росморпорту; {listed}; подписанные объекты в OSM есть у {linked} из "
+            f"{len(record.operators)} операторов"
+        )
+    pipelines = found("pipeline_terminal")
     kinds: dict[FreightKind, tuple[CoverageStatus, str, list[str]]] = {
         "port": ("partial" if found("port") else "unknown", port_reason, port_refs),
         "pipeline_terminal": (
-            "partial" if found("pipeline_terminal") else "unknown",
-            "Нефтяные терминалы по названиям OSM (КТК, Шесхарис, ПНБ); реестра операторов нет",
+            "partial" if pipelines else "unknown",
+            "Терминалы магистральных трубопроводов по названиям OSM (КТК, Шесхарис, ПНБ); "
+            "реестра операторов нет"
+            if pipelines
+            else "Терминалы магистральных трубопроводов по правилам OSM не найдены; отсутствие "
+            "не подтверждено",
             osm,
         ),
         "rail_terminal": (

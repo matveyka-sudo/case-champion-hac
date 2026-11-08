@@ -1,17 +1,21 @@
-"""Urban freight: physical sites and freight nodes (rule set ``freight-osm-rules-v1``).
+"""Urban freight: physical sites and freight nodes (rule set ``freight-osm-rules-v2``).
 
 PRODUCT_SPEC §4: access of a physical production site or warehouse to a suitable
 port, freight station or terminal; equal weights of sites without volumes; no
 supply chains reconstructed from legal addresses.
 
 Nodes:
-- ``port``: an OSM port area (``landuse=harbour|port``, ``industrial=port``,
-  ``man_made=container_terminal``) or a feature named after a stevedoring
-  operator of the official seaport record (Rosmorport). Linked operators give
-  the evidence; a port area without an operator link is accepted as a port area
-  of the registered seaport only when the seaport record is loaded.
+- ``port``: inside the city of a registered seaport (Rosmorport record with its
+  registration number), an OSM port area (``landuse=harbour|port``,
+  ``industrial=port``, ``man_made=container_terminal``), an area whose name has
+  the word «порт» («Калининградский морской торговый порт»; «аэропорт» is not),
+  or a feature named after a stevedoring operator of that record. Without the
+  seaport record a port area is quarantined (``SEAPORT_RECORD_MISSING``). A
+  feature found by an operator name alone needs a published operator list
+  (v2: Rosmorport hides the list in an HTML comment, so such features stay
+  quarantined with ``OPERATOR_LIST_UNPUBLISHED``).
 - ``pipeline_terminal``: an oil storage or oil terminal area whose name refers to
-  a pipeline operator (КТК / Каспийск / Шесхарис / перевалочн).
+  a trunk pipeline operator (КТК / Каспийск / Шесхарис / ПНБ).
 - ``rail_terminal``: mainline railway stations of the city; freight operations
   are not confirmed by an open register, so they stay quarantined.
 
@@ -35,10 +39,10 @@ import shapely  # type: ignore[import-untyped]
 
 from .geo import to_crs
 
-RULES_VERSION = "freight-osm-rules-v1"
+RULES_VERSION = "freight-osm-rules-v2"
 SITE_MIN_AREA_M2 = 5_000.0
 BUILDING_MIN_AREA_M2 = 1_000.0
-PIPELINE_NAME = re.compile(r"КТК|Каспийск|Шесхарис|перевалочн|\bПНБ\b", re.I)
+PIPELINE_NAME = re.compile(r"КТК|Каспийск|Шесхарис|\bПНБ\b", re.I)
 # explicit operator names make an industrial area a pipeline terminal even when
 # OSM mislabels the product (e.g. «ПНБ Грушовая» tagged industrial=gas)
 PIPELINE_EXPLICIT = re.compile(r"КТК|Каспийск|Шесхарис|\bПНБ\b", re.I)
@@ -52,6 +56,16 @@ NOT_PRODUCTION = re.compile(
 )
 NOT_PRODUCTION_INDUSTRIAL = {"depot", "wastewater", "water", "electrical", "heating_station"}
 PORT_AREA = (("landuse", "harbour"), ("landuse", "port"), ("industrial", "port"))
+PORT_NAME = re.compile(r"(?<![а-яё])порт(?![а-яё])", re.I)
+COMMENT = re.compile(r"<!--.*?-->", re.S)
+SERVICE_ITEMS = '<div class="li-three">'
+CAPACITY = re.compile(r"^-\s*(наливные|сухие|контейнерные|контейнеры)\s*:\s*(.*)$")
+CAPACITY_KEYS = {
+    "наливные": "liquid_capacity",
+    "сухие": "dry_capacity",
+    "контейнерные": "container_capacity",
+    "контейнеры": "container_capacity",
+}
 OPERATOR_STOP = {
     "новороссийский",
     "новороссийская",
@@ -75,6 +89,22 @@ class PortOperator:
     keys: frozenset[str]
 
 
+@dataclass(frozen=True)
+class SeaportRecord:
+    """One seaport section of a Rosmorport branch page.
+
+    ``facts`` holds only text the page shows. The stevedore list may sit in an
+    HTML comment: then it is read but ``operators_published`` is False, and a
+    node confirmed by that list alone is not accepted.
+    """
+
+    port_name: str
+    registration_number: str | None
+    operators: tuple[PortOperator, ...]
+    operators_published: bool
+    facts: dict[str, Any]
+
+
 def _quoted(name: str) -> str:
     found = re.search(r"«(.+)»", name)
     return found.group(1) if found else name
@@ -88,41 +118,66 @@ def operator_keys(name: str) -> frozenset[str]:
     return frozenset(keys)
 
 
-def parse_seaport(page: str, port_name: str) -> tuple[list[PortOperator], dict[str, Any]]:
-    """Stevedoring operators and capacities of one seaport on the Rosmorport page."""
+def _lines(fragment: str) -> list[str]:
+    lines = []
+    for part in re.sub(r"<[^>]+>", "\n", fragment).split("\n"):
+        text = re.sub(r"\s+", " ", html.unescape(part)).strip()
+        if text:
+            lines.append(text)
+    return lines
+
+
+def _service_list(section: str, title: str) -> tuple[list[str], bool]:
+    """Items of one service list and whether the page shows them (not an HTML comment)."""
+
+    at = section.find(f"<a>{title}</a>")
+    start = section.find(SERVICE_ITEMS, at) if at >= 0 else -1
+    if start < 0:
+        return [], True
+    start += len(SERVICE_ITEMS)
+    block = section[start : section.find("</div>", start)]
+    items = []
+    for part in re.split(r"<br\s*/?>", block.replace("<!--", " ").replace("-->", " ")):
+        text = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", part))).strip(" -")
+        if text:
+            items.append(text)
+    return items, "<!--" not in block
+
+
+def parse_seaport(page: str, port_name: str) -> SeaportRecord:
+    """Registration number, capacities and stevedores of one seaport on a Rosmorport page."""
 
     start = page.find(f"Морской порт {port_name}")
     if start < 0:
         raise ValueError(f"seaport {port_name} not found")
     end = page.find("Морской порт ", start + 20)
     section = page[start : end if end > 0 else len(page)]
-    lines = [
-        re.sub(r"\s+", " ", html.unescape(line)).strip()
-        for line in re.sub(r"<[^>]+>", "\n", section).split("\n")
-    ]
-    lines = [line for line in lines if line and line != "-->"]
-    operators: list[PortOperator] = []
-    if "Стивидорные услуги" in lines:
-        for line in lines[lines.index("Стивидорные услуги") + 1 :]:
-            if not re.match(r"^(ПАО|ООО|АО|ОАО|ЗАО)\b", line):
-                break
-            name = line.rstrip("-> ").strip()
-            operators.append(PortOperator(name=name, keys=operator_keys(name)))
+    visible = _lines(COMMENT.sub(" ", section))
+    names, published = _service_list(section, "Стивидорные услуги")
+    registration: str | None = None
     facts: dict[str, Any] = {}
-    for index, line in enumerate(lines):
-        if line.startswith("Регистрационный номер") and index + 1 < len(lines):
-            facts["registration_number"] = lines[index + 1]
-        if line.startswith("- наливные:") and index + 1 < len(lines):
-            facts["liquid_capacity"] = lines[index + 1]
-        if line.startswith("- сухие:") and index + 1 < len(lines):
-            facts["dry_capacity"] = lines[index + 1]
-        if line.startswith("- контейнерные:") and index + 1 < len(lines):
-            facts["container_capacity"] = lines[index + 1]
-    facts["mentions_ktk_berths"] = any("КТК" in line for line in lines)
-    return operators, facts
+    for index, line in enumerate(visible):
+        if line.startswith("Регистрационный номер") and registration is None:
+            registration = next(
+                (v for v in visible[index + 1 :] if not v.startswith("Регистрационный номер")),
+                None,
+            )
+        found = CAPACITY.match(line)
+        if found:
+            value = found.group(2).strip()
+            if not value and index + 1 < len(visible):
+                value = visible[index + 1]
+            facts.setdefault(CAPACITY_KEYS[found.group(1)], value)
+    facts |= {
+        "registration_number": registration,
+        "operators_published": published,
+        "mentions_ktk_berths": any("КТК" in line for line in visible),
+    }
+    operators = tuple(PortOperator(name=n, keys=operator_keys(n)) for n in names)
+    return SeaportRecord(port_name, registration, operators, published, facts)
 
 
-def load_seaport(raw_html: Path, port_name: str) -> tuple[list[PortOperator], dict[str, Any]]:
+def load_seaport(raw_html: Path, port_name: str) -> SeaportRecord:
     return parse_seaport(raw_html.read_bytes().decode("utf-8", errors="strict"), port_name)
 
 
@@ -174,11 +229,12 @@ def classify(
     stations: list[dict[str, Any]],
     area_utm: shapely.Geometry,
     crs: str,
-    operators: list[PortOperator] | None,
+    seaport: SeaportRecord | None,
 ) -> tuple[list[NodeCandidate], list[SiteCandidate], dict[str, int]]:
     """Nodes and sites of ``area_utm`` (city boundary) from extracted OSM freight rows."""
 
     shapely.prepare(area_utm)
+    operators = list(seaport.operators) if seaport else []
     counts: dict[str, int] = {}
     nodes: list[NodeCandidate] = []
     industrial: list[tuple[dict[str, Any], shapely.Geometry, shapely.Geometry]] = []
@@ -219,9 +275,14 @@ def classify(
             any(tags.get(k) == v for k, v in PORT_AREA)
             or tags.get("man_made") == "container_terminal"
         )
-        operator = _link_operator(name, operators or [])
-        if geometry.geom_type != "Point" and (port_area or operator):
-            reasons = [] if (operator or operators) else ["SEAPORT_RECORD_MISSING"]
+        port_named = bool(name and PORT_NAME.search(name))
+        operator = _link_operator(name, operators)
+        if geometry.geom_type != "Point" and (port_area or port_named or operator):
+            reasons: list[str] = []
+            if seaport is None:
+                reasons.append("SEAPORT_RECORD_MISSING")
+            elif not (port_area or port_named) and not seaport.operators_published:
+                reasons.append("OPERATOR_LIST_UNPUBLISHED")
             nodes.append(
                 NodeCandidate(
                     "port",
@@ -230,7 +291,11 @@ def classify(
                     geometry,
                     operator.name if operator else None,
                     reasons,
-                    rule="operator_name" if operator else "port_area",
+                    rule=(
+                        "port_area"
+                        if port_area
+                        else ("port_name" if port_named else "operator_name")
+                    ),
                 )
             )
             count("port")

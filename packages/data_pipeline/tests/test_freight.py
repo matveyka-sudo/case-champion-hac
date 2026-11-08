@@ -1,4 +1,4 @@
-"""Urban freight rules (freight-osm-rules-v1) on synthetic OSM rows and a synthetic port page."""
+"""Urban freight rules (freight-osm-rules-v2) on synthetic OSM rows and a synthetic port page."""
 
 import json
 from typing import Any
@@ -16,20 +16,26 @@ CRS = "EPSG:32637"
 X0, Y0 = 400_000, 4_950_000
 CITY = shapely.box(X0, Y0, X0 + 5000, Y0 + 5000)
 
+# The markup of a Rosmorport branch page: the stevedore list sits in an HTML comment.
 PAGE = """
-<div><h3>Морской порт Тестовый</h3>
-<p>Регистрационный номер</p><p>Т-1</p>
-<p>- наливные:</p><p>10 тыс. тонн в год;</p>
-<p>- сухие:</p><p>5 тыс. тонн в год;</p>
-<p>Стивидорные услуги</p>
-<p>ООО «Терминал «ТТК»</p>
-<p>АО «Синтетический морской торговый порт»</p>
-<p>Лоцманская проводка</p>
+<div class="list_parent"><a>Морской порт Тестовый</a></div>
+<div>Регистрационный номер морского порта</div>
+<div>Регистрационный номер морского порта</div>
+<div>Т-1</div>
+<div>&nbsp;- наливные: 10 тыс. тонн в год;<br>&nbsp;- сухие:</div><div>5 тыс. тонн в год;</div>
+<div>&nbsp;- контейнеры: 7 тыс. ДФЭ в год;</div>
+<div class="list_parent li-two"><a>Стивидорные услуги</a></div>
+<div class="list_parent-info ul-two"><div class="li-three"><!---ООО «Терминал «ТТК»<br>
+ АО «Синтетический морской торговый порт»<br>
+ АО «КТК-Синтетик»<br>---></div></div>
+<div class="list_parent li-two"><a>Лоцманские услуги</a></div>
+<div class="list_parent-info ul-two"><div class="li-three"><a href="https://example.org">ФГУП «Тест»</a><br></div></div>
 <p>Выносные причальные устройства КТК</p>
-<h3>Морской порт Соседний</h3>
-<p>Стивидорные услуги</p><p>ООО «Чужой терминал»</p>
-</div>
+<div class="list_parent"><a>Морской порт Соседний</a></div>
+<div class="list_parent li-two"><a>Стивидорные услуги</a></div>
+<div class="list_parent-info ul-two"><div class="li-three">ООО «Чужой терминал»<br></div></div>
 """
+PUBLISHED = PAGE.replace("<!---", "").replace("--->", "")
 
 
 def box(x: float, y: float, size: float) -> Any:
@@ -67,6 +73,9 @@ ROWS = [
     row("way/13", box(3000, 2000, 200), landuse="industrial", disused="yes"),
     row("way/14", box(9000, 9000, 200), landuse="industrial"),  # outside the city
     row("node/15", point(3000, 3000), man_made="pier"),
+    row("way/17", box(3500, 0, 200), landuse="industrial", name="Тестовый морской торговый порт"),
+    # «аэропорт» is not a port; the airport is not a production site either
+    row("way/18", box(4000, 1000, 200), landuse="industrial", name="Аэропорт Тестовый"),
 ]
 STATIONS = [row("node/16", point(4000, 4000), railway="station", name="Тестовая")]
 
@@ -78,28 +87,40 @@ def test_operator_keys_are_distinctive_words() -> None:
 
 
 def test_parse_seaport_reads_only_its_section() -> None:
-    operators, facts = freight.parse_seaport(PAGE, "Тестовый")
-    assert [o.name for o in operators] == [
+    record = freight.parse_seaport(PAGE, "Тестовый")
+    assert record.registration_number == "Т-1"
+    # the first name right after the comment opener is kept
+    assert [o.name for o in record.operators] == [
         "ООО «Терминал «ТТК»",
         "АО «Синтетический морской торговый порт»",
+        "АО «КТК-Синтетик»",
     ]
-    assert facts["registration_number"] == "Т-1"
-    assert facts["liquid_capacity"] == "10 тыс. тонн в год;"
-    assert facts["dry_capacity"] == "5 тыс. тонн в год;"
-    assert facts["mentions_ktk_berths"] is True
+    assert record.operators_published is False
+    assert record.facts["liquid_capacity"] == "10 тыс. тонн в год;"  # value on the same line
+    assert record.facts["dry_capacity"] == "5 тыс. тонн в год;"  # value on the next line
+    assert record.facts["container_capacity"] == "7 тыс. ДФЭ в год;"
+    assert record.facts["mentions_ktk_berths"] is True
+    assert freight.parse_seaport(PUBLISHED, "Тестовый").operators_published is True
     with pytest.raises(ValueError, match="not found"):
         freight.parse_seaport(PAGE, "Несуществующий")
 
 
+def test_hidden_text_is_not_a_fact() -> None:
+    page = PAGE.replace("<p>Выносные причальные устройства КТК</p>", "")
+    # «КТК» now appears only inside the hidden operator list
+    assert freight.parse_seaport(page, "Тестовый").facts["mentions_ktk_berths"] is False
+
+
 def test_classify_nodes_and_sites() -> None:
-    operators, _ = freight.parse_seaport(PAGE, "Тестовый")
-    nodes, sites, counts = freight.classify(ROWS, STATIONS, CITY, CRS, operators)
+    record = freight.parse_seaport(PUBLISHED, "Тестовый")
+    nodes, sites, counts = freight.classify(ROWS, STATIONS, CITY, CRS, record)
     found = {n.osm_refs[0]: (n.kind, n.operator, n.rule, n.reasons) for n in nodes}
     assert found == {
         "way/1": ("port", None, "port_area", []),
         "way/3": ("port", "ООО «Терминал «ТТК»", "operator_name", []),
         "way/4": ("pipeline_terminal", None, "oil+pipeline_name", []),
         "way/5": ("pipeline_terminal", None, "oil+pipeline_name", []),
+        "way/17": ("port", None, "port_name", []),
         "node/16": ("rail_terminal", None, "railway_station", ["FREIGHT_OPERATIONS_UNVERIFIED"]),
     }
     assert [(s.osm_ref, s.kind, s.name) for s in sites] == [
@@ -108,22 +129,29 @@ def test_classify_nodes_and_sites() -> None:
     ]
     assert sites[0].area_m2 == pytest.approx(22_500, rel=1e-3)
     assert counts == {
-        "port": 2,
+        "port": 3,
         "pipeline_terminal": 2,
         "rail_terminal": 1,
         "site_inside_node": 1,
         "site_too_small": 1,
-        "site_not_production": 2,
+        "site_not_production": 3,
         "building_inside_industrial_site": 1,
         "building_too_small": 1,
         "sites": 2,
     }
 
 
-def test_port_area_without_seaport_record_is_quarantined() -> None:
+def test_hidden_operator_list_does_not_confirm_a_node() -> None:
+    nodes, _, _ = freight.classify(ROWS, [], CITY, CRS, freight.parse_seaport(PAGE, "Тестовый"))
+    reasons = {n.osm_refs[0]: n.reasons for n in nodes if n.kind == "port"}
+    # found by the operator name only: quarantined; port tags and a port name still count
+    assert reasons == {"way/1": [], "way/3": ["OPERATOR_LIST_UNPUBLISHED"], "way/17": []}
+
+
+def test_port_without_seaport_record_is_quarantined() -> None:
     nodes, sites, _ = freight.classify(ROWS, [], CITY, CRS, None)
-    harbour = next(n for n in nodes if n.osm_refs == ["way/1"])
-    assert harbour.reasons == ["SEAPORT_RECORD_MISSING"]
+    reasons = {n.osm_refs[0]: n.reasons for n in nodes if n.kind == "port"}
+    assert reasons == {"way/1": ["SEAPORT_RECORD_MISSING"], "way/17": ["SEAPORT_RECORD_MISSING"]}
     # without the operator list a terminal-like name proves nothing: it stays a site
     assert "way/3" in {s.osm_ref for s in sites}
 
