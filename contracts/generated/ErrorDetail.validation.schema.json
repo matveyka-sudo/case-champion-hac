@@ -43,7 +43,11 @@
         "internal_error",
         "method_not_allowed",
         "job_timeout",
-        "job_cancelled"
+        "job_cancelled",
+        "data_unavailable",
+        "unsupported_traffic_mode",
+        "provider_unavailable",
+        "unsupported_scenario"
       ],
       "title": "Code",
       "type": "string"

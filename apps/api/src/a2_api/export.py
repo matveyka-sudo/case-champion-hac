@@ -6,11 +6,22 @@ import inspect
 import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Literal
 
 from a2_contracts import api, common, dataset, journeys, profiles, regions, results, scenarios
 from a2_contracts.common import ContractModel
+from a2_contracts.v2 import api as api_v2
+from a2_contracts.v2 import assistant as assistant_v2
+from a2_contracts.v2 import base as base_v2
+from a2_contracts.v2 import dataset as dataset_v2
+from a2_contracts.v2 import journeys as journeys_v2
+from a2_contracts.v2 import requests as requests_v2
+from a2_contracts.v2 import results as results_v2
+from a2_contracts.v2 import scenarios as scenarios_v2
+from pydantic import TypeAdapter
 
-from .app import API_CONTRACT_VERSION, create_app
+from .api_v2 import API_CONTRACT_VERSION, create_app
+from .app import create_app as create_legacy_app
 from .configuration import CatalogConfig
 
 MODULES = (api, common, dataset, journeys, profiles, regions, results, scenarios)
@@ -26,15 +37,42 @@ def model_registry() -> dict[str, type[ContractModel]]:
         and model.__module__ == module.__name__
     }
     models["CatalogConfig"] = CatalogConfig
+    for module in (
+        api_v2,
+        assistant_v2,
+        base_v2,
+        dataset_v2,
+        journeys_v2,
+        requests_v2,
+        results_v2,
+        scenarios_v2,
+    ):
+        for name, model in inspect.getmembers(module, inspect.isclass):
+            if (
+                issubclass(model, ContractModel)
+                and model is not ContractModel
+                and model.__module__ == module.__name__
+            ):
+                models["v2." + name] = model
     return models
 
 
 def export_schemas(output: Path) -> None:
     output.mkdir(parents=True, exist_ok=True)
-    artifacts: dict[str, object] = {"openapi.json": create_app().openapi()}
+    artifacts: dict[str, object] = {
+        "openapi.json": create_app().openapi(),
+        "legacy-openapi.json": create_legacy_app().openapi(),
+    }
+    modes: tuple[Literal["validation", "serialization"], ...] = ("validation", "serialization")
     for name, model in sorted(model_registry().items()):
-        for mode in ("validation", "serialization"):
+        for mode in modes:
             artifacts[f"{name}.{mode}.schema.json"] = model.model_json_schema(mode=mode)
+    for name, adapter in (
+        ("AnalysisRequest", requests_v2.REQUEST_ADAPTER),
+        ("CargoProfile", TypeAdapter(requests_v2.CargoProfile)),
+    ):
+        for mode in modes:
+            artifacts[f"v2.{name}.{mode}.schema.json"] = adapter.json_schema(mode=mode)
     hashes: dict[str, str] = {}
     for filename, document in sorted(artifacts.items()):
         content = (

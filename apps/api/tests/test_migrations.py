@@ -9,7 +9,7 @@ async def test_migration_upgrade_twice_and_downgrade_preserve_unrelated_tables(d
     pool, schema, url = database
     await pool.execute("CREATE TABLE unrelated_table(note text)")
     await asyncio.to_thread(migrate, url, schema)
-    assert await pool.fetchval("SELECT version_num FROM alembic_version") == "0001_jobs_runs"
+    assert await pool.fetchval("SELECT version_num FROM alembic_version") == "0002_v2_jobs"
     await asyncio.to_thread(migrate, url, schema, "base", True)
     assert await pool.fetchval("SELECT to_regclass('jobs')") is None
     assert await pool.fetchval("SELECT to_regclass('runs')") is None

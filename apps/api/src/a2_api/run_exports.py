@@ -9,6 +9,8 @@ from a2_contracts.results import ProfileResult
 from a2_contracts.scenarios import Comparison
 from pydantic import JsonValue
 
+from .services import DomainError
+
 Cell = str | int | float | None
 
 CSV_FIELDS = (
@@ -156,6 +158,8 @@ def export_run(
     uses canonical JSON cells; missing scalars remain empty cells. Row order is
     the saved result order, preserving any explicit origin ordering.
     """
+    if not isinstance(result, (ProfileResult, Comparison)):
+        raise DomainError(404, "unknown_id", "Legacy run not found")
     if format == "json":
         body = _json({"result": result.model_dump(mode="json"), "parameters": parameters})
         return "application/json", (body + "\n").encode("utf-8")

@@ -5,10 +5,10 @@ import asyncio
 import importlib
 import inspect
 import signal
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Annotated, cast
+from typing import Annotated, Literal, cast
 
 import asyncpg  # type: ignore[import-untyped]
 from fastapi import FastAPI
@@ -24,6 +24,10 @@ from .worker import Worker
 
 class RuntimeSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="A2_", extra="ignore", hide_input_in_errors=True)
+    contract_version: Literal["2", "legacy"] = "2"
+    registry_hook: str | None = None
+    assistant_hook: str | None = None
+    secure_cookies: bool = False
     database_url: str | None = Field(default=None, repr=False)
     database_schema: Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{0,62}$")] = "a2_backend"
     catalog_path: Path | None = None
@@ -48,7 +52,10 @@ async def open_pool(settings: RuntimeSettings) -> asyncpg.Pool:
     )
     assert pool is not None
     try:
-        if await pool.fetchval("SELECT to_regclass('jobs')") is None:
+        if (
+            await pool.fetchval("SELECT to_regclass('jobs')") is None
+            or await pool.fetchval("SELECT to_regclass('scenario_proposals')") is None
+        ):
             raise ValueError("Apply backend Alembic migrations before starting API/worker")
     except BaseException:
         await pool.close()
@@ -70,7 +77,7 @@ def load_prepare(settings: RuntimeSettings) -> Prepare | None:
     return cast(Prepare, hook)
 
 
-def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
+def build_legacy_app(settings: RuntimeSettings | None = None) -> FastAPI:
     from .app import create_app
 
     config = settings if settings is not None else RuntimeSettings()
@@ -100,6 +107,74 @@ def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
             await pool.close()
 
     return create_app(metadata, lifespan=lifespan)
+
+
+def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
+    """Canonical default; legacy deployment requires explicit operator selection."""
+    from a2_assistant import FlashAssistant
+
+    from .analysis_service import AnalysisService, Preflight
+    from .api_v2 import create_app
+    from .product_registry import ProductRegistry
+
+    config = settings if settings is not None else RuntimeSettings()
+    if config.contract_version == "legacy":
+        return build_legacy_app(config)
+
+    def configured_hook(path: str) -> object:
+        module, name = path.split(":", 1)
+        return getattr(importlib.import_module(module), name)
+
+    registry = ProductRegistry()
+    if config.registry_hook:
+        factory = cast(Callable[[], ProductRegistry], configured_hook(config.registry_hook))
+        registry = factory()
+        if not isinstance(registry, ProductRegistry):
+            raise ValueError("Registry hook must return ProductRegistry")
+    preflight: Preflight | None = None
+    if config.preflight_hook:
+        hook = configured_hook(config.preflight_hook)
+        if not inspect.iscoroutinefunction(hook):
+            raise ValueError("Preflight must be an async server-side function")
+        preflight = cast(Preflight, hook)
+    if bool(config.calculation_handler) != bool(config.code_version):
+        raise ValueError("Configure calculation handler and code version together")
+
+    def service(repository: JobRepository | None = None) -> AnalysisService:
+        result = AnalysisService(
+            registry,
+            repository,
+            code_version=config.code_version,
+            engine_enabled=bool(config.calculation_handler),
+            preflight=preflight,
+        )
+        if config.assistant_hook:
+            factory = cast(
+                Callable[[AnalysisService], FlashAssistant], configured_hook(config.assistant_hook)
+            )
+            result.assistant = factory(result)
+            if not isinstance(result.assistant, FlashAssistant):
+                raise ValueError("Assistant hook must return FlashAssistant")
+        return result
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        if config.database_url is None:
+            yield
+            return
+        try:
+            pool = await open_pool(config)
+        except Exception:
+            raise RuntimeError(
+                "Backend database startup failed; check migrations/configuration"
+            ) from None
+        try:
+            app.state.services = service(JobRepository(pool))
+            yield
+        finally:
+            await pool.close()
+
+    return create_app(service(), lifespan=lifespan, secure_cookies=config.secure_cookies)
 
 
 async def run_worker(settings: RuntimeSettings, once: bool = False) -> None:

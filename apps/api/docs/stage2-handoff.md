@@ -1,3 +1,5 @@
+> Исторический выпуск 0.2.0. Для текущего контракта используйте [README](../README.md) и [handoff](handoff-ml1-ml2.md); прежние профили и HTTP не являются production v2.
+
 # BACKEND 0.2.0 — PostgreSQL jobs and worker
 
 First region: **Leningrad Oblast**, then other regions through configuration. No production cities, institutions, services or scenarios were selected by backend. Domain data/calculation still comes from №5/№4, as described in [the handoff contract](handoff-ml1-ml2.md).

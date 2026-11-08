@@ -1,0 +1,32 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "evidence_refs": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 50,
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "rationale": {
+      "maxLength": 1000,
+      "minLength": 1,
+      "title": "Rationale",
+      "type": "string"
+    },
+    "template_id": {
+      "minLength": 1,
+      "title": "Template Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "template_id",
+    "rationale",
+    "evidence_refs"
+  ],
+  "title": "ScenarioSuggestion",
+  "type": "object"
+}

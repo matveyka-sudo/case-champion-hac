@@ -1,0 +1,3838 @@
+{
+  "components": {
+    "schemas": {
+      "AddTrip": {
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "rail",
+                  "bus",
+                  "walk"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
+          },
+          "new_trip_id": {
+            "minLength": 1,
+            "title": "New Trip Id",
+            "type": "string"
+          },
+          "route_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route Id"
+          },
+          "service_dates": {
+            "items": {
+              "format": "date",
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Service Dates",
+            "type": "array"
+          },
+          "service_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Id"
+          },
+          "stop_time_shift_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stop Time Shift Seconds"
+          },
+          "stop_times": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ScenarioStopTime"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stop Times"
+          },
+          "template_trip_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Trip Id"
+          },
+          "type": {
+            "const": "add_trip",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "new_trip_id",
+          "service_dates"
+        ],
+        "title": "AddTrip",
+        "type": "object"
+      },
+      "AnalysisRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "bundle_id": {
+            "minLength": 1,
+            "title": "Bundle Id",
+            "type": "string"
+          },
+          "include_case_results": {
+            "title": "Include Case Results",
+            "type": "boolean"
+          },
+          "origin_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Origin Ids",
+            "type": "array"
+          },
+          "profile_id": {
+            "enum": [
+              "regular",
+              "medical",
+              "intercity"
+            ],
+            "title": "Profile Id",
+            "type": "string"
+          },
+          "profile_version": {
+            "exclusiveMinimum": 0.0,
+            "title": "Profile Version",
+            "type": "integer"
+          },
+          "task_set_hash": {
+            "minLength": 1,
+            "title": "Task Set Hash",
+            "type": "string"
+          }
+        },
+        "required": [
+          "bundle_id",
+          "profile_id",
+          "profile_version",
+          "task_set_hash",
+          "origin_ids",
+          "include_case_results"
+        ],
+        "title": "AnalysisRequest",
+        "type": "object"
+      },
+      "Assumption": {
+        "additionalProperties": false,
+        "properties": {
+          "assumption_id": {
+            "minLength": 1,
+            "title": "Assumption Id",
+            "type": "string"
+          },
+          "basis": {
+            "enum": [
+              "scenario",
+              "verified"
+            ],
+            "title": "Basis",
+            "type": "string"
+          },
+          "description": {
+            "minLength": 1,
+            "title": "Description",
+            "type": "string"
+          },
+          "evidence_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Evidence Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "assumption_id",
+          "description",
+          "basis",
+          "evidence_ids"
+        ],
+        "title": "Assumption",
+        "type": "object"
+      },
+      "Budget": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "minimum": 0.0,
+            "title": "Amount",
+            "type": "number"
+          },
+          "currency": {
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "currency"
+        ],
+        "title": "Budget",
+        "type": "object"
+      },
+      "CaseResult": {
+        "additionalProperties": false,
+        "properties": {
+          "assumption_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Assumption Ids",
+            "type": "array"
+          },
+          "case_id": {
+            "minLength": 1,
+            "title": "Case Id",
+            "type": "string"
+          },
+          "constraint_results": {
+            "additionalProperties": {
+              "enum": [
+                "pass",
+                "fail",
+                "unknown",
+                "not_requested"
+              ],
+              "type": "string"
+            },
+            "propertyNames": {
+              "minLength": 1
+            },
+            "title": "Constraint Results",
+            "type": "object"
+          },
+          "evidence_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Evidence Ids",
+            "type": "array"
+          },
+          "journey_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Journey Ids",
+            "type": "array"
+          },
+          "overall_feasibility": {
+            "enum": [
+              "pass",
+              "fail",
+              "unknown"
+            ],
+            "title": "Overall Feasibility",
+            "type": "string"
+          },
+          "reason_codes": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Reason Codes",
+            "type": "array"
+          },
+          "weight": {
+            "exclusiveMinimum": 0.0,
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "case_id",
+          "weight",
+          "overall_feasibility",
+          "constraint_results",
+          "reason_codes",
+          "journey_ids",
+          "evidence_ids",
+          "assumption_ids"
+        ],
+        "title": "CaseResult",
+        "type": "object"
+      },
+      "CityScore": {
+        "additionalProperties": false,
+        "properties": {
+          "origin_id": {
+            "minLength": 1,
+            "title": "Origin Id",
+            "type": "string"
+          },
+          "resolved_weight_share": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Resolved Weight Share",
+            "type": "number"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "score_lower": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Score Lower",
+            "type": "number"
+          },
+          "score_upper": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Score Upper",
+            "type": "number"
+          },
+          "task_count": {
+            "exclusiveMinimum": 0.0,
+            "title": "Task Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "origin_id",
+          "score",
+          "score_lower",
+          "score_upper",
+          "task_count",
+          "resolved_weight_share"
+        ],
+        "title": "CityScore",
+        "type": "object"
+      },
+      "Comparison": {
+        "additionalProperties": false,
+        "properties": {
+          "assumption_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Assumption Ids",
+            "type": "array"
+          },
+          "base_run_ids": {
+            "additionalProperties": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "propertyNames": {
+              "enum": [
+                "regular",
+                "medical",
+                "intercity"
+              ]
+            },
+            "title": "Base Run Ids",
+            "type": "object"
+          },
+          "bundle_id": {
+            "minLength": 1,
+            "title": "Bundle Id",
+            "type": "string"
+          },
+          "code_version": {
+            "minLength": 1,
+            "title": "Code Version",
+            "type": "string"
+          },
+          "comparisons": {
+            "items": {
+              "$ref": "#/components/schemas/ComparisonEntry"
+            },
+            "title": "Comparisons",
+            "type": "array"
+          },
+          "evidence_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Evidence Ids",
+            "type": "array"
+          },
+          "operational_validation": {
+            "const": "not_verified",
+            "title": "Operational Validation",
+            "type": "string"
+          },
+          "operations": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "add_trip": "#/components/schemas/AddTrip",
+                  "shift_trip": "#/components/schemas/ShiftTrip"
+                },
+                "propertyName": "type"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/ShiftTrip"
+                },
+                {
+                  "$ref": "#/components/schemas/AddTrip"
+                }
+              ]
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Operations",
+            "type": "array"
+          },
+          "operations_hash": {
+            "minLength": 1,
+            "title": "Operations Hash",
+            "type": "string"
+          },
+          "params_hash": {
+            "minLength": 1,
+            "title": "Params Hash",
+            "type": "string"
+          },
+          "provenance": {
+            "items": {
+              "$ref": "#/components/schemas/Provenance"
+            },
+            "title": "Provenance",
+            "type": "array"
+          },
+          "resource_delta": {
+            "$ref": "#/components/schemas/ResourceDelta"
+          },
+          "result_hash": {
+            "minLength": 1,
+            "title": "Result Hash",
+            "type": "string"
+          },
+          "run_id": {
+            "minLength": 1,
+            "title": "Run Id",
+            "type": "string"
+          },
+          "scenario_id": {
+            "minLength": 1,
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "partial",
+              "insufficient_data"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "run_id",
+          "scenario_id",
+          "bundle_id",
+          "base_run_ids",
+          "status",
+          "operations",
+          "operations_hash",
+          "comparisons",
+          "resource_delta",
+          "operational_validation",
+          "provenance",
+          "evidence_ids",
+          "assumption_ids",
+          "code_version",
+          "params_hash",
+          "result_hash",
+          "warnings"
+        ],
+        "title": "Comparison",
+        "type": "object"
+      },
+      "ComparisonEntry": {
+        "additionalProperties": false,
+        "properties": {
+          "after": {
+            "anyOf": [
+              {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "maximum": 100.0,
+                    "minimum": 0.0,
+                    "type": "number"
+                  },
+                  {
+                    "maximum": 100.0,
+                    "minimum": 0.0,
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After"
+          },
+          "base_run_id": {
+            "minLength": 1,
+            "title": "Base Run Id",
+            "type": "string"
+          },
+          "before": {
+            "anyOf": [
+              {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "maximum": 100.0,
+                    "minimum": 0.0,
+                    "type": "number"
+                  },
+                  {
+                    "maximum": 100.0,
+                    "minimum": 0.0,
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before"
+          },
+          "confirmed_improved_cases": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed Improved Cases"
+          },
+          "confirmed_worse_cases": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed Worse Cases"
+          },
+          "delta_interval_conservative": {
+            "anyOf": [
+              {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta Interval Conservative"
+          },
+          "lower_bound_change": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lower Bound Change"
+          },
+          "origin_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin Id"
+          },
+          "profile_id": {
+            "enum": [
+              "regular",
+              "medical",
+              "intercity"
+            ],
+            "title": "Profile Id",
+            "type": "string"
+          },
+          "profile_version": {
+            "exclusiveMinimum": 0.0,
+            "title": "Profile Version",
+            "type": "integer"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "scenario_run_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario Run Id"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "partial",
+              "insufficient_data"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "task_set_hash": {
+            "minLength": 1,
+            "title": "Task Set Hash",
+            "type": "string"
+          },
+          "unresolved_cases": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unresolved Cases"
+          },
+          "upper_bound_change": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upper Bound Change"
+          },
+          "worst_worsened_case_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Worst Worsened Case Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "profile_id",
+          "profile_version",
+          "task_set_hash",
+          "base_run_id",
+          "scenario_run_id",
+          "origin_id",
+          "status",
+          "before",
+          "after",
+          "lower_bound_change",
+          "upper_bound_change",
+          "delta_interval_conservative",
+          "confirmed_improved_cases",
+          "confirmed_worse_cases",
+          "unresolved_cases",
+          "worst_worsened_case_ids",
+          "reason"
+        ],
+        "title": "ComparisonEntry",
+        "type": "object"
+      },
+      "CompletenessScope": {
+        "additionalProperties": false,
+        "properties": {
+          "destination_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Destination Ids",
+            "type": "array"
+          },
+          "modes": {
+            "items": {
+              "enum": [
+                "rail",
+                "bus",
+                "walk"
+              ],
+              "type": "string"
+            },
+            "title": "Modes",
+            "type": "array"
+          },
+          "origin_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Origin Ids",
+            "type": "array"
+          },
+          "valid_period": {
+            "$ref": "#/components/schemas/ValidityPeriod"
+          }
+        },
+        "required": [
+          "origin_ids",
+          "destination_ids",
+          "modes",
+          "valid_period"
+        ],
+        "title": "CompletenessScope",
+        "type": "object"
+      },
+      "Coverage": {
+        "additionalProperties": false,
+        "properties": {
+          "is_complete": {
+            "title": "Is Complete",
+            "type": "boolean"
+          },
+          "missing_fields": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Missing Fields",
+            "type": "array"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/CompletenessScope"
+          }
+        },
+        "required": [
+          "scope",
+          "is_complete",
+          "missing_fields"
+        ],
+        "title": "Coverage",
+        "type": "object"
+      },
+      "Destination": {
+        "additionalProperties": false,
+        "properties": {
+          "anchor_id": {
+            "minLength": 1,
+            "title": "Anchor Id",
+            "type": "string"
+          },
+          "city_id": {
+            "minLength": 1,
+            "title": "City Id",
+            "type": "string"
+          },
+          "destination_id": {
+            "minLength": 1,
+            "title": "Destination Id",
+            "type": "string"
+          },
+          "entrance_id": {
+            "minLength": 1,
+            "title": "Entrance Id",
+            "type": "string"
+          },
+          "evidence_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Evidence Ids",
+            "type": "array"
+          },
+          "lat": {
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Lon",
+            "type": "number"
+          },
+          "timezone": {
+            "minLength": 1,
+            "title": "Timezone",
+            "type": "string"
+          },
+          "type": {
+            "minLength": 1,
+            "title": "Type",
+            "type": "string"
+          },
+          "verification_state": {
+            "enum": [
+              "verified",
+              "absent",
+              "unknown"
+            ],
+            "title": "Verification State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "destination_id",
+          "city_id",
+          "anchor_id",
+          "entrance_id",
+          "lon",
+          "lat",
+          "timezone",
+          "type",
+          "verification_state",
+          "evidence_ids"
+        ],
+        "title": "Destination",
+        "type": "object"
+      },
+      "ErrorDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "enum": [
+              "invalid_request",
+              "unknown_id",
+              "incompatible_versions",
+              "idempotency_conflict",
+              "budget_exceeded",
+              "engine_unavailable",
+              "internal_error",
+              "method_not_allowed",
+              "job_timeout",
+              "job_cancelled",
+              "data_unavailable",
+              "unsupported_traffic_mode",
+              "provider_unavailable",
+              "unsupported_scenario"
+            ],
+            "title": "Code",
+            "type": "string"
+          },
+          "field_errors": {
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            },
+            "title": "Field Errors",
+            "type": "array"
+          },
+          "message": {
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "retryable": {
+            "title": "Retryable",
+            "type": "boolean"
+          },
+          "trace_id": {
+            "minLength": 1,
+            "title": "Trace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "field_errors",
+          "retryable",
+          "trace_id"
+        ],
+        "title": "ErrorDetail",
+        "type": "object"
+      },
+      "ErrorEnvelope": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "ErrorEnvelope",
+        "type": "object"
+      },
+      "Evidence": {
+        "additionalProperties": false,
+        "properties": {
+          "content_hash": {
+            "minLength": 1,
+            "title": "Content Hash",
+            "type": "string"
+          },
+          "evidence_id": {
+            "minLength": 1,
+            "title": "Evidence Id",
+            "type": "string"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "title": "Fetched At",
+            "type": "string"
+          },
+          "record_id": {
+            "minLength": 1,
+            "title": "Record Id",
+            "type": "string"
+          },
+          "source_id": {
+            "minLength": 1,
+            "title": "Source Id",
+            "type": "string"
+          },
+          "valid_period": {
+            "$ref": "#/components/schemas/ValidityPeriod"
+          },
+          "verification_state": {
+            "enum": [
+              "verified",
+              "absent",
+              "unknown"
+            ],
+            "title": "Verification State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "evidence_id",
+          "source_id",
+          "record_id",
+          "fetched_at",
+          "valid_period",
+          "content_hash",
+          "verification_state"
+        ],
+        "title": "Evidence",
+        "type": "object"
+      },
+      "FieldError": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "minLength": 1,
+            "title": "Code",
+            "type": "string"
+          },
+          "location": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "message": {
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "location",
+          "code",
+          "message"
+        ],
+        "title": "FieldError",
+        "type": "object"
+      },
+      "Health": {
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "const": "ok",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "Health",
+        "type": "object"
+      },
+      "Job": {
+        "additionalProperties": false,
+        "properties": {
+          "bundle_id": {
+            "minLength": 1,
+            "title": "Bundle Id",
+            "type": "string"
+          },
+          "code_version": {
+            "minLength": 1,
+            "title": "Code Version",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "input_hash": {
+            "minLength": 1,
+            "title": "Input Hash",
+            "type": "string"
+          },
+          "job_id": {
+            "minLength": 1,
+            "title": "Job Id",
+            "type": "string"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "trace_id": {
+            "minLength": 1,
+            "title": "Trace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id",
+          "status",
+          "trace_id",
+          "bundle_id",
+          "input_hash",
+          "code_version",
+          "created_at",
+          "started_at",
+          "finished_at",
+          "run_id",
+          "error"
+        ],
+        "title": "Job",
+        "type": "object"
+      },
+      "JobAccepted": {
+        "additionalProperties": false,
+        "properties": {
+          "job_id": {
+            "minLength": 1,
+            "title": "Job Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id",
+          "status"
+        ],
+        "title": "JobAccepted",
+        "type": "object"
+      },
+      "Journey": {
+        "additionalProperties": false,
+        "properties": {
+          "currency": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Z]{3}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "journey_id": {
+            "minLength": 1,
+            "title": "Journey Id",
+            "type": "string"
+          },
+          "legs": {
+            "items": {
+              "$ref": "#/components/schemas/Leg"
+            },
+            "minItems": 1,
+            "title": "Legs",
+            "type": "array"
+          },
+          "outbound_minutes": {
+            "minimum": 0.0,
+            "title": "Outbound Minutes",
+            "type": "number"
+          },
+          "return_minutes": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return Minutes"
+          },
+          "total_fare": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Fare"
+          },
+          "transfers": {
+            "minimum": 0.0,
+            "title": "Transfers",
+            "type": "integer"
+          },
+          "waiting_minutes": {
+            "minimum": 0.0,
+            "title": "Waiting Minutes",
+            "type": "number"
+          }
+        },
+        "required": [
+          "journey_id",
+          "legs",
+          "outbound_minutes",
+          "return_minutes",
+          "waiting_minutes",
+          "transfers",
+          "total_fare",
+          "currency"
+        ],
+        "title": "Journey",
+        "type": "object"
+      },
+      "JourneyRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "activity_basis": {
+            "anyOf": [
+              {
+                "enum": [
+                  "scenario",
+                  "verified"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activity Basis"
+          },
+          "activity_end": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activity End"
+          },
+          "activity_start": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activity Start"
+          },
+          "arrival_buffer_max_minutes": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arrival Buffer Max Minutes"
+          },
+          "arrival_buffer_min_minutes": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arrival Buffer Min Minutes"
+          },
+          "budget": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Budget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "bundle_id": {
+            "minLength": 1,
+            "title": "Bundle Id",
+            "type": "string"
+          },
+          "destination_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination Id"
+          },
+          "earliest_departure": {
+            "format": "date-time",
+            "title": "Earliest Departure",
+            "type": "string"
+          },
+          "max_access_walk_minutes": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Access Walk Minutes"
+          },
+          "max_one_way_minutes": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max One Way Minutes"
+          },
+          "max_transfers": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Transfers"
+          },
+          "origin_id": {
+            "minLength": 1,
+            "title": "Origin Id",
+            "type": "string"
+          },
+          "profile_id": {
+            "enum": [
+              "regular",
+              "medical",
+              "intercity"
+            ],
+            "title": "Profile Id",
+            "type": "string"
+          },
+          "profile_version": {
+            "exclusiveMinimum": 0.0,
+            "title": "Profile Version",
+            "type": "integer"
+          },
+          "require_step_free": {
+            "title": "Require Step Free",
+            "type": "boolean"
+          },
+          "return_by": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return By"
+          },
+          "service_date": {
+            "format": "date",
+            "title": "Service Date",
+            "type": "string"
+          },
+          "service_type_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Type Id"
+          }
+        },
+        "required": [
+          "max_one_way_minutes",
+          "max_transfers",
+          "max_access_walk_minutes",
+          "budget",
+          "require_step_free",
+          "profile_id",
+          "origin_id",
+          "service_date",
+          "earliest_departure",
+          "bundle_id",
+          "profile_version"
+        ],
+        "title": "JourneyRequest",
+        "type": "object"
+      },
+      "JourneyResult": {
+        "additionalProperties": false,
+        "properties": {
+          "assumption_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Assumption Ids",
+            "type": "array"
+          },
+          "assumptions": {
+            "items": {
+              "$ref": "#/components/schemas/Assumption"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "constraints": {
+            "additionalProperties": {
+              "enum": [
+                "pass",
+                "fail",
+                "unknown",
+                "not_requested"
+              ],
+              "type": "string"
+            },
+            "propertyNames": {
+              "minLength": 1
+            },
+            "title": "Constraints",
+            "type": "object"
+          },
+          "evidence_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Evidence Ids",
+            "type": "array"
+          },
+          "missing_fields": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Missing Fields",
+            "type": "array"
+          },
+          "optimality": {
+            "enum": [
+              "proven_in_scope",
+              "not_proven"
+            ],
+            "title": "Optimality",
+            "type": "string"
+          },
+          "overall_feasibility": {
+            "enum": [
+              "pass",
+              "fail",
+              "unknown"
+            ],
+            "title": "Overall Feasibility",
+            "type": "string"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/Provenance"
+          },
+          "reason_codes": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Reason Codes",
+            "type": "array"
+          },
+          "routes": {
+            "items": {
+              "$ref": "#/components/schemas/Journey"
+            },
+            "title": "Routes",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "partial",
+              "insufficient_data"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "routes",
+          "overall_feasibility",
+          "constraints",
+          "missing_fields",
+          "reason_codes",
+          "evidence_ids",
+          "assumptions",
+          "assumption_ids",
+          "provenance",
+          "optimality"
+        ],
+        "title": "JourneyResult",
+        "type": "object"
+      },
+      "Leg": {
+        "additionalProperties": false,
+        "properties": {
+          "arrival_at": {
+            "format": "date-time",
+            "title": "Arrival At",
+            "type": "string"
+          },
+          "departure_at": {
+            "format": "date-time",
+            "title": "Departure At",
+            "type": "string"
+          },
+          "duration_seconds": {
+            "minimum": 0.0,
+            "title": "Duration Seconds",
+            "type": "number"
+          },
+          "evidence_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Evidence Ids",
+            "type": "array"
+          },
+          "from_id": {
+            "minLength": 1,
+            "title": "From Id",
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "rail",
+              "bus",
+              "walk"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "to_id": {
+            "minLength": 1,
+            "title": "To Id",
+            "type": "string"
+          },
+          "trip_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trip Id"
+          }
+        },
+        "required": [
+          "mode",
+          "from_id",
+          "to_id",
+          "trip_id",
+          "departure_at",
+          "arrival_at",
+          "duration_seconds",
+          "evidence_ids"
+        ],
+        "title": "Leg",
+        "type": "object"
+      },
+      "Place": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "city",
+              "municipality",
+              "terminal",
+              "stop"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "lat": {
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Lon",
+            "type": "number"
+          },
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "place_id": {
+            "minLength": 1,
+            "title": "Place Id",
+            "type": "string"
+          },
+          "region_id": {
+            "minLength": 1,
+            "title": "Region Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "place_id",
+          "name",
+          "kind",
+          "region_id",
+          "lon",
+          "lat"
+        ],
+        "title": "Place",
+        "type": "object"
+      },
+      "ProfileConfig": {
+        "additionalProperties": false,
+        "properties": {
+          "assumption_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Assumption Ids",
+            "type": "array"
+          },
+          "basis": {
+            "enum": [
+              "scenario",
+              "verified"
+            ],
+            "title": "Basis",
+            "type": "string"
+          },
+          "destination_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Destination Ids",
+            "type": "array"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "evidence_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Evidence Ids",
+            "type": "array"
+          },
+          "half_life_minutes": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Half Life Minutes"
+          },
+          "horizon_hours": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Horizon Hours"
+          },
+          "metric_kind": {
+            "enum": [
+              "activity_feasibility",
+              "time_decay"
+            ],
+            "title": "Metric Kind",
+            "type": "string"
+          },
+          "modes": {
+            "items": {
+              "enum": [
+                "rail",
+                "bus",
+                "walk"
+              ],
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Modes",
+            "type": "array"
+          },
+          "profile_id": {
+            "enum": [
+              "regular",
+              "medical",
+              "intercity"
+            ],
+            "title": "Profile Id",
+            "type": "string"
+          },
+          "profile_version": {
+            "exclusiveMinimum": 0.0,
+            "title": "Profile Version",
+            "type": "integer"
+          },
+          "rules": {
+            "$ref": "#/components/schemas/TripRules"
+          },
+          "service_type_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Service Type Ids",
+            "type": "array"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "start_times": {
+            "items": {
+              "format": "time",
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Start Times",
+            "type": "array"
+          },
+          "study_area_id": {
+            "minLength": 1,
+            "title": "Study Area Id",
+            "type": "string"
+          },
+          "study_area_version": {
+            "exclusiveMinimum": 0.0,
+            "title": "Study Area Version",
+            "type": "integer"
+          },
+          "timezone": {
+            "minLength": 1,
+            "title": "Timezone",
+            "type": "string"
+          },
+          "weighting": {
+            "enum": [
+              "uniform",
+              "explicit"
+            ],
+            "title": "Weighting",
+            "type": "string"
+          }
+        },
+        "required": [
+          "profile_id",
+          "profile_version",
+          "study_area_id",
+          "study_area_version",
+          "metric_kind",
+          "start_date",
+          "end_date",
+          "timezone",
+          "start_times",
+          "destination_ids",
+          "service_type_ids",
+          "modes",
+          "rules",
+          "weighting",
+          "basis",
+          "assumption_ids",
+          "evidence_ids",
+          "half_life_minutes",
+          "horizon_hours"
+        ],
+        "title": "ProfileConfig",
+        "type": "object"
+      },
+      "ProfileResult": {
+        "additionalProperties": false,
+        "properties": {
+          "assumption_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Assumption Ids",
+            "type": "array"
+          },
+          "bundle_id": {
+            "minLength": 1,
+            "title": "Bundle Id",
+            "type": "string"
+          },
+          "case_results": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CaseResult"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Results"
+          },
+          "cities": {
+            "items": {
+              "$ref": "#/components/schemas/CityScore"
+            },
+            "title": "Cities",
+            "type": "array"
+          },
+          "code_version": {
+            "minLength": 1,
+            "title": "Code Version",
+            "type": "string"
+          },
+          "evidence_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Evidence Ids",
+            "type": "array"
+          },
+          "missing_fields": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Missing Fields",
+            "type": "array"
+          },
+          "params_hash": {
+            "minLength": 1,
+            "title": "Params Hash",
+            "type": "string"
+          },
+          "profile_id": {
+            "enum": [
+              "regular",
+              "medical",
+              "intercity"
+            ],
+            "title": "Profile Id",
+            "type": "string"
+          },
+          "profile_version": {
+            "exclusiveMinimum": 0.0,
+            "title": "Profile Version",
+            "type": "integer"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/Provenance"
+          },
+          "reason_codes": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Reason Codes",
+            "type": "array"
+          },
+          "result_hash": {
+            "minLength": 1,
+            "title": "Result Hash",
+            "type": "string"
+          },
+          "run_id": {
+            "minLength": 1,
+            "title": "Run Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "partial",
+              "insufficient_data"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "task_set_hash": {
+            "minLength": 1,
+            "title": "Task Set Hash",
+            "type": "string"
+          },
+          "unit": {
+            "const": "points_0_100",
+            "title": "Unit",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "run_id",
+          "status",
+          "bundle_id",
+          "profile_id",
+          "profile_version",
+          "task_set_hash",
+          "code_version",
+          "params_hash",
+          "result_hash",
+          "unit",
+          "provenance",
+          "evidence_ids",
+          "assumption_ids",
+          "warnings",
+          "cities"
+        ],
+        "title": "ProfileResult",
+        "type": "object"
+      },
+      "Provenance": {
+        "additionalProperties": false,
+        "properties": {
+          "bundle_id": {
+            "minLength": 1,
+            "title": "Bundle Id",
+            "type": "string"
+          },
+          "code_version": {
+            "minLength": 1,
+            "title": "Code Version",
+            "type": "string"
+          },
+          "completeness_scope": {
+            "minLength": 1,
+            "title": "Completeness Scope",
+            "type": "string"
+          },
+          "network_complete": {
+            "title": "Network Complete",
+            "type": "boolean"
+          },
+          "profile_id": {
+            "enum": [
+              "regular",
+              "medical",
+              "intercity"
+            ],
+            "title": "Profile Id",
+            "type": "string"
+          },
+          "profile_version": {
+            "exclusiveMinimum": 0.0,
+            "title": "Profile Version",
+            "type": "integer"
+          },
+          "search_complete": {
+            "title": "Search Complete",
+            "type": "boolean"
+          },
+          "task_set_hash": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Set Hash"
+          }
+        },
+        "required": [
+          "bundle_id",
+          "profile_id",
+          "profile_version",
+          "code_version",
+          "completeness_scope",
+          "network_complete",
+          "search_complete"
+        ],
+        "title": "Provenance",
+        "type": "object"
+      },
+      "ResourceDelta": {
+        "additionalProperties": false,
+        "properties": {
+          "departures": {
+            "title": "Departures",
+            "type": "integer"
+          },
+          "vehicle_minutes": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vehicle Minutes"
+          }
+        },
+        "required": [
+          "departures",
+          "vehicle_minutes"
+        ],
+        "title": "ResourceDelta",
+        "type": "object"
+      },
+      "ScenarioRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "base_run_ids": {
+            "additionalProperties": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "propertyNames": {
+              "enum": [
+                "regular",
+                "medical",
+                "intercity"
+              ]
+            },
+            "title": "Base Run Ids",
+            "type": "object"
+          },
+          "evaluate_profile_ids": {
+            "items": {
+              "enum": [
+                "regular",
+                "medical",
+                "intercity"
+              ],
+              "type": "string"
+            },
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Evaluate Profile Ids",
+            "type": "array"
+          },
+          "operations": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "add_trip": "#/components/schemas/AddTrip",
+                  "shift_trip": "#/components/schemas/ShiftTrip"
+                },
+                "propertyName": "type"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/ShiftTrip"
+                },
+                {
+                  "$ref": "#/components/schemas/AddTrip"
+                }
+              ]
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Operations",
+            "type": "array"
+          }
+        },
+        "required": [
+          "base_run_ids",
+          "evaluate_profile_ids",
+          "operations"
+        ],
+        "title": "ScenarioRequest",
+        "type": "object"
+      },
+      "ScenarioStopTime": {
+        "additionalProperties": false,
+        "properties": {
+          "arrival_seconds": {
+            "minimum": 0.0,
+            "title": "Arrival Seconds",
+            "type": "integer"
+          },
+          "departure_seconds": {
+            "minimum": 0.0,
+            "title": "Departure Seconds",
+            "type": "integer"
+          },
+          "dropoff": {
+            "title": "Dropoff",
+            "type": "boolean"
+          },
+          "pickup": {
+            "title": "Pickup",
+            "type": "boolean"
+          },
+          "sequence": {
+            "minimum": 0.0,
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "stop_id": {
+            "minLength": 1,
+            "title": "Stop Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stop_id",
+          "sequence",
+          "arrival_seconds",
+          "departure_seconds",
+          "pickup",
+          "dropoff"
+        ],
+        "title": "ScenarioStopTime",
+        "type": "object"
+      },
+      "ShiftTrip": {
+        "additionalProperties": false,
+        "properties": {
+          "delta_seconds": {
+            "maximum": 1800.0,
+            "minimum": -1800.0,
+            "title": "Delta Seconds",
+            "type": "integer"
+          },
+          "service_dates": {
+            "items": {
+              "format": "date",
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Service Dates",
+            "type": "array"
+          },
+          "trip_id": {
+            "minLength": 1,
+            "title": "Trip Id",
+            "type": "string"
+          },
+          "type": {
+            "const": "shift_trip",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "trip_id",
+          "service_dates",
+          "delta_seconds"
+        ],
+        "title": "ShiftTrip",
+        "type": "object"
+      },
+      "Source": {
+        "additionalProperties": false,
+        "properties": {
+          "license_status": {
+            "enum": [
+              "permitted",
+              "restricted",
+              "unknown"
+            ],
+            "title": "License Status",
+            "type": "string"
+          },
+          "publisher": {
+            "minLength": 1,
+            "title": "Publisher",
+            "type": "string"
+          },
+          "source_id": {
+            "minLength": 1,
+            "title": "Source Id",
+            "type": "string"
+          },
+          "url": {
+            "format": "uri",
+            "maxLength": 2083,
+            "minLength": 1,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_id",
+          "publisher",
+          "url",
+          "license_status"
+        ],
+        "title": "Source",
+        "type": "object"
+      },
+      "StudyArea": {
+        "additionalProperties": false,
+        "properties": {
+          "area_id": {
+            "minLength": 1,
+            "title": "Area Id",
+            "type": "string"
+          },
+          "area_version": {
+            "exclusiveMinimum": 0.0,
+            "title": "Area Version",
+            "type": "integer"
+          },
+          "basis": {
+            "enum": [
+              "scenario",
+              "verified"
+            ],
+            "title": "Basis",
+            "type": "string"
+          },
+          "city_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "City Ids",
+            "type": "array"
+          },
+          "demo_city_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Demo City Ids",
+            "type": "array"
+          },
+          "evidence_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Evidence Ids",
+            "type": "array"
+          },
+          "region_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Region Ids",
+            "type": "array"
+          },
+          "timezone": {
+            "minLength": 1,
+            "title": "Timezone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "area_id",
+          "area_version",
+          "region_ids",
+          "city_ids",
+          "demo_city_ids",
+          "timezone",
+          "basis",
+          "evidence_ids"
+        ],
+        "title": "StudyArea",
+        "type": "object"
+      },
+      "TripRules": {
+        "additionalProperties": false,
+        "properties": {
+          "budget": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Budget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "max_access_walk_minutes": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Access Walk Minutes"
+          },
+          "max_one_way_minutes": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max One Way Minutes"
+          },
+          "max_transfers": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Transfers"
+          },
+          "require_step_free": {
+            "title": "Require Step Free",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "max_one_way_minutes",
+          "max_transfers",
+          "max_access_walk_minutes",
+          "budget",
+          "require_step_free"
+        ],
+        "title": "TripRules",
+        "type": "object"
+      },
+      "ValidityPeriod": {
+        "additionalProperties": false,
+        "properties": {
+          "valid_from": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid To"
+          }
+        },
+        "required": [
+          "valid_from",
+          "valid_to"
+        ],
+        "title": "ValidityPeriod",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "A2 accessibility API",
+    "version": "0.2.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/analyses": {
+      "post": {
+        "operationId": "analyses_api_v1_analyses_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobAccepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Analyses"
+      }
+    },
+    "/api/v1/coverage": {
+      "get": {
+        "operationId": "coverage_api_v1_coverage_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "bundle_id",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Bundle Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Coverage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Coverage"
+      }
+    },
+    "/api/v1/destinations": {
+      "get": {
+        "operationId": "destinations_api_v1_destinations_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "bundle_id",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Bundle Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Destination"
+                  },
+                  "title": "Response Destinations Api V1 Destinations Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Destinations"
+      }
+    },
+    "/api/v1/evidence": {
+      "get": {
+        "operationId": "evidence_api_v1_evidence_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "bundle_id",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Bundle Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Evidence"
+                  },
+                  "title": "Response Evidence Api V1 Evidence Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Evidence"
+      }
+    },
+    "/api/v1/evidence/{evidence_id}": {
+      "get": {
+        "operationId": "evidence_record_api_v1_evidence__evidence_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "evidence_id",
+            "required": true,
+            "schema": {
+              "title": "Evidence Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "bundle_id",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Bundle Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Evidence"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Evidence Record"
+      }
+    },
+    "/api/v1/jobs/{job_id}": {
+      "get": {
+        "operationId": "job_api_v1_jobs__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Job"
+      }
+    },
+    "/api/v1/journeys": {
+      "post": {
+        "operationId": "journeys_api_v1_journeys_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JourneyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JourneyResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Journeys"
+      }
+    },
+    "/api/v1/places": {
+      "get": {
+        "operationId": "places_api_v1_places_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "bundle_id",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Bundle Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Place"
+                  },
+                  "title": "Response Places Api V1 Places Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Places"
+      }
+    },
+    "/api/v1/profiles": {
+      "get": {
+        "operationId": "profiles_api_v1_profiles_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProfileConfig"
+                  },
+                  "title": "Response Profiles Api V1 Profiles Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Profiles"
+      }
+    },
+    "/api/v1/runs/{run_id}": {
+      "get": {
+        "operationId": "run_api_v1_runs__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ProfileResult"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Comparison"
+                    }
+                  ],
+                  "title": "Response Run Api V1 Runs  Run Id  Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Run"
+      }
+    },
+    "/api/v1/runs/{run_id}/export": {
+      "get": {
+        "operationId": "export_api_v1_runs__run_id__export_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "default": "json",
+              "enum": [
+                "json",
+                "csv"
+              ],
+              "title": "Format",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {},
+              "text/csv": {}
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Export"
+      }
+    },
+    "/api/v1/scenario-analyses": {
+      "post": {
+        "operationId": "scenarios_api_v1_scenario_analyses_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobAccepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Scenarios"
+      }
+    },
+    "/api/v1/sources": {
+      "get": {
+        "operationId": "sources_api_v1_sources_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "bundle_id",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Bundle Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Source"
+                  },
+                  "title": "Response Sources Api V1 Sources Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Sources"
+      }
+    },
+    "/api/v1/study-areas": {
+      "get": {
+        "operationId": "study_areas_api_v1_study_areas_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StudyArea"
+                  },
+                  "title": "Response Study Areas Api V1 Study Areas Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Study Areas"
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health"
+      }
+    }
+  }
+}

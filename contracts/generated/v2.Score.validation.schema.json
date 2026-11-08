@@ -1,0 +1,377 @@
+{
+  "$defs": {
+    "ComponentRef": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "metric",
+            "score"
+          ],
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ],
+      "title": "ComponentRef",
+      "type": "object"
+    },
+    "PopulationBasis": {
+      "additionalProperties": false,
+      "properties": {
+        "coverage": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Coverage",
+          "type": "number"
+        },
+        "population": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Population"
+        },
+        "population_method": {
+          "minLength": 1,
+          "title": "Population Method",
+          "type": "string"
+        },
+        "unit": {
+          "const": "persons",
+          "title": "Unit",
+          "type": "string"
+        },
+        "unknown_positive_weight": {
+          "title": "Unknown Positive Weight",
+          "type": "boolean"
+        },
+        "year": {
+          "anyOf": [
+            {
+              "maximum": 2200,
+              "minimum": 1900,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Year"
+        }
+      },
+      "required": [
+        "population",
+        "population_method",
+        "year",
+        "coverage",
+        "unit",
+        "unknown_positive_weight"
+      ],
+      "title": "PopulationBasis",
+      "type": "object"
+    },
+    "SiteBasis": {
+      "additionalProperties": false,
+      "properties": {
+        "coverage": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Coverage",
+          "type": "number"
+        },
+        "site_count": {
+          "minimum": 0,
+          "title": "Site Count",
+          "type": "integer"
+        },
+        "weighting": {
+          "const": "equal_physical_sites",
+          "title": "Weighting",
+          "type": "string"
+        }
+      },
+      "required": [
+        "site_count",
+        "weighting",
+        "coverage"
+      ],
+      "title": "SiteBasis",
+      "type": "object"
+    },
+    "SubjectRef": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "anyOf": [
+            {
+              "enum": [
+                "adult_polyclinic",
+                "child_polyclinic",
+                "kindergarten",
+                "school",
+                "college_university",
+                "rail_terminal",
+                "bus_terminal",
+                "airport",
+                "shopping_center"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Category"
+        },
+        "destination_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Destination Id"
+        },
+        "kind": {
+          "enum": [
+            "sample_point",
+            "territory",
+            "category",
+            "freight_site",
+            "freight_node",
+            "connection",
+            "pipeline",
+            "city_pair"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "enum": [
+                "walk",
+                "public_transport",
+                "private_car",
+                "road",
+                "rail",
+                "air",
+                "water",
+                "mixed",
+                "pipeline"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mode"
+        },
+        "node_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node Id"
+        },
+        "origin_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Origin Id"
+        },
+        "point_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Point Id"
+        },
+        "site_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Site Id"
+        },
+        "territory_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Territory Id"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "SubjectRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "aggregation_basis": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PopulationBasis"
+        },
+        {
+          "$ref": "#/$defs/SiteBasis"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Aggregation Basis"
+    },
+    "completeness": {
+      "enum": [
+        "full",
+        "partial"
+      ],
+      "title": "Completeness",
+      "type": "string"
+    },
+    "components": {
+      "items": {
+        "$ref": "#/$defs/ComponentRef"
+      },
+      "title": "Components",
+      "type": "array"
+    },
+    "evidence_refs": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "methodology_version": {
+      "const": "a2-methodology-v3",
+      "title": "Methodology Version",
+      "type": "string"
+    },
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "ranking_eligible": {
+      "title": "Ranking Eligible",
+      "type": "boolean"
+    },
+    "reason_code": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Reason Code"
+    },
+    "score_id": {
+      "minLength": 1,
+      "title": "Score Id",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "available",
+        "unknown",
+        "not_applicable",
+        "methodology_pending"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "subject": {
+      "$ref": "#/$defs/SubjectRef"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Value"
+    }
+  },
+  "required": [
+    "score_id",
+    "name",
+    "value",
+    "status",
+    "completeness",
+    "methodology_version",
+    "reason_code",
+    "components",
+    "evidence_refs",
+    "subject",
+    "ranking_eligible"
+  ],
+  "title": "Score",
+  "type": "object"
+}

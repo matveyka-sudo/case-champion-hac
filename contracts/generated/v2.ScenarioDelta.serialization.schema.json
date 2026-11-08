@@ -1,0 +1,112 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "after_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "After Id"
+    },
+    "before_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Before Id"
+    },
+    "delta": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Delta"
+    },
+    "effect_id": {
+      "minLength": 1,
+      "title": "Effect Id",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "metric",
+        "score"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "outcome": {
+      "enum": [
+        "improved",
+        "worsened",
+        "unchanged",
+        "changed",
+        "unknown",
+        "new_connection"
+      ],
+      "title": "Outcome",
+      "type": "string"
+    },
+    "reason_code": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Reason Code"
+    },
+    "scope": {
+      "enum": [
+        "transport",
+        "pipeline"
+      ],
+      "title": "Scope",
+      "type": "string"
+    },
+    "sign_convention": {
+      "enum": [
+        "before_minus_after",
+        "after_minus_before"
+      ],
+      "title": "Sign Convention",
+      "type": "string"
+    },
+    "unit": {
+      "minLength": 1,
+      "title": "Unit",
+      "type": "string"
+    }
+  },
+  "required": [
+    "effect_id",
+    "kind",
+    "before_id",
+    "after_id",
+    "unit",
+    "delta",
+    "sign_convention",
+    "outcome",
+    "reason_code",
+    "scope"
+  ],
+  "title": "ScenarioDelta",
+  "type": "object"
+}

@@ -1,917 +1,528 @@
 {
   "components": {
     "schemas": {
-      "AddTrip": {
+      "AnalysisResult": {
         "additionalProperties": false,
         "properties": {
-          "mode": {
-            "anyOf": [
-              {
-                "enum": [
-                  "rail",
-                  "bus",
-                  "walk"
-                ],
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Mode"
-          },
-          "new_trip_id": {
+          "analysis_id": {
             "minLength": 1,
-            "title": "New Trip Id",
+            "title": "Analysis Id",
             "type": "string"
           },
-          "route_id": {
-            "anyOf": [
-              {
-                "minLength": 1,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Route Id"
-          },
-          "service_dates": {
-            "items": {
-              "format": "date",
-              "type": "string"
-            },
-            "minItems": 1,
-            "title": "Service Dates",
-            "type": "array"
-          },
-          "service_id": {
-            "anyOf": [
-              {
-                "minLength": 1,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Service Id"
-          },
-          "stop_time_shift_seconds": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Stop Time Shift Seconds"
-          },
-          "stop_times": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/ScenarioStopTime"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Stop Times"
-          },
-          "template_trip_id": {
-            "anyOf": [
-              {
-                "minLength": 1,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Template Trip Id"
-          },
-          "type": {
-            "const": "add_trip",
-            "title": "Type",
-            "type": "string"
-          }
-        },
-        "required": [
-          "type",
-          "new_trip_id",
-          "service_dates"
-        ],
-        "title": "AddTrip",
-        "type": "object"
-      },
-      "AnalysisRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "bundle_id": {
-            "minLength": 1,
-            "title": "Bundle Id",
-            "type": "string"
-          },
-          "include_case_results": {
-            "title": "Include Case Results",
-            "type": "boolean"
-          },
-          "origin_ids": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "minItems": 1,
-            "title": "Origin Ids",
-            "type": "array"
-          },
-          "profile_id": {
+          "analysis_kind": {
             "enum": [
-              "regular",
-              "medical",
-              "intercity"
+              "urban_passenger",
+              "intercity_passenger",
+              "urban_cargo",
+              "intercity_cargo"
             ],
-            "title": "Profile Id",
+            "title": "Analysis Kind",
             "type": "string"
           },
-          "profile_version": {
-            "exclusiveMinimum": 0.0,
-            "title": "Profile Version",
-            "type": "integer"
-          },
-          "task_set_hash": {
+          "config_hash": {
             "minLength": 1,
-            "title": "Task Set Hash",
-            "type": "string"
-          }
-        },
-        "required": [
-          "bundle_id",
-          "profile_id",
-          "profile_version",
-          "task_set_hash",
-          "origin_ids",
-          "include_case_results"
-        ],
-        "title": "AnalysisRequest",
-        "type": "object"
-      },
-      "Assumption": {
-        "additionalProperties": false,
-        "properties": {
-          "assumption_id": {
-            "minLength": 1,
-            "title": "Assumption Id",
+            "title": "Config Hash",
             "type": "string"
           },
-          "basis": {
-            "enum": [
-              "scenario",
-              "verified"
-            ],
-            "title": "Basis",
-            "type": "string"
+          "counts": {
+            "items": {
+              "$ref": "#/components/schemas/CountResult"
+            },
+            "title": "Counts",
+            "type": "array"
           },
-          "description": {
-            "minLength": 1,
-            "title": "Description",
-            "type": "string"
+          "evidence_refs": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            },
+            "title": "Evidence Refs",
+            "type": "array"
           },
-          "evidence_ids": {
+          "journeys": {
+            "items": {
+              "$ref": "#/components/schemas/JourneyResult"
+            },
+            "title": "Journeys",
+            "type": "array"
+          },
+          "last_returns": {
+            "items": {
+              "$ref": "#/components/schemas/LastReturn"
+            },
+            "title": "Last Returns",
+            "type": "array"
+          },
+          "limitations": {
             "items": {
               "minLength": 1,
               "type": "string"
             },
-            "title": "Evidence Ids",
-            "type": "array"
-          }
-        },
-        "required": [
-          "assumption_id",
-          "description",
-          "basis",
-          "evidence_ids"
-        ],
-        "title": "Assumption",
-        "type": "object"
-      },
-      "Budget": {
-        "additionalProperties": false,
-        "properties": {
-          "amount": {
-            "minimum": 0.0,
-            "title": "Amount",
-            "type": "number"
-          },
-          "currency": {
-            "pattern": "^[A-Z]{3}$",
-            "title": "Currency",
-            "type": "string"
-          }
-        },
-        "required": [
-          "amount",
-          "currency"
-        ],
-        "title": "Budget",
-        "type": "object"
-      },
-      "CaseResult": {
-        "additionalProperties": false,
-        "properties": {
-          "assumption_ids": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Assumption Ids",
+            "title": "Limitations",
             "type": "array"
           },
-          "case_id": {
-            "minLength": 1,
-            "title": "Case Id",
+          "methodology_version": {
+            "const": "a2-methodology-v3",
+            "title": "Methodology Version",
             "type": "string"
           },
-          "constraint_results": {
-            "additionalProperties": {
-              "enum": [
-                "pass",
-                "fail",
-                "unknown",
-                "not_requested"
-              ],
-              "type": "string"
-            },
-            "propertyNames": {
-              "minLength": 1
-            },
-            "title": "Constraint Results",
-            "type": "object"
-          },
-          "evidence_ids": {
+          "metrics": {
             "items": {
-              "minLength": 1,
-              "type": "string"
+              "$ref": "#/components/schemas/Metric"
             },
-            "title": "Evidence Ids",
+            "title": "Metrics",
             "type": "array"
           },
-          "journey_ids": {
+          "references": {
             "items": {
-              "minLength": 1,
-              "type": "string"
+              "$ref": "#/components/schemas/ReferenceResult"
             },
-            "title": "Journey Ids",
+            "title": "References",
             "type": "array"
           },
-          "overall_feasibility": {
-            "enum": [
-              "pass",
-              "fail",
-              "unknown"
-            ],
-            "title": "Overall Feasibility",
-            "type": "string"
-          },
-          "reason_codes": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
+          "request": {
+            "discriminator": {
+              "mapping": {
+                "intercity_cargo": "#/components/schemas/IntercityCargoRequest",
+                "intercity_passenger": "#/components/schemas/IntercityPassengerRequest",
+                "urban_cargo": "#/components/schemas/UrbanCargoRequest",
+                "urban_passenger": "#/components/schemas/UrbanPassengerRequest"
+              },
+              "propertyName": "analysis_kind"
             },
-            "title": "Reason Codes",
-            "type": "array"
-          },
-          "weight": {
-            "exclusiveMinimum": 0.0,
-            "title": "Weight",
-            "type": "number"
-          }
-        },
-        "required": [
-          "case_id",
-          "weight",
-          "overall_feasibility",
-          "constraint_results",
-          "reason_codes",
-          "journey_ids",
-          "evidence_ids",
-          "assumption_ids"
-        ],
-        "title": "CaseResult",
-        "type": "object"
-      },
-      "CityScore": {
-        "additionalProperties": false,
-        "properties": {
-          "origin_id": {
-            "minLength": 1,
-            "title": "Origin Id",
-            "type": "string"
-          },
-          "resolved_weight_share": {
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Resolved Weight Share",
-            "type": "number"
-          },
-          "score": {
-            "anyOf": [
+            "oneOf": [
               {
-                "maximum": 100.0,
-                "minimum": 0.0,
-                "type": "number"
+                "$ref": "#/components/schemas/UrbanPassengerRequest"
               },
               {
-                "type": "null"
+                "$ref": "#/components/schemas/IntercityPassengerRequest"
+              },
+              {
+                "$ref": "#/components/schemas/UrbanCargoRequest"
+              },
+              {
+                "$ref": "#/components/schemas/IntercityCargoRequest"
               }
             ],
-            "title": "Score"
-          },
-          "score_lower": {
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Score Lower",
-            "type": "number"
-          },
-          "score_upper": {
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Score Upper",
-            "type": "number"
-          },
-          "task_count": {
-            "exclusiveMinimum": 0.0,
-            "title": "Task Count",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "origin_id",
-          "score",
-          "score_lower",
-          "score_upper",
-          "task_count",
-          "resolved_weight_share"
-        ],
-        "title": "CityScore",
-        "type": "object"
-      },
-      "Comparison": {
-        "additionalProperties": false,
-        "properties": {
-          "assumption_ids": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Assumption Ids",
-            "type": "array"
-          },
-          "base_run_ids": {
-            "additionalProperties": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "propertyNames": {
-              "enum": [
-                "regular",
-                "medical",
-                "intercity"
-              ]
-            },
-            "title": "Base Run Ids",
-            "type": "object"
-          },
-          "bundle_id": {
-            "minLength": 1,
-            "title": "Bundle Id",
-            "type": "string"
-          },
-          "code_version": {
-            "minLength": 1,
-            "title": "Code Version",
-            "type": "string"
-          },
-          "comparisons": {
-            "items": {
-              "$ref": "#/components/schemas/ComparisonEntry"
-            },
-            "title": "Comparisons",
-            "type": "array"
-          },
-          "evidence_ids": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Evidence Ids",
-            "type": "array"
-          },
-          "operational_validation": {
-            "const": "not_verified",
-            "title": "Operational Validation",
-            "type": "string"
-          },
-          "operations": {
-            "items": {
-              "discriminator": {
-                "mapping": {
-                  "add_trip": "#/components/schemas/AddTrip",
-                  "shift_trip": "#/components/schemas/ShiftTrip"
-                },
-                "propertyName": "type"
-              },
-              "oneOf": [
-                {
-                  "$ref": "#/components/schemas/ShiftTrip"
-                },
-                {
-                  "$ref": "#/components/schemas/AddTrip"
-                }
-              ]
-            },
-            "maxItems": 10,
-            "minItems": 1,
-            "title": "Operations",
-            "type": "array"
-          },
-          "operations_hash": {
-            "minLength": 1,
-            "title": "Operations Hash",
-            "type": "string"
-          },
-          "params_hash": {
-            "minLength": 1,
-            "title": "Params Hash",
-            "type": "string"
-          },
-          "provenance": {
-            "items": {
-              "$ref": "#/components/schemas/Provenance"
-            },
-            "title": "Provenance",
-            "type": "array"
-          },
-          "resource_delta": {
-            "$ref": "#/components/schemas/ResourceDelta"
+            "title": "Request"
           },
           "result_hash": {
             "minLength": 1,
             "title": "Result Hash",
             "type": "string"
           },
-          "run_id": {
-            "minLength": 1,
-            "title": "Run Id",
+          "schema_version": {
+            "const": "2",
+            "title": "Schema Version",
             "type": "string"
           },
-          "scenario_id": {
+          "scores": {
+            "items": {
+              "$ref": "#/components/schemas/Score"
+            },
+            "title": "Scores",
+            "type": "array"
+          },
+          "snapshot_id": {
             "minLength": 1,
-            "title": "Scenario Id",
+            "title": "Snapshot Id",
             "type": "string"
           },
           "status": {
             "enum": [
-              "ok",
+              "available",
               "partial",
-              "insufficient_data"
+              "unknown"
             ],
             "title": "Status",
             "type": "string"
           },
-          "warnings": {
+          "traffic_mode": {
+            "enum": [
+              "static",
+              "typical",
+              "live",
+              "historical"
+            ],
+            "title": "Traffic Mode",
+            "type": "string"
+          },
+          "versions": {
+            "$ref": "#/components/schemas/VersionRefs"
+          }
+        },
+        "required": [
+          "schema_version",
+          "analysis_id",
+          "analysis_kind",
+          "request",
+          "snapshot_id",
+          "methodology_version",
+          "config_hash",
+          "traffic_mode",
+          "status",
+          "metrics",
+          "scores",
+          "evidence_refs",
+          "limitations",
+          "versions",
+          "journeys",
+          "references",
+          "counts",
+          "last_returns",
+          "result_hash"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      },
+      "BoundaryNodeSets": {
+        "additionalProperties": false,
+        "properties": {
+          "destination_node_ids": {
             "items": {
               "minLength": 1,
               "type": "string"
             },
-            "title": "Warnings",
+            "minItems": 1,
+            "title": "Destination Node Ids",
+            "type": "array"
+          },
+          "origin_node_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Origin Node Ids",
             "type": "array"
           }
         },
         "required": [
-          "run_id",
-          "scenario_id",
-          "bundle_id",
-          "base_run_ids",
-          "status",
-          "operations",
-          "operations_hash",
-          "comparisons",
-          "resource_delta",
-          "operational_validation",
-          "provenance",
-          "evidence_ids",
-          "assumption_ids",
-          "code_version",
-          "params_hash",
-          "result_hash",
-          "warnings"
+          "origin_node_ids",
+          "destination_node_ids"
         ],
-        "title": "Comparison",
+        "title": "BoundaryNodeSets",
         "type": "object"
       },
-      "ComparisonEntry": {
+      "Capabilities": {
         "additionalProperties": false,
         "properties": {
-          "after": {
-            "anyOf": [
-              {
-                "maxItems": 2,
-                "minItems": 2,
-                "prefixItems": [
-                  {
-                    "maximum": 100.0,
-                    "minimum": 0.0,
-                    "type": "number"
-                  },
-                  {
-                    "maximum": 100.0,
-                    "minimum": 0.0,
-                    "type": "number"
-                  }
-                ],
-                "type": "array"
+          "analyses": {
+            "items": {
+              "$ref": "#/components/schemas/KindCapability"
+            },
+            "title": "Analyses",
+            "type": "array"
+          },
+          "cargo_profiles": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "delivery": "#/components/schemas/DeliveryCargoProfile",
+                  "pipeline": "#/components/schemas/PipelineCargoProfile"
+                },
+                "propertyName": "kind"
               },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "After"
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/DeliveryCargoProfile"
+                },
+                {
+                  "$ref": "#/components/schemas/PipelineCargoProfile"
+                }
+              ]
+            },
+            "title": "Cargo Profiles",
+            "type": "array"
           },
-          "base_run_id": {
-            "minLength": 1,
-            "title": "Base Run Id",
-            "type": "string"
+          "categories": {
+            "items": {
+              "enum": [
+                "adult_polyclinic",
+                "child_polyclinic",
+                "kindergarten",
+                "school",
+                "college_university",
+                "rail_terminal",
+                "bus_terminal",
+                "airport",
+                "shopping_center"
+              ],
+              "type": "string"
+            },
+            "title": "Categories",
+            "type": "array"
           },
-          "before": {
-            "anyOf": [
-              {
-                "maxItems": 2,
-                "minItems": 2,
-                "prefixItems": [
-                  {
-                    "maximum": 100.0,
-                    "minimum": 0.0,
-                    "type": "number"
-                  },
-                  {
-                    "maximum": 100.0,
-                    "minimum": 0.0,
-                    "type": "number"
-                  }
-                ],
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Before"
-          },
-          "confirmed_improved_cases": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Confirmed Improved Cases"
-          },
-          "confirmed_worse_cases": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Confirmed Worse Cases"
-          },
-          "delta_interval_conservative": {
-            "anyOf": [
-              {
-                "maxItems": 2,
-                "minItems": 2,
-                "prefixItems": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "number"
-                  }
-                ],
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Delta Interval Conservative"
-          },
-          "lower_bound_change": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Lower Bound Change"
-          },
-          "origin_id": {
-            "anyOf": [
-              {
-                "minLength": 1,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Origin Id"
-          },
-          "profile_id": {
+          "default_traffic_mode": {
             "enum": [
-              "regular",
-              "medical",
-              "intercity"
+              "static",
+              "typical",
+              "live",
+              "historical"
             ],
-            "title": "Profile Id",
+            "title": "Default Traffic Mode",
             "type": "string"
           },
-          "profile_version": {
-            "exclusiveMinimum": 0.0,
-            "title": "Profile Version",
-            "type": "integer"
-          },
-          "reason": {
-            "anyOf": [
-              {
-                "minLength": 1,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reason"
-          },
-          "scenario_run_id": {
-            "anyOf": [
-              {
-                "minLength": 1,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Scenario Run Id"
-          },
-          "status": {
-            "enum": [
-              "ok",
-              "partial",
-              "insufficient_data"
-            ],
-            "title": "Status",
-            "type": "string"
-          },
-          "task_set_hash": {
-            "minLength": 1,
-            "title": "Task Set Hash",
-            "type": "string"
-          },
-          "unresolved_cases": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Unresolved Cases"
-          },
-          "upper_bound_change": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Upper Bound Change"
-          },
-          "worst_worsened_case_ids": {
+          "limitations": {
             "items": {
               "minLength": 1,
               "type": "string"
             },
-            "title": "Worst Worsened Case Ids",
+            "title": "Limitations",
             "type": "array"
+          },
+          "methodology": {
+            "$ref": "#/components/schemas/MethodologyRef"
+          },
+          "national_catalog_complete": {
+            "title": "National Catalog Complete",
+            "type": "boolean"
+          },
+          "pipeline_products": {
+            "items": {
+              "enum": [
+                "oil",
+                "oil_products",
+                "gas"
+              ],
+              "type": "string"
+            },
+            "title": "Pipeline Products",
+            "type": "array"
+          },
+          "schema_version": {
+            "const": "2",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "snapshots": {
+            "items": {
+              "$ref": "#/components/schemas/SnapshotAvailability"
+            },
+            "title": "Snapshots",
+            "type": "array"
+          },
+          "spec_version": {
+            "const": "2026-11-08.1",
+            "title": "Spec Version",
+            "type": "string"
+          },
+          "territory_catalog_available": {
+            "title": "Territory Catalog Available",
+            "type": "boolean"
+          },
+          "traffic_modes": {
+            "items": {
+              "enum": [
+                "static",
+                "typical",
+                "live",
+                "historical"
+              ],
+              "type": "string"
+            },
+            "title": "Traffic Modes",
+            "type": "array"
+          },
+          "urban_city_names": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Urban City Names",
+            "type": "array"
+          }
+        },
+        "required": [
+          "schema_version",
+          "spec_version",
+          "methodology",
+          "analyses",
+          "urban_city_names",
+          "categories",
+          "traffic_modes",
+          "default_traffic_mode",
+          "pipeline_products",
+          "territory_catalog_available",
+          "national_catalog_complete",
+          "cargo_profiles",
+          "limitations"
+        ],
+        "title": "Capabilities",
+        "type": "object"
+      },
+      "ComponentRef": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "metric",
+              "score"
+            ],
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id"
+        ],
+        "title": "ComponentRef",
+        "type": "object"
+      },
+      "CountResult": {
+        "additionalProperties": false,
+        "properties": {
+          "dependency_job_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dependency Job Id"
+          },
+          "evidence_refs": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "metric_id": {
+            "minLength": 1,
+            "title": "Metric Id",
+            "type": "string"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "unknown",
+              "not_applicable",
+              "pending"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "threshold_seconds": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Threshold Seconds"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "metric_id",
+          "threshold_seconds",
+          "value",
+          "status",
+          "reason_code",
+          "dependency_job_id",
+          "evidence_refs"
+        ],
+        "title": "CountResult",
+        "type": "object"
+      },
+      "DeliveryCargoProfile": {
+        "additionalProperties": false,
+        "properties": {
+          "food_class": {
+            "enum": [
+              "food",
+              "nonfood"
+            ],
+            "title": "Food Class",
+            "type": "string"
+          },
+          "handling_requirements": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Handling Requirements",
+            "type": "array"
+          },
+          "kind": {
+            "const": "delivery",
+            "title": "Kind",
+            "type": "string"
+          },
+          "profile_id": {
+            "minLength": 1,
+            "title": "Profile Id",
+            "type": "string"
+          },
+          "temperature_requirements": {
+            "$ref": "#/components/schemas/TemperatureRequirements"
+          },
+          "urgency": {
+            "enum": [
+              "urgent",
+              "ordinary",
+              "nonurgent"
+            ],
+            "title": "Urgency",
+            "type": "string"
+          },
+          "vehicle_constraints": {
+            "$ref": "#/components/schemas/VehicleConstraints"
           }
         },
         "required": [
           "profile_id",
-          "profile_version",
-          "task_set_hash",
-          "base_run_id",
-          "scenario_run_id",
-          "origin_id",
-          "status",
-          "before",
-          "after",
-          "lower_bound_change",
-          "upper_bound_change",
-          "delta_interval_conservative",
-          "confirmed_improved_cases",
-          "confirmed_worse_cases",
-          "unresolved_cases",
-          "worst_worsened_case_ids",
-          "reason"
+          "kind",
+          "food_class",
+          "urgency",
+          "temperature_requirements",
+          "handling_requirements",
+          "vehicle_constraints"
         ],
-        "title": "ComparisonEntry",
-        "type": "object"
-      },
-      "CompletenessScope": {
-        "additionalProperties": false,
-        "properties": {
-          "destination_ids": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Destination Ids",
-            "type": "array"
-          },
-          "modes": {
-            "items": {
-              "enum": [
-                "rail",
-                "bus",
-                "walk"
-              ],
-              "type": "string"
-            },
-            "title": "Modes",
-            "type": "array"
-          },
-          "origin_ids": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Origin Ids",
-            "type": "array"
-          },
-          "valid_period": {
-            "$ref": "#/components/schemas/ValidityPeriod"
-          }
-        },
-        "required": [
-          "origin_ids",
-          "destination_ids",
-          "modes",
-          "valid_period"
-        ],
-        "title": "CompletenessScope",
-        "type": "object"
-      },
-      "Coverage": {
-        "additionalProperties": false,
-        "properties": {
-          "is_complete": {
-            "title": "Is Complete",
-            "type": "boolean"
-          },
-          "missing_fields": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Missing Fields",
-            "type": "array"
-          },
-          "scope": {
-            "$ref": "#/components/schemas/CompletenessScope"
-          }
-        },
-        "required": [
-          "scope",
-          "is_complete",
-          "missing_fields"
-        ],
-        "title": "Coverage",
-        "type": "object"
-      },
-      "Destination": {
-        "additionalProperties": false,
-        "properties": {
-          "anchor_id": {
-            "minLength": 1,
-            "title": "Anchor Id",
-            "type": "string"
-          },
-          "city_id": {
-            "minLength": 1,
-            "title": "City Id",
-            "type": "string"
-          },
-          "destination_id": {
-            "minLength": 1,
-            "title": "Destination Id",
-            "type": "string"
-          },
-          "entrance_id": {
-            "minLength": 1,
-            "title": "Entrance Id",
-            "type": "string"
-          },
-          "evidence_ids": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Evidence Ids",
-            "type": "array"
-          },
-          "lat": {
-            "maximum": 90.0,
-            "minimum": -90.0,
-            "title": "Lat",
-            "type": "number"
-          },
-          "lon": {
-            "maximum": 180.0,
-            "minimum": -180.0,
-            "title": "Lon",
-            "type": "number"
-          },
-          "timezone": {
-            "minLength": 1,
-            "title": "Timezone",
-            "type": "string"
-          },
-          "type": {
-            "minLength": 1,
-            "title": "Type",
-            "type": "string"
-          },
-          "verification_state": {
-            "enum": [
-              "verified",
-              "absent",
-              "unknown"
-            ],
-            "title": "Verification State",
-            "type": "string"
-          }
-        },
-        "required": [
-          "destination_id",
-          "city_id",
-          "anchor_id",
-          "entrance_id",
-          "lon",
-          "lat",
-          "timezone",
-          "type",
-          "verification_state",
-          "evidence_ids"
-        ],
-        "title": "Destination",
+        "title": "DeliveryCargoProfile",
         "type": "object"
       },
       "ErrorDetail": {
         "additionalProperties": false,
         "properties": {
           "code": {
-            "enum": [
-              "invalid_request",
-              "unknown_id",
-              "incompatible_versions",
-              "idempotency_conflict",
-              "budget_exceeded",
-              "engine_unavailable",
-              "internal_error",
-              "method_not_allowed",
-              "job_timeout",
-              "job_cancelled"
-            ],
+            "minLength": 1,
             "title": "Code",
             "type": "string"
           },
@@ -927,22 +538,22 @@
             "title": "Message",
             "type": "string"
           },
+          "request_id": {
+            "minLength": 1,
+            "title": "Request Id",
+            "type": "string"
+          },
           "retryable": {
             "title": "Retryable",
             "type": "boolean"
-          },
-          "trace_id": {
-            "minLength": 1,
-            "title": "Trace Id",
-            "type": "string"
           }
         },
         "required": [
           "code",
           "message",
           "field_errors",
-          "retryable",
-          "trace_id"
+          "request_id",
+          "retryable"
         ],
         "title": "ErrorDetail",
         "type": "object"
@@ -960,27 +571,34 @@
         "title": "ErrorEnvelope",
         "type": "object"
       },
-      "Evidence": {
+      "EvidenceRef": {
         "additionalProperties": false,
         "properties": {
-          "content_hash": {
-            "minLength": 1,
-            "title": "Content Hash",
-            "type": "string"
-          },
           "evidence_id": {
             "minLength": 1,
             "title": "Evidence Id",
             "type": "string"
           },
-          "fetched_at": {
+          "observed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed At"
+          },
+          "retrieved_at": {
             "format": "date-time",
-            "title": "Fetched At",
+            "title": "Retrieved At",
             "type": "string"
           },
-          "record_id": {
+          "section": {
             "minLength": 1,
-            "title": "Record Id",
+            "title": "Section",
             "type": "string"
           },
           "source_id": {
@@ -988,29 +606,130 @@
             "title": "Source Id",
             "type": "string"
           },
-          "valid_period": {
-            "$ref": "#/components/schemas/ValidityPeriod"
-          },
-          "verification_state": {
-            "enum": [
-              "verified",
-              "absent",
-              "unknown"
-            ],
-            "title": "Verification State",
+          "url": {
+            "format": "uri",
+            "maxLength": 2083,
+            "minLength": 1,
+            "title": "Url",
             "type": "string"
           }
         },
         "required": [
           "evidence_id",
           "source_id",
-          "record_id",
-          "fetched_at",
-          "valid_period",
-          "content_hash",
-          "verification_state"
+          "url",
+          "retrieved_at",
+          "observed_at",
+          "section"
         ],
-        "title": "Evidence",
+        "title": "EvidenceRef",
+        "type": "object"
+      },
+      "Explanation": {
+        "additionalProperties": false,
+        "properties": {
+          "analysis_id": {
+            "minLength": 1,
+            "title": "Analysis Id",
+            "type": "string"
+          },
+          "analysis_result_hash": {
+            "minLength": 1,
+            "title": "Analysis Result Hash",
+            "type": "string"
+          },
+          "evidence_refs": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "maxItems": 20,
+            "title": "Findings",
+            "type": "array"
+          },
+          "limitations": {
+            "items": {
+              "maxLength": 1000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Limitations",
+            "type": "array"
+          },
+          "model_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Id"
+          },
+          "proposals": {
+            "items": {
+              "$ref": "#/components/schemas/ScenarioSuggestion"
+            },
+            "maxItems": 10,
+            "title": "Proposals",
+            "type": "array"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "request_id": {
+            "minLength": 1,
+            "title": "Request Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": "2",
+            "default": "2",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "generated",
+              "template"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "analysis_id",
+          "findings",
+          "proposals",
+          "evidence_refs",
+          "limitations",
+          "analysis_result_hash",
+          "request_id",
+          "status",
+          "model_id",
+          "reason_code"
+        ],
+        "title": "Explanation",
         "type": "object"
       },
       "FieldError": {
@@ -1042,6 +761,112 @@
         "title": "FieldError",
         "type": "object"
       },
+      "Finding": {
+        "additionalProperties": false,
+        "properties": {
+          "claims": {
+            "items": {
+              "$ref": "#/components/schemas/NumericClaim"
+            },
+            "maxItems": 20,
+            "title": "Claims",
+            "type": "array"
+          },
+          "evidence_refs": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "metric_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Metric Ids",
+            "type": "array"
+          },
+          "text": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "metric_ids",
+          "evidence_refs",
+          "claims"
+        ],
+        "title": "Finding",
+        "type": "object"
+      },
+      "FixedParameters": {
+        "additionalProperties": false,
+        "properties": {
+          "demand_evidence": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Demand Evidence",
+            "type": "array"
+          },
+          "resource_constraints": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Resource Constraints",
+            "type": "array"
+          },
+          "resource_evidence": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Resource Evidence",
+            "type": "array"
+          },
+          "service_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Service Ids",
+            "type": "array"
+          },
+          "shift_seconds": {
+            "title": "Shift Seconds",
+            "type": "integer"
+          },
+          "turnaround_evidence": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Turnaround Evidence",
+            "type": "array"
+          }
+        },
+        "required": [
+          "service_ids",
+          "shift_seconds",
+          "demand_evidence",
+          "resource_evidence",
+          "turnaround_evidence",
+          "resource_constraints"
+        ],
+        "title": "FixedParameters",
+        "type": "object"
+      },
       "Health": {
         "additionalProperties": false,
         "properties": {
@@ -1057,18 +882,356 @@
         "title": "Health",
         "type": "object"
       },
-      "Job": {
+      "IntercityCargoRequest": {
         "additionalProperties": false,
         "properties": {
-          "bundle_id": {
-            "minLength": 1,
-            "title": "Bundle Id",
+          "analysis_kind": {
+            "const": "intercity_cargo",
+            "title": "Analysis Kind",
             "type": "string"
           },
-          "code_version": {
+          "cargo_modes": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "road",
+                    "rail",
+                    "air",
+                    "water",
+                    "mixed",
+                    "pipeline"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cargo Modes"
+          },
+          "cargo_profile_id": {
             "minLength": 1,
-            "title": "Code Version",
+            "title": "Cargo Profile Id",
             "type": "string"
+          },
+          "cargo_transport": {
+            "enum": [
+              "multimodal",
+              "pipeline"
+            ],
+            "title": "Cargo Transport",
+            "type": "string"
+          },
+          "departure_at": {
+            "format": "date-time",
+            "title": "Departure At",
+            "type": "string"
+          },
+          "destination_id": {
+            "minLength": 1,
+            "title": "Destination Id",
+            "type": "string"
+          },
+          "destination_node_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination Node Ids"
+          },
+          "methodology": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MethodologyRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "origin_id": {
+            "minLength": 1,
+            "title": "Origin Id",
+            "type": "string"
+          },
+          "origin_node_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin Node Ids"
+          },
+          "pipeline_product": {
+            "anyOf": [
+              {
+                "enum": [
+                  "oil",
+                  "oil_products",
+                  "gas"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pipeline Product"
+          },
+          "schema_version": {
+            "const": "2",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot Id"
+          },
+          "territory_level": {
+            "enum": [
+              "city",
+              "region"
+            ],
+            "title": "Territory Level",
+            "type": "string"
+          },
+          "traffic_mode": {
+            "enum": [
+              "static",
+              "typical",
+              "live",
+              "historical"
+            ],
+            "title": "Traffic Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "departure_at",
+          "traffic_mode",
+          "territory_level",
+          "origin_id",
+          "destination_id",
+          "analysis_kind",
+          "cargo_profile_id",
+          "cargo_transport"
+        ],
+        "title": "IntercityCargoRequest",
+        "type": "object"
+      },
+      "IntercityPassengerRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "analysis_kind": {
+            "const": "intercity_passenger",
+            "title": "Analysis Kind",
+            "type": "string"
+          },
+          "departure_at": {
+            "format": "date-time",
+            "title": "Departure At",
+            "type": "string"
+          },
+          "destination_id": {
+            "minLength": 1,
+            "title": "Destination Id",
+            "type": "string"
+          },
+          "destination_node_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination Node Ids"
+          },
+          "methodology": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MethodologyRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "origin_id": {
+            "minLength": 1,
+            "title": "Origin Id",
+            "type": "string"
+          },
+          "origin_node_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin Node Ids"
+          },
+          "passenger_modes": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "road",
+                    "rail",
+                    "air",
+                    "water",
+                    "mixed",
+                    "private_car"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Passenger Modes"
+          },
+          "schema_version": {
+            "const": "2",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot Id"
+          },
+          "territory_level": {
+            "enum": [
+              "city",
+              "region"
+            ],
+            "title": "Territory Level",
+            "type": "string"
+          },
+          "traffic_mode": {
+            "enum": [
+              "static",
+              "typical",
+              "live",
+              "historical"
+            ],
+            "title": "Traffic Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "departure_at",
+          "traffic_mode",
+          "territory_level",
+          "origin_id",
+          "destination_id",
+          "analysis_kind"
+        ],
+        "title": "IntercityPassengerRequest",
+        "type": "object"
+      },
+      "JobAccepted": {
+        "additionalProperties": false,
+        "properties": {
+          "job_id": {
+            "minLength": 1,
+            "title": "Job Id",
+            "type": "string"
+          },
+          "poll_after_seconds": {
+            "default": 2,
+            "minimum": 1.0,
+            "title": "Poll After Seconds",
+            "type": "integer"
+          },
+          "request_id": {
+            "minLength": 1,
+            "title": "Request Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id",
+          "status",
+          "request_id"
+        ],
+        "title": "JobAccepted",
+        "type": "object"
+      },
+      "JobView": {
+        "additionalProperties": false,
+        "properties": {
+          "analysis_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Id"
           },
           "created_at": {
             "format": "date-time",
@@ -1097,17 +1260,23 @@
             ],
             "title": "Finished At"
           },
-          "input_hash": {
-            "minLength": 1,
-            "title": "Input Hash",
-            "type": "string"
-          },
           "job_id": {
             "minLength": 1,
             "title": "Job Id",
             "type": "string"
           },
-          "run_id": {
+          "poll_after_seconds": {
+            "default": 2,
+            "minimum": 1.0,
+            "title": "Poll After Seconds",
+            "type": "integer"
+          },
+          "request_id": {
+            "minLength": 1,
+            "title": "Request Id",
+            "type": "string"
+          },
+          "scenario_run_id": {
             "anyOf": [
               {
                 "minLength": 1,
@@ -1117,7 +1286,7 @@
                 "type": "null"
               }
             ],
-            "title": "Run Id"
+            "title": "Scenario Run Id"
           },
           "started_at": {
             "anyOf": [
@@ -1141,70 +1310,112 @@
             ],
             "title": "Status",
             "type": "string"
-          },
-          "trace_id": {
-            "minLength": 1,
-            "title": "Trace Id",
-            "type": "string"
           }
         },
         "required": [
           "job_id",
           "status",
-          "trace_id",
-          "bundle_id",
-          "input_hash",
-          "code_version",
+          "request_id",
           "created_at",
           "started_at",
           "finished_at",
-          "run_id",
+          "analysis_id",
+          "scenario_run_id",
           "error"
         ],
-        "title": "Job",
+        "title": "JobView",
         "type": "object"
       },
-      "JobAccepted": {
+      "JourneyResult": {
         "additionalProperties": false,
         "properties": {
-          "job_id": {
-            "minLength": 1,
-            "title": "Job Id",
-            "type": "string"
-          },
-          "status": {
-            "enum": [
-              "queued",
-              "running",
-              "succeeded",
-              "failed",
-              "cancelled"
-            ],
-            "title": "Status",
-            "type": "string"
-          }
-        },
-        "required": [
-          "job_id",
-          "status"
-        ],
-        "title": "JobAccepted",
-        "type": "object"
-      },
-      "Journey": {
-        "additionalProperties": false,
-        "properties": {
-          "currency": {
+          "arrival_at": {
             "anyOf": [
               {
-                "pattern": "^[A-Z]{3}$",
+                "format": "date-time",
                 "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Currency"
+            "title": "Arrival At"
+          },
+          "completeness": {
+            "enum": [
+              "full",
+              "partial"
+            ],
+            "title": "Completeness",
+            "type": "string"
+          },
+          "departure_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Departure At"
+          },
+          "destination_node_id": {
+            "minLength": 1,
+            "title": "Destination Node Id",
+            "type": "string"
+          },
+          "destination_object_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination Object Id"
+          },
+          "evidence_refs": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "geometry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LineGeometry"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "geometry_kind": {
+            "enum": [
+              "actual",
+              "schematic",
+              "none"
+            ],
+            "title": "Geometry Kind",
+            "type": "string"
+          },
+          "initial_wait_seconds": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Initial Wait Seconds"
           },
           "journey_id": {
             "minLength": 1,
@@ -1215,145 +1426,27 @@
             "items": {
               "$ref": "#/components/schemas/Leg"
             },
-            "minItems": 1,
             "title": "Legs",
             "type": "array"
           },
-          "outbound_minutes": {
-            "minimum": 0.0,
-            "title": "Outbound Minutes",
-            "type": "number"
-          },
-          "return_minutes": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Return Minutes"
-          },
-          "total_fare": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total Fare"
-          },
-          "transfers": {
-            "minimum": 0.0,
-            "title": "Transfers",
-            "type": "integer"
-          },
-          "waiting_minutes": {
-            "minimum": 0.0,
-            "title": "Waiting Minutes",
-            "type": "number"
-          }
-        },
-        "required": [
-          "journey_id",
-          "legs",
-          "outbound_minutes",
-          "return_minutes",
-          "waiting_minutes",
-          "transfers",
-          "total_fare",
-          "currency"
-        ],
-        "title": "Journey",
-        "type": "object"
-      },
-      "JourneyRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "activity_basis": {
-            "anyOf": [
-              {
-                "enum": [
-                  "scenario",
-                  "verified"
-                ],
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Activity Basis"
-          },
-          "activity_end": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Activity End"
-          },
-          "activity_start": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Activity Start"
-          },
-          "arrival_buffer_max_minutes": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Arrival Buffer Max Minutes"
-          },
-          "arrival_buffer_min_minutes": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Arrival Buffer Min Minutes"
-          },
-          "budget": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Budget"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "bundle_id": {
+          "origin_node_id": {
             "minLength": 1,
-            "title": "Bundle Id",
+            "title": "Origin Node Id",
             "type": "string"
           },
-          "destination_id": {
+          "path_seconds": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path Seconds"
+          },
+          "point_id": {
             "anyOf": [
               {
                 "minLength": 1,
@@ -1363,14 +1456,68 @@
                 "type": "null"
               }
             ],
-            "title": "Destination Id"
+            "title": "Point Id"
           },
-          "earliest_departure": {
+          "reason_code": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "reference_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Id"
+          },
+          "requested_departure_at": {
             "format": "date-time",
-            "title": "Earliest Departure",
+            "title": "Requested Departure At",
             "type": "string"
           },
-          "max_access_walk_minutes": {
+          "scope": {
+            "enum": [
+              "urban",
+              "intercity"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "minLength": 1,
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "unknown",
+              "not_applicable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "time_kind": {
+            "enum": [
+              "movement",
+              "complete_chain"
+            ],
+            "title": "Time Kind",
+            "type": "string"
+          },
+          "total_seconds": {
             "anyOf": [
               {
                 "minimum": 0.0,
@@ -1380,9 +1527,9 @@
                 "type": "null"
               }
             ],
-            "title": "Max Access Walk Minutes"
+            "title": "Total Seconds"
           },
-          "max_one_way_minutes": {
+          "total_wait_seconds": {
             "anyOf": [
               {
                 "minimum": 0.0,
@@ -1392,9 +1539,976 @@
                 "type": "null"
               }
             ],
-            "title": "Max One Way Minutes"
+            "title": "Total Wait Seconds"
           },
-          "max_transfers": {
+          "traffic_mode": {
+            "enum": [
+              "static",
+              "typical",
+              "live",
+              "historical"
+            ],
+            "title": "Traffic Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "journey_id",
+          "scope",
+          "origin_node_id",
+          "destination_node_id",
+          "requested_departure_at",
+          "departure_at",
+          "arrival_at",
+          "total_seconds",
+          "initial_wait_seconds",
+          "path_seconds",
+          "total_wait_seconds",
+          "legs",
+          "geometry",
+          "geometry_kind",
+          "status",
+          "reason_code",
+          "snapshot_id",
+          "completeness",
+          "traffic_mode",
+          "time_kind",
+          "reference_id",
+          "destination_object_id",
+          "evidence_refs"
+        ],
+        "title": "JourneyResult",
+        "type": "object"
+      },
+      "KindCapability": {
+        "additionalProperties": false,
+        "properties": {
+          "analysis_kind": {
+            "enum": [
+              "urban_passenger",
+              "intercity_passenger",
+              "urban_cargo",
+              "intercity_cargo"
+            ],
+            "title": "Analysis Kind",
+            "type": "string"
+          },
+          "calculation_available": {
+            "title": "Calculation Available",
+            "type": "boolean"
+          },
+          "contract_available": {
+            "title": "Contract Available",
+            "type": "boolean"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          }
+        },
+        "required": [
+          "analysis_kind",
+          "contract_available",
+          "calculation_available",
+          "reason_code"
+        ],
+        "title": "KindCapability",
+        "type": "object"
+      },
+      "LastReturn": {
+        "additionalProperties": false,
+        "properties": {
+          "arrival_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arrival At"
+          },
+          "destination_object_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination Object Id"
+          },
+          "evidence_refs": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "first_departure_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Departure At"
+          },
+          "journey_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Journey Id"
+          },
+          "leave_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Leave At"
+          },
+          "point_id": {
+            "minLength": 1,
+            "title": "Point Id",
+            "type": "string"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "service_date": {
+            "format": "date",
+            "title": "Service Date",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "unknown",
+              "not_applicable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "timezone": {
+            "minLength": 1,
+            "title": "Timezone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "point_id",
+          "destination_object_id",
+          "journey_id",
+          "status",
+          "reason_code",
+          "service_date",
+          "timezone",
+          "leave_at",
+          "first_departure_at",
+          "arrival_at",
+          "evidence_refs"
+        ],
+        "title": "LastReturn",
+        "type": "object"
+      },
+      "Leg": {
+        "additionalProperties": false,
+        "properties": {
+          "duration_seconds": {
+            "minimum": 0.0,
+            "title": "Duration Seconds",
+            "type": "number"
+          },
+          "end_at": {
+            "format": "date-time",
+            "title": "End At",
+            "type": "string"
+          },
+          "evidence_refs": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "from_node_id": {
+            "minLength": 1,
+            "title": "From Node Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "walk",
+              "ride",
+              "wait_initial",
+              "wait_transfer",
+              "handling",
+              "transfer_operation"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "walk",
+              "public_transport",
+              "private_car",
+              "road",
+              "rail",
+              "air",
+              "water",
+              "mixed"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "service_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Id"
+          },
+          "start_at": {
+            "format": "date-time",
+            "title": "Start At",
+            "type": "string"
+          },
+          "to_node_id": {
+            "minLength": 1,
+            "title": "To Node Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode",
+          "kind",
+          "from_node_id",
+          "to_node_id",
+          "start_at",
+          "end_at",
+          "duration_seconds",
+          "service_id",
+          "evidence_refs"
+        ],
+        "title": "Leg",
+        "type": "object"
+      },
+      "LineGeometry": {
+        "additionalProperties": false,
+        "properties": {
+          "coordinates": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            "minItems": 2,
+            "title": "Coordinates",
+            "type": "array"
+          },
+          "evidence_refs": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "type": {
+            "const": "LineString",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "coordinates",
+          "evidence_refs"
+        ],
+        "title": "LineGeometry",
+        "type": "object"
+      },
+      "MethodologyRef": {
+        "additionalProperties": false,
+        "properties": {
+          "config_hash": {
+            "minLength": 1,
+            "title": "Config Hash",
+            "type": "string"
+          },
+          "reference_profile": {
+            "const": "edge-calibrated-v1",
+            "default": "edge-calibrated-v1",
+            "title": "Reference Profile",
+            "type": "string"
+          },
+          "version": {
+            "const": "a2-methodology-v3",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "config_hash"
+        ],
+        "title": "MethodologyRef",
+        "type": "object"
+      },
+      "Metric": {
+        "additionalProperties": false,
+        "properties": {
+          "completeness": {
+            "enum": [
+              "full",
+              "partial"
+            ],
+            "title": "Completeness",
+            "type": "string"
+          },
+          "dependency_job_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dependency Job Id"
+          },
+          "journey_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Journey Id"
+          },
+          "metric_id": {
+            "minLength": 1,
+            "title": "Metric Id",
+            "type": "string"
+          },
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "population_basis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PopulationBasis"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "site_basis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SiteBasis"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_refs": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Source Refs",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "unknown",
+              "not_applicable",
+              "methodology_pending",
+              "pending"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/SubjectRef"
+          },
+          "time_kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "movement",
+                  "complete_chain"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Kind"
+          },
+          "unit": {
+            "minLength": 1,
+            "title": "Unit",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "metric_id",
+          "name",
+          "value",
+          "unit",
+          "status",
+          "reason_code",
+          "source_refs",
+          "subject",
+          "completeness"
+        ],
+        "title": "Metric",
+        "type": "object"
+      },
+      "NumericClaim": {
+        "additionalProperties": false,
+        "properties": {
+          "metric_id": {
+            "minLength": 1,
+            "title": "Metric Id",
+            "type": "string"
+          },
+          "unit": {
+            "minLength": 1,
+            "title": "Unit",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "metric_id",
+          "value",
+          "unit"
+        ],
+        "title": "NumericClaim",
+        "type": "object"
+      },
+      "PipelineCargoProfile": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "pipeline",
+            "title": "Kind",
+            "type": "string"
+          },
+          "product": {
+            "enum": [
+              "oil",
+              "oil_products",
+              "gas"
+            ],
+            "title": "Product",
+            "type": "string"
+          },
+          "profile_id": {
+            "minLength": 1,
+            "title": "Profile Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "profile_id",
+          "kind",
+          "product"
+        ],
+        "title": "PipelineCargoProfile",
+        "type": "object"
+      },
+      "PopulationBasis": {
+        "additionalProperties": false,
+        "properties": {
+          "coverage": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Coverage",
+            "type": "number"
+          },
+          "population": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Population"
+          },
+          "population_method": {
+            "minLength": 1,
+            "title": "Population Method",
+            "type": "string"
+          },
+          "unit": {
+            "const": "persons",
+            "title": "Unit",
+            "type": "string"
+          },
+          "unknown_positive_weight": {
+            "title": "Unknown Positive Weight",
+            "type": "boolean"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "maximum": 2200.0,
+                "minimum": 1900.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "population",
+          "population_method",
+          "year",
+          "coverage",
+          "unit",
+          "unknown_positive_weight"
+        ],
+        "title": "PopulationBasis",
+        "type": "object"
+      },
+      "ReferenceResult": {
+        "additionalProperties": false,
+        "properties": {
+          "boundary_node_sets": {
+            "$ref": "#/components/schemas/BoundaryNodeSets"
+          },
+          "calibration_evidence": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Calibration Evidence",
+            "type": "array"
+          },
+          "completeness": {
+            "enum": [
+              "full",
+              "partial"
+            ],
+            "title": "Completeness",
+            "type": "string"
+          },
+          "edges": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Edges",
+            "type": "array"
+          },
+          "graph_version": {
+            "minLength": 1,
+            "title": "Graph Version",
+            "type": "string"
+          },
+          "necessary_operations": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Necessary Operations",
+            "type": "array"
+          },
+          "profile_version": {
+            "const": "edge-calibrated-v1",
+            "title": "Profile Version",
+            "type": "string"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "reference_id": {
+            "minLength": 1,
+            "title": "Reference Id",
+            "type": "string"
+          },
+          "seconds": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seconds"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "unknown",
+              "not_applicable"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reference_id",
+          "seconds",
+          "status",
+          "completeness",
+          "reason_code",
+          "profile_version",
+          "graph_version",
+          "boundary_node_sets",
+          "edges",
+          "necessary_operations",
+          "calibration_evidence"
+        ],
+        "title": "ReferenceResult",
+        "type": "object"
+      },
+      "ScenarioDelta": {
+        "additionalProperties": false,
+        "properties": {
+          "after_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After Id"
+          },
+          "before_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before Id"
+          },
+          "delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta"
+          },
+          "effect_id": {
+            "minLength": 1,
+            "title": "Effect Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "metric",
+              "score"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "improved",
+              "worsened",
+              "unchanged",
+              "changed",
+              "unknown",
+              "new_connection"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "scope": {
+            "enum": [
+              "transport",
+              "pipeline"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "sign_convention": {
+            "enum": [
+              "before_minus_after",
+              "after_minus_before"
+            ],
+            "title": "Sign Convention",
+            "type": "string"
+          },
+          "unit": {
+            "minLength": 1,
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "effect_id",
+          "kind",
+          "before_id",
+          "after_id",
+          "unit",
+          "delta",
+          "sign_convention",
+          "outcome",
+          "reason_code",
+          "scope"
+        ],
+        "title": "ScenarioDelta",
+        "type": "object"
+      },
+      "ScenarioProposal": {
+        "additionalProperties": false,
+        "properties": {
+          "assumptions": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "baseline_analysis_id": {
+            "minLength": 1,
+            "title": "Baseline Analysis Id",
+            "type": "string"
+          },
+          "baseline_result_hash": {
+            "minLength": 1,
+            "title": "Baseline Result Hash",
+            "type": "string"
+          },
+          "editable_local_graph": {
+            "title": "Editable Local Graph",
+            "type": "boolean"
+          },
+          "evidence_refs": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            },
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "feasibility": {
+            "enum": [
+              "verified",
+              "unverified"
+            ],
+            "title": "Feasibility",
+            "type": "string"
+          },
+          "fixed_parameters": {
+            "$ref": "#/components/schemas/FixedParameters"
+          },
+          "limitations": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "operation_type": {
+            "enum": [
+              "coordinate_transfer",
+              "additional_departure"
+            ],
+            "title": "Operation Type",
+            "type": "string"
+          },
+          "scenario_id": {
+            "minLength": 1,
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": "2",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "status": {
+            "const": "proposed",
+            "title": "Status",
+            "type": "string"
+          },
+          "template_id": {
+            "minLength": 1,
+            "title": "Template Id",
+            "type": "string"
+          },
+          "versions": {
+            "$ref": "#/components/schemas/VersionRefs"
+          }
+        },
+        "required": [
+          "schema_version",
+          "scenario_id",
+          "baseline_analysis_id",
+          "template_id",
+          "operation_type",
+          "fixed_parameters",
+          "evidence_refs",
+          "assumptions",
+          "status",
+          "feasibility",
+          "versions",
+          "baseline_result_hash",
+          "editable_local_graph",
+          "limitations"
+        ],
+        "title": "ScenarioProposal",
+        "type": "object"
+      },
+      "ScenarioResult": {
+        "additionalProperties": false,
+        "properties": {
+          "affected_population": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Affected Population"
+          },
+          "affected_sites": {
             "anyOf": [
               {
                 "minimum": 0.0,
@@ -1404,569 +2518,88 @@
                 "type": "null"
               }
             ],
-            "title": "Max Transfers"
+            "title": "Affected Sites"
           },
-          "origin_id": {
-            "minLength": 1,
-            "title": "Origin Id",
-            "type": "string"
-          },
-          "profile_id": {
-            "enum": [
-              "regular",
-              "medical",
-              "intercity"
-            ],
-            "title": "Profile Id",
-            "type": "string"
-          },
-          "profile_version": {
-            "exclusiveMinimum": 0.0,
-            "title": "Profile Version",
-            "type": "integer"
-          },
-          "require_step_free": {
-            "title": "Require Step Free",
-            "type": "boolean"
-          },
-          "return_by": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Return By"
-          },
-          "service_date": {
-            "format": "date",
-            "title": "Service Date",
-            "type": "string"
-          },
-          "service_type_id": {
-            "anyOf": [
-              {
-                "minLength": 1,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Service Type Id"
-          }
-        },
-        "required": [
-          "max_one_way_minutes",
-          "max_transfers",
-          "max_access_walk_minutes",
-          "budget",
-          "require_step_free",
-          "profile_id",
-          "origin_id",
-          "service_date",
-          "earliest_departure",
-          "bundle_id",
-          "profile_version"
-        ],
-        "title": "JourneyRequest",
-        "type": "object"
-      },
-      "JourneyResult": {
-        "additionalProperties": false,
-        "properties": {
-          "assumption_ids": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Assumption Ids",
-            "type": "array"
+          "after": {
+            "$ref": "#/components/schemas/ScenarioValues"
           },
           "assumptions": {
             "items": {
-              "$ref": "#/components/schemas/Assumption"
+              "minLength": 1,
+              "type": "string"
             },
             "title": "Assumptions",
             "type": "array"
           },
-          "constraints": {
-            "additionalProperties": {
-              "enum": [
-                "pass",
-                "fail",
-                "unknown",
-                "not_requested"
-              ],
-              "type": "string"
-            },
-            "propertyNames": {
-              "minLength": 1
-            },
-            "title": "Constraints",
-            "type": "object"
-          },
-          "evidence_ids": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Evidence Ids",
-            "type": "array"
-          },
-          "missing_fields": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Missing Fields",
-            "type": "array"
-          },
-          "optimality": {
-            "enum": [
-              "proven_in_scope",
-              "not_proven"
-            ],
-            "title": "Optimality",
-            "type": "string"
-          },
-          "overall_feasibility": {
-            "enum": [
-              "pass",
-              "fail",
-              "unknown"
-            ],
-            "title": "Overall Feasibility",
-            "type": "string"
-          },
-          "provenance": {
-            "$ref": "#/components/schemas/Provenance"
-          },
-          "reason_codes": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Reason Codes",
-            "type": "array"
-          },
-          "routes": {
-            "items": {
-              "$ref": "#/components/schemas/Journey"
-            },
-            "title": "Routes",
-            "type": "array"
-          },
-          "status": {
-            "enum": [
-              "ok",
-              "partial",
-              "insufficient_data"
-            ],
-            "title": "Status",
-            "type": "string"
-          }
-        },
-        "required": [
-          "status",
-          "routes",
-          "overall_feasibility",
-          "constraints",
-          "missing_fields",
-          "reason_codes",
-          "evidence_ids",
-          "assumptions",
-          "assumption_ids",
-          "provenance",
-          "optimality"
-        ],
-        "title": "JourneyResult",
-        "type": "object"
-      },
-      "Leg": {
-        "additionalProperties": false,
-        "properties": {
-          "arrival_at": {
-            "format": "date-time",
-            "title": "Arrival At",
-            "type": "string"
-          },
-          "departure_at": {
-            "format": "date-time",
-            "title": "Departure At",
-            "type": "string"
-          },
-          "duration_seconds": {
-            "minimum": 0.0,
-            "title": "Duration Seconds",
-            "type": "number"
-          },
-          "evidence_ids": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Evidence Ids",
-            "type": "array"
-          },
-          "from_id": {
+          "baseline_analysis_id": {
             "minLength": 1,
-            "title": "From Id",
+            "title": "Baseline Analysis Id",
             "type": "string"
           },
-          "mode": {
-            "enum": [
-              "rail",
-              "bus",
-              "walk"
-            ],
-            "title": "Mode",
-            "type": "string"
-          },
-          "to_id": {
+          "baseline_result_hash": {
             "minLength": 1,
-            "title": "To Id",
+            "title": "Baseline Result Hash",
             "type": "string"
           },
-          "trip_id": {
-            "anyOf": [
-              {
-                "minLength": 1,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Trip Id"
-          }
-        },
-        "required": [
-          "mode",
-          "from_id",
-          "to_id",
-          "trip_id",
-          "departure_at",
-          "arrival_at",
-          "duration_seconds",
-          "evidence_ids"
-        ],
-        "title": "Leg",
-        "type": "object"
-      },
-      "Place": {
-        "additionalProperties": false,
-        "properties": {
-          "kind": {
-            "enum": [
-              "city",
-              "municipality",
-              "terminal",
-              "stop"
-            ],
-            "title": "Kind",
-            "type": "string"
+          "before": {
+            "$ref": "#/components/schemas/ScenarioValues"
           },
-          "lat": {
-            "maximum": 90.0,
-            "minimum": -90.0,
-            "title": "Lat",
-            "type": "number"
-          },
-          "lon": {
-            "maximum": 180.0,
-            "minimum": -180.0,
-            "title": "Lon",
-            "type": "number"
-          },
-          "name": {
-            "minLength": 1,
-            "title": "Name",
-            "type": "string"
-          },
-          "place_id": {
-            "minLength": 1,
-            "title": "Place Id",
-            "type": "string"
-          },
-          "region_id": {
-            "minLength": 1,
-            "title": "Region Id",
-            "type": "string"
-          }
-        },
-        "required": [
-          "place_id",
-          "name",
-          "kind",
-          "region_id",
-          "lon",
-          "lat"
-        ],
-        "title": "Place",
-        "type": "object"
-      },
-      "ProfileConfig": {
-        "additionalProperties": false,
-        "properties": {
-          "assumption_ids": {
+          "deltas": {
             "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Assumption Ids",
-            "type": "array"
-          },
-          "basis": {
-            "enum": [
-              "scenario",
-              "verified"
-            ],
-            "title": "Basis",
-            "type": "string"
-          },
-          "destination_ids": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Destination Ids",
-            "type": "array"
-          },
-          "end_date": {
-            "format": "date",
-            "title": "End Date",
-            "type": "string"
-          },
-          "evidence_ids": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Evidence Ids",
-            "type": "array"
-          },
-          "half_life_minutes": {
-            "anyOf": [
-              {
-                "exclusiveMinimum": 0.0,
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Half Life Minutes"
-          },
-          "horizon_hours": {
-            "anyOf": [
-              {
-                "exclusiveMinimum": 0.0,
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Horizon Hours"
-          },
-          "metric_kind": {
-            "enum": [
-              "activity_feasibility",
-              "time_decay"
-            ],
-            "title": "Metric Kind",
-            "type": "string"
-          },
-          "modes": {
-            "items": {
-              "enum": [
-                "rail",
-                "bus",
-                "walk"
-              ],
-              "type": "string"
+              "$ref": "#/components/schemas/ScenarioDelta"
             },
             "minItems": 1,
-            "title": "Modes",
+            "title": "Deltas",
             "type": "array"
           },
-          "profile_id": {
+          "editable_local_graph": {
+            "title": "Editable Local Graph",
+            "type": "boolean"
+          },
+          "evidence_refs": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            },
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "feasibility": {
             "enum": [
-              "regular",
-              "medical",
-              "intercity"
+              "verified",
+              "unverified"
             ],
-            "title": "Profile Id",
+            "title": "Feasibility",
             "type": "string"
           },
-          "profile_version": {
-            "exclusiveMinimum": 0.0,
-            "title": "Profile Version",
-            "type": "integer"
-          },
-          "rules": {
-            "$ref": "#/components/schemas/TripRules"
-          },
-          "service_type_ids": {
+          "limitations": {
             "items": {
               "minLength": 1,
               "type": "string"
             },
-            "title": "Service Type Ids",
+            "title": "Limitations",
             "type": "array"
           },
-          "start_date": {
-            "format": "date",
-            "title": "Start Date",
-            "type": "string"
-          },
-          "start_times": {
-            "items": {
-              "format": "time",
-              "type": "string"
-            },
-            "minItems": 1,
-            "title": "Start Times",
-            "type": "array"
-          },
-          "study_area_id": {
+          "operations_hash": {
             "minLength": 1,
-            "title": "Study Area Id",
+            "title": "Operations Hash",
             "type": "string"
           },
-          "study_area_version": {
-            "exclusiveMinimum": 0.0,
-            "title": "Study Area Version",
-            "type": "integer"
-          },
-          "timezone": {
+          "overlay_graph_id": {
             "minLength": 1,
-            "title": "Timezone",
+            "title": "Overlay Graph Id",
             "type": "string"
-          },
-          "weighting": {
-            "enum": [
-              "uniform",
-              "explicit"
-            ],
-            "title": "Weighting",
-            "type": "string"
-          }
-        },
-        "required": [
-          "profile_id",
-          "profile_version",
-          "study_area_id",
-          "study_area_version",
-          "metric_kind",
-          "start_date",
-          "end_date",
-          "timezone",
-          "start_times",
-          "destination_ids",
-          "service_type_ids",
-          "modes",
-          "rules",
-          "weighting",
-          "basis",
-          "assumption_ids",
-          "evidence_ids",
-          "half_life_minutes",
-          "horizon_hours"
-        ],
-        "title": "ProfileConfig",
-        "type": "object"
-      },
-      "ProfileResult": {
-        "additionalProperties": false,
-        "properties": {
-          "assumption_ids": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Assumption Ids",
-            "type": "array"
-          },
-          "bundle_id": {
-            "minLength": 1,
-            "title": "Bundle Id",
-            "type": "string"
-          },
-          "case_results": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/CaseResult"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Case Results"
-          },
-          "cities": {
-            "items": {
-              "$ref": "#/components/schemas/CityScore"
-            },
-            "title": "Cities",
-            "type": "array"
-          },
-          "code_version": {
-            "minLength": 1,
-            "title": "Code Version",
-            "type": "string"
-          },
-          "evidence_ids": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Evidence Ids",
-            "type": "array"
-          },
-          "missing_fields": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Missing Fields",
-            "type": "array"
           },
           "params_hash": {
             "minLength": 1,
             "title": "Params Hash",
             "type": "string"
           },
-          "profile_id": {
-            "enum": [
-              "regular",
-              "medical",
-              "intercity"
-            ],
-            "title": "Profile Id",
-            "type": "string"
-          },
-          "profile_version": {
-            "exclusiveMinimum": 0.0,
-            "title": "Profile Version",
-            "type": "integer"
-          },
-          "provenance": {
-            "$ref": "#/components/schemas/Provenance"
-          },
-          "reason_codes": {
+          "resource_evidence": {
             "items": {
               "minLength": 1,
               "type": "string"
             },
-            "title": "Reason Codes",
+            "title": "Resource Evidence",
             "type": "array"
           },
           "result_hash": {
@@ -1979,95 +2612,210 @@
             "title": "Run Id",
             "type": "string"
           },
+          "scenario_id": {
+            "minLength": 1,
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": "2",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "service_changes": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceChange"
+            },
+            "minItems": 1,
+            "title": "Service Changes",
+            "type": "array"
+          },
           "status": {
             "enum": [
-              "ok",
+              "available",
               "partial",
-              "insufficient_data"
+              "unknown"
             ],
             "title": "Status",
             "type": "string"
           },
-          "task_set_hash": {
-            "minLength": 1,
-            "title": "Task Set Hash",
-            "type": "string"
-          },
-          "unit": {
-            "const": "points_0_100",
-            "title": "Unit",
-            "type": "string"
-          },
-          "warnings": {
+          "turnaround_evidence": {
             "items": {
               "minLength": 1,
               "type": "string"
             },
-            "title": "Warnings",
+            "title": "Turnaround Evidence",
+            "type": "array"
+          },
+          "versions": {
+            "$ref": "#/components/schemas/VersionRefs"
+          },
+          "worsened_metric_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Worsened Metric Ids",
             "type": "array"
           }
         },
         "required": [
+          "schema_version",
           "run_id",
+          "scenario_id",
+          "baseline_analysis_id",
           "status",
-          "bundle_id",
-          "profile_id",
-          "profile_version",
-          "task_set_hash",
-          "code_version",
-          "params_hash",
+          "before",
+          "after",
+          "deltas",
+          "affected_population",
+          "affected_sites",
+          "worsened_metric_ids",
+          "feasibility",
+          "service_changes",
+          "versions",
+          "overlay_graph_id",
+          "baseline_result_hash",
           "result_hash",
-          "unit",
-          "provenance",
-          "evidence_ids",
-          "assumption_ids",
-          "warnings",
-          "cities"
+          "params_hash",
+          "operations_hash",
+          "evidence_refs",
+          "turnaround_evidence",
+          "assumptions",
+          "limitations",
+          "editable_local_graph"
         ],
-        "title": "ProfileResult",
+        "title": "ScenarioResult",
         "type": "object"
       },
-      "Provenance": {
+      "ScenarioRunOptions": {
+        "additionalProperties": false,
+        "description": "Public body; IDs come from the path and saved server-owned proposal.",
+        "properties": {
+          "schema_version": {
+            "const": "2",
+            "title": "Schema Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version"
+        ],
+        "title": "ScenarioRunOptions",
+        "type": "object"
+      },
+      "ScenarioSuggestion": {
         "additionalProperties": false,
         "properties": {
-          "bundle_id": {
+          "evidence_refs": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "rationale": {
+            "maxLength": 1000,
             "minLength": 1,
-            "title": "Bundle Id",
+            "title": "Rationale",
             "type": "string"
           },
-          "code_version": {
+          "template_id": {
             "minLength": 1,
-            "title": "Code Version",
+            "title": "Template Id",
             "type": "string"
+          }
+        },
+        "required": [
+          "template_id",
+          "rationale",
+          "evidence_refs"
+        ],
+        "title": "ScenarioSuggestion",
+        "type": "object"
+      },
+      "ScenarioValues": {
+        "additionalProperties": false,
+        "properties": {
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/Metric"
+            },
+            "title": "Metrics",
+            "type": "array"
           },
-          "completeness_scope": {
-            "minLength": 1,
-            "title": "Completeness Scope",
-            "type": "string"
-          },
-          "network_complete": {
-            "title": "Network Complete",
-            "type": "boolean"
-          },
-          "profile_id": {
-            "enum": [
-              "regular",
-              "medical",
-              "intercity"
+          "scores": {
+            "items": {
+              "$ref": "#/components/schemas/Score"
+            },
+            "title": "Scores",
+            "type": "array"
+          }
+        },
+        "required": [
+          "metrics",
+          "scores"
+        ],
+        "title": "ScenarioValues",
+        "type": "object"
+      },
+      "Score": {
+        "additionalProperties": false,
+        "properties": {
+          "aggregation_basis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PopulationBasis"
+              },
+              {
+                "$ref": "#/components/schemas/SiteBasis"
+              },
+              {
+                "type": "null"
+              }
             ],
-            "title": "Profile Id",
+            "title": "Aggregation Basis"
+          },
+          "completeness": {
+            "enum": [
+              "full",
+              "partial"
+            ],
+            "title": "Completeness",
             "type": "string"
           },
-          "profile_version": {
-            "exclusiveMinimum": 0.0,
-            "title": "Profile Version",
-            "type": "integer"
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/ComponentRef"
+            },
+            "title": "Components",
+            "type": "array"
           },
-          "search_complete": {
-            "title": "Search Complete",
+          "evidence_refs": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "methodology_version": {
+            "const": "a2-methodology-v3",
+            "title": "Methodology Version",
+            "type": "string"
+          },
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "ranking_eligible": {
+            "title": "Ranking Eligible",
             "type": "boolean"
           },
-          "task_set_hash": {
+          "reason_code": {
             "anyOf": [
               {
                 "minLength": 1,
@@ -2077,373 +2825,141 @@
                 "type": "null"
               }
             ],
-            "title": "Task Set Hash"
-          }
-        },
-        "required": [
-          "bundle_id",
-          "profile_id",
-          "profile_version",
-          "code_version",
-          "completeness_scope",
-          "network_complete",
-          "search_complete"
-        ],
-        "title": "Provenance",
-        "type": "object"
-      },
-      "ResourceDelta": {
-        "additionalProperties": false,
-        "properties": {
-          "departures": {
-            "title": "Departures",
-            "type": "integer"
+            "title": "Reason Code"
           },
-          "vehicle_minutes": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Vehicle Minutes"
-          }
-        },
-        "required": [
-          "departures",
-          "vehicle_minutes"
-        ],
-        "title": "ResourceDelta",
-        "type": "object"
-      },
-      "ScenarioRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "base_run_ids": {
-            "additionalProperties": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "propertyNames": {
-              "enum": [
-                "regular",
-                "medical",
-                "intercity"
-              ]
-            },
-            "title": "Base Run Ids",
-            "type": "object"
-          },
-          "evaluate_profile_ids": {
-            "items": {
-              "enum": [
-                "regular",
-                "medical",
-                "intercity"
-              ],
-              "type": "string"
-            },
-            "maxItems": 3,
-            "minItems": 1,
-            "title": "Evaluate Profile Ids",
-            "type": "array"
-          },
-          "operations": {
-            "items": {
-              "discriminator": {
-                "mapping": {
-                  "add_trip": "#/components/schemas/AddTrip",
-                  "shift_trip": "#/components/schemas/ShiftTrip"
-                },
-                "propertyName": "type"
-              },
-              "oneOf": [
-                {
-                  "$ref": "#/components/schemas/ShiftTrip"
-                },
-                {
-                  "$ref": "#/components/schemas/AddTrip"
-                }
-              ]
-            },
-            "maxItems": 10,
-            "minItems": 1,
-            "title": "Operations",
-            "type": "array"
-          }
-        },
-        "required": [
-          "base_run_ids",
-          "evaluate_profile_ids",
-          "operations"
-        ],
-        "title": "ScenarioRequest",
-        "type": "object"
-      },
-      "ScenarioStopTime": {
-        "additionalProperties": false,
-        "properties": {
-          "arrival_seconds": {
-            "minimum": 0.0,
-            "title": "Arrival Seconds",
-            "type": "integer"
-          },
-          "departure_seconds": {
-            "minimum": 0.0,
-            "title": "Departure Seconds",
-            "type": "integer"
-          },
-          "dropoff": {
-            "title": "Dropoff",
-            "type": "boolean"
-          },
-          "pickup": {
-            "title": "Pickup",
-            "type": "boolean"
-          },
-          "sequence": {
-            "minimum": 0.0,
-            "title": "Sequence",
-            "type": "integer"
-          },
-          "stop_id": {
+          "score_id": {
             "minLength": 1,
-            "title": "Stop Id",
-            "type": "string"
-          }
-        },
-        "required": [
-          "stop_id",
-          "sequence",
-          "arrival_seconds",
-          "departure_seconds",
-          "pickup",
-          "dropoff"
-        ],
-        "title": "ScenarioStopTime",
-        "type": "object"
-      },
-      "ShiftTrip": {
-        "additionalProperties": false,
-        "properties": {
-          "delta_seconds": {
-            "maximum": 1800.0,
-            "minimum": -1800.0,
-            "title": "Delta Seconds",
-            "type": "integer"
-          },
-          "service_dates": {
-            "items": {
-              "format": "date",
-              "type": "string"
-            },
-            "minItems": 1,
-            "title": "Service Dates",
-            "type": "array"
-          },
-          "trip_id": {
-            "minLength": 1,
-            "title": "Trip Id",
+            "title": "Score Id",
             "type": "string"
           },
-          "type": {
-            "const": "shift_trip",
-            "title": "Type",
-            "type": "string"
-          }
-        },
-        "required": [
-          "type",
-          "trip_id",
-          "service_dates",
-          "delta_seconds"
-        ],
-        "title": "ShiftTrip",
-        "type": "object"
-      },
-      "Source": {
-        "additionalProperties": false,
-        "properties": {
-          "license_status": {
+          "status": {
             "enum": [
-              "permitted",
-              "restricted",
-              "unknown"
+              "available",
+              "unknown",
+              "not_applicable",
+              "methodology_pending"
             ],
-            "title": "License Status",
+            "title": "Status",
             "type": "string"
           },
-          "publisher": {
-            "minLength": 1,
-            "title": "Publisher",
-            "type": "string"
+          "subject": {
+            "$ref": "#/components/schemas/SubjectRef"
           },
-          "source_id": {
-            "minLength": 1,
-            "title": "Source Id",
-            "type": "string"
-          },
-          "url": {
-            "format": "uri",
-            "maxLength": 2083,
-            "minLength": 1,
-            "title": "Url",
-            "type": "string"
+          "value": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
           }
         },
         "required": [
-          "source_id",
-          "publisher",
-          "url",
-          "license_status"
+          "score_id",
+          "name",
+          "value",
+          "status",
+          "completeness",
+          "methodology_version",
+          "reason_code",
+          "components",
+          "evidence_refs",
+          "subject",
+          "ranking_eligible"
         ],
-        "title": "Source",
+        "title": "Score",
         "type": "object"
       },
-      "StudyArea": {
+      "ServiceChange": {
         "additionalProperties": false,
         "properties": {
-          "area_id": {
+          "service_id": {
             "minLength": 1,
-            "title": "Area Id",
+            "title": "Service Id",
             "type": "string"
           },
-          "area_version": {
-            "exclusiveMinimum": 0.0,
-            "title": "Area Version",
+          "shift_seconds": {
+            "title": "Shift Seconds",
             "type": "integer"
           },
-          "basis": {
-            "enum": [
-              "scenario",
-              "verified"
-            ],
-            "title": "Basis",
-            "type": "string"
+          "subsequent_stops_updated": {
+            "title": "Subsequent Stops Updated",
+            "type": "boolean"
           },
-          "city_ids": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "minItems": 1,
-            "title": "City Ids",
-            "type": "array"
-          },
-          "demo_city_ids": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Demo City Ids",
-            "type": "array"
-          },
-          "evidence_ids": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "title": "Evidence Ids",
-            "type": "array"
-          },
-          "region_ids": {
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            },
-            "minItems": 1,
-            "title": "Region Ids",
-            "type": "array"
-          },
-          "timezone": {
-            "minLength": 1,
-            "title": "Timezone",
-            "type": "string"
-          }
-        },
-        "required": [
-          "area_id",
-          "area_version",
-          "region_ids",
-          "city_ids",
-          "demo_city_ids",
-          "timezone",
-          "basis",
-          "evidence_ids"
-        ],
-        "title": "StudyArea",
-        "type": "object"
-      },
-      "TripRules": {
-        "additionalProperties": false,
-        "properties": {
-          "budget": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Budget"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "max_access_walk_minutes": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Max Access Walk Minutes"
-          },
-          "max_one_way_minutes": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Max One Way Minutes"
-          },
-          "max_transfers": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Max Transfers"
-          },
-          "require_step_free": {
-            "title": "Require Step Free",
+          "whole_trip": {
+            "title": "Whole Trip",
             "type": "boolean"
           }
         },
         "required": [
-          "max_one_way_minutes",
-          "max_transfers",
-          "max_access_walk_minutes",
-          "budget",
-          "require_step_free"
+          "service_id",
+          "shift_seconds",
+          "whole_trip",
+          "subsequent_stops_updated"
         ],
-        "title": "TripRules",
+        "title": "ServiceChange",
         "type": "object"
       },
-      "ValidityPeriod": {
+      "SiteBasis": {
         "additionalProperties": false,
         "properties": {
+          "coverage": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Coverage",
+            "type": "number"
+          },
+          "site_count": {
+            "minimum": 0.0,
+            "title": "Site Count",
+            "type": "integer"
+          },
+          "weighting": {
+            "const": "equal_physical_sites",
+            "title": "Weighting",
+            "type": "string"
+          }
+        },
+        "required": [
+          "site_count",
+          "weighting",
+          "coverage"
+        ],
+        "title": "SiteBasis",
+        "type": "object"
+      },
+      "SnapshotAvailability": {
+        "additionalProperties": false,
+        "description": "Accepted snapshot metadata, not proof of full route or mode coverage.",
+        "properties": {
+          "calendar_version": {
+            "minLength": 1,
+            "title": "Calendar Version",
+            "type": "string"
+          },
+          "graph_version": {
+            "minLength": 1,
+            "title": "Graph Version",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "minLength": 1,
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "territory_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Territory Ids",
+            "type": "array"
+          },
           "valid_from": {
             "anyOf": [
               {
@@ -2470,23 +2986,614 @@
           }
         },
         "required": [
+          "snapshot_id",
+          "territory_ids",
           "valid_from",
-          "valid_to"
+          "valid_to",
+          "graph_version",
+          "calendar_version"
         ],
-        "title": "ValidityPeriod",
+        "title": "SnapshotAvailability",
+        "type": "object"
+      },
+      "SubjectRef": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "enum": [
+                  "adult_polyclinic",
+                  "child_polyclinic",
+                  "kindergarten",
+                  "school",
+                  "college_university",
+                  "rail_terminal",
+                  "bus_terminal",
+                  "airport",
+                  "shopping_center"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "destination_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination Id"
+          },
+          "kind": {
+            "enum": [
+              "sample_point",
+              "territory",
+              "category",
+              "freight_site",
+              "freight_node",
+              "connection",
+              "pipeline",
+              "city_pair"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "walk",
+                  "public_transport",
+                  "private_car",
+                  "road",
+                  "rail",
+                  "air",
+                  "water",
+                  "mixed",
+                  "pipeline"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
+          },
+          "node_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Node Id"
+          },
+          "origin_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin Id"
+          },
+          "point_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Point Id"
+          },
+          "site_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Site Id"
+          },
+          "territory_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Territory Id"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "SubjectRef",
+        "type": "object"
+      },
+      "TemperatureRequirements": {
+        "additionalProperties": false,
+        "properties": {
+          "controlled": {
+            "title": "Controlled",
+            "type": "boolean"
+          },
+          "max_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max C"
+          },
+          "min_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min C"
+          }
+        },
+        "required": [
+          "controlled",
+          "min_c",
+          "max_c"
+        ],
+        "title": "TemperatureRequirements",
+        "type": "object"
+      },
+      "TerritoryOption": {
+        "additionalProperties": false,
+        "properties": {
+          "capital_city_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capital City Id"
+          },
+          "level": {
+            "enum": [
+              "city",
+              "region"
+            ],
+            "title": "Level",
+            "type": "string"
+          },
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "parent_region_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Region Id"
+          },
+          "territory_id": {
+            "minLength": 1,
+            "title": "Territory Id",
+            "type": "string"
+          },
+          "timezone": {
+            "minLength": 1,
+            "title": "Timezone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "territory_id",
+          "level",
+          "name",
+          "timezone"
+        ],
+        "title": "TerritoryOption",
+        "type": "object"
+      },
+      "UrbanCargoRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "analysis_kind": {
+            "const": "urban_cargo",
+            "title": "Analysis Kind",
+            "type": "string"
+          },
+          "area_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Id"
+          },
+          "cargo_profile_id": {
+            "minLength": 1,
+            "title": "Cargo Profile Id",
+            "type": "string"
+          },
+          "city_id": {
+            "minLength": 1,
+            "title": "City Id",
+            "type": "string"
+          },
+          "departure_at": {
+            "format": "date-time",
+            "title": "Departure At",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "outbound",
+              "inbound"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "freight_node_types": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "port",
+                    "rail_freight_station",
+                    "terminal",
+                    "logistics_center"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freight Node Types"
+          },
+          "methodology": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MethodologyRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "schema_version": {
+            "const": "2",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot Id"
+          },
+          "traffic_mode": {
+            "enum": [
+              "static",
+              "typical",
+              "live",
+              "historical"
+            ],
+            "title": "Traffic Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "departure_at",
+          "traffic_mode",
+          "city_id",
+          "analysis_kind",
+          "cargo_profile_id",
+          "direction"
+        ],
+        "title": "UrbanCargoRequest",
+        "type": "object"
+      },
+      "UrbanPassengerRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "analysis_kind": {
+            "const": "urban_passenger",
+            "title": "Analysis Kind",
+            "type": "string"
+          },
+          "area_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Id"
+          },
+          "categories": {
+            "items": {
+              "enum": [
+                "adult_polyclinic",
+                "child_polyclinic",
+                "kindergarten",
+                "school",
+                "college_university",
+                "rail_terminal",
+                "bus_terminal",
+                "airport",
+                "shopping_center"
+              ],
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Categories",
+            "type": "array"
+          },
+          "city_id": {
+            "minLength": 1,
+            "title": "City Id",
+            "type": "string"
+          },
+          "departure_at": {
+            "format": "date-time",
+            "title": "Departure At",
+            "type": "string"
+          },
+          "methodology": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MethodologyRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "passenger_mode": {
+            "enum": [
+              "walk",
+              "public_transport",
+              "private_car"
+            ],
+            "title": "Passenger Mode",
+            "type": "string"
+          },
+          "priorities": {
+            "additionalProperties": {
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ],
+              "type": "string"
+            },
+            "propertyNames": {
+              "enum": [
+                "adult_polyclinic",
+                "child_polyclinic",
+                "kindergarten",
+                "school",
+                "college_university",
+                "rail_terminal",
+                "bus_terminal",
+                "airport",
+                "shopping_center"
+              ]
+            },
+            "title": "Priorities",
+            "type": "object"
+          },
+          "schema_version": {
+            "const": "2",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot Id"
+          },
+          "traffic_mode": {
+            "enum": [
+              "static",
+              "typical",
+              "live",
+              "historical"
+            ],
+            "title": "Traffic Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "departure_at",
+          "traffic_mode",
+          "city_id",
+          "analysis_kind",
+          "passenger_mode",
+          "categories",
+          "priorities"
+        ],
+        "title": "UrbanPassengerRequest",
+        "type": "object"
+      },
+      "VehicleConstraints": {
+        "additionalProperties": false,
+        "properties": {
+          "max_height_m": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Height M"
+          },
+          "max_weight_tonnes": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Weight Tonnes"
+          },
+          "restrictions": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Restrictions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "max_height_m",
+          "max_weight_tonnes",
+          "restrictions"
+        ],
+        "title": "VehicleConstraints",
+        "type": "object"
+      },
+      "VersionRefs": {
+        "additionalProperties": false,
+        "properties": {
+          "calendar_version": {
+            "minLength": 1,
+            "title": "Calendar Version",
+            "type": "string"
+          },
+          "code_version": {
+            "minLength": 1,
+            "title": "Code Version",
+            "type": "string"
+          },
+          "config_hash": {
+            "minLength": 1,
+            "title": "Config Hash",
+            "type": "string"
+          },
+          "graph_version": {
+            "minLength": 1,
+            "title": "Graph Version",
+            "type": "string"
+          },
+          "methodology_version": {
+            "const": "a2-methodology-v3",
+            "title": "Methodology Version",
+            "type": "string"
+          },
+          "population_version": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Population Version"
+          },
+          "snapshot_id": {
+            "minLength": 1,
+            "title": "Snapshot Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "snapshot_id",
+          "graph_version",
+          "calendar_version",
+          "population_version",
+          "methodology_version",
+          "config_hash",
+          "code_version"
+        ],
+        "title": "VersionRefs",
         "type": "object"
       }
     }
   },
   "info": {
     "title": "A2 accessibility API",
-    "version": "0.2.0"
+    "version": "2.0.0"
   },
   "openapi": "3.1.0",
   "paths": {
     "/api/v1/analyses": {
       "post": {
-        "operationId": "analyses_api_v1_analyses_post",
+        "operationId": "analyse_api_v1_analyses_post",
         "parameters": [
           {
             "in": "header",
@@ -2504,7 +3611,30 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AnalysisRequest"
+                "discriminator": {
+                  "mapping": {
+                    "intercity_cargo": "#/components/schemas/IntercityCargoRequest",
+                    "intercity_passenger": "#/components/schemas/IntercityPassengerRequest",
+                    "urban_cargo": "#/components/schemas/UrbanCargoRequest",
+                    "urban_passenger": "#/components/schemas/UrbanPassengerRequest"
+                  },
+                  "propertyName": "analysis_kind"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/UrbanPassengerRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/IntercityPassengerRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/UrbanCargoRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/IntercityCargoRequest"
+                  }
+                ],
+                "title": "Body"
               }
             }
           },
@@ -2521,7 +3651,7 @@
             },
             "description": "Successful Response"
           },
-          "404": {
+          "403": {
             "content": {
               "application/json": {
                 "schema": {
@@ -2529,88 +3659,7 @@
                 }
               }
             },
-            "description": "Not Found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Unprocessable Entity"
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Too Many Requests"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Internal Server Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Service Unavailable"
-          }
-        },
-        "summary": "Analyses"
-      }
-    },
-    "/api/v1/coverage": {
-      "get": {
-        "operationId": "coverage_api_v1_coverage_get",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "bundle_id",
-            "required": true,
-            "schema": {
-              "maxLength": 200,
-              "minLength": 1,
-              "title": "Bundle Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Coverage"
-                }
-              }
-            },
-            "description": "Successful Response"
+            "description": "Forbidden"
           },
           "404": {
             "content": {
@@ -2673,220 +3722,19 @@
             "description": "Service Unavailable"
           }
         },
-        "summary": "Coverage"
+        "summary": "Analyse"
       }
     },
-    "/api/v1/destinations": {
+    "/api/v1/analyses/{analysis_id}": {
       "get": {
-        "operationId": "destinations_api_v1_destinations_get",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "bundle_id",
-            "required": true,
-            "schema": {
-              "maxLength": 200,
-              "minLength": 1,
-              "title": "Bundle Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/Destination"
-                  },
-                  "title": "Response Destinations Api V1 Destinations Get",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Not Found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Unprocessable Entity"
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Too Many Requests"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Internal Server Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Service Unavailable"
-          }
-        },
-        "summary": "Destinations"
-      }
-    },
-    "/api/v1/evidence": {
-      "get": {
-        "operationId": "evidence_api_v1_evidence_get",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "bundle_id",
-            "required": true,
-            "schema": {
-              "maxLength": 200,
-              "minLength": 1,
-              "title": "Bundle Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/Evidence"
-                  },
-                  "title": "Response Evidence Api V1 Evidence Get",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Not Found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Unprocessable Entity"
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Too Many Requests"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Internal Server Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Service Unavailable"
-          }
-        },
-        "summary": "Evidence"
-      }
-    },
-    "/api/v1/evidence/{evidence_id}": {
-      "get": {
-        "operationId": "evidence_record_api_v1_evidence__evidence_id__get",
+        "operationId": "analysis_api_v1_analyses__analysis_id__get",
         "parameters": [
           {
             "in": "path",
-            "name": "evidence_id",
+            "name": "analysis_id",
             "required": true,
             "schema": {
-              "title": "Evidence Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "bundle_id",
-            "required": true,
-            "schema": {
-              "maxLength": 200,
-              "minLength": 1,
-              "title": "Bundle Id",
+              "title": "Analysis Id",
               "type": "string"
             }
           }
@@ -2896,11 +3744,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Evidence"
+                  "$ref": "#/components/schemas/AnalysisResult"
                 }
               }
             },
             "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
           },
           "404": {
             "content": {
@@ -2963,7 +3821,297 @@
             "description": "Service Unavailable"
           }
         },
-        "summary": "Evidence Record"
+        "summary": "Analysis"
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/explanation": {
+      "post": {
+        "operationId": "explanation_api_v1_analyses__analysis_id__explanation_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "analysis_id",
+            "required": true,
+            "schema": {
+              "title": "Analysis Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Explanation"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Explanation"
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/scenarios": {
+      "get": {
+        "operationId": "proposals_api_v1_analyses__analysis_id__scenarios_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "analysis_id",
+            "required": true,
+            "schema": {
+              "title": "Analysis Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScenarioProposal"
+                  },
+                  "title": "Response Proposals Api V1 Analyses  Analysis Id  Scenarios Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Proposals"
+      }
+    },
+    "/api/v1/capabilities": {
+      "get": {
+        "operationId": "capabilities_api_v1_capabilities_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Capabilities"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Capabilities"
       }
     },
     "/api/v1/jobs/{job_id}": {
@@ -2985,11 +4133,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Job"
+                  "$ref": "#/components/schemas/JobView"
                 }
               }
             },
             "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
           },
           "404": {
             "content": {
@@ -3055,29 +4213,40 @@
         "summary": "Job"
       }
     },
-    "/api/v1/journeys": {
+    "/api/v1/jobs/{job_id}/cancel": {
       "post": {
-        "operationId": "journeys_api_v1_journeys_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/JourneyRequest"
-              }
+        "operationId": "cancel_api_v1_jobs__job_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
             }
-          },
-          "required": true
-        },
+          }
+        ],
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JourneyResult"
+                  "$ref": "#/components/schemas/JobView"
                 }
               }
             },
             "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
           },
           "404": {
             "content": {
@@ -3140,22 +4309,250 @@
             "description": "Service Unavailable"
           }
         },
-        "summary": "Journeys"
+        "summary": "Cancel"
       }
     },
-    "/api/v1/places": {
+    "/api/v1/scenario-runs/{run_id}": {
       "get": {
-        "operationId": "places_api_v1_places_get",
+        "operationId": "scenario_result_api_v1_scenario_runs__run_id__get",
         "parameters": [
           {
-            "in": "query",
-            "name": "bundle_id",
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Scenario Result"
+      }
+    },
+    "/api/v1/scenarios/{scenario_id}/runs": {
+      "post": {
+        "operationId": "scenario_api_v1_scenarios__scenario_id__runs_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scenario_id",
+            "required": true,
+            "schema": {
+              "title": "Scenario Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
             "required": true,
             "schema": {
               "maxLength": 200,
               "minLength": 1,
-              "title": "Bundle Id",
+              "title": "Idempotency-Key",
               "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioRunOptions"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobAccepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Scenario"
+      }
+    },
+    "/api/v1/territories": {
+      "get": {
+        "operationId": "territories_api_v1_territories_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "level",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "city",
+                    "region"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level"
             }
           },
           {
@@ -3182,16 +4579,16 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/Place"
+                    "$ref": "#/components/schemas/TerritoryOption"
                   },
-                  "title": "Response Places Api V1 Places Get",
+                  "title": "Response Territories Api V1 Territories Get",
                   "type": "array"
                 }
               }
             },
             "description": "Successful Response"
           },
-          "404": {
+          "403": {
             "content": {
               "application/json": {
                 "schema": {
@@ -3199,79 +4596,7 @@
                 }
               }
             },
-            "description": "Not Found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Unprocessable Entity"
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Too Many Requests"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Internal Server Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Service Unavailable"
-          }
-        },
-        "summary": "Places"
-      }
-    },
-    "/api/v1/profiles": {
-      "get": {
-        "operationId": "profiles_api_v1_profiles_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/ProfileConfig"
-                  },
-                  "title": "Response Profiles Api V1 Profiles Get",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response"
+            "description": "Forbidden"
           },
           "404": {
             "content": {
@@ -3334,482 +4659,7 @@
             "description": "Service Unavailable"
           }
         },
-        "summary": "Profiles"
-      }
-    },
-    "/api/v1/runs/{run_id}": {
-      "get": {
-        "operationId": "run_api_v1_runs__run_id__get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "run_id",
-            "required": true,
-            "schema": {
-              "title": "Run Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/ProfileResult"
-                    },
-                    {
-                      "$ref": "#/components/schemas/Comparison"
-                    }
-                  ],
-                  "title": "Response Run Api V1 Runs  Run Id  Get"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Not Found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Unprocessable Entity"
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Too Many Requests"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Internal Server Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Service Unavailable"
-          }
-        },
-        "summary": "Run"
-      }
-    },
-    "/api/v1/runs/{run_id}/export": {
-      "get": {
-        "operationId": "export_api_v1_runs__run_id__export_get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "run_id",
-            "required": true,
-            "schema": {
-              "title": "Run Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "format",
-            "required": false,
-            "schema": {
-              "default": "json",
-              "enum": [
-                "json",
-                "csv"
-              ],
-              "title": "Format",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {},
-              "text/csv": {}
-            },
-            "description": "Successful Response"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Not Found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Unprocessable Entity"
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Too Many Requests"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Internal Server Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Service Unavailable"
-          }
-        },
-        "summary": "Export"
-      }
-    },
-    "/api/v1/scenario-analyses": {
-      "post": {
-        "operationId": "scenarios_api_v1_scenario_analyses_post",
-        "parameters": [
-          {
-            "in": "header",
-            "name": "idempotency-key",
-            "required": true,
-            "schema": {
-              "maxLength": 200,
-              "minLength": 1,
-              "title": "Idempotency-Key",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ScenarioRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "202": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JobAccepted"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Not Found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Unprocessable Entity"
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Too Many Requests"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Internal Server Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Service Unavailable"
-          }
-        },
-        "summary": "Scenarios"
-      }
-    },
-    "/api/v1/sources": {
-      "get": {
-        "operationId": "sources_api_v1_sources_get",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "bundle_id",
-            "required": true,
-            "schema": {
-              "maxLength": 200,
-              "minLength": 1,
-              "title": "Bundle Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/Source"
-                  },
-                  "title": "Response Sources Api V1 Sources Get",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Not Found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Unprocessable Entity"
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Too Many Requests"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Internal Server Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Service Unavailable"
-          }
-        },
-        "summary": "Sources"
-      }
-    },
-    "/api/v1/study-areas": {
-      "get": {
-        "operationId": "study_areas_api_v1_study_areas_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/StudyArea"
-                  },
-                  "title": "Response Study Areas Api V1 Study Areas Get",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Not Found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Unprocessable Entity"
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Too Many Requests"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Internal Server Error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            },
-            "description": "Service Unavailable"
-          }
-        },
-        "summary": "Study Areas"
+        "summary": "Territories"
       }
     },
     "/health": {

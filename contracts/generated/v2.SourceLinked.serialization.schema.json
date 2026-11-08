@@ -1,0 +1,19 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "source_refs": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Refs",
+      "type": "array"
+    }
+  },
+  "required": [
+    "source_refs"
+  ],
+  "title": "SourceLinked",
+  "type": "object"
+}

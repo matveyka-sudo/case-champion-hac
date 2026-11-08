@@ -33,9 +33,21 @@ def test_schema_export_is_repeatable_with_complete_local_references(tmp_path):
     assert "StudyArea.serialization.schema.json" in first
     spec = json.loads(first["openapi.json"])
     assert spec["paths"]["/api/v1/analyses"]["post"]["responses"]["202"]
-    assert spec["paths"]["/api/v1/journeys"]["post"]["responses"]["422"]["content"][
+    assert spec["paths"]["/api/v1/analyses"]["post"]["responses"]["422"]["content"][
         "application/json"
     ]["schema"]["$ref"].endswith("ErrorEnvelope")
+    assert "v2.AnalysisResult.validation.schema.json" in first
+    assert "v2.AnalysisRequest.validation.schema.json" in first
+    assert (
+        len(
+            spec["paths"]["/api/v1/analyses"]["post"]["requestBody"]["content"]["application/json"][
+                "schema"
+            ]["oneOf"]
+        )
+        == 4
+    )
+    assert "/api/v1/scenario-analyses" not in spec["paths"]
+    assert "/api/v1/scenario-analyses" in json.loads(first["legacy-openapi.json"])["paths"]
     for content in first.values():
         document = json.loads(content)
 

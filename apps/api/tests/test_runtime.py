@@ -19,7 +19,8 @@ def test_runtime_configuration_does_not_expose_password():
 def test_database_disabled_preserves_unavailable_default():
     with TestClient(build_app(RuntimeSettings())) as api:
         assert api.get("/health").status_code == 200
-        assert api.get("/api/v1/profiles").status_code == 503
+        assert api.get("/api/v1/capabilities").status_code == 200
+        assert api.get("/api/v1/profiles").status_code == 404
 
 
 def test_lifespan_opens_pool_and_persists_pollable_job(database_sync_config):
@@ -32,7 +33,7 @@ def test_lifespan_opens_pool_and_persists_pollable_job(database_sync_config):
             json=request().model_dump(mode="json"),
             headers={"Idempotency-Key": "test"},
         )
-        assert response.status_code == 503
+        assert response.status_code == 422
 
 
 @pytest.mark.asyncio
@@ -44,3 +45,21 @@ async def test_runtime_pool_uses_configured_schema_and_closes(database):
         assert await pool.fetchval("SELECT count(*) FROM jobs") == 0
     finally:
         await pool.close()
+
+
+def test_legacy_runtime_requires_explicit_operator_selection():
+    with TestClient(build_app(RuntimeSettings(contract_version="legacy"))) as api:
+        assert api.get("/api/v1/profiles").status_code == 503
+        assert api.get("/api/v1/capabilities").status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_runtime_refuses_database_with_only_historical_migration(database):
+    import asyncio
+
+    from conftest import migrate
+
+    _, schema, url = database
+    await asyncio.to_thread(migrate, url, schema, "0001_jobs_runs", True)
+    with pytest.raises(ValueError, match="migrations"):
+        await open_pool(RuntimeSettings(database_url=url, database_schema=schema))

@@ -6,12 +6,13 @@ from typing import Literal
 from a2_contracts.api import AnalysisRequest, Job, JobAccepted
 from a2_contracts.profiles import ProfileConfig
 from a2_contracts.regions import StudyArea
-from a2_contracts.scenarios import ScenarioRequest
+from a2_contracts.results import ProfileResult
+from a2_contracts.scenarios import Comparison, ScenarioRequest
 
 from .configuration import CatalogConfig
 from .jobs import JobContext, JobKind, JobRequest
 from .services import DomainError, Services, unavailable
-from .storage import JobRepository, RunResult
+from .storage import JobRepository
 
 Prepare = Callable[[JobKind, JobRequest], Awaitable[JobContext]]
 
@@ -43,6 +44,8 @@ class QueuedServices(Services):
     async def _submit(
         self, kind: JobKind, request: JobRequest, key: str, trace: str
     ) -> JobAccepted:
+        if not isinstance(request, (AnalysisRequest, ScenarioRequest)):
+            raise DomainError(404, "unknown_id", "Legacy operation not found")
         replay = await self.repository.replay(kind, request, key)
         if replay is not None:
             return replay
@@ -136,12 +139,15 @@ class QueuedServices(Services):
     async def job(self, job_id: str) -> Job:
         return await self.repository.get_job(job_id)
 
-    async def run(self, run_id: str) -> RunResult:
-        return await self.repository.get_run(run_id)
+    async def run(self, run_id: str) -> ProfileResult | Comparison:
+        result = await self.repository.get_run(run_id)
+        if not isinstance(result, (ProfileResult, Comparison)):
+            raise DomainError(404, "unknown_id", "Legacy run not found")
+        return result
 
     async def export(self, run_id: str, format: Literal["json", "csv"]) -> tuple[str, bytes]:
         from .run_exports import export_run
 
-        result = await self.repository.get_run(run_id)
+        result = await self.run(run_id)
         parameters = await self.repository.get_run_parameters(run_id)
         return export_run(result, parameters, format)

@@ -28,6 +28,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 from starlette.types import Lifespan
 
+from .api_v2 import create_app as create_v2_app
 from .services import DomainError, Services
 
 BundleQuery = Annotated[str, Query(min_length=1, max_length=200)]
@@ -218,4 +219,4 @@ def create_configured_app() -> FastAPI:
     return build_app()
 
 
-app = create_app()
+app = create_v2_app()

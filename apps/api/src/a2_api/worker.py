@@ -14,13 +14,16 @@ from uuid import uuid4
 from a2_contracts.api import ErrorDetail
 from a2_contracts.results import ProfileResult
 from a2_contracts.scenarios import Comparison
+from a2_contracts.v2.results import AnalysisResult
+from a2_contracts.v2.scenarios import ScenarioResult
 
-from .jobs import ClaimedJob
+from .jobs import CalculationOutput, ClaimedJob, V2JobContext
 from .services import DomainError
 from .storage import JobRepository, RunResult
 
 logger = logging.getLogger("a2_api.worker")
 MAX_RESULT_BYTES = 16 * 1024 * 1024
+HandlerOutput = RunResult | CalculationOutput
 
 
 def _child(send: Connection, handler_path: str, claim_json: str, parent_pid: int) -> None:
@@ -39,11 +42,23 @@ def _child(send: Connection, handler_path: str, claim_json: str, parent_pid: int
         handler = getattr(importlib.import_module(module), name)
         claim = ClaimedJob.model_validate_json(claim_json)
         result = handler(claim)
-        if not isinstance(result, (ProfileResult, Comparison)):
+        if not isinstance(
+            result, (ProfileResult, Comparison, AnalysisResult, ScenarioResult, CalculationOutput)
+        ):
             raise TypeError("Handler must return a canonical run result")
         output = json.dumps(
             {
-                "result_kind": "profile" if isinstance(result, ProfileResult) else "comparison",
+                "result_kind": (
+                    "profile"
+                    if isinstance(result, ProfileResult)
+                    else "comparison"
+                    if isinstance(result, Comparison)
+                    else "analysis_v2"
+                    if isinstance(result, AnalysisResult)
+                    else "scenario_v2"
+                    if isinstance(result, ScenarioResult)
+                    else "analysis_output"
+                ),
                 "result": result.model_dump(mode="json"),
             },
             allow_nan=False,
@@ -89,7 +104,7 @@ def _stop(process: BaseProcess) -> None:
     process.close()
 
 
-async def calculate(claim: ClaimedJob, handler: str, timeout_seconds: float) -> RunResult:
+async def calculate(claim: ClaimedJob, handler: str, timeout_seconds: float) -> HandlerOutput:
     context = multiprocessing.get_context("spawn")
     receive, send = context.Pipe(duplex=False)
     process = context.Process(
@@ -125,7 +140,21 @@ async def calculate(claim: ClaimedJob, handler: str, timeout_seconds: float) -> 
                 retryable=error.retryable,
                 field_errors=error.field_errors,
             )
-        model = ProfileResult if output["result_kind"] == "profile" else Comparison
+        models: dict[
+            str,
+            type[ProfileResult]
+            | type[Comparison]
+            | type[AnalysisResult]
+            | type[ScenarioResult]
+            | type[CalculationOutput],
+        ] = {
+            "profile": ProfileResult,
+            "comparison": Comparison,
+            "analysis_v2": AnalysisResult,
+            "scenario_v2": ScenarioResult,
+            "analysis_output": CalculationOutput,
+        }
+        model = models[output["result_kind"]]
         return model.model_validate(output["result"])
     finally:
         await asyncio.shield(asyncio.to_thread(_stop, process))
@@ -168,7 +197,12 @@ class Worker:
                         409, "incompatible_versions", "Queued job requires another code version"
                     )
                 result = await self._calculate_with_lease(claim, lease_lost)
-                await self.repository.succeed(claim, result)
+                if isinstance(result, CalculationOutput):
+                    await self.repository.succeed(
+                        claim, result.analysis, proposals=result.proposals
+                    )
+                else:
+                    await self.repository.succeed(claim, result)
             except asyncio.CancelledError:
                 error = ErrorDetail(
                     code="engine_unavailable",
@@ -195,7 +229,8 @@ class Worker:
                         trace_id=claim.job.trace_id,
                     ),
                 )
-            final = await self.repository.get_job(claim.job.job_id)
+            scope = claim.context.access_scope if isinstance(claim.context, V2JobContext) else None
+            final = await self.repository.get_job(claim.job.job_id, scope=scope)
             logger.info(
                 "job_finished job_id=%s trace_id=%s status=%s",
                 final.job_id,
@@ -204,19 +239,37 @@ class Worker:
             )
             return True
 
-    async def _calculate_with_lease(self, claim: ClaimedJob, lost: asyncio.Event) -> RunResult:
+    async def _monitor_claim(self, claim: ClaimedJob) -> None:
+        while True:
+            if not await self.repository.heartbeat(claim):
+                scope = (
+                    claim.context.access_scope if isinstance(claim.context, V2JobContext) else None
+                )
+                job = await self.repository.get_job(claim.job.job_id, scope=scope)
+                if job.status == "cancelled":
+                    raise DomainError(503, "job_cancelled", "Calculation was cancelled")
+                raise DomainError(503, "engine_unavailable", "Calculation claim lease expired")
+            await asyncio.sleep(min(1, self.repository.lease_seconds / 3))
+
+    async def _calculate_with_lease(self, claim: ClaimedJob, lost: asyncio.Event) -> HandlerOutput:
         calculation = asyncio.create_task(calculate(claim, self.handler, self.timeout_seconds))
         lease = asyncio.create_task(lost.wait())
+        heartbeat = asyncio.create_task(self._monitor_claim(claim))
         try:
-            done, _ = await asyncio.wait((calculation, lease), return_when=asyncio.FIRST_COMPLETED)
+            done, _ = await asyncio.wait(
+                (calculation, lease, heartbeat), return_when=asyncio.FIRST_COMPLETED
+            )
             if lease in done:
                 raise DomainError(503, "engine_unavailable", "Worker database lease was lost")
+            if heartbeat in done:
+                await heartbeat
             return await calculation
         finally:
             lease.cancel()
+            heartbeat.cancel()
             if not calculation.done():
                 calculation.cancel()
-            await asyncio.gather(lease, calculation, return_exceptions=True)
+            await asyncio.gather(lease, heartbeat, calculation, return_exceptions=True)
 
     async def run_forever(self, poll_seconds: float = 0.5) -> None:
         if poll_seconds <= 0:
