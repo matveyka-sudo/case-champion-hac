@@ -1,5 +1,5 @@
 {
-  "spec_version": "2026-11-07.1",
+  "spec_version": "2026-11-08.1",
   "intracity_cities": [
     "Москва",
     "Калининград",
@@ -48,24 +48,89 @@
   ],
   "methodologies": {
     "urban_passenger": {
-      "status": "pending",
-      "version": null,
-      "parameters": null
+      "status": "approved",
+      "version": "a2-methodology-v3",
+      "parameters": {
+        "area_h_bands": [
+          {
+            "max_area_km2": 100,
+            "h_minutes": 20
+          },
+          {
+            "max_area_km2": 300,
+            "h_minutes": 30
+          },
+          {
+            "max_area_km2": 1000,
+            "h_minutes": 40
+          },
+          {
+            "max_area_km2": null,
+            "h_minutes": 60
+          }
+        ],
+        "low_accessibility_below": 50,
+        "max_total_wait_hours": 4,
+        "tau_times": [
+          "08:00",
+          "12:00",
+          "18:00",
+          "22:00"
+        ],
+        "tau_days": 7
+      }
     },
     "intercity_passenger": {
-      "status": "pending",
-      "version": null,
-      "parameters": null
+      "status": "approved",
+      "version": "a2-methodology-v3",
+      "parameters": {
+        "reference": "A",
+        "reference_profile": "edge-calibrated-v1",
+        "departure_window_days": 7,
+        "initial_wait_half_life_hours": 12
+      }
     },
     "urban_cargo": {
-      "status": "pending",
-      "version": null,
-      "parameters": null
+      "status": "approved",
+      "version": "a2-methodology-v3",
+      "parameters": {
+        "h_source": "urban_passenger.area_h_bands",
+        "aggregation": "equal_physical_sites_by_node_type"
+      }
     },
     "intercity_cargo": {
-      "status": "pending",
-      "version": null,
-      "parameters": null
+      "status": "approved",
+      "version": "a2-methodology-v3",
+      "parameters": {
+        "departure_window_days": 31,
+        "delivery_half_life_hours": {
+          "urgent": 24,
+          "ordinary": 72,
+          "nonurgent": 744
+        },
+        "pipeline_in_total": false
+      }
     }
-  }
+  },
+  "methodology_version": "a2-methodology-v3",
+  "priority_weights": {
+    "low": 1,
+    "medium": 2,
+    "high": 3
+  },
+  "assistant": {
+    "provider": "yandex_ai_studio",
+    "model": "aliceai-llm-flash",
+    "api": "chat_completions",
+    "base_url": "https://ai.api.cloud.yandex.net/v1",
+    "enabled_by_default": false
+  },
+  "traffic_modes": [
+    "static",
+    "typical",
+    "live",
+    "historical"
+  ],
+  "traffic_default": "static",
+  "schema_version": "2"
 }

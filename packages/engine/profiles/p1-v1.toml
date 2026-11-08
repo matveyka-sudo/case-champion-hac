@@ -1,5 +1,5 @@
-# HISTORICAL ONLY. Never load as runtime default. All current formulas are pending.
-# Historical six-city intercity prototype. See docs/ML_PLAN.md for current D1–D3.
+# HISTORICAL ONLY. Never load as runtime default. Current methodology is defined in config/product.json.
+# Historical six-city intercity prototype. See docs/FORMULAS.md for the current methodology.
 profile_id = "p1"
 profile_version = "1.0.0"
 purpose = "Дневные межгородские поездки жителей без личного автомобиля"

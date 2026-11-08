@@ -1,22 +1,28 @@
-# Подготовка dev от 07.11.2026
-
-Исходная вершина: a3d244623fec783670060b43dfca72b51a924f98. Координатор обновил документацию и контракты по поручению пользователя; рабочие ветки не изменялись.
+# Подготовка dev — 08.11.2026
+Исходная вершина: 73ae577f0bf72c0d305b22a582cd1a27cda15c9b (включает изменения FRONTEND). Координатор действует по прямому поручению пользователя; постоянные work/* не изменяются.
 
 ## Результат
-- PRODUCT_SPEC.md — текущий scope с последним решением отложить все формулы.
-- config/product.json — четыре анализа, три города, категории/режимы, pending-методики без коэффициентов.
-- Задачи пяти ролей и документационные контракты приведены к новому scope; старые материалы сохранены в docs/archive/2026-11-06.
-- frontend/ — активный Vite starter, его код не переписывался. apps/web/ сохранён как исторический каркас; CI собирает и проверяет frontend/.
-- Python manifests, lock и инфраструктура сохранены; фиктивных API, индексов и провайдеров не добавлено.
+- PRODUCT_SPEC.md — итоговое ТЗ 2026-11-08.1.
+- FORMULAS.md — формула, объяснение и причина; v3 закрывает калибровку эталона A по рёбрам.
+- IMPLEMENTATION.md — конкретные решения пробелов, очередь и порядок интеграции.
+- ASSISTANT.md — выбранная Alice AI LLM Flash, серверный API, tools и отказоустойчивость.
+- TRAFFIC_AND_PROVIDERS.md — сохранённые результаты проверки провайдеров с обновлённым выбором модели; SOURCE_REGISTRY.md — все назначения A2.
+- config/product.json и проверка отражают утверждённые параметры; контракты версии 2, задачи пяти ролей и инструкции синхронизированы.
+- frontend/src, его assets, npm manifest/lock, Python manifests/uv.lock и история веток сохранены. Исторический p1-v1.toml не runtime default.
+- Backend, engine и адаптеры не объявлены реализованными. Их работа распределена между владельцами; прошлый откаченный код не восстановлен автоматически.
 
-## Проверено локально
+## Проверки этого изменения
 - python3 scripts/check_product_config.py — PASS.
-- git diff --check — PASS.
-- npm ci (временный кеш), npm run build, npm run lint в frontend/ — PASS.
-- uv lock --check под uv 0.12.17 — PASS. Системный uv 0.13.6 несовместим с существующим pin; проверка выполнена через uvx с изолированными cache/tool dirs.
-- docker compose --env-file .env.example config --quiet — PASS. Запуск PostgreSQL и миграции не проверялись.
+- uvx --from uv==0.12.17 uv lock --check — PASS; системный uv 0.13.5 не соответствует pin и не использован для изменения lock.
+- frontend: npm ci --ignore-scripts, npm run build, npm run lint, npm test — PASS, 11 тестов в 2 файлах. Среда Node 24.22.1/npm 11.9.0; точный CI pin Node 24.22.2 проверяется в GitHub CI.
+- Docker отсутствует в текущей среде; Compose не запускался и не изменён.
+- Платный вызов Flash, Yandex Расписания с проектным ключом, сборка графов OTP/Valhalla и продуктовый E2E не выполнялись. Предыдущие проверки источников в TRAFFIC_AND_PROVIDERS не являются новым тестом этой поставки.
 
-Backend/engine/адаптеры пока не реализованы; product end-to-end тесты и расчёт на реальных данных не выполнялись. CI в GitHub проверяется отдельно после push.
-
-## Старт команды
-Получить origin/dev и влить его в свою постоянную work/<role> без force push. Прочитать PRODUCT_SPEC.md, OWNERSHIP.md и docs/tasks/<role>.md. BACKEND начинает с DTO/fixtures; ML2 с пригодности источников и snapshot; ML1 с временных цепочек; FRONTEND с формы и состояний; DEVOPS с запуска реализованных entrypoints. Согласование формул выполняется отдельным изменением с версией методики.
+## Как команде забрать
+В чистом checkout своей постоянной work/<role>:
+```bash
+git fetch origin
+git merge --ff-only '@{upstream}'
+git merge origin/dev
+```
+Не переключать всех на dev и не переписывать историю. При локальной незавершённой работе сначала сохранить её в своей ветке. Начать с этапа 1 IMPLEMENTATION.md; BACKEND публикует DTO/OpenAPI, ML1 — чистые расчёты, ML2 — принятый data bundle, FRONTEND — API gateway, DEVOPS — runtime/CI. Согласованные PR направлять в dev.
