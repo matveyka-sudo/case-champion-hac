@@ -1,7 +1,4 @@
-const response = await fetch("/data/demo.json");
-if (!response.ok)
-  throw new Error("Не удалось загрузить демонстрационные данные");
-const raw: unknown = await response.json();
+import { loadFixtures } from "./loadFixtures";
 export type CityId = "msk" | "kgd" | "nvr";
 export type Travel = "pt" | "walk" | "car";
 export type CatId =
@@ -122,7 +119,7 @@ export interface Fixtures {
   cargoMeta: Record<string, [string, string]>;
 }
 // Structured, precomputed reference fixtures. No production index formula executes in the browser.
-export const fixtures = raw as unknown as Fixtures;
+export const fixtures = await loadFixtures();
 export const categories = fixtures.categories;
 export const categoryById = Object.fromEntries(
   categories.map((c) => [c.id, c]),

@@ -1,3 +1,4 @@
+import { NavigationLink } from "../shared/NavigationLink";
 import { useState } from "react";
 import { Icon } from "../shared/ui";
 import { css } from "../shared/format";
@@ -10,27 +11,27 @@ export function LandingPage() {
   return (
     <div id="landing">
       <header className="lp-header" id="lpHeader">
-        <a
+        <NavigationLink
           className="wordmark"
-          href="#top"
+          to="top"
           aria-label="Waydex — в начало страницы"
         >
           <span className="wm-way">{"Way"}</span>
           <span className="wm-dex">{"dex"}</span>
-        </a>
+        </NavigationLink>
         <nav className="lp-nav" aria-label="Основная навигация">
-          <a className="nav-link-wx" href="#about">
+          <NavigationLink className="nav-link-wx" to="about">
             {"О продукте"}
-          </a>
-          <a className="nav-link-wx" href="#features">
+          </NavigationLink>
+          <NavigationLink className="nav-link-wx" to="features">
             {"Возможности"}
-          </a>
-          <a className="wbtn wbtn-light" href="#atlas">
+          </NavigationLink>
+          <NavigationLink className="wbtn wbtn-light" to="atlas">
             {"Открыть атлас "}
             <span className="arrow">
               <Icon name="arrow-up-right" />
             </span>
-          </a>
+          </NavigationLink>
         </nav>
       </header>
       <main id="main">
@@ -91,15 +92,15 @@ export function LandingPage() {
               }
             </p>
             <div className="hero-cta">
-              <a className="wbtn wbtn-primary" href="#atlas">
+              <NavigationLink className="wbtn wbtn-primary" to="atlas">
                 {"Открыть атлас "}
                 <span className="arrow">
                   <Icon name="arrow-up-right" />
                 </span>
-              </a>
-              <a className="wbtn wbtn-ghost-light" href="#how">
+              </NavigationLink>
+              <NavigationLink className="wbtn wbtn-ghost-light" to="how">
                 {"Как это работает"}
-              </a>
+              </NavigationLink>
             </div>
             <div className="hero-facts" aria-label="Что внутри">
               <span>
@@ -116,14 +117,14 @@ export function LandingPage() {
               </span>
             </div>
           </div>
-          <a
+          <NavigationLink
             className="hero-scroll"
-            href="#about"
+            to="about"
             aria-label="Прокрутить к описанию продукта"
           >
             <span className="line"></span>
             {"Дальше"}
-          </a>
+          </NavigationLink>
         </section>
         <section className="sec about" id="about" aria-labelledby="aboutTitle">
           <svg
@@ -618,9 +619,9 @@ export function LandingPage() {
             <div className="filmstrip" aria-hidden="true">
               <div className="film" data-reveal="clip">
                 <img
-                  src="/assets/train-sunset.jpg"
-                  width="1108"
-                  height="1376"
+                  src="/assets/passenger-train.webp"
+                  width="1316"
+                  height="1372"
                   alt=""
                   loading="lazy"
                   decoding="async"
@@ -632,9 +633,9 @@ export function LandingPage() {
               </div>
               <div className="film" data-reveal="clip">
                 <img
-                  src="/assets/plane-front.jpg"
-                  width="2200"
-                  height="1417"
+                  src="/assets/passenger-plane.webp"
+                  width="1110"
+                  height="1354"
                   alt=""
                   loading="lazy"
                   decoding="async"
@@ -783,23 +784,23 @@ export function LandingPage() {
                     "Карта России для связей между территориями и детальные карты трёх городов. Фильтры слева, агент справа, время — на шкале суток."
                   }
                 </p>
-                <a
+                <NavigationLink
                   className="wbtn wbtn-primary"
-                  href="#atlas"
+                  to="atlas"
                   style={css({ marginTop: "26px" })}
                 >
                   {"Перейти к карте "}
                   <span className="arrow">
                     <Icon name="arrow-up-right" />
                   </span>
-                </a>
+                </NavigationLink>
               </div>
             </div>
             <div className="preview-stage" id="previewStage">
               <div className="preview-glow" aria-hidden="true"></div>
-              <a
+              <NavigationLink
                 className="preview-frame"
-                href="#atlas"
+                to="atlas"
                 aria-label="Открыть атлас: превью рабочего экрана"
                 style={css({ display: "block", textDecoration: "none" })}
               >
@@ -869,7 +870,7 @@ export function LandingPage() {
                     </div>
                   </div>
                 </div>
-              </a>
+              </NavigationLink>
             </div>
           </div>
         </section>
@@ -951,27 +952,31 @@ export function LandingPage() {
                   "Начните с карты России или сразу выберите город: Москву, Калининград или Новороссийск."
                 }
               </p>
-              <a className="wbtn wbtn-light" href="#atlas">
+              <NavigationLink className="wbtn wbtn-light" to="atlas">
                 {"Перейти к карте "}
                 <span className="arrow">
                   <Icon name="arrow-up-right" />
                 </span>
-              </a>
+              </NavigationLink>
             </div>
           </div>
         </section>
       </main>
       <footer className="lp-footer">
         <div className="wrap">
-          <a className="wordmark sm" href="#top" aria-label="Waydex — в начало">
+          <NavigationLink
+            className="wordmark sm"
+            to="top"
+            aria-label="Waydex — в начало"
+          >
             <span className="wm-way">{"Way"}</span>
             <span className="wm-dex">{"dex"}</span>
-          </a>
+          </NavigationLink>
           <nav aria-label="Нижняя навигация">
-            <a href="#about">{"О продукте"}</a>
-            <a href="#features">{"Возможности"}</a>
-            <a href="#how">{"Как это работает"}</a>
-            <a href="#atlas">{"Атлас"}</a>
+            <NavigationLink to="about">{"О продукте"}</NavigationLink>
+            <NavigationLink to="features">{"Возможности"}</NavigationLink>
+            <NavigationLink to="how">{"Как это работает"}</NavigationLink>
+            <NavigationLink to="atlas">{"Атлас"}</NavigationLink>
           </nav>
           <span>
             {"Дизайн-прототип · кейс A2 · 2026. Данные — демонстрационные."}

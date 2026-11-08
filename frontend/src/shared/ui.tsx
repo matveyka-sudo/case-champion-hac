@@ -1,3 +1,4 @@
+import { NavigationLink } from "./NavigationLink";
 import { iconRegistry } from "./iconRegistry";
 import type { ReactNode } from "react";
 export function Icon({
@@ -18,14 +19,14 @@ export function Icon({
 }
 export function Wordmark({ small = false }: { small?: boolean }) {
   return (
-    <a
+    <NavigationLink
       className={`wordmark ${small ? "sm" : ""}`}
-      href="#top"
+      to="top"
       aria-label="Waydex — на главную"
     >
       <span className="wm-way">Way</span>
       <span className="wm-dex">dex</span>
-    </a>
+    </NavigationLink>
   );
 }
 export function Demo() {

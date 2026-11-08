@@ -1,3 +1,4 @@
+import { NavigationLink } from "../shared/NavigationLink";
 import { useEffect, useRef, useState } from "react";
 import { useModalFocus } from "../features/accessibility";
 import {
@@ -239,9 +240,13 @@ export function AtlasPage() {
   return (
     <div id="atlas" className="atlas" aria-label="Атлас Waydex">
       <header className="at-top">
-        <a className="at-back" href="#top" aria-label="Вернуться на главную">
+        <NavigationLink
+          className="at-back"
+          to="top"
+          aria-label="Вернуться на главную"
+        >
           <Icon name="arrow-left" />
-        </a>
+        </NavigationLink>
         <Wordmark small />
         <div
           className="modes"

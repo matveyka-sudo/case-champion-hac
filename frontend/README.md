@@ -27,7 +27,7 @@ Google Fonts (Manrope/Unbounded) и городские тайлы OSM требу
 - `src/pages/AtlasPage.tsx`: композиция рабочего пространства и async-запросы.
 - `src/features/state.ts`: типы, reducer, draft/applied условия, revision guard; `AtlasProvider.tsx`: провайдер.
 - `src/widgets/`: React-фильтры, Leaflet CityMap, d3 RussiaMap, карточка, легенда/таймлайн, агент.
-- `src/mocks/catalog.*`: лёгкие справочники для лендинга; `public/data/demo.json`: предрасчитанные детерминированные fixtures; `mocks/model.ts`: view models/selectors; `mocks/gateway.ts`: отменяемый async mock gateway.
+- `src/mocks/catalog.*`: лёгкие справочники для лендинга; `public/data/demo/` (manifest и небольшие части по городам): предрасчитанные детерминированные fixtures; `mocks/model.ts`: view models/selectors; `mocks/gateway.ts`: отменяемый async mock gateway.
 - `src/shared/`: иконки, форматирование, цвет, время.
 - `src/styles/prototype.css`: исходные токены, keyframes и адаптивность; `integration.css`: минимальные исправления интеграции React/Leaflet.
 
