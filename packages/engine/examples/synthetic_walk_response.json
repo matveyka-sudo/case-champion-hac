@@ -1,0 +1,40 @@
+{
+  "id": "f010630453bfbd4f8f87124defc6353c6fd7436afdb05f080bd79aea106e53ff",
+  "trip": {
+    "status": 0,
+    "units": "kilometers",
+    "locations": [
+      {
+        "lon": 20.501,
+        "lat": 54.7
+      },
+      {
+        "lon": 20.519,
+        "lat": 54.7
+      }
+    ],
+    "summary": {
+      "time": 1620,
+      "length": 1.8,
+      "has_ferry": false
+    },
+    "legs": [
+      {
+        "summary": {
+          "time": 1620,
+          "length": 1.8,
+          "has_ferry": false
+        },
+        "maneuvers": [
+          {
+            "type": 1,
+            "travel_mode": "pedestrian",
+            "travel_type": "foot",
+            "time": 1620,
+            "length": 1.8
+          }
+        ]
+      }
+    ]
+  }
+}

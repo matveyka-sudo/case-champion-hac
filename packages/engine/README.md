@@ -26,6 +26,8 @@ a2_engine/
     analysis.py               # точки, категории, режимы и территория
     tau_models.py             # принятые OD-матрицы, календарь и scope
     tau.py                    # выбор базовой недели и точный расчёт τ
+    walk.py                   # AcceptedData, план и сборка walk/static анализа
+    valhalla.py               # типы, запросы и проверка ответов route JSON 3.5.1
   intercity/
     __init__.py
     passenger.py              # пассажирская цепочка, эталон, автомобиль
@@ -91,8 +93,8 @@ a2_engine.config, a2_engine.results и a2_engine.passenger: эти пути ис
 Тест копирует пакет вне checkout и проверяет все три загрузчика с таким путём;
 отдельные процессы из другого cwd проверяют загрузку по умолчанию.
 
-Городской анализ добавил 23 экспорта; расчёт τ добавляет ещё 12 (всего 72).
-Зафиксированы и проверяются все 60 сигнатур до добавления τ. Предметные реализации могут импортировать свои внутренние
+Городской анализ добавил 23 экспорта; расчёт τ добавил ещё 12, пешая интеграция — 15 (всего 87).
+Зафиксированы все 72 прежних вызова; совместимое расширение destination описано ниже. Предметные реализации могут импортировать свои внутренние
 модули и shared; shared по-прежнему не зависит от предметных пакетов.
 
 ## Городские пассажирские вызовы: первый этап
@@ -709,7 +711,7 @@ available JourneyResult публиковать только допустимые
   перемещение точки не меняет её population, дубли входов не увеличивают count,
   обслуживающий город объект за границей не удаляется автоматически.
 
-Реальные маршрутизаторы, построение реальных OD-матриц, последний
+HTTP-исполнение маршрутов, построение реальных OD-матриц, последний
 обратный рейс, эталон A и graph overlay сценариев остаются следующими этапами.
 
 ## Точный городской τ по принятым OD-матрицам
@@ -932,6 +934,214 @@ OD-времена и не основание полного городского
   запуск engine pytest/Ruff/mypy из закреплённого окружения; зависимостей для этого
   этапа не добавлено. До исправления упаковки используется PYTHONPATH.
 
+## Пешая интеграция AcceptedData → Valhalla → UrbanAnalysis
+
+Реализован чистый срез walk/static в urban/walk.py и urban/valhalla.py. Engine
+не выполняет HTTP, не загружает producer bundle и не импортирует a2_contracts/a2_api.
+Преобразование BundleData → AcceptedData v2 остаётся единственным у ML2.
+Вызов prepare_walk_inputs получает model_dump(mode="json") уже проверенного
+BACKEND-моделью AcceptedData. Он проверяет дополнительные инварианты проекции,
+но не заменяет каноническую валидацию. Все входные данные сохраняются неизменными.
+
+```python
+prepare_walk_inputs(accepted, *, city_id, departure_at, methodology_version,
+                    config_hash, search_parameters_id, build=None,
+                    connectors=(), correlations=()) -> WalkInputs
+plan_walk_routes(inputs, *, point_ids, categories) -> WalkRoutePlan
+normalize_walk_response(request, envelope) -> WalkRouteResult
+analyze_walk_responses(plan, responses, *, selected_categories, config, rules,
+                       thresholds=()) -> WalkAnalysisResult
+```
+
+Добавлены 15 явных экспортов, всего 87. Все 72 прежних имени сохранены.
+Единственное расширение прежней сигнатуры — keyword-only
+UrbanDestination.physical_node_id=None. Восьмипозиционный старый вызов по-прежнему
+заканчивает цепочку на access_node_id. С новым полем требуется реальный конечный
+walk leg от access_node_id к physical_node_id; проверка границ пути сохранена.
+Снимок публичного интерфейса теперь защищает все 72 прежних имени; старый вызов
+UrbanDestination дополнительно проверяется отдельным тестом.
+
+### Оба подхода и привязка к сети
+
+Физические ID заданы однозначно: physical:point:<point_id> и
+physical:destination:<destination_id>. Они обозначают исходные location принятых
+записей, а не узлы OSM или Valhalla. access_node_id остаётся исходным ML2 ID.
+Полная цепочка содержит три последовательных walk leg:
+physical origin → source access → destination access → physical destination.
+Первый и последний имеют длительности WalkConnector.seconds; средний —
+trip.summary.time. Каждый участок учитывается ровно один раз.
+
+WalkConnector фиксирует snapshot/source_graph, физический и сетевой ID, обе
+координаты, seconds, traversable, time_basis и evidence_refs. Принят только
+traversable=True с известным временем и evidence. Неизвестный подход блокирует
+запрос; даже совпадение координат не доказывает нулевой подход. В этом этапе
+потребляется переданное подтверждённое время: скорость для подходов не вычисляется.
+access_distance_m расчётной точки не берётся из initial_center и не превращается
+в секунды. Отсутствующий destination access distance не заполняется нулём.
+
+ValhallaBuild раздельно хранит snapshot_id, исходный source_graph_version ML2,
+build_id, фактический graph_version тайлов, engine_version, profile_version,
+полный pedestrian_options_json и evidence. После принятия build контекст engine
+использует именно фактический graph_version тайлов; исходная версия привязок
+сохраняется отдельно. Snapshot сохраняется. Без build создаётся только входная
+проекция с source graph и static:unbound — запросы не выдаются.
+
+Для пилота поддержана JSON-схема Valhalla **3.5.1**, а не незакреплённый latest.
+Проверены официальные [route docs 3.5.1](https://github.com/valhalla/valhalla/blob/3.5.1/docs/docs/api/turn-by-turn/api-reference.md),
+[matrix docs 3.5.1](https://github.com/valhalla/valhalla/blob/3.5.1/docs/docs/api/matrix/api-reference.md)
+и [pedestrian costing source 3.5.1](https://github.com/valhalla/valhalla/blob/3.5.1/src/sif/pedestriancost.cc).
+Принятая production-сборка пока отсутствует: поддержка формата не означает её наличие.
+walking_speed обязательно передаётся в профиль явно, источник/принятие — build evidence.
+Число 5.1 в примере — только параметр синтетического профиля, не принятая скорость
+реальных подходов. profile_hash включает версию движка, профиля и канонические options.
+
+ValhallaCorrelation связывает ML2 access ID/координату с фактической принятой
+корреляцией конкретного build, correlation_id и evidence. OSM way/offset не
+выдаются за внутренний ID Valhalla. При отсутствии внутреннего ID достаточно
+подтверждённой координаты и артефакта корреляции, сохраняющего выбранную дорогу.
+Изменение координаты корреляции требует нового согласованного connector и версии;
+этот пилот отклоняет его как REVISED_ACCESS_CONNECTOR_REQUIRED. На перекрёстках
+одних координат недостаточно: evidence должно различать выбранную дорогу/направление.
+Текст ID сам по себе не является доказательством.
+
+### План, внешний исполнитель и response envelope
+
+WalkRoutePlan содержит неизменяемые inputs, выбранные point_ids/categories,
+requests и issues для заблокированных пар. Перебираются **все** принятые объекты
+выбранной категории, включая несколько входов одного физического объекта.
+Сокращения по прямому расстоянию нет. Порядок и request_id детерминированы.
+
+Каждый WalkRouteRequest сохраняет point/destination IDs, build/profile, параметры
+поиска, обе корреляции, evidence, network_only и payload_json. payload() возвращает
+отдельный JSON dict для POST /route: два break locations с lon/lat, pedestrian,
+полные costing_options, units=kilometers, format=json, maneuvers, alternates=0,
+id=request_id. payload_hash — SHA256 UTF-8 строки payload_json, без её
+переформатирования. date_time отсутствует для static. Параметры radius=0/search_cutoff=1/
+node_snap_tolerance=0 не доказывают отсутствие повторной привязки; фактическая
+корреляция проверяется отдельно. exclude_ferry в endpoint filter также не
+доказывает отсутствие парома во всём пути.
+
+Внешний слой выполняет план в следующем порядке:
+
+1. Проверяет принятую сборку, effective profile и корреляции на этой сборке.
+2. Отправляет неизменённый payload, сохраняет его hash и сырой ответ/content hash.
+3. Фиксирует исход выполнения, фактически выбранные endpoints и их доказательства.
+4. Проверяет состав рёбер на чистый walk; сохраняет доказательство отсутствия ferry.
+5. Передаёт WalkResponseEnvelope в engine; повторные попытки и jobs остаются снаружи.
+
+Envelope содержит request_id, направленные point_id/destination_id, полный build,
+request_payload_hash, origin/destination correlation IDs, outcome, response_json,
+evidence_refs, search_complete, minimum_time_evidence_refs,
+unreachable_evidence_refs, pure_walk_evidence_refs, matched_origin/destination и
+endpoint_evidence_refs. Эти сведения поступают от доверенного исполнителя после
+проверки сохранённых артефактов. Они не копируются из полей входного запроса.
+Повторённые trip.locations подтверждают только echo; без доказательств фактических
+endpoints результат ACTUAL_ENDPOINTS_UNCONFIRMED. Несовпадение пары, build, профиля,
+hash, выбранных endpoints или геометрии — ValueError, без смешивания контекстов.
+
+WalkRouteResult сохраняет также SHA256 исходного response_json (response_hash),
+чтобы сопоставлять результат с неизменяемым сохранённым ответом.
+Для успешного JSON проверяются status, warnings, единицы, summary/leg, maneuvers,
+конечность и неотрицательность чисел, pedestrian/foot, отсутствие ferry/transit.
+Время — elapsed seconds из summary.time, не routing cost и не recosting.
+Расстояние переводится из kilometers/miles в метры. Поддерживается один сетевой leg
+между двумя endpoints; multi-leg/matrix/OSRM/multimodal не входят в пилот.
+Опциональная polyline6 декодируется в (lon,lat), проверяется и хранится только как
+network_geometry. Она не становится полной candidate.geometry: реальные геометрии
+подходов пока не передаются, недостающие линии не дорисовываются.
+
+Pedestrian выбирает путь по собственному cost, который может отличаться от elapsed
+time. shortest и recosting не считаются доказательством минимального времени.
+Без принятого аудита minimum_time_evidence_refs и полного поиска маршрут остаётся
+лучшим известным кандидатом, minimum_proven=False; индекс категории unknown.
+Это внешний обязательный аудит конкретного профиля, графа, ограничений и всех
+допустимых входов. Engine проверяет соответствие его идентичности, а не выполняет
+повторный поиск по графу. У реального текущего набора такого аудита нет.
+
+Timeout/HTTP error/limit/no correlation, пропущенный ответ, неполный JSON, предупреждения
+и код 442 сохраняют unknown с причиной. Только 442 вместе с отдельным достаточным
+unreachable evidence и полным поиском подтверждает недостижимость. Ошибка не
+исключает объект из обязательного набора и не превращается в нулевой индекс.
+
+Каталог и поиск проверяются раздельно: partial catalog сохраняет лучший известный
+маршрут, но не полный индекс. object_identity дедуплицирует несколько входов для
+count. Потерянное население и пилотное подмножество точек блокируют городской рейтинг.
+Отсутствующий τ не блокирует готовый H-индекс, count остаётся TAU_UNAVAILABLE.
+Согласованный существующий UrbanThreshold можно передать через thresholds; его
+контекст и версии проверяются прежним анализом. not_collected calendar допустим
+для walk/static, но не подтверждает базовую неделю τ.
+
+### Воспроизводимые прогоны
+
+Самостоятельное воспроизведение сохранённого **синтетического** ответа, без HTTP:
+
+```bash
+PYTHONPATH=packages/engine/src uv run --frozen python packages/engine/examples/synthetic_walk.py
+```
+
+<!-- executable-example -->
+```python
+import runpy
+
+demo = runpy.run_path("packages/engine/examples/synthetic_walk.py")
+result = demo["run_demo"]()
+assert [leg.duration_seconds for leg in result.analysis.journeys[0].candidate.legs] == [60, 1620, 120]
+assert result.analysis.journeys[0].total_seconds == 1800
+assert result.analysis.h_seconds.value == 1800
+assert result.analysis.modes[0].points[0].index.value == 50
+```
+
+synthetic_walk_response.json — маленький сохранённый тестовый ответ с request_id;
+все acceptance/proof/build IDs в этом примере синтетические. Геоданные этого
+примера также синтетические. Отдельный тестовый canonical subset Калининграда
+содержит реальные геоданные ML2, но его маршрутные ответы и подтверждения тестовые.
+
+Для реального bundle используйте установленные/доступные через PYTHONPATH версии
+packages/data_pipeline/src из work/ml2@02221bf и packages/contracts/src из
+work/backend@d2cfe9a. В A2_DATA_DIR укажите каталог data с опубликованным bundle;
+engine/src также должен входить в PYTHONPATH. Исходники соседей не копируются в engine.
+
+```bash
+uv run --frozen python packages/engine/examples/check_walk_bundle.py --bundle kaliningrad-urban-2026-11-08.2 --departure-at 2026-11-08T12:00:00+00:00
+```
+
+Этот прогон реально выполнен через load_accepted_data, то есть существующее
+преобразование ML2 и каноническую валидацию BACKEND. Запись результата:
+examples/kaliningrad_walk_readiness.json, полный canonical payload hash
+1c437d5a042f952eae17a1d787ad7836792aeafa89f0e4ba8377070f0e0c5f47.
+Подтверждены 1/286/216/39/255/1228 city/cells/points/objects/access/evidence.
+Сумма населения исключённых ячеек по исходным числам **277.772**, в QA округлено 277.8.
+Пилот airport и три перечисленные в записи точки дают 3 заблокированные пары,
+0 исполнимых запросов: нет build, принятых Valhalla correlations и connectors.
+HTTP-прогон не состоялся; реальные времена и индексы маршрутов не получены.
+В опубликованных соседних ветках executor/build не обнаружены; локальный Docker
+недоступен (docker.sock отсутствует). Публичный demo не использовался как production.
+
+### Точная передача соседним ролям
+
+- **BACKEND — apps/api/** и **packages/contracts/src/a2_contracts/v2/**:
+  предоставить внешний исполнитель POST /route и сохранение request/envelope по
+  описанным полям. Формализовать отдельные connector/correlation/route attestations,
+  не institutional CoverageScope. Проверить реальную корреляцию по возможностям
+  3.5.1 (/locate и сведения фактического пути), сохранить chosen road в evidence;
+  не доверять echo. Принять аудит минимума времени профиля либо сохранять unknown.
+  Приёмка: timeout/442 не no-route, hash/build/endpoints совпадают, сохранённый ответ
+  воспроизводится, частичный поиск не становится полным, job создаётся реальным worker.
+- **ML2 — packages/data_pipeline/** и immutable bundle supplement:
+  передать snapshot_id/source_graph_version, physical/access coordinates, osm_way_ref,
+  offset_along_way_m, destination access_distance_m и evidence привязок без потерь.
+  Отдельно нужны подтверждение проходимости обоих connectors и известное время с
+  time_basis/version (или согласованная модель, параметры и источник). Расстояния
+  проекций не доказывают проходимость. Сохранить исключённых 277.772 жителей и
+  partial/quarantine категорий; не перераспределять население молча. Приёмка:
+  prepare_walk_inputs связывает дополнение с исходной версией, неизвестное остаётся unknown.
+- **DEVOPS — infra/**, manifests/CI:
+  согласовать стабильный image digest Valhalla 3.5.1, build/tiles hash, source OSM hash,
+  runtime config/effective costing profile и endpoint для BACKEND executor.
+  Другую версию сначала проверить на совместимость адаптера; engine отклоняет её явно.
+  Приёмка: опубликован воспроизводимый build manifest и рабочий /route, engine tests
+  проходят в установленном src-пакете. Зависимости и lock этим этапом не менялись.
+
 ## Воспроизводимые проверки
 
 Из **корня этого checkout**, Python 3.12, закреплённый uv 0.12.17:
@@ -955,11 +1165,11 @@ git diff --check
 только в tests; реальные данные/рейтинги не создаются.
 
 Проверки переноса находятся в tests/test_public_api.py и входят в общий запуск
-pytest: сохранение 60 прежних экспортов/сигнатур, тождественность каноническим объектам,
+pytest: сохранение 72 прежних экспортов и совместимости вызовов, тождественность каноническим объектам,
 frozen dataclass, импорты предметных пакетов в разных порядках, все три загрузчика
 из другого cwd, явный путь вне checkout, прежние ошибки файла/JSON и направление
-зависимостей через shared и собственные модули. Семь рабочих блоков README
-(все шесть прежних и новый τ-пример) с меткой
+зависимостей через shared и собственные модули. Восемь рабочих блоков README
+(все семь прежних и новый walk-пример) с меткой
 executable-example можно выполнить отдельно из корня checkout:
 
 ```bash
@@ -969,7 +1179,7 @@ import re
 
 text = Path("packages/engine/README.md").read_text()
 examples = re.findall(r"<!-- executable-example -->\s*```python\n(.*?)```", text, re.S)
-assert len(examples) == 7
+assert len(examples) == 8
 for number, source in enumerate(examples, 1):
     exec(compile(source, f"README example {number}", "exec"), {})
     print(f"README example {number}: PASS")

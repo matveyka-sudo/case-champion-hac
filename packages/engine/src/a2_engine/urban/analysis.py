@@ -118,9 +118,8 @@ def _check_candidate(
         raise ValueError("CATEGORY_DESTINATION_MISMATCH")
     if candidate.passenger_mode not in config.modes:
         raise ValueError("UNSUPPORTED_PASSENGER_MODE")
-    if (
-        candidate.origin_node_id != point.origin_node_id
-        or candidate.destination_node_id != destination.access_node_id
+    if candidate.origin_node_id != point.origin_node_id or candidate.destination_node_id != (
+        destination.physical_node_id or destination.access_node_id
     ):
         raise ValueError("CANDIDATE_BOUNDARY_MISMATCH")
     timing = validate_urban_journey(candidate, rules=rules)
@@ -136,6 +135,14 @@ def _check_candidate(
                 break
         if not reached or access_walk <= 0:
             raise ValueError("ACCESS_CONNECTOR_REQUIRED")
+    if destination.physical_node_id not in (None, destination.access_node_id):
+        final_leg = candidate.legs[-1]
+        if not (
+            final_leg.kind == "walk"
+            and final_leg.from_node_id == destination.access_node_id
+            and final_leg.to_node_id == destination.physical_node_id
+        ):
+            raise ValueError("DESTINATION_CONNECTOR_REQUIRED")
     return timing
 
 

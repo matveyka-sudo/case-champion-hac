@@ -142,3 +142,36 @@ UrbanTauResult.to_threshold() сохраняет baseline versions и подкл
 Проверки этапа: 383 pytest-теста (320 прежних и 63 новых), Ruff check/format,
 mypy, uv lock --check, uv pip check, check_product_config.py, git diff --check
 и все семь исполнимых примеров README прошли. Публичных экспортов теперь 72.
+
+## Пешая интеграция walk/static
+
+UrbanDestination расширен необязательным keyword-only physical_node_id; старые
+вызовы сохранены. Финальный подход теперь проверяется отдельным конечным walk leg.
+urban/walk.py отображает канонический AcceptedData v2 (после валидации BACKEND),
+учитывает всё население и partial catalogs, строит детерминированный план всех
+нужных объектов и собирает полный путь через прежний analyze_urban_candidates.
+urban/valhalla.py поддерживает закреплённый route JSON Valhalla 3.5.1, отдельные
+source graph/build/profile/correlation identities, внешние connector times и
+проверку response envelope. HTTP/worker/foreign DTO imports в engine отсутствуют.
+
+Сквозной синтетический контроль: 60+1620+120=1800 секунд, H=1800, индекс=50.
+Геометрия сетевой части не объявляется полной; минимум времени без отдельного
+аудита не доказан. Ошибки, неполные ответы и непроверенные подходы остаются unknown.
+72 прежних имени сохранены (единственное расширение сигнатуры — destination
+keyword-only endpoint), добавлено 15 экспортов. Все импорты абсолютные.
+
+Реальный bundle .2 проверен существующим load_accepted_data из ML2@02221bf с
+каноническими contracts BACKEND@d2cfe9a во временных внешних копиях: состав
+1/286/216/39/255/1228 подтверждён. Исключённое население по каноническим числам
+277.772 (QA:277.8), calendar=not_collected. Pilot airport на трёх точках из
+examples/kaliningrad_walk_readiness.json заблокирован отсутствием build,
+подтверждённых connectors и correlations. Сетевой прогон не выполнен, реальных
+времён/индексов нет. Docker daemon недоступен; в соседних ветках executor не найден.
+Готовность вычислительного адаптера, инфраструктуры и полного городского результата
+различаются. Точные поля/handoff и порядок внешнего выполнения — README engine;
+исполняемые synthetic replay и real readiness — examples/. Чужие исходники,
+манифесты, lock и a2-dev.bundle в поставку не включаются.
+
+Проверки: 433 теста (383 прежних + 50 новых), Ruff check/format, mypy,
+uv lock --check, uv pip check, check_product_config.py, git diff --check и все
+8 примеров README прошли. Ruff/mypy также проверили новые examples.

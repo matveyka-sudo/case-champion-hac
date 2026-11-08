@@ -129,9 +129,9 @@ PUBLIC_SIGNATURES: dict[str, str] = {
     "UrbanCoverage": "(scope: UrbanSearchScope, catalog_complete: bool, search_complete: bool, "
     "evidence_refs: tuple[str, ...], catalog_destination_ids: frozenset[str], "
     "provider_error: str | None = None) -> None",
-    "UrbanDestination": "(destination_id: str, object_identity: str, categories: frozenset[str], "
-    "access_node_id: str, territory_id: str, eligible: bool | None, "
-    "in_service_scope: bool, source_refs: tuple[str, ...]) -> None",
+    "UrbanDestination": "(destination_id: str, object_identity: str, categories: frozenset[str], access_node_id: "
+    "str, territory_id: str, eligible: bool | None, in_service_scope: bool, source_refs: "
+    "tuple[str, ...], *, physical_node_id: str | None = None) -> None",
     "UrbanGeometry": "(coordinates: tuple[tuple[float, float], ...], evidence_refs: tuple[str, "
     "...]) -> None",
     "UrbanJourneyTiming": "(candidate: UrbanCandidate, total_seconds: float, walking_seconds: "
@@ -176,6 +176,46 @@ PUBLIC_SIGNATURES: dict[str, str] = {
     "collections.abc.Sequence[UrbanThreshold] = ()) -> UrbanAnalysis",
     "validate_urban_journey": "(candidate: UrbanCandidate, *, rules: UrbanJourneyRules) -> "
     "UrbanJourneyTiming",
+    "UrbanTauRules": "(methodology_version: str, tau_days: int, tau_times: tuple[datetime.time, ...], "
+    "max_total_wait_seconds: float, max_lookback_weeks: int = 8) -> None",
+    "load_urban_tau_rules": "(path: str | pathlib.Path | None = None) -> UrbanTauRules",
+    "urban_tau_rules_from_mapping": "(product: collections.abc.Mapping[str, object]) -> UrbanTauRules",
+    "UrbanODScope": "(city_id: str, passenger_mode: Literal['walk', 'public_transport', 'private_car'], "
+    "versions: UrbanVersions, traffic_mode: Literal['static', 'typical', 'live', "
+    "'historical'], search_parameters_id: str, timezone: str, point_ids: frozenset[str], "
+    "max_total_wait_seconds: float) -> None",
+    "UrbanODPair": "(origin_point_id: str, destination_point_id: str, state: Literal['reachable', "
+    "'confirmed_unreachable', 'unknown'], seconds: float | None, search_complete: bool, "
+    "rules_confirmed: bool, evidence_refs: tuple[str, ...], reason_code: str | None = None) "
+    "-> None",
+    "UrbanTauDay": "(service_date: datetime.date, ordinary: bool | None, is_holiday: bool | None, "
+    "calendar_confirmed: bool, service_calendar_confirmed: bool, evidence_refs: tuple[str, "
+    "...]) -> None",
+    "UrbanTauSlice": "(scope: UrbanODScope, service_date: datetime.date, local_time: datetime.time, "
+    "departure_at: datetime.datetime, pairs: tuple[UrbanODPair, ...], coverage_confirmed: "
+    "bool, evidence_refs: tuple[str, ...]) -> None",
+    "UrbanTauWeek": "(week_id: str, scope: UrbanODScope, week_start: datetime.date, calendar: "
+    "tuple[UrbanTauDay, ...], slices: tuple[UrbanTauSlice, ...], evidence_refs: tuple[str, "
+    "...], typical_profile_accepted: bool, traffic_evidence_refs: tuple[str, ...]) -> None",
+    "UrbanTauSliceResult": "(service_date: datetime.date, local_time: datetime.time, departure_at: "
+    "datetime.datetime, mean_seconds: MetricResult, reachable_weight: fractions.Fraction, "
+    "confirmed_unreachable_weight: fractions.Fraction, unknown_weight: fractions.Fraction, "
+    "weight_denominator: fractions.Fraction, unreachable_weight_share: fractions.Fraction | "
+    "None, reasons: tuple[str, ...], evidence_refs: tuple[str, ...]) -> None",
+    "UrbanTauWeekResult": "(week_id: str, week_start: datetime.date, scope: UrbanODScope, tau_seconds: "
+    "MetricResult, slices: tuple[UrbanTauSliceResult, ...], reasons: tuple[str, ...], "
+    "evidence_refs: tuple[str, ...]) -> None",
+    "UrbanTauResult": "(baseline_context: UrbanContext, passenger_mode: Literal['walk', 'public_transport', "
+    "'private_car'], timezone: str, reference_at: datetime.datetime, rules: UrbanTauRules, "
+    "points: tuple[UrbanPoint, ...], population_coverage: UrbanPopulationCoverage, "
+    "tau_seconds: MetricResult, selected_week: UrbanTauWeekResult | None, weeks: "
+    "tuple[UrbanTauWeekResult, ...], reasons: tuple[str, ...], evidence_refs: tuple[str, "
+    "...]) -> None",
+    "calculate_urban_tau": "(baseline_context: UrbanContext, points: collections.abc.Sequence[UrbanPoint], "
+    "population_coverage: UrbanPopulationCoverage, weeks: "
+    "collections.abc.Sequence[UrbanTauWeek], *, passenger_mode: Literal['walk', "
+    "'public_transport', 'private_car'], timezone: str, reference_at: datetime.datetime, "
+    "rules: UrbanTauRules) -> UrbanTauResult",
 }
 
 CANONICAL_MODULES = {
@@ -265,21 +305,43 @@ CANONICAL_MODULES = {
         "UrbanTauResult",
         "calculate_urban_tau",
     ),
+    "a2_engine.urban.valhalla": (
+        "ValhallaBuild",
+        "ValhallaCorrelation",
+        "WalkCoordinate",
+        "WalkConnector",
+        "WalkRouteRequest",
+        "WalkResponseEnvelope",
+        "WalkRouteResult",
+        "normalize_walk_response",
+    ),
+    "a2_engine.urban.walk": (
+        "WalkInputs",
+        "WalkRoutePlan",
+        "WalkPlanIssue",
+        "WalkAnalysisResult",
+        "prepare_walk_inputs",
+        "plan_walk_routes",
+        "analyze_walk_responses",
+    ),
 }
 
 NEW_PUBLIC_NAMES = {
-    "UrbanODPair",
-    "UrbanODScope",
-    "UrbanTauDay",
-    "UrbanTauResult",
-    "UrbanTauRules",
-    "UrbanTauSlice",
-    "UrbanTauSliceResult",
-    "UrbanTauWeek",
-    "UrbanTauWeekResult",
-    "calculate_urban_tau",
-    "load_urban_tau_rules",
-    "urban_tau_rules_from_mapping",
+    "WalkConnector",
+    "WalkResponseEnvelope",
+    "WalkInputs",
+    "WalkRoutePlan",
+    "normalize_walk_response",
+    "WalkAnalysisResult",
+    "prepare_walk_inputs",
+    "ValhallaBuild",
+    "analyze_walk_responses",
+    "plan_walk_routes",
+    "WalkRouteResult",
+    "WalkRouteRequest",
+    "WalkPlanIssue",
+    "WalkCoordinate",
+    "ValhallaCorrelation",
 }
 
 

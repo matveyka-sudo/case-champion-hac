@@ -80,6 +80,25 @@ from a2_engine.urban import (
     territory_index,
     validate_urban_journey,
 )
+from a2_engine.urban.valhalla import (
+    ValhallaBuild,
+    ValhallaCorrelation,
+    WalkConnector,
+    WalkCoordinate,
+    WalkResponseEnvelope,
+    WalkRouteRequest,
+    WalkRouteResult,
+    normalize_walk_response,
+)
+from a2_engine.urban.walk import (
+    WalkAnalysisResult,
+    WalkInputs,
+    WalkPlanIssue,
+    WalkRoutePlan,
+    analyze_walk_responses,
+    plan_walk_routes,
+    prepare_walk_inputs,
+)
 
 __all__ = [
     "AreaHBand",
@@ -154,4 +173,19 @@ __all__ = [
     "UrbanTauWeekResult",
     "UrbanTauResult",
     "calculate_urban_tau",
+    "ValhallaBuild",
+    "ValhallaCorrelation",
+    "WalkCoordinate",
+    "WalkConnector",
+    "WalkRouteRequest",
+    "WalkResponseEnvelope",
+    "WalkRouteResult",
+    "normalize_walk_response",
+    "WalkInputs",
+    "WalkRoutePlan",
+    "WalkPlanIssue",
+    "WalkAnalysisResult",
+    "prepare_walk_inputs",
+    "plan_walk_routes",
+    "analyze_walk_responses",
 ]

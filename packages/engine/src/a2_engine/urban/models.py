@@ -1,7 +1,7 @@
 """Immutable normalized engine boundary; not a second set of wire DTOs."""
 
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Literal
 
@@ -146,6 +146,7 @@ class UrbanDestination:
     eligible: bool | None
     in_service_scope: bool
     source_refs: tuple[str, ...]
+    physical_node_id: str | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         for name in ("destination_id", "object_identity", "access_node_id", "territory_id"):
@@ -160,6 +161,8 @@ class UrbanDestination:
         if not isinstance(self.in_service_scope, bool):
             raise ValueError("in_service_scope must be an explicit boolean")
         object.__setattr__(self, "source_refs", references(self.source_refs, required=True))
+        if self.physical_node_id is not None:
+            identifier(self.physical_node_id, "physical_node_id")
 
 
 @dataclass(frozen=True)
