@@ -1,0 +1,35 @@
+{
+  "dataset_id": "rosmorport.seaports-novorossiysk-20261108",
+  "source_id": "rosmorport",
+  "source_url": "https://www.rosmorport.ru/nvr_seaports.html",
+  "retrieved_at": "2026-11-08T19:40:38.141524Z",
+  "publication_date": null,
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Азово-Черноморский бассейн; морской порт Новороссийск (Ч-1)",
+  "license": {
+    "name": "Используются только факты: перечень операторов и характеристики порта (ст. 1259 ГК РФ)",
+    "url": "https://www.rosmorport.ru/",
+    "status": "permitted",
+    "attribution": "ФГУП «Росморпорт», rosmorport.ru"
+  },
+  "access_method": "manual",
+  "raw_path": "rosmorport/nvr_seaports-20261108.html",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "b66300669b2675eb30b9a60cb9c14672da5c2cf6f5029d84a54f04cb015521b6",
+    "size_bytes": 1359306
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "Перечень услуг / Стивидорные услуги": "операторы морских терминалов",
+    "Основные технические характеристики": "мощности порта"
+  },
+  "coverage": "Сведения о морских портах бассейнового филиала, включая перечень операторов стивидорных услуг",
+  "limitations": [
+    "Перечень операторов без привязки к причалам и видам грузов",
+    "Мощность — по порту в целом, не по терминалам"
+  ],
+  "status": "accepted",
+  "qa_report": "data/bundles/novorossiysk-urban-2026-11-08.2/qa_report.json"
+}

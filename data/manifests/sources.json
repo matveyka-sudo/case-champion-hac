@@ -74,8 +74,14 @@
       "limitations": "Подтверждение узла и совместимости грузов; состав полей различается; расписаний нет",
       "access_method": "manual",
       "geography": "Морские порты РФ",
-      "license": {"name": null, "url": null, "status": "unknown"},
-      "status": "registered"
+      "license": {
+        "name": "Используются только факты: перечень операторов и характеристики порта (ст. 1259 ГК РФ)",
+        "url": "https://www.rosmorport.ru/",
+        "status": "permitted",
+        "attribution": "ФГУП «Росморпорт», rosmorport.ru"
+      },
+      "status": "accepted",
+      "datasets": ["rosmorport.seaports-novorossiysk-20261108"]
     },
     {
       "source_id": "osm_geofabrik",

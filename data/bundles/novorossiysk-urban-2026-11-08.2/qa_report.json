@@ -1,0 +1,426 @@
+{
+  "bundle_id": "novorossiysk-urban-2026-11-08.2",
+  "generated_at": "2026-11-08T20:03:09.442377+00:00",
+  "parser_version": "ml2-urban-0.2.0",
+  "category_rules": "osm-category-rules-v1",
+  "graph_version": "osm_geofabrik.south-fed-district-261107:osm-walk-network-v1:main-component",
+  "road_graph_version": "osm_geofabrik.south-fed-district-261107:osm-road-network-v1:main-component",
+  "result": "pass",
+  "failed_checks": [],
+  "warnings": [
+    "medical_registry_city_addresses_located",
+    "accredited_schools_located",
+    "access_distance_points",
+    "freight_access_distance",
+    "seaport_operators_located"
+  ],
+  "checks": [
+    {
+      "check_id": "boundary_valid",
+      "status": "pass",
+      "detail": "City and district polygons are valid after make_valid"
+    },
+    {
+      "check_id": "area_geodesic_vs_utm",
+      "status": "pass",
+      "detail": "Geodesic area agrees with UTM area within 0.5%",
+      "geodesic_km2": 848.313,
+      "utm_km2": 847.873
+    },
+    {
+      "check_id": "districts_partition_city",
+      "status": "pass",
+      "detail": "Districts cover the city area without overlap (area sum within 0.5%)",
+      "district_sum_km2": 848.313
+    },
+    {
+      "check_id": "cells_partition_city",
+      "status": "pass",
+      "detail": "Clipped cells cover the city exactly once"
+    },
+    {
+      "check_id": "points_inside_own_cell",
+      "status": "pass",
+      "detail": "Every sample point lies in its own clipped cell"
+    },
+    {
+      "check_id": "population_conserved",
+      "status": "pass",
+      "detail": "All GHSL population inside the city is assigned to exactly one cell",
+      "cells_sum": 316189.4,
+      "raster_sum": 316189.4
+    },
+    {
+      "check_id": "district_population_not_doubled",
+      "status": "pass",
+      "detail": "District shares never exceed the city population",
+      "district_sum": 316189.1
+    },
+    {
+      "check_id": "medical_registry_city_addresses_located",
+      "status": "warn",
+      "detail": "Every register polyclinic of a settlement in the search area is found in OSM addresses",
+      "unlocated": [
+        {
+          "category": "adult_polyclinic",
+          "name": "ГБУЗ «Городская поликлиника №6 г. Новороссийска» МЗ КК",
+          "address": "353991, Краснодарский край, г. Новороссийск, село Гайдук, ул. Ясельная, 4"
+        }
+      ]
+    },
+    {
+      "check_id": "medical_registry_exact_addresses",
+      "status": "pass",
+      "detail": "Polyclinics are placed at the exact house (nearest same-parity number at most ±4 otherwise)",
+      "nearest_number": []
+    },
+    {
+      "check_id": "accredited_schools_located",
+      "status": "warn",
+      "detail": "Every public school of the accreditation registry in the city is found in OSM addresses",
+      "unlocated": [
+        {
+          "org": "МБОУ СОШ № 27",
+          "address": "353993, Россия, Краснодарский край, г. Новороссийск, село Мысхако, ул. Школьная, 5"
+        },
+        {
+          "org": "МБОУ СОШ № 24 имени генерала Н.Н. Раевского",
+          "address": "353983, Российская Федерация, Краснодарский край, город Новороссийск, станица Раевская, ул. Красная, 40"
+        },
+        {
+          "org": "МБОУ СОШ № 16",
+          "address": "Россия, Краснодарский край, 353902, г. Новороссийск, ул. Сухумийское шоссе д.82"
+        }
+      ]
+    },
+    {
+      "check_id": "higher_education_registry_located",
+      "status": "pass",
+      "detail": "Every public college and university of the city has a building or a located address",
+      "unlocated": []
+    },
+    {
+      "check_id": "public_categories_need_registry",
+      "status": "pass",
+      "detail": "No medical/education object is accepted without registry confirmation",
+      "accepted_registry_objects": 40
+    },
+    {
+      "check_id": "airport_outside_boundary_kept",
+      "status": "pass",
+      "detail": "Scheduled airport outside the city boundary is kept (PRODUCT_SPEC §2)",
+      "airports": [
+        "Геленджик"
+      ]
+    },
+    {
+      "check_id": "walk_network_main_component",
+      "status": "pass",
+      "detail": "Largest connected walk component holds at least 90% of walk length",
+      "share": 0.9837
+    },
+    {
+      "check_id": "access_distance_points",
+      "status": "warn",
+      "detail": "Sample points join the walk network within 500 m",
+      "over_limit": [
+        "novorossiysk-utm37n-1km-v1-e386-n4967-p",
+        "novorossiysk-utm37n-1km-v1-e389-n4964-p",
+        "novorossiysk-utm37n-1km-v1-e391-n4970-p",
+        "novorossiysk-utm37n-1km-v1-e392-n4967-p",
+        "novorossiysk-utm37n-1km-v1-e397-n4966-p",
+        "novorossiysk-utm37n-1km-v1-e398-n4966-p",
+        "novorossiysk-utm37n-1km-v1-e399-n4967-p",
+        "novorossiysk-utm37n-1km-v1-e410-n4955-p",
+        "novorossiysk-utm37n-1km-v1-e410-n4956-p",
+        "novorossiysk-utm37n-1km-v1-e411-n4956-p"
+      ]
+    },
+    {
+      "check_id": "access_distance_accepted_destinations",
+      "status": "pass",
+      "detail": "Accepted destinations join the walk network within 500 m",
+      "over_limit": []
+    },
+    {
+      "check_id": "road_network_main_component",
+      "status": "pass",
+      "detail": "Largest connected road component holds at least 90% of drivable length",
+      "share": 0.9758
+    },
+    {
+      "check_id": "freight_access_distance",
+      "status": "warn",
+      "detail": "Accepted freight nodes and sites join the road network within 500 m of their inner point",
+      "over_limit": [
+        {
+          "id": "novorossiysk-pipeline_terminal-relation-3569335",
+          "name": "ПНБ Грушовая",
+          "distance_m": 1017.56
+        },
+        {
+          "id": "novorossiysk-site-way-1503696641",
+          "name": null,
+          "distance_m": 783.74
+        }
+      ]
+    },
+    {
+      "check_id": "seaport_operators_located",
+      "status": "warn",
+      "detail": "Every stevedoring operator of the seaport record has a named OSM object in the city",
+      "unlinked": [
+        "ПАО «Новороссийский морской торговый порт»",
+        "ООО «Новороссийский мазутный терминал»",
+        "АО «Новороссийский судоремонтный завод»",
+        "АО «Зерновой терминал «КСК»",
+        "ООО «Новороссийский нефтеперевалочный комплекс»",
+        "ООО «Новороссийский топливный терминал»"
+      ]
+    }
+  ],
+  "summary": {
+    "city_area_km2": 848.313,
+    "cells_total": 968,
+    "cells_sampled": 409,
+    "cells_excluded": {
+      "NO_BUILDING": 559,
+      "WATER_ONLY": 0
+    },
+    "population_total": 316189.4,
+    "population_in_excluded_cells": 453.8,
+    "population_method": "ghsl_r2023a_e2025_100m_pixel_centroid",
+    "population_year": 2025,
+    "sample_offset_m": {
+      "center_placements": 17,
+      "median": 171.0,
+      "max": 702.3
+    },
+    "walk_network": {
+      "rules": "osm-walk-network-v1",
+      "ways_total": 41996,
+      "ways_main_component": 41056,
+      "components": 408,
+      "main_component_length_share": 0.9837
+    },
+    "access_distance_m": {
+      "sample_points": {
+        "median": 22.7,
+        "p95": 250.4,
+        "max": 822.3
+      },
+      "destinations": {
+        "median": 30.0,
+        "p95": 68.2,
+        "max": 108.1
+      }
+    },
+    "destinations_by_category": {
+      "adult_polyclinic": {
+        "accepted": 5,
+        "quarantined": 6
+      },
+      "child_polyclinic": {
+        "accepted": 1,
+        "quarantined": 3
+      },
+      "kindergarten": {
+        "accepted": 0,
+        "quarantined": 61
+      },
+      "school": {
+        "accepted": 23,
+        "quarantined": 44
+      },
+      "college_university": {
+        "accepted": 11,
+        "quarantined": 5
+      },
+      "rail_terminal": {
+        "accepted": 1,
+        "quarantined": 0
+      },
+      "bus_terminal": {
+        "accepted": 2,
+        "quarantined": 0
+      },
+      "airport": {
+        "accepted": 1,
+        "quarantined": 1
+      },
+      "shopping_center": {
+        "accepted": 15,
+        "quarantined": 6
+      }
+    },
+    "osm_rule_counts": {
+      "rail_station_not_terminal": 58,
+      "passenger_station+name:<город>": 1,
+      "school_additional_education": 19,
+      "aerodrome_without_iata": 49,
+      "medical_not_polyclinic": 341,
+      "amenity=school": 355,
+      "shop=mall": 90,
+      "amenity=bus_station+name:автовокзал": 14,
+      "medical+name:поликлиника": 40,
+      "amenity=college": 24,
+      "amenity=kindergarten": 388,
+      "bus_station_not_terminal": 17,
+      "amenity=university": 26,
+      "not_a_category": 11,
+      "aerodrome+iata": 2,
+      "disused": 1,
+      "merged_duplicates": 71,
+      "airport_point_at_terminal": 2,
+      "medical_registry": {
+        "rules": "admnvrsk-polyclinic-rules-v1",
+        "objects": 8,
+        "skipped_rows": {
+          "not_a_city_polyclinic": 18,
+          "not_public": 1
+        },
+        "located_destinations": {
+          "adult_polyclinic": 5,
+          "child_polyclinic": 1
+        },
+        "city_addresses_not_in_osm": 1,
+        "osm_candidates_attached": 3,
+        "osm_candidates_unmatched": 9
+      },
+      "accredited_schools": {
+        "rules": "registry-osm-match-v1",
+        "buildings": 23,
+        "buildings_with_osm": 19,
+        "osm_candidates_matched": 19,
+        "osm_candidates_unmatched": 44,
+        "near_but_other_number": 5,
+        "distance_m": {
+          "median": 0.0,
+          "max": 54.1
+        },
+        "registry_schools": 33,
+        "placed": 23,
+        "unlocated": 3
+      },
+      "higher_education_registry": {
+        "rules": "obrnadzor-college-university-rules-v1",
+        "link_rules": "edu-name-link-v1",
+        "local_orgs": 10,
+        "public_orgs": 10,
+        "rejected": {},
+        "accepted_destinations": 11,
+        "osm_linked": [
+          {
+            "osm": "Новороссийский колледж строительства и экономики",
+            "org": "ГАПОУ КК \"НКСЭ\"",
+            "score": 3
+          },
+          {
+            "osm": "Новороссийский колледж строительства и экономики",
+            "org": "ГАПОУ КК \"НКСЭ\"",
+            "score": 3
+          },
+          {
+            "osm": "Государственный морской университет имени адмирала Ф.Ф. Ушакова",
+            "org": "ФГБОУ ВО «ГМУ им. адм. Ф.Ф. Ушакова»",
+            "score": 3
+          },
+          {
+            "osm": "Новороссийский Колледж Радиоэлектронного Приборостроения",
+            "org": "ГБПОУ КК НКРП",
+            "score": 3
+          },
+          {
+            "osm": "Кубанский государственный технологический университет",
+            "org": "НПИ (филиал) ФГБОУ ВО «КубГТУ»",
+            "score": 2
+          },
+          {
+            "osm": "Новороссийский музыкальный колледж",
+            "org": "ГБПОУ КК \"НМК им. Д.Д.Шостаковича\" (к)",
+            "score": 2
+          },
+          {
+            "osm": "Новороссийский медицинский колледж",
+            "org": "ГБПОУ \"Новороссийский медицинский колледж\"",
+            "score": 2
+          }
+        ],
+        "osm_unlinked": 5
+      }
+    },
+    "freight": {
+      "rules": "freight-osm-rules-v1",
+      "road_network": {
+        "rules": "osm-road-network-v1",
+        "ways_total": 27005,
+        "ways_main_component": 26521,
+        "components": 187,
+        "main_component_length_share": 0.9758
+      },
+      "rule_counts": {
+        "port": 3,
+        "pipeline_terminal": 4,
+        "site_too_small": 20,
+        "site_not_production": 2,
+        "building_inside_industrial_site": 7,
+        "building_too_small": 95,
+        "rail_terminal": 4,
+        "sites": 86
+      },
+      "nodes": {
+        "port": {
+          "accepted": 3,
+          "quarantined": 0
+        },
+        "rail_terminal": {
+          "accepted": 0,
+          "quarantined": 4
+        },
+        "logistics_terminal": {
+          "accepted": 0,
+          "quarantined": 0
+        },
+        "airport": {
+          "accepted": 0,
+          "quarantined": 0
+        },
+        "pipeline_terminal": {
+          "accepted": 4,
+          "quarantined": 0
+        }
+      },
+      "sites": {
+        "industrial": 85,
+        "warehouse": 1,
+        "area_ha": 689.4
+      },
+      "access_distance_m": {
+        "nodes": {
+          "median": 166.9,
+          "p95": 1017.6,
+          "max": 1017.6
+        },
+        "sites": {
+          "median": 32.6,
+          "p95": 155.6,
+          "max": 783.7
+        }
+      },
+      "seaport": {
+        "record": {
+          "registration_number": "Ч-1",
+          "liquid_capacity": "165 124 тыс. тонн в год;",
+          "dry_capacity": "44 355 тыс. тонн в год;",
+          "container_capacity": "1 114 тыс. TEU в год;",
+          "mentions_ktk_berths": true
+        },
+        "operators": 8,
+        "linked_operators": [
+          "АО «Новорослесэкспорт»",
+          "ОАО «КТ НУТЭП»"
+        ]
+      }
+    }
+  }
+}
