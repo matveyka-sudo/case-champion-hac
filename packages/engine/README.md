@@ -28,6 +28,9 @@ a2_engine/
     tau.py                    # выбор базовой недели и точный расчёт τ
     walk.py                   # AcceptedData, план и сборка walk/static анализа
     valhalla.py               # типы, запросы и проверка ответов route JSON 3.5.1
+    district_models.py        # исходные ячейки, районы, доли и покрытие
+    district_inputs.py        # сверка узкого дополнения с canonical
+    districts.py              # районные индексы, QA и сравнение
   intercity/
     __init__.py
     passenger.py              # пассажирская цепочка, эталон, автомобиль
@@ -93,8 +96,8 @@ a2_engine.config, a2_engine.results и a2_engine.passenger: эти пути ис
 Тест копирует пакет вне checkout и проверяет все три загрузчика с таким путём;
 отдельные процессы из другого cwd проверяют загрузку по умолчанию.
 
-Городской анализ добавил 23 экспорта; расчёт τ добавил ещё 12, пешая интеграция — 15 (всего 87).
-Зафиксированы все 72 прежних вызова; совместимое расширение destination описано ниже. Предметные реализации могут импортировать свои внутренние
+Городской анализ добавил 23 экспорта; расчёт τ добавил ещё 12, пешая интеграция — 15, районы — 17 (всего 104).
+Зафиксированы все 87 прежних сигнатур; расширение destination прошлого этапа описано ниже. Предметные реализации могут импортировать свои внутренние
 модули и shared; shared по-прежнему не зависит от предметных пакетов.
 
 ## Городские пассажирские вызовы: первый этап
@@ -1152,6 +1155,217 @@ HTTP-прогон не состоялся; реальные времена и и
   Приёмка: опубликован воспроизводимый build manifest и рабочий /route, engine tests
   проходят в установленном src-пакете. Зависимости и lock этим этапом не менялись.
 
+## Районы: веса исходных ячеек, Gap, Deficit и рейтинг
+
+Чистый районный слой urban/districts.py принимает уже рассчитанный UrbanAnalysis.
+Он не ищет маршруты, не меняет категории/приоритеты и не ограничивает каталог
+учреждений границами района. Общий городской H сохраняется в comparison scope:
+для площади Калининграда 224.668 км² это 1800с, независимо от площади района.
+
+```python
+analyze_urban_districts(
+    urban_analysis: UrbanAnalysis,
+    original_cells: Sequence[UrbanOriginalCell],
+    district_catalog: Sequence[UrbanDistrict],
+    population_shares: Sequence[UrbanDistrictShare],
+    coverage: UrbanDistrictCoverage,
+) -> UrbanDistrictAnalysis
+```
+
+Готовый UrbanAnalysis передаётся напрямую, в том числе из
+analyze_walk_responses(...).analysis. Районный результат не зависит от наличия
+Valhalla. Верхние UrbanAnalysis.status и city ranking_eligible не используются
+как готовность районного H-индекса: τ/count могут оставаться unknown.
+Точечные/категорийные index и их собственная полнота проверяются отдельно.
+
+### Входы, версии и проверки
+
+| Тип | Содержание |
+| --- | --- |
+| UrbanOriginalCell | cell_id, city_id, grid_version, исходное population/year/method, point_id либо None, excluded, evidence_refs |
+| UrbanDistrict | district_id, city_id (родитель), name, boundary_version, evidence_refs; только administrative_level=district |
+| UrbanDistrictShare | cell_id, district_id, population (абсолютные жители либо None), evidence_refs; optional area_share только для аудита |
+| UrbanSharePrecision | cell_quantum, share_quantum, evidence_refs; явно принятый rule=cell_nearest_share_floor |
+| UrbanDistrictCoverage | исходный UrbanContext, catalog_version/distribution_version, grid_versions, district_boundary_versions, expected_district_ids/expected_cell_ids, complete_district_ids, original_cells_complete, evidence_refs, optional precision |
+
+В одном вызове поддерживается одна согласованная группа районов одного города.
+Полный context должен совпасть с UrbanAnalysis: snapshot, graph, population,
+geometry, traffic/mode, methodology, config, request time и search parameters.
+Режимы и метрики никогда не смешиваются между собой. Состав категорий и приоритеты,
+H, версии каталога/долей/сетки/границ сохраняются в каждом UrbanDistrictComparison.
+Рейтинг разных UrbanAnalysis этим API не строится: вся группа использует один
+исходный контекст. Сравнение сторонних сохранённых групп требует проверки полного scope.
+
+Отклоняются дубликаты ячеек/точек/районов/пар долей, несоответствие point→cell,
+населения, года и метода, неподходящий город/уровень/границы/сетка, неизвестные IDs,
+отрицательные/NaN/Infinity веса. Сумма известных районных весов одной ячейки не
+может превышать её исходное население. Ни area_share, ни число объектов/входов
+не используются как вес. Повторная геометрическая классификация отсутствует.
+
+Отдельная prepare_urban_district_inputs принимает UrbanAnalysis и JSON-дампы
+**уже проверенных** канонического AcceptedData и producer BundleData. Это узкая
+проекция районного дополнения, а не ещё один BundleData→AcceptedData адаптер.
+Она сверяет immutable snapshot, population/geometry/source graph, исходную границу
+города, полный roster ячеек/точек, grid и population/year/method каждой ячейки,
+sampled/excluded и parent_id районов. Возвращает UrbanDistrictInputs с четырьмя
+аргументами для основного вызова. Принятую полноту и точность caller передаёт явно:
+
+```python
+prepared = prepare_urban_district_inputs(
+    analysis, accepted.model_dump(mode="json"), bundle.model_dump(mode="json"),
+    catalog_version=catalog_version, distribution_version=distribution_version,
+    complete_district_ids=confirmed_district_ids, original_cells_complete=True,
+    evidence_refs=coverage_evidence, precision=accepted_precision,
+)
+result = analyze_urban_districts(
+    analysis, prepared.original_cells, prepared.district_catalog,
+    prepared.population_shares, prepared.coverage,
+)
+```
+
+### Население, точность и полнота
+
+Для района territory_index применяется к абсолютным весам P_cell,r; у общей
+ячейки в двух районах один и тот же точечный индекс и разные веса. Для города
+territory_index вызывается независимо на **исходных** P_cell, каждая ячейка один раз.
+Город не получается средним районов и не заменяет свой знаменатель суммой долей.
+Так же отдельно агрегируются выбранные категории и общий точечный индекс,
+отдельно для каждого режима. Формулы индексов не дублируются.
+
+Unknown точки с положительным весом блокирует только затронутые районы.
+Известный нулевой вес не требует индекса; неизвестный вес не ноль. Подтверждённый
+индекс 0 с положительным весом участвует в среднем. Нулевая подтверждённая масса
+даёт not_applicable/ZERO_WEIGHT, не индекс 0. Для отсутствующих пар cell/district
+нулевой вклад допустим лишь при явно принятом полном распределении района.
+
+Excluded-ячейки не исчезают: их положительный либо неизвестный районный вес
+блокирует полный результат этого района. Город также видит их исходный вес и
+отсутствующий индекс точки. Если исключённый вес равен 0, он не влияет на среднее.
+Население не переносится к соседним точкам. Полнота города, разметки районов и
+собственного покрытия каждого района проверяется раздельно. Для города также
+сохраняются прежние проверки полного population roster и excluded=0 из анализа. Отсутствующие доли
+не портят полный город из исходных ячеек.
+
+Суммы населения, allocated и residual сохраняются как Decimal, полученный из
+десятичных представлений входных чисел; для JSON передавайте их десятичными
+строками. Диагностика не переполняется при конечных больших входных весах.
+Само взвешенное среднее использует прежний territory_index. Выход содержит
+cell_qa и district_populations, включая excluded_population и причины.
+
+Остаток population−sum(shares) никогда не перераспределяется. Положительный
+необъяснённый остаток — UNALLOCATED_POPULATION, районная полнота unknown;
+городской расчёт от этого не меняется. Неизвестная доля сохраняет неизвестную
+массу соответствующего района и unknown residual. Подтверждение точности не
+выводится из малости разницы.
+
+Для конкретного опубликованного правила cell_nearest_share_floor допустимая
+граница остатка одной ячейки — cell_quantum/2 + N_shares*share_quantum.
+Нужны precision evidence, значения на заявленной сетке точности и фактические
+записи долей. При их наличии остаток в этой границе получает
+DOCUMENTED_PRECISION_RESIDUAL и не блокирует полный индекс по сохранённым весам.
+Большая разница остаётся неполным распределением. Веса не доводятся до 100%.
+
+### Gap, Deficit и область рейтинга
+
+Каждый UrbanDistrictMetric содержит scope, city_index, districts (index/deficit/
+ranking_eligible/reasons), gap и ranking. Полный Gap вычисляется только при
+полном ожидаемом наборе применимых районов. Unknown хотя бы одного ожидаемого
+района оставляет INCOMPLETE_DISTRICT_GAP. Полностью подтверждённые ZERO_WEIGHT
+районы неприменимы и исключаются. При пустом применимом наборе Gap not_applicable;
+при одном в полном наборе Gap=0. Пропавшие районы не создают такой ноль.
+
+Deficit_r=max(0,I_city−I_r) доступен при известных полных городе и этом районе;
+неизвестность другого района ему не мешает. При unknown городе Deficit unknown.
+Неприменимый район сохраняет not_applicable/ZERO_WEIGHT.
+
+Ranking содержит полный scope с expected_district_ids, entries, excluded с
+причинами, complete и positions_scope. Допускаются только полные available индексы
+одной метрики. Неприменимые районы имеют явное исключение. complete означает, что
+все ожидаемые применимые результаты известны. При unknown возвращается
+available_subset: позиции относятся только к доступному подмножеству.
+Сортировка — по исходному числу по убыванию; равные числа имеют competition ranks
+**1,1,3**, ID обеспечивает стабильный порядок при равенстве. Округления для экрана нет.
+
+### Исполнимый синтетический пример
+
+```bash
+PYTHONPATH=packages/engine/src uv run --frozen python packages/engine/examples/synthetic_districts.py
+```
+
+<!-- executable-example -->
+```python
+import runpy
+
+demo = runpy.run_path("packages/engine/examples/synthetic_districts.py")
+result = demo["run_demo"]()
+metric = result.modes[0].overall
+assert {d.district_id: d.index.value for d in metric.districts} == {"A": 70, "B": 25, "C": 80}
+assert metric.city_index.value == 51.25 and metric.gap.value == 55
+assert [d.deficit.value for d in metric.districts] == [0, 26.25, 0]
+assert [row.district_id for row in metric.ranking.entries] == ["C", "A", "B"]
+partial = demo["run_demo"](unknown_third=True).modes[0].overall
+assert {d.district_id: d.index.value for d in partial.districts} == {"A": 70, "B": None, "C": 80}
+assert partial.city_index.status == partial.gap.status == "unknown"
+assert not partial.ranking.complete and partial.ranking.positions_scope == "available_subset"
+```
+
+Вход примера — явно синтетические сохранённые точечные индексы, не рейтинг
+Калининграда. Они показывают повторное использование готового UrbanAnalysis,
+включая partial верхнего статуса из-за unknown τ.
+
+### Реальные районные входы ML2 .4
+
+Проверена work/ml2@e631929c01792ced9f0a9305ddfce5b312305fa4 через существующие
+load_bundle и load_accepted_data, без слияния и копирования исходников соседей.
+Набор kaliningrad-urban-2026-11-08.4: 286 ячеек, 216 точек, три района, 262 принятых
+объекта всех девяти категорий. Каталог airport полный, остальные partial.
+Готовый canonical не содержит районных долей; они приняты узким дополнением
+той же immutable версии. Исторические .2 fixtures/отчёты не переписаны.
+
+| Район | Все районные доли, жителей | Excluded-доли, жителей |
+| --- | ---: | ---: |
+| Центральный | 138478.673 | 193.203 |
+| Ленинградский | 193507.398 | 63.411 |
+| Московский | 153790.202 | 21.140 |
+
+Город из исходных ячеек: **485776.410**, районные доли: **485776.273**,
+остаток **0.137**. Городские excluded: **277.772**; районные excluded также
+сохраняют собственное округление. Правило сохранения подтверждено кодом ML2
+build_city.py:_cells этого коммита: round(cell.population,3) и floor(share*1000)/1000.
+Документированный положительный остаток выявлен в 133 ячейках. Это отдельная QA
+диагностика; excluded-потеря населения не объявлена погрешностью округления.
+
+Воспроизводимая проверка (доступ к ML2/contracts — как в walk readiness, с A2_DATA_DIR
+на реальный data и явными PYTHONPATH для временных/установленных пакетов):
+
+```bash
+uv run --frozen python packages/engine/examples/check_district_bundle.py --bundle kaliningrad-urban-2026-11-08.4
+```
+
+Результат записан в examples/kaliningrad_district_readiness.json. В прогоне
+использован настоящий canonical + producer и готовый анализ без маршрутных
+ответов: индексы/GAP unknown, рейтинг неполный и без численных мест. Положительное
+excluded-население каждого района дополнительно препятствует полной готовности.
+Внешний Valhalla в этом этапе не запускался; прежние ограничения сохраняются.
+
+### Передача BACKEND и ML2
+
+- **BACKEND — packages/contracts/src/a2_contracts/v2/** и **apps/api/**:
+  нужен районный supplement с snapshot/provenance, каталогом parent/level/boundary
+  version, cell→point, абсолютными population shares/year/method/grid, evidence,
+  expected rosters и полнотой каждого района, precision rule/quantums/evidence.
+  Выход адаптировать из UrbanDistrictAnalysis: индексы режимов/категорий/общего,
+  город из исходных ячеек, cell residual QA, excluded по районам, Gap/Deficit,
+  полный comparison scope, entries/excluded/complete/positions_scope рейтинга.
+  Decimal сериализовать строками. Приёмка: 51.25 не среднее районов, 1,1,3,
+  partial subset не выдаётся за полные места; unknown count не блокирует H-рейтинг.
+- **ML2 — packages/data_pipeline/** и immutable district supplement:
+  сохранить .4 и source rule, абсолютные веса, связи точек с исходными ячейками,
+  year/method/grid/boundary versions и precision evidence. Не нормировать остаток
+  0.137 и не скрывать excluded 277.772. Для реальных полных индексов нужно устранить
+  excluded-потерю либо сохранять неизвестность затронутых районов. Приёмка:
+  контрольные суммы выше, canonical/supplement одной версии, partial каталоги не full.
+
 ## Воспроизводимые проверки
 
 Из **корня этого checkout**, Python 3.12, закреплённый uv 0.12.17:
@@ -1175,11 +1389,11 @@ git diff --check
 только в tests; реальные данные/рейтинги не создаются.
 
 Проверки переноса находятся в tests/test_public_api.py и входят в общий запуск
-pytest: сохранение 72 прежних экспортов и совместимости вызовов, тождественность каноническим объектам,
+pytest: сохранение 87 прежних экспортов/сигнатур и совместимости вызовов, тождественность каноническим объектам,
 frozen dataclass, импорты предметных пакетов в разных порядках, все три загрузчика
 из другого cwd, явный путь вне checkout, прежние ошибки файла/JSON и направление
-зависимостей через shared и собственные модули. Восемь рабочих блоков README
-(все семь прежних и новый walk-пример) с меткой
+зависимостей через shared и собственные модули. Девять рабочих блоков README
+(все восемь прежних и новый районный пример) с меткой
 executable-example можно выполнить отдельно из корня checkout:
 
 ```bash
@@ -1189,7 +1403,7 @@ import re
 
 text = Path("packages/engine/README.md").read_text()
 examples = re.findall(r"<!-- executable-example -->\s*```python\n(.*?)```", text, re.S)
-assert len(examples) == 8
+assert len(examples) == 9
 for number, source in enumerate(examples, 1):
     exec(compile(source, f"README example {number}", "exec"), {})
     print(f"README example {number}: PASS")

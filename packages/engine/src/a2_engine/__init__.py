@@ -80,6 +80,26 @@ from a2_engine.urban import (
     territory_index,
     validate_urban_journey,
 )
+from a2_engine.urban.district_inputs import UrbanDistrictInputs, prepare_urban_district_inputs
+from a2_engine.urban.district_models import (
+    UrbanDistrict,
+    UrbanDistrictCoverage,
+    UrbanDistrictShare,
+    UrbanOriginalCell,
+    UrbanSharePrecision,
+)
+from a2_engine.urban.districts import (
+    UrbanCellAllocation,
+    UrbanDistrictAnalysis,
+    UrbanDistrictComparison,
+    UrbanDistrictMetric,
+    UrbanDistrictModeResult,
+    UrbanDistrictPopulation,
+    UrbanDistrictRank,
+    UrbanDistrictRanking,
+    UrbanDistrictValue,
+    analyze_urban_districts,
+)
 from a2_engine.urban.valhalla import (
     ValhallaBuild,
     ValhallaCorrelation,
@@ -188,4 +208,21 @@ __all__ = [
     "prepare_walk_inputs",
     "plan_walk_routes",
     "analyze_walk_responses",
+    "UrbanOriginalCell",
+    "UrbanDistrict",
+    "UrbanDistrictShare",
+    "UrbanSharePrecision",
+    "UrbanDistrictCoverage",
+    "UrbanCellAllocation",
+    "UrbanDistrictPopulation",
+    "UrbanDistrictComparison",
+    "UrbanDistrictValue",
+    "UrbanDistrictRank",
+    "UrbanDistrictRanking",
+    "UrbanDistrictMetric",
+    "UrbanDistrictModeResult",
+    "UrbanDistrictAnalysis",
+    "analyze_urban_districts",
+    "UrbanDistrictInputs",
+    "prepare_urban_district_inputs",
 ]

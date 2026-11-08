@@ -216,6 +216,56 @@ PUBLIC_SIGNATURES: dict[str, str] = {
     "collections.abc.Sequence[UrbanTauWeek], *, passenger_mode: Literal['walk', "
     "'public_transport', 'private_car'], timezone: str, reference_at: datetime.datetime, "
     "rules: UrbanTauRules) -> UrbanTauResult",
+    "ValhallaBuild": "(snapshot_id: str, source_graph_version: str, build_id: str, graph_version: str, "
+    "engine_version: str, profile_version: str, pedestrian_options_json: str, evidence_refs: "
+    "tuple[str, ...]) -> None",
+    "ValhallaCorrelation": "(build: ValhallaBuild, access_node_id: str, source_location: WalkCoordinate, "
+    "correlated_location: WalkCoordinate, correlation_id: str, evidence_refs: tuple[str, "
+    "...]) -> None",
+    "WalkCoordinate": "(lon: float, lat: float) -> None",
+    "WalkConnector": "(snapshot_id: str, source_graph_version: str, physical_node_id: str, access_node_id: "
+    "str, physical_location: WalkCoordinate, access_location: WalkCoordinate, seconds: float "
+    "| None, traversable: bool | None, time_basis: str, evidence_refs: tuple[str, ...]) -> "
+    "None",
+    "WalkRouteRequest": "(request_id: str, point_id: str, destination_id: str, build: ValhallaBuild, "
+    "search_parameters_id: str, origin: ValhallaCorrelation, destination: "
+    "ValhallaCorrelation, payload_json: str, evidence_refs: tuple[str, ...], path_scope: "
+    "Literal['network_only'] = 'network_only') -> None",
+    "WalkResponseEnvelope": "(request_id: str, point_id: str, destination_id: str, build: ValhallaBuild, "
+    "request_payload_hash: str, origin_correlation_id: str, destination_correlation_id: str, "
+    "outcome: Literal['response', 'timeout', 'http_error', 'limit', 'no_correlation'], "
+    "response_json: str | None, evidence_refs: tuple[str, ...], search_complete: bool = "
+    "False, minimum_time_evidence_refs: tuple[str, ...] = (), unreachable_evidence_refs: "
+    "tuple[str, ...] = (), pure_walk_evidence_refs: tuple[str, ...] = (), matched_origin: "
+    "WalkCoordinate | None = None, matched_destination: WalkCoordinate | None = None, "
+    "endpoint_evidence_refs: tuple[str, ...] = ()) -> None",
+    "WalkRouteResult": "(request: WalkRouteRequest, state: Literal['reachable', 'confirmed_unreachable', "
+    "'unknown'], network_seconds: float | None, network_distance_m: float | None, "
+    "network_geometry: UrbanGeometry | None, minimum_proven: bool, reason_code: str | None, "
+    "evidence_refs: tuple[str, ...], response_hash: str | None = None) -> None",
+    "normalize_walk_response": "(request: WalkRouteRequest, envelope: WalkResponseEnvelope) -> WalkRouteResult",
+    "WalkInputs": "(canonical_payload_hash: str, source_graph_version: str, context: UrbanContext, build: "
+    "ValhallaBuild | None, points: tuple[UrbanPoint, ...], destinations: "
+    "tuple[UrbanDestination, ...], point_endpoints: tuple[WalkEndpoint, ...], "
+    "destination_endpoints: tuple[WalkEndpoint, ...], catalogs: tuple[WalkCatalog, ...], "
+    "area: UrbanArea, population_coverage: UrbanPopulationCoverage, limitations: tuple[str, "
+    "...]) -> None",
+    "WalkRoutePlan": "(inputs: WalkInputs, point_ids: tuple[str, ...], categories: tuple[str, ...], requests: "
+    "tuple[WalkRouteRequest, ...], issues: tuple[WalkPlanIssue, ...]) -> None",
+    "WalkPlanIssue": "(point_id: str, destination_id: str, reasons: tuple[str, ...]) -> None",
+    "WalkAnalysisResult": "(plan: WalkRoutePlan, routes: tuple[WalkRouteResult, ...], analysis: UrbanAnalysis) -> "
+    "None",
+    "prepare_walk_inputs": "(accepted: collections.abc.Mapping[str, typing.Any], *, city_id: str, departure_at: "
+    "datetime.datetime, methodology_version: str, config_hash: str, search_parameters_id: "
+    "str, build: ValhallaBuild | None = None, connectors: "
+    "collections.abc.Sequence[WalkConnector] = (), correlations: "
+    "collections.abc.Sequence[ValhallaCorrelation] = ()) -> WalkInputs",
+    "plan_walk_routes": "(inputs: WalkInputs, *, point_ids: collections.abc.Sequence[str], categories: "
+    "collections.abc.Sequence[str]) -> WalkRoutePlan",
+    "analyze_walk_responses": "(plan: WalkRoutePlan, responses: collections.abc.Sequence[WalkResponseEnvelope], *, "
+    "selected_categories: collections.abc.Mapping[str, str], config: UrbanConfig, rules: "
+    "UrbanJourneyRules, thresholds: collections.abc.Sequence[UrbanThreshold] = ()) -> "
+    "WalkAnalysisResult",
 }
 
 CANONICAL_MODULES = {
@@ -324,24 +374,46 @@ CANONICAL_MODULES = {
         "plan_walk_routes",
         "analyze_walk_responses",
     ),
+    "a2_engine.urban.district_models": (
+        "UrbanOriginalCell",
+        "UrbanDistrict",
+        "UrbanDistrictShare",
+        "UrbanSharePrecision",
+        "UrbanDistrictCoverage",
+    ),
+    "a2_engine.urban.districts": (
+        "UrbanCellAllocation",
+        "UrbanDistrictPopulation",
+        "UrbanDistrictComparison",
+        "UrbanDistrictValue",
+        "UrbanDistrictRank",
+        "UrbanDistrictRanking",
+        "UrbanDistrictMetric",
+        "UrbanDistrictModeResult",
+        "UrbanDistrictAnalysis",
+        "analyze_urban_districts",
+    ),
+    "a2_engine.urban.district_inputs": ("UrbanDistrictInputs", "prepare_urban_district_inputs"),
 }
 
 NEW_PUBLIC_NAMES = {
-    "WalkConnector",
-    "WalkResponseEnvelope",
-    "WalkInputs",
-    "WalkRoutePlan",
-    "normalize_walk_response",
-    "WalkAnalysisResult",
-    "prepare_walk_inputs",
-    "ValhallaBuild",
-    "analyze_walk_responses",
-    "plan_walk_routes",
-    "WalkRouteResult",
-    "WalkRouteRequest",
-    "WalkPlanIssue",
-    "WalkCoordinate",
-    "ValhallaCorrelation",
+    "UrbanDistrictInputs",
+    "prepare_urban_district_inputs",
+    "UrbanDistrictPopulation",
+    "UrbanCellAllocation",
+    "UrbanDistrictCoverage",
+    "UrbanDistrictAnalysis",
+    "UrbanDistrictValue",
+    "UrbanDistrictModeResult",
+    "UrbanSharePrecision",
+    "UrbanDistrictRanking",
+    "UrbanDistrictShare",
+    "UrbanDistrict",
+    "UrbanDistrictComparison",
+    "analyze_urban_districts",
+    "UrbanDistrictMetric",
+    "UrbanOriginalCell",
+    "UrbanDistrictRank",
 }
 
 
