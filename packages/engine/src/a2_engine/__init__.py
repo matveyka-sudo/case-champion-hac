@@ -266,3 +266,55 @@ __all__ = [
     "UrbanLastReturnResult",
     "search_urban_last_return",
 ]
+
+from a2_engine.routing.road import (
+    RoadBuild,
+    RoadCoordinate,
+    RoadEndpoint,
+    RoadRequest,
+    RoadResponse,
+    RoadResult,
+    normalize_road_response,
+)
+from a2_engine.urban.car import (
+    CarAnalysisResult,
+    CarInputs,
+    CarPlan,
+    analyze_car_responses,
+    plan_car_routes,
+)
+from a2_engine.urban.od import (
+    UrbanODCollector,
+    UrbanODObservation,
+    UrbanODPlan,
+    UrbanODTask,
+    assemble_urban_od_week,
+    od_road_observation,
+    od_road_request,
+    od_timetable_observation,
+    plan_urban_od_week,
+)
+
+__all__ += [
+    "RoadBuild",
+    "RoadCoordinate",
+    "RoadEndpoint",
+    "RoadRequest",
+    "RoadResponse",
+    "RoadResult",
+    "normalize_road_response",
+    "CarInputs",
+    "CarPlan",
+    "CarAnalysisResult",
+    "plan_car_routes",
+    "analyze_car_responses",
+    "UrbanODTask",
+    "UrbanODPlan",
+    "UrbanODObservation",
+    "UrbanODCollector",
+    "plan_urban_od_week",
+    "assemble_urban_od_week",
+    "od_road_request",
+    "od_road_observation",
+    "od_timetable_observation",
+]

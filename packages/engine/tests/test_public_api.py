@@ -493,6 +493,64 @@ NEW_PUBLIC_NAMES = {
 }
 
 
+CANONICAL_MODULES.update(
+    {
+        "a2_engine.routing.road": (
+            "RoadBuild",
+            "RoadCoordinate",
+            "RoadEndpoint",
+            "RoadRequest",
+            "RoadResponse",
+            "RoadResult",
+            "normalize_road_response",
+        ),
+        "a2_engine.urban.car": (
+            "CarInputs",
+            "CarPlan",
+            "CarAnalysisResult",
+            "plan_car_routes",
+            "analyze_car_responses",
+        ),
+        "a2_engine.urban.od": (
+            "UrbanODTask",
+            "UrbanODPlan",
+            "UrbanODObservation",
+            "UrbanODCollector",
+            "plan_urban_od_week",
+            "assemble_urban_od_week",
+            "od_road_request",
+            "od_road_observation",
+            "od_timetable_observation",
+        ),
+    }
+)
+NEW_PUBLIC_NAMES.update(
+    {
+        "RoadResponse",
+        "RoadEndpoint",
+        "assemble_urban_od_week",
+        "RoadBuild",
+        "UrbanODPlan",
+        "CarAnalysisResult",
+        "RoadCoordinate",
+        "plan_urban_od_week",
+        "UrbanODTask",
+        "od_road_request",
+        "normalize_road_response",
+        "analyze_car_responses",
+        "UrbanODObservation",
+        "RoadRequest",
+        "od_road_observation",
+        "CarPlan",
+        "UrbanODCollector",
+        "plan_car_routes",
+        "od_timetable_observation",
+        "CarInputs",
+        "RoadResult",
+    }
+)
+
+
 def test_public_names_signatures_and_defaults_are_unchanged() -> None:
     assert tuple(a2_engine.__all__[: len(PUBLIC_SIGNATURES)]) == tuple(PUBLIC_SIGNATURES)
     assert set(a2_engine.__all__) == set(PUBLIC_SIGNATURES) | NEW_PUBLIC_NAMES
