@@ -115,6 +115,11 @@ export function initialState(): State {
     revision: 0,
   };
 }
+export function resultStatus(p: Params): Status {
+  if (p.date < "2026-11-01" || p.date > "2026-11-30") return "baddate";
+  if (p.date !== "2026-11-10" || p.t !== 34) return "demoonly";
+  return p.mode === "city" && p.city === "kgd" ? "partial" : "ok";
+}
 export function reducer(s: State, a: Action): State {
   switch (a.type) {
     case "params": {
@@ -123,7 +128,7 @@ export function reducer(s: State, a: Action): State {
         ...s,
         p,
         status:
-          JSON.stringify(p) === JSON.stringify(s.applied) ? "ok" : "stale",
+          JSON.stringify(p) === JSON.stringify(s.applied) ? resultStatus(p) : "stale",
         demoState: null,
         revision: s.revision + 1,
         scenario: "none",
@@ -138,7 +143,7 @@ export function reducer(s: State, a: Action): State {
         ...s,
         p,
         applied: p,
-        status: p.city === "kgd" && a.mode === "city" ? "partial" : "ok",
+        status: resultStatus(p),
         demoState: null,
         selection: null,
         cardHidden: false,
@@ -153,7 +158,7 @@ export function reducer(s: State, a: Action): State {
         ...s,
         p,
         applied: p,
-        status: a.city === "kgd" ? "partial" : "ok",
+        status: resultStatus(p),
         demoState: null,
         selection: null,
         cardHidden: false,
@@ -170,14 +175,7 @@ export function reducer(s: State, a: Action): State {
         : {
             ...s,
             applied: a.params,
-            status:
-              a.params.date < "2026-11-01" || a.params.date > "2026-11-30"
-                ? "baddate"
-                : a.params.date !== "2026-11-10" || a.params.t !== 34
-                  ? "demoonly"
-                  : a.params.city === "kgd" && a.params.mode === "city"
-                    ? "partial"
-                    : "ok",
+            status: resultStatus(a.params),
           };
     case "reset": {
       const p = { ...s.p, date: "2026-11-10", t: 34 };
@@ -185,7 +183,7 @@ export function reducer(s: State, a: Action): State {
         ...s,
         p,
         applied: p,
-        status: p.city === "kgd" ? "partial" : "ok",
+        status: resultStatus(p),
         demoState: null,
         revision: s.revision + 1,
         scenario: "none",

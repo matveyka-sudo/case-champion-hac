@@ -61,6 +61,10 @@ export function DatePicker({
         onClick={() => {
           setMonth(value.slice(0, 7));
           setOpen(!open);
+          if (!open) requestAnimationFrame(() =>
+            (popup.current?.querySelector<HTMLElement>(`[data-date="${value}"]:not(:disabled)`)
+              ?? popup.current?.querySelector<HTMLElement>(".wx-calendar-days button:not(:disabled)"))?.focus(),
+          );
         }}
       >
         {value.split("-").reverse().join(".")}

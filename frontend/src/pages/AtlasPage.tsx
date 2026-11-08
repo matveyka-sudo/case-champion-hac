@@ -132,15 +132,26 @@ export function AtlasPage() {
     selectedModel?.cells.find((c) => c.id === s.selection?.id) ||
     selectedModel?.canonCell;
   const mobileFocus = (
-    s.metric === "overall" ? Object.keys(s.applied.cats)[0] : s.metric
+    s.metric === "overall"
+      ? Object.keys(s.applied.cats).sort((a, b) =>
+          (s.applied.cats[b as keyof typeof categoryById] || 0) -
+          (s.applied.cats[a as keyof typeof categoryById] || 0),
+        )[0]
+      : s.metric
   ) as keyof typeof categoryById;
   const mobileValue = mobileCell?.values[s.applied.travel][mobileFocus];
-  const mobileDescription =
-    p.mode === "city" && mobileValue
-      ? `${s.scenario === "done" && s.scnView === "scn" ? mobileValue.scenarioTime : mobileValue.time} мин до: ${categoryById[mobileFocus]?.short.toLowerCase()} · индекс ${(s.scenario === "done" && s.scnView === "scn" ? mobileValue.scenarioScore : mobileValue.score).toFixed(1).replace(".", ",")}`
-      : p.mode === "pax" && fixtures.passenger[`${p.paxA}>${p.paxB}`]
-        ? `Самолёт: 2 ч 10 мин, ${fixtures.passenger[`${p.paxA}>${p.paxB}`].air.dep} отправлений в день · поезд и авто — неизвестно`
-        : "Демонстрационный результат";
+  const noResult = ["idle", "nd", "srcerr", "baddate"].includes(st);
+  const mobileDescription = noResult
+    ? "Для выбранных условий результата нет"
+    : p.mode === "city" && mobileCell && (mobileCell.ndPartial || (st === "partial" && mobileCell.j <= -6))
+      ? "Для выбранной ячейки нет подтверждённых данных"
+      : p.mode === "city" && st === "pending" && mobileValue
+        ? `${mobileValue.time} мин · формула индекса ожидает утверждения`
+        : p.mode === "city" && mobileValue
+          ? `${s.scenario === "done" && s.scnView === "scn" ? mobileValue.scenarioTime : mobileValue.time} мин до: ${categoryById[mobileFocus]?.short.toLowerCase()} · индекс ${(s.scenario === "done" && s.scnView === "scn" ? mobileValue.scenarioScore : mobileValue.score).toFixed(1).replace(".", ",")}`
+          : p.mode === "pax" && fixtures.passenger[`${p.paxA}>${p.paxB}`]
+            ? `Самолёт: 2 ч 10 мин, ${fixtures.passenger[`${p.paxA}>${p.paxB}`].air.dep} отправлений в день · поезд и авто — неизвестно`
+            : "Демонстрационный результат";
   const title =
     p.mode === "city"
       ? p.city
@@ -720,7 +731,7 @@ export function AtlasPage() {
             </defs>
           </svg>
         </section>
-        <AgentChat key={`${p.mode}:${p.city}`} handle={chat} />
+        <AgentChat key={s.revision} handle={chat} />
       </div>
     </div>
   );

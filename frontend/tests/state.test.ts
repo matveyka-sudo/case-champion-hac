@@ -85,3 +85,21 @@ describe("mock gateway cancellation", () => {
     vi.unstubAllGlobals();
   });
 });
+
+describe("result status follows actual supported conditions", () => {
+  it("does not turn an unsupported time into success by switching cities or modes", () => {
+    const changed = reducer(initialState(), { type: "params", patch: { t: 80 } });
+    expect(reducer(changed, { type: "city", city: "kgd" }).status).toBe("demoonly");
+    expect(reducer(changed, { type: "mode", mode: "cargo" }).status).toBe("demoonly");
+  });
+  it("restores the partial status when returning to applied Kaliningrad conditions", () => {
+    const city = reducer(initialState(), { type: "city", city: "kgd" });
+    const changed = reducer(city, { type: "params", patch: { t: 80 } });
+    expect(reducer(changed, { type: "params", patch: { t: 34 } }).status).toBe("partial");
+  });
+  it("does not carry a passenger city's partial state into freight", () => {
+    const city = reducer(initialState(), { type: "city", city: "kgd" });
+    const cargo = reducer(city, { type: "mode", mode: "cargo" });
+    expect(reducer(cargo, { type: "reset" }).status).toBe("ok");
+  });
+});

@@ -1,4 +1,4 @@
-import { useId, useRef, type KeyboardEvent } from "react";
+import { useId, useLayoutEffect, useRef, type KeyboardEvent } from "react";
 import { Icon } from "./ui";
 import { usePopover } from "./usePopover";
 export interface SelectOption {
@@ -27,7 +27,11 @@ export function Select({
       ?.querySelector<HTMLElement>(`[data-value="${CSS.escape(value)}"]`)
       ?.focus();
   };
+  useLayoutEffect(() => {
+    if (open) popup.current?.querySelector<HTMLElement>(`[data-value="${CSS.escape(active.current)}"]:not(:disabled)`)?.focus();
+  }, [open, popup]);
   const select = (next: string) => {
+    if (!options.some((option) => option.value === next && !option.disabled)) return;
     onChange(next);
     setOpen(false);
     trigger.current?.focus();
@@ -39,9 +43,8 @@ export function Select({
     if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
       e.preventDefault();
       if (!open) {
-        active.current = value;
+        active.current = enabled.find((option) => option.value === value)?.value ?? enabled[0].value;
         setOpen(true);
-        requestAnimationFrame(() => focusOption(value));
         return;
       }
       i =
@@ -56,8 +59,8 @@ export function Select({
       e.preventDefault();
       if (open) select(active.current);
       else {
+        active.current = enabled.find((option) => option.value === value)?.value ?? enabled[0].value;
         setOpen(true);
-        requestAnimationFrame(() => focusOption(value));
       }
     } else if (e.key === "Tab") setOpen(false);
     else if (e.key.length === 1) {
@@ -73,8 +76,10 @@ export function Select({
       );
       if (found) {
         e.preventDefault();
-        if (!open) setOpen(true);
-        requestAnimationFrame(() => focusOption(found.value));
+        if (!open) {
+          active.current = found.value;
+          setOpen(true);
+        } else focusOption(found.value);
       }
     }
   };
@@ -90,7 +95,7 @@ export function Select({
         aria-expanded={open}
         aria-haspopup="listbox"
         onClick={() => {
-          active.current = value;
+          active.current = options.find((option) => option.value === value && !option.disabled)?.value ?? options.find((option) => !option.disabled)?.value ?? "";
           setOpen(!open);
         }}
         onKeyDown={keyboard}
