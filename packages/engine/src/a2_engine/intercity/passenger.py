@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from math import sqrt
 from typing import Literal
 
-from a2_engine.config import PassengerConfig
-from a2_engine.results import MetricResult, finite_number
-from a2_engine.urban import category_index
+from a2_engine.shared.config import PassengerConfig
+from a2_engine.shared.results import MetricResult, finite_number
+from a2_engine.shared.scoring import category_index
 
 
 @dataclass(frozen=True)

@@ -7,7 +7,24 @@ from a2_engine.comparison import (
     delta_index,
     time_saved_seconds,
 )
-from a2_engine.config import (
+from a2_engine.freight import (
+    CargoDeliveryResult,
+    CargoScope,
+    CargoSiteResult,
+    intercity_cargo_index,
+    urban_cargo_site_index,
+    urban_cargo_territory_index,
+)
+from a2_engine.intercity import (
+    CarResult,
+    PassengerChain,
+    PassengerResult,
+    ReferenceTime,
+    intercity_car_index,
+    intercity_passenger_index,
+)
+from a2_engine.pipeline import PipelineBasis, PipelineResult, pipeline_utilization
+from a2_engine.shared.config import (
     AreaHBand,
     FreightConfig,
     PassengerConfig,
@@ -19,24 +36,7 @@ from a2_engine.config import (
     passenger_config_from_mapping,
     urban_config_from_mapping,
 )
-from a2_engine.freight import (
-    CargoDeliveryResult,
-    CargoScope,
-    CargoSiteResult,
-    intercity_cargo_index,
-    urban_cargo_site_index,
-    urban_cargo_territory_index,
-)
-from a2_engine.passenger import (
-    CarResult,
-    PassengerChain,
-    PassengerResult,
-    ReferenceTime,
-    intercity_car_index,
-    intercity_passenger_index,
-)
-from a2_engine.pipeline import PipelineBasis, PipelineResult, pipeline_utilization
-from a2_engine.results import MetricResult
+from a2_engine.shared.results import MetricResult
 from a2_engine.urban import (
     category_index,
     is_low_accessibility,

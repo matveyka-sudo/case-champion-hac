@@ -3,8 +3,8 @@
 from collections.abc import Mapping, Sequence
 from math import frexp, fsum, ldexp
 
-from a2_engine.config import AreaHBand, UrbanConfig, validate_bands
-from a2_engine.results import MetricResult, finite_number, validate_index
+from a2_engine.shared.config import AreaHBand, UrbanConfig, validate_bands
+from a2_engine.shared.results import MetricResult, finite_number, validate_index
 
 
 def select_h_seconds(area_km2: float | None, *, bands: Sequence[AreaHBand]) -> MetricResult:
@@ -17,32 +17,6 @@ def select_h_seconds(area_km2: float | None, *, bands: Sequence[AreaHBand]) -> M
         if band.max_area_km2 is None or area <= band.max_area_km2:
             return MetricResult(band.h_seconds, "available")
     raise AssertionError("Validated bands must cover every positive area")
-
-
-def category_index(
-    travel_seconds: float | None,
-    h_seconds: float | None,
-    *,
-    confirmed_no_route: bool = False,
-) -> MetricResult:
-    """Score a supplied minimum travel time, or explicitly proven unreachability.
-
-    The caller alone certifies complete coverage and the search window for
-    confirmed_no_route. Missing times/provider failures are never such proof.
-    """
-    if not isinstance(confirmed_no_route, bool):
-        raise ValueError("confirmed_no_route must be a boolean")
-    travel = None if travel_seconds is None else finite_number(travel_seconds, "travel_seconds")
-    half_life = None if h_seconds is None else finite_number(h_seconds, "h_seconds", positive=True)
-    if confirmed_no_route:
-        if travel is not None:
-            raise ValueError("A travel time contradicts confirmed_no_route")
-        return MetricResult(0.0, "available", "NO_FEASIBLE_ROUTE")
-    if travel is None:
-        return MetricResult(None, "unknown", "DATA_UNAVAILABLE")
-    if half_life is None:
-        return MetricResult(None, "unknown", "H_UNAVAILABLE")
-    return MetricResult(100.0 * 2.0 ** (-travel / half_life), "available")
 
 
 def is_low_accessibility(index: MetricResult, *, threshold: float) -> bool | None:

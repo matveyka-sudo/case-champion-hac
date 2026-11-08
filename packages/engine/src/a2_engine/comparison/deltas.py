@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from math import isfinite
 from typing import Literal
 
-from a2_engine.results import MetricResult, finite_number, validate_index
+from a2_engine.shared.results import MetricResult, finite_number, validate_index
 
 
 @dataclass(frozen=True)

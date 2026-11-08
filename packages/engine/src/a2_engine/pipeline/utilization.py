@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 from math import isfinite
 
-from a2_engine.config import FreightConfig
-from a2_engine.results import MetricResult, finite_number
+from a2_engine.shared.config import FreightConfig
+from a2_engine.shared.results import MetricResult, finite_number
 
 
 @dataclass(frozen=True)

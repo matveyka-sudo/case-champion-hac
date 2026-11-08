@@ -1,4 +1,4 @@
-"""Load and validate the published urban methodology, independently of cwd."""
+"""Load and validate published methodology configurations, independently of cwd."""
 
 import json
 from collections.abc import Mapping, Sequence
@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
 
-from a2_engine.results import finite_number
+from a2_engine.shared.results import finite_number
 
 
 @dataclass(frozen=True)
@@ -145,10 +145,11 @@ def load_urban_config(path: str | Path | None = None) -> UrbanConfig:
 
 
 def _load_product(path: str | Path | None) -> Mapping[str, object]:
+    # shared/config.py is one level below the former flat package module.
     config_path = (
         Path(path)
         if path is not None
-        else Path(__file__).resolve().parents[4] / "config/product.json"
+        else Path(__file__).resolve().parents[5] / "config/product.json"
     )
     product: object = json.loads(config_path.read_text(encoding="utf-8"))
     return _mapping(product, "product")
