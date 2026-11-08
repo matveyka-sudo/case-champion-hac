@@ -94,7 +94,7 @@ export function TransportShowcase({ group }: { group: string }) {
     document.getElementById(`tr-${items[next].k}`)?.focus();
   };
   return (
-    <div className="tr-stage">
+    <div className={`tr-stage${group === "cargo" ? " tr-stage-cargo" : ""}`}>
       <div
         className="tr-photo"
         id="trPhoto"
