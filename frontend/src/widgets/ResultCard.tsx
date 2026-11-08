@@ -14,7 +14,7 @@ export function ResultCard({ analyze }: { analyze: () => void }) {
   const { state: s, dispatch } = useAtlas(),
     p = s.applied,
     st = currentStatus(s);
-  const active = s.p;
+  const active = s.applied;
   const close = () => dispatch({ type: "ui", patch: { cardHidden: true } });
   const head = (label: ReactNode, title: ReactNode) => (
     <div className="ctx-h">
@@ -50,7 +50,14 @@ export function ResultCard({ analyze }: { analyze: () => void }) {
     </div>
   );
   let content: ReactNode;
-  if (active.mode === "city") {
+  if (active.mode !== "city" && ["idle", "nd", "srcerr", "baddate"].includes(st)) {
+    content = <>
+      {head("Транспортная связь", "Результата нет")}
+      <div className="ctx-b"><Notice kind={st === "srcerr" ? "err" : "nd"}>
+        {st === "idle" ? "Расчёт ещё не выполнялся." : "Для выбранных условий нет подтверждённых данных — значения не показываются."}
+      </Notice></div>
+    </>;
+  } else if (active.mode === "city") {
     const city = active.city;
     if (!city) {
       content = (
@@ -231,7 +238,7 @@ export function ResultCard({ analyze }: { analyze: () => void }) {
               </div>
             </>
           );
-        } else if (c.ndPartial) {
+        } else if (c.ndPartial || (st === "partial" && c.j <= -6)) {
           content = (
             <>
               {head("Ячейка 1 км", "Нет результата")}
