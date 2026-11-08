@@ -15,8 +15,10 @@ from a2_contracts.v2 import assistant as assistant_v2
 from a2_contracts.v2 import base as base_v2
 from a2_contracts.v2 import dataset as dataset_v2
 from a2_contracts.v2 import journeys as journeys_v2
+from a2_contracts.v2 import map_data as map_v2
 from a2_contracts.v2 import requests as requests_v2
 from a2_contracts.v2 import results as results_v2
+from a2_contracts.v2 import retrieval as retrieval_v2
 from a2_contracts.v2 import scenarios as scenarios_v2
 from pydantic import TypeAdapter
 
@@ -44,7 +46,9 @@ def model_registry() -> dict[str, type[ContractModel]]:
         dataset_v2,
         journeys_v2,
         requests_v2,
+        map_v2,
         results_v2,
+        retrieval_v2,
         scenarios_v2,
     ):
         for name, model in inspect.getmembers(module, inspect.isclass):

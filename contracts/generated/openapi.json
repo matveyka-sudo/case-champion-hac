@@ -1,6 +1,51 @@
 {
   "components": {
     "schemas": {
+      "AnalysisMapData": {
+        "additionalProperties": false,
+        "properties": {
+          "completeness": {
+            "default": "partial",
+            "enum": [
+              "full",
+              "partial"
+            ],
+            "title": "Completeness",
+            "type": "string"
+          },
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/MapFeature"
+            },
+            "title": "Features",
+            "type": "array"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "MAP_DATA_UNAVAILABLE",
+            "title": "Reason Code"
+          },
+          "status": {
+            "default": "unknown",
+            "enum": [
+              "available",
+              "unknown"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "title": "AnalysisMapData",
+        "type": "object"
+      },
       "AnalysisResult": {
         "additionalProperties": false,
         "properties": {
@@ -59,6 +104,9 @@
             },
             "title": "Limitations",
             "type": "array"
+          },
+          "map_data": {
+            "$ref": "#/components/schemas/AnalysisMapData"
           },
           "methodology_version": {
             "const": "a2-methodology-v3",
@@ -174,6 +222,33 @@
         "title": "AnalysisResult",
         "type": "object"
       },
+      "AreaOption": {
+        "additionalProperties": false,
+        "properties": {
+          "area_id": {
+            "minLength": 1,
+            "title": "Area Id",
+            "type": "string"
+          },
+          "city_id": {
+            "minLength": 1,
+            "title": "City Id",
+            "type": "string"
+          },
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "area_id",
+          "city_id",
+          "name"
+        ],
+        "title": "AreaOption",
+        "type": "object"
+      },
       "BoundaryNodeSets": {
         "additionalProperties": false,
         "properties": {
@@ -211,6 +286,13 @@
               "$ref": "#/components/schemas/KindCapability"
             },
             "title": "Analyses",
+            "type": "array"
+          },
+          "areas": {
+            "items": {
+              "$ref": "#/components/schemas/AreaOption"
+            },
+            "title": "Areas",
             "type": "array"
           },
           "cargo_profiles": {
@@ -702,6 +784,14 @@
             "title": "Request Id",
             "type": "string"
           },
+          "retrieved_evidence": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            },
+            "maxItems": 50,
+            "title": "Retrieved Evidence",
+            "type": "array"
+          },
           "schema_version": {
             "const": "2",
             "default": "2",
@@ -730,6 +820,72 @@
           "reason_code"
         ],
         "title": "Explanation",
+        "type": "object"
+      },
+      "ExplanationRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "question": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question"
+          },
+          "schema_version": {
+            "const": "2",
+            "default": "2",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "selection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExplanationSelection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "ExplanationRequest",
+        "type": "object"
+      },
+      "ExplanationSelection": {
+        "additionalProperties": false,
+        "properties": {
+          "entity_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Entity Id",
+            "type": "string"
+          },
+          "entity_kind": {
+            "enum": [
+              "cell",
+              "sample_point",
+              "destination",
+              "freight_site",
+              "freight_node",
+              "access_node",
+              "territory"
+            ],
+            "title": "Entity Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "entity_kind",
+          "entity_id"
+        ],
+        "title": "ExplanationSelection",
         "type": "object"
       },
       "FieldError": {
@@ -1880,6 +2036,206 @@
         "title": "LineGeometry",
         "type": "object"
       },
+      "MapFeature": {
+        "additionalProperties": false,
+        "properties": {
+          "categories": {
+            "items": {
+              "enum": [
+                "adult_polyclinic",
+                "child_polyclinic",
+                "kindergarten",
+                "school",
+                "college_university",
+                "rail_terminal",
+                "bus_terminal",
+                "airport",
+                "shopping_center"
+              ],
+              "type": "string"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "cell_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cell Id"
+          },
+          "entity_id": {
+            "minLength": 1,
+            "title": "Entity Id",
+            "type": "string"
+          },
+          "entity_kind": {
+            "enum": [
+              "cell",
+              "sample_point",
+              "destination",
+              "freight_site",
+              "freight_node",
+              "access_node",
+              "territory"
+            ],
+            "title": "Entity Kind",
+            "type": "string"
+          },
+          "geometry": {
+            "anyOf": [
+              {
+                "discriminator": {
+                  "mapping": {
+                    "MultiPolygon": "#/components/schemas/MultiPolygonGeometry",
+                    "Point": "#/components/schemas/PointGeometry",
+                    "Polygon": "#/components/schemas/PolygonGeometry"
+                  },
+                  "propertyName": "type"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/PointGeometry"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PolygonGeometry"
+                  },
+                  {
+                    "$ref": "#/components/schemas/MultiPolygonGeometry"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geometry"
+          },
+          "geometry_kind": {
+            "enum": [
+              "actual",
+              "schematic",
+              "none"
+            ],
+            "title": "Geometry Kind",
+            "type": "string"
+          },
+          "geometry_ref": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geometry Ref"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "point_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Point Id"
+          },
+          "population": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Population"
+          },
+          "population_method": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Population Method"
+          },
+          "population_year": {
+            "anyOf": [
+              {
+                "maximum": 2200.0,
+                "minimum": 1900.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Population Year"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "source_refs": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Source Refs",
+            "type": "array"
+          },
+          "territory_id": {
+            "minLength": 1,
+            "title": "Territory Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "entity_kind",
+          "entity_id",
+          "territory_id",
+          "geometry",
+          "geometry_kind",
+          "source_refs"
+        ],
+        "title": "MapFeature",
+        "type": "object"
+      },
       "MethodologyRef": {
         "additionalProperties": false,
         "properties": {
@@ -2052,6 +2408,52 @@
         "title": "Metric",
         "type": "object"
       },
+      "MultiPolygonGeometry": {
+        "additionalProperties": false,
+        "properties": {
+          "coordinates": {
+            "items": {
+              "items": {
+                "items": {
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "prefixItems": [
+                    {
+                      "maximum": 180.0,
+                      "minimum": -180.0,
+                      "type": "number"
+                    },
+                    {
+                      "maximum": 90.0,
+                      "minimum": -90.0,
+                      "type": "number"
+                    }
+                  ],
+                  "type": "array"
+                },
+                "minItems": 4,
+                "type": "array"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "minItems": 1,
+            "title": "Coordinates",
+            "type": "array"
+          },
+          "type": {
+            "const": "MultiPolygon",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "coordinates"
+        ],
+        "title": "MultiPolygonGeometry",
+        "type": "object"
+      },
       "NumericClaim": {
         "additionalProperties": false,
         "properties": {
@@ -2114,6 +2516,82 @@
           "product"
         ],
         "title": "PipelineCargoProfile",
+        "type": "object"
+      },
+      "PointGeometry": {
+        "additionalProperties": false,
+        "properties": {
+          "coordinates": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "maximum": 180.0,
+                "minimum": -180.0,
+                "type": "number"
+              },
+              {
+                "maximum": 90.0,
+                "minimum": -90.0,
+                "type": "number"
+              }
+            ],
+            "title": "Coordinates",
+            "type": "array"
+          },
+          "type": {
+            "const": "Point",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "coordinates"
+        ],
+        "title": "PointGeometry",
+        "type": "object"
+      },
+      "PolygonGeometry": {
+        "additionalProperties": false,
+        "properties": {
+          "coordinates": {
+            "items": {
+              "items": {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "maximum": 180.0,
+                    "minimum": -180.0,
+                    "type": "number"
+                  },
+                  {
+                    "maximum": 90.0,
+                    "minimum": -90.0,
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              "minItems": 4,
+              "type": "array"
+            },
+            "minItems": 1,
+            "title": "Coordinates",
+            "type": "array"
+          },
+          "type": {
+            "const": "Polygon",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "coordinates"
+        ],
+        "title": "PolygonGeometry",
         "type": "object"
       },
       "PopulationBasis": {
@@ -3838,6 +4316,23 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ExplanationRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "content": {

@@ -10,7 +10,7 @@ from typing import Annotated, Literal, Self
 from pydantic import Field, StrictBool, model_validator
 
 from .base import ContractModel, Count, Identifier, NonNegative, VersionRefs
-from .results import EvidenceRef, Metric, Score
+from .results import EvidenceRef, Metric, Score, validate_score_dependencies
 
 Feasibility = Literal["verified", "unverified"]
 
@@ -133,13 +133,9 @@ class ScenarioValues(ContractModel):
         if len({m.metric_id for m in self.metrics}) != len(self.metrics):
             raise ValueError("Duplicate metric identity in scenario values")
         scores = {s.score_id for s in self.scores}
-        metrics = {m.metric_id for m in self.metrics}
         if len(scores) != len(self.scores):
             raise ValueError("Duplicate score identity in scenario values")
-        for score in self.scores:
-            for component in score.components:
-                if component.id not in (metrics if component.kind == "metric" else scores):
-                    raise ValueError("Unresolved scenario score component")
+        validate_score_dependencies(self.metrics, self.scores)
         return self
 
 
@@ -203,6 +199,19 @@ class ScenarioResult(ContractModel):
 
     @model_validator(mode="after")
     def comparable_effects(self) -> Self:
+        items: list[Metric | Score] = [
+            *self.before.metrics,
+            *self.before.scores,
+            *self.after.metrics,
+            *self.after.scores,
+        ]
+        if self.status == "available" and any(
+            item.status not in ("available", "not_applicable") or item.completeness != "full"
+            for item in items
+        ):
+            raise ValueError("Unresolved or partial scenario values require a partial result")
+        if self.status == "unknown" and any(item.value is not None for item in items):
+            raise ValueError("Known scenario values must remain visible in a partial result")
         if not self.editable_local_graph or self.overlay_graph_id == self.versions.graph_version:
             raise ValueError("Computed scenario requires a separate editable graph overlay")
         if self.affected_population is not None and self.affected_sites is not None:

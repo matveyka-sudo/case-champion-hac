@@ -1,0 +1,34 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "coordinates": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "maximum": 180,
+          "minimum": -180,
+          "type": "number"
+        },
+        {
+          "maximum": 90,
+          "minimum": -90,
+          "type": "number"
+        }
+      ],
+      "title": "Coordinates",
+      "type": "array"
+    },
+    "type": {
+      "const": "Point",
+      "title": "Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "coordinates"
+  ],
+  "title": "PointGeometry",
+  "type": "object"
+}

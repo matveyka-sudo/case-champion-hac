@@ -5,21 +5,61 @@ from datetime import date, datetime
 from typing import cast
 
 from a2_assistant.tools import AccessScope, ToolName, ToolRejected, validate_tool
+from a2_contracts.common import canonical_hash
+from a2_contracts.v2.dataset import AcceptedData
+from a2_contracts.v2.retrieval import EvidenceSearchRequest, EvidenceSearchResult
 from pydantic import JsonValue, TypeAdapter
 
 from .analysis_service import AnalysisService
+from .evidence_search import EvidenceRepository
+from .providers.departures import RaspDepartureGateway
 from .services import DomainError
 
 
 class SavedTools:
-    def __init__(self, service: AnalysisService) -> None:
+    def __init__(
+        self,
+        service: AnalysisService,
+        *,
+        evidence: EvidenceRepository | None = None,
+        departures: RaspDepartureGateway | None = None,
+    ) -> None:
         self.service = service
+        self.evidence = evidence or (
+            EvidenceRepository(service.repository.pool) if service.repository is not None else None
+        )
+        self.departures = departures
 
     async def call(
         self, name: ToolName, args: dict[str, JsonValue], access_scope: AccessScope
     ) -> JsonValue:
-        value = await self._call(name, args, access_scope)
-        return TypeAdapter(JsonValue).validate_python(value)
+        value = TypeAdapter(JsonValue).validate_python(await self._call(name, args, access_scope))
+
+        def size() -> int:
+            return len(json.dumps({"untrusted_tool_data": value}, ensure_ascii=False).encode())
+
+        if isinstance(value, dict) and size() > 11000:
+            # Preserve a useful summary instead of failing the entire explanation on normal large runs.
+            value["truncated"] = True
+            for key in ("metrics", "scores", "departures"):
+                items = value.get(key)
+                if isinstance(items, list):
+                    while len(items) > 1 and size() > 11000:
+                        items.pop()
+            provider = value.get("provider_observation")
+            if isinstance(provider, dict):
+                departures = provider.get("departures")
+                if isinstance(departures, list):
+                    while departures and size() > 11000:
+                        departures.pop()
+                        provider["truncated"] = True
+        if size() > 11000:
+            return {
+                "status": "unknown",
+                "reason_code": "TOOL_PAYLOAD_LIMIT",
+                "completeness": "partial",
+            }
+        return value
 
     async def _call(
         self, name: ToolName, args: dict[str, JsonValue], access_scope: AccessScope
@@ -39,14 +79,25 @@ class SavedTools:
             raise ToolRejected()
         if not access_scope.snapshot_ids <= {result.snapshot_id for result in saved}:
             raise ToolRejected()
-        if not access_scope.source_ids <= {
-            ref.source_id for result in saved for ref in result.evidence_refs
-        }:
+        snapshots: list[AcceptedData] = []
+        for result in saved:
+            snapshot = await self.service.accepted_snapshot(result, access_scope.principal_id)
+            if snapshot is not None and snapshot.snapshot_id in access_scope.snapshot_ids:
+                if all(item.snapshot_id != snapshot.snapshot_id for item in snapshots):
+                    snapshots.append(snapshot)
+        permitted_sources = {ref.source_id for result in saved for ref in result.evidence_refs}
+        permitted_sources.update(
+            e.source_id for snapshot in snapshots for e in snapshot.evidence if e.verified
+        )
+        if not access_scope.source_ids <= permitted_sources:
             raise ToolRejected()
         if name in {"get_analysis", "get_metric_details", "get_scenario_templates"}:
-            result = next((item for item in saved if item.analysis_id == args["analysis_id"]), None)
-            if result is None:
+            selected = next(
+                (item for item in saved if item.analysis_id == args["analysis_id"]), None
+            )
+            if selected is None:
                 raise ToolRejected()
+            result = selected
             if name == "get_scenario_templates":
                 proposals = await self.service.proposals(
                     result.analysis_id, access_scope.principal_id
@@ -64,33 +115,55 @@ class SavedTools:
                 metric = next((m for m in result.metrics if m.metric_id == args["metric_id"]), None)
                 if metric is None:
                     raise DomainError(404, "unknown_id", "Metric not found")
-                return cast(JsonValue, metric.model_dump(mode="json"))
+                payload = metric.model_dump(mode="json")
+                payload["source_refs"] = metric.source_refs[:20]
+                payload["references_truncated"] = len(metric.source_refs) > 20
+                return cast(JsonValue, payload)
             return {
                 "analysis_id": result.analysis_id,
                 "status": result.status,
-                "metrics": [cast(JsonValue, m.model_dump(mode="json")) for m in result.metrics],
-                "scores": [cast(JsonValue, s.model_dump(mode="json")) for s in result.scores],
-                "limitations": list(result.limitations),
+                "metrics": [
+                    cast(JsonValue, m.model_dump(mode="json")) for m in result.metrics[:20]
+                ],
+                "scores": [cast(JsonValue, s.model_dump(mode="json")) for s in result.scores[:20]],
+                "limitations": list(result.limitations[:20]),
+                "truncated": len(result.metrics) > 20
+                or len(result.scores) > 20
+                or len(result.limitations) > 20,
                 "result_hash": result.result_hash,
             }
         if name == "search_evidence":
-            # Search stable identities only; raw source prose is never forwarded to the model.
-            query = str(args["query"]).casefold()
-            return [
-                {"evidence_id": e.evidence_id, "source_id": e.source_id}
-                for result in saved
-                for e in result.evidence_refs
-                if query in (e.evidence_id + " " + e.source_id).casefold()
-            ][:50]
+            if self.evidence is None:
+                return EvidenceSearchResult(
+                    status="unknown", reason_code="EVIDENCE_INDEX_UNAVAILABLE", hits=[]
+                ).model_dump(mode="json")
+            request = EvidenceSearchRequest.model_validate(args)
+            hashes = {
+                snapshot.snapshot_id: canonical_hash(snapshot.model_dump(mode="json"))
+                for snapshot in snapshots
+            }
+            return (
+                await self.evidence.search(
+                    request, snapshot_hashes=hashes, source_ids=access_scope.source_ids
+                )
+            ).model_dump(mode="json")
         if name == "resolve_places":
-            return [
-                cast(JsonValue, t.model_dump(mode="json"))
-                for t in self.service.registry.territories(query=str(args["query"]))
+            places = [
+                t
+                for t in self.service.registry.catalog.values()
                 if t.territory_id in access_scope.territory_ids
-            ][:20]
+                and str(args["query"]).casefold() in t.name.casefold()
+            ]
+            return {
+                "status": "available" if places else "unknown",
+                "completeness": "partial",
+                "reason_code": None if places else "PLACE_NOT_FOUND_IN_ACCEPTED_CATALOG",
+                "places": [t.model_dump(mode="json") for t in places[:20]],
+                "truncated": len(places) > 20,
+            }
         if name == "get_source_status":
             snapshot_id, source_id = str(args["snapshot_id"]), str(args["source_id"])
-            snapshot = self.service.registry.snapshots.get(snapshot_id)
+            snapshot = next((item for item in snapshots if item.snapshot_id == snapshot_id), None)
             if snapshot is None or source_id not in snapshot.source_versions:
                 raise DomainError(
                     503, "data_unavailable", "Accepted source snapshot is unavailable"
@@ -107,8 +180,9 @@ class SavedTools:
         if name == "get_calendar":
             requested_date = date.fromisoformat(str(args["date"]))
             territory_id = str(args["territory_id"])
-            snapshots = []
-            for snapshot in self.service.registry.snapshots.values():
+            calendars = []
+            truncated = False
+            for snapshot in snapshots:
                 if (
                     snapshot.snapshot_id not in access_scope.snapshot_ids
                     or territory_id not in snapshot.geographic_scope
@@ -126,30 +200,50 @@ class SavedTools:
                     for node in snapshot.access_nodes
                     if node.territory_id == territory_id
                 }
-                snapshots.append(
+                services = [
+                    s.service_id
+                    for s in snapshot.scheduled_services
+                    if requested_date in s.service_dates
+                    and any(stop.node_id in nodes for stop in s.stop_times)
+                ]
+                truncated = truncated or len(services) > 20
+                calendars.append(
                     {
                         "snapshot_id": snapshot.snapshot_id,
                         "calendar_version": snapshot.provenance.calendar_version,
-                        "service_ids": [
-                            s.service_id
-                            for s in snapshot.scheduled_services
-                            if requested_date in s.service_dates
-                            and any(stop.node_id in nodes for stop in s.stop_times)
-                        ][:100],
+                        "service_ids": services[:20],
                     }
                 )
             return {
                 "territory_id": territory_id,
                 "date": requested_date.isoformat(),
-                "status": "accepted_calendar_only" if snapshots else "unknown",
+                "status": "accepted_calendar_only" if calendars else "unknown",
                 "completeness": "partial",
-                "reason_code": None if snapshots else "DATE_OUTSIDE_ACCEPTED_COVERAGE",
-                "snapshots": snapshots,
+                "reason_code": None if calendars else "DATE_OUTSIDE_ACCEPTED_COVERAGE",
+                "snapshots": calendars,
+                "truncated": truncated,
             }
-        # Saved direct/mixed journeys are distinct. No new route search or provider inference.
+        # Provider observations never modify saved runs or accepted snapshots.
+        observation = None
+        if self.departures is not None:
+            observation = await self.departures.get_departures(
+                str(args["origin_id"]),
+                str(args["destination_id"]),
+                datetime.fromisoformat(str(args["departure_at"])),
+                snapshots=snapshots,
+                source_ids=access_scope.source_ids,
+            )
+        provider_payload = None if observation is None else observation.model_dump(mode="json")
+        if provider_payload is not None and observation is not None:
+            provider_payload["departures"] = [
+                d.model_dump(mode="json") for d in observation.departures[:10]
+            ]
+            provider_payload["truncated"] = len(observation.departures) > 10
         return {
-            "status": "saved_only",
+            "status": "saved_only" if observation is None else "saved_and_provider_observation",
             "completeness": "partial",
+            "reason_code": "PROVIDER_NOT_CONFIGURED" if observation is None else None,
+            "provider_observation": provider_payload,
             "departures": [
                 {
                     "journey_id": journey.journey_id,
@@ -164,7 +258,8 @@ class SavedTools:
                 and getattr(result.request, "destination_id", None) == args["destination_id"]
                 and result.request.departure_at == datetime.fromisoformat(str(args["departure_at"]))
                 for journey in result.journeys
-            ][:100],
+            ][:10],
+            "saved_results_only": True,
         }
 
     @staticmethod

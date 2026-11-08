@@ -4,6 +4,7 @@ import asyncio
 import json
 from collections.abc import AsyncIterator, Mapping, Sequence
 from contextlib import asynccontextmanager
+from contextvars import ContextVar
 from typing import cast
 from uuid import NAMESPACE_URL, uuid4, uuid5
 
@@ -93,6 +94,22 @@ class JobRepository:
             raise ValueError("Lease must be positive and at most 600 seconds")
         self.pool = pool
         self.lease_seconds = lease_seconds
+        self._worker_connection: ContextVar[asyncpg.Connection | None] = ContextVar(
+            "worker_connection", default=None
+        )
+
+    @asynccontextmanager
+    async def _publication_connection(self) -> AsyncIterator[asyncpg.Connection]:
+        # Publication must share the session holding the sole-worker lock. Losing
+        # that session then aborts publication rather than leaving a valid TTL
+        # on an independently acquired connection. Direct repository users retain
+        # the ordinary claim-token/heartbeat fence.
+        connection = self._worker_connection.get()
+        if connection is not None:
+            yield connection
+        else:
+            async with self.pool.acquire() as connection:
+                yield connection
 
     async def replay(
         self, kind: JobKind, request: JobRequest, key: str, scope: str | None = None
@@ -270,7 +287,7 @@ class JobRepository:
         # Revalidate metadata before publishing it; backend owns the saved content hash.
         saved = type(result).model_validate(payload)
         try:
-            async with self.pool.acquire() as connection:
+            async with self._publication_connection() as connection:
                 async with connection.transaction():
                     current = await connection.fetchrow(
                         "SELECT *,lease_expires_at>now() AS lease_active FROM jobs WHERE job_id=$1 FOR UPDATE",
@@ -751,9 +768,12 @@ class JobRepository:
 
             if acquired:
                 connection.add_termination_listener(terminated)
+            publication_token = self._worker_connection.set(connection) if acquired else None
             try:
                 yield acquired
             finally:
+                if publication_token is not None:
+                    self._worker_connection.reset(publication_token)
                 if acquired and not disconnected.is_set():
                     try:
                         connection.remove_termination_listener(terminated)

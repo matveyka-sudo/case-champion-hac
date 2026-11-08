@@ -5,6 +5,7 @@ from datetime import date as Date
 from typing import Annotated, Literal, Protocol, cast
 
 from a2_contracts.v2.base import ContractModel, Identifier, Timestamp
+from a2_contracts.v2.retrieval import EvidenceSearchRequest
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError
 
 ToolName = Literal[
@@ -54,9 +55,8 @@ class MetricArgs(AnalysisArgs):
     metric_id: Identifier
 
 
-class EvidenceArgs(ContractModel):
-    query: Query
-    territory_ids: list[Identifier] = Field(min_length=1, max_length=20)
+class EvidenceArgs(EvidenceSearchRequest):
+    pass
 
 
 class SourceArgs(ContractModel):
@@ -132,6 +132,12 @@ def validate_tool(
     if isinstance(model, AnalysisArgs) and model.analysis_id not in scope.analysis_ids:
         raise ToolRejected()
     if isinstance(model, EvidenceArgs) and not set(model.territory_ids) <= scope.territory_ids:
+        raise ToolRejected()
+    if (
+        isinstance(model, EvidenceArgs)
+        and model.source_ids is not None
+        and not set(model.source_ids) <= scope.source_ids
+    ):
         raise ToolRejected()
     if isinstance(model, SourceArgs) and (
         model.source_id not in scope.source_ids or model.snapshot_id not in scope.snapshot_ids

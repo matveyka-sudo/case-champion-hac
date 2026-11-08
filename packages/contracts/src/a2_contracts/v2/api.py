@@ -121,3 +121,4 @@ class Capabilities(ContractModel):
     cargo_profiles: list[CargoProfile]
     limitations: list[Identifier]
     snapshots: list[SnapshotAvailability] = Field(default_factory=list)
+    areas: list[AreaOption] = Field(default_factory=list)

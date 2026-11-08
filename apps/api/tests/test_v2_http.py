@@ -96,3 +96,19 @@ def test_session_cookie_supports_https_and_cross_origin_mutations_are_rejected()
         )
         assert response.status_code == 403
         assert response.json()["error"]["request_id"] == response.headers["x-request-id"]
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"question": ""},
+        {"question": "x" * 2001},
+        {"selection": {"entity_kind": "sample_point", "entity_id": ""}},
+        {"operations": []},
+    ],
+)
+def test_chat_context_is_bounded_and_cannot_carry_scenario_commands(payload):
+    with TestClient(create_app()) as client:
+        response = client.post("/api/v1/analyses/unknown/explanation", json=payload)
+        assert response.status_code == 422
+        assert response.json()["error"]["field_errors"]

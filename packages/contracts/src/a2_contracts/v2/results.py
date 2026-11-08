@@ -4,6 +4,8 @@ from typing import Annotated, Literal, Self
 
 from pydantic import Field, HttpUrl, model_validator
 
+from a2_contracts.common import utc
+
 from .base import (
     AnalysisKind,
     Availability,
@@ -19,6 +21,7 @@ from .base import (
     VersionRefs,
 )
 from .journeys import CountResult, JourneyResult, LastReturn, ReferenceResult
+from .map_data import AnalysisMapData
 from .requests import AnalysisRequest
 
 
@@ -174,6 +177,40 @@ class Score(ContractModel):
         return self
 
 
+def validate_score_dependencies(metrics: list[Metric], scores: list[Score]) -> None:
+    """Shared analysis/scenario invariants, without computing any domain formula."""
+    metric_map = {metric.metric_id: metric for metric in metrics}
+    score_map = {score.score_id: score for score in scores}
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit(identifier: str) -> None:
+        if identifier in visiting:
+            raise ValueError("Circular score component graph")
+        if identifier in visited:
+            return
+        visiting.add(identifier)
+        score = score_map[identifier]
+        for component in score.components:
+            dependencies = metric_map if component.kind == "metric" else score_map
+            if component.id not in dependencies:
+                raise ValueError("Unknown score component")
+            dependency = dependencies[component.id]
+            if (
+                score.status == "available"
+                and score.completeness == "full"
+                and (dependency.status != "available" or dependency.completeness != "full")
+            ):
+                raise ValueError("Full numeric score cannot depend on missing/partial components")
+            if component.kind == "score":
+                visit(component.id)
+        visiting.remove(identifier)
+        visited.add(identifier)
+
+    for identifier in score_map:
+        visit(identifier)
+
+
 class AnalysisResult(ContractModel):
     schema_version: Literal["2"]
     analysis_id: Identifier
@@ -194,6 +231,9 @@ class AnalysisResult(ContractModel):
     counts: list[CountResult]
     last_returns: list[LastReturn]
     result_hash: Identifier
+    map_data: AnalysisMapData = Field(
+        default_factory=AnalysisMapData, exclude_if=lambda value: value == AnalysisMapData()
+    )
 
     @model_validator(mode="after")
     def resolved_consistent_result(self) -> Self:
@@ -226,28 +266,13 @@ class AnalysisResult(ContractModel):
         for item in self.metrics:
             if not set(item.source_refs) <= evidence:
                 raise ValueError("Unknown metric evidence reference")
+        validate_score_dependencies(self.metrics, self.scores)
         for score in self.scores:
             if (
                 score.methodology_version != self.methodology_version
                 or not set(score.evidence_refs) <= evidence
             ):
                 raise ValueError("Unknown score evidence or methodology")
-            for component in score.components:
-                if component.id not in (metrics if component.kind == "metric" else scores):
-                    raise ValueError("Unknown score component")
-                if component.kind == "score" and component.id == score.score_id:
-                    raise ValueError("Score cannot depend on itself")
-                dependency = (
-                    metrics[component.id] if component.kind == "metric" else scores[component.id]
-                )
-                if (
-                    score.status == "available"
-                    and score.completeness == "full"
-                    and (dependency.status != "available" or dependency.completeness != "full")
-                ):
-                    raise ValueError(
-                        "Full numeric score cannot depend on missing/partial components"
-                    )
             if score.ranking_eligible and score.subject.kind == "territory":
                 expected = PopulationBasis if self.analysis_kind == "urban_passenger" else SiteBasis
                 if self.analysis_kind in ("urban_passenger", "urban_cargo") and not isinstance(
@@ -263,23 +288,6 @@ class AnalysisResult(ContractModel):
                 )
             ):
                 raise ValueError("Cargo delivery score needs a complete-chain time operand")
-        visiting: set[str] = set()
-        visited: set[str] = set()
-
-        def visit(identifier: str) -> None:
-            if identifier in visiting:
-                raise ValueError("Circular score component graph")
-            if identifier in visited:
-                return
-            visiting.add(identifier)
-            for component in scores[identifier].components:
-                if component.kind == "score":
-                    visit(component.id)
-            visiting.remove(identifier)
-            visited.add(identifier)
-
-        for identifier in scores:
-            visit(identifier)
         journeys = {j.journey_id: j for j in self.journeys}
         references = {r.reference_id: r for r in self.references}
         if len(journeys) != len(self.journeys) or len(references) != len(self.references):
@@ -288,6 +296,9 @@ class AnalysisResult(ContractModel):
         def evidence_links(values: list[str]) -> None:
             if not set(values) <= evidence:
                 raise ValueError("Unknown nested evidence reference")
+
+        for feature in self.map_data.features:
+            evidence_links(feature.source_refs)
 
         for reference in self.references:
             evidence_links(reference.calibration_evidence)
@@ -313,9 +324,20 @@ class AnalysisResult(ContractModel):
         for metric in self.metrics:
             if metric.journey_id is not None and metric.journey_id not in journeys:
                 raise ValueError("Unknown metric journey")
+        if len({count.metric_id for count in self.counts}) != len(self.counts):
+            raise ValueError("Duplicate count metric identity")
         for count in self.counts:
             if count.metric_id not in metrics:
                 raise ValueError("Unknown count metric")
+            metric = metrics[count.metric_id]
+            if (
+                metric.unit != "objects"
+                or metric.value != count.value
+                or metric.status != count.status
+                or metric.reason_code != count.reason_code
+                or metric.dependency_job_id != count.dependency_job_id
+            ):
+                raise ValueError("Count differs from its canonical metric")
             evidence_links(count.evidence_refs)
         for last_return in self.last_returns:
             evidence_links(last_return.evidence_refs)
@@ -328,6 +350,24 @@ class AnalysisResult(ContractModel):
                     or linked.destination_object_id != last_return.destination_object_id
                 ):
                     raise ValueError("Last return belongs to a different point/object")
+                if last_return.status == "available":
+                    rides = [
+                        leg for leg in linked.legs if leg.kind == "ride" and leg.mode != "walk"
+                    ]
+                    if (
+                        linked.status != "available"
+                        or not rides
+                        or last_return.leave_at is None
+                        or last_return.first_departure_at is None
+                        or last_return.arrival_at is None
+                        or linked.arrival_at is None
+                        or utc(last_return.leave_at) != utc(linked.requested_departure_at)
+                        or utc(last_return.first_departure_at) != utc(rides[0].start_at)
+                        or utc(last_return.arrival_at) != utc(linked.arrival_at)
+                    ):
+                        raise ValueError(
+                            "Available last return requires matching confirmed journey times"
+                        )
         items: list[Metric | Score] = [*self.metrics, *self.scores]
         if not items:
             raise ValueError(

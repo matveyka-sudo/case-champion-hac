@@ -11,3 +11,5 @@ export PYTHONPATH=packages/contracts/src:apps/api/src:packages/assistant/src
 ```
 
 Повторный экспорт байт-в-байт идентичен; `--check` не меняет файлы. Python cross-field/context validators обязательны: одна JSON Schema не подтверждает достоверность данных, полноту сети или готовность расчётчика. Основание — `docs/PRODUCT_SPEC.md`, `docs/FORMULAS.md`, `config/product.json`; интеграция и ограничения — `apps/api/docs/handoff-ml1-ml2.md` и `docs/tasks/backend.md`.
+
+Аудит PR #8 добавляет DTO `EvidenceChunk`, `EvidenceHit`, `EvidenceSearchRequest/Result` и серверное поле `Explanation.retrieved_evidence`; schema_version остаётся `"2"`. Входные аргументы `search_evidence` расширены source/year/period filters. Generated schemas экспортируются повторно вместе с OpenAPI; они не содержат production-документов.

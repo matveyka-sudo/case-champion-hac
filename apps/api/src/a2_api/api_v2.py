@@ -19,7 +19,7 @@ from a2_contracts.v2.api import (
     JobView,
     TerritoryOption,
 )
-from a2_contracts.v2.assistant import Explanation
+from a2_contracts.v2.assistant import Explanation, ExplanationRequest
 from a2_contracts.v2.requests import AnalysisRequest
 from a2_contracts.v2.results import AnalysisResult
 from a2_contracts.v2.scenarios import ScenarioProposal, ScenarioResult, ScenarioRunOptions
@@ -192,9 +192,11 @@ def create_app(
         return await backend().analysis(analysis_id, request.state.access_scope)
 
     @router.post("/analyses/{analysis_id}/explanation")
-    async def explanation(analysis_id: str, request: Request) -> Explanation:
+    async def explanation(
+        analysis_id: str, request: Request, body: ExplanationRequest | None = None
+    ) -> Explanation:
         return await backend().explain(
-            analysis_id, request.state.access_scope, request.state.request_id
+            analysis_id, request.state.access_scope, request.state.request_id, body
         )
 
     @router.get("/analyses/{analysis_id}/scenarios")

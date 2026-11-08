@@ -150,6 +150,7 @@ class ProductRegistry:
             territory_catalog_available=bool(self.catalog),
             national_catalog_complete=self.national_catalog_complete,
             cargo_profiles=list(self.cargo_profiles.values()),
+            areas=list(self.areas.values()),
             snapshots=[
                 SnapshotAvailability(
                     snapshot_id=snapshot.snapshot_id,

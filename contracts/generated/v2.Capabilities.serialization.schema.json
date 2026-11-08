@@ -1,5 +1,32 @@
 {
   "$defs": {
+    "AreaOption": {
+      "additionalProperties": false,
+      "properties": {
+        "area_id": {
+          "minLength": 1,
+          "title": "Area Id",
+          "type": "string"
+        },
+        "city_id": {
+          "minLength": 1,
+          "title": "City Id",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "area_id",
+        "city_id",
+        "name"
+      ],
+      "title": "AreaOption",
+      "type": "object"
+    },
     "DeliveryCargoProfile": {
       "additionalProperties": false,
       "properties": {
@@ -311,6 +338,13 @@
         "$ref": "#/$defs/KindCapability"
       },
       "title": "Analyses",
+      "type": "array"
+    },
+    "areas": {
+      "items": {
+        "$ref": "#/$defs/AreaOption"
+      },
+      "title": "Areas",
       "type": "array"
     },
     "cargo_profiles": {

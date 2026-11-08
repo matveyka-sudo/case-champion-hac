@@ -72,3 +72,48 @@ def calculate(claim: ClaimedJob) -> AnalysisResult | ScenarioResult | Calculatio
 Все manifests/lock остаются у DEVOPS. Нужны declared dependencies/source packaging для `a2-contracts`, `a2-api`, `a2-assistant`, прямой `pydantic` для assistant, `sqlalchemy[asyncio]>=2,<3` и обновление lock. Пока package=false, команды требуют `PYTHONPATH=packages/contracts/src:apps/api/src:packages/assistant/src`. Нужны PostgreSQL/PostGIS, миграции, отдельные схемы/порты участников и CI с реальными PG tests. HTTPS: `A2_SECURE_COOKIES=true`.
 
 Для live Flash интеграции нужен durable deployment budget protocol `reserve/record_usage`, валюта и положительный лимит, секреты и отдельный capability smoke. Глобальный платёжный ledger в текущем модуле не реализован; memory budget допустим только с fake transport в тестах. Paid smoke не запускался. Адаптер расписаний тестируется через MockTransport, не является принятой транспортной сетью. Состояние реализации и фактические результаты проверок фиксируются в `docs/tasks/backend.md`.
+
+## Аудит перед PR #8: документы и read-only tools
+
+Это локальные изменения `work/backend`, проверенные относительно `origin/dev` (`c783435`). Push и merge в рамках аудита не выполняются. Актуальная постановка не изменилась; методика остаётся v3.
+
+### Контракт документов для ML2
+
+BACKEND предоставляет `a2_contracts.v2.retrieval.EvidenceChunk` и `a2_api.evidence_search.EvidenceRepository.publish(snapshot, chunks)`. Это доверенный серверный вход, не HTTP endpoint и не загрузчик URL. ML2 передаёт уже полученный, проверенный публичный текст без персональных данных:
+
+- `chunk_id`, accepted `snapshot_id`, `evidence_id`, `source_id/source_version`;
+- URL и `retrieved_at`, точно совпадающие с verified Evidence принятого snapshot;
+- `title`, `section`, `document_date` (nullable), закрытые `valid_from/valid_to`, подтверждённые `territory_ids`;
+- `text` до 12000 символов, `content_hash=canonical_hash(text)`, явный `public_nonpersonal_reviewed=true` после проверки ML2.
+
+Период документального показателя независим от периода транспортного графа. Период чанка должен входить в подтверждённый период его Evidence; год поиска — год применимости показателя, не обязательно год публикации документа. Права, достоверность текста, территориальная атрибуция и PII review остаются ответственностью ML2. BACKEND не создаёт production-текст, не скачивает документы и не подтверждает их содержание автоматически.
+
+Миграция `0003_evidence_search` добавляет immutable `evidence_chunks`, generated Russian tsvector и GIN. Публикация атомарная, повтор идентичного чанка допустим, изменение hash/метаданных под тем же ID отклоняется. Батч 1–200 чанков. Принятый snapshot целиком связан hash; замена его содержимого под прежним ID не даёт tools читать новый индекс от имени старого результата. Downgrade с сохранёнными чанками отказывает вместо удаления документов.
+
+`search_evidence` принимает `query`, `territory_ids`, опциональные `source_ids`, `year` и пару `start_date/end_date`. Источники и территории ограничиваются серверным scope сохранённого анализа. Поиск — PostgreSQL `plainto_tsquery('russian', ...)`, без произвольного SQL. Ответ `EvidenceSearchResult`: `status`, `completeness=partial`, `reason_code`, `hits` (до 5 и с общим byte budget), `truncated`. Каждый hit содержит chunk/evidence/snapshot/source IDs, source version, URL, retrieval/document dates, section, период, разрешённые территории, excerpt и hash. Нет принятого индекса — `unknown/EVIDENCE_INDEX_UNAVAILABLE`; отсутствие совпадений в существующем индексе не доказывает отсутствия транспорта.
+
+Численные факты по-прежнему берутся только из сохранённых metric_id. Результат модели не может самостоятельно добавить retrieval provenance: `Explanation.retrieved_evidence` заполняется сервером из validated tool hits. Произвольная проза модели не публикуется: она выбирает разрешённые русские формулировки, применимые к статусу метрики, и проверяемые ссылки. Это намеренно ограничивает свободный пересказ документов, но устраняет обход проверки чисел словами. Текст документа передаётся как untrusted data. Неверный JSON, duplicate keys, чужие IDs и неизвестные команды приводят к безопасному fallback; сценарий через tools не запускается.
+
+### Контракт mapping для ML2 и провайдера расписаний
+
+`a2_api.providers.departures.RaspPlaceBinding` содержит `territory_id`, `snapshot_id`, `provider_code` (`s...`/`c...`), IANA timezone и `evidence_id` подтверждённого соответствия. Передать по одному однозначному binding для каждой подключаемой территории; namespace provider code не должен отождествлять разные территории. Evidence должен быть verified, соответствовать source/version принятого snapshot и покрывать запрошенную местную дату. Код города/станции нельзя угадывать по названию или frontend alias.
+
+`RaspDepartureGateway(provider, bindings).get_departures(origin_id, destination_id, departure_at, snapshots=..., source_ids=...)` принимает канонические IDs, разрешённые snapshot и source IDs. Missing/ambiguous/unverified mapping и дата вне покрытия возвращают typed unknown без HTTP-запроса. Gateway внедряется явно: `SavedTools(service, departures=gateway)` в доверенном assistant hook. Оператор владеет жизненным циклом HTTP-клиента, API-ключом и общей квотой экземпляра провайдера.
+
+Tool сохраняет `departures` из immutable результата отдельно от `provider_observation`. Наблюдение маркируется `source=yandex_rasp`, `accepted_snapshot=false`, `coverage=completeness=partial`, содержит fetched/expiry/hash, причины и безопасные provider errors. Оно не меняет baseline, snapshot или индекс; пустой direct-ответ не означает NO_FEASIBLE_ROUTE. При отсутствии gateway остаётся явный `PROVIDER_NOT_CONFIGURED`. ML2 отдельно принимает полученные источники; ML1 отдельно строит маршруты/смешанные цепочки.
+
+`resolve_places` возвращает ограниченный разрешёнными территориями справочник с available/unknown, partial, reason и truncated. `get_calendar` использует только подтверждённый snapshot сохранённого анализа, локальные explicit service dates и рейсы, затрагивающие разрешённые узлы. Период вне принятого календаря — unknown, а не пустое полное расписание. Truncation указывается явно. Tool outputs ограничены также фактическими UTF-8 байтами.
+
+### Подтверждённый блокер DevOps
+
+В новом временном окружении выполнен pinned `uv sync --frozen --all-packages --group dev`: установлено 56 пакетов. Два теста миграций завершились setup ERROR: `ModuleNotFoundError: greenlet` / `The SQLAlchemy asyncio module requires ... greenlet`. Рабочая `.venv` содержит дополнительный greenlet; её зелёная регрессия не доказывает воспроизводимость frozen deployment.
+
+Требуемое изменение владельца: `apps/api/pyproject.toml`, заменить `sqlalchemy>=2,<3` на `sqlalchemy[asyncio]>=2,<3`, обновить `uv.lock` закреплённым uv. Не менять manifest вручную только ради локального PASS. Критерий: новая среда из lock применяет все миграции и проходит PG/process tests без дополнительного pip install. Прямые зависимости API/contracts/assistant, source packaging/PYTHONPATH, PostGIS и CI также остаются у DevOps. BACKEND эти файлы не менял.
+
+Следующая совместная приёмка: реальный walk/static snapshot одного утверждённого города + engine adapter → четыре формы продолжают отдавать честную readiness, первый расчёт/cache, карточка и сохранённый сценарий проверяются через текущий OpenAPI. Отдельное планирование τ и реальные transport/GIS результаты не подменяются RAG или ответом расписаний. Платный Flash capability smoke и deployment spending ledger требуют владельца бюджета и отдельного разрешения; во время аудита live-вызовов не было.
+
+## Обновление Waydex integration readiness
+
+Полная передача FRONTEND теперь в [frontend-integration-handoff.md](frontend-integration-handoff.md). Added DTO: optional immutable `AnalysisResult.map_data` и optional `ExplanationRequest(question,selection)` в существующем POST, configured `Capabilities.areas`; маршруты не расширены. ML2/BACKEND adapter должен передать реальную геометрию и stable cell/point/destination/site/node IDs с evidence; backend не строит полигоны из bbox. ML1 должен сохранять point_id/destination_object_id и субъекты метрик для привязки карточек. Исторические результаты без map_data сохраняют wire/hash; frontend считает отсутствующее map_data unknown.
+
+Прежний frozen blocker выше **исправлен по отдельному разрешению пользователя**: API SQLAlchemy asyncio extra +greenlet в корневом lock; других dependency-файлов/версий не меняли. Чистая frozen environment: 57 packages, pip check/import greenlet PASS, миграции и полный PG/process suite **560 passed**. Поле «требуется sqlalchemy[asyncio]» выше описывает историческое обнаружение; оно больше не открытая зависимость. Остальные source packaging/PostGIS/CI/runtime секреты остаются у DevOps. Paid capability и реальный React↔командные данные не проверялись.

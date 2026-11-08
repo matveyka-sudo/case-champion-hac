@@ -5,8 +5,29 @@ from typing import Annotated, Literal, Self
 from pydantic import Field, model_validator
 
 from .base import ContractModel, Identifier
+from .map_data import MapEntityKind
+from .results import EvidenceRef
 
 Text = Annotated[str, Field(min_length=1, max_length=1000)]
+
+
+class ExplanationSelection(ContractModel):
+    entity_kind: MapEntityKind
+    entity_id: Annotated[str, Field(min_length=1, max_length=200)]
+
+
+class ExplanationRequest(ContractModel):
+    schema_version: Literal["2"] = "2"
+    question: Annotated[str, Field(min_length=1, max_length=2000)] | None = None
+    selection: ExplanationSelection | None = None
+
+    @model_validator(mode="after")
+    def nonblank_question(self) -> Self:
+        if self.question is not None and (
+            not self.question.strip() or any(ord(c) < 32 and c not in "\n\t" for c in self.question)
+        ):
+            raise ValueError("Question must be nonblank text without control characters")
+        return self
 
 
 class NumericClaim(ContractModel):
@@ -52,6 +73,8 @@ class Explanation(ExplanationContent):
     status: Literal["generated", "template"]
     model_id: Identifier | None
     reason_code: Identifier | None
+    # Collected by the server from scoped retrieval tools, never supplied by the model.
+    retrieved_evidence: list[EvidenceRef] = Field(default_factory=list, max_length=50)
 
     @model_validator(mode="after")
     def explicit_fallback(self) -> Self:

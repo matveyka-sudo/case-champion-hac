@@ -379,3 +379,14 @@ def test_capabilities_expose_snapshot_dates_and_versions_without_claiming_route_
 def test_capabilities_keep_unknown_snapshot_date_boundary_null():
     metadata = registry_with([accepted_snapshot(end=None)]).capabilities().snapshots[0]
     assert metadata.model_dump(mode="json")["valid_to"] is None
+
+
+def test_capabilities_publish_configured_area_ids_without_inventing_districts():
+    from a2_contracts.v2.api import AreaOption
+
+    selected = registry()
+    selected.areas["synthetic-area"] = AreaOption(
+        area_id="synthetic-area", city_id="demo-city", name="Synthetic district"
+    )
+    assert selected.capabilities().areas[0].area_id == "synthetic-area"
+    assert ProductRegistry().capabilities().areas == []

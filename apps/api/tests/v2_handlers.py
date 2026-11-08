@@ -61,3 +61,44 @@ def scenario_success(claim):
     command = claim.context.scenario_proposal
     baseline = baseline.model_copy(update={"result_hash": command.baseline_result_hash})
     return scenario_result(baseline, command)
+
+
+def with_map(claim):
+    """Explicit synthetic map example; never selected by production defaults."""
+    result = success(claim)
+    payload = result.model_dump(mode="json")
+    common = dict(territory_id="city-1", geometry_kind="actual", source_refs=["e-1"])
+    payload["map_data"] = dict(
+        status="available",
+        completeness="partial",
+        reason_code="SYNTHETIC_ONLY",
+        features=[
+            common
+            | dict(
+                entity_kind="cell",
+                entity_id="synthetic-cell",
+                point_id="demo-point",
+                population=None,
+                geometry=dict(
+                    type="Polygon",
+                    coordinates=[[[37.0, 55.0], [37.01, 55.0], [37.01, 55.01], [37.0, 55.0]]],
+                ),
+            ),
+            common
+            | dict(
+                entity_kind="sample_point",
+                entity_id="demo-point",
+                cell_id="synthetic-cell",
+                geometry=dict(type="Point", coordinates=[37.005, 55.001]),
+            ),
+            common
+            | dict(
+                entity_kind="destination",
+                entity_id="synthetic-school",
+                categories=["school"],
+                name="Synthetic school",
+                geometry=dict(type="Point", coordinates=[37.006, 55.002]),
+            ),
+        ],
+    )
+    return AnalysisResult.model_validate(payload)

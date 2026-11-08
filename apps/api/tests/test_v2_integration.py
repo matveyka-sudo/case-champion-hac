@@ -174,3 +174,74 @@ async def test_saved_server_scenario_runs_through_http_worker_and_cannot_change_
         assert result.json()["baseline_result_hash"] == baseline["result_hash"]
         assert result.json()["feasibility"] == "unverified"
         assert (await client.get(f"/api/v1/analyses/{analysis_id}")).json() == baseline
+
+
+@pytest.mark.asyncio
+async def test_http_chat_accepts_question_and_only_entities_from_saved_result(database):
+    pool, _, _ = database
+    repo = JobRepository(pool)
+    service = AnalysisService(registry(), repo, code_version="demo-code", engine_enabled=True)
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=create_app(service)), base_url="http://test"
+    ) as client:
+        accepted = await client.post(
+            "/api/v1/analyses", json=request_body(), headers={"Idempotency-Key": "chat-http"}
+        )
+        await Worker(
+            repo, handler="v2_handlers:success", code_version="demo-code", timeout_seconds=5
+        ).run_once()
+        job = (await client.get("/api/v1/jobs/" + accepted.json()["job_id"])).json()
+        endpoint = "/api/v1/analyses/" + job["analysis_id"] + "/explanation"
+        reply = await client.post(
+            endpoint,
+            json={
+                "question": "Почему здесь низкая доступность?",
+                "selection": {"entity_kind": "sample_point", "entity_id": "demo-point"},
+            },
+        )
+        assert reply.status_code == 200, reply.text
+        assert reply.json()["status"] == "template"
+        denied = await client.post(
+            endpoint,
+            json={
+                "question": "Другой объект",
+                "selection": {"entity_kind": "sample_point", "entity_id": "foreign"},
+            },
+        )
+        assert denied.status_code == 404
+        assert await pool.fetchval("SELECT count(*) FROM jobs") == 1
+
+
+@pytest.mark.asyncio
+async def test_saved_map_entities_and_unknown_population_reach_http_and_chat(database):
+    pool, _, _ = database
+    repo = JobRepository(pool)
+    service = AnalysisService(registry(), repo, code_version="demo-code", engine_enabled=True)
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=create_app(service)), base_url="http://test"
+    ) as client:
+        accepted = await client.post(
+            "/api/v1/analyses", json=request_body(), headers={"Idempotency-Key": "map-http"}
+        )
+        await Worker(
+            repo, handler="v2_handlers:with_map", code_version="demo-code", timeout_seconds=5
+        ).run_once()
+        job = (await client.get("/api/v1/jobs/" + accepted.json()["job_id"])).json()
+        assert job["status"] == "succeeded", job
+        analysis_id = job["analysis_id"]
+        result = (await client.get("/api/v1/analyses/" + analysis_id)).json()
+        assert result["map_data"]["features"][0]["population"] is None
+        assert result["map_data"]["features"][0]["geometry"]["type"] == "Polygon"
+        assert (
+            result["metrics"][0]["subject"]["point_id"]
+            == result["map_data"]["features"][1]["entity_id"]
+        )
+        explanation = await client.post(
+            "/api/v1/analyses/" + analysis_id + "/explanation",
+            json={
+                "question": "Что известно о населении?",
+                "selection": {"entity_kind": "cell", "entity_id": "synthetic-cell"},
+            },
+        )
+        assert explanation.status_code == 200, explanation.text
+        assert (await client.get("/api/v1/analyses/" + analysis_id)).json() == result

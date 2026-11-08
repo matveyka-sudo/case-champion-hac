@@ -37,6 +37,10 @@ class ScopedSavedService(AnalysisService):
             raise DomainError(404, "unknown_id", "Analysis not found")
         return self.saved
 
+    async def accepted_snapshot(self, result, scope):
+        await self.analysis(result.analysis_id, scope)
+        return self.registry.snapshots.get(result.snapshot_id)
+
     async def proposals(self, analysis_id, scope):
         await self.analysis(analysis_id, scope)
         return []
@@ -197,3 +201,170 @@ async def test_saved_departures_match_equal_instants_with_different_offsets():
     )
     assert len(result["departures"]) == 1
     assert result["completeness"] == "partial"
+
+
+@pytest.mark.asyncio
+async def test_evidence_filters_are_validated_before_any_server_access():
+    service = ScopedSavedService()
+    with pytest.raises(ToolRejected):
+        await SavedTools(service).call(
+            "search_evidence",
+            dict(query="пересадка", territory_ids=["city-1"], source_ids=["not-authorized"]),
+            scope(service),
+        )
+    assert service.reads == 0
+
+
+@pytest.mark.asyncio
+async def test_missing_retrieval_index_is_explicit_unknown_not_id_only_fallback():
+    service = ScopedSavedService()
+    result = await SavedTools(service).call(
+        "search_evidence", dict(query="source-1", territory_ids=["city-1"]), scope(service)
+    )
+    assert result["status"] == "unknown" and result["reason_code"] == "EVIDENCE_INDEX_UNAVAILABLE"
+    assert result["hits"] == []
+
+
+@pytest.mark.asyncio
+async def test_place_tool_describes_incomplete_catalog_and_absent_matches():
+    service = ScopedSavedService()
+    known = await SavedTools(service).call("resolve_places", {"query": "Москва"}, scope(service))
+    assert known["status"] == "available" and known["completeness"] == "partial"
+    assert [p["territory_id"] for p in known["places"]] == ["city-1"]
+    missing = await SavedTools(service).call(
+        "resolve_places", {"query": "unknown-place"}, scope(service)
+    )
+    assert missing["status"] == "unknown" and missing["places"] == []
+    assert missing["reason_code"] == "PLACE_NOT_FOUND_IN_ACCEPTED_CATALOG"
+
+
+@pytest.mark.asyncio
+async def test_departure_tool_separates_provider_observation_from_saved_journeys():
+    from a2_api.providers.departures import DepartureObservation, DepartureQuery
+
+    class Gateway:
+        def __init__(self):
+            self.calls = 0
+
+        async def get_departures(
+            self, origin_id, destination_id, departure_at, *, snapshots, source_ids
+        ):
+            self.calls += 1
+            return DepartureObservation(
+                status="unknown",
+                query=DepartureQuery(
+                    origin_id=origin_id,
+                    destination_id=destination_id,
+                    departure_at=departure_at,
+                    transport_types=("train",),
+                ),
+                reason_codes=["PLACE_MAPPING_MISSING"],
+            )
+
+    service = ScopedSavedService()
+    gateway = Gateway()
+    # Territory ownership is still enforced before any gateway call.
+    with pytest.raises(ToolRejected):
+        await SavedTools(service, departures=gateway).call(
+            "get_intercity_departures",
+            dict(
+                origin_id="city-1",
+                destination_id="foreign",
+                departure_at="2026-11-09T08:15:00+03:00",
+            ),
+            scope(service),
+        )
+    assert gateway.calls == 0
+
+
+@pytest.mark.asyncio
+async def test_departure_tool_integrates_real_gateway_through_mock_http_without_accepting_response():
+    import httpx
+    from a2_api.providers.departures import RaspDepartureGateway
+    from a2_api.providers.rasp import RaspProvider
+    from test_departure_gateway import START, bindings, snapshot
+    from test_rasp_provider import page
+
+    service = ScopedSavedService()
+    raw = json.loads(
+        (
+            Path(__file__).resolve().parents[3]
+            / "packages/contracts/fixtures/v2/intercity_passenger-result.json"
+        ).read_text()
+    )["payload"]
+    raw = json.loads(json.dumps(raw).replace("demo-source", "source-1"))
+    raw["request"].update(
+        origin_id="city-1",
+        destination_id="city-2",
+        departure_at=START.isoformat(),
+        snapshot_id="synthetic-snapshot",
+    )
+    raw["snapshot_id"] = raw["versions"]["snapshot_id"] = "synthetic-snapshot"
+    service.saved = AnalysisResult.model_validate(raw)
+    service.registry.snapshots["synthetic-snapshot"] = snapshot()
+    before = service.saved.model_dump_json()
+    requests = []
+
+    def handle(request):
+        requests.append(request)
+        return httpx.Response(200, json=page([]))
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:
+        gateway = RaspDepartureGateway(
+            RaspProvider(client, api_key="synthetic", requests_per_second=1000),
+            bindings(snapshot()),
+            transport_types=("train",),
+        )
+        access = scope(service).model_copy(
+            update={"territory_ids": frozenset({"city-1", "city-2"})}
+        )
+        response = await SavedTools(service, departures=gateway).call(
+            "get_intercity_departures",
+            dict(origin_id="city-1", destination_id="city-2", departure_at=START.isoformat()),
+            access,
+        )
+    assert requests
+    assert response["departures"] == []
+    observation = response["provider_observation"]
+    assert observation["accepted_snapshot"] is False
+    assert observation["coverage"] == observation["completeness"] == "partial"
+    assert "EMPTY_DIRECT_RESPONSE_NOT_NO_ROUTE" in observation["reason_codes"]
+    assert service.saved.model_dump_json() == before
+
+
+@pytest.mark.asyncio
+async def test_calendar_truncation_only_counts_services_in_authorized_territory():
+    from a2_contracts.v2.dataset import AcceptedData
+
+    service = ScopedSavedService()
+    raw = service.registry.snapshots["synthetic-snapshot"].model_dump(mode="json")
+    original = raw["scheduled_services"][0]
+    raw["scheduled_services"] = [
+        original | {"service_id": f"synthetic-service-{i}", "trip_id": f"synthetic-trip-{i}"}
+        for i in range(25)
+    ]
+    service.registry.snapshots["synthetic-snapshot"] = AcceptedData.model_validate(raw)
+    result = await SavedTools(service).call(
+        "get_calendar", {"date": "2026-11-09", "territory_id": "city-1"}, scope(service)
+    )
+    assert result["truncated"] is True
+    assert len(result["snapshots"][0]["service_ids"]) == 20
+
+
+@pytest.mark.asyncio
+async def test_valid_large_saved_analysis_is_compact_instead_of_breaking_assistant_budget():
+    service = ScopedSavedService()
+    metric = service.saved.metrics[0]
+    service.saved.metrics = [
+        metric.model_copy(
+            update={"metric_id": f"synthetic-{i}", "name": "Синтетическое время " * 25}
+        )
+        for i in range(20)
+    ]
+    response = await SavedTools(service).call(
+        "get_analysis", {"analysis_id": service.saved.analysis_id}, scope(service)
+    )
+    assert len(json.dumps({"untrusted_tool_data": response}, ensure_ascii=False).encode()) <= 12000
+    assert response["metrics"]
+    assert response["truncated"] is True
+    assert len(service.saved.metrics) == 20
