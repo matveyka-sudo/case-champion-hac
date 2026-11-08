@@ -1,11 +1,10 @@
-# ProfileResult
-
-ML1 рассчитывает `evaluate_cases(data, profile, task_set)`. BACKEND сохраняет версионированный Run, FRONTEND и агент показывают оценки по трём самостоятельным профилям. Сопоставление использует одну область, правила и общий TaskSet. Обязательны `run_id`, `status`, `bundle_id`, `profile_id`, `profile_version`, `task_set_hash`, `code_version`, `params_hash`, `result_hash`, `unit=points_0_100`, `provenance`, `evidence_ids`, `assumption_ids`, `warnings` и `cities`. Каждая оценённая запись содержит `origin_id`, `score`, `score_lower`, `score_upper`, `task_count` и `resolved_weight_share` (0–1). Период и зона разрешаются через ProfileConfig; конкретные времена в case results содержат смещение.
-
-`case_results` при запросе включает `case_id`, `weight`, `overall_feasibility`, `constraint_results`, `reason_codes`, `journey_ids`, `evidence_ids` и `assumption_ids`. Достаточное знание для определения полезности зависит от профиля. Для regular/medical определённые исходы — pass/fail. Для intercity определена точная полезность, когда доказано оптимальное время или отсутствие пути в полной принятой области.
-
-Regular/medical используют `A = 100 × Σ(w_k × F_k) / Σw_k`. Pass=1, fail=0, unknown даёт 0 в нижней и 1 в верхней оценке. Веса положительны, D3 предлагает 1. Услуга даёт один исход задачи, даже при нескольких учреждениях. Intercity использует `I_time = 100 × Σ(w_k × 2^(-C_k/H)) / Σw_k`. C в минутах включает подход, ожидание, движение, пересадки и выход. При подтверждённом пути в неполной сети полезность находится в `[2^(-C/H), 1]`. Неполная сеть без достоверного пути даёт `[0, 1]`. Ноль допустим при доказанном отсутствии прибытия за горизонт в полной принятой области.
-
-Unknown остаётся в знаменателе. Доля определённых — сумма весов определённых исходов, делённая на сумму всех весов. Границы считаются до округления. `score` заполнен только при равенстве границ до округления. Касающиеся и пересекающиеся интервалы не доказывают строгого превосходства. Профили не агрегируются в общий балл. Пустой знаменатель разбирается как `invalid_profile` по [соглашению о профиле](analysis-profile.md). Ошибки отсутствующих ID, несовместимых версий и engine см. в [API](api.md).
-
-`ok` — расчёт с определёнными оценками, `partial` — расчёт с неполнотой или интервалом, `insufficient_data` — невозможность обоснованного расчёта, с причиной и отсутствующими полями. Последнее состояние не подставляет ноль или выдуманный путь.
+# AnalysisResult / Metric / Score — schema_version 2
+analysis_id, analysis_kind, request, snapshot_id, methodology_version, config_hash, traffic_mode, status, metrics[], scores[], evidence_refs[], limitations[].
+Metric: metric_id, name, value nullable, unit, status, reason_code, source_refs, population_basis/site_basis where applicable.
+Score: score_id, value nullable (0..100), status=available|unknown|not_applicable|methodology_pending, completeness=full|partial, methodology_version, reason_code, components[], evidence_refs[]. Для текущих четырёх методов version=a2-methodology-v3; methodology_pending не глобальное состояние.
+available допускается только для рассчитанного результата. unknown/not_applicable/methodology_pending требуют value=null. Partial score — результат только явно заявленного поднабора, отдельная карточка, не общий рейтинг.
+Подтверждённая недостижимость в полном графе/окне даёт value=0, available, reason_code=NO_FEASIBLE_ROUTE. Ошибка API/пустой неполный каталог даёт unknown, null, DATA_UNAVAILABLE. Нет выбранных категорий → validation error до запуска.
+Территориальный полный индекс отсутствует при unknown у любой точки с положительным весом или unknown населении. Нулевой знаменатель → not_applicable, ZERO_WEIGHT. Публиковать известные категории отдельно; не перенормировать пропуски как полноценный результат.
+Популяционная оценка хранит population_method, year, coverage и единицу persons. Отсутствие данных отличается от 0 жителей.
+JourneyResult, ReferenceResult и CountResult сохраняют собственные статусы: неизвестный τ не блокирует индекс H; неизвестный эталон блокирует только зависящий от него score.
+На экране 1 знак, сортировка по исходному float; NaN/Infinity запрещены. Demo вынесен из production dataset, не состояние доступности реального score.

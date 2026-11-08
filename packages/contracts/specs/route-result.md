@@ -1,16 +1,8 @@
-# JourneyRequest и JourneyResult
+# JourneyResult
+origin_node_id, destination_node_id, departure_at, arrival_at, total_seconds, legs, geometry, status, reason_code, snapshot_id.
+Leg: mode, from_node_id, to_node_id, start_at, end_at, duration_seconds, service_id при наличии. Начальное ожидание отдельно от ожидания пересадки; total включает каждый интервал один раз. Не добавлять второй штраф за пересадку.
+Карточка точки включает destination_object_id ближайшего подходящего объекта по времени. Межгород не включает путь из дома к первому узлу. Для грузов time_kind=movement|complete_chain; complete_chain допустим только при учёте всех этапов. Трубопровод не получает фиктивный дорожный JourneyResult.
 
-BACKEND получает и валидирует REST/tool запрос, ML1 выполняет `find_activity_journeys(data, request)`. BACKEND, UI и агент показывают маршруты, ограничения, доказательства и пропуски. Сбой вычисления возвращается как типизированная ошибка.
-
-**JourneyRequest.** Обязательны `bundle_id`, `profile_id`, `profile_version`, `origin_id`, ровно одна цель `destination_id` или `service_type_id`, `service_date` и `earliest_departure`. Для regular обязательна цель-объект, для medical — тип услуги, либо конкретное учреждение с однозначно заданной подходящей услугой в согласованном запросе. Regular/medical требуют `activity_start`, `activity_end`, `arrival_buffer_min_minutes` и `arrival_buffer_max_minutes` для границ буфера прибытия и `return_by`. Intercity по умолчанию one-way и использует направление и время старта, поля деятельности/возврата требуются при явной задаче с соответствующими условиями. У эффективного запроса определены `max_one_way_minutes`, `max_transfers`, `max_access_walk_minutes`, `budget` (nullable) и `require_step_free`, с наследованием конфигурации и явным выключением неприменимых ограничений. `activity_basis=scenario` помечает условный визит или смену. Конкретные моменты имеют смещение. В пилоте профиль в `Europe/Kaliningrad`.
-
-**JourneyResult.** Обязательны `status` (ok/partial/insufficient_data), `routes`, `overall_feasibility`, `constraints`, `missing_fields`, `reason_codes`, `evidence_ids`, `assumptions`, `assumption_ids`, `provenance` и ссылки на версии bundle/profile/task при наличии задачи и кода. `optimality` указывается как `proven_in_scope` или `not_proven`. Маршрут имеет стабильный ID и `legs` с `mode`, `from_id`, `to_id`, `trip_id` (nullable), `departure_at`, `arrival_at`, `duration_seconds` и evidence. Агрегаты `outbound_minutes`, `return_minutes`, `waiting_minutes`, `transfers`, `total_fare`, `currency` явно различают минуты, число пересадок и стоимость, неизвестные и неприменимые значения допускают `null`.
-
-| Состояние ограничения | Семантика |
-| --- | --- |
-| `pass` | Подтверждённое выполнение. Общий pass следует из одного пути со всеми активными pass даже в неполной сети. Это не доказывает оптимальность. |
-| `fail` | Подтверждённое нарушение. Общий fail возможен только после завершённого поиска в принятой полной области. |
-| `unknown` | Пробелы данных или существенные непроверенные альтернативы. Неизвестный тариф при активном бюджете или неизвестная безбарьерность при активном требовании дают unknown для такой альтернативы. |
-| `not_requested` | Условие выключено, например `budget=null` или `require_step_free=false`. Общий исход задачи при этом остаётся pass/fail/unknown. |
-
-Поиск сохраняет альтернативы по активным ограничениям. Максимум три относится к показу, не к полноте поиска. Возврат начинается после окончания деятельности. Деятельность исключена из транспортного времени, раннее ожидание показывается отдельно. Подход, ожидание первого рейса, движение, пересадки и конечный участок учитываются по одному разу. Буфер пересадки проверяется как ограничение. Продолжение внутри того же рейса не добавляет смену рейса. Неизвестный календарь не подтверждает посадку. Бюджет учитывает применимые тарифы за одну либо обе стороны с пересадками, без стоимости услуги. Невалидный запрос и недоступный engine возвращают [Error](api.md), а не fail или пустой ответ.
+Дополнительно: requested_departure_at, initial_wait_seconds, path_seconds, total_wait_seconds, time_kind, completeness, traffic_mode, reference_id, boundary_nodes, evidence_refs. Межгородской total=initial_wait+path; городской total=sum legs. Временные интервалы не пересекаются, transfer walk не повторяется как wait.
+ReferenceResult: reference_id, seconds nullable, status, completeness, profile_version, graph_version, boundary_node_sets, edges, necessary_operations, calibration_evidence.
+LastReturn: local service_date, leave_at, first_departure_at, arrival_at; first_departure в выбранный день, arrival может быть позже; walk_only → not_applicable.

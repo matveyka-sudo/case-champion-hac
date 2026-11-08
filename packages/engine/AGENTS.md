@@ -1,3 +1,2 @@
 # ML1
-
-Own routing, profile metrics, scenario comparisons and numerical checks. Calculate from AcceptedData and shared requests. Preserve alternatives, fixed task denominators and the immutable baseline. Keep transport unknowns distinct from proven failure and surface computation failures as typed errors. Fetching data and calling models stay outside the engine. Coordinate contracts with BACKEND and coverage with ML2. DEVOPS owns every Python manifest and the root lock.
+Own this package on work/ml1. Use docs/PRODUCT_SPEC.md and docs/tasks/ml1.md. Deterministic travel-time and scenario calculations consume accepted data. Implement docs/FORMULAS.md with versioned config/product.json parameters. Approved methodology does not imply available data; never load historical profiles or invent missing values. Data fetching and LLM calls stay outside engine. Preserve baseline versions and unknown values. DEVOPS owns manifests and lock.
