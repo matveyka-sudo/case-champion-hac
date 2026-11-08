@@ -61,9 +61,10 @@ usable = [d for d in data.destinations if d.status == "accepted"]
 ```python
 from a2_data_pipeline.contract_v2 import load_accepted_data, registry_options, to_accepted_data_v2
 
-accepted = load_accepted_data("kaliningrad-urban-2026-11-08.2")  # AcceptedData, validated
-payload = to_accepted_data_v2(load_bundle("kaliningrad-urban-2026-11-08.2"))  # тот же JSON без валидации
-options = registry_options(load_bundle("kaliningrad-urban-2026-11-08.2"))  # TerritoryOption / AreaOption
+bundle_id = "kaliningrad-urban-2026-11-08.2"
+accepted = load_accepted_data(bundle_id)  # AcceptedData, проверенный моделью v2
+payload = to_accepted_data_v2(load_bundle(bundle_id))  # тот же JSON без валидации
+options = registry_options(load_bundle(bundle_id))  # TerritoryOption / AreaOption
 ```
 
 Ошибки имеют поле `.code`:

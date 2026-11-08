@@ -30,6 +30,6 @@
   "limitations": [
     "scheduled_service — признак регулярных рейсов по данным OurAirports, не расписание"
   ],
-  "status": "fetched",
-  "qa_report": null
+  "status": "accepted",
+  "qa_report": "data/bundles/kaliningrad-urban-2026-11-08.2/qa_report.json"
 }

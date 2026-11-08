@@ -1,6 +1,6 @@
 import re
 
-from a2_data_pipeline.manifest import load_registry
+from a2_data_pipeline.manifest import load_dataset_manifest, load_registry
 from a2_data_pipeline.paths import repo_root
 
 
@@ -27,3 +27,14 @@ def test_registered_is_not_accepted() -> None:
         if entry.status == "accepted":
             assert entry.license.status == "permitted", entry.source_id
             assert entry.datasets, entry.source_id
+
+
+def test_registry_datasets_have_manifests() -> None:
+    for entry in load_registry().entries:
+        statuses = []
+        for dataset_id in entry.datasets:
+            manifest = load_dataset_manifest(dataset_id)
+            assert manifest.source_id == entry.source_id, dataset_id
+            statuses.append(manifest.status)
+        if entry.status == "accepted":
+            assert "accepted" in statuses, entry.source_id

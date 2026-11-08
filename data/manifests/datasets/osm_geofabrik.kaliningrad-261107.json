@@ -4,7 +4,7 @@
   "source_url": "https://download.geofabrik.de/russia/kaliningrad-261107.osm.pbf",
   "retrieved_at": "2026-11-08T13:36:59.619413Z",
   "publication_date": "2026-11-07",
-  "valid_from": null,
+  "valid_from": "2026-11-07",
   "valid_to": null,
   "geography": "Калининградская область (выгрузка Geofabrik russia/kaliningrad)",
   "license": {
@@ -27,6 +27,6 @@
     "Теги неоднородны",
     "Не содержит расписаний и формы собственности"
   ],
-  "status": "fetched",
-  "qa_report": null
+  "status": "accepted",
+  "qa_report": "data/bundles/kaliningrad-urban-2026-11-08.2/qa_report.json"
 }

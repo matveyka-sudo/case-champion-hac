@@ -95,7 +95,8 @@
         "status": "permitted",
         "attribution": "© OpenStreetMap contributors"
       },
-      "status": "registered"
+      "status": "accepted",
+      "datasets": ["osm_geofabrik.kaliningrad-261107"]
     },
     {
       "source_id": "tochno_settlements",
@@ -140,7 +141,8 @@
       "access_method": "file",
       "geography": "Мир",
       "license": {"name": "Public Domain", "url": "https://ourairports.com/data/", "status": "permitted"},
-      "status": "registered"
+      "status": "accepted",
+      "datasets": ["ourairports.airports-20261108"]
     },
     {
       "source_id": "favt_registry",
@@ -390,7 +392,8 @@
         "status": "permitted",
         "attribution": "Schiavina M. et al., GHS-POP R2023A, European Commission JRC"
       },
-      "status": "registered"
+      "status": "accepted",
+      "datasets": ["ghsl_pop.e2025-r2023a-100m-r3c20"]
     },
     {
       "source_id": "worldpop",
