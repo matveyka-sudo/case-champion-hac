@@ -96,7 +96,7 @@
         "attribution": "© OpenStreetMap contributors"
       },
       "status": "accepted",
-      "datasets": ["osm_geofabrik.kaliningrad-261107"]
+      "datasets": ["osm_geofabrik.kaliningrad-261107", "osm_geofabrik.south-fed-district-261107"]
     },
     {
       "source_id": "tochno_settlements",
@@ -393,7 +393,7 @@
         "attribution": "Schiavina M. et al., GHS-POP R2023A, European Commission JRC"
       },
       "status": "accepted",
-      "datasets": ["ghsl_pop.e2025-r2023a-100m-r3c20"]
+      "datasets": ["ghsl_pop.e2025-r2023a-100m-r3c20", "ghsl_pop.e2025-r2023a-100m-r4c22"]
     },
     {
       "source_id": "worldpop",
@@ -552,6 +552,27 @@
       },
       "status": "accepted",
       "datasets": ["tfoms39_trmo.2026-07"]
+    },
+    {
+      "source_id": "admnvrsk_health",
+      "a2_ref": null,
+      "title": "Администрация Новороссийска — учреждения здравоохранения города",
+      "publisher": "Администрация муниципального образования город-герой Новороссийск",
+      "source_url": "https://admnvrsk.ru/o-gorode/gostyam-goroda/uchrezhdenija-zdravoohranenija/",
+      "role": "calculation",
+      "analysis_kinds": ["urban_passenger"],
+      "provides": "Медицинские учреждения города: официальное наименование с ОПФ, адрес, профиль помощи",
+      "limitations": "Головные адреса учреждений, не все отделения; не реестр ОКФС — собственность по ОПФ наименования",
+      "access_method": "file",
+      "geography": "Новороссийск",
+      "license": {
+        "name": "Общедоступная официальная информация ОМСУ: используются только факты (ст. 1259 ГК РФ, 8-ФЗ)",
+        "url": "https://admnvrsk.ru/",
+        "status": "permitted",
+        "attribution": "Администрация МО г. Новороссийск, admnvrsk.ru"
+      },
+      "status": "accepted",
+      "datasets": ["admnvrsk_health.20261108"]
     },
     {
       "source_id": "bus_gov",
