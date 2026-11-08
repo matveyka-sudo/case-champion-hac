@@ -17,6 +17,8 @@ class CityConfig:
     grid_version: int = 1
     education_registry_dataset_id: str | None = None
     medical_registry_dataset_id: str | None = None
+    region_name: str | None = None
+    higher_education_registry_dataset_id: str | None = None
 
     @property
     def grid_id(self) -> str:
@@ -34,5 +36,7 @@ CITIES: dict[str, CityConfig] = {
         utm_epsg=32634,
         education_registry_dataset_id="klgd_education.20261108",
         medical_registry_dataset_id="tfoms39_trmo.2026-07",
+        region_name="Калининградская область",
+        higher_education_registry_dataset_id="obrnadzor_accreditation.20261108",
     ),
 }

@@ -25,7 +25,7 @@ import shapely  # type: ignore[import-untyped]
 from pydantic import BaseModel
 
 from . import categories as cat
-from . import klgd, trmo
+from . import klgd, obrnadzor, trmo
 from .access import ACCESS_KIND, Access, WalkNetwork, load_walk_network, snap
 from .addresses import AddressIndex, parse_address
 from .bundle import (
@@ -245,11 +245,25 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
                 medical_manifest, f"{trmo.SOURCE_ID}:dataset:{medical_manifest.dataset_id}"
             )
         )
+    education = None
+    if config.higher_education_registry_dataset_id and config.region_name:
+        education_manifest = load_dataset_manifest(config.higher_education_registry_dataset_id)
+        source_manifests.append(education_manifest)
+        orgs = obrnadzor.read_orgs(
+            raw_dir() / education_manifest.raw_path, config.region_name, config.name
+        )
+        education = (orgs, education_manifest)
+        snapshot_evidence["higher_education_registry"] = book.add(
+            _dataset_evidence(
+                education_manifest,
+                f"{obrnadzor.SOURCE_ID}:dataset:{education_manifest.dataset_id}",
+            )
+        )
 
     territories = _territories(config, layers, grid, book, checks)
     cells, point_drafts = _cells(config, grid, ghsl_evidence, checks)
     drafts, ownership, rule_counts = _destination_drafts(
-        config, layers, osm_dir, airports_manifest, book, checks, roster, medical
+        config, layers, osm_dir, airports_manifest, book, checks, roster, medical, education
     )
     accesses = snap([p.utm for p in point_drafts] + [d.utm for d in drafts], network)
     point_access, destination_access = accesses[: len(point_drafts)], accesses[len(point_drafts) :]
@@ -263,7 +277,12 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
     ]
     access_summary = _access_checks(points, destinations, network, checks)
     coverage = _coverage(
-        config, destinations, snapshot_evidence, roster is not None, medical is not None
+        config,
+        destinations,
+        snapshot_evidence,
+        roster is not None,
+        medical is not None,
+        education is not None,
     )
 
     failed = [check["check_id"] for check in checks if check["status"] == "fail"]
@@ -553,6 +572,7 @@ def _destination_drafts(
     checks: list[dict[str, Any]],
     roster: tuple[klgd.Roster, DatasetManifest] | None = None,
     medical: tuple[list[trmo.Unit], DatasetManifest] | None = None,
+    education: tuple[list[obrnadzor.EduOrg], DatasetManifest] | None = None,
 ) -> tuple[list[DestinationDraft], list[CategoryOwnership], dict[str, Any]]:
     rows = pq.read_table(osm_dir / "pois.parquet").to_pylist()
     candidates, osm_rule_counts = cat.build_candidates(rows, config.name)
@@ -568,6 +588,14 @@ def _destination_drafts(
     candidates = [c for c in candidates if in_search_area(c)]
     drafts: list[DestinationDraft] = []
     ownership: list[CategoryOwnership] = []
+    cache: dict[str, AddressIndex] = {}
+
+    def address_index() -> AddressIndex:
+        if "index" not in cache:
+            area = to_crs(city_utm.buffer(SEARCH_BUFFER_M), crs, "EPSG:4326")
+            cache["index"] = AddressIndex(osm_dir, area, layers.city, config.name)
+        return cache["index"]
+
     if roster is not None:
         registry_categories = set(KIND_TO_CATEGORY.values())
         roster_candidates = [c for c in candidates if c.category in registry_categories]
@@ -584,12 +612,22 @@ def _destination_drafts(
         medical_candidates = [c for c in candidates if c.category in medical_categories]
         rest = [c for c in candidates if c.category not in medical_categories]
         medical_drafts, medical_ownership, still_unmatched, medical_stats = _medical_drafts(
-            config, medical, medical_candidates, layers, city_utm, crs, osm_dir, book, checks
+            config, medical, medical_candidates, address_index(), city_utm, crs, book, checks
         )
         drafts.extend(medical_drafts)
         ownership.extend(medical_ownership)
         candidates = rest + still_unmatched
         rule_counts["medical_registry"] = medical_stats
+    if education is not None:
+        college_candidates = [c for c in candidates if c.category == "college_university"]
+        rest = [c for c in candidates if c.category != "college_university"]
+        college_drafts, college_ownership, college_unmatched, college_stats = _university_drafts(
+            config, education, college_candidates, address_index(), city_utm, crs, book, checks
+        )
+        drafts.extend(college_drafts)
+        ownership.extend(college_ownership)
+        candidates = rest + college_unmatched
+        rule_counts["higher_education_registry"] = college_stats
     airports = {
         row["iata_code"]: row
         for row in csv.DictReader((raw_dir() / airports_manifest.raw_path).open(encoding="utf-8"))
@@ -786,10 +824,9 @@ def _medical_drafts(
     config: CityConfig,
     medical: tuple[list[trmo.Unit], DatasetManifest],
     candidates: list[cat.Candidate],
-    layers: OsmLayers,
+    index: AddressIndex,
     city_utm: shapely.Geometry,
     crs: str,
-    osm_dir: Path,
     book: EvidenceBook,
     checks: list[dict[str, Any]],
 ) -> tuple[list[DestinationDraft], list[CategoryOwnership], list[cat.Candidate], dict[str, Any]]:
@@ -802,8 +839,6 @@ def _medical_drafts(
 
     units, manifest = medical
     objects, stats = trmo.polyclinics(units)
-    area = to_crs(city_utm.buffer(SEARCH_BUFFER_M), crs, "EPSG:4326")
-    index = AddressIndex(osm_dir, area, layers.city, config.name)
     grouped: dict[tuple[str, str], list[tuple[trmo.MedicalObject, Any]]] = {}
     unlocated: list[dict[str, str]] = []
     for item in objects:
@@ -897,6 +932,166 @@ def _medical_drafts(
         "city_addresses_not_in_osm": len(unlocated),
         "osm_candidates_attached": sum(len(v) for v in attached.values()),
         "osm_candidates_unmatched": len(unmatched),
+    }
+    return drafts, ownership, unmatched, stats
+
+
+def _org_name(org: obrnadzor.EduOrg) -> str:
+    short = org.short_name.strip()
+    return short if len(short) > 2 else org.full_name
+
+
+def _university_drafts(
+    config: CityConfig,
+    education: tuple[list[obrnadzor.EduOrg], DatasetManifest],
+    candidates: list[cat.Candidate],
+    index: AddressIndex,
+    city_utm: shapely.Geometry,
+    crs: str,
+    book: EvidenceBook,
+    checks: list[dict[str, Any]],
+) -> tuple[list[DestinationDraft], list[CategoryOwnership], list[cat.Candidate], dict[str, Any]]:
+    """Public colleges and universities: accreditation registry plus their OSM buildings.
+
+    An OSM building linked by name to a public organisation is one of its
+    buildings (location from OSM). The registry address adds a destination when
+    no linked building of that organisation lies within 100 m. Buildings linked
+    to private or departmental organisations stay quarantined with that reason.
+    """
+
+    orgs, manifest = education
+    local = [
+        o
+        for o in orgs
+        if config.name in o.post_address and obrnadzor.classify(o) != "NOT_COLLEGE_OR_UNIVERSITY"
+    ]
+    by_id = {o.org_id: o for o in local}
+    reasons = {o.org_id: obrnadzor.classify(o) for o in local}
+    keys = [obrnadzor.name_key(o) for o in local]
+
+    def org_evidence(org: obrnadzor.EduOrg) -> str:
+        return book.add(
+            Evidence(
+                evidence_id=f"{obrnadzor.SOURCE_ID}:{org.org_id.lower()}",
+                source_id=obrnadzor.SOURCE_ID,
+                dataset_id=manifest.dataset_id,
+                record_id=org.org_id,
+                url=obrnadzor.REGISTRY_PAGE,
+                fetched_at=manifest.retrieved_at,
+                content_hash=obrnadzor.record_hash(org),
+                verification_state="verified",
+            )
+        )
+
+    drafts: list[DestinationDraft] = []
+    ownership: list[CategoryOwnership] = []
+    unmatched: list[cat.Candidate] = []
+    linked_points: dict[str, list[shapely.Point]] = {}
+    links: list[dict[str, Any]] = []
+    for candidate in sorted(candidates, key=lambda c: c.osm_refs[0]):
+        found = obrnadzor.link(candidate.name, keys)
+        if found.org_id is None:
+            unmatched.append(candidate)
+            continue
+        org = by_id[found.org_id]
+        reason = reasons[org.org_id]
+        point_utm = to_crs(candidate.point, "EPSG:4326", crs)
+        record = org_evidence(org)
+        destination_id = (
+            f"{config.city_id}-college_university-{candidate.osm_refs[0].replace('/', '-')}"
+        )
+        drafts.append(
+            DestinationDraft(
+                destination_id=destination_id,
+                category="college_university",
+                name=candidate.name,
+                utm=point_utm,
+                lonlat=candidate.point,
+                inside_city_boundary=city_utm.distance(point_utm) == 0,
+                osm_ref=candidate.osm_refs[0],
+                reasons=[] if reason is None else [f"{reason}_BY_REGISTRY"],
+                evidence_ids=[record, *(book.osm(ref) for ref in candidate.osm_refs)],
+                location_source="osm",
+                ownership_verified=reason is None,
+            )
+        )
+        ownership.append(
+            CategoryOwnership(
+                destination_id=destination_id,
+                category="college_university",
+                ownership=obrnadzor.ownership(org.full_name),  # type: ignore[arg-type]
+                basis="registry",
+                verification_state="verified",
+                evidence_ids=[record],
+            )
+        )
+        links.append({"osm": candidate.name, "org": _org_name(org), "score": found.score})
+        if reason is None:
+            linked_points.setdefault(org.org_id, []).append(point_utm)
+    unlocated: list[dict[str, str]] = []
+    for org in local:
+        if reasons[org.org_id] is not None:
+            continue
+        hit = index.locate(org.post_address)
+        if hit is None:
+            parsed = parse_address(org.post_address)
+            in_area = parsed is not None and parsed.settlement in index.settlements
+            if in_area and not linked_points.get(org.org_id):
+                unlocated.append({"org": _org_name(org), "address": org.post_address})
+            continue
+        point_utm = to_crs(hit.point, "EPSG:4326", crs)
+        if any(point_utm.distance(p) <= 100 for p in linked_points.get(org.org_id, [])):
+            continue
+        record = org_evidence(org)
+        destination_id = (
+            f"{config.city_id}-college_university-{obrnadzor.SOURCE_ID}-{org.org_id.lower()}"
+        )
+        drafts.append(
+            DestinationDraft(
+                destination_id=destination_id,
+                category="college_university",
+                name=_org_name(org),
+                utm=point_utm,
+                lonlat=hit.point,
+                inside_city_boundary=city_utm.distance(point_utm) == 0,
+                osm_ref=hit.osm_ref,
+                reasons=[],
+                evidence_ids=[record, book.osm(hit.osm_ref)],
+                location_source="registry_address",
+                ownership_verified=True,
+            )
+        )
+        ownership.append(
+            CategoryOwnership(
+                destination_id=destination_id,
+                category="college_university",
+                ownership=obrnadzor.ownership(org.full_name),  # type: ignore[arg-type]
+                basis="registry",
+                verification_state="verified",
+                evidence_ids=[record],
+            )
+        )
+    _check(
+        checks,
+        "higher_education_registry_located",
+        not unlocated,
+        "Every public college and university of the city has a building or a located address",
+        severity="warn",
+        unlocated=unlocated,
+    )
+    rejected: dict[str, int] = {}
+    for reason in reasons.values():
+        if reason:
+            rejected[reason] = rejected.get(reason, 0) + 1
+    stats = {
+        "rules": obrnadzor.RULES_VERSION,
+        "link_rules": obrnadzor.LINK_RULES_VERSION,
+        "local_orgs": len(local),
+        "public_orgs": sum(1 for r in reasons.values() if r is None),
+        "rejected": rejected,
+        "accepted_destinations": sum(1 for d in drafts if not d.reasons),
+        "osm_linked": links,
+        "osm_unlinked": len(unmatched),
     }
     return drafts, ownership, unmatched, stats
 
@@ -1021,6 +1216,7 @@ def _coverage(
     evidence: dict[str, str],
     has_registry: bool = False,
     has_medical_registry: bool = False,
+    has_education_registry: bool = False,
 ) -> list[CoverageRecord]:
     city = config.city_id
     start, end = ANALYSIS_WINDOW
@@ -1068,7 +1264,14 @@ def _coverage(
     for category in PRODUCT_CATEGORIES:
         accepted = sum(1 for d in destinations if d.category == category and d.status == "accepted")
         extra: list[str] = []
-        if has_medical_registry and category in {"adult_polyclinic", "child_polyclinic"}:
+        if has_education_registry and category == "college_university":
+            status = "partial"
+            reason = (
+                "Государственные колледжи и вузы по реестру аккредитации Рособрнадзора; корпуса — "
+                "по названиям в OSM; частные, ведомственные и неаккредитованные не входят"
+            )
+            extra = [evidence["higher_education_registry"]]
+        elif has_medical_registry and category in {"adult_polyclinic", "child_polyclinic"}:
             status = "partial"
             reason = (
                 "Городские поликлиники ОМС (ОКФС 13/14) по ТРМО ТФОМС; адреса, которых нет в OSM, "
@@ -1118,13 +1321,13 @@ def _coverage(
             status="partial" if registry_categories or has_medical_registry else "unknown",
             reason=(
                 "Школы и детсады — по перечню учредителя (муниципальные), поликлиники — по ТРМО "
-                "(ОКФС 13/14); колледжи, вузы и прочие школы и детсады не подтверждены"
+                "(ОКФС 13/14), колледжи и вузы — по реестру аккредитации; прочие не подтверждены"
                 if registry_categories or has_medical_registry
                 else "Официальный реестр учреждений ещё не загружен"
             ),
             evidence_ids=[
                 evidence[key]
-                for key in ("education_registry", "medical_registry")
+                for key in ("education_registry", "medical_registry", "higher_education_registry")
                 if key in evidence
             ],
         )
