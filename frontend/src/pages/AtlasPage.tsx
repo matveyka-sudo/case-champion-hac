@@ -1,5 +1,5 @@
 import { NavigationLink } from "../shared/NavigationLink";
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useEffect, useRef, useState } from "react";
 import { useModalFocus } from "../features/accessibility";
 import {
   useAtlas,
@@ -71,7 +71,7 @@ export function AtlasPage() {
     document.body.classList.add("mode-atlas");
     return () => document.body.classList.remove("mode-atlas");
   }, []);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const night =
       s.themeMode === "dark" ||
       (s.themeMode === "auto" && (p.t >= 80 || p.t <= 23));
@@ -644,7 +644,8 @@ export function AtlasPage() {
               {[
                 ["in", "plus", "Приблизить"],
                 ["out", "minus", "Отдалить"],
-                ["home", "locate-fixed", "Показать всю территорию"],
+                ["home", "globe", "Показать всю территорию"],
+                ...(cityView ? [["city", "locate-fixed", "К выбранному городу"]] : []),
               ].map(([kind, icon, label]) => (
                 <button
                   className="zbtn"

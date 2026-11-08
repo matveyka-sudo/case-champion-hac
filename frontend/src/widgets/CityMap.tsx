@@ -1,4 +1,4 @@
-import { mapColor } from "../shared/mapColor";
+import { mapColor, mapPalette } from "../shared/mapColor";
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -8,11 +8,21 @@ import {
   cellScore,
   categoryById,
   type Cell,
+  type CityId,
   type CatId,
   type LL,
 } from "../mocks/model";
 import { Icon } from "../shared/ui";
 import { f1 } from "../shared/format";
+const iconMarkup = new Map<string, string>();
+const mapLevel = (zoom: number) => zoom <= 7 ? 0 : zoom <= 10.5 ? 1 : zoom < 13.5 ? 2 : 3;
+function focusCity(map: L.Map, city: CityId, cargo: boolean) {
+  map.stop();
+  const mobile = window.innerWidth < 768;
+  if (cargo) map.setView([44.733, 37.79], 13, { animate: false });
+  else if (city === "msk") map.setView(mobile ? [55.703, 37.752] : [55.706, 37.795], mobile ? 13 : 12.5, { animate: false });
+  else map.setView(fixtures.city[city].c, 12, { animate: false });
+}
 export function CityMap({
   zoomAction,
 }: {
@@ -22,17 +32,25 @@ export function CityMap({
   const host = useRef<HTMLDivElement>(null),
     mapRef = useRef<L.Map | null>(null),
     groupRef = useRef<L.LayerGroup | null>(null);
-  const [zoom, setZoom] = useState(12.5),
+  const [level, setLevel] = useState(2),
     [tileFailed, setTileFailed] = useState(false);
   const { state: s, dispatch } = useAtlas();
   const p = s.applied;
   const city = s.p.mode === "cargo" ? "nvr" : s.p.city || "msk";
+  const { layers, cLayers, metric, selection, scenario, scnView } = s;
+  const { mode, cargoDir, profile } = s.p;
+  const handling = profile.handling;
+  const status = currentStatus(s);
+  const renderStatus = ["nd", "idle", "srcerr", "baddate", "pending", "partial", "noroute"].includes(status) ? status : "ok";
+  const night = s.themeMode === "dark" || (s.themeMode === "auto" && (s.p.t >= 80 || s.p.t <= 23));
   useEffect(() => {
     if (!host.current) return;
     const map = L.map(host.current, {
       zoomControl: false,
       attributionControl: true,
-      minZoom: 9,
+      minZoom: 1,
+      preferCanvas: true,
+      inertia: true,
       maxZoom: 16,
       zoomSnap: 0.5,
       wheelPxPerZoomLevel: 90,
@@ -52,7 +70,7 @@ export function CityMap({
       })
       .addTo(map);
     groupRef.current = L.layerGroup().addTo(map);
-    map.on("zoomend", () => setZoom(map.getZoom()));
+    map.on("zoomend", () => setLevel(mapLevel(map.getZoom())));
     const ro = new ResizeObserver(() => map.invalidateSize({ pan: false }));
     ro.observe(host.current);
     return () => {
@@ -65,24 +83,31 @@ export function CityMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const mobile = window.innerWidth < 768;
-    if (s.p.mode === "cargo")
-      map.setView([44.733, s.cardHidden ? 37.765 : 37.79], 13, {
-        animate: false,
-      });
-    else if (city === "msk")
-      map.setView(
-        mobile ? [55.703, 37.752] : [55.706, s.cardHidden ? 37.755 : 37.795],
-        mobile ? 13 : 12.5,
-        { animate: false },
-      );
-    else map.setView(fixtures.city[city].c, 12, { animate: false });
-  }, [city, s.p.mode, s.cardHidden]);
+    focusCity(map, city, mode === "cargo");
+  }, [city, mode]);
   useEffect(() => {
     const map = mapRef.current,
       g = groupRef.current;
     if (!map || !g) return;
     g.clearLayers();
+    const style = getComputedStyle(document.documentElement);
+    const palette = mapPalette();
+    const color = (name: string) => style.getPropertyValue(name).trim();
+    if (level === 0) {
+      (Object.keys(fixtures.city) as CityId[]).filter((id) => mode !== "cargo" || id === "nvr").forEach((id) => {
+        const entry = fixtures.city[id];
+        const name = id === "msk" ? "Москва" : id === "kgd" ? "Калининград" : "Новороссийск";
+        const label = document.createElement("span");
+        label.textContent = name + " · демо-данные";
+        L.marker(entry.c, { title: name, icon: L.divIcon({ className: "stop-dot xfer", iconSize: [16, 16], iconAnchor: [8, 8] }) })
+          .bindTooltip(label, { permanent: true, direction: "top", className: "wx-tip" })
+          .on("click", () => {
+            if (mode !== "cargo") dispatch({ type: "city", city: id });
+            focusCity(map, id, mode === "cargo");
+          }).addTo(g);
+      });
+      return;
+    }
     const select = (
       type: "cell" | "obj" | "wh" | "node",
       id: string,
@@ -102,7 +127,8 @@ export function CityMap({
     ) => {
       const content = document.createElement("div");
       content.className = `obj-pin ${selected ? "sel" : ""} ${extra}`;
-      content.innerHTML = renderToStaticMarkup(<Icon name={icon} />);
+      if (!iconMarkup.has(icon)) iconMarkup.set(icon, renderToStaticMarkup(<Icon name={icon} />));
+      content.innerHTML = iconMarkup.get(icon)!;
       return L.marker(ll, {
         icon: L.divIcon({
           className: "",
@@ -117,14 +143,14 @@ export function CityMap({
         .on("click", click)
         .addTo(g);
     };
-    if (s.p.mode === "cargo") {
+    if (mode === "cargo") {
       const warehouse = fixtures.cargo.objs[0];
-      const showingWarehouse = !s.selection || s.selection.type === "wh";
+      const showingWarehouse = !selection || selection.type === "wh";
       fixtures.cargo.nodes
-        .filter((n) => s.cLayers[n.type])
+        .filter((n) => cLayers[n.type])
         .forEach((n) => {
-          const ok = n.h.includes(s.p.profile.handling);
-          const showTime = ok && showingWarehouse && s.cLayers.wh;
+          const ok = n.h.includes(handling);
+          const showTime = ok && showingWarehouse && cLayers.wh;
           marker(
             n.ll,
             n.icon,
@@ -134,18 +160,18 @@ export function CityMap({
             `${n.type === "port" ? "port" : ""} ${ok ? "" : "dim"}`,
           ).bindTooltip(
             showTime
-              ? `${warehouse.t[n.id] + (s.p.cargoDir === "in" ? 2 : 0)} мин`
+              ? `${warehouse.t[n.id] + (cargoDir === "in" ? 2 : 0)} мин`
               : `${n.name}${ok ? "" : " · не подходит профилю"}`,
             {
               className: "wx-tip",
               direction: "right",
               offset: [16, 0],
-              permanent: !!showTime,
+              permanent: showTime,
             },
           );
           if (showTime)
             L.polyline([warehouse.ll, n.ll], {
-              color: "var(--accent)",
+              color: color("--accent"),
               weight: 3,
               opacity: 0.85,
               dashArray: "1 8",
@@ -154,7 +180,7 @@ export function CityMap({
             }).addTo(g);
         });
       fixtures.cargo.objs
-        .filter((o) => s.cLayers[o.type])
+        .filter((o) => cLayers[o.type])
         .forEach((o) =>
           marker(
             o.ll,
@@ -175,16 +201,16 @@ export function CityMap({
     }
     const M = fixtures.cities[city];
     if (!M) return;
-    const scn = s.scenario === "done" && s.scnView === "scn",
-      st = currentStatus(s);
+    const scn = scenario === "done" && scnView === "scn",
+      st = renderStatus;
     const empty = ["nd", "idle", "srcerr", "baddate", "pending"].includes(st);
     const partial = city === "kgd" || st === "partial";
     const selected =
-      s.selection?.type === "cell" ? s.selection.id : M.canonCell?.id;
+      selection?.type === "cell" ? selection.id : M.canonCell?.id;
     const value = (c: Cell) =>
-      s.layers.pop
+      layers.pop
         ? Math.max(0, Math.min(100, ((c.pop - 120) / 1900) * 100))
-        : cellScore(c, s.metric, p.travel, p.cats, scn);
+        : cellScore(c, metric, p.travel, p.cats, scn);
     const unavailable = (c: Cell) =>
       empty || (partial && (c.ndPartial || (st === "partial" && c.j <= -6)));
     const draw = (cells: Cell[], bounds: L.LatLngBoundsExpression) => {
@@ -194,18 +220,22 @@ export function CityMap({
         ? valid.reduce((a, c) => a + (value(c) || 0) * c.pop, 0) / pop
         : null;
       const c = cells[0];
-      const isPoint = cells.length === 1 && zoom >= 13.5;
+      const isPoint = cells.length === 1 && level === 3;
       const options: L.PathOptions = {
         weight: cells.length === 1 ? 1 : 1.2,
         color: "#fff",
         opacity: 0.55,
         fillOpacity:
-          s.layers.index || s.layers.pop ? (isPoint ? 0.92 : 0.58) : 0,
-        fillColor: mapColor(st === "noroute" && c.zone ? 0 : v),
+          layers.index || layers.pop ? (isPoint ? 0.92 : 0.58) : 0,
+        fillColor: mapColor(st === "noroute" && c.zone ? 0 : v, palette),
+        ...(scn && c.eff === "up" ? { color: color("--ok"), weight: 2 } : {}),
+        ...(scn && c.eff === "dn" ? { color: color("--err"), weight: 2 } : {}),
+        ...(cells.some((cell) => cell.id === selected) ? { color: color("--sel"), weight: 3, opacity: 1 } : {}),
+        ...(!valid.length ? { fillColor: "#999", fillOpacity: 0.35, dashArray: "3 4" } : {}),
         className: `cell ${!valid.length ? "cell-nd" : ""} ${cells.some((c) => c.id === selected) ? "cell-sel" : ""} ${scn && c.eff === "up" ? "cell-up" : ""} ${scn && c.eff === "dn" ? "cell-dn" : ""}`,
       };
       const shape = isPoint
-        ? L.circleMarker(c.ll, { ...options, radius: 7, weight: 2 })
+        ? L.circleMarker(c.ll, { ...options, radius: 7 })
         : L.rectangle(bounds, options);
       const tip = document.createElement("span");
       tip.textContent =
@@ -213,9 +243,9 @@ export function CityMap({
           ? `Агрегат 4×4 км · ${cells.length} ячеек · ${f1(v)} (демо)`
           : unavailable(c)
             ? "Нет расписания — результата нет"
-            : s.layers.pop
+            : layers.pop
               ? `≈ ${c.pop} жит. · модель`
-              : `${s.metric === "overall" ? "Общий индекс" : `${c.values[p.travel][s.metric as CatId]?.time} мин · индекс`} ${f1(v)} · демо`;
+              : `${metric === "overall" ? "Общий индекс" : `${c.values[p.travel][metric as CatId]?.time} мин · индекс`} ${f1(v)} · демо`;
       shape
         .bindTooltip(tip, { className: "wx-tip", sticky: true, opacity: 1 })
         .on("click", () => {
@@ -236,7 +266,7 @@ export function CityMap({
         })
         .addTo(g);
     };
-    if (zoom <= 10.5) {
+    if (level === 1) {
       const blocks: Record<string, Cell[]> = {};
       M.cells.forEach((c) => {
         const key = `${Math.floor(c.i / 4)}:${Math.floor(c.j / 4)}`;
@@ -261,14 +291,14 @@ export function CityMap({
         ),
       );
     const focus =
-      s.metric === "overall"
+      metric === "overall"
         ? (Object.keys(p.cats).sort(
             (a, b) => (p.cats[b as CatId] || 0) - (p.cats[a as CatId] || 0),
           )[0] as CatId)
-        : (s.metric as CatId);
+        : (metric as CatId);
     const selectedCell = M.cells.find((c) => c.id === selected) || M.canonCell;
     const nearest = selectedCell?.near[focus]?.obj;
-    if (s.layers.objects && focus)
+    if (layers.objects && focus)
       M.objs[focus]?.forEach((o) =>
         marker(
           o.ll,
@@ -286,11 +316,11 @@ export function CityMap({
     ) {
       const r = fixtures.canon.route;
       const colors = [
-        "var(--text-2)",
-        "var(--accent)",
-        "var(--text-2)",
-        "var(--accent-2)",
-        "var(--text-2)",
+        color("--text-2"),
+        color("--accent"),
+        color("--text-2"),
+        color("--accent-2"),
+        color("--text-2"),
       ];
       for (let i = 0; i < 5; i++)
         L.polyline([r[i], r[i + 1]], {
@@ -322,41 +352,28 @@ export function CityMap({
           .addTo(g);
       });
     }
-  }, [
-    city,
-    dispatch,
-    p.travel,
-    p.cats,
-    s.p.mode,
-    s.p.profile.handling,
-    s.layers,
-    s.cLayers,
-    s.metric,
-    s.selection,
-    s.scenario,
-    s.scnView,
-    s.demoState,
-    s.status,
-    zoom,
-    s,
-  ]);
+  }, [city, dispatch, p.travel, p.cats, mode, handling, cargoDir, layers,
+    cLayers, metric, selection, scenario, scnView, renderStatus, level, night]);
   useEffect(() => {
     if (lastZoomAction.current === zoomAction.id) return;
     lastZoomAction.current = zoomAction.id;
     const map = mapRef.current;
     if (!map) return;
+    map.stop();
     if (zoomAction.kind === "home")
-      map.setView(fixtures.city[city].c, city === "msk" ? 10 : 12);
+      map.fitBounds([[40, 19], [82, 190]], { padding: [35, 60], animate: false });
+    else if (zoomAction.kind === "city") focusCity(map, city, mode === "cargo");
     else if (zoomAction.kind === "in") map.zoomIn();
     else map.zoomOut();
-  }, [zoomAction, city]);
+  }, [zoomAction, city, mode]);
   return (
     <>
       <div
         ref={host}
         id="mapCity"
         className="map-layer"
-        aria-label="Карта города"
+        aria-label="Карта России и городов"
+        data-map-level={level}
       />
       {tileFailed && (
         <div className="panelc stmsg unk tile-note" role="status">

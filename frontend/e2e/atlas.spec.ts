@@ -252,3 +252,27 @@ test("custom calendar selects a date and closes without hiding the atlas", async
   await expect(page.locator(".status")).toContainText("Параметры изменены");
   await expect(calendar).toBeFocused();
 });
+
+test("city map zooms out to Russia and returns without replacing the map", async ({ page }) => {
+  await page.goto("/#atlas");
+  await page.locator("#filters").getByRole("button", { name: "Москва", exact: true }).click();
+  const map = page.locator("#mapCity");
+  await expect(map.locator("canvas")).toBeVisible();
+  await map.evaluate((el) => el.setAttribute("data-instance-test", "original"));
+  await page.getByRole("button", { name: "Показать всю территорию", exact: true }).click();
+  await expect(map).toHaveAttribute("data-map-level", "0");
+  await expect(map.getByText("Калининград · демо-данные", { exact: true })).toHaveCount(1);
+  await expect(map.getByText("Калининград · демо-данные", { exact: true })).toBeVisible();
+  await expect(map.getByText("Новороссийск · демо-данные", { exact: true })).toBeVisible();
+  await page.locator("#timedock input[type=range]").fill("80");
+  await expect(map).toHaveAttribute("data-map-level", "0");
+  await expect(map).toHaveAttribute("data-instance-test", "original");
+  await page.getByRole("button", { name: "К выбранному городу", exact: true }).click();
+  await expect(map).toHaveAttribute("data-map-level", "2");
+  await expect(map.locator("canvas")).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Показать всю территорию", exact: true }).click();
+  await expect(map).toHaveAttribute("data-map-level", "0");
+  await expect(map.getByText("Калининград · демо-данные", { exact: true })).toHaveCount(1);
+  await expect(map.getByText("Калининград · демо-данные", { exact: true })).toBeVisible();
+});

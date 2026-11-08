@@ -1,9 +1,11 @@
-export function mapColor(v: number | null) {
-  if (v == null) return "#999";
+export function mapPalette() {
   const style = getComputedStyle(document.documentElement);
-  const scale = Array.from({ length: 6 }, (_, i) =>
+  return Array.from({ length: 6 }, (_, i) =>
     style.getPropertyValue("--scale-" + i).trim(),
   );
+}
+export function mapColor(v: number | null, scale = mapPalette()) {
+  if (v == null) return "#999";
   const t = Math.max(0, Math.min(100, v)) / 20,
     i = Math.min(4, Math.floor(t)),
     f = t - i;

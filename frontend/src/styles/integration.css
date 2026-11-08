@@ -258,3 +258,16 @@
     animation: none;
   }
 }
+
+@media (max-width: 767px) {
+  .atlas .ov-bottom .zgroup {
+    display: flex;
+    position: fixed;
+    right: 12px;
+    bottom: calc(var(--sheet-h, 196px) + 86px);
+  }
+  .atlas .ov-bottom .zgroup .zbtn {
+    width: 36px;
+    height: 40px;
+  }
+}
