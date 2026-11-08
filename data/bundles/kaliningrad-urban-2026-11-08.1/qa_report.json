@@ -1,0 +1,139 @@
+{
+  "bundle_id": "kaliningrad-urban-2026-11-08.1",
+  "generated_at": "2026-11-08T13:46:52.768833+00:00",
+  "parser_version": "ml2-urban-0.1.0",
+  "category_rules": "osm-category-rules-v1",
+  "result": "pass",
+  "failed_checks": [],
+  "checks": [
+    {
+      "check_id": "boundary_valid",
+      "status": "pass",
+      "detail": "City and district polygons are valid after make_valid"
+    },
+    {
+      "check_id": "area_geodesic_vs_utm",
+      "status": "pass",
+      "detail": "Geodesic area agrees with UTM area within 0.5%",
+      "geodesic_km2": 224.668,
+      "utm_km2": 224.496
+    },
+    {
+      "check_id": "districts_partition_city",
+      "status": "pass",
+      "detail": "Districts cover the city area without overlap (area sum within 0.5%)",
+      "district_sum_km2": 224.668
+    },
+    {
+      "check_id": "cells_partition_city",
+      "status": "pass",
+      "detail": "Clipped cells cover the city exactly once"
+    },
+    {
+      "check_id": "points_inside_own_cell",
+      "status": "pass",
+      "detail": "Every sample point lies in its own clipped cell"
+    },
+    {
+      "check_id": "population_conserved",
+      "status": "pass",
+      "detail": "All GHSL population inside the city is assigned to exactly one cell",
+      "cells_sum": 485776.4,
+      "raster_sum": 485776.4
+    },
+    {
+      "check_id": "district_population_not_doubled",
+      "status": "pass",
+      "detail": "District shares never exceed the city population",
+      "district_sum": 485776.3
+    },
+    {
+      "check_id": "public_categories_need_registry",
+      "status": "pass",
+      "detail": "No medical/education object is accepted without registry confirmation"
+    },
+    {
+      "check_id": "airport_outside_boundary_kept",
+      "status": "pass",
+      "detail": "Scheduled airport outside the city boundary is kept (PRODUCT_SPEC §2)",
+      "airports": [
+        "Калининград (Храброво)"
+      ]
+    }
+  ],
+  "summary": {
+    "city_area_km2": 224.668,
+    "cells_total": 286,
+    "cells_sampled": 216,
+    "cells_excluded": {
+      "NO_BUILDING": 59,
+      "WATER_ONLY": 11
+    },
+    "population_total": 485776.4,
+    "population_in_excluded_cells": 277.8,
+    "population_method": "ghsl_r2023a_e2025_100m_pixel_centroid",
+    "population_year": 2025,
+    "sample_offset_m": {
+      "center_placements": 16,
+      "median": 59.8,
+      "max": 690.9
+    },
+    "destinations_by_category": {
+      "adult_polyclinic": {
+        "accepted": 0,
+        "quarantined": 14
+      },
+      "child_polyclinic": {
+        "accepted": 0,
+        "quarantined": 14
+      },
+      "kindergarten": {
+        "accepted": 0,
+        "quarantined": 149
+      },
+      "school": {
+        "accepted": 0,
+        "quarantined": 105
+      },
+      "college_university": {
+        "accepted": 0,
+        "quarantined": 63
+      },
+      "rail_terminal": {
+        "accepted": 2,
+        "quarantined": 0
+      },
+      "bus_terminal": {
+        "accepted": 2,
+        "quarantined": 0
+      },
+      "airport": {
+        "accepted": 1,
+        "quarantined": 0
+      },
+      "shopping_center": {
+        "accepted": 34,
+        "quarantined": 14
+      }
+    },
+    "osm_rule_counts": {
+      "rail_station_not_terminal": 78,
+      "aerodrome_without_iata": 15,
+      "amenity=university": 54,
+      "shop=mall": 75,
+      "medical_not_polyclinic": 286,
+      "amenity=college": 23,
+      "amenity=school": 242,
+      "amenity=kindergarten": 278,
+      "medical+name:поликлиника": 36,
+      "bus_station_not_terminal": 10,
+      "amenity=bus_station+name:автовокзал": 13,
+      "passenger_station+name:<город>-": 2,
+      "school_additional_education": 16,
+      "station+name:вокзал": 3,
+      "aerodrome+iata": 1,
+      "disused": 5,
+      "merged_duplicates": 43
+    }
+  }
+}

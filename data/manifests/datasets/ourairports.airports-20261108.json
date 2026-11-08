@@ -1,0 +1,35 @@
+{
+  "dataset_id": "ourairports.airports-20261108",
+  "source_id": "ourairports",
+  "source_url": "https://davidmegginson.github.io/ourairports-data/airports.csv",
+  "retrieved_at": "2026-11-08T13:42:04.183446Z",
+  "publication_date": null,
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Мир",
+  "license": {
+    "name": "Public Domain",
+    "url": "https://ourairports.com/data/",
+    "status": "permitted",
+    "attribution": null
+  },
+  "access_method": "file",
+  "raw_path": "ourairports/airports-20261108.csv",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "5754df21f25cb08d2def8a80b3eb609ddc52a4217afa8eb48280b6428c06e78f",
+    "size_bytes": 12758284
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "iata_code": "IATA",
+    "type": "airport type",
+    "scheduled_service": "yes/no"
+  },
+  "coverage": "Все аэропорты и аэродромы OurAirports на дату загрузки",
+  "limitations": [
+    "scheduled_service — признак регулярных рейсов по данным OurAirports, не расписание"
+  ],
+  "status": "fetched",
+  "qa_report": null
+}

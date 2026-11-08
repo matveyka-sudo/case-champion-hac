@@ -1,0 +1,32 @@
+{
+  "dataset_id": "osm_geofabrik.kaliningrad-261107",
+  "source_id": "osm_geofabrik",
+  "source_url": "https://download.geofabrik.de/russia/kaliningrad-261107.osm.pbf",
+  "retrieved_at": "2026-11-08T13:36:59.619413Z",
+  "publication_date": "2026-11-07",
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Калининградская область (выгрузка Geofabrik russia/kaliningrad)",
+  "license": {
+    "name": "ODbL-1.0",
+    "url": "https://opendatacommons.org/licenses/odbl/1-0/",
+    "status": "permitted",
+    "attribution": "© OpenStreetMap contributors"
+  },
+  "access_method": "file",
+  "raw_path": "osm_geofabrik/kaliningrad-261107.osm.pbf",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "769a6a6ac552b534057f2480b88f1c2d0709636761ab6d08483efe69c1e97b69",
+    "size_bytes": 29330257
+  },
+  "upstream_checksum": "md5:774690e875533b0c36be7ae801444210",
+  "schema_mapping": {},
+  "coverage": "Все объекты OSM в полигоне выгрузки на дату выгрузки",
+  "limitations": [
+    "Теги неоднородны",
+    "Не содержит расписаний и формы собственности"
+  ],
+  "status": "fetched",
+  "qa_report": null
+}
