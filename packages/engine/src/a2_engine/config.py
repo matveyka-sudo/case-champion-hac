@@ -141,10 +141,136 @@ def urban_config_from_mapping(product: Mapping[str, object]) -> UrbanConfig:
 
 def load_urban_config(path: str | Path | None = None) -> UrbanConfig:
     """Read product.json. Installed distributions must receive an explicit path."""
+    return urban_config_from_mapping(_load_product(path))
+
+
+def _load_product(path: str | Path | None) -> Mapping[str, object]:
     config_path = (
         Path(path)
         if path is not None
         else Path(__file__).resolve().parents[4] / "config/product.json"
     )
     product: object = json.loads(config_path.read_text(encoding="utf-8"))
-    return urban_config_from_mapping(_mapping(product, "product"))
+    return _mapping(product, "product")
+
+
+def _method_parameters(
+    product: Mapping[str, object], kind: str
+) -> tuple[str, Mapping[str, object]]:
+    try:
+        method = _mapping(_mapping(product["methodologies"], "methodologies")[kind], kind)
+        version = product["methodology_version"]
+        if not isinstance(version, str) or not version.strip() or method["version"] != version:
+            raise ValueError("Global and method versions must agree")
+        if method["status"] != "approved":
+            raise ValueError(f"{kind} must be approved")
+        return version, _mapping(method["parameters"], f"{kind} parameters")
+    except KeyError as exc:
+        raise ValueError(f"Missing configuration field: {exc.args[0]}") from exc
+
+
+@dataclass(frozen=True)
+class PassengerConfig:
+    methodology_version: str
+    waiting_half_life_seconds: float
+    reference_profile: str
+
+    def __post_init__(self) -> None:
+        _identifiers((self.methodology_version,), "methodology_version")
+        _identifiers((self.reference_profile,), "reference_profile")
+        object.__setattr__(
+            self,
+            "waiting_half_life_seconds",
+            finite_number(
+                self.waiting_half_life_seconds, "waiting_half_life_seconds", positive=True
+            ),
+        )
+
+
+def passenger_config_from_mapping(product: Mapping[str, object]) -> PassengerConfig:
+    version, parameters = _method_parameters(product, "intercity_passenger")
+    try:
+        if parameters["reference"] != "A":
+            raise ValueError("Only reference A is implemented")
+        profile = parameters["reference_profile"]
+        if not isinstance(profile, str):
+            raise ValueError("reference_profile must be a string")
+        hours = finite_number(
+            parameters["initial_wait_half_life_hours"], "waiting hours", positive=True
+        )
+        return PassengerConfig(version, hours * 3600.0, profile)
+    except KeyError as exc:
+        raise ValueError(f"Missing configuration field: {exc.args[0]}") from exc
+
+
+def load_passenger_config(path: str | Path | None = None) -> PassengerConfig:
+    return passenger_config_from_mapping(_load_product(path))
+
+
+@dataclass(frozen=True)
+class FreightConfig:
+    methodology_version: str
+    area_h_bands: tuple[AreaHBand, ...]
+    delivery_half_life_seconds: Mapping[str, float]
+    pipeline_products: frozenset[str]
+
+    def __post_init__(self) -> None:
+        _identifiers((self.methodology_version,), "methodology_version")
+        bands = tuple(self.area_h_bands)
+        validate_bands(bands)
+        object.__setattr__(self, "area_h_bands", bands)
+        if not isinstance(self.delivery_half_life_seconds, Mapping):
+            raise ValueError("delivery_half_life_seconds must be a mapping")
+        _identifiers(tuple(self.delivery_half_life_seconds), "urgencies")
+        half_lives = {
+            key: finite_number(value, f"delivery half-life.{key}", positive=True)
+            for key, value in self.delivery_half_life_seconds.items()
+        }
+        object.__setattr__(self, "delivery_half_life_seconds", MappingProxyType(half_lives))
+        object.__setattr__(
+            self,
+            "pipeline_products",
+            frozenset(_identifiers(self.pipeline_products, "pipeline_products")),
+        )
+
+
+def freight_config_from_mapping(product: Mapping[str, object]) -> FreightConfig:
+    version, delivery = _method_parameters(product, "intercity_cargo")
+    _, urban = _method_parameters(product, "urban_cargo")
+    _, passenger_urban = _method_parameters(product, "urban_passenger")
+    try:
+        if urban["h_source"] != "urban_passenger.area_h_bands":
+            raise ValueError("Unsupported urban cargo H source")
+        if urban["aggregation"] != "equal_physical_sites_by_node_type":
+            raise ValueError("Unsupported urban cargo aggregation")
+        if delivery["pipeline_in_total"] is not False:
+            raise ValueError("Pipelines must stay outside the cargo delivery index")
+        raw_bands = passenger_urban["area_h_bands"]
+        if not isinstance(raw_bands, list):
+            raise ValueError("area_h_bands must be a list")
+        bands = []
+        for item in raw_bands:
+            band = _mapping(item, "area band")
+            area = band["max_area_km2"]
+            bands.append(
+                AreaHBand(
+                    None if area is None else finite_number(area, "max_area_km2", positive=True),
+                    finite_number(band["h_minutes"], "h_minutes", positive=True) * 60.0,
+                )
+            )
+        hours = _mapping(delivery["delivery_half_life_hours"], "delivery_half_life_hours")
+        return FreightConfig(
+            version,
+            tuple(bands),
+            {
+                key: finite_number(value, f"delivery hours.{key}", positive=True) * 3600.0
+                for key, value in hours.items()
+            },
+            frozenset(_identifiers(product["pipeline_products"], "pipeline_products")),
+        )
+    except KeyError as exc:
+        raise ValueError(f"Missing configuration field: {exc.args[0]}") from exc
+
+
+def load_freight_config(path: str | Path | None = None) -> FreightConfig:
+    return freight_config_from_mapping(_load_product(path))
