@@ -17,6 +17,10 @@ ErrorCode = Literal[
     "method_not_allowed",
     "job_timeout",
     "job_cancelled",
+    "data_unavailable",
+    "unsupported_traffic_mode",
+    "provider_unavailable",
+    "unsupported_scenario",
 ]
 JobStatus = Literal["queued", "running", "succeeded", "failed", "cancelled"]
 

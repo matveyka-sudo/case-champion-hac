@@ -1,0 +1,64 @@
+"""Grounded explanations of an immutable saved analysis, never calculation commands."""
+
+from typing import Annotated, Literal, Self
+
+from pydantic import Field, model_validator
+
+from .base import ContractModel, Identifier
+
+Text = Annotated[str, Field(min_length=1, max_length=1000)]
+
+
+class NumericClaim(ContractModel):
+    metric_id: Identifier
+    value: Annotated[float, Field(strict=True)] | None
+    unit: Identifier
+
+
+class Finding(ContractModel):
+    text: Text
+    metric_ids: list[Identifier] = Field(min_length=1, max_length=20)
+    evidence_refs: list[Identifier] = Field(max_length=50)
+    claims: list[NumericClaim] = Field(max_length=20)
+
+    @model_validator(mode="after")
+    def referenced_claims(self) -> Self:
+        ids = [claim.metric_id for claim in self.claims]
+        if len(set(ids)) != len(ids) or not set(ids) <= set(self.metric_ids):
+            raise ValueError("Claims require unique referenced metric identities")
+        if len(set(self.metric_ids)) != len(self.metric_ids):
+            raise ValueError("Duplicate metric reference")
+        return self
+
+
+class ScenarioSuggestion(ContractModel):
+    template_id: Identifier
+    rationale: Text
+    evidence_refs: list[Identifier] = Field(max_length=50)
+
+
+class ExplanationContent(ContractModel):
+    analysis_id: Identifier
+    findings: list[Finding] = Field(max_length=20)
+    proposals: list[ScenarioSuggestion] = Field(max_length=10)
+    evidence_refs: list[Identifier] = Field(max_length=50)
+    limitations: list[Text] = Field(max_length=20)
+
+
+class Explanation(ExplanationContent):
+    schema_version: Literal["2"] = "2"
+    analysis_result_hash: Identifier
+    request_id: Identifier
+    status: Literal["generated", "template"]
+    model_id: Identifier | None
+    reason_code: Identifier | None
+
+    @model_validator(mode="after")
+    def explicit_fallback(self) -> Self:
+        if self.status == "template" and (self.model_id is not None or not self.reason_code):
+            raise ValueError("Template fallback requires a reason and no model attribution")
+        if self.status == "generated" and (self.model_id is None or self.reason_code is not None):
+            raise ValueError("Generated explanation requires its model and no fallback reason")
+        if self.status == "generated" and not self.findings:
+            raise ValueError("Generated explanation requires grounded findings")
+        return self
