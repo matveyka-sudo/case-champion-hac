@@ -1,6 +1,6 @@
 {
-  "bundle_id": "kaliningrad-urban-2026-11-08.3",
-  "generated_at": "2026-11-08T15:40:03.348012+00:00",
+  "bundle_id": "kaliningrad-urban-2026-11-08.4",
+  "generated_at": "2026-11-08T15:56:02.111197+00:00",
   "parser_version": "ml2-urban-0.2.0",
   "category_rules": "osm-category-rules-v1",
   "graph_version": "osm_geofabrik.kaliningrad-261107:osm-walk-network-v1:main-component",
@@ -172,10 +172,16 @@
       ]
     },
     {
+      "check_id": "higher_education_registry_located",
+      "status": "pass",
+      "detail": "Every public college and university of the city has a building or a located address",
+      "unlocated": []
+    },
+    {
       "check_id": "public_categories_need_registry",
       "status": "pass",
       "detail": "No medical/education object is accepted without registry confirmation",
-      "accepted_registry_objects": 197
+      "accepted_registry_objects": 223
     },
     {
       "check_id": "airport_outside_boundary_kept",
@@ -262,8 +268,8 @@
         "quarantined": 54
       },
       "college_university": {
-        "accepted": 0,
-        "quarantined": 63
+        "accepted": 26,
+        "quarantined": 44
       },
       "rail_terminal": {
         "accepted": 2,
@@ -335,6 +341,127 @@
         "city_addresses_not_in_osm": 2,
         "osm_candidates_attached": 13,
         "osm_candidates_unmatched": 15
+      },
+      "higher_education_registry": {
+        "rules": "obrnadzor-college-university-rules-v1",
+        "link_rules": "edu-name-link-v1",
+        "local_orgs": 30,
+        "public_orgs": 19,
+        "rejected": {
+          "DEPARTMENTAL_INSTITUTION": 3,
+          "SPECIAL_CLOSED_INSTITUTION": 1,
+          "NOT_PUBLIC": 6,
+          "SOCIAL_INSTITUTION": 1
+        },
+        "accepted_destinations": 26,
+        "osm_linked": [
+          {
+            "osm": "Колледж сервиса и туризма",
+            "org": "ГАУ КО ПОО КСТ",
+            "score": 2
+          },
+          {
+            "osm": "Петербуржский государственный университет путей сообщения",
+            "org": "Калининградский филиал ПГУПС",
+            "score": 3
+          },
+          {
+            "osm": "Балтийский федеральный университет имени И.Канта",
+            "org": "ФГАОУ ВО \"БФУ ИМ. И. КАНТА\"",
+            "score": 2
+          },
+          {
+            "osm": "Калининградский Бизнес Колледж",
+            "org": "АНО ПО КБК",
+            "score": 1
+          },
+          {
+            "osm": "Центр подготовки авиакассиров БФУ имени И.Канта",
+            "org": "ФГАОУ ВО \"БФУ ИМ. И. КАНТА\"",
+            "score": 3
+          },
+          {
+            "osm": "Колледж предпринимательства",
+            "org": "ГАУ КО \"Колледж предпринимательства\"",
+            "score": 1
+          },
+          {
+            "osm": "Академия народного хозяйства при правительстве РФ. Калининградский филиал",
+            "org": "Западный филиал РАНХиГС",
+            "score": 3
+          },
+          {
+            "osm": "Калининградский государственный технический университет",
+            "org": "ФГБОУ ВО \"КГТУ\"",
+            "score": 1
+          },
+          {
+            "osm": "Калининградский государственный технический университет",
+            "org": "ФГБОУ ВО \"КГТУ\"",
+            "score": 1
+          },
+          {
+            "osm": "Балтийский федеральный университет имени Иммануила Канта",
+            "org": "ФГАОУ ВО \"БФУ ИМ. И. КАНТА\"",
+            "score": 3
+          },
+          {
+            "osm": "Балтийский федеральный университет имени И.Канта",
+            "org": "ФГАОУ ВО \"БФУ ИМ. И. КАНТА\"",
+            "score": 2
+          },
+          {
+            "osm": "Инженерно-технический институт БФУ им. И. Канта",
+            "org": "ФГАОУ ВО \"БФУ ИМ. И. КАНТА\"",
+            "score": 3
+          },
+          {
+            "osm": "Западный филиал Российской академии народного хозяйства и государственной службы",
+            "org": "Западный филиал РАНХиГС",
+            "score": 3
+          },
+          {
+            "osm": "Калининградский областной музыкальный колледж им. С.В. Рахманинова",
+            "org": "ГБПОУ «Калининградский музыкальный колледж им. С.В. Рахманинова»",
+            "score": 2
+          },
+          {
+            "osm": "Колледж сервиса и туризма",
+            "org": "ГАУ КО ПОО КСТ",
+            "score": 2
+          },
+          {
+            "osm": "Институт природопользования, территориального развития и градостроительства БФУ им. И.Канта",
+            "org": "ФГАОУ ВО \"БФУ ИМ. И. КАНТА\"",
+            "score": 3
+          },
+          {
+            "osm": "Научно-технологический парк БФУ имени И.Канта",
+            "org": "ФГАОУ ВО \"БФУ ИМ. И. КАНТА\"",
+            "score": 3
+          },
+          {
+            "osm": "Калининградский юридический институт МВД России",
+            "org": "Калининградский филиал Санкт-Петербургского университета МВД России, КФ ФГКОУ ВО СПбУ МВД России, КФ СПбУ МВД России",
+            "score": 3
+          },
+          {
+            "osm": "Балтийский федеральный университет имени Иммануила Канта",
+            "org": "ФГАОУ ВО \"БФУ ИМ. И. КАНТА\"",
+            "score": 3
+          },
+          {
+            "osm": "Университетский колледж БФУ",
+            "org": "ФГАОУ ВО \"БФУ ИМ. И. КАНТА\"",
+            "score": 3
+          },
+          {
+            "osm": "Колледж сервиса и туризма",
+            "org": "ГАУ КО ПОО КСТ",
+            "score": 2
+          }
+        ],
+        "osm_unlinked": 42
       }
     }
   }
