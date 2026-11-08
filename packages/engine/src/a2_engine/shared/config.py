@@ -275,3 +275,30 @@ def freight_config_from_mapping(product: Mapping[str, object]) -> FreightConfig:
 
 def load_freight_config(path: str | Path | None = None) -> FreightConfig:
     return freight_config_from_mapping(_load_product(path))
+
+
+@dataclass(frozen=True)
+class UrbanJourneyRules:
+    methodology_version: str
+    max_total_wait_seconds: float
+
+    def __post_init__(self) -> None:
+        _identifiers((self.methodology_version,), "methodology_version")
+        object.__setattr__(
+            self,
+            "max_total_wait_seconds",
+            finite_number(self.max_total_wait_seconds, "max_total_wait_seconds"),
+        )
+
+
+def urban_journey_rules_from_mapping(product: Mapping[str, object]) -> UrbanJourneyRules:
+    version, parameters = _method_parameters(product, "urban_passenger")
+    try:
+        hours = finite_number(parameters["max_total_wait_hours"], "max_total_wait_hours")
+        return UrbanJourneyRules(version, hours * 3600.0)
+    except KeyError as exc:
+        raise ValueError(f"Missing configuration field: {exc.args[0]}") from exc
+
+
+def load_urban_journey_rules(path: str | Path | None = None) -> UrbanJourneyRules:
+    return urban_journey_rules_from_mapping(_load_product(path))

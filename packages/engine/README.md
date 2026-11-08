@@ -11,7 +11,7 @@
 
 ```text
 a2_engine/
-  __init__.py                 # стабильные 37 публичных экспортов
+  __init__.py                 # прежние 37 экспортов + городской анализ по кандидатам
   shared/
     __init__.py
     config.py                 # конфигурации, загрузчики и их проверки
@@ -20,6 +20,10 @@ a2_engine/
   urban/
     __init__.py
     indices.py                # городские пассажирские индексы и H
+    models.py                 # нормализованный контекст и принятые входы
+    journeys.py               # проверка временных цепочек и ожиданий
+    selection.py              # минимум по физическим объектам
+    analysis.py               # точки, категории, режимы и территория
   intercity/
     __init__.py
     passenger.py              # пассажирская цепочка, эталон, автомобиль
@@ -64,7 +68,7 @@ Shared не импортирует предметные пакеты. Внутр
 | pipeline.py | pipeline/utilization.py |
 | comparison.py | comparison/deltas.py |
 
-Основной контракт `from a2_engine import ...` сохранён целиком: 37 имён,
+Основной контракт `from a2_engine import ...` сохранён целиком: прежние 37 имён,
 их сигнатуры и значения по умолчанию зафиксированы до переноса и проверяются
 в tests/test_public_api.py. Существующие пути a2_engine.urban, a2_engine.freight,
 a2_engine.pipeline и a2_engine.comparison сохранены пакетными __init__.py
@@ -84,6 +88,10 @@ a2_engine.config, a2_engine.results и a2_engine.passenger: эти пути ис
 разработчика. При размещении пакета отдельно от checkout передавайте явный путь.
 Тест копирует пакет вне checkout и проверяет все три загрузчика с таким путём;
 отдельные процессы из другого cwd проверяют загрузку по умолчанию.
+
+Городской анализ добавляет 23 явных экспорта (всего 60). Проверки старых 37
+сигнатур сохранены. Предметные реализации могут импортировать свои внутренние
+модули и shared; shared по-прежнему не зависит от предметных пакетов.
 
 ## Городские пассажирские вызовы: первый этап
 
@@ -429,6 +437,278 @@ DTO BACKEND. Единицы времён/экономии — seconds, инде�
 index points, загрузки — percent. Подтверждения в примерах тестовые: они не
 свидетельствуют о наличии реального источника, рейса или подключения.
 
+## Городской анализ по нормализованным кандидатам
+
+```python
+analyze_urban_candidates(
+    context: UrbanContext,
+    points: Sequence[UrbanPoint],
+    destinations: Sequence[UrbanDestination],
+    candidates: Sequence[UrbanCandidate],
+    coverage: Sequence[UrbanCoverage],
+    *, area: UrbanArea, selected_categories: Mapping[str, str], modes: Sequence[str],
+    population_coverage: UrbanPopulationCoverage, config: UrbanConfig,
+    rules: UrbanJourneyRules, thresholds: Sequence[UrbanThreshold] = (),
+) -> UrbanAnalysis
+validate_urban_journey(candidate: UrbanCandidate, *, rules: UrbanJourneyRules) -> UrbanJourneyTiming
+load_urban_journey_rules(path: str | Path | None = None) -> UrbanJourneyRules
+urban_journey_rules_from_mapping(product: Mapping[str, object]) -> UrbanJourneyRules
+```
+
+Это чистая обработка **переданных** цепочек. Сетевых вызовов, поиска по графу,
+построения τ и восстановления пропущенных интервалов нет. Численные индексы
+рассчитывают прежние select_h_seconds/category_index/point_index/territory_index.
+UrbanJourneyRules отдельно загружает max_total_wait_hours в секунды; сигнатура
+UrbanConfig не меняется. Полный time limit относится к сумме ожиданий, не total.
+
+### Входная граница
+
+Все новые контейнеры frozen; коллекции копируются в tuple/frozenset. Их назначение —
+внутренняя нормализованная граница engine, не альтернативный REST-контракт.
+
+| Тип | Поля и смысл |
+| --- | --- |
+| UrbanVersions | snapshot_id, graph_version, calendar_version, population_version (nullable), geometry_version, methodology_version, config_hash, traffic_version |
+| UrbanContext | city_id, territory_id выбранной области, requested_departure_at, traffic_mode, versions, search_parameters_id принятого набора ограничений/окна поиска |
+| UrbanArea | city_id, административная area_km2 либо None, geometry_version границы, source_refs |
+| UrbanPoint | point_id, исходный cell_id, логический origin_node_id точки, access_node_id сети, access_distance_m, territory_id, population либо None, population_year/method, source_refs, optional population_share_id |
+| UrbanDestination | destination_id записи, object_identity учреждения, categories, access_node_id входа, territory_id, eligible=True/False/None, in_service_scope, source_refs |
+| UrbanLeg | mode, kind, from/to_node_id, start/end_at, duration_seconds, service_id либо None, evidence_refs |
+| UrbanCandidate | journey_id, point_id, destination_id, category, passenger_mode, context, origin/destination_node_id, departure/arrival_at, legs, evidence_refs, optional geometry |
+| UrbanGeometry | Только переданный actual LineString: coordinates lon/lat и evidence_refs; None остаётся none |
+| UrbanSearchScope | context, point_id, category, passenger_mode, max_total_wait_seconds |
+| UrbanCoverage | scope, явные catalog_complete/search_complete, evidence_refs, catalog_destination_ids принятого каталога в данной категории/области, optional provider_error |
+| UrbanPopulationCoverage | context, явный complete, excluded_population либо None, evidence_refs, point_ids ожидаемой выборки |
+| UrbanThreshold | city_id, passenger_mode, versions базового расчёта, traffic_mode, search_parameters_id, seconds либо None, evidence_refs |
+
+Адаптер обязан разрешить версии и config_hash по опубликованной конфигурации,
+проверить QA, период и registry evidence принятого snapshot. Engine проверяет
+согласованность переданных контекстов, а не подлинность источников по сети.
+Отдельная версия traffic_version идентифицирует принятый профиль/ответ трафика:
+имя режима static/typical/live/historical её не заменяет.
+
+Логический origin_node_id соответствует выбранной точке, а не автоматически
+ближайшему сетевому узлу. При положительном access_distance_m требуется
+переданный положительный пеший префикс до access_node_id. Engine не назначает
+скорость и не добавляет недостающие метры/секунды. Конечный узел должен совпадать
+с принятым входом объекта. Географию/здания и пригодность подтверждает ML2.
+Объект из соседней территории разрешён при in_service_scope=True.
+eligible=False означает подтверждённую непригодность, None — пробел подтверждения;
+этот пробел блокирует полный минимум категории.
+
+### Цепочка, выбор и результаты
+
+Datetime должны быть aware, на входной границе они переводятся в UTC.
+Городской departure_at и первый start_at равны requested_departure_at. Узлы
+и timestamps соседних legs должны стыковаться без разрывов/перекрытий; последний
+конец совпадает с arrival_at. duration_seconds проверяется против UTC timestamps
+с точностью канонического Leg (rel_tol=1e-12, abs_tol=1e-9); составляющие engine
+суммируются из **фактических UTC-интервалов**, без округления для UI.
+
+Поддержаны четыре kind: walk, ride, wait_initial, wait_transfer. Перенос между
+остановками — walk. Ожидание не меняет узел; initial wait расположен до первой
+поездки, transfer wait — между поездками. Для ОТ допустимы пешие legs и ride/wait
+с mode public_transport/rail/water; автомобильные legs не принимаются как ОТ.
+Для автомобиля — private_car с реальными пешими подходами, для walk — только walk.
+Общие road/mixed и прочие operation kinds адаптер должен однозначно нормализовать
+по подтверждённой семантике или отклонить; молча терять их длительность нельзя.
+
+Структурно неверная цепочка вызывает ValueError и не исчезает из расчёта как
+«нет пути». Корректная цепочка сверх лимита ожидания возвращает admissible=False,
+MAX_TOTAL_WAIT_EXCEEDED и все времена. Лимит включительный и читается из config.
+Даже поездка дольше четырёх часов допустима, если её ожидания проходят ограничение.
+
+UrbanJourneyTiming сохраняет candidate, total/walking/riding/initial_wait/
+transfer_wait/total_wait_seconds, waiting_share, admissible и reason_code.
+Доля ожидания — fraction (0..1), при total=0 она not_applicable/ZERO_DURATION.
+Ни двойного штрафа за пересадки, ни повторного учёта walk в ожидании нет.
+
+Сначала проверяются **все** кандидаты, включая те, которые не будут выбраны.
+Затем для point/category/mode выбирается лучший допустимый путь к каждому
+object_identity, после — лучший физический объект. Стабильный ключ выбора:
+(total_seconds, object_identity, destination_id, journey_id). Порядок входа
+не влияет на результат. В разных категориях одно учреждение участвует отдельно.
+
+UrbanCategoryResult сохраняет best, objects (один лучший путь на учреждение),
+rejected, index, count, threshold, coverage, minimum_proven, completeness,
+evidence_refs и limitations. SelectedUrbanObject содержит полную запись destination
+и проверенную journey, поэтому сохраняются и физическая идентичность, и конкретный
+вход/запись/маршрут. При неполноте best — только лучший **известный** путь.
+
+UrbanPointResult сохраняет исходную point, mode, результаты категорий и index.
+UrbanTerritoryResult содержит points, index, completeness, ranking_eligible и evidence.
+UrbanAnalysis содержит context/area, неизменяемый выбор приоритетов, h_seconds,
+все проверенные journeys, раздельные modes, population_coverage, status и limitations.
+Статус верхнего анализа может быть partial; статус отдельной численной метрики
+остаётся available/unknown/not_applicable. Ограничение GEOMETRY_UNAVAILABLE
+не уничтожает известное время, но настоящая дорожная линия не синтезируется.
+
+### Полнота и τ
+
+Полный минимум/индекс требует доказанных полного каталога и поиска в **точном**
+scope. Полнота snapshot не подменяет полноту ответа маршрутизатора. Свидетельство
+охвата должно иметь evidence, правильные время/точку/категорию/режим/версии/опции
+и roster catalog_destination_ids, совпадающий с переданными записями категории
+в принятой области обслуживания. Флаги полноты не имеют значения True по умолчанию.
+
+| Случай | Результат категории |
+| --- | --- |
+| Полный scope, допустимый путь | Численный индекс, полный минимум |
+| Полный scope, допустимых путей нет | index=0, available/NO_FEASIBLE_ROUTE, evidence; best=None |
+| Неполный/непереданный scope | index=null/unknown/INCOMPLETE_COVERAGE; известный best сохраняется |
+| Ошибка провайдера | unknown/DATA_UNAVAILABLE; она не может подтверждать полный поиск |
+| Неизвестная пригодность записи | unknown/DESTINATION_ELIGIBILITY_UNKNOWN |
+| Неизвестная площадь | H неизвестен, полный индекс найденного пути неизвестен; путь сохраняется |
+
+У отсутствующего пути нет нулевого времени и фиктивных legs. Ноль относится
+только к индексу при доказанном полном отсутствии допустимого пути.
+
+Полный агрегат территории дополнительно требует UrbanPopulationCoverage.complete,
+excluded_population=0, точного совпадения point_ids с исходной выборкой и известной
+версии населения. Иначе он unknown, не перенормированное среднее оставшихся жителей.
+Неизвестное положительное население/индекс блокирует численное полное среднее.
+Известный нулевой вес не портит остальных, нулевой знаменатель даёт ZERO_WEIGHT.
+Дубли point_id, полных cell_id, одинаковых shares и смешение полного веса с его
+долями отклоняются. Корректность подготовленных непересекающихся долей и суммы
+исходной ячейки подтверждает ML2; engine не распределяет население по геометрии.
+
+Count использует уже принятый τ: уникальные object_identity с лучшим T <= τ.
+Требуются полный scope и совпадение city/mode/базовых versions/traffic/опций.
+Отсутствующий/unknown τ даёт TAU_UNAVAILABLE и **не блокирует H-индекс**.
+Чужой контекст τ отклоняется как TAU_CONTEXT_MISMATCH. Никаких выдуманных pending
+jobs нет: dependency_job_id может назначить только BACKEND для настоящего задания.
+Из-за неизвестного count общий analysis может быть partial при доступном полном
+индексе; рейтинг относится к конкретному полному Score, не ко всем метрикам сразу.
+
+### Сквозной пример: только синтетические данные
+
+Ниже флаги полноты и evidence IDs — явно тестовые утверждения, не доказательства
+готовности реального города. Две точки: 20/40 минут, население 90/10, H=20 минут.
+
+<!-- executable-example -->
+```python
+from datetime import UTC, datetime, timedelta
+from a2_engine import (
+    UrbanArea, UrbanCandidate, UrbanContext, UrbanCoverage, UrbanDestination,
+    UrbanLeg, UrbanPoint, UrbanPopulationCoverage, UrbanSearchScope, UrbanThreshold,
+    UrbanVersions, analyze_urban_candidates, load_urban_config, load_urban_journey_rules,
+)
+
+config, rules = load_urban_config(), load_urban_journey_rules()
+versions = UrbanVersions(
+    "synthetic-snapshot", "synthetic-graph", "synthetic-calendar", "synthetic-population",
+    "synthetic-geometry", config.methodology_version, "synthetic-config-hash", "synthetic-traffic",
+)
+context = UrbanContext("synthetic-city", "synthetic-city", datetime(2026, 11, 8, 8, tzinfo=UTC),
+                       "static", versions, "synthetic-search-options")
+area = UrbanArea(context.city_id, 100, versions.geometry_version, ("synthetic-area-evidence",))
+points = [UrbanPoint(
+    f"p{i}", f"cell{i}", f"p{i}", f"p{i}", 0, context.territory_id,
+    population, 2026, "synthetic-estimate", ("synthetic-population-evidence",),
+) for i, population in [(1, 90), (2, 10)]]
+destination = UrbanDestination(
+    "school-record", "physical-school", frozenset({"school"}), "school-node",
+    context.city_id, True, True, ("synthetic-registry-evidence",),
+)
+candidates = []
+for point, seconds in zip(points, (1200, 2400), strict=True):
+    start, end = context.requested_departure_at, context.requested_departure_at + timedelta(seconds=seconds)
+    leg = UrbanLeg("walk", "walk", point.origin_node_id, destination.access_node_id,
+                   start, end, seconds, None, ("synthetic-route-evidence",))
+    candidates.append(UrbanCandidate(
+        f"route-{point.point_id}", point.point_id, destination.destination_id, "school", "walk",
+        context, point.origin_node_id, destination.access_node_id, start, end, (leg,),
+        ("synthetic-route-evidence",),
+    ))
+coverage = [UrbanCoverage(
+    UrbanSearchScope(context, point.point_id, "school", "walk", rules.max_total_wait_seconds),
+    True, True, ("synthetic-search-proof",), frozenset({destination.destination_id}),
+) for point in points]
+population_coverage = UrbanPopulationCoverage(
+    context, True, 0, ("synthetic-sampling-proof",), frozenset(p.point_id for p in points),
+)
+tau = UrbanThreshold(context.city_id, "walk", versions, "static", context.search_parameters_id,
+                     1200, ("synthetic-tau-proof",))
+result = analyze_urban_candidates(
+    context, points, [destination], candidates, coverage, area=area,
+    selected_categories={"school": "medium"}, modes=("walk",),
+    population_coverage=population_coverage, config=config, rules=rules, thresholds=(tau,),
+)
+assert [p.index.value for p in result.modes[0].points] == [50, 25]
+assert [p.categories[0].count.value for p in result.modes[0].points] == [1, 0]
+assert result.modes[0].index.value == 47.5 and result.modes[0].ranking_eligible
+```
+
+### Сверка с BACKEND d2cfe9a и следующий адаптер
+
+Прочитаны реальные a2_contracts.v2 dataset/journeys/results/requests и
+apps/api/docs/handoff-ml1-ml2.md из work/backend на d2cfe9a без слияния.
+В текущем checkout этих Python DTO ещё нет: engine не импортирует их обязательно,
+не импортирует a2_api/FastAPI/jobs и не выдаёт UrbanAnalysis за готовый AnalysisResult.
+
+| Внутреннее поле | Канонический источник или отображение |
+| --- | --- |
+| context.city_id/territory_id/time/traffic; selected_categories/modes | UrbanPassengerRequest.city_id/area_id/departure_at/traffic_mode, categories/priorities/passenger_mode; отдельный запрос/результат на режим в API |
+| context.versions | VersionRefs snapshot/graph/calendar/population/methodology/config; geometry_version — AcceptedData.provenance; code_version сохраняет BACKEND |
+| area | AcceptedData.territories: административная площадь города, версия geometry и source_refs |
+| point cell/population/year/method | SamplePoint + PopulationCell; источник — исходная ячейка, не здание/посетители |
+| point origin/access | Логический узел точки плюс SamplePoint.access_node_id/access_distance_m; реальный connector передаёт маршрутизатор |
+| destination | Destination.destination_id/object_identity/categories/access_node_id/territory_id/source_refs; eligible из принятого registry/category_ownership, in_service_scope из принятой области обслуживания |
+| candidate/legs | JourneyResult.journey_id/point_id/boundaries/traffic/snapshot + Leg.kind/mode/nodes/timestamps/duration/service/evidence |
+| выбранные object_identity и destination_id | object_identity остаётся в выбранной Destination; JourneyResult.destination_object_id связывается с её destination_id, идентичность восстанавливается через immutable dataset |
+| timing | JourneyResult scope=urban, time_kind=complete_chain, total_seconds/initial_wait_seconds/total_wait_seconds; departure_at=requested_departure_at, arrival_at=последний leg; path_seconds/reference_id для urban можно оставить None |
+| walking/riding/transfer_wait/waiting_share | Отдельные Metric с seconds/fraction и journey_id; не повторный штраф в Score |
+| geometry | LineGeometry с переданными координатами/evidence; geometry_kind=actual либо none, не синтезированная линия |
+| category/point/territory index | Score value/status/reason, completeness, methodology_version, SubjectRef point/category/mode/territory; components связывает BACKEND |
+| territory basis | PopulationBasis: исходная сумма, year/method, coverage, unknown_positive_weight; ranking_eligible переносится без повышения |
+| count/threshold | CountResult: float целого count преобразовать в int, threshold_seconds, status/reason/evidence; его metric_id назначает BACKEND |
+| context/proofs/limitations | Версии/ограничения и ссылки на сохранённые доказательства охвата; финальные analysis/job IDs, hashes и публикация — BACKEND |
+
+Особые условия адаптации: не превращать отсутствие journey в duration=0; не ставить
+неизвестное время компонентом полного нулевого Score. При известном нулевом
+населении не включать неизвестный Score этой точки в components полного
+территориального Score — канонический валидатор запрещает зависимость полного
+Score от unknown. Точку и её raw данные при этом сохранять отдельно.
+При partial поиске известный JourneyResult может быть available/completeness=partial,
+а индекс категории остаётся unknown. Все source/evidence IDs разрешаются в
+AcceptedData.evidence того же snapshot и превращаются в EvidenceRef при публикации.
+UrbanAnalysis.journeys включает все проверенные входы для QA: в канонические
+available JourneyResult публиковать только допустимые маршруты нужного результата,
+а rejected сохранять как диагностику. Полнота Metric числа объектов определяется
+его собственным count: available count точен даже при неизвестном H; полноту
+индекса категории нельзя слепо переносить на независимую метрику count.
+
+Точные запросы к коллегам для следующей интеграции:
+
+- **BACKEND, apps/api adapter и packages/contracts/src/a2_contracts/v2/**:
+  сопоставить перечисленные поля; сохранить routing proof (point/category/mode,
+  requested time/window/options, graph/traffic versions, catalog roster, evidence)
+  и population roster без вывода полноты из одного AcceptedData.qa. Dataset.CoverageScope
+  на d2cfe9a описывает более широкое покрытие и сам не является доказательством
+  завершённого поиска в точке. Приёмка: полный/пустой полный/неполный/ошибка провайдера
+  дают разные результаты, потерянные строки каталога/выборки не дают рейтинг.
+- **BACKEND, packages/contracts/src/a2_contracts/v2/journeys.py**:
+  сейчас JourneyResult содержит независимый порог 14400. Согласовать валидацию
+  с опубликованным max_total_wait_hours. Сначала передавать сырые нормализованные
+  Leg в engine, затем публиковать допустимый JourneyResult; недопустимый кандидат
+  сохранять как причину, не пытаться выдать его за available journey. Приёмка:
+  изменение конфигурационного лимита не оставляет два разных порога в системе.
+- **Маршрутизатор (Valhalla/OTP adapter)**: передать один контекст, явные wait legs,
+  реальные source/destination connectors и выбранные границы, непрерывные UTC-
+  интервалы, service/evidence IDs, actual geometry только при наличии. Полнота
+  ответа включает пагинацию/лимиты/окно и конкретные опции. Приёмка: 32 минуты,
+  walk-transfer без двойного учёта, 4ч/4ч1м, несовместимый traffic отклоняется.
+- **ML2, packages/data_pipeline/**: принятый roster точек/ячеек и учреждений,
+  физический object_identity, пригодность по каждой категории, административная
+  площадь с версией границы, population year/method и исключённое население.
+  Для shares доказать непересечение и сохранение суммы исходной ячейки.
+  Передать готовый τ с базовыми версиями либо explicit unknown. Приёмка:
+  перемещение точки не меняет её population, дубли входов не увеличивают count,
+  обслуживающий город объект за границей не удаляется автоматически.
+
+Реальные маршрутизаторы, приём реальных городских данных, расчёт τ, последний
+обратный рейс, эталон A и graph overlay сценариев остаются следующими этапами.
+
 ## Воспроизводимые проверки
 
 Из **корня этого checkout**, Python 3.12, закреплённый uv 0.12.17:
@@ -455,7 +735,8 @@ git diff --check
 pytest: сохранение 37 экспортов/сигнатур, тождественность каноническим объектам,
 frozen dataclass, импорты предметных пакетов в разных порядках, все три загрузчика
 из другого cwd, явный путь вне checkout, прежние ошибки файла/JSON и направление
-зависимостей через shared. Пять существующих блоков README с меткой
+зависимостей через shared и собственные модули. Шесть рабочих блоков README (пять
+прежних и новый городской пример) с меткой
 executable-example можно выполнить отдельно из корня checkout:
 
 ```bash
@@ -465,7 +746,7 @@ import re
 
 text = Path("packages/engine/README.md").read_text()
 examples = re.findall(r"<!-- executable-example -->\s*```python\n(.*?)```", text, re.S)
-assert len(examples) == 5
+assert len(examples) == 6
 for number, source in enumerate(examples, 1):
     exec(compile(source, f"README example {number}", "exec"), {})
     print(f"README example {number}: PASS")

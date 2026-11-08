@@ -113,6 +113,9 @@ CANONICAL_MODULES = {
         "load_urban_config",
         "passenger_config_from_mapping",
         "urban_config_from_mapping",
+        "UrbanJourneyRules",
+        "load_urban_journey_rules",
+        "urban_journey_rules_from_mapping",
     ),
     "a2_engine.shared.results": ("MetricResult",),
     "a2_engine.shared.scoring": ("category_index",),
@@ -146,11 +149,62 @@ CANONICAL_MODULES = {
         "delta_index",
         "time_saved_seconds",
     ),
+    "a2_engine.urban.models": (
+        "UrbanArea",
+        "UrbanCandidate",
+        "UrbanContext",
+        "UrbanCoverage",
+        "UrbanDestination",
+        "UrbanGeometry",
+        "UrbanLeg",
+        "UrbanPoint",
+        "UrbanPopulationCoverage",
+        "UrbanSearchScope",
+        "UrbanThreshold",
+        "UrbanVersions",
+    ),
+    "a2_engine.urban.journeys": ("UrbanJourneyTiming", "validate_urban_journey"),
+    "a2_engine.urban.selection": ("SelectedUrbanObject",),
+    "a2_engine.urban.analysis": (
+        "UrbanAnalysis",
+        "UrbanCategoryResult",
+        "UrbanPointResult",
+        "UrbanTerritoryResult",
+        "analyze_urban_candidates",
+    ),
+}
+
+NEW_PUBLIC_NAMES = {
+    "UrbanJourneyRules",
+    "load_urban_journey_rules",
+    "urban_journey_rules_from_mapping",
+    "SelectedUrbanObject",
+    "UrbanAnalysis",
+    "UrbanArea",
+    "UrbanCandidate",
+    "UrbanCategoryResult",
+    "UrbanContext",
+    "UrbanCoverage",
+    "UrbanDestination",
+    "UrbanGeometry",
+    "UrbanJourneyTiming",
+    "UrbanLeg",
+    "UrbanPoint",
+    "UrbanPointResult",
+    "UrbanPopulationCoverage",
+    "UrbanSearchScope",
+    "UrbanTerritoryResult",
+    "UrbanThreshold",
+    "UrbanVersions",
+    "analyze_urban_candidates",
+    "validate_urban_journey",
 }
 
 
 def test_public_names_signatures_and_defaults_are_unchanged() -> None:
-    assert tuple(a2_engine.__all__) == tuple(PUBLIC_SIGNATURES)
+    assert tuple(a2_engine.__all__[: len(PUBLIC_SIGNATURES)]) == tuple(PUBLIC_SIGNATURES)
+    assert set(a2_engine.__all__) == set(PUBLIC_SIGNATURES) | NEW_PUBLIC_NAMES
+    assert len(a2_engine.__all__) == len(PUBLIC_SIGNATURES) + len(NEW_PUBLIC_NAMES)
     for name, expected in PUBLIC_SIGNATURES.items():
         signature = str(inspect.signature(getattr(a2_engine, name)))
         signature = re.sub(r"\ba2_engine(?:\.[a-z_]+)+\.([A-Z][A-Za-z0-9_]*)", r"\1", signature)
@@ -261,8 +315,17 @@ def test_internal_imports_follow_shared_dependency_direction() -> None:
                 assert node.level == 0, path
                 assert node.module != "a2_engine", path
                 if node.module is not None and node.module.startswith("a2_engine."):
-                    assert node.module.startswith("a2_engine.shared."), (path, node.module)
+                    domain = path.relative_to(package).parts[0]
+                    assert node.module.startswith(("a2_engine.shared.", f"a2_engine.{domain}.")), (
+                        path,
+                        node.module,
+                    )
             elif isinstance(node, ast.Import):
-                assert not any(alias.name.startswith("a2_engine") for alias in node.names), path
+                domain = path.relative_to(package).parts[0]
+                for alias in node.names:
+                    if alias.name.startswith("a2_engine"):
+                        assert alias.name.startswith(
+                            ("a2_engine.shared.", f"a2_engine.{domain}.")
+                        ), path
     for domain in ("urban", "intercity", "freight", "pipeline", "comparison", "shared"):
         assert not (package / f"{domain}.py").exists()
