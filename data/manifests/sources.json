@@ -529,7 +529,29 @@
         "status": "permitted",
         "attribution": "Администрация ГО «Город Калининград», klgd.ru"
       },
-      "status": "registered"
+      "status": "accepted",
+      "datasets": ["klgd_education.20261108"]
+    },
+    {
+      "source_id": "tfoms39_trmo",
+      "a2_ref": null,
+      "title": "ТФОМС Калининградской области — территориальный реестр медицинских организаций (ТРМО)",
+      "publisher": "Территориальный фонд обязательного медицинского страхования Калининградской области",
+      "source_url": "https://tfoms39.ru/medicalfacilities/register-medical/",
+      "role": "calculation",
+      "analysis_kinds": ["urban_passenger"],
+      "provides": "Подразделения медицинских организаций ОМС: адрес оказания помощи с GUID ФИАС, виды и условия помощи, профили, ОКОПФ и ОКФС организации",
+      "limitations": "Только участники ОМС; координат нет — адрес привязывается к OSM; ведомственные и частные поликлиники не городские",
+      "access_method": "file",
+      "geography": "Калининградская область",
+      "license": {
+        "name": "Общедоступная официальная информация государственного учреждения: используются только факты (ст. 1259 ГК РФ)",
+        "url": "https://tfoms39.ru/",
+        "status": "permitted",
+        "attribution": "ТФОМС Калининградской области, tfoms39.ru"
+      },
+      "status": "accepted",
+      "datasets": ["tfoms39_trmo.2026-07"]
     },
     {
       "source_id": "bus_gov",

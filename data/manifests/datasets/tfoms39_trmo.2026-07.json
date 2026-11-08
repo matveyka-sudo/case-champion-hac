@@ -1,0 +1,39 @@
+{
+  "dataset_id": "tfoms39_trmo.2026-07",
+  "source_id": "tfoms39_trmo",
+  "source_url": "https://tfoms39.ru/upload/iblock/0ff/ngdlejrjod17ygfc107yi1c8oshk5h41/%D0%B8%D1%8E%D0%BB%D1%8C_%D0%A2%D0%A0%D0%9C%D0%9E%202026.xlsx",
+  "retrieved_at": "2026-11-08T15:33:37.096254Z",
+  "publication_date": null,
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Калининградская область",
+  "license": {
+    "name": "Общедоступная официальная информация государственного учреждения: используются только факты (ст. 1259 ГК РФ)",
+    "url": "https://tfoms39.ru/",
+    "status": "permitted",
+    "attribution": "ТФОМС Калининградской области, tfoms39.ru"
+  },
+  "access_method": "file",
+  "raw_path": "tfoms39_trmo/trmo-2026-07.xlsx",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "5aff48eec26d6a994d95b4800ac719cca17a03bfa26c513153d5bfea0bc50e8a",
+    "size_bytes": 222900
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "col 6": "полное наименование МО",
+    "col 15-16": "ОКФС",
+    "col 22-23": "адрес и GUID ФИАС подразделения",
+    "col 26": "подразделение",
+    "col 28-30": "вид, условия, профиль помощи",
+    "col 32": "дата исключения"
+  },
+  "coverage": "Медицинские организации ОМС и их подразделения, редакция «июль, ТРМО 2026»",
+  "limitations": [
+    "Редакция июля 2026 г.; более поздние изменения не учтены",
+    "Координаты подразделений не публикуются"
+  ],
+  "status": "accepted",
+  "qa_report": "data/bundles/kaliningrad-urban-2026-11-08.3/qa_report.json"
+}

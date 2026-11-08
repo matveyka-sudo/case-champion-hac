@@ -30,6 +30,6 @@
     "Только муниципальные учреждения: региональные, федеральные и частные не входят",
     "Координаты корпусов — с карты сайта администрации, точность не заявлена"
   ],
-  "status": "fetched",
-  "qa_report": null
+  "status": "accepted",
+  "qa_report": "data/bundles/kaliningrad-urban-2026-11-08.3/qa_report.json"
 }

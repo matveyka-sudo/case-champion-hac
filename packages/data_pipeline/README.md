@@ -12,17 +12,17 @@
 | Принятые bundle (небольшие, ODbL / CC BY 4.0, можно хранить в git) | `data/bundles/<bundle_id>/` |
 | Raw и промежуточные файлы (не в git) | `data/raw/`, `data/processed/` |
 
-Сейчас опубликован `kaliningrad-urban-2026-11-08.2` (accepted). Он заменил `.1`: тот был собран в прежнем формате, без входов на граф, и его никто не использовал. В QA-отчёте (`qa_report.json`) 12 проверок: 11 pass, 1 warn, fail нет. Заявленный период применимости — 01–30.11.2026.
+Текущий bundle — `kaliningrad-urban-2026-11-08.3` (accepted). В нём медицина и образование подтверждены официальными реестрами. Предыдущий `.2`, без реестров, оставлен: опубликованные bundle не меняются. В QA-отчёте (`qa_report.json`) 18 проверок: 13 pass, 5 warn, fail нет. Заявленный период применимости — 01–30.11.2026.
 
 | Коллекция | Строк | Покрытие |
 | --- | ---: | --- |
 | territories | 4 | complete: городской округ (224,668 км², геодезическая площадь по границе OSM) и три района |
 | population_cells | 286 | complete: сетка 1 км в UTM 34N от начала (0, 0), обрезана по границе; население GHSL R2023A эпохи 2025 — 485 776 чел. |
 | sample_points | 216 | complete: 70 ячеек исключены (59 без зданий, 11 вода), в них 277,8 чел. |
-| access_nodes | 612 | complete для walk: вход каждой точки и каждого объекта на пешеходную сеть |
-| destinations | 398 | airport complete; rail/bus terminal и ТЦ partial; 5 категорий медицины и образования unknown (карантин) |
-| category_ownership | 398 | unknown: официальный реестр учреждений ещё не загружен |
-| evidence | 1228 | записи OSM, OurAirports и GHSL с sha256 содержимого, плюс evidence на целые выгрузки |
+| access_nodes | 666 | complete для walk: вход каждой точки и каждого объекта на пешеходную сеть |
+| destinations | 457 | приняты 236: школы 76, детсады 93, поликлиники 16 взрослых и 12 детских, ТЦ 34, вокзалы 2, автовокзалы 2, аэропорт 1. Аэропорт complete, остальные partial, колледжи и вузы unknown (карантин) |
+| category_ownership | 457 | partial: муниципальные школы и детсады — по перечню учредителя, поликлиники — по ТРМО ТФОМС |
+| evidence | 1418 | записи OSM, OurAirports, GHSL, перечня klgd.ru и ТРМО с sha256 содержимого, плюс evidence на целые выгрузки |
 
 Расписания, грузы и трубопроводы в этот bundle не входят. В `manifest.coverage` у них стоит `not_collected`. Пустой список не означает отсутствия.
 
@@ -40,7 +40,16 @@
   - Расстояние до входа сохраняется в `access_distance_m` и не теряется из времени пути.
   - Аэропорт ставится на пассажирский терминал (`aeroway=terminal`), а не в центр лётного поля.
 - **Население.** Население принадлежит исходной ячейке и считается по центроидам пикселей GHSL. Доли районов берутся из тех же пикселей и не превышают население ячейки (QA `district_population_not_doubled`).
-- **Публичные категории.** Поликлиника, детсад, школа, колледж или вуз могут быть `accepted` только с `category_ownership.basis=registry` и `verification_state=verified`. Пока такой сверки нет, они в карантине с причиной `OWNERSHIP_UNVERIFIED`.
+- **Публичные категории.** Поликлиника, детсад, школа, колледж или вуз могут быть `accepted` только с `category_ownership.basis=registry` и `verification_state=verified`. Без такой сверки объект в карантине с причиной `OWNERSHIP_UNVERIFIED`.
+- **Школы и детсады** (`klgd_education`). Перечни подведомственных учреждений на сайте администрации Калининграда, плюс координаты корпусов с её карты учреждений. Учредитель — город, поэтому собственность муниципальная.
+  - Каждый корпус — отдельный объект: филиалы в разных местах ТЗ разрешает.
+  - Кандидаты OSM привязываются к корпусу по правилам `registry-osm-match-v1`: номер совпадает — до 300 м; безымянный или типовой объект («Школа») — до 60 м; при разных номерах привязки нет.
+  - Непривязанные кандидаты остаются в карантине: это частные и региональные учреждения или объекты со старыми номерами.
+- **Поликлиники** (`tfoms39_trmo`, правила `trmo-polyclinic-rules-v1`).
+  - Подразделение ТРМО ТФОМС входит, если оно не исключено из реестра, помощь амбулаторная и первичная врачебная, в названии есть «поликлин» (но не «консультатив»), а ОКФС 13 или 14.
+  - «детск» в названии — детская поликлиника. Без «детск», но с профилями «терапия» и «педиатрия» — обе категории.
+  - Подразделения одной категории по одному адресу — один объект.
+  - Место берётся по адресу из OSM (`osm-address-match-v1`). Улица и дом должны совпасть, номер ±4 той же чётности допустим как приблизительный. Населённый пункт тоже должен совпасть: адрес Калининграда ищется внутри границы города, другой пункт — только по `addr:city`.
 - **Объекты за границей.** Объект за границей города разрешён и помечается `inside_city_boundary=false`. Пример — аэропорт Храброво.
 - **Неизменяемость.** Bundle публикуется атомарно (staging → rename) и не перезаписывается. `load_bundle` при каждом чтении сверяет sha256 всех коллекций и QA-отчёта, число строк и все ссылки.
 
@@ -49,7 +58,7 @@
 ```python
 from a2_data_pipeline import load_bundle
 
-data = load_bundle("kaliningrad-urban-2026-11-08.2")  # BundleData, формат ML2
+data = load_bundle("kaliningrad-urban-2026-11-08.3")  # BundleData, формат ML2
 cells = data.population_cells  # население, district_shares
 points = data.sample_points  # одна точка на sampled-ячейку + вход на граф
 city = data.territories[0].area_km2  # для H по FORMULAS.md §2
@@ -61,7 +70,7 @@ usable = [d for d in data.destinations if d.status == "accepted"]
 ```python
 from a2_data_pipeline.contract_v2 import load_accepted_data, registry_options, to_accepted_data_v2
 
-bundle_id = "kaliningrad-urban-2026-11-08.2"
+bundle_id = "kaliningrad-urban-2026-11-08.3"
 accepted = load_accepted_data(bundle_id)  # AcceptedData, проверенный моделью v2
 payload = to_accepted_data_v2(load_bundle(bundle_id))  # тот же JSON без валидации
 options = registry_options(load_bundle(bundle_id))  # TerritoryOption / AreaOption
@@ -81,12 +90,14 @@ options = registry_options(load_bundle(bundle_id))  # TerritoryOption / AreaOpti
 ```bash
 PYTHONPATH=packages/data_pipeline/src uvx --from uv==0.12.17 uv run --frozen \
   --with 'osmium>=4,<5' --with 'shapely>=2,<3' --with 'pyproj>=3.6,<4' --with 'rasterio>=1.4,<2' \
+  --with 'openpyxl>=3.1,<4' \
   python -m a2_data_pipeline.build_city kaliningrad --bundle-id <новый-id> --accept
 ```
 
 ```bash
 PYTHONPATH=packages/data_pipeline/src uvx --from uv==0.12.17 uv run --frozen \
   --with 'osmium>=4,<5' --with 'shapely>=2,<3' --with 'pyproj>=3.6,<4' --with 'rasterio>=1.4,<2' \
+  --with 'openpyxl>=3.1,<4' \
   python -m pytest packages/data_pipeline/tests
 ```
 
@@ -96,6 +107,8 @@ Raw, которые использованы для сборки, перечис
 - Выгрузка Geofabrik `russia/kaliningrad-261107.osm.pbf`, md5 сверен с Geofabrik.
 - Тайл GHSL `GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0_R3_C20.zip`.
 - OurAirports `airports.csv`.
+- Перечни и карта учреждений klgd.ru — `klgd-education-20261108.zip`, это сами HTML-страницы. ФИО и контакты из них в данные не переносятся.
+- ТРМО ТФОМС — `trmo-2026-07.xlsx`, редакция «июль, ТРМО 2026».
 
 Сборка детерминирована: две сборки подряд дают одинаковые sha256 всех коллекций.
 
@@ -116,19 +129,30 @@ Raw, которые использованы для сборки, перечис
   - До входа: у точек медиана 19,7 м и максимум 838,5 м, у объектов медиана 29,9 м.
   - Три точки на северной окраине (ряд `n6069`) дальше 500 м — это QA warn `access_distance_points`.
   - Подъезд по дорожной сети для `private_car` ещё не построен, поэтому покрытие в v2 заявлено только для `walk`.
-- **Не сделаны:** реестр собственности учреждений, расписания, грузовые данные.
+- **Школы и детсады.**
+  - Подтверждены только муниципальные: 45 школ (76 корпусов) и 67 детсадов (93 корпуса).
+  - 7 точек карты администрации не входят в её перечни — QA warn `registry_map_points_listed`.
+  - У 4 корпусов объект OSM дальше 150 м — QA warn `registry_osm_distance`. Точкой объекта всегда служит координата реестра.
+- **Поликлиники.**
+  - Ведомственная поликлиника МВД (ОКФС 12) и частные не считаются городскими.
+  - Два подразделения по ул. Адмирала Егорова, 2 (взрослое и детское) не размещены: этого адреса в OSM нет — QA warn `medical_registry_city_addresses_located`.
+  - Одно подразделение (ул. М. Расковой, 10) поставлено по ближайшему номеру дома.
+- **Колледжи и вузы** пока в карантине. Реестр Рособрнадзора, как и другие сайты на сертификате российского УЦ (Минздрав, Минпросвещения, data.mos.ru), из этого окружения не открывается: российский корневой сертификат здесь не установлен.
+- **Лицензия.** У klgd.ru и ТФОМС явной лицензии нет. ML2 использует только факты: название, адрес, форму собственности, координаты — со ссылкой на источник (ст. 1259 ГК РФ). Сырые страницы в git не попадают. Это решение ML2, команда может его пересмотреть.
+- **Не сделаны:** расписания, подъезд по дорогам для `private_car`, грузовые данные.
 
 ## Handoff
 
 ### BACKEND (№3)
 
-`load_accepted_data("kaliningrad-urban-2026-11-08.2")` проходит `a2_contracts.v2.AcceptedData` из PR #8 (`work/backend`, d2cfe9a), и `model_validate`, и `model_validate_json`.
+`load_accepted_data("kaliningrad-urban-2026-11-08.3")` проходит `a2_contracts.v2.AcceptedData` из PR #8 (`work/backend`, d2cfe9a), и `model_validate`, и `model_validate_json`.
 
 Что в нём:
 - 1 территория, 286 ячеек, 216 точек;
-- 39 объектов: 34 ТЦ, 2 ж/д вокзала, 2 автовокзала, аэропорт;
-- 255 входов на граф, 1228 evidence;
-- два `CoverageScope` по `walk`: аэропорт `full`; вокзалы, автовокзалы и ТЦ `partial`.
+- 236 объектов: 93 детсада, 76 школ, 16 взрослых и 12 детских поликлиник, 34 ТЦ, 2 ж/д вокзала, 2 автовокзала, аэропорт;
+- у 197 публичных объектов есть `registry_evidence` и `category_ownership`: municipal для школ и детсадов, government для поликлиник;
+- 450 входов на граф, 1418 evidence;
+- два `CoverageScope` по `walk`: аэропорт `full`, остальные семь категорий `partial`.
 
 Негативная проверка: если вручную добавить школу из карантина, модель v2 отклоняет её с ошибкой «Public medical/education category requires public ownership».
 
@@ -137,7 +161,7 @@ Raw, которые использованы для сборки, перечис
 1. **Районы.** `TerritoryLevel` допускает только `city|region`, а у `PopulationCell` нет долей районов. Районы ML2 отдаёт как `AreaOption` через `registry_options()`. Но для агрегатов районов без удвоения (PRODUCT_SPEC §2) нужны доли населения ячеек по районам.
    - Предложение: поле `district_shares: [{area_id, population}]` у ячейки, где сумма долей не больше `population`. Готовая модель — `DistrictShare` в `bundle.py`.
    - Критерий: агрегат района считается из исходных ячеек и долей, а не средним районов.
-2. **Категория без scope.** Медицина и образование в карантине в snapshot не попадают, и `CoverageScope` по ним нет. Нужно подтвердить: отсутствие scope по категории означает `DATA_UNAVAILABLE`, а не `NO_FEASIBLE_ROUTE`.
+2. **Категория без scope.** Объекты в карантине в snapshot не попадают. Сейчас без `CoverageScope` остаются колледжи и вузы. Нужно подтвердить: отсутствие scope по категории означает `DATA_UNAVAILABLE`, а не `NO_FEASIBLE_ROUTE`.
 3. **Расстояние до входа у объекта.** У `SamplePoint` есть `access_distance_m`, у `Destination` нет. ML2 хранит это расстояние у объекта в своём bundle.
    - Предложение: `Destination.access_distance_m`.
    - Критерий: путь до объекта включает расстояние от входа до объекта.
@@ -156,7 +180,7 @@ Raw, которые использованы для сборки, перечис
 
 Вход — это не вершина графа, а проекция на линию OSM. В `access_nodes` есть `osm_way_ref` и `offset_along_way_m`. Расстояние до входа нужно добавлять к пешему участку один раз.
 
-**Не 0, а unknown.** Индекс категории с `coverage.status=unknown` (5 публичных категорий, пока нет реестра) нужно считать unknown. Для partial-категорий (вокзалы, автовокзалы, ТЦ) отсутствие найденного объекта не доказывает недостижимость.
+**Не 0, а unknown.** Индекс категории с `coverage.status=unknown` нужно считать unknown — сейчас это колледжи и вузы. Для partial-категорий (поликлиники, школы, детсады, вокзалы, автовокзалы, ТЦ) отсутствие найденного объекта не доказывает недостижимость: в базе есть только подтверждённые объекты.
 
 **Чего ещё нет:** расписаний ОТ и подъезда по дорожной сети для `private_car`.
 
@@ -165,13 +189,13 @@ Raw, которые использованы для сборки, перечис
 **Где.** `packages/data_pipeline/pyproject.toml`, `uv.lock`.
 
 **Что добавить:**
-- в dependencies: `pydantic>=2,<3`, `numpy>=2,<3`, `shapely>=2,<3`, `pyproj>=3.6,<4`, `rasterio>=1.4,<2`, `osmium>=4,<5`;
+- в dependencies: `pydantic>=2,<3`, `numpy>=2,<3`, `shapely>=2,<3`, `pyproj>=3.6,<4`, `rasterio>=1.4,<2`, `osmium>=4,<5`, `openpyxl>=3.1,<4`;
 - в группу dev, по желанию: `types-shapely`.
 
 Проверено оверлеем, версии на 08.11: shapely 2.2.0, pyproj 3.8.0, rasterio 1.5.2 (GDAL 3.12.2), osmium 4.x. Колёса есть для macOS arm64 и Linux, Python 3.12.
 
 **Критерий приёмки:**
 - `uv sync --frozen --all-packages --group dev` ставит пакеты;
-- `PYTHONPATH=packages/data_pipeline/src pytest packages/data_pipeline/tests` проходит без skip гео-тестов. Сейчас с оверлеем и контрактами PR #8 — 59 passed.
+- `PYTHONPATH=packages/data_pipeline/src pytest packages/data_pipeline/tests` проходит без skip гео-тестов. Сейчас с оверлеем и контрактами PR #8 — 86 passed.
 
 Отдельно: CI сейчас не запускает pytest пакетов.
