@@ -36,3 +36,17 @@
 .at-map {
   isolation: isolate;
 }
+
+/* Header branding sits directly on the page, without a white capsule. */
+.lp-header .wordmark,
+.at-top .wordmark,
+[data-theme="dark"] .at-top .wordmark {
+  background: transparent;
+  box-shadow: none;
+}
+.lp-header:not(.is-solid) .wordmark .wm-dex {
+  color: var(--wx-white);
+}
+[data-theme="dark"] .at-top .wordmark .wm-dex {
+  color: var(--text);
+}
