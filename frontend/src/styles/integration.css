@@ -271,3 +271,7 @@
     height: 40px;
   }
 }
+
+.tr-stage-cargo .tr-list {
+  justify-content: center;
+}
