@@ -24,3 +24,12 @@ OpenAPI отсутствует: генерация типов подготовл
 Приёмка: npm ci; npm run build; npm run lint. Проверить pending/unknown/error и запрет вымышленных чисел.
 
 Передача: commit, пути, команды/результаты проверок, контрактные изменения и ограничения. Формулы не считать до согласования.
+
+
+## Перенос утверждённого Waydex HTML — 08.11.2026
+
+Реализовано в `frontend/` на `work/frontend`: React/TypeScript strict, исходные CSS/assets и движения, полный лендинг, atlas city/pax/cargo, Leaflet/d3, фильтры/15-минутный таймлайн/темы, моковый чат и scenario до/после, mobile sheet и состояния. Пользователь явно поручил перенос на моковых данных. Значения из дизайна сохранены в fixtures и маркированы demo; производственная формула/H в клиенте не исполняется. `apps/web/` не менялся. Описание и источник с SHA-256 — `frontend/README.md`, `frontend/src/mocks/source.json`; визуальный отчёт — `frontend/docs/VISUAL_QA.md`.
+
+Проверки на Node 24.22.2: `npm ci`, typecheck, lint, 11 unit-тестов, build, 9 Playwright-сценариев. Ручное сопоставление HTML/React на 1440×900, 1280×800, 768×1024, 390×844: страницы/карты/ночь/пассажиры/грузы; без JS-ошибок и горизонтального overflow. Production npm audit — 0; полный audit сохраняет 10 moderate в dev-зависимостях, без изменения major вслепую. Сборка разделена на landing/shared/atlas, каждый JS-chunk <500 kB.
+
+BACKEND handoff: текущие view models и mockGateway не канонический API; требуется опубликованный OpenAPI, DTO четырёх analysis_kind, async jobs/статусы, approved scenarios, версии и evidence. Приёмка интеграции: заменить gateway без изменения визуального дизайна, убрать mock fixtures только после проверки данных/методики, не превращать null в 0. ML2: подтверждённые геометрии/объекты/расписания вместо условной сетки. DEVOPS: `cd frontend && npm ci && npm run build`; запуск `npm run dev`, #atlas; внешние Google Fonts и городские тайлы требуют сети. Все реальные API/LLM/engine-интеграции не выполнялись и не объявлены завершёнными.

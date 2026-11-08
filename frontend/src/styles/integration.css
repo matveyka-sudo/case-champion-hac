@@ -1,0 +1,38 @@
+/* React host integration; visual tokens and layout remain in prototype.css. */
+.map-wrapper {
+  position: absolute;
+  inset: 0;
+  transition: opacity 280ms;
+}
+.map-wrapper.dim {
+  opacity: 0.65;
+}
+.tile-note {
+  position: absolute;
+  left: 50%;
+  top: 84px;
+  transform: translateX(-50%);
+  z-index: 600;
+  max-width: 420px;
+  background: var(--surface);
+}
+.dropdown-menu.show {
+  right: 0;
+  left: auto;
+  top: 100%;
+}
+@media (max-width: 767.98px) {
+  .at-chat.is-closed {
+    display: none;
+  }
+  .at-filters:not(.m-open) {
+    visibility: hidden;
+  }
+  .at-map {
+    --sheet-h: 220px;
+  }
+}
+/* Keep Leaflet panes and map overlays below the application header dropdown. */
+.at-map {
+  isolation: isolate;
+}
