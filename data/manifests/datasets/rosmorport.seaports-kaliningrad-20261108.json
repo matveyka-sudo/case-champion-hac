@@ -1,0 +1,37 @@
+{
+  "dataset_id": "rosmorport.seaports-kaliningrad-20261108",
+  "source_id": "rosmorport",
+  "source_url": "https://www.rosmorport.ru/filials/spb_seaports/",
+  "retrieved_at": "2026-11-08T20:27:58.451074Z",
+  "publication_date": null,
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Северо-Западный бассейновый филиал; морской порт Калининград (Б-7)",
+  "license": {
+    "name": "Используются только факты: перечень операторов и характеристики порта (ст. 1259 ГК РФ)",
+    "url": "https://www.rosmorport.ru/",
+    "status": "permitted",
+    "attribution": "ФГУП «Росморпорт», rosmorport.ru"
+  },
+  "access_method": "manual",
+  "raw_path": "rosmorport/spb_seaports-20261108.html",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "75d5a5e524edb59142f1712c3b88181666ad012dc3b876056bbc13f71536a684",
+    "size_bytes": 1209275
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "Регистрационный номер морского порта": "номер в Реестре морских портов",
+    "Основные технические характеристики": "мощности порта",
+    "Перечень услуг / Стивидорные услуги": "операторы (скрытый блок)"
+  },
+  "coverage": "Сведения о морских портах бассейнового филиала, включая порт Калининград: регистрационный номер, мощности, перечень услуг",
+  "limitations": [
+    "Перечень стивидорных операторов скрыт в разметке страницы (HTML-комментарий) и на сайте не показывается",
+    "Перечень операторов без привязки к причалам и видам грузов",
+    "Мощность — по порту в целом, включая терминалы за границей Калининграда (Светлый, Балтийск, Пионерский)"
+  ],
+  "status": "accepted",
+  "qa_report": "data/bundles/kaliningrad-urban-2026-11-08.5/qa_report.json"
+}

@@ -49,6 +49,9 @@ CITIES: dict[str, CityConfig] = {
         medical_registry_dataset_id="tfoms39_trmo.2026-07",
         region_name="Калининградская область",
         higher_education_registry_dataset_id="obrnadzor_accreditation.20261108",
+        freight=True,
+        seaport_dataset_id="rosmorport.seaports-kaliningrad-20261108",
+        seaport_name="Калининград",
     ),
     "novorossiysk": CityConfig(
         city_id="novorossiysk",
