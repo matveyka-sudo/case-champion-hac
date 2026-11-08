@@ -94,17 +94,13 @@ Raw, которые использованы для сборки, перечис
 
 ### BACKEND (№3)
 
-**Где и почему.** `packages/contracts/src/a2_contracts/dataset.py` в `work/backend`: модель `AcceptedData` 0.1.0 написана по прежней постановке P1 (medical/regular, Ленинградская область). В ней нет коллекций v2 из `packages/contracts/specs/dataset-snapshot.md`: territories, population_cells, sample_points, category_ownership, coverage по категориям и сеткам, freight_*, pipeline_connections, reference_edges, minimum_transfers, traffic_profiles.
+Канонический контракт — `a2_contracts.v2.dataset.AcceptedData` из PR #8 (`work/backend`, d2cfe9a). Bundle ML2 близок к нему. ML2 сделает адаптер `BundleData → AcceptedData v2` и проверит его на моделях из PR #8; сам контракт ML2 не меняет. Ниже — что нужно решить BACKEND.
 
-**Предложение.** Взять за основу v2 модели из `packages/data_pipeline/src/a2_data_pipeline/bundle.py`: `BundleManifest`, `Territory`, `PopulationCell`, `DistrictShare`, `SamplePoint`, `Destination`, `CategoryOwnership`, `CoverageRecord`, `GridSpec`, `Evidence`. Либо подключить ML2 через адаптер `load_bundle(bundle_id) -> BundleData`. Канонический контракт остаётся за BACKEND, менять его ML2 не будет.
+1. **Районы.** `TerritoryLevel` допускает только `city|region`, а у `PopulationCell` нет долей районов. PRODUCT_SPEC §2 требует агрегаты районов без удвоения населения. Предложение: уровень `district` с `parent_id` и поле `district_shares: [{territory_id, population}]` у ячейки, где сумма долей не больше `population`. Готовая модель — `DistrictShare` в `bundle.py`. Критерий: агрегат района считается из исходных ячеек и долей, а не средним районов.
+2. **Карантин.** `AcceptedData` не может содержать публичную категорию без проверенного реестра. Поэтому кандидаты в карантине в snapshot не попадут, а их категория останется без `CoverageScope`. Нужно подтвердить: отсутствие scope по категории означает `DATA_UNAVAILABLE`, а не `NO_FEASIBLE_ROUTE`.
+3. **Чем ML2 закроет остальные обязательные поля.** `access_node_id` у точек и объектов — входами на пешеходную сеть OSM с `access_distance_m`. `content_hash` у evidence — sha256 канонического JSON записи. `GeometryRef` — id, версия и bbox, а сами геометрии останутся в bundle ML2.
 
-**Критерий приёмки:**
-- адаптер загружает `kaliningrad-urban-2026-11-08.1`;
-- `population=null` доходит до DTO как `null`;
-- объекты со `status=quarantined` не попадают в расчёт;
-- `coverage.status=unknown|not_collected` даёт `DATA_UNAVAILABLE`, а не `NO_FEASIBLE_ROUTE`.
-
-Отдельно: в handoff BACKEND первый регион — Ленинградская область, а по PRODUCT_SPEC это Москва, Калининград и Новороссийск.
+Отдельно: в первом handoff BACKEND первым регионом названа Ленинградская область, а по PRODUCT_SPEC это Москва, Калининград и Новороссийск.
 
 ### ML1 (№4)
 
@@ -116,7 +112,7 @@ Raw, которые использованы для сборки, перечис
 
 **Не 0, а unknown.** Индекс категории с `coverage.status=unknown` (5 публичных категорий, пока нет реестра) нужно считать unknown. Для partial-категорий (вокзалы, автовокзалы, ТЦ) отсутствие найденного объекта не доказывает недостижимость.
 
-**Чего ещё нет:** входов на граф (`access_nodes`) и расписаний ОТ. Следующий шаг ML2 — расписания gortrans39 Калининграда в trip/stop_time/calendar.
+**Чего ещё нет:** входов на граф (`access_nodes`) и расписаний ОТ. Входы ML2 делает следующим шагом, вместе с адаптером к контракту v2. Затем — расписания gortrans39 Калининграда в trip/stop_time/calendar.
 
 ### DEVOPS (№2)
 
