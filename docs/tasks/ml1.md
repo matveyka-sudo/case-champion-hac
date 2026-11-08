@@ -175,3 +175,12 @@ examples/kaliningrad_walk_readiness.json заблокирован отсутст
 Проверки: 433 теста (383 прежних + 50 новых), Ruff check/format, mypy,
 uv lock --check, uv pip check, check_product_config.py, git diff --check и все
 8 примеров README прошли. Ruff/mypy также проверили новые examples.
+
+## Исправление дробных длительностей walk
+
+Воспроизведён LEG_DURATION_MISMATCH для connector 60.123456789с. При сборке
+UTC-интервалов UrbanLeg теперь получает фактическую микросекундную длительность;
+исходные секунды connector/network result сохранены. Положительное значение,
+обнуляющееся в timestamps, явно отклоняется WALK_DURATION_BELOW_TIMESTAMP_RESOLUTION.
+Строгий валидатор цепочек, формулы и τ не менялись. Регрессии проверяют оба
+подхода, сетевой участок, непрерывность и исходные значения.

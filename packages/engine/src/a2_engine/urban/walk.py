@@ -421,6 +421,9 @@ def analyze_walk_responses(
                 arrival = departure + timedelta(seconds=seconds)
             except OverflowError as exc:
                 raise ValueError("JOURNEY_TIME_RANGE_EXCEEDED") from exc
+            elapsed = (arrival - departure).total_seconds()
+            if seconds > 0 and elapsed == 0:
+                raise ValueError("WALK_DURATION_BELOW_TIMESTAMP_RESOLUTION")
             legs.append(
                 UrbanLeg(
                     "walk",
@@ -429,7 +432,7 @@ def analyze_walk_responses(
                     end_node,
                     departure,
                     arrival,
-                    seconds,
+                    elapsed,
                     None,
                     evidence,
                 )

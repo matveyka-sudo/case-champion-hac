@@ -549,3 +549,86 @@ def test_cost_and_recosting_do_not_replace_elapsed_seconds(canonical: dict[str, 
     assert not normalize_walk_response(
         request, replace(envelope, minimum_time_evidence_refs=())
     ).minimum_proven
+
+
+def test_fractional_durations_normalize_at_timestamp_boundary(canonical: dict[str, Any]) -> None:
+    base = synthetic_inputs(canonical)
+    endpoints = (*base.point_endpoints, *base.destination_endpoints)
+    connectors = [
+        replace(ep.connector, seconds=60.123456789 if ep in base.point_endpoints else 120.345678912)
+        for ep in endpoints
+        if ep.connector
+    ]
+    correlations = tuple(
+        {
+            ep.correlation.access_node_id: ep.correlation for ep in endpoints if ep.correlation
+        }.values()
+    )
+    inputs = prepare(canonical, build=base.build, connectors=connectors, correlations=correlations)
+    p = plan(inputs)
+    envelopes = [
+        mutate(
+            response(r),
+            lambda b: (
+                b["trip"]["summary"].update(time=1620.234567891),
+                b["trip"]["legs"][0]["summary"].update(time=1620.234567891),
+            ),
+        )
+        for r in p.requests
+    ]
+    result = analyze(p, envelopes)
+    assert inputs.point_endpoints[0].connector == connectors[0]
+    assert connectors[0].seconds == 60.123456789
+    assert result.routes[0].network_seconds == 1620.234567891
+    assert inputs.destination_endpoints[0].connector
+    assert inputs.destination_endpoints[0].connector.seconds == 120.345678912
+    for timing in result.analysis.journeys:
+        candidate = timing.candidate
+        assert [leg.duration_seconds for leg in candidate.legs] == [
+            60.123457,
+            1620.234568,
+            120.345679,
+        ]
+        assert timing.total_seconds == pytest.approx(
+            (candidate.arrival_at - candidate.departure_at).total_seconds(), abs=1e-12
+        )
+        for before, after in zip(candidate.legs, candidate.legs[1:]):
+            assert before.end_at == after.start_at and before.end_at.tzinfo == UTC
+        assert all(
+            leg.duration_seconds == (leg.end_at - leg.start_at).total_seconds()
+            for leg in candidate.legs
+        )
+    assert all(point.index.status == "available" for point in result.analysis.modes[0].points)
+
+
+@pytest.mark.parametrize("part", ["origin", "network", "destination"])
+def test_positive_submicrosecond_duration_never_silently_becomes_zero(
+    canonical: dict[str, Any], part: str
+) -> None:
+    inputs = synthetic_inputs(canonical)
+    if part != "network":
+        field = "point_endpoints" if part == "origin" else "destination_endpoints"
+        endpoints = getattr(inputs, field)
+        endpoint = endpoints[0]
+        changes: dict[str, Any] = {
+            field: (
+                replace(endpoint, connector=replace(endpoint.connector, seconds=1e-7)),
+                *endpoints[1:],
+            )
+        }
+        inputs = replace(inputs, **changes)
+    p = plan(inputs)
+    envelopes = [response(r) for r in p.requests]
+    if part == "network":
+        envelopes = [
+            mutate(
+                e,
+                lambda b: (
+                    b["trip"]["summary"].update(time=1e-7),
+                    b["trip"]["legs"][0]["summary"].update(time=1e-7),
+                ),
+            )
+            for e in envelopes
+        ]
+    with pytest.raises(ValueError, match="WALK_DURATION_BELOW_TIMESTAMP_RESOLUTION"):
+        analyze(p, envelopes)
