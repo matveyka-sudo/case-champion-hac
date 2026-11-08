@@ -25,6 +25,14 @@ from .store import load_bundle
 
 CALENDAR_NOT_COLLECTED = "not_collected"
 COVERAGE_MODES = ["walk"]
+OWNERSHIP_V2 = {
+    "municipal": "municipal",
+    "federal": "government",
+    "regional": "government",
+    "state": "government",
+    "private": "private",
+    "unknown": "unknown",
+}
 
 
 def _lonlat(lon: float, lat: float) -> dict[str, float]:
@@ -158,6 +166,7 @@ def to_accepted_data_v2(data: BundleData) -> dict[str, Any]:
         }
         for d in usable
     ]
+    registry_evidence, category_ownership = _ownership(data, {d.destination_id for d in usable})
     used_nodes = {p.access_node_id for p in data.sample_points} | {d.access_node_id for d in usable}
     node_city = {p.access_node_id: cell_city[p.cell_id] for p in data.sample_points}
     node_city.update({d.access_node_id: d.serving_city_id for d in usable})
@@ -196,7 +205,7 @@ def to_accepted_data_v2(data: BundleData) -> dict[str, Any]:
             ],
         },
         "evidence": evidence,
-        "registry_evidence": [],
+        "registry_evidence": registry_evidence,
         "territories": territories,
         "population_cells": population_cells,
         "sample_points": sample_points,
@@ -211,10 +220,48 @@ def to_accepted_data_v2(data: BundleData) -> dict[str, Any]:
         "reference_edges": [],
         "minimum_transfers": [],
         "traffic_profiles": [],
-        "category_ownership": [],
+        "category_ownership": category_ownership,
         "coverage_by_mode_date_category": _coverage_scopes(manifest.coverage),
         "confirmed_absence_scope": [],
     }
+
+
+def _ownership(
+    data: BundleData, usable: set[str]
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Registry-verified public ownership of usable destinations, in v2 form."""
+
+    source_of = {item.evidence_id: item.source_id for item in data.evidence}
+    registry_evidence: list[dict[str, Any]] = []
+    category_ownership: list[dict[str, Any]] = []
+    for row in data.category_ownership:
+        if row.destination_id not in usable or row.basis != "registry":
+            continue
+        if row.verification_state != "verified" or not row.evidence_ids:
+            continue
+        registry_evidence_id = f"registry:{row.destination_id}:{row.category}"
+        ownership = OWNERSHIP_V2[row.ownership]
+        registry_evidence.append(
+            {
+                "registry_evidence_id": registry_evidence_id,
+                "registry_id": source_of[row.evidence_ids[0]],
+                "destination_id": row.destination_id,
+                "category": row.category,
+                "ownership": ownership,
+                "verified": True,
+                "source_refs": row.evidence_ids,
+            }
+        )
+        category_ownership.append(
+            {
+                "destination_id": row.destination_id,
+                "category": row.category,
+                "ownership": ownership,
+                "registry_evidence_ids": [registry_evidence_id],
+                "source_refs": row.evidence_ids,
+            }
+        )
+    return registry_evidence, category_ownership
 
 
 def _coverage_scopes(records: list[CoverageRecord]) -> list[dict[str, Any]]:

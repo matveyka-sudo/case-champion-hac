@@ -512,6 +512,26 @@
       "status": "registered"
     },
     {
+      "source_id": "klgd_education",
+      "a2_ref": null,
+      "title": "Администрация Калининграда — муниципальные школы и детские сады",
+      "publisher": "Администрация городского округа «Город Калининград»",
+      "source_url": "https://www.klgd.ru/activity/education/institutions/",
+      "role": "calculation",
+      "analysis_kinds": ["urban_passenger"],
+      "provides": "Перечень муниципальных общеобразовательных и дошкольных учреждений учредителя и координаты корпусов с карты учреждений",
+      "limitations": "Только муниципальные учреждения; координаты корпусов без заявленной точности; ФИО и контакты не используются",
+      "access_method": "file",
+      "geography": "Калининград",
+      "license": {
+        "name": "Общедоступная официальная информация ОМСУ: используются только факты (ст. 1259 ГК РФ, 8-ФЗ)",
+        "url": "https://www.klgd.ru/",
+        "status": "permitted",
+        "attribution": "Администрация ГО «Город Калининград», klgd.ru"
+      },
+      "status": "registered"
+    },
+    {
       "source_id": "bus_gov",
       "a2_ref": null,
       "title": "bus.gov.ru — реестр государственных и муниципальных учреждений",

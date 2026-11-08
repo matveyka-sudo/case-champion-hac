@@ -25,6 +25,7 @@ import shapely  # type: ignore[import-untyped]
 from pydantic import BaseModel
 
 from . import categories as cat
+from . import klgd
 from .access import ACCESS_KIND, Access, WalkNetwork, load_walk_network, snap
 from .bundle import (
     OWNERSHIP_REQUIRED,
@@ -56,6 +57,7 @@ from .geo import (
     rounded_geojson,
     to_crs,
 )
+from .institutions import KIND_TO_CATEGORY, match_roster
 from .manifest import DatasetManifest, load_dataset_manifest
 from .osm import extract, extract_is_current
 from .paths import processed_dir, raw_dir
@@ -68,6 +70,7 @@ OURAIRPORTS_DATASET = "ourairports.airports-20261108"
 SEARCH_BUFFER_M = 10_000
 AIRPORT_BUFFER_M = 60_000
 ACCESS_WARN_M = 500.0
+REGISTRY_WARN_M = 150.0
 # Declared analysis window of the snapshot (ML2 assumption): geometry and
 # population of an OSM state from 2026-11-07 are used for dates in November 2026.
 # Not a guarantee that objects are unchanged; schedules have their own periods.
@@ -173,9 +176,11 @@ class DestinationDraft:
     utm: shapely.Point
     lonlat: shapely.Point
     inside_city_boundary: bool
-    osm_ref: str
+    osm_ref: str | None
     reasons: list[str]
     evidence_ids: list[str]
+    location_source: str = "osm"
+    ownership_verified: bool = False
 
 
 def _osm_hashes(osm_dir: Path, network: WalkNetwork) -> dict[str, str]:
@@ -215,10 +220,22 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
         ),
     }
 
+    roster = None
+    source_manifests = [osm_manifest, ghsl_manifest, airports_manifest]
+    if config.education_registry_dataset_id:
+        registry_manifest = load_dataset_manifest(config.education_registry_dataset_id)
+        source_manifests.append(registry_manifest)
+        roster = (klgd.load_roster(raw_dir() / registry_manifest.raw_path), registry_manifest)
+        snapshot_evidence["education_registry"] = book.add(
+            _dataset_evidence(
+                registry_manifest, f"{klgd.SOURCE_ID}:dataset:{registry_manifest.dataset_id}"
+            )
+        )
+
     territories = _territories(config, layers, grid, book, checks)
     cells, point_drafts = _cells(config, grid, ghsl_evidence, checks)
     drafts, ownership, rule_counts = _destination_drafts(
-        config, layers, osm_dir, airports_manifest, book, checks
+        config, layers, osm_dir, airports_manifest, book, checks, roster
     )
     accesses = snap([p.utm for p in point_drafts] + [d.utm for d in drafts], network)
     point_access, destination_access = accesses[: len(point_drafts)], accesses[len(point_drafts) :]
@@ -231,7 +248,7 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
         _destination(config, draft, access) for draft, access in zip(drafts, destination_access)
     ]
     access_summary = _access_checks(points, destinations, network, checks)
-    coverage = _coverage(config, destinations, snapshot_evidence)
+    coverage = _coverage(config, destinations, snapshot_evidence, roster is not None)
 
     failed = [check["check_id"] for check in checks if check["status"] == "fail"]
     warnings = [check["check_id"] for check in checks if check["status"] == "warn"]
@@ -316,7 +333,7 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
                 license=item.license,
                 publication_date=item.publication_date,
             )
-            for item in (osm_manifest, ghsl_manifest, airports_manifest)
+            for item in source_manifests
         ],
         files={},
         coverage=coverage,
@@ -518,25 +535,41 @@ def _destination_drafts(
     airports_manifest: DatasetManifest,
     book: EvidenceBook,
     checks: list[dict[str, Any]],
-) -> tuple[list[DestinationDraft], list[CategoryOwnership], dict[str, int]]:
+    roster: tuple[klgd.Roster, DatasetManifest] | None = None,
+) -> tuple[list[DestinationDraft], list[CategoryOwnership], dict[str, Any]]:
     rows = pq.read_table(osm_dir / "pois.parquet").to_pylist()
-    candidates, rule_counts = cat.build_candidates(rows, config.name)
+    candidates, osm_rule_counts = cat.build_candidates(rows, config.name)
+    rule_counts: dict[str, Any] = dict(osm_rule_counts)
     crs = f"EPSG:{config.utm_epsg}"
     city_utm = to_crs(layers.city, "EPSG:4326", crs)
     shapely.prepare(city_utm)
+
+    def in_search_area(candidate: cat.Candidate) -> bool:
+        limit = AIRPORT_BUFFER_M if candidate.category == "airport" else SEARCH_BUFFER_M
+        return bool(city_utm.distance(to_crs(candidate.point, "EPSG:4326", crs)) <= limit)
+
+    candidates = [c for c in candidates if in_search_area(c)]
+    drafts: list[DestinationDraft] = []
+    ownership: list[CategoryOwnership] = []
+    if roster is not None:
+        registry_categories = set(KIND_TO_CATEGORY.values())
+        roster_candidates = [c for c in candidates if c.category in registry_categories]
+        others = [c for c in candidates if c.category not in registry_categories]
+        registry_drafts, registry_ownership, unmatched, stats = _registry_drafts(
+            config, roster, roster_candidates, city_utm, crs, book, checks
+        )
+        drafts.extend(registry_drafts)
+        ownership.extend(registry_ownership)
+        candidates = others + unmatched
+        rule_counts["registry_match"] = stats
     airports = {
         row["iata_code"]: row
         for row in csv.DictReader((raw_dir() / airports_manifest.raw_path).open(encoding="utf-8"))
         if row["iata_code"]
     }
-    drafts: list[DestinationDraft] = []
-    ownership: list[CategoryOwnership] = []
     for candidate in sorted(candidates, key=lambda c: (c.category, c.osm_refs[0])):
         point_utm = to_crs(candidate.point, "EPSG:4326", crs)
         distance = city_utm.distance(point_utm)
-        limit = AIRPORT_BUFFER_M if candidate.category == "airport" else SEARCH_BUFFER_M
-        if distance > limit:
-            continue
         evidence_ids = [book.osm(ref) for ref in candidate.osm_refs]
         reasons: list[str] = []
         if candidate.category == "airport":
@@ -589,12 +622,17 @@ def _destination_drafts(
                 evidence_ids=evidence_ids if required else [],
             )
         )
-    accepted_public = [d for d in drafts if d.category in OWNERSHIP_REQUIRED and not d.reasons]
+    accepted_public = [
+        d.destination_id
+        for d in drafts
+        if d.category in OWNERSHIP_REQUIRED and not d.reasons and not d.ownership_verified
+    ]
     _check(
         checks,
         "public_categories_need_registry",
         not accepted_public,
         "No medical/education object is accepted without registry confirmation",
+        accepted_registry_objects=sum(1 for d in drafts if d.ownership_verified),
     )
     airports_in = [d for d in drafts if d.category == "airport" and not d.reasons]
     _check(
@@ -605,6 +643,115 @@ def _destination_drafts(
         airports=[d.name for d in airports_in],
     )
     return drafts, ownership, rule_counts
+
+
+def _registry_drafts(
+    config: CityConfig,
+    roster: tuple[klgd.Roster, DatasetManifest],
+    candidates: list[cat.Candidate],
+    city_utm: shapely.Geometry,
+    crs: str,
+    book: EvidenceBook,
+    checks: list[dict[str, Any]],
+) -> tuple[list[DestinationDraft], list[CategoryOwnership], list[cat.Candidate], dict[str, Any]]:
+    """One destination per roster building; matched OSM candidates only add evidence.
+
+    The roster is the founder's list, so these objects are municipal and accepted.
+    The location is the roster coordinate: it is the official record, and OSM
+    agrees with it in most cases (QA ``registry_osm_distance``).
+    """
+
+    data, manifest = roster
+    matches, unmatched, stats = match_roster(data.buildings, candidates, crs)
+    drafts: list[DestinationDraft] = []
+    ownership: list[CategoryOwnership] = []
+    outside: list[str] = []
+    for match in matches:
+        building = match.building
+        institution = data.institutions[str(building.institution_id)]
+        record = book.add(
+            Evidence(
+                evidence_id=f"{klgd.SOURCE_ID}:{institution.institution_id}",
+                source_id=klgd.SOURCE_ID,
+                dataset_id=manifest.dataset_id,
+                record_id=institution.institution_id,
+                url=institution.detail_url,
+                fetched_at=manifest.retrieved_at,
+                content_hash=data.record_hash(institution.institution_id),
+                verification_state="verified",
+            )
+        )
+        osm_refs = sorted({ref for c in match.candidates for ref in c.osm_refs})
+        category = KIND_TO_CATEGORY[building.kind]
+        destination_id = f"{config.city_id}-{category}-{klgd.SOURCE_ID}-{building.map_id}"
+        inside = city_utm.distance(match.point_utm) == 0
+        if not inside:
+            outside.append(destination_id)
+        drafts.append(
+            DestinationDraft(
+                destination_id=destination_id,
+                category=category,
+                name=institution.name,
+                utm=match.point_utm,
+                lonlat=shapely.Point(building.lon, building.lat),
+                inside_city_boundary=inside,
+                osm_ref=osm_refs[0] if osm_refs else None,
+                reasons=[],
+                evidence_ids=[record, *(book.osm(ref) for ref in osm_refs)],
+                location_source="registry",
+                ownership_verified=True,
+            )
+        )
+        ownership.append(
+            CategoryOwnership(
+                destination_id=destination_id,
+                category=category,  # type: ignore[arg-type]
+                ownership="municipal",
+                basis="registry",
+                verification_state="verified",
+                evidence_ids=[record],
+            )
+        )
+    far = sorted(
+        (
+            (round(max(m.distances_m), 1), m.building.name, m.building.map_id)
+            for m in matches
+            if m.distances_m and max(m.distances_m) > REGISTRY_WARN_M
+        ),
+        reverse=True,
+    )
+    _check(
+        checks,
+        "registry_roster_complete",
+        not data.qa["institutions_without_coordinates"] and not data.qa["non_municipal_names"],
+        "Every listed institution has building coordinates and a municipal legal form",
+        institutions=data.qa["institutions"],
+        buildings=data.qa["buildings"],
+    )
+    _check(
+        checks,
+        "registry_points_in_city",
+        not outside,
+        "Roster buildings lie inside the city boundary",
+        outside=outside,
+    )
+    _check(
+        checks,
+        "registry_osm_distance",
+        not far,
+        f"Matched OSM objects lie within {REGISTRY_WARN_M:.0f} m of the roster coordinate",
+        severity="warn",
+        over_limit=[{"distance_m": d, "name": n, "map_id": i} for d, n, i in far],
+    )
+    _check(
+        checks,
+        "registry_map_points_listed",
+        not data.qa["map_points_not_in_founder_lists"],
+        "Every map point belongs to an institution of the founder's lists",
+        severity="warn",
+        not_listed=data.qa["map_points_not_in_founder_lists"],
+    )
+    return drafts, ownership, unmatched, stats
 
 
 def _lonlat(point_utm: shapely.Point, crs: str) -> tuple[float, float]:
@@ -662,6 +809,7 @@ def _destination(config: CityConfig, draft: DestinationDraft, access: Access) ->
         lat=round(draft.lonlat.y, 7),
         inside_city_boundary=draft.inside_city_boundary,
         osm_ref=draft.osm_ref,
+        location_source=draft.location_source,  # type: ignore[arg-type]
         access_node_id=access.node_id,
         access_distance_m=round(access.distance_m, 2),
         status="quarantined" if draft.reasons else "accepted",
@@ -721,7 +869,10 @@ def _access_checks(
 
 
 def _coverage(
-    config: CityConfig, destinations: list[Destination], evidence: dict[str, str]
+    config: CityConfig,
+    destinations: list[Destination],
+    evidence: dict[str, str],
+    has_registry: bool = False,
 ) -> list[CoverageRecord]:
     city = config.city_id
     start, end = ANALYSIS_WINDOW
@@ -765,9 +916,18 @@ def _coverage(
             valid_to=end,
         ),
     ]
+    registry_categories = set(KIND_TO_CATEGORY.values()) if has_registry else set()
     for category in PRODUCT_CATEGORIES:
         accepted = sum(1 for d in destinations if d.category == category and d.status == "accepted")
-        if category in OWNERSHIP_REQUIRED:
+        extra: list[str] = []
+        if category in registry_categories:
+            status = "partial"
+            reason = (
+                "Муниципальные учреждения подтверждены перечнем учредителя (klgd.ru); "
+                "региональные, федеральные и частные не подтверждены"
+            )
+            extra = [evidence["education_registry"]]
+        elif category in OWNERSHIP_REQUIRED:
             status, reason = (
                 "unknown",
                 "Кандидаты OSM в карантине: форма собственности не подтверждена реестром",
@@ -788,7 +948,9 @@ def _coverage(
                     "category": category,
                     "status": status,
                     "reason": reason,
-                    "evidence_ids": osm + ([evidence["airports"]] if category == "airport" else []),
+                    "evidence_ids": osm
+                    + extra
+                    + ([evidence["airports"]] if category == "airport" else []),
                     "valid_from": start,
                     "valid_to": end,
                 }
@@ -798,8 +960,14 @@ def _coverage(
         CoverageRecord(
             collection="category_ownership",
             city_id=city,
-            status="unknown",
-            reason="Официальный реестр учреждений ещё не загружен",
+            status="partial" if registry_categories else "unknown",
+            reason=(
+                "Муниципальные школы и детсады — по перечню учредителя; поликлиники, колледжи, "
+                "вузы и немуниципальные школы и детсады не подтверждены"
+                if registry_categories
+                else "Официальный реестр учреждений ещё не загружен"
+            ),
+            evidence_ids=[evidence["education_registry"]] if registry_categories else [],
         )
     )
     for collection in NOT_COLLECTED:

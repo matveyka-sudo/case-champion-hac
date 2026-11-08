@@ -1,0 +1,35 @@
+{
+  "dataset_id": "klgd_education.20261108",
+  "source_id": "klgd_education",
+  "source_url": "https://www.klgd.ru/activity/education/institutions/",
+  "retrieved_at": "2026-11-08T15:22:48.707041Z",
+  "publication_date": null,
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Городской округ «Город Калининград»",
+  "license": {
+    "name": "Общедоступная официальная информация ОМСУ: используются только факты (ст. 1259 ГК РФ, 8-ФЗ)",
+    "url": "https://www.klgd.ru/",
+    "status": "permitted",
+    "attribution": "Администрация ГО «Город Калининград», klgd.ru"
+  },
+  "access_method": "file",
+  "raw_path": "klgd_education/klgd-education-20261108.zip",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "a6915842ef5df9248a3d31be9d5df037ca20a5614506740dac34711ee852908c",
+    "size_bytes": 141254
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "list rows": "name, district, address, detail.php?ID",
+    "map items": "ID, cat, LAT, LNG, adress_short, license, akkredit"
+  },
+  "coverage": "Муниципальные общеобразовательные и дошкольные учреждения, опубликованные учредителем",
+  "limitations": [
+    "Только муниципальные учреждения: региональные, федеральные и частные не входят",
+    "Координаты корпусов — с карты сайта администрации, точность не заявлена"
+  ],
+  "status": "fetched",
+  "qa_report": null
+}

@@ -15,6 +15,7 @@ class CityConfig:
     osm_district_relations: tuple[int, ...]
     utm_epsg: int
     grid_version: int = 1
+    education_registry_dataset_id: str | None = None
 
     @property
     def grid_id(self) -> str:
@@ -30,5 +31,6 @@ CITIES: dict[str, CityConfig] = {
         osm_boundary_relation=331414,
         osm_district_relations=(331411, 331412, 331413),
         utm_epsg=32634,
+        education_registry_dataset_id="klgd_education.20261108",
     ),
 }
