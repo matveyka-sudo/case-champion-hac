@@ -57,7 +57,7 @@ def test_legacy_runtime_requires_explicit_operator_selection():
 async def test_runtime_refuses_database_with_only_historical_migration(database):
     import asyncio
 
-    from conftest import migrate
+    from apps.api.tests.migration_support import migrate
 
     _, schema, url = database
     await asyncio.to_thread(migrate, url, schema, "0001_jobs_runs", True)

@@ -56,7 +56,8 @@
         "unchanged",
         "changed",
         "unknown",
-        "new_connection"
+        "new_connection",
+        "lost_connection"
       ],
       "title": "Outcome",
       "type": "string"

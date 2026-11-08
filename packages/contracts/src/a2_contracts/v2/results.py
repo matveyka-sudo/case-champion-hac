@@ -5,8 +5,7 @@ from typing import Annotated, Literal, Self
 from pydantic import Field, HttpUrl, model_validator
 
 from a2_contracts.common import utc
-
-from .base import (
+from a2_contracts.v2.base import (
     AnalysisKind,
     Availability,
     Category,
@@ -20,9 +19,9 @@ from .base import (
     TrafficMode,
     VersionRefs,
 )
-from .journeys import CountResult, JourneyResult, LastReturn, ReferenceResult
-from .map_data import AnalysisMapData
-from .requests import AnalysisRequest
+from a2_contracts.v2.journeys import CountResult, JourneyResult, LastReturn, ReferenceResult
+from a2_contracts.v2.map_data import AnalysisMapData
+from a2_contracts.v2.requests import AnalysisRequest
 
 
 class EvidenceRef(ContractModel):
@@ -131,6 +130,9 @@ class Score(ContractModel):
     subject: SubjectRef
     ranking_eligible: bool = Field(strict=True)
     aggregation_basis: PopulationBasis | SiteBasis | None = None
+    reference_ids: list[Identifier] = Field(
+        default_factory=list, exclude_if=lambda value: not value
+    )
 
     @model_validator(mode="after")
     def genuine_score(self) -> Self:
@@ -144,6 +146,16 @@ class Score(ContractModel):
             self.value != 0 or self.completeness != "full" or not self.evidence_refs
         ):
             raise ValueError("Confirmed absence requires full scope, evidence and available zero")
+        if len(set(self.reference_ids)) != len(self.reference_ids):
+            raise ValueError("Duplicate score reference dependency")
+        if self.status == "available" and self.completeness == "full":
+            basis = self.aggregation_basis
+            if isinstance(basis, PopulationBasis) and (
+                basis.population is None or basis.coverage < 1 or basis.unknown_positive_weight
+            ):
+                raise ValueError("Full index requires complete known positive population weights")
+            if isinstance(basis, SiteBasis) and basis.coverage < 1:
+                raise ValueError("Full index requires the complete physical-site sample")
         if self.ranking_eligible:
             if self.status != "available" or self.completeness != "full":
                 raise ValueError("Only full available scores may enter a ranking")
@@ -324,6 +336,33 @@ class AnalysisResult(ContractModel):
         for metric in self.metrics:
             if metric.journey_id is not None and metric.journey_id not in journeys:
                 raise ValueError("Unknown metric journey")
+
+        # A reference affects an index, not the independently observed raw time.
+        # Legacy score chains carry their reference through Metric -> Journey;
+        # reference_ids also expresses a direct denominator dependency explicitly.
+        def check_required_dependencies(score: Score) -> None:
+            full = score.status == "available" and score.completeness == "full"
+            required_references = set(score.reference_ids)
+            for component in score.components:
+                if component.kind != "metric":
+                    continue
+                metric = metrics[component.id]
+                if metric.journey_id is None:
+                    continue
+                journey = journeys[metric.journey_id]
+                if full and (journey.status != "available" or journey.completeness != "full"):
+                    raise ValueError("Full index requires its complete available journey")
+                if journey.reference_id is not None:
+                    required_references.add(journey.reference_id)
+            for identifier in required_references:
+                if identifier not in references:
+                    raise ValueError("Unknown score reference dependency")
+                reference = references[identifier]
+                if full and (reference.status != "available" or reference.completeness != "full"):
+                    raise ValueError("Full index requires its complete available reference")
+
+        for score in self.scores:
+            check_required_dependencies(score)
         if len({count.metric_id for count in self.counts}) != len(self.counts):
             raise ValueError("Duplicate count metric identity")
         for count in self.counts:

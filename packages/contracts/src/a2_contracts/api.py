@@ -21,6 +21,7 @@ ErrorCode = Literal[
     "unsupported_traffic_mode",
     "provider_unavailable",
     "unsupported_scenario",
+    "stored_result_incompatible",
 ]
 JobStatus = Literal["queued", "running", "succeeded", "failed", "cancelled"]
 

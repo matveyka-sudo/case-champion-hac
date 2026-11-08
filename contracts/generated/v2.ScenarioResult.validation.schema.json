@@ -346,7 +346,8 @@
             "unchanged",
             "changed",
             "unknown",
-            "new_connection"
+            "new_connection",
+            "lost_connection"
           ],
           "title": "Outcome",
           "type": "string"
@@ -491,6 +492,14 @@
             }
           ],
           "title": "Reason Code"
+        },
+        "reference_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Reference Ids",
+          "type": "array"
         },
         "score_id": {
           "minLength": 1,

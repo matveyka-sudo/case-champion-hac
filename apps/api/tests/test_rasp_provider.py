@@ -34,7 +34,7 @@ def segment(departure="2026-11-10T09:00:00Z", uid="train-1", **changes):
     } | changes
 
 
-def page(rows=(), *, total=None, offset=0, limit=100, intervals=()):
+def page(rows=(), *, total=None, offset=0, limit=100, intervals=(), request=None):
     return {
         "segments": list(rows),
         "interval_segments": list(intervals),
@@ -43,7 +43,11 @@ def page(rows=(), *, total=None, offset=0, limit=100, intervals=()):
             "limit": limit,
             "offset": offset,
         },
-        "search": {"date": "2026-11-10", "from": {"code": "c1"}, "to": {"code": "c2"}},
+        "search": {
+            "date": request.url.params["date"] if request else "2026-11-10",
+            "from": {"code": request.url.params["from"] if request else "c1"},
+            "to": {"code": request.url.params["to"] if request else "c2"},
+        },
     }
 
 
@@ -81,7 +85,7 @@ async def test_date_api_is_filtered_to_exact_seven_day_window_and_stays_partial(
             segment("2026-11-17T08:29:00Z", "last"),
             segment("2026-11-17T08:30:00Z", "too-late"),
         ]
-        return httpx.Response(200, json=page(rows))
+        return httpx.Response(200, json=page(rows, request=request))
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:
         adapter = provider(client, requests_per_second=1000)
@@ -107,7 +111,9 @@ async def test_date_api_is_filtered_to_exact_seven_day_window_and_stays_partial(
 @pytest.mark.asyncio
 async def test_empty_provider_response_never_confirms_no_route():
     async with httpx.AsyncClient(
-        transport=httpx.MockTransport(lambda request: httpx.Response(200, json=page()))
+        transport=httpx.MockTransport(
+            lambda request: httpx.Response(200, json=page(request=request))
+        )
     ) as client:
         result = await query(provider(client, requests_per_second=1000))
     assert result.departures == []
@@ -137,7 +143,7 @@ async def test_interval_services_remain_unknown_instead_of_inventing_departures(
     async with httpx.AsyncClient(
         transport=httpx.MockTransport(
             lambda request: httpx.Response(
-                200, json=page(intervals=[{"thread": {"uid": "interval"}}])
+                200, json=page(intervals=[{"thread": {"uid": "interval"}}], request=request)
             )
         )
     ) as client:
@@ -284,7 +290,7 @@ async def test_quota_includes_retries_and_cutoff_after_one_page_is_partial():
 
     def handle(request):
         calls.append(request)
-        return httpx.Response(200, json=page([segment()]))
+        return httpx.Response(200, json=page([segment()], request=request))
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:
         result = await query(provider(client, request_quota=1, requests_per_second=1000))
@@ -302,7 +308,7 @@ async def test_cache_is_ttl_scoped_and_returned_models_cannot_corrupt_it():
 
     def handle(request):
         calls.append(request)
-        return httpx.Response(200, json=page([segment()]))
+        return httpx.Response(200, json=page([segment()], request=request))
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:
         adapter = provider(client, clock=lambda: now[0], sleep=sleep, cache_ttl_seconds=10)
@@ -338,7 +344,7 @@ async def test_shared_rate_and_concurrency_are_enforced_across_queries():
         started.append(now[0])
         await asyncio.sleep(0)
         active -= 1
-        return httpx.Response(200, json=page())
+        return httpx.Response(200, json=page(request=request))
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:
         adapter = provider(
@@ -378,7 +384,7 @@ async def test_retry_after_cools_down_other_queries_using_the_same_credentials()
         if len(requests) == 1:
             first_started.set()
             return httpx.Response(429, headers={"Retry-After": "0.1"})
-        return httpx.Response(200, json=page())
+        return httpx.Response(200, json=page(request=request))
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:
         adapter = provider(client, requests_per_second=1000, max_concurrency=2, max_pages=1)
@@ -434,7 +440,7 @@ async def test_multiple_transport_filters_do_not_assume_undocumented_search_comm
             segment(uid="plane-1", thread={"uid": "plane-1", "transport_type": "plane"}),
             segment(uid="bus-1", thread={"uid": "bus-1", "transport_type": "bus"}),
         ]
-        return httpx.Response(200, json=page(rows))
+        return httpx.Response(200, json=page(rows, request=request))
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:
         result = await provider(client, max_pages=1).intercity_departures(

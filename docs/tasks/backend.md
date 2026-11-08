@@ -159,3 +159,9 @@ Frozen blocker устранён строго разрешённым исключ
 Добавлены 30 contract regression cases и PostgreSQL regression: даже изменённый после создания DTO повторно валидируется в `JobRepository.succeed` до INSERT, некорректный сценарий не сохраняется, baseline не меняется. Исходный пример ревьюера и дополнительный обход через `new_connection` воспроизведены падающими тестами до исправлений.
 
 Проверки текущего backend: **591 passed, 0 skipped**, с PostgreSQL и существующими process smoke tests API/worker на synthetic fixtures; Ruff PASS, format PASS (93 files), strict mypy PASS (43 source files), OpenAPI/JSON Schema export `--check` PASS, `git diff --check` PASS. Публичные поля и схемы не менялись. Проверка merge-кандидата dev, live providers и реальные данные ML1/ML2 в этот прогон не входят; merge не выполнялся. Frontend, формулы ML1 и DevOps не изменялись.
+
+## Independent review corrections 2026-11-09
+
+Two P1 fixes (scenario task disappearance/loss and mandatory result dependencies), three Rasp P2 fixes, absolute migration-helper imports for joint ML1 tests, and typed immutable historical-result/cache refusal are complete locally. See [full audit report](../../apps/api/docs/backend-review-20261109.md) for exact revisions, RED/GREEN proof, changed-file inventory, tree A/B construction and verification commands. PostgreSQL backend/A:660 passed; combined B:1206 passed; no skips. No push, branch commit, merge or foreign-module edits. Source packaging and real calculation/data integration remain explicit owner dependencies.
+
+Publication preparation: user authorized a separate commit and ordinary push to PR8 after fresh verification. Backend PostgreSQL rerun:660 passed/0skipped; Ruff/format/mypy/schema/config/lock/pip/diff checks passed. Backend/dev refs unchanged; newer ML1 work is not claimed covered by the historical B result (see audit report). No code/schema changes since the verified audit snapshot.

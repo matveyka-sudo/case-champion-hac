@@ -1,7 +1,8 @@
 import asyncio
 
 import pytest
-from conftest import migrate
+
+from apps.api.tests.migration_support import migrate
 
 
 @pytest.mark.asyncio

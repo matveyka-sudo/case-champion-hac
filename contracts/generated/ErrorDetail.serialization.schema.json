@@ -47,7 +47,8 @@
         "data_unavailable",
         "unsupported_traffic_mode",
         "provider_unavailable",
-        "unsupported_scenario"
+        "unsupported_scenario",
+        "stored_result_incompatible"
       ],
       "title": "Code",
       "type": "string"

@@ -194,7 +194,7 @@ async def test_cyrillic_retrieval_respects_actual_tool_byte_budget(database):
 async def test_evidence_migration_refuses_destructive_downgrade_when_documents_exist(database):
     import asyncio
 
-    from conftest import migrate
+    from apps.api.tests.migration_support import migrate
 
     pool, schema, url = database
     await EvidenceRepository(pool).publish(accepted(), [chunk()])

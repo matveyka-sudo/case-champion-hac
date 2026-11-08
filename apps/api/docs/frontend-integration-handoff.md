@@ -193,3 +193,9 @@ ML1: routing/reference/scenario callable, real effects и τ scheduler interface
 Следующая командная приёмка: один принятый реальный walk/static город → API/worker → existing Waydex gateway → карта/карточка → объяснение → предложенный сценарий. До этого demo-markers снимаются только для действительно принятых данных.
 
 Фактический финальный прогон: clean frozen **560 passed, 0 skipped** с PostgreSQL; Ruff/format 91 файлов, strict mypy 43 source files, schema export --check, uv lock --check, pip check и import greenlet прошли. Командные данные/платный Flash/React браузерный E2E не проверялись.
+
+## Review 09.11.2026: contract changes
+
+`ScenarioDelta.outcome=lost_connection` represents confirmed connection loss with delta=null; unknown does not prove loss or creation. Every prior task remains represented in before/after; journey ID may change. Optional `Score.reference_ids` declares required references; the empty default is omitted from serialization. Full indices require full dependencies and aggregation basis irrespective of ranking eligibility. Preliminary values remain partial.
+
+Historical contradictory results are immutable: reads and cache reuse return safe 409 `stored_result_incompatible` requiring recalculation. Regenerate frontend types from OpenAPI, handle the additive outcome and typed error. Frontend files were not changed.

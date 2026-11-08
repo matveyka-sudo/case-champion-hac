@@ -16,9 +16,9 @@ from a2_contracts.scenarios import Comparison, ScenarioRequest
 from a2_contracts.v2.requests import RequestBase, parse_analysis_request
 from a2_contracts.v2.results import AnalysisResult
 from a2_contracts.v2.scenarios import ScenarioProposal, ScenarioResult, ScenarioRunRequest
-from pydantic import JsonValue
+from pydantic import JsonValue, ValidationError
 
-from .jobs import (
+from a2_api.jobs import (
     ClaimedJob,
     JobContext,
     JobContextUnion,
@@ -28,7 +28,7 @@ from .jobs import (
     cache_fingerprint,
     request_hash,
 )
-from .services import DomainError
+from a2_api.services import DomainError
 
 RunResult = ProfileResult | Comparison | AnalysisResult | ScenarioResult
 JOB_FIELDS = (
@@ -85,7 +85,12 @@ def _run_from_row(row: Mapping[str, object]) -> RunResult:
         "scenario_v2": ScenarioResult,
     }
     model = models[str(row["result_kind"])]
-    return model.model_validate_json(str(row["payload"]))
+    try:
+        return model.model_validate_json(str(row["payload"]))
+    except ValidationError:
+        raise DomainError(
+            409, "stored_result_incompatible", "Stored result requires recalculation"
+        ) from None
 
 
 class JobRepository:
@@ -156,6 +161,8 @@ class JobRepository:
                     owner,
                 )
                 cached = cached_row["run_id"] if cached_row is not None else None
+                if cached is not None:
+                    await self._read_run(connection, cached, owner)
                 if cached_row is not None and isinstance(context, V2JobContext):
                     expiry = context.cache_valid_until
                     original_expiry = cached_row["cache_valid_until"]

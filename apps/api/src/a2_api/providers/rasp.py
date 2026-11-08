@@ -155,7 +155,18 @@ class _Pagination(_WireModel):
     limit: Annotated[int, Field(strict=True, ge=1, le=100)]
 
 
+class _SearchPlace(_WireModel):
+    code: Code
+
+
+class _Search(_WireModel):
+    date: date
+    origin: _SearchPlace = Field(alias="from")
+    destination: _SearchPlace = Field(alias="to")
+
+
 class _Page(_WireModel):
+    search: _Search
     pagination: _Pagination
     segments: list[dict[str, JsonValue]]
     interval_segments: list[dict[str, JsonValue]] = Field(default_factory=list)
@@ -202,6 +213,7 @@ class RaspProvider:
         page_size: int = 100,
         cache_ttl_seconds: float = 300,
         max_cache_entries: int = 128,
+        max_response_bytes: int = 2 * 1024 * 1024,
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     ) -> None:
@@ -221,6 +233,7 @@ class RaspProvider:
             (max_pages, 1000),
             (page_size, 100),
             (max_cache_entries, 10000),
+            (max_response_bytes, 16 * 1024 * 1024),
         ):
             if type(value) is not int or not 1 <= value <= upper:
                 raise ValueError("Provider count limits must be bounded positive integers")
@@ -233,6 +246,7 @@ class RaspProvider:
         self._timeout, self._operation_timeout = timeout_seconds, operation_timeout_seconds
         self._interval, self._quota = 1 / requests_per_second, request_quota
         self._page_limit, self._page_size = max_pages, page_size
+        self._max_response_bytes = max_response_bytes
         self._ttl, self._cache_size = cache_ttl_seconds, max_cache_entries
         self._clock, self._sleep = clock, sleep
         self._next_request = 0.0
@@ -312,6 +326,12 @@ class RaspProvider:
                         if len(query.transport_types) == 1:
                             params["transport_types"] = query.transport_types[0]
                         page = await self._request(params)
+                        if (
+                            page.search.origin.code != query.from_code
+                            or page.search.destination.code != query.to_code
+                            or page.search.date != current
+                        ):
+                            raise RaspError("invalid_response")
                         pages += 1
                         if current not in queried:
                             queried.append(current)
@@ -346,6 +366,14 @@ class RaspProvider:
                                 )
                             except ValidationError:
                                 raise RaspError("invalid_response") from None
+                            if (
+                                query.from_code.startswith("s")
+                                and row.origin.code != query.from_code
+                            ) or (
+                                query.to_code.startswith("s")
+                                and row.destination.code != query.to_code
+                            ):
+                                raise RaspError("invalid_response")
                             if departure.transport_type not in query.transport_types:
                                 continue
                             if start <= departure.departure_at < end:
@@ -355,6 +383,8 @@ class RaspProvider:
                                     departure.to_station.code,
                                     departure.departure_at,
                                 )
+                                if identity in rows and rows[identity] != departure:
+                                    raise RaspError("invalid_response")
                                 rows[identity] = departure
                         offset += len(page.segments)
                         if offset >= pagination.total:
@@ -369,7 +399,7 @@ class RaspProvider:
             errors.append(RaspIssue(code="timeout", retryable=True))
         except RaspError as exc:
             # A malformed first page cannot become a successful empty result.
-            if not rows and not completed:
+            if exc.code == "invalid_response" or (not rows and not completed):
                 raise
             errors.append(RaspIssue(code=exc.code, retryable=exc.retryable))
         if errors:
@@ -445,8 +475,16 @@ class RaspProvider:
                 try:
                     async with asyncio.timeout(self._timeout):
                         response = await self._client.send(
-                            request, follow_redirects=False, auth=None
+                            request, follow_redirects=False, auth=None, stream=True
                         )
+                        try:
+                            body = bytearray()
+                            async for chunk in response.aiter_bytes(chunk_size=65536):
+                                if len(body) + len(chunk) > self._max_response_bytes:
+                                    raise RaspError("invalid_response")
+                                body.extend(chunk)
+                        finally:
+                            await response.aclose()
                 except (TimeoutError, httpx.TimeoutException):
                     raise RaspError("timeout", retryable=True) from None
                 except httpx.HTTPError:
@@ -466,7 +504,7 @@ class RaspProvider:
             if status != 200:
                 raise RaspError("upstream_error")
             try:
-                return _Page.model_validate(response.json())
+                return _Page.model_validate(json.loads(body))
             except (ValueError, ValidationError):
                 raise RaspError("invalid_response") from None
         raise AssertionError("Unreachable retry state")

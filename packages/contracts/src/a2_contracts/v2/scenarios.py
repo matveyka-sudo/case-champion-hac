@@ -10,9 +10,8 @@ from typing import Annotated, Literal, Self
 from pydantic import Field, StrictBool, model_validator
 
 from a2_contracts.common import canonical_hash
-
-from .base import ContractModel, Count, Identifier, NonNegative, VersionRefs
-from .results import EvidenceRef, Metric, Score, validate_score_dependencies
+from a2_contracts.v2.base import ContractModel, Count, Identifier, NonNegative, VersionRefs
+from a2_contracts.v2.results import EvidenceRef, Metric, Score, validate_score_dependencies
 
 Feasibility = Literal["verified", "unverified"]
 
@@ -149,16 +148,28 @@ class ScenarioDelta(ContractModel):
     unit: Identifier
     delta: Annotated[float, Field(strict=True)] | None
     sign_convention: Literal["before_minus_after", "after_minus_before"]
-    outcome: Literal["improved", "worsened", "unchanged", "changed", "unknown", "new_connection"]
+    outcome: Literal[
+        "improved",
+        "worsened",
+        "unchanged",
+        "changed",
+        "unknown",
+        "new_connection",
+        "lost_connection",
+    ]
     reason_code: Identifier | None
     scope: Literal["transport", "pipeline"]
 
     @model_validator(mode="after")
     def explicit_effect(self) -> Self:
         if self.delta is None:
-            if not self.reason_code or self.outcome not in {"unknown", "new_connection"}:
+            if not self.reason_code or self.outcome not in {
+                "unknown",
+                "new_connection",
+                "lost_connection",
+            }:
                 raise ValueError("Uncomputed delta requires a reason and a nonnumeric outcome")
-        elif self.outcome in {"unknown", "new_connection"}:
+        elif self.outcome in {"unknown", "new_connection", "lost_connection"}:
             raise ValueError(
                 "Unknown or newly established connection cannot assert a numeric saving"
             )
@@ -196,6 +207,22 @@ def _measure_key(value: Metric | Score) -> str:
             else None,
         )
     return canonical_hash(data)
+
+
+def _confirmed_absence(value: Metric | Score) -> bool:
+    return (
+        value.reason_code == "NO_FEASIBLE_ROUTE"
+        and value.completeness == "full"
+        and (
+            isinstance(value, Metric)
+            and value.status == "not_applicable"
+            and value.value is None
+            and bool(value.source_refs)
+            or isinstance(value, Score)
+            and value.status == "available"
+            and value.value == 0
+        )
+    )
 
 
 def _is_time_or_index(value: Metric | Score) -> bool:
@@ -312,12 +339,72 @@ def _check_effect_coverage(
                     raise ValueError(
                         "Ambiguous changed measures require stable IDs or explicit effects"
                     )
+        # A task must remain represented even when its connection disappears.
+        # A null-valued, scoped placeholder distinguishes absence from missing data.
+        if any(
+            _is_time_or_index(item) and identifier not in pairs
+            for identifier, item in old_values.items()
+        ):
+            raise ValueError("Every prior time/index task requires an after representation")
+        paired_new = set(pairs.values())
+        if any(
+            _is_time_or_index(item)
+            and identifier not in paired_new
+            and (item.status == "available" or _confirmed_absence(item))
+            for identifier, item in new_values.items()
+        ):
+            raise ValueError("Every new time/index task requires a before representation")
         for old_id, new_id in pairs.items():
             old, new = old_values[old_id], new_values[new_id]
+            task_effect = covered.get((old_id, new_id))
+            if _is_time_or_index(old) or _is_time_or_index(new):
+                changed_state = (
+                    old.status != new.status
+                    or old.value != new.value
+                    or old.reason_code != new.reason_code
+                    or old_keys[old_id] != new_keys[new_id]
+                )
+                if changed_state and task_effect is None:
+                    raise ValueError("Every changed task requires an explicit effect")
+                if old_keys[old_id] != new_keys[new_id]:
+                    if (
+                        task_effect is None
+                        or task_effect.outcome != "unknown"
+                        or task_effect.delta is not None
+                    ):
+                        raise ValueError(
+                            "Changed task semantics require an explicit unknown effect"
+                        )
+                elif (
+                    old.status == "available"
+                    and not _confirmed_absence(old)
+                    and _confirmed_absence(new)
+                ):
+                    if task_effect is None or task_effect.outcome != "lost_connection":
+                        raise ValueError(
+                            "Confirmed connection loss requires a lost_connection event"
+                        )
+                    if isinstance(new, Metric):
+                        worsened.add(new_id)
+                elif (
+                    _confirmed_absence(old)
+                    and new.status == "available"
+                    and not _confirmed_absence(new)
+                ):
+                    if task_effect is None or task_effect.outcome != "new_connection":
+                        raise ValueError(
+                            "Confirmed connection appearance requires a new_connection event"
+                        )
+                elif old.status != new.status:
+                    if task_effect is None or task_effect.outcome != "unknown":
+                        raise ValueError("Uncertain task transitions require an unknown effect")
             if not _numeric_change(old, new):
                 continue
             checked_effect = covered.get((old_id, new_id))
-            if checked_effect is not None and checked_effect.outcome == "new_connection":
+            if checked_effect is not None and checked_effect.outcome in {
+                "new_connection",
+                "lost_connection",
+            }:
                 # Confirmed absence -> connection is a checked event, never an invented saving.
                 continue
             if checked_effect is None or checked_effect.delta is None:
@@ -423,28 +510,22 @@ class ScenarioResult(ContractModel):
                 and effect.sign_convention != "before_minus_after"
             ):
                 raise ValueError("Time improvement uses before minus after")
-            if effect.outcome == "new_connection":
+            if effect.outcome in {"new_connection", "lost_connection"}:
+                absent, present = (old, new) if effect.outcome == "new_connection" else (new, old)
                 if (
-                    not old
-                    or old.reason_code != "NO_FEASIBLE_ROUTE"
-                    or old.completeness != "full"
-                    or (isinstance(old, Metric) and old.value is not None)
-                    or (isinstance(old, Score) and old.value not in (None, 0))
-                    or not new
-                    or new.status != "available"
+                    absent is None
+                    or present is None
+                    or not _confirmed_absence(absent)
+                    or present.status != "available"
+                    or _confirmed_absence(present)
+                    or present.completeness != "full"
                 ):
                     raise ValueError(
-                        "New connection requires confirmed prior absence and a confirmed new path"
+                        "Connection event requires confirmed absence and a confirmed path"
                     )
                 old_unit = old.unit if isinstance(old, Metric) else "points_0_100"
-                new_unit = new.unit if isinstance(new, Metric) else "points_0_100"
-                if (
-                    old.subject != new.subject
-                    or old.name != new.name
-                    or old_unit != new_unit
-                    or effect.unit != old_unit
-                ):
-                    raise ValueError("New connection must refer to the same pair and measure")
+                if _measure_key(absent) != _measure_key(present) or effect.unit != old_unit:
+                    raise ValueError("Connection event must refer to the same task and measure")
             if effect.delta is not None:
                 if not old or not new or old.value is None or new.value is None:
                     raise ValueError("Numeric effect requires numeric before and after")

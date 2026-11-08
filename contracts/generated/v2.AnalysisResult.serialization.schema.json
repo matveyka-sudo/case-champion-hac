@@ -1796,6 +1796,14 @@
           ],
           "title": "Reason Code"
         },
+        "reference_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Reference Ids",
+          "type": "array"
+        },
         "score_id": {
           "minLength": 1,
           "title": "Score Id",

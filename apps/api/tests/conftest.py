@@ -6,17 +6,10 @@ from uuid import uuid4
 import asyncpg
 import pytest
 import pytest_asyncio
-from alembic import command
-from alembic.config import Config
+
+from apps.api.tests.migration_support import migrate
 
 ROOT = Path(__file__).resolve().parents[3]
-
-
-def migrate(url, schema, revision="head", downgrade=False):
-    config = Config(str(ROOT / "apps/api/alembic.ini"))
-    config.attributes["database_url"] = url
-    config.attributes["database_schema"] = schema
-    (command.downgrade if downgrade else command.upgrade)(config, revision)
 
 
 @pytest.fixture

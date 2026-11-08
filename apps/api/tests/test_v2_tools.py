@@ -307,7 +307,7 @@ async def test_departure_tool_integrates_real_gateway_through_mock_http_without_
 
     def handle(request):
         requests.append(request)
-        return httpx.Response(200, json=page([]))
+        return httpx.Response(200, json=page([], request=request))
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:
         gateway = RaspDepartureGateway(

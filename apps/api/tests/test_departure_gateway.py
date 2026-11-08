@@ -49,7 +49,7 @@ async def test_approved_mapping_queries_fixed_provider_and_returns_separate_part
 
     def handle(request):
         requests.append(request)
-        return httpx.Response(200, json=page([] if empty else [segment()]))
+        return httpx.Response(200, json=page([] if empty else [segment()], request=request))
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:
         provider = RaspProvider(client, api_key="synthetic", requests_per_second=1000)
@@ -181,3 +181,38 @@ def test_provider_codes_and_timezones_are_validated_as_trusted_configuration():
     for changes in ({"provider_code": "https://attacker.test"}, {"timezone": "not/a/zone"}):
         with pytest.raises(ValidationError):
             RaspPlaceBinding.model_validate(raw | changes)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("failure", ["reverse", "conflict"])
+async def test_rejected_provider_rows_never_reach_observation_or_cache(failure):
+    saved = snapshot()
+    place_bindings = [
+        binding.model_copy(
+            update={"provider_code": "s1" if binding.territory_id == "city-1" else "s2"}
+        )
+        for binding in bindings(saved)
+    ]
+    calls = []
+
+    def handle(request):
+        calls.append(request)
+        rows = [segment()]
+        if failure == "reverse":
+            rows[0]["from"], rows[0]["to"] = rows[0]["to"], rows[0]["from"]
+        else:
+            rows.append(segment(arrival="2026-11-10T10:00:00Z", duration=3600))
+        return httpx.Response(200, json=page(rows, request=request))
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:
+        gateway = RaspDepartureGateway(
+            RaspProvider(client, api_key="synthetic", requests_per_second=1000), place_bindings
+        )
+        for _ in range(2):
+            observation = await gateway.get_departures(
+                "city-1", "city-2", START, snapshots=[saved], source_ids=frozenset({"source-1"})
+            )
+            assert observation.status == "unknown"
+            assert observation.departures == []
+            assert observation.cache_key is None
+    assert len(calls) == 2
