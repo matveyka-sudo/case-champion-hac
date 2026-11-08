@@ -38,6 +38,11 @@ from a2_engine.urban.indices import (
     territory_index,
 )
 from a2_engine.urban.journeys import UrbanJourneyTiming, validate_urban_journey
+from a2_engine.urban.last_return import (
+    UrbanLastReturnResult,
+    UrbanReturnJourney,
+    search_urban_last_return,
+)
 from a2_engine.urban.models import (
     UrbanArea,
     UrbanCandidate,
@@ -65,6 +70,11 @@ from a2_engine.urban.tau_models import (
     UrbanTauDay,
     UrbanTauSlice,
     UrbanTauWeek,
+)
+from a2_engine.urban.transit import (
+    UrbanTransitNetwork,
+    UrbanTransitResult,
+    search_urban_transit,
 )
 from a2_engine.urban.valhalla import (
     ValhallaBuild,
@@ -154,4 +164,10 @@ __all__ = [
     "analyze_urban_districts",
     "UrbanDistrictInputs",
     "prepare_urban_district_inputs",
+    "UrbanTransitNetwork",
+    "UrbanTransitResult",
+    "search_urban_transit",
+    "UrbanReturnJourney",
+    "UrbanLastReturnResult",
+    "search_urban_last_return",
 ]

@@ -24,6 +24,20 @@ from a2_engine.intercity import (
     intercity_passenger_index,
 )
 from a2_engine.pipeline import PipelineBasis, PipelineResult, pipeline_utilization
+from a2_engine.routing.timetable import (
+    solve_timetable,
+)
+from a2_engine.routing.timetable_models import (
+    Timetable,
+    TimetableEvent,
+    TimetableFootpath,
+    TimetablePath,
+    TimetableRun,
+    TimetableScope,
+    TimetableSearchResult,
+    TimetableStep,
+    TimetableTransfer,
+)
 from a2_engine.shared.config import (
     AreaHBand,
     FreightConfig,
@@ -99,6 +113,16 @@ from a2_engine.urban.districts import (
     UrbanDistrictRanking,
     UrbanDistrictValue,
     analyze_urban_districts,
+)
+from a2_engine.urban.last_return import (
+    UrbanLastReturnResult,
+    UrbanReturnJourney,
+    search_urban_last_return,
+)
+from a2_engine.urban.transit import (
+    UrbanTransitNetwork,
+    UrbanTransitResult,
+    search_urban_transit,
 )
 from a2_engine.urban.valhalla import (
     ValhallaBuild,
@@ -225,4 +249,20 @@ __all__ = [
     "analyze_urban_districts",
     "UrbanDistrictInputs",
     "prepare_urban_district_inputs",
+    "TimetableEvent",
+    "TimetableRun",
+    "TimetableFootpath",
+    "TimetableTransfer",
+    "TimetableScope",
+    "Timetable",
+    "TimetableStep",
+    "TimetablePath",
+    "TimetableSearchResult",
+    "solve_timetable",
+    "UrbanTransitNetwork",
+    "UrbanTransitResult",
+    "search_urban_transit",
+    "UrbanReturnJourney",
+    "UrbanLastReturnResult",
+    "search_urban_last_return",
 ]

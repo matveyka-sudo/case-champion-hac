@@ -266,6 +266,61 @@ PUBLIC_SIGNATURES: dict[str, str] = {
     "selected_categories: collections.abc.Mapping[str, str], config: UrbanConfig, rules: "
     "UrbanJourneyRules, thresholds: collections.abc.Sequence[UrbanThreshold] = ()) -> "
     "WalkAnalysisResult",
+    "UrbanOriginalCell": "(cell_id: str, city_id: str, grid_version: str, population: float | None, "
+    "population_year: int | None, population_method: str | None, point_id: str | None, "
+    "excluded: bool, evidence_refs: tuple[str, ...]) -> None",
+    "UrbanDistrict": "(district_id: str, city_id: str, name: str, boundary_version: str, evidence_refs: "
+    "tuple[str, ...], administrative_level: str = 'district') -> None",
+    "UrbanDistrictShare": "(cell_id: str, district_id: str, population: float | None, evidence_refs: tuple[str, "
+    "...], area_share: float | None = None) -> None",
+    "UrbanSharePrecision": "(cell_quantum: float, share_quantum: float, evidence_refs: tuple[str, ...], rule: str = "
+    "'cell_nearest_share_floor') -> None",
+    "UrbanDistrictCoverage": "(context: UrbanContext, catalog_version: str, distribution_version: str, grid_versions: "
+    "frozenset[str], district_boundary_versions: collections.abc.Mapping[str, str], "
+    "expected_district_ids: frozenset[str], expected_cell_ids: frozenset[str], "
+    "complete_district_ids: frozenset[str], original_cells_complete: bool, evidence_refs: "
+    "tuple[str, ...], precision: UrbanSharePrecision | None = None) -> None",
+    "UrbanCellAllocation": "(cell_id: str, population: float | None, allocated_population: decimal.Decimal | None, "
+    "residual_population: decimal.Decimal | None, documented_precision: bool, reasons: "
+    "tuple[str, ...]) -> None",
+    "UrbanDistrictPopulation": "(district_id: str, population: decimal.Decimal | None, excluded_population: "
+    "decimal.Decimal | None, reasons: tuple[str, ...]) -> None",
+    "UrbanDistrictComparison": "(context: UrbanContext, passenger_mode: str, category: str | None, selected_categories: "
+    "tuple[tuple[str, str], ...], h_seconds: MetricResult, catalog_version: str, "
+    "distribution_version: str, grid_versions: frozenset[str], district_boundary_versions: "
+    "tuple[tuple[str, str], ...], expected_district_ids: tuple[str, ...], "
+    "administrative_level: str = 'district') -> None",
+    "UrbanDistrictValue": "(district_id: str, index: MetricResult, deficit: MetricResult, ranking_eligible: bool, "
+    "reasons: tuple[str, ...]) -> None",
+    "UrbanDistrictRank": "(district_id: str, index: float, rank: int) -> None",
+    "UrbanDistrictRanking": "(scope: UrbanDistrictComparison, entries: tuple[UrbanDistrictRank, ...], excluded: "
+    "tuple[tuple[str, tuple[str, ...]], ...], complete: bool, positions_scope: str) -> None",
+    "UrbanDistrictMetric": "(scope: UrbanDistrictComparison, city_index: MetricResult, districts: "
+    "tuple[UrbanDistrictValue, ...], gap: MetricResult, ranking: UrbanDistrictRanking) -> "
+    "None",
+    "UrbanDistrictModeResult": "(passenger_mode: str, overall: UrbanDistrictMetric, categories: "
+    "tuple[UrbanDistrictMetric, ...]) -> None",
+    "UrbanDistrictAnalysis": "(source_analysis: UrbanAnalysis, original_cells: tuple[UrbanOriginalCell, ...], "
+    "district_catalog: tuple[UrbanDistrict, ...], population_shares: "
+    "tuple[UrbanDistrictShare, ...], coverage: UrbanDistrictCoverage, cell_qa: "
+    "tuple[UrbanCellAllocation, ...], district_populations: tuple[UrbanDistrictPopulation, "
+    "...], city_population: decimal.Decimal | None, allocated_population: decimal.Decimal | "
+    "None, residual_population: decimal.Decimal | None, excluded_population: decimal.Decimal "
+    "| None, modes: tuple[UrbanDistrictModeResult, ...], evidence_refs: tuple[str, ...]) -> "
+    "None",
+    "analyze_urban_districts": "(urban_analysis: UrbanAnalysis, original_cells: "
+    "collections.abc.Sequence[UrbanOriginalCell], district_catalog: "
+    "collections.abc.Sequence[UrbanDistrict], population_shares: "
+    "collections.abc.Sequence[UrbanDistrictShare], coverage: UrbanDistrictCoverage) -> "
+    "UrbanDistrictAnalysis",
+    "UrbanDistrictInputs": "(original_cells: tuple[UrbanOriginalCell, ...], district_catalog: tuple[UrbanDistrict, "
+    "...], population_shares: tuple[UrbanDistrictShare, ...], coverage: "
+    "UrbanDistrictCoverage) -> None",
+    "prepare_urban_district_inputs": "(urban_analysis: UrbanAnalysis, accepted: collections.abc.Mapping[str, typing.Any], "
+    "supplement: collections.abc.Mapping[str, typing.Any], *, catalog_version: str, "
+    "distribution_version: str, complete_district_ids: collections.abc.Sequence[str], "
+    "original_cells_complete: bool, evidence_refs: collections.abc.Sequence[str], precision: "
+    "UrbanSharePrecision | None = None) -> UrbanDistrictInputs",
 }
 
 CANONICAL_MODULES = {
@@ -394,26 +449,47 @@ CANONICAL_MODULES = {
         "analyze_urban_districts",
     ),
     "a2_engine.urban.district_inputs": ("UrbanDistrictInputs", "prepare_urban_district_inputs"),
+    "a2_engine.routing.timetable_models": (
+        "TimetableEvent",
+        "TimetableRun",
+        "TimetableFootpath",
+        "TimetableTransfer",
+        "TimetableScope",
+        "Timetable",
+        "TimetableStep",
+        "TimetablePath",
+        "TimetableSearchResult",
+    ),
+    "a2_engine.routing.timetable": ("solve_timetable",),
+    "a2_engine.urban.transit": (
+        "UrbanTransitNetwork",
+        "UrbanTransitResult",
+        "search_urban_transit",
+    ),
+    "a2_engine.urban.last_return": (
+        "UrbanReturnJourney",
+        "UrbanLastReturnResult",
+        "search_urban_last_return",
+    ),
 }
 
 NEW_PUBLIC_NAMES = {
-    "UrbanDistrictInputs",
-    "prepare_urban_district_inputs",
-    "UrbanDistrictPopulation",
-    "UrbanCellAllocation",
-    "UrbanDistrictCoverage",
-    "UrbanDistrictAnalysis",
-    "UrbanDistrictValue",
-    "UrbanDistrictModeResult",
-    "UrbanSharePrecision",
-    "UrbanDistrictRanking",
-    "UrbanDistrictShare",
-    "UrbanDistrict",
-    "UrbanDistrictComparison",
-    "analyze_urban_districts",
-    "UrbanDistrictMetric",
-    "UrbanOriginalCell",
-    "UrbanDistrictRank",
+    "TimetableStep",
+    "TimetablePath",
+    "solve_timetable",
+    "TimetableRun",
+    "UrbanTransitNetwork",
+    "search_urban_last_return",
+    "TimetableTransfer",
+    "UrbanTransitResult",
+    "UrbanLastReturnResult",
+    "search_urban_transit",
+    "TimetableFootpath",
+    "Timetable",
+    "TimetableSearchResult",
+    "TimetableScope",
+    "UrbanReturnJourney",
+    "TimetableEvent",
 }
 
 
@@ -439,7 +515,7 @@ def test_root_and_domain_exports_are_the_same_canonical_objects() -> None:
             assert canonical.__module__ == module_name
             if is_dataclass(canonical):
                 assert getattr(canonical, "__dataclass_params__").frozen
-    for domain in ("urban", "intercity", "freight", "pipeline", "comparison"):
+    for domain in ("urban", "intercity", "freight", "pipeline", "comparison", "routing"):
         package = importlib.import_module(f"a2_engine.{domain}")
         for name in package.__all__:
             assert getattr(package, name) is getattr(a2_engine, name)
@@ -448,6 +524,7 @@ def test_root_and_domain_exports_are_the_same_canonical_objects() -> None:
 def test_fresh_import_orders_and_all_default_loaders_from_another_cwd(tmp_path: Path) -> None:
     modules = [
         "a2_engine.urban",
+        "a2_engine.routing",
         "a2_engine.intercity",
         "a2_engine.freight",
         "a2_engine.pipeline",
@@ -532,7 +609,10 @@ def test_internal_imports_follow_shared_dependency_direction() -> None:
                 assert node.module != "a2_engine", path
                 if node.module is not None and node.module.startswith("a2_engine."):
                     domain = path.relative_to(package).parts[0]
-                    assert node.module.startswith(("a2_engine.shared.", f"a2_engine.{domain}.")), (
+                    allowed: tuple[str, ...] = ("a2_engine.shared.", f"a2_engine.{domain}.")
+                    if domain == "urban":
+                        allowed += ("a2_engine.routing.",)
+                    assert node.module.startswith(allowed), (
                         path,
                         node.module,
                     )
@@ -540,8 +620,12 @@ def test_internal_imports_follow_shared_dependency_direction() -> None:
                 domain = path.relative_to(package).parts[0]
                 for alias in node.names:
                     if alias.name.startswith("a2_engine"):
-                        assert alias.name.startswith(
-                            ("a2_engine.shared.", f"a2_engine.{domain}.")
-                        ), path
+                        import_allowed: tuple[str, ...] = (
+                            "a2_engine.shared.",
+                            f"a2_engine.{domain}.",
+                        )
+                        if domain == "urban":
+                            import_allowed += ("a2_engine.routing.",)
+                        assert alias.name.startswith(import_allowed), path
     for domain in ("urban", "intercity", "freight", "pipeline", "comparison", "shared"):
         assert not (package / f"{domain}.py").exists()

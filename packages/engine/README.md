@@ -2,16 +2,17 @@
 
 Чистые расчёты ML1 по `docs/FORMULAS.md` и `config/product.json`: городские
 пассажирские индексы, одна межгородская пассажирская цепочка, городские/межгородские
-грузы, загрузка трубопровода, сравнение готовых результатов и городской τ по OD-матрицам.
+грузы, загрузка трубопровода, сравнение готовых результатов, городской τ, районные
+агрегаты и поиск прямой поездки/последнего возврата по нормализованному расписанию.
 Времена, население и подтверждения входных условий поступают от вызывающего слоя.
-Маршрутизации, сетки, построения реальных OD-матриц, эталона A, изменения расписаний,
+Загрузки внешних расписаний, сетки, построения реальных OD-матриц, эталона A, изменения расписаний,
 сценарного движка, HTTP и LLM здесь нет.
 
 ## Структура и зависимости
 
 ```text
 a2_engine/
-  __init__.py                 # прежние 37 экспортов + городской анализ по кандидатам
+  __init__.py                 # 120 явных публичных экспортов
   shared/
     __init__.py
     config.py                 # конфигурации, загрузчики и их проверки
@@ -31,6 +32,11 @@ a2_engine/
     district_models.py        # исходные ячейки, районы, доли и покрытие
     district_inputs.py        # сверка узкого дополнения с canonical
     districts.py              # районные индексы, QA и сравнение
+    transit.py                # городской поиск по нормализованному расписанию
+    last_return.py            # позднейший выход от выбранного объекта
+  routing/
+    timetable_models.py       # исполнения, события, footpaths, transfers, scope
+    timetable.py              # независимое событийное ядро с бюджетом ожидания
   intercity/
     __init__.py
     passenger.py              # пассажирская цепочка, эталон, автомобиль
@@ -96,9 +102,10 @@ a2_engine.config, a2_engine.results и a2_engine.passenger: эти пути ис
 Тест копирует пакет вне checkout и проверяет все три загрузчика с таким путём;
 отдельные процессы из другого cwd проверяют загрузку по умолчанию.
 
-Городской анализ добавил 23 экспорта; расчёт τ добавил ещё 12, пешая интеграция — 15, районы — 17 (всего 104).
-Зафиксированы все 87 прежних сигнатур; расширение destination прошлого этапа описано ниже. Предметные реализации могут импортировать свои внутренние
-модули и shared; shared по-прежнему не зависит от предметных пакетов.
+Городской анализ добавил 23 экспорта; расчёт τ добавил ещё 12, пешая интеграция — 15, районы — 17, расписание/возврат — 16 (всего 120).
+Зафиксированы все 104 прежних сигнатуры; расширение destination прошлого этапа описано ниже. Предметные реализации могут импортировать свои внутренние
+модули и shared; urban также использует независимый routing. Shared и routing не
+зависят от предметных пакетов.
 
 ## Городские пассажирские вызовы: первый этап
 
@@ -714,8 +721,9 @@ available JourneyResult публиковать только допустимые
   перемещение точки не меняет её population, дубли входов не увеличивают count,
   обслуживающий город объект за границей не удаляется автоматически.
 
-HTTP-исполнение маршрутов, построение реальных OD-матриц, последний
-обратный рейс, эталон A и graph overlay сценариев остаются следующими этапами.
+HTTP-исполнение маршрутов, построение реальных OD-матриц, эталон A и graph overlay
+сценариев остаются следующими этапами. Поиск последнего возврата по нормализованному
+расписанию реализован отдельным вычислительным вызовом ниже.
 
 ## Точный городской τ по принятым OD-матрицам
 
@@ -1366,6 +1374,247 @@ excluded-население каждого района дополнительн
   excluded-потерю либо сохранять неизвестность затронутых районов. Приёмка:
   контрольные суммы выше, canonical/supplement одной версии, partial каталоги не full.
 
+## Точный поиск по событиям и последний городской возврат
+
+Самостоятельный расчёт по **нормализованным** расписаниям: routing/timetable_models.py
+и routing/timetable.py не зависят от urban, HTTP, GTFS loader или OTP. urban/transit.py
+проверяет городской контекст и создаёт прежние UrbanCandidate; urban/last_return.py
+возвращает отдельную обратную цепочку. В journeys.py общие строгие проверки вынесены
+в summarize_urban_legs; прежний validate_urban_journey и все его проверки сохранены.
+104 прежние публичные сигнатуры зафиксированы; добавлено 16 экспортов, всего 120.
+Архитектурный тест разрешает urban→routing, но запрещает routing→urban.
+
+```python
+search_urban_transit(
+    network: UrbanTransitNetwork, point: UrbanPoint, destination: UrbanDestination, *,
+    category: str, rules: UrbanJourneyRules,
+    passenger_mode: Literal["public_transport", "walk"] = "public_transport",
+    resource_limit: int | None = None,
+) -> UrbanTransitResult
+
+search_urban_last_return(
+    network: UrbanTransitNetwork, point: UrbanPoint, selected_destination: UrbanDestination, *,
+    local_day: date, rules: UrbanJourneyRules, lower_leave_at: datetime | None = None,
+    passenger_mode: Literal["public_transport", "walk"] = "public_transport",
+    resource_limit: int | None = None,
+) -> UrbanLastReturnResult
+```
+
+В прямом поиске t0 — network.context.requested_departure_at; оно не переносится
+к отправлению автобуса. rules загружается load_urban_journey_rules из product.json:
+сейчас максимальное **суммарное ожидание** 14400с. Полное время и движение этим
+числом не ограничены. Public_transport включает подтверждённые чисто пешие пути.
+Производные H/τ/индексы/count/районы не пересчитываются новым алгоритмом.
+
+### Нормализованные входы и идентичность
+
+| Тип | Содержание |
+| --- | --- |
+| TimetableEvent | sequence, node_id, aware arrival_at/departure_at, pickup/dropoff, evidence_refs |
+| TimetableRun | snapshot_id, source_id, trip_id конкретного исполнения, service_date, IANA timezone, transport_type, events, active (bool/None), calendar_evidence_refs |
+| TimetableFootpath | path_id, направленные from/to_node_id, исходные seconds либо None, confirmed, evidence_refs |
+| TimetableTransfer | rule_id, направленные from/to_node_id, minimum_seconds, allowed (bool/None), evidence_refs, optional from_run_id/to_run_id; semantics=alight_to_departure |
+| TimetableScope | snapshot/graph/calendar/timetable/footpath/transfer versions, IANA timezone, aware start_at/end_at, node_ids, отдельные schedule/calendar/footpaths/transfers/continuations completeness, evidence_refs, limitations |
+| Timetable | scope, runs, footpaths, transfers; неизменяемые и стабильно упорядоченные записи |
+| UrbanTransitNetwork | исходный UrbanContext, Timetable, evidence_refs; snapshot/graph/calendar должны совпасть |
+
+run_id — устойчивый SHA256 комбинации snapshot/source/trip identity/service date,
+не один template trip_id. Два исполнения шаблона в разные даты не склеиваются.
+Для частотного источника будущий адаптер обязан дать отдельную trip identity каждому
+конкретному старту. Event идентифицируется через run_id и sequence. Sequence может
+иметь пропуски; повторный node_id разрешён. Конфликтующие IDs и обратные интервалы
+отклоняются. Все исходные event timestamps явно переданы; внутри нормализуются в UTC.
+
+Каждое service date уже должно учитывать исключения. active=False с evidence
+исключает исполнение; None или отсутствие календарных доказательств — неизвестность,
+а не воскресное/праздничное расписание по догадке. События прошлых сервисных суток
+после полуночи не удаляются. Фильтровать такие исполнения только по service_date нельзя.
+
+Преобразование service-day seconds в этом этапе **не реализовано**. Будущий GTFS
+адаптер должен следовать [официальной семантике времени](https://gtfs.org/documentation/schedule/reference/#field-types):
+сервисный отсчёт определяется через полдень минус 12 часов, значения могут превышать
+24 часа, а исключения календаря применяются явно. Нельзя использовать `% 86400`
+или безусловно прибавлять секунды к местной полуночи в DST-день. Engine принимает
+уже развёрнутые aware instants, не угадывает fold и не восстанавливает пропущенные события.
+
+Footpath — подтверждённое физическое движение с известным временем, не минимальный
+интервал пересадки. Обратная связь передаётся отдельно. Положительное время,
+исчезающее в timedelta, отклоняется; допустимые дробные seconds нормализуются только
+на границе timestamps. TimetableStep.duration_seconds берётся из UTC-интервала,
+original_seconds и footpath_id сохраняют происхождение. Геометрия не синтезируется.
+
+Физические endpoints, отличные от принятых access nodes, должны быть граничными
+узлами пеших подходов/выходов, а не остановками рейса. Исходящий физический подход
+связывает origin с его access, конечный участок — destination access с physical
+endpoint. Противоречащие связи отклоняются PHYSICAL_ACCESS_LINK_MISMATCH; новый
+адаптер не обходит прежние проверки подходов UrbanPoint/UrbanDestination.
+
+### Состояние поиска и корректность отсечения
+
+solve_timetable — событийный label search с очередью по абсолютному времени.
+Off-vehicle состояние: node, время, накопленное ожидание в целых микросекундах и
+последнее событие высадки (run/sequence, следовательно его время и транспорт).
+On-vehicle состояние: конкретный run и индекс события. В пути сохраняются реальные
+steps, исходные walk seconds, первые посадки и source transport types.
+
+Две off-vehicle метки сравниваются **только** при одинаковом узле и событии высадки;
+начальные метки также отделены от пересадочных. On-vehicle сравнение — лишь внутри
+одного исполнения и события. Это обеспечивает одинаковые дальнейшие возможности
+и якорь минимального интервала. Достаточное доминирование:
+
+`t1 <= t2 AND w1 + (t2 - t1) <= w2`.
+
+Первая метка может воспроизвести возможности второй, оплатив дополнительное ожидание;
+при time-independent walk она придёт к следующему событию не позже, с не большим
+ожиданием. Минимальные пересадки имеют тот же якорь высадки. Внутри одного события
+рейса время совпадает, достаточно меньшего ожидания. Обычное «раньше и меньше уже
+ждал» не используется. Контрпример A/B даёт B: 5+235=240 минут; A требует 245.
+Отдельно проверен такой же эффект для двух пеших подходов к одному совместимому состоянию.
+
+Посадка проверяет pickup, высадка — dropoff. Продолжение того же исполнения идёт
+по следующему sequence, включает промежуточную стоянку в ride и не требует новых
+pickup/dropoff. Возвращение в тот же node не означает конец/начало другого рейса.
+transfers считает фактические смены run между посадками, а не ride legs.
+Bus/tram/metro/trolleybus отображаются в UrbanLeg.mode=public_transport; rail/water
+сохраняют поддерживаемый mode. Исходный transport_type остаётся в TimetableRun/Step.
+Расписанные времена автобуса не умножаются повторно на дорожный traffic factor.
+
+При пересадке minimum_seconds — минимальный интервал **от высадки до отправления**,
+уже включающий пеший переход. После фактического walk оставшееся время до отправления
+считается wait_transfer; минимум не прибавляется ещё раз. Даже при одном node нужны
+явные применимые правила (минимум может быть 0). Нет правила/времени/доказательств —
+неизвестная связь; allowed=False с evidence — запрет. Из применимых правил выбирается
+наиболее специфичное по from/to run; равная конфликтующая специфичность — ошибка.
+
+Область конечна: [scope.start_at, scope.end_at], прибытие на end_at разрешено.
+Никакого ограничения двух пересадок, первых N рейсов или четырёх часов всей поездки
+нет. Нулевые циклы отсекаются эквивалентными метками. Положительные реальные пешие
+циклы не заменяются фиктивным ожиданием и не удаляются небезопасным правилом;
+при микросекундном времени и конечном горизонте множество состояний конечно, но
+может быть большим. resource_limit — явный общий лимит расширений, по умолчанию None.
+При его достижении RESOURCE_LIMIT_REACHED, interrupted=True и unknown; best-known
+сохраняется. Первая извлечённая допустимая цель доказывает earliest arrival в области,
+так как все временные переходы неотрицательны. Геометрические эвристики отсутствуют.
+
+### Последний выход от выбранного объекта
+
+Объект передаётся конкретным UrbanDestination из прямого результата/анализа;
+другой объект не выбирается. Оптимизируется leave_at, не время автобуса.
+Для каждого pickup события выбранного **местного календарного** дня вычисляется
+кратчайший подтверждённый пеший подход от physical объекта. Он даёт позднейший
+выход `first_departure - walk_duration` без первоначального ожидания. Любой более
+длинный подход к тому же событию выйдет раньше и не улучшит оставшийся бюджет.
+Для этой первой посадки общий solver проверяет все продолжения с требованием хотя
+бы одной посадки. Перебираются все такие события, затем выбирается максимальный выход;
+при равенстве — более раннее прибытие и стабильный порядок.
+
+Пересадки/прибытие после полуночи разрешены. Первая посадка в 00:05 следующего дня
+не подходит, даже если service_date предыдущая и исходное расписание писало 24:05.
+День проверяется через UTC instant → scope.timezone. Границы дня проверяются без
+выбора неоднозначной/несуществующей полуночи по умолчанию. Полнота требует покрытия
+всего первого дня и необходимых продолжений; обрезка в 00:00/рейс за end_at оставляет unknown.
+
+lower_leave_at — явная aware нижняя граница, дополнительно действует start_at области.
+Нет скрытых часов работы, длительности визита и требования прибыть домой до полуночи.
+Pure walk не имеет последнего рейса: для walk mode not_applicable; в public_transport
+наличие пешей альтернативы не отменяет поиск рейсов. Если транспортный возврат доказанно
+отсутствует, но пеший путь есть, WALK_ONLY_RETURN/not_applicable. Если нет обоих —
+confirmed_unreachable с proven=True и причиной NO_FEASIBLE_RETURN_WITHIN_SCOPE;
+подтверждённое время при этом отсутствует. Неполнота не позволяет сделать такой вывод.
+
+Возврат хранится в UrbanReturnJourney, не в обратном UrbanCandidate. Legs проходят
+те же строгие проверки, но сохраняют свои physical object→point boundaries.
+Неизвестный возврат никак не меняет уже рассчитанный дневной H-индекс.
+
+### Результаты и доказательства полноты
+
+TimetableSearchResult сохраняет timetable/scope, endpoints/t0, state,
+best_known TimetablePath, proven, reasons/evidence, expanded_states/interrupted,
+точные max_wait_seconds/allow_transit/require_transit/first_boarding/resource_limit.
+Path содержит шаги и посадки; пустой список рейсов сам по себе не подтверждает отсутствие.
+Полнота — внешняя принятая аттестация именно этой области, версии, календаря, пеших
+связей и пересадок. Неизвестные записи дополнительно снимают доказательство даже при
+ошибочно выставленном общем флаге. Допускается консервативный unknown от непроверенных
+входов всей области; он не превращается в no-route.
+
+UrbanTransitResult.best_known — проверенный UrbanJourneyTiming (или None), .seconds
+available только при доказанном минимуме; при unknown найденный кандидат сохраняется.
+.search_complete применим также к подтверждённому отсутствию **в принятой области**,
+не утверждает отсутствие связи на всех датах/за её пределами. Ограничения области
+должны входить в согласованные search parameters и coverage. Нельзя вручную объявить
+укороченную выгрузку полным городским поиском. Полнота институционального каталога
+отдельна: UrbanCoverage можно сделать search_complete только после обработки всех
+требуемых объектов категории с доказанными результатами. Одной пары недостаточно.
+
+UrbanLastReturnResult сохраняет selected point/destination, local_day/timezone,
+network/context, исходные rules/lower_leave_at/resource_limit, status/state/proven,
+best_known, reasons/evidence и ресурсную
+диагностику. leave_at/first_departure_at/arrival_at доступны напрямую только при
+status=available. При unknown времена найденной цепочки находятся исключительно
+в best_known. Цепочка содержит totals ожидания/ходьбы/движения и source_path с версиями.
+
+### Самостоятельный пример: только синтетическое расписание
+
+```bash
+PYTHONPATH=packages/engine/src uv run --frozen python packages/engine/examples/synthetic_transit.py
+```
+
+Исходные данные: O→S пешком 5мин, автобус S 08:12→T 08:27, выход T→D 5мин,
+начало 08:00. Возвраты: D→A 20мин, A 23:55→G 00:15; D→B 5мин,
+B 23:50→G 00:10; G→O 5мин. Все календарные/coverage evidence в примере тестовые.
+
+<!-- executable-example -->
+```python
+import runpy
+from zoneinfo import ZoneInfo
+
+demo = runpy.run_path("packages/engine/examples/synthetic_transit.py")
+outbound, analysis, last = demo["run_demo"]()
+assert outbound.seconds.value == 1920
+assert outbound.best_known is not None
+assert (outbound.best_known.walking_seconds, outbound.best_known.riding_seconds,
+        outbound.best_known.total_wait_seconds) == (600, 900, 420)
+assert outbound.best_known.waiting_share.value == 0.21875
+assert analysis.modes[0].index.value is not None
+assert analysis.modes[0].points[0].categories[0].count.reason_code == "TAU_UNAVAILABLE"
+zone = ZoneInfo("Europe/Kaliningrad")
+assert last.leave_at is not None and last.first_departure_at is not None and last.arrival_at is not None
+assert last.leave_at.astimezone(zone).isoformat() == "2026-11-08T23:45:00+02:00"
+assert last.first_departure_at.astimezone(zone).isoformat() == "2026-11-08T23:50:00+02:00"
+assert last.arrival_at.astimezone(zone).isoformat() == "2026-11-09T00:15:00+02:00"
+```
+
+При H=1800с индекс примера 47.74208019552083. Пешие 40мин проигрывают прямой цепочке,
+28мин выигрывают. Это не настоящий расчёт Калининграда. Корректность отсечений
+дополнительно проверена независимым DFS без доминирования на 80 маленьких конечных
+расписаниях; это тестовый oracle, не production search.
+
+### Следующая общая интеграция
+
+- **ML2 / normalizer**: источник с явным snapshot, конкретные исполнения и активные
+  даты после исключений, IANA timezone и aware stop events с pickup/dropoff/sequence,
+  mode, evidence, направленные реальные подходы/выходы/переходы с временами. Не
+  восстанавливать отсутствующие события и не переносить holiday на weekday шаблон.
+  Подготовить scope с графом, календарём, footpath/transfer/timetable versions,
+  границами и доказательством полноты, включая продолжения после полуночи.
+- **BACKEND, packages/contracts/src/a2_contracts/v2/**: ScheduledService сначала
+  развернуть в отдельный TimetableRun каждой активной даты; исходный service_id
+  сохранить как source provenance. stop sequence переносится без перенумерации.
+  Canonical Transfer.seconds нельзя автоматически назвать одновременно walk time
+  и минимумом: нужны отдельный TimetableFootpath и явный alight_to_departure rule
+  с допустимостью, направлением и optional run specificity. Городской контекст
+  связывается UrbanTransitNetwork без подмены graph/snapshot/config/traffic versions.
+- **BACKEND result adapter**: прямой best-known candidate передаётся в прежний анализ
+  с отдельной route/catalog coverage; unknown minimum не становится доступным индексом.
+  Canonical LastReturn сейчас не хранит best-known и полноту/область при unknown:
+  нужны отдельные best_known_journey_id, proven/completeness/scope или сохранённый
+  внутренний артефакт. Нельзя помещать best-known времена в поля подтверждённого
+  LastReturn. Ни fake dependency jobs, ни HTTP в engine не добавлены.
+- **Worker/DEVOPS**: передавать явный resource_limit и сохранять interrupted как
+  частичный результат, не no-route. GTFS ingest, HTTP, OTP, общее подключение DTO,
+  реальные расписания и прогоны остаются отдельной интеграцией после вычислительного
+  этапа. Манифесты/lock/глобальная конфигурация этим изменением не затрагиваются.
+
 ## Воспроизводимые проверки
 
 Из **корня этого checkout**, Python 3.12, закреплённый uv 0.12.17:
@@ -1389,11 +1638,11 @@ git diff --check
 только в tests; реальные данные/рейтинги не создаются.
 
 Проверки переноса находятся в tests/test_public_api.py и входят в общий запуск
-pytest: сохранение 87 прежних экспортов/сигнатур и совместимости вызовов, тождественность каноническим объектам,
+pytest: сохранение 104 прежних экспортов/сигнатур и совместимости вызовов, тождественность каноническим объектам,
 frozen dataclass, импорты предметных пакетов в разных порядках, все три загрузчика
 из другого cwd, явный путь вне checkout, прежние ошибки файла/JSON и направление
-зависимостей через shared и собственные модули. Девять рабочих блоков README
-(все восемь прежних и новый районный пример) с меткой
+зависимостей через shared и собственные модули. Десять рабочих блоков README
+(все девять прежних и новый transit/return пример) с меткой
 executable-example можно выполнить отдельно из корня checkout:
 
 ```bash
@@ -1403,7 +1652,7 @@ import re
 
 text = Path("packages/engine/README.md").read_text()
 examples = re.findall(r"<!-- executable-example -->\s*```python\n(.*?)```", text, re.S)
-assert len(examples) == 9
+assert len(examples) == 10
 for number, source in enumerate(examples, 1):
     exec(compile(source, f"README example {number}", "exec"), {})
     print(f"README example {number}: PASS")
