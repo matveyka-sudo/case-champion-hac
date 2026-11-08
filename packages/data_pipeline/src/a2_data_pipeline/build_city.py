@@ -26,7 +26,7 @@ import pyarrow.parquet as pq  # type: ignore[import-untyped]
 import shapely  # type: ignore[import-untyped]
 from pydantic import BaseModel
 
-from . import admnvrsk, freight, klgd, obrnadzor, trmo
+from . import admnvrsk, freight, klgd, mgfoms, obrnadzor, trmo
 from . import categories as cat
 from .access import Access, WalkNetwork, load_road_network, load_walk_network, snap
 from .addresses import AddressIndex, parse_address
@@ -73,6 +73,11 @@ from .store import publish_bundle
 PARSER_VERSION = "ml2-urban-0.2.0"
 OURAIRPORTS_DATASET = "ourairports.airports-20261108"
 SEARCH_BUFFER_M = 10_000
+SCHOOL_BUILDING_RULES = "school-building-link-v1"
+SCHOOL_CAMPUS_M = 5_000.0
+SCHOOL_NAME_NUMBER = re.compile(
+    r"(?:школ|лице|гимнази|образовани)[а-яё]*\s*(?:№|N)\s*(\d{1,4})(?!\d)", re.I
+)
 AIRPORT_BUFFER_M = 60_000
 ACCESS_WARN_M = 500.0
 REGISTRY_WARN_M = 150.0
@@ -351,6 +356,8 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
             "нет в OSM, не размещены; частные и ведомственные не входят",
             admnvrsk.SOURCE_ID: "Городские поликлиники по перечню учреждений здравоохранения на "
             "сайте администрации (ОПФ ГБУЗ … МЗ КК); головные адреса, не все отделения",
+            mgfoms.SOURCE_ID: "Поликлиники с прикреплением, подведомственные ДЗМ, по справочнику "
+            "МГФОМС с координатами фонда; ведомственные и частные не входят",
         }[medical[2].source_id]
         for category in ("adult_polyclinic", "child_polyclinic"):
             registry_coverage[category] = (medical_reason, "medical_registry")
@@ -360,7 +367,18 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
             "названиям в OSM; частные, ведомственные и неаккредитованные не входят",
             "higher_education_registry",
         )
-        if roster is None:
+        if roster is None and config.school_buildings_by_name:
+            registry_coverage["school"] = (
+                "Государственные школы по реестру аккредитации: адрес организации и корпуса OSM с "
+                "номером этой школы в названии (до 5 км); корпуса без номера не подтверждены",
+                "higher_education_registry",
+            )
+            registry_coverage["kindergarten"] = (
+                "Только дошкольные отделения государственных школ, названные в OSM по номеру "
+                "школы; отдельные детсады не подтверждены",
+                "higher_education_registry",
+            )
+        elif roster is None:
             registry_coverage["school"] = (
                 "Государственные и муниципальные школы по реестру аккредитации; только адрес "
                 "организации, другие корпуса не подтверждены",
@@ -749,8 +767,9 @@ def _destination_drafts(
         candidates = rest + still_unmatched
         rule_counts["medical_registry"] = medical_stats
     if education is not None and roster is None:
-        school_candidates = [c for c in candidates if c.category == "school"]
-        rest = [c for c in candidates if c.category != "school"]
+        linked = {"school", "kindergarten"} if config.school_buildings_by_name else {"school"}
+        school_candidates = [c for c in candidates if c.category in linked]
+        rest = [c for c in candidates if c.category not in linked]
         school_drafts, school_ownership, school_unmatched, school_stats = _accredited_schools(
             config, education, school_candidates, address_index(), city_utm, crs, book, checks
         )
@@ -971,18 +990,31 @@ def _medical_drafts(
     book: EvidenceBook,
     checks: list[dict[str, Any]],
 ) -> tuple[list[DestinationDraft], list[CategoryOwnership], list[cat.Candidate], dict[str, Any]]:
-    """City polyclinics from an official register, placed at their OSM address.
+    """City polyclinics from an official register.
 
-    Objects of one category that land on the same OSM address object are one
-    destination. Registry addresses of the city that OSM does not hold are
-    reported in QA and not placed: no coordinates are invented.
+    A register with coordinates (MGFOMS) places the object at its own point. A
+    register without them is placed at the OSM address: objects of one category
+    that land on the same OSM address object are one destination, and city
+    addresses OSM does not hold are reported in QA and not placed — no
+    coordinates are invented. Register points beyond the search area are dropped.
     """
 
     objects, registry_stats, manifest = medical
     stats = dict(registry_stats)
     grouped: dict[tuple[str, str], list[tuple[RegistryObject, Any]]] = {}
     unlocated: list[dict[str, str]] = []
+    beyond = 0
     for item in objects:
+        if item.lon is not None and item.lat is not None:
+            point = shapely.Point(item.lon, item.lat)
+            if city_utm.distance(to_crs(point, "EPSG:4326", crs)) > SEARCH_BUFFER_M:
+                beyond += 1
+                continue
+            own = RegistryPoint(point=point)
+            grouped.setdefault((item.category, f"registry:{item.object_id}"), []).append(
+                (item, own)
+            )
+            continue
         hit = index.locate(item.address)
         if hit is None:
             parsed = parse_address(item.address)
@@ -1022,8 +1054,9 @@ def _medical_drafts(
         ]
         osm_refs = sorted({ref for c in attached[item.object_id] for ref in c.osm_refs})
         destination_id = f"{config.city_id}-{item.object_id}"
-        if hit.method != "exact":
+        if hit.method not in {"exact", "registry"}:
             approximate.append({"destination_id": destination_id, "address": item.address})
+        address_refs = [book.osm(hit.osm_ref)] if hit.osm_ref else []
         drafts.append(
             DestinationDraft(
                 destination_id=destination_id,
@@ -1034,8 +1067,8 @@ def _medical_drafts(
                 inside_city_boundary=city_utm.distance(point_utm) == 0,
                 osm_ref=osm_refs[0] if osm_refs else hit.osm_ref,
                 reasons=[],
-                evidence_ids=[*records, book.osm(hit.osm_ref), *(book.osm(r) for r in osm_refs)],
-                location_source="registry_address",
+                evidence_ids=[*records, *address_refs, *(book.osm(r) for r in osm_refs)],
+                location_source="registry" if hit.method == "registry" else "registry_address",
                 ownership_verified=True,
             )
         )
@@ -1071,6 +1104,7 @@ def _medical_drafts(
             for c in ("adult_polyclinic", "child_polyclinic")
         },
         "city_addresses_not_in_osm": len(unlocated),
+        "registry_points_beyond_search_area": beyond,
         "osm_candidates_attached": sum(len(v) for v in attached.values()),
         "osm_candidates_unmatched": len(unmatched),
     }
@@ -1088,6 +1122,17 @@ class RegistryObject:
     name: str
     record_id: str
     content_hash: str
+    lon: float | None = None  # the register's own coordinate, when it has one
+    lat: float | None = None
+
+
+@dataclass(frozen=True)
+class RegistryPoint:
+    """Location from the register itself (no OSM address object)."""
+
+    point: shapely.Point
+    osm_ref: str | None = None
+    method: str = "registry"
 
 
 def _medical_objects(manifest: DatasetManifest) -> tuple[list[RegistryObject], dict[str, Any]]:
@@ -1119,6 +1164,22 @@ def _medical_objects(manifest: DatasetManifest) -> tuple[list[RegistryObject], d
                 content_hash=r.record_hash(),
             )
             for r in rows
+        ], stats
+    if manifest.source_id == mgfoms.SOURCE_ID:
+        clinics, stats = mgfoms.load(raw)
+        return [
+            RegistryObject(
+                object_id=c.object_id,
+                category=c.category,
+                ownership=c.ownership,
+                address=c.address,
+                name=c.name,
+                record_id=c.record_id,
+                content_hash=c.record_hash(),
+                lon=c.lon,
+                lat=c.lat,
+            )
+            for c in clinics
         ], stats
     raise ValueError(f"no polyclinic reader for source {manifest.source_id}")
 
@@ -1213,6 +1274,11 @@ def _accredited_schools(
                 evidence_ids=[record],
             )
         )
+    if config.school_buildings_by_name:
+        unmatched, building_stats = _school_buildings(
+            config, schools, entries, unmatched, manifest, city_utm, crs, book, drafts, ownership
+        )
+        stats["school_buildings"] = building_stats
     _check(
         checks,
         "accredited_schools_located",
@@ -1227,6 +1293,113 @@ def _accredited_schools(
         "unlocated": len(unlocated),
     }
     return drafts, ownership, unmatched, stats
+
+
+def _school_number(*names: str | None) -> str | None:
+    """The number of a school named by type: «Школа № 1514», «Лицей № 1535» (not «Детский сад № 5»)."""
+
+    numbers = {str(int(n)) for name in names if name for n in SCHOOL_NAME_NUMBER.findall(name)}
+    return numbers.pop() if len(numbers) == 1 else None
+
+
+def _school_buildings(
+    config: CityConfig,
+    schools: list[obrnadzor.EduOrg],
+    entries: list[tuple[obrnadzor.EduOrg, Any]],
+    candidates: list[cat.Candidate],
+    manifest: DatasetManifest,
+    city_utm: shapely.Geometry,
+    crs: str,
+    book: EvidenceBook,
+    drafts: list[DestinationDraft],
+    ownership: list[CategoryOwnership],
+) -> tuple[list[cat.Candidate], dict[str, Any]]:
+    """Other buildings of school complexes (rule ``school-building-link-v1``).
+
+    An OSM school or kindergarten whose name gives one school number by type
+    («Школа № 1514, корпус 3», «Школа № 1514, дошкольное отделение») is a building
+    of the accredited public school with that number, when the number belongs to
+    exactly one registry school of the city and the building lies within 5 km of
+    its registry address. «Детский сад № 1234» is never linked: old kindergarten
+    numbers repeat school numbers. Location: the OSM object.
+    """
+
+    counts: dict[str, int] = {}
+    for org in schools:
+        number = _school_number(org.short_name, org.full_name)
+        if number:
+            counts[number] = counts.get(number, 0) + 1
+    by_number: dict[str, tuple[obrnadzor.EduOrg, shapely.Point]] = {}
+    for org, hit in entries:
+        number = _school_number(org.short_name, org.full_name)
+        if number and counts.get(number) == 1:
+            by_number[number] = (org, to_crs(hit.point, "EPSG:4326", crs))
+    rest: list[cat.Candidate] = []
+    linked: dict[str, int] = {}
+    too_far = 0
+    for candidate in sorted(candidates, key=lambda c: c.osm_refs[0]):
+        tags = candidate.tags
+        number = _school_number(
+            candidate.name, tags.get("name"), tags.get("official_name"), tags.get("short_name")
+        )
+        if number is None or number not in by_number:
+            rest.append(candidate)
+            continue
+        org, registry_point = by_number[number]
+        point_utm = to_crs(candidate.point, "EPSG:4326", crs)
+        if point_utm.distance(registry_point) > SCHOOL_CAMPUS_M:
+            too_far += 1
+            rest.append(candidate)
+            continue
+        record = book.add(
+            Evidence(
+                evidence_id=f"{obrnadzor.SOURCE_ID}:{org.org_id.lower()}",
+                source_id=obrnadzor.SOURCE_ID,
+                dataset_id=manifest.dataset_id,
+                record_id=org.org_id,
+                url=obrnadzor.REGISTRY_PAGE,
+                fetched_at=manifest.retrieved_at,
+                content_hash=obrnadzor.record_hash(org),
+                verification_state="verified",
+            )
+        )
+        destination_id = (
+            f"{config.city_id}-{candidate.category}-{candidate.osm_refs[0].replace('/', '-')}"
+        )
+        drafts.append(
+            DestinationDraft(
+                destination_id=destination_id,
+                category=candidate.category,
+                name=candidate.name,
+                utm=point_utm,
+                lonlat=candidate.point,
+                inside_city_boundary=city_utm.distance(point_utm) == 0,
+                osm_ref=candidate.osm_refs[0],
+                reasons=[],
+                evidence_ids=[record, *(book.osm(ref) for ref in candidate.osm_refs)],
+                location_source="osm",
+                ownership_verified=True,
+            )
+        )
+        ownership.append(
+            CategoryOwnership(
+                destination_id=destination_id,
+                category=candidate.category,  # type: ignore[arg-type]
+                ownership=obrnadzor.ownership(org.full_name),  # type: ignore[arg-type]
+                basis="registry",
+                verification_state="verified",
+                evidence_ids=[record],
+            )
+        )
+        linked[candidate.category] = linked.get(candidate.category, 0) + 1
+    stats = {
+        "rules": SCHOOL_BUILDING_RULES,
+        "numbered_registry_schools": len(by_number),
+        "repeated_numbers": sum(1 for n in counts.values() if n > 1),
+        "linked_buildings": linked,
+        "beyond_campus_distance": too_far,
+    }
+    return rest, stats
 
 
 def _names_city(address: str, city: str) -> bool:

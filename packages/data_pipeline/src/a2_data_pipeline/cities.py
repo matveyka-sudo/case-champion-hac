@@ -26,6 +26,8 @@ class CityConfig:
     higher_education_registry_dataset_id: str | None = None
     # urban freight: nodes and sites with road access; the seaport record confirms port nodes
     freight: bool = False
+    # school complexes (Moscow): OSM buildings named after an accredited school are its buildings
+    school_buildings_by_name: bool = False
     seaport_dataset_id: str | None = None
     seaport_name: str | None = None
 
@@ -35,6 +37,39 @@ class CityConfig:
 
 
 CITIES: dict[str, CityConfig] = {
+    "moscow": CityConfig(
+        city_id="moscow",
+        name="Москва",
+        timezone="Europe/Moscow",
+        osm_dataset_id="osm_geofabrik.central-fed-district-261107",
+        osm_boundary_relation=102269,
+        # 12 administrative okrugs: ЦАО, САО, СВАО, ВАО, ЮВАО, ЮАО, ЮЗАО, ЗАО, СЗАО, ЗелАО, НАО, ТАО
+        osm_district_relations=(
+            2162196,
+            162903,
+            1252558,
+            1320234,
+            1278703,
+            1282181,
+            1304596,
+            226149,
+            446092,
+            1320358,
+            2263058,
+            2263059,
+        ),
+        utm_epsg=32637,
+        ghsl_dataset_id="ghsl_pop.e2025-r2023a-100m-r3c21",
+        ghsl_tif="GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0_R3_C21.tif",
+        # city boundary + 10 km for buildings and walk network; +60 km for destinations
+        extract_bbox=(36.62, 55.04, 38.15, 56.12),
+        poi_bbox=(35.85, 54.60, 38.95, 56.57),
+        region_name="г. Москва",
+        higher_education_registry_dataset_id="obrnadzor_accreditation.20261108",
+        medical_registry_dataset_id="mgfoms_med_org.20261108",
+        freight=True,
+        school_buildings_by_name=True,
+    ),
     "kaliningrad": CityConfig(
         city_id="kaliningrad",
         name="Калининград",

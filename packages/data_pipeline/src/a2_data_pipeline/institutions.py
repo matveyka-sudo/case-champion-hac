@@ -35,7 +35,9 @@ GENERIC_WORDS = re.compile(
     r"д/с|ясли|корпус|корп|здание|маоу|мбоу|мадоу|мбдоу|[\s\d№.,\-–—«»\"'()/]+)",
     re.IGNORECASE,
 )
-NUMBER_AFTER_SIGN = re.compile(r"№\s*(\d{1,3})(?!\d)")
+# after «№» up to four digits (Moscow schools: № 1514); a bare number stays 1–3
+# digits so that years and house numbers are not read as institution numbers
+NUMBER_AFTER_SIGN = re.compile(r"№\s*(\d{1,4})(?!\d)")
 BARE_NUMBER = re.compile(r"(?<![\d.,/-])(\d{1,3})(?![\d.,/-])")
 
 

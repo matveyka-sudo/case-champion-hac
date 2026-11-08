@@ -1,0 +1,39 @@
+{
+  "dataset_id": "mgfoms_med_org.20261108",
+  "source_id": "mgfoms_med_org",
+  "source_url": "https://www.mgfoms.ru/spravochniki/med-org/",
+  "retrieved_at": "2026-11-08T20:46:10.485465Z",
+  "publication_date": null,
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Москва",
+  "license": {
+    "name": "Общедоступная официальная информация государственного учреждения: используются только факты (ст. 1259 ГК РФ)",
+    "url": "https://www.mgfoms.ru/",
+    "status": "permitted",
+    "attribution": "МГФОМС, mgfoms.ru"
+  },
+  "access_method": "file",
+  "raw_path": "mgfoms_med_org/med-org-20261108.html",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "18ca95c06f275b9256dbf61481c3dd4d4f6a9c7c49b0fec6aada753a074d17c0",
+    "size_bytes": 2838103
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "MO_CODE/FILIAL_CODE": "код МО и филиала",
+    "PRINADL_NAME": "принадлежность",
+    "TIP_NAMES": "типы помощи",
+    "NASEL_NAMES": "взрослое/детское население",
+    "ADDRESS, MAP_LAT, MAP_LNG": "адрес и координаты"
+  },
+  "coverage": "Справочник медицинских организаций и филиалов ОМС Москвы на дату загрузки (массив allItems на странице)",
+  "limitations": [
+    "Принадлежность по классификатору фонда: ДЗМ, ведомственные, самостоятельно хозяйствующие",
+    "Координаты фонда, не OSM",
+    "ФИО руководителей, телефоны и e-mail есть в raw, но не читаются"
+  ],
+  "status": "fetched",
+  "qa_report": null
+}

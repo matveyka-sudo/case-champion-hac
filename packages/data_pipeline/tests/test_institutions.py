@@ -55,6 +55,9 @@ def test_numbers_and_generic_names() -> None:
     assert institution_numbers("МАОУ СОШ № 9 им. Дьякова П.М.") == {"9"}
     assert institution_numbers("МАОУ лицей 35") == {"35"}
     assert institution_numbers("Школа №07") == {"7"}
+    # Moscow school numbers have four digits; a bare four-digit number is a year
+    assert institution_numbers("ГБОУ Школа № 1514") == {"1514"}
+    assert institution_numbers("Школа 1945 года") == set()
     assert generic_name("Детский сад корп. 2") and generic_name(None)
     assert not generic_name("Фикус")
 
