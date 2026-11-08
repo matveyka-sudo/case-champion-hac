@@ -147,8 +147,11 @@ def build_candidates(
 
     rule_counts: dict[str, int] = {}
     raw: list[Candidate] = []
+    terminals: list[tuple[str, shapely.Geometry]] = []
     for row in rows:
         tags = json.loads(row["tags"])
+        if tags.get("aeroway") == "terminal":
+            terminals.append((row["osm_ref"], shapely.from_wkb(row["wkb"])))
         category, rule = classify(tags, city_name)
         rule_counts[rule] = rule_counts.get(rule, 0) + 1
         if category is None:
@@ -195,7 +198,37 @@ def build_candidates(
         if target.ownership_hint == "unknown":
             target.ownership_hint = candidate.ownership_hint
     rule_counts["merged_duplicates"] = len(raw) - len(merged)
+    rule_counts["airport_point_at_terminal"] = _airports_at_terminals(merged, terminals)
     return merged, rule_counts
+
+
+def _airports_at_terminals(
+    candidates: list[Candidate], terminals: list[tuple[str, shapely.Geometry]]
+) -> int:
+    """Place an airport at its largest passenger terminal inside the aerodrome polygon.
+
+    The centre of an airfield is not where passengers arrive; without a mapped
+    terminal the aerodrome's representative point stays and is noted.
+    """
+
+    moved = 0
+    for candidate in candidates:
+        if candidate.category != "airport" or candidate.geometry.geom_type == "Point":
+            continue
+        inside = [
+            (geometry.area, ref, geometry)
+            for ref, geometry in terminals
+            if candidate.geometry.covers(geometry.representative_point())
+        ]
+        if not inside:
+            candidate.notes.append("no terminal mapped: point inside aerodrome")
+            continue
+        _, ref, geometry = max(inside, key=lambda item: (item[0], item[1]))
+        candidate.point = geometry.representative_point()
+        candidate.osm_refs.append(ref)
+        candidate.notes.append(f"point at terminal {ref}")
+        moved += 1
+    return moved
 
 
 def _distance_m(a: shapely.Point, b: shapely.Point) -> float:

@@ -24,6 +24,7 @@ BUNDLE_COLLECTIONS = (
     "sample_points",
     "destinations",
     "category_ownership",
+    "access_nodes",
 )
 
 
@@ -101,6 +102,11 @@ def publish_bundle(
             )
         qa_bytes = (json.dumps(qa_report, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
         (staging / manifest.qa_report).write_bytes(qa_bytes)
+        files["qa_report"] = FileRef(
+            path=manifest.qa_report,
+            sha256=hashlib.sha256(qa_bytes).hexdigest(),
+            rows=len(qa_report.get("checks", [])),
+        )
         final = manifest.model_copy(update={"files": files})
         manifest_text = json.dumps(final.model_dump(mode="json"), ensure_ascii=False, indent=2)
         (staging / "manifest.json").write_text(manifest_text + "\n", encoding="utf-8")
@@ -133,6 +139,13 @@ def _load_dir(directory: Path, require_accepted: bool) -> BundleData:
         if len(rows) != ref.rows:
             raise BundleIntegrityError(f"{name}: row count mismatch")
         payload[name] = rows
+    qa_ref = manifest.files.get("qa_report")
+    if qa_ref is None:
+        raise BundleIntegrityError("manifest lists no QA report")
+    qa_bytes = (directory / qa_ref.path).read_bytes()
+    if hashlib.sha256(qa_bytes).hexdigest() != qa_ref.sha256:
+        raise BundleIntegrityError("qa_report: sha256 mismatch")
+    payload["qa_report"] = json.loads(qa_bytes)
     return BundleData.model_validate(payload)
 
 

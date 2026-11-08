@@ -1,18 +1,18 @@
 {
   "format": "a2-ml2-bundle",
   "schema_version": 2,
-  "bundle_id": "kaliningrad-urban-2026-11-08.1",
-  "created_at": "2026-11-08T13:46:52.768833Z",
-  "parser_version": "ml2-urban-0.1.0",
+  "bundle_id": "kaliningrad-urban-2026-11-08.2",
+  "created_at": "2026-11-08T14:37:53.276587Z",
+  "parser_version": "ml2-urban-0.2.0",
   "acceptance_state": "accepted",
   "accepted_by": "ML2 (№5)",
-  "accepted_at": "2026-11-08T13:46:52.768833Z",
+  "accepted_at": "2026-11-08T14:37:53.276587Z",
   "synthetic": false,
   "geographic_scope": [
     "kaliningrad"
   ],
-  "valid_from": null,
-  "valid_to": null,
+  "valid_from": "2026-11-01",
+  "valid_to": "2026-11-30",
   "timezone": "Europe/Kaliningrad",
   "grids": [
     {
@@ -25,6 +25,7 @@
       "version": 1
     }
   ],
+  "graph_version": "osm_geofabrik.kaliningrad-261107:osm-walk-network-v1:main-component",
   "source_versions": [
     {
       "source_id": "osm_geofabrik",
@@ -81,8 +82,8 @@
   "files": {
     "evidence": {
       "path": "evidence.json",
-      "sha256": "0b1301faf354816fa8c6a4cf43f7b94f567e7b4771acbb5f317512efa1a63686",
-      "rows": 428
+      "sha256": "6eec4ae133f5430b50b04025edafcb0f6d8013f50ab2fe212449ba6a1df915e3",
+      "rows": 1228
     },
     "territories": {
       "path": "territories.json",
@@ -91,23 +92,33 @@
     },
     "population_cells": {
       "path": "population_cells.json",
-      "sha256": "a8c7c2e136dc84b899ca5e3e3948e3bcaff897dae02c0fddf41384fa47529f37",
+      "sha256": "2cb027c31c08a514761fa4f8c93f60bb6b7901a40e8a51d46b0cbe811b48b325",
       "rows": 286
     },
     "sample_points": {
       "path": "sample_points.json",
-      "sha256": "fe941c1a99a71be3df22233d3fc0979b45e432457cc569a1fbea625d05ed367c",
+      "sha256": "44bbb5b3d883201d127c131a5cea78c5bd4c5b08412bfd1b9d3583e929cbfc0f",
       "rows": 216
     },
     "destinations": {
       "path": "destinations.json",
-      "sha256": "135ca95e13d697763a96bb495d87447b6ae0554b7e08a1635569fb4bc9ef38c0",
+      "sha256": "c7cd419d12149f8765855a27497a3af0153b650ce8d153d3f14cd5f6b432459f",
       "rows": 398
     },
     "category_ownership": {
       "path": "category_ownership.json",
       "sha256": "daccef043c04ec5d766e04cf70d0e71cf2c2c219af7260bb79379836131f0d8d",
       "rows": 398
+    },
+    "access_nodes": {
+      "path": "access_nodes.json",
+      "sha256": "240fd9e7be1956a9ed40e68e88e71bfe8e9b853b6338fe5f99dcb2e1ceeeff4a",
+      "rows": 612
+    },
+    "qa_report": {
+      "path": "qa_report.json",
+      "sha256": "2a5d402202f6b5ce5f655aa362e827dcd4e13c169766e5b8ed1c024244d1f35d",
+      "rows": 12
     }
   },
   "coverage": [
@@ -116,144 +127,184 @@
       "city_id": "kaliningrad",
       "category": null,
       "mode": null,
-      "valid_from": null,
-      "valid_to": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
       "status": "complete",
       "confirmed_absence": false,
       "reason": "Городской округ и все три района из OSM",
-      "evidence_ids": []
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
     },
     {
       "collection": "population_cells",
       "city_id": "kaliningrad",
       "category": null,
       "mode": null,
-      "valid_from": null,
-      "valid_to": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
       "status": "complete",
       "confirmed_absence": false,
       "reason": "Все ячейки сетки 1 км, пересекающие границу; население GHSL по центроидам пикселей",
-      "evidence_ids": []
+      "evidence_ids": [
+        "ghsl:ghsl_pop.e2025-r2023a-100m-r3c20",
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
     },
     {
       "collection": "sample_points",
       "city_id": "kaliningrad",
       "category": null,
       "mode": null,
-      "valid_from": null,
-      "valid_to": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
       "status": "complete",
       "confirmed_absence": false,
       "reason": "По одной точке на ячейку со зданием; исключённые ячейки с причиной и населением в QA",
-      "evidence_ids": []
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
+    },
+    {
+      "collection": "access_nodes",
+      "city_id": "kaliningrad",
+      "category": null,
+      "mode": "walk",
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "complete",
+      "confirmed_absence": false,
+      "reason": "Вход на главную связную компоненту пешеходной сети OSM v1 у каждой точки и объекта",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
     },
     {
       "collection": "destinations",
       "city_id": "kaliningrad",
       "category": "adult_polyclinic",
       "mode": null,
-      "valid_from": null,
-      "valid_to": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
       "status": "unknown",
       "confirmed_absence": false,
       "reason": "Кандидаты OSM в карантине: форма собственности не подтверждена реестром",
-      "evidence_ids": []
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
     },
     {
       "collection": "destinations",
       "city_id": "kaliningrad",
       "category": "child_polyclinic",
       "mode": null,
-      "valid_from": null,
-      "valid_to": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
       "status": "unknown",
       "confirmed_absence": false,
       "reason": "Кандидаты OSM в карантине: форма собственности не подтверждена реестром",
-      "evidence_ids": []
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
     },
     {
       "collection": "destinations",
       "city_id": "kaliningrad",
       "category": "kindergarten",
       "mode": null,
-      "valid_from": null,
-      "valid_to": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
       "status": "unknown",
       "confirmed_absence": false,
       "reason": "Кандидаты OSM в карантине: форма собственности не подтверждена реестром",
-      "evidence_ids": []
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
     },
     {
       "collection": "destinations",
       "city_id": "kaliningrad",
       "category": "school",
       "mode": null,
-      "valid_from": null,
-      "valid_to": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
       "status": "unknown",
       "confirmed_absence": false,
       "reason": "Кандидаты OSM в карантине: форма собственности не подтверждена реестром",
-      "evidence_ids": []
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
     },
     {
       "collection": "destinations",
       "city_id": "kaliningrad",
       "category": "college_university",
       "mode": null,
-      "valid_from": null,
-      "valid_to": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
       "status": "unknown",
       "confirmed_absence": false,
       "reason": "Кандидаты OSM в карантине: форма собственности не подтверждена реестром",
-      "evidence_ids": []
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
     },
     {
       "collection": "destinations",
       "city_id": "kaliningrad",
       "category": "rail_terminal",
       "mode": null,
-      "valid_from": null,
-      "valid_to": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
       "status": "partial",
       "confirmed_absence": false,
       "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
-      "evidence_ids": []
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
     },
     {
       "collection": "destinations",
       "city_id": "kaliningrad",
       "category": "bus_terminal",
       "mode": null,
-      "valid_from": null,
-      "valid_to": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
       "status": "partial",
       "confirmed_absence": false,
       "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
-      "evidence_ids": []
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
     },
     {
       "collection": "destinations",
       "city_id": "kaliningrad",
       "category": "airport",
       "mode": null,
-      "valid_from": null,
-      "valid_to": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
       "status": "complete",
       "confirmed_absence": false,
       "reason": "Аэродромы с IATA в 60 км, регулярные рейсы подтверждены OurAirports",
-      "evidence_ids": []
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107",
+        "ourairports:dataset:ourairports.airports-20261108"
+      ]
     },
     {
       "collection": "destinations",
       "city_id": "kaliningrad",
       "category": "shopping_center",
       "mode": null,
-      "valid_from": null,
-      "valid_to": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
       "status": "partial",
       "confirmed_absence": false,
       "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
-      "evidence_ids": []
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
     },
     {
       "collection": "category_ownership",
@@ -265,18 +316,6 @@
       "status": "unknown",
       "confirmed_absence": false,
       "reason": "Официальный реестр учреждений ещё не загружен",
-      "evidence_ids": []
-    },
-    {
-      "collection": "access_nodes",
-      "city_id": "kaliningrad",
-      "category": null,
-      "mode": null,
-      "valid_from": null,
-      "valid_to": null,
-      "status": "not_collected",
-      "confirmed_absence": false,
-      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
       "evidence_ids": []
     },
     {
@@ -430,6 +469,8 @@
     "Население — модельная оценка GHSL R2023A эпохи 2025, не перепись",
     "Поликлиники, детсады, школы, колледжи и вузы в карантине до сверки с официальным реестром",
     "Ж/д вокзалы, автовокзалы и ТЦ отобраны правилами OSM v1 без сверки со справочником",
-    "Входы на граф (access_nodes), расписания и грузовые данные в этот bundle не входят"
+    "Вход на граф — проекция на пешеходную сеть OSM v1, не размеченный вход здания",
+    "Период применимости 01–30.11.2026 заявлен ML2 для снимка OSM от 07.11.2026",
+    "Расписания и грузовые данные в этот bundle не входят"
   ]
 }

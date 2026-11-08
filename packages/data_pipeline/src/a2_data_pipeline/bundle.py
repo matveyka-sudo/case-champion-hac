@@ -80,6 +80,7 @@ PRODUCED_COLLECTIONS: tuple[Collection, ...] = (
     "sample_points",
     "destinations",
     "category_ownership",
+    "access_nodes",
 )
 
 
@@ -154,6 +155,9 @@ class PopulationCell(Model):
     ix: int
     iy: int
     geometry: GeoJSON
+    square_bbox: tuple[Lon, Lat, Lon, Lat] = Field(
+        description="EPSG:4326 bbox of the original unclipped square: west, south, east, north"
+    )
     land_area_km2: NonNegative
     population: NonNegative | None
     population_status: Literal["estimated", "zero", "unknown"]
@@ -162,6 +166,7 @@ class PopulationCell(Model):
     district_shares: list[DistrictShare]
     status: Literal["sampled", "excluded"]
     exclusion_reason: Literal["NO_BUILDING", "WATER_ONLY"] | None
+    evidence_ids: Annotated[list[Identifier], Field(min_length=1)]
 
     @model_validator(mode="after")
     def consistent(self) -> Self:
@@ -184,14 +189,32 @@ class PopulationCell(Model):
         return self
 
 
+class AccessNode(Model):
+    """Where a point or destination joins the routing graph; not a graph vertex itself."""
+
+    access_node_id: Identifier
+    kind: Literal["walk_network_projection"]
+    lon: Lon
+    lat: Lat
+    graph_version: str
+    osm_way_ref: str
+    offset_along_way_m: NonNegative
+    evidence_ids: Annotated[list[Identifier], Field(min_length=1)]
+
+
 class SamplePoint(Model):
     point_id: Identifier
     cell_id: Identifier
     lon: Lon
     lat: Lat
+    initial_center_lon: Lon
+    initial_center_lat: Lat
     placement: Literal["cell_center", "nearest_building_point"]
     building_ref: str
     offset_m: NonNegative
+    access_node_id: Identifier
+    access_distance_m: NonNegative
+    evidence_ids: Annotated[list[Identifier], Field(min_length=1)]
 
 
 class Destination(Model):
@@ -203,6 +226,8 @@ class Destination(Model):
     lat: Lat
     inside_city_boundary: bool
     osm_ref: str | None
+    access_node_id: Identifier
+    access_distance_m: NonNegative
     status: Literal["accepted", "quarantined"]
     quarantine_reasons: list[str]
     evidence_ids: list[Identifier]
@@ -265,6 +290,7 @@ class BundleManifest(Model):
     valid_to: date | None
     timezone: str
     grids: list[GridSpec]
+    graph_version: str | None
     source_versions: list[SourceVersion]
     files: dict[str, FileRef]
     coverage: list[CoverageRecord]
@@ -290,6 +316,8 @@ class BundleData(Model):
     sample_points: list[SamplePoint]
     destinations: list[Destination]
     category_ownership: list[CategoryOwnership]
+    access_nodes: list[AccessNode]
+    qa_report: dict[str, Any]
 
     @model_validator(mode="after")
     def references(self) -> Self:
@@ -308,6 +336,7 @@ class BundleData(Model):
             [(row.destination_id, row.category) for row in self.category_ownership],
             "category_ownership",
         )
+        access_ids = unique([row.access_node_id for row in self.access_nodes], "access_nodes")
         grid_ids = {grid.grid_id for grid in self.manifest.grids}
         source_ids = {source.source_id for source in self.manifest.source_versions}
         scope = set(self.manifest.geographic_scope)
@@ -318,21 +347,39 @@ class BundleData(Model):
 
         for item in self.evidence:
             resolve(item.source_id, source_ids, "evidence.source_id")
+        for node in self.access_nodes:
+            if node.graph_version != self.manifest.graph_version:
+                raise ValueError(f"access node from another graph version: {node.access_node_id}")
+            for evidence_id in node.evidence_ids:
+                resolve(evidence_id, evidence_ids, "access_nodes.evidence_ids")
         for territory in self.territories:
             resolve(territory.parent_id, territory_ids, "territories.parent_id")
             for evidence_id in territory.evidence_ids:
                 resolve(evidence_id, evidence_ids, "territories.evidence_ids")
         for cell in self.population_cells:
+            for evidence_id in cell.evidence_ids:
+                resolve(evidence_id, evidence_ids, "population_cells.evidence_ids")
             resolve(cell.city_id, scope, "population_cells.city_id")
             resolve(cell.grid_id, grid_ids, "population_cells.grid_id")
             for share in cell.district_shares:
                 resolve(share.territory_id, territory_ids, "district_shares.territory_id")
         sampled = {cell.cell_id for cell in self.population_cells if cell.status == "sampled"}
+        squares = {cell.cell_id: cell.square_bbox for cell in self.population_cells}
         points_per_cell: dict[str, int] = {}
         for point in self.sample_points:
             resolve(point.cell_id, cell_ids, "sample_points.cell_id")
+            resolve(point.access_node_id, access_ids, "sample_points.access_node_id")
+            for evidence_id in point.evidence_ids:
+                resolve(evidence_id, evidence_ids, "sample_points.evidence_ids")
             if point.cell_id not in sampled:
                 raise ValueError(f"sample point in excluded cell: {point.cell_id}")
+            west, south, east, north = squares[point.cell_id]
+            for lon, lat in (
+                (point.lon, point.lat),
+                (point.initial_center_lon, point.initial_center_lat),
+            ):
+                if not (west <= lon <= east and south <= lat <= north):
+                    raise ValueError(f"sample point leaves its original cell: {point.point_id}")
             points_per_cell[point.cell_id] = points_per_cell.get(point.cell_id, 0) + 1
         if any(count > 1 for count in points_per_cell.values()):
             raise ValueError("at most one sample point per cell")
@@ -340,6 +387,7 @@ class BundleData(Model):
             raise ValueError("every sampled cell needs exactly one sample point")
         for destination in self.destinations:
             resolve(destination.serving_city_id, scope, "destinations.serving_city_id")
+            resolve(destination.access_node_id, access_ids, "destinations.access_node_id")
             for evidence_id in destination.evidence_ids:
                 resolve(evidence_id, evidence_ids, "destinations.evidence_ids")
         categories = {row.destination_id: row.category for row in self.destinations}

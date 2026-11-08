@@ -1,10 +1,14 @@
 {
-  "bundle_id": "kaliningrad-urban-2026-11-08.1",
-  "generated_at": "2026-11-08T13:46:52.768833+00:00",
-  "parser_version": "ml2-urban-0.1.0",
+  "bundle_id": "kaliningrad-urban-2026-11-08.2",
+  "generated_at": "2026-11-08T14:37:53.276587+00:00",
+  "parser_version": "ml2-urban-0.2.0",
   "category_rules": "osm-category-rules-v1",
+  "graph_version": "osm_geofabrik.kaliningrad-261107:osm-walk-network-v1:main-component",
   "result": "pass",
   "failed_checks": [],
+  "warnings": [
+    "access_distance_points"
+  ],
   "checks": [
     {
       "check_id": "boundary_valid",
@@ -59,6 +63,28 @@
       "airports": [
         "Калининград (Храброво)"
       ]
+    },
+    {
+      "check_id": "walk_network_main_component",
+      "status": "pass",
+      "detail": "Largest connected walk component holds at least 90% of walk length",
+      "share": 0.9654
+    },
+    {
+      "check_id": "access_distance_points",
+      "status": "warn",
+      "detail": "Sample points join the walk network within 500 m",
+      "over_limit": [
+        "kaliningrad-utm34n-1km-v1-e459-n6069-p",
+        "kaliningrad-utm34n-1km-v1-e460-n6069-p",
+        "kaliningrad-utm34n-1km-v1-e461-n6069-p"
+      ]
+    },
+    {
+      "check_id": "access_distance_accepted_destinations",
+      "status": "pass",
+      "detail": "Accepted destinations join the walk network within 500 m",
+      "over_limit": []
     }
   ],
   "summary": {
@@ -77,6 +103,25 @@
       "center_placements": 16,
       "median": 59.8,
       "max": 690.9
+    },
+    "walk_network": {
+      "walk_rules": "osm-walk-network-v1",
+      "ways_total": 71094,
+      "ways_main_component": 68777,
+      "components": 871,
+      "main_component_length_share": 0.9654
+    },
+    "access_distance_m": {
+      "sample_points": {
+        "median": 19.7,
+        "p95": 185.8,
+        "max": 838.5
+      },
+      "destinations": {
+        "median": 29.9,
+        "p95": 67.7,
+        "max": 116.2
+      }
     },
     "destinations_by_category": {
       "adult_polyclinic": {
@@ -131,9 +176,11 @@
       "passenger_station+name:<город>-": 2,
       "school_additional_education": 16,
       "station+name:вокзал": 3,
+      "not_a_category": 2,
       "aerodrome+iata": 1,
       "disused": 5,
-      "merged_duplicates": 43
+      "merged_duplicates": 43,
+      "airport_point_at_terminal": 1
     }
   }
 }
