@@ -50,3 +50,211 @@
 [data-theme="dark"] .at-top .wordmark .wm-dex {
   color: var(--text);
 }
+
+/* Align the wordmark itself with the header's outer inset. */
+.lp-header .wordmark,
+.at-top .wordmark {
+  padding-left: 0;
+}
+
+/* Waydex pickers: custom surfaces in the browser top layer, not OS menus. */
+.wx-select {
+  width: 100%;
+  min-width: 0;
+}
+.wx-select-trigger {
+  width: 100%;
+  min-height: 46px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 10px 12px 10px 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.wx-select-trigger span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wx-select-trigger > .lucide {
+  width: 16px;
+  height: 16px;
+  color: var(--text-3);
+  transition: transform var(--t-fast);
+}
+.wx-select-trigger[aria-expanded="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.wx-select-trigger[aria-expanded="true"] > .lucide {
+  transform: rotate(180deg);
+}
+.wx-popup {
+  margin: 0;
+  padding: 6px;
+  border: 1px solid var(--line-2);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-2);
+  overflow: auto;
+  font-family: var(--f-ui), sans-serif;
+  font-size: 14px;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.wx-popup:popover-open {
+  animation: wx-picker-in 140ms var(--ease);
+}
+.wx-select-popup > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  text-align: left;
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+}
+.wx-select-popup > button:hover,
+.wx-select-popup > button:focus-visible {
+  background: var(--surface-2);
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent-soft);
+}
+.wx-select-popup > button[aria-selected="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 800;
+}
+.wx-select-popup > button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.wx-select-popup .lucide {
+  width: 16px;
+  height: 16px;
+}
+.wx-date-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 32px;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  padding: 3px 0;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.wx-date-trigger:hover,
+.wx-date-trigger[aria-expanded="true"] {
+  color: var(--accent);
+}
+.wx-calendar {
+  padding: 14px;
+  max-height: none !important;
+}
+.wx-calendar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.wx-calendar-head b {
+  font-size: 14px;
+  text-transform: capitalize;
+}
+.wx-calendar-head button {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+.wx-calendar-head button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.wx-calendar-week,
+.wx-calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  text-align: center;
+}
+.wx-calendar-week {
+  font-size: 11px;
+  color: var(--text-3);
+  font-weight: 700;
+  margin-bottom: 7px;
+}
+.wx-calendar-days button {
+  aspect-ratio: 1;
+  min-height: 32px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+}
+.wx-calendar-days button:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.wx-calendar-days button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.wx-calendar-days button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.wx-calendar p {
+  margin: 12px 0 0;
+  font-size: 10.5px;
+  color: var(--text-3);
+  text-align: center;
+}
+@keyframes wx-picker-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wx-popup:popover-open {
+    animation: none;
+  }
+}

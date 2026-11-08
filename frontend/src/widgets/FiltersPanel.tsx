@@ -1,3 +1,4 @@
+import { Select } from "../shared/Select";
 import { categories, fixtures, type CatId, type CityId } from "../mocks/model";
 import { useAtlas, type Params } from "../features/state";
 import { Icon } from "../shared/ui";
@@ -63,7 +64,7 @@ export function FiltersPanel({ run }: { run: () => void }) {
           key={v}
           type="button"
           className="fchip"
-          aria-pressed={!!values[v]}
+          aria-pressed={values[v]}
           onClick={() => onChange(v)}
         >
           {i && <Icon name={i} />}
@@ -93,17 +94,15 @@ export function FiltersPanel({ run }: { run: () => void }) {
         {(["A", "B"] as const).map((side, i) => (
           <div className="fsel" key={side}>
             <span className="k">{i ? "Б" : "А"}</span>
-            <select
-              aria-label={`Территория ${i ? "Б" : "А"}`}
+            <Select
+              label={`Территория ${i ? "Б" : "А"}`}
               value={i ? b : a}
-              onChange={(e) => change(side, e.target.value)}
-            >
-              {Object.entries(fixtures.places).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {kind === "pax" && p.paxScale === "subj" ? v.subj : v.n}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => change(side, v)}
+              options={Object.entries(fixtures.places).map(([value, v]) => ({
+                value,
+                label: kind === "pax" && p.paxScale === "subj" ? v.subj : v.n,
+              }))}
+            />
           </div>
         ))}
         <button
@@ -292,25 +291,26 @@ export function FiltersPanel({ run }: { run: () => void }) {
                 <span className="k">
                   <Icon name="palette" />
                 </span>
-                <select
-                  aria-label="Показатель, которым окрашена карта"
+                <Select
+                  label="Показатель, которым окрашена карта"
                   value={s.metric}
-                  onChange={(e) =>
-                    dispatch({ type: "ui", patch: { metric: e.target.value } })
+                  onChange={(metric) =>
+                    dispatch({ type: "ui", patch: { metric } })
                   }
-                >
-                  <option
-                    value="overall"
-                    disabled={!Object.keys(p.cats).length}
-                  >
-                    Общий индекс
-                  </option>
-                  {Object.keys(p.cats).map((id) => (
-                    <option value={id} key={id}>
-                      {categories.find((c) => c.id === (id as CatId))?.short}
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    {
+                      value: "overall",
+                      label: "Общий индекс",
+                      disabled: !Object.keys(p.cats).length,
+                    },
+                    ...Object.keys(p.cats).map((id) => ({
+                      value: id,
+                      label:
+                        categories.find((c) => c.id === (id as CatId))?.short ||
+                        id,
+                    })),
+                  ]}
+                />
               </div>
               <p className="flabel" style={{ marginTop: 14 }}>
                 Слои

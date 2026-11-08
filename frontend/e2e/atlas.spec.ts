@@ -92,10 +92,11 @@ test("free question is safe text and does not pretend to call AI", async ({
 }) => {
   await page.goto("/#atlas");
   await page.getByRole("button", { name: "Агент", exact: true }).click();
-  await page.getByLabel("Вопрос агенту").fill("<img src=x onerror=alert(1)>");
+  const unsafeMessage = String.fromCharCode(60) + "img src=x onerror=alert(1)>";
+  await page.getByLabel("Вопрос агенту").fill(unsafeMessage);
   await page.getByRole("button", { name: "Отправить", exact: true }).click();
   await expect(page.locator(".msg.u")).toHaveText(
-    "<img src=x onerror=alert(1)>",
+    unsafeMessage,
   );
   await expect(page.locator(".msg.a").last()).toContainText(
     "агент не подключён",
@@ -203,4 +204,51 @@ test("scroll motion and reduced motion preserve the content", async ({
   await expect(page.locator("#featTitle")).toHaveClass(/is-in/);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator("#featTitle")).toHaveCSS("opacity", "1");
+});
+
+test("custom selectors support pointer, keyboard and dark theme", async ({
+  page,
+}) => {
+  await page.goto("/#atlas");
+  await page.locator("#modeTabs button").nth(1).click();
+  const selector = page.getByRole("combobox", { name: "Территория А" });
+  await selector.click();
+  await expect(
+    page.getByRole("listbox", { name: "Территория А" }),
+  ).toBeVisible();
+  await page.getByRole("option", { name: "Казань", exact: true }).click();
+  await expect(selector).toContainText("Казань");
+  await expect(selector).toHaveAttribute("aria-expanded", "false");
+  await selector.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(selector).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(selector).toContainText("Екатеринбург");
+  await page.getByRole("button", { name: "Тема: тёмная" }).click();
+  await selector.click();
+  await expect(page.getByRole("listbox", { name: "Территория А" })).toHaveCSS(
+    "background-color",
+    "rgb(20, 25, 71)",
+  );
+  await page.keyboard.press("Escape");
+  await expect(selector).toBeFocused();
+  await expect(selector).toHaveAttribute("aria-expanded", "false");
+});
+test("custom calendar selects a date and closes without hiding the atlas", async ({
+  page,
+}) => {
+  await page.goto("/#atlas");
+  const calendar = page
+    .locator("#timedock")
+    .getByRole("button", { name: "Выбрать дату" });
+  await calendar.click();
+  await expect(page.getByRole("dialog", { name: "Выбор даты" })).toBeVisible();
+  await page
+    .getByRole("button", { name: "среда, 11 ноября 2026 г.", exact: true })
+    .click();
+  await expect(calendar).toContainText("11.11.2026");
+  await expect(page.getByRole("dialog", { name: "Выбор даты" })).toBeHidden();
+  await expect(page.locator(".status")).toContainText("Параметры изменены");
+  await expect(calendar).toBeFocused();
 });

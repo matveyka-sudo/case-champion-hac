@@ -1,3 +1,4 @@
+import { DatePicker } from "../shared/DatePicker";
 import { useAtlas } from "../features/state";
 import { timezone } from "../shared/timezone";
 import { Icon } from "../shared/ui";
@@ -22,20 +23,14 @@ export function TimeDock({
     >
       <div className="td-date">
         <label htmlFor={`dateIn${id}`}>Дата</label>
-        <input
-          type="date"
+        <DatePicker
           id={`dateIn${id}`}
-          className="tnum"
           value={p.date}
           min="2026-11-01"
           max="2026-11-30"
-          onChange={(e) =>
-            dispatch({
-              type: "params",
-              patch: { date: e.target.value || "2026-11-10" },
-            })
-          }
+          onChange={(date) => dispatch({ type: "params", patch: { date } })}
         />
+
         <span className="tz">
           <Icon name="globe" /> {timezone(p)}
         </span>
