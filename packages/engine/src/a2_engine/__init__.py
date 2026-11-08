@@ -1,8 +1,8 @@
 """Deterministic A2 urban passenger indices; no routing or data fetching."""
 
-from .config import AreaHBand, UrbanConfig, load_urban_config, urban_config_from_mapping
-from .results import MetricResult
-from .urban import (
+from a2_engine.config import AreaHBand, UrbanConfig, load_urban_config, urban_config_from_mapping
+from a2_engine.results import MetricResult
+from a2_engine.urban import (
     category_index,
     is_low_accessibility,
     point_index,

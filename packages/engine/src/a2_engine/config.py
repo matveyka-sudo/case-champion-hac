@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
 
-from .results import finite_number
+from a2_engine.results import finite_number
 
 
 @dataclass(frozen=True)

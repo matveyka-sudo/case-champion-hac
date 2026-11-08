@@ -3,8 +3,8 @@
 from collections.abc import Mapping, Sequence
 from math import frexp, fsum, ldexp
 
-from .config import AreaHBand, UrbanConfig, validate_bands
-from .results import MetricResult, finite_number, validate_index
+from a2_engine.config import AreaHBand, UrbanConfig, validate_bands
+from a2_engine.results import MetricResult, finite_number, validate_index
 
 
 def select_h_seconds(area_km2: float | None, *, bands: Sequence[AreaHBand]) -> MetricResult:
