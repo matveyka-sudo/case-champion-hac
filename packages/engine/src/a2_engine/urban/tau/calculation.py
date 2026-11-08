@@ -1,110 +1,30 @@
-"""Exact OD-weighted slice means, then an equal mean of the baseline slices."""
+"""tau / calculation — canonical urban implementation."""
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from fractions import Fraction
 from math import isfinite
 from typing import Literal
-from zoneinfo import ZoneInfo
 
 from a2_engine.shared.config import UrbanTauRules
 from a2_engine.shared.results import MetricResult
-from a2_engine.urban.analysis import _check_points
 from a2_engine.urban.models import (
     UrbanContext,
     UrbanPoint,
     UrbanPopulationCoverage,
-    UrbanThreshold,
     references,
     utc_timestamp,
 )
-from a2_engine.urban.tau_models import UrbanODScope, UrbanTauSlice, UrbanTauWeek, city_zone
-
-
-@dataclass(frozen=True)
-class UrbanTauSliceResult:
-    service_date: date
-    local_time: time
-    departure_at: datetime
-    mean_seconds: MetricResult
-    reachable_weight: Fraction
-    confirmed_unreachable_weight: Fraction
-    unknown_weight: Fraction
-    weight_denominator: Fraction  # All directed i != j weights, not only reachable ones.
-    unreachable_weight_share: Fraction | None
-    reasons: tuple[str, ...]
-    evidence_refs: tuple[str, ...]
-
-
-@dataclass(frozen=True)
-class UrbanTauWeekResult:
-    week_id: str
-    week_start: date
-    scope: UrbanODScope
-    tau_seconds: MetricResult
-    slices: tuple[UrbanTauSliceResult, ...]
-    reasons: tuple[str, ...]
-    evidence_refs: tuple[str, ...]
-
-    @property
-    def reachable_weight(self) -> Fraction | None:
-        return sum((s.reachable_weight for s in self.slices), Fraction()) if self.slices else None
-
-    @property
-    def confirmed_unreachable_weight(self) -> Fraction | None:
-        return (
-            sum((s.confirmed_unreachable_weight for s in self.slices), Fraction())
-            if self.slices
-            else None
-        )
-
-    @property
-    def unknown_weight(self) -> Fraction | None:
-        return sum((s.unknown_weight for s in self.slices), Fraction()) if self.slices else None
-
-    @property
-    def weight_denominator(self) -> Fraction | None:
-        return sum((s.weight_denominator for s in self.slices), Fraction()) if self.slices else None
-
-    @property
-    def unreachable_weight_share(self) -> Fraction | None:
-        denominator = self.weight_denominator
-        numerator = self.confirmed_unreachable_weight
-        return numerator / denominator if denominator and numerator is not None else None
-
-
-@dataclass(frozen=True)
-class UrbanTauResult:
-    baseline_context: UrbanContext
-    passenger_mode: Literal["walk", "public_transport", "private_car"]
-    timezone: str
-    reference_at: datetime
-    rules: UrbanTauRules
-    points: tuple[UrbanPoint, ...]
-    population_coverage: UrbanPopulationCoverage
-    tau_seconds: MetricResult
-    selected_week: UrbanTauWeekResult | None
-    weeks: tuple[UrbanTauWeekResult, ...]
-    reasons: tuple[str, ...]
-    evidence_refs: tuple[str, ...]
-
-    @property
-    def completeness(self) -> Literal["full", "partial"]:
-        return "full" if self.tau_seconds.status == "available" else "partial"
-
-    def to_threshold(self) -> UrbanThreshold:
-        """No context overrides: preserve the baseline versions, even for future scenarios."""
-        context = self.baseline_context
-        return UrbanThreshold(
-            context.city_id,
-            self.passenger_mode,
-            context.versions,
-            context.traffic_mode,
-            context.search_parameters_id,
-            self.tau_seconds.value,
-            self.evidence_refs,
-        )
+from a2_engine.urban.tau.calendar import _local_instant, city_zone
+from a2_engine.urban.tau.models import (
+    UrbanODScope,
+    UrbanTauResult,
+    UrbanTauSlice,
+    UrbanTauSliceResult,
+    UrbanTauWeek,
+    UrbanTauWeekResult,
+)
+from a2_engine.urban.validation import _check_points
 
 
 def _as_seconds(value: Fraction) -> MetricResult:
@@ -117,21 +37,6 @@ def _as_seconds(value: Fraction) -> MetricResult:
     if value > 0 and seconds == 0:
         return MetricResult(None, "unknown", "NUMERIC_UNDERFLOW")
     return MetricResult(seconds, "available")
-
-
-def _local_instant(day: date, clock: time, zone: ZoneInfo) -> datetime:
-    naive = datetime.combine(day, clock)
-    alternatives = [naive.replace(tzinfo=zone, fold=fold).astimezone(UTC) for fold in (0, 1)]
-    valid = {
-        instant
-        for instant in alternatives
-        if instant.astimezone(zone).replace(tzinfo=None) == naive
-    }
-    if not valid:
-        raise ValueError("NONEXISTENT_LOCAL_SLICE_TIME")
-    if len(valid) != 1:
-        raise ValueError("AMBIGUOUS_LOCAL_SLICE_TIME")
-    return next(iter(valid))
 
 
 def _slice_result(

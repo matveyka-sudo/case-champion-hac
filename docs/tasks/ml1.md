@@ -314,3 +314,73 @@ connectors/build и внешнего Valhalla executor. Backend handler/DTO/ML2/
 Следующий шаг — принятые typical directional profiles (graph/date/bin/day/season,
 coverage QA), затем live/historical observed_at/valid_until и path-entry-time;
 никакого static fallback под другим traffic mode.
+
+## 09.11.2026 — структурный перенос urban без изменения поведения
+
+Исходный SHA: `cd7572ebb0a2d1f054c974d304ab37a0bf9a81f1`; опубликованная ветка
+перед началом совпадала, рабочая копия `/tmp/a2-ml1-car-20261109` была чистой.
+Перенос выполнялся последовательно в этой актуальной копии. Старый checkout с
+`a2-dev.bundle` не использовался как база и не изменялся.
+
+Восемь крупных модулей превращены в пакеты с явными реэкспортами:
+analysis (models/validation/calculation), valhalla (models/requests/responses/codec),
+walk (models/inputs/analysis), car (models/analysis), transit
+(models/journeys/search/last_return), tau (models/calendar/calculation),
+od (models/planning/collection), districts (models/inputs/calculation).
+Старые одноимённые .py удалены; tests/examples/fixtures не перемещались.
+В корне оставлены общие модели/индексы/journeys/selection и validation.
+
+Четыре узких файла совместимости: district_models.py, district_inputs.py,
+tau_models.py и last_return.py. Только aliases, без повторных классов или логики.
+Фактически используемые старые прямые импорты, в том числе private helpers,
+сохранены. Все они возвращают канонические объекты по identity `is`.
+
+Три общие зависимости выделены явно:
+- `_check_points` — urban/validation.py, используется analysis и tau;
+- `_local_instant` — tau/calendar.py, импортируется OD напрямую;
+- `check_urban_inputs`, `path_legs`, identity JSON helper — transit/journeys.py,
+  общие для прямого поиска и последнего возврата.
+Внутренние реализации используют конкретные модули и абсолютные импорты;
+фасады — только экспорт. Routing/shared и shared/config.py не изменялись.
+
+До изменений сняты snapshot всех 141 root exports, сигнатур/defaults/frozen и
+fingerprints полей dataclass; inventory прямых импортов. CANONICAL_MODULES в
+существующем test_public_api.py указывает реальные новые места определений;
+проверки identity/frozen/архитектуры/загрузки конфигурации сохранены и расширены.
+В новых процессах проверены три порядка загрузки старых и новых модулей.
+
+Проверка AST до/после: **94 перенесённых определения идентичны**, включая тела
+функций, поля/декораторы dataclass, defaults и причины ошибок. Изменены только
+размещение, module docstrings и абсолютные imports. Строки __module__ закономерно
+показывают новый canonical owner; они не подделывались.
+
+Контрольные результаты получены из исходного cd7572e и сравниваются компактными
+hashes 14 полных нормализованных структур: walk, districts, transit/return, car,
+request payload, OD plan/observations, week, tau, threshold и partial/unknown.
+Все совпали: значения, причины, доказательства, порядок выбора, payload/profile/
+request/task identities. Slots/classmethod/новые продуктовые функции не добавлены.
+
+Фактически выполнено:
+- исходный suite: 591 passed;
+- итоговый `PYTHONPATH=packages/engine/src uv run --frozen pytest packages/engine/tests -q`:
+  **596 passed**;
+- Ruff src/tests, formatter src/tests: PASS (78 файлов);
+- strict mypy src/tests: PASS (77 файлов);
+- strict mypy src/tests/examples: PASS (84 файла);
+- Ruff/format всех семи examples: PASS;
+- десять executable README controls и пять synthetic scripts
+  (walk/districts/transit/car/od): PASS;
+- оба bundle CLI `--help`: PASS; реальный ingest/recalculation не выполнялся;
+- uv lock --check, uv pip check, product config validation, git diff --check: PASS.
+
+Дополнительный запуск mypy только по examples без указания source files дал
+import-untyped из-за прежнего package=false/отсутствующего py.typed. Команда с
+явным src/tests/examples проходит; manifests и упаковка в этом структурном этапе
+не менялись. Это не исправление/изменение packaging.
+
+README обновлён: актуальное дерево, 141 экспорт, canonical owners, таблица старых
+и новых путей, назначение совместимости и правила зависимостей. Все прежние
+функциональные ограничения (реальные adapters/данные, minimum proof, субминутная
+граница Valhalla 3.5.1, отсутствие typical/live/historical) сохранены.
+Backend/DTO/ветки коллег и a2-dev.bundle не изменялись. Следующий функциональный
+этап — принятые профили трафика; здесь он не реализовывался.

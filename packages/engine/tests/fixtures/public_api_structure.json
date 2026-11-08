@@ -1,0 +1,707 @@
+{
+  "AreaHBand": {
+    "signature": "(max_area_km2: float | None, h_seconds: float) -> None",
+    "frozen": true,
+    "fields_hash": "a75f422270c4f2e800896cd73c3705e4493a17de61d29c9a0e1376dfbb347d36"
+  },
+  "CarResult": {
+    "signature": "(chain_id: str, reference: ReferenceTime, path_index: MetricResult, completeness: Literal['full', 'partial'], diagnostics: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "3f6c93d3e6839b8c973cbef90ef8afd153341ac219989cdfe0d4c4201c5560ae"
+  },
+  "CargoDeliveryResult": {
+    "signature": "(cargo_profile_id: str, urgency: str, movement_seconds: MetricResult, total_seconds: MetricResult, index: MetricResult) -> None",
+    "frozen": true,
+    "fields_hash": "f9bc6e5df24e139b3758ac5b5ee7d3ffed9d3cdfe64b20d570464aef276dc640"
+  },
+  "CargoScope": {
+    "signature": "(node_type: str, direction: Literal['inbound', 'outbound'], cargo_profile_id: str) -> None",
+    "frozen": true,
+    "fields_hash": "b708281ff34337918770e5a6cd44cd7b13aa673bd0f33e761f3a662db9b0efe3"
+  },
+  "CargoSiteResult": {
+    "signature": "(site_id: str, scope: CargoScope, index: MetricResult) -> None",
+    "frozen": true,
+    "fields_hash": "c4d9eaffdc91070be40610eff7fcae7a3f1e101f6baf22967749bb51b267bd9d"
+  },
+  "ComparisonContext": {
+    "signature": "(comparable: bool, verification_id: str) -> None",
+    "frozen": true,
+    "fields_hash": "bd35e24ec675b64b10ee81b0f12d3c6de0e15e2f87d03ae9dc6c8ba13c7d2835"
+  },
+  "DeltaResult": {
+    "signature": "(value: float | None, status: Literal['available', 'unknown', 'not_applicable'], reason_code: str | None = None) -> None",
+    "frozen": true,
+    "fields_hash": "fc1ed308a9d11ec87900153bf68a81def040258ee1f0c8b3131c7bdc279ceb48"
+  },
+  "FreightConfig": {
+    "signature": "(methodology_version: str, area_h_bands: tuple[AreaHBand, ...], delivery_half_life_seconds: collections.abc.Mapping[str, float], pipeline_products: frozenset[str]) -> None",
+    "frozen": true,
+    "fields_hash": "2d329080a4738fa325ecc64bca322ba3e115f895170a00fc0ea08b384e588ae4"
+  },
+  "MetricResult": {
+    "signature": "(value: float | None, status: Literal['available', 'unknown', 'not_applicable'], reason_code: str | None = None) -> None",
+    "frozen": true,
+    "fields_hash": "fc1ed308a9d11ec87900153bf68a81def040258ee1f0c8b3131c7bdc279ceb48"
+  },
+  "PassengerChain": {
+    "signature": "(chain_id: str, path_seconds: float | None, initial_wait_seconds: float | None) -> None",
+    "frozen": true,
+    "fields_hash": "04d042dcfbbbe3335f921ec6baefa729cad079933ff552d1a0bd45090f61eab9"
+  },
+  "PassengerConfig": {
+    "signature": "(methodology_version: str, waiting_half_life_seconds: float, reference_profile: str) -> None",
+    "frozen": true,
+    "fields_hash": "daeceb4e922d18936c2790fe4badb643c2267bc99b067aab76c99fc59d95cd32"
+  },
+  "PassengerResult": {
+    "signature": "(chain: PassengerChain, reference: ReferenceTime, path_index: MetricResult, waiting_index: MetricResult, index: MetricResult, completeness: Literal['full', 'partial'], diagnostics: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "9bc40c1e13e040a5f4b03c28d8f328df02b1d718538f55ccbc900c99dff32294"
+  },
+  "PipelineBasis": {
+    "signature": "(product: str, period: str, unit: str, connection_id: str, direction: str) -> None",
+    "frozen": true,
+    "fields_hash": "761490d99694397acf3cfa6a4cd4a1725f18ed3e9b70cdaebb9315a8c6772364"
+  },
+  "PipelineResult": {
+    "signature": "(utilization_percent: MetricResult, diagnostics: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "2ed551241ba2506090cb90408da7989897575df56d22c61c7c5222bf68bee643"
+  },
+  "ReferenceTime": {
+    "signature": "(reference_id: str, seconds: float | None, profile_version: str, completeness: Literal['full', 'partial'], applicability_confirmed: bool) -> None",
+    "frozen": true,
+    "fields_hash": "c23cbfe47b1164eaa7e1d1441600bfb43fb2f88ba25270d96587bf515d123d6d"
+  },
+  "TravelTime": {
+    "signature": "(seconds: float | None, route_exists: bool | None) -> None",
+    "frozen": true,
+    "fields_hash": "27d3bba5bb523207192c5880b073fde55df7326252b757aa5c7f76c1f60432ee"
+  },
+  "UrbanConfig": {
+    "signature": "(methodology_version: str, area_h_bands: tuple[AreaHBand, ...], priority_weights: collections.abc.Mapping[str, float], categories: frozenset[str], modes: frozenset[str], low_accessibility_below: float) -> None",
+    "frozen": true,
+    "fields_hash": "e2b06ac0d3aa52880d9e119cf2237e39e4dc165b959e0c8c4e4cc16de573221a"
+  },
+  "category_index": {
+    "signature": "(travel_seconds: float | None, h_seconds: float | None, *, confirmed_no_route: bool = False) -> MetricResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "delta_index": {
+    "signature": "(before: MetricResult, after: MetricResult, *, comparison: ComparisonContext) -> DeltaResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "freight_config_from_mapping": {
+    "signature": "(product: collections.abc.Mapping[str, object]) -> FreightConfig",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "intercity_car_index": {
+    "signature": "(chain_id: str, path_seconds: float | None, reference: ReferenceTime, *, config: PassengerConfig) -> CarResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "intercity_cargo_index": {
+    "signature": "(*, cargo_profile_id: str, urgency: str, initial_wait_seconds: float | None, movement_seconds: float | None, handling_seconds: float | None, transfer_wait_seconds: float | None, compatibility_confirmed: bool, config: FreightConfig) -> CargoDeliveryResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "intercity_passenger_index": {
+    "signature": "(chain: PassengerChain, reference: ReferenceTime, *, config: PassengerConfig) -> PassengerResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "is_low_accessibility": {
+    "signature": "(index: MetricResult, *, threshold: float) -> bool | None",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "load_urban_config": {
+    "signature": "(path: str | pathlib.Path | None = None) -> UrbanConfig",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "load_freight_config": {
+    "signature": "(path: str | pathlib.Path | None = None) -> FreightConfig",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "load_passenger_config": {
+    "signature": "(path: str | pathlib.Path | None = None) -> PassengerConfig",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "passenger_config_from_mapping": {
+    "signature": "(product: collections.abc.Mapping[str, object]) -> PassengerConfig",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "pipeline_utilization": {
+    "signature": "(volume: float | None, capacity: float | None, *, volume_basis: PipelineBasis, capacity_basis: PipelineBasis, connection_confirmed: bool, config: FreightConfig) -> PipelineResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "point_index": {
+    "signature": "(category_indices: collections.abc.Mapping[str, MetricResult], selected_categories: collections.abc.Mapping[str, str], *, config: UrbanConfig) -> MetricResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "point_indices_by_mode": {
+    "signature": "(category_indices_by_mode: collections.abc.Mapping[str, collections.abc.Mapping[str, MetricResult]], selected_categories: collections.abc.Mapping[str, str], *, config: UrbanConfig) -> dict[str, MetricResult]",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "select_h_seconds": {
+    "signature": "(area_km2: float | None, *, bands: collections.abc.Sequence[AreaHBand]) -> MetricResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "territory_index": {
+    "signature": "(point_indices: collections.abc.Mapping[str, MetricResult], populations: collections.abc.Mapping[str, float | None]) -> MetricResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "time_saved_seconds": {
+    "signature": "(before: TravelTime, after: TravelTime, *, comparison: ComparisonContext) -> DeltaResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "urban_cargo_site_index": {
+    "signature": "(site_id: str, travel_seconds: float | None, h_seconds: float | None, *, scope: CargoScope, compatibility_confirmed: bool, confirmed_no_route: bool = False) -> CargoSiteResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "urban_cargo_territory_index": {
+    "signature": "(sites: collections.abc.Sequence[CargoSiteResult], *, scope: CargoScope) -> MetricResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "urban_config_from_mapping": {
+    "signature": "(product: collections.abc.Mapping[str, object]) -> UrbanConfig",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "UrbanJourneyRules": {
+    "signature": "(methodology_version: str, max_total_wait_seconds: float) -> None",
+    "frozen": true,
+    "fields_hash": "75bc51a3409b4853b83a08adc6abcb0fe61bbdce51a4ad9f49aa6e9d8f066557"
+  },
+  "load_urban_journey_rules": {
+    "signature": "(path: str | pathlib.Path | None = None) -> UrbanJourneyRules",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "urban_journey_rules_from_mapping": {
+    "signature": "(product: collections.abc.Mapping[str, object]) -> UrbanJourneyRules",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "SelectedUrbanObject": {
+    "signature": "(destination: UrbanDestination, journey: UrbanJourneyTiming) -> None",
+    "frozen": true,
+    "fields_hash": "179c4d7cd4deb325eca4bf68414d6553b0aedde28374d3c49d3843f23196377f"
+  },
+  "UrbanAnalysis": {
+    "signature": "(context: UrbanContext, area: UrbanArea, selected_categories: collections.abc.Mapping[str, str], h_seconds: MetricResult, journeys: tuple[UrbanJourneyTiming, ...], modes: tuple[UrbanTerritoryResult, ...], population_coverage: UrbanPopulationCoverage, status: Literal['available', 'partial', 'unknown'], limitations: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "21b64d7d6bfa47df4972138df340e232e1c0028c40a853bdef881344a24f2c2e"
+  },
+  "UrbanArea": {
+    "signature": "(city_id: str, area_km2: float | None, geometry_version: str, source_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "d7eb55e34c40f8ea01e2a6ca0500a0b62304feff934af30f0b72d63f9ac94db3"
+  },
+  "UrbanCandidate": {
+    "signature": "(journey_id: str, point_id: str, destination_id: str, category: str, passenger_mode: str, context: UrbanContext, origin_node_id: str, destination_node_id: str, departure_at: datetime.datetime, arrival_at: datetime.datetime, legs: tuple[UrbanLeg, ...], evidence_refs: tuple[str, ...], geometry: UrbanGeometry | None = None) -> None",
+    "frozen": true,
+    "fields_hash": "3a76bd81147694897be66481cb45c95bb9ad5e864731649b3dfcc4fca851af09"
+  },
+  "UrbanCategoryResult": {
+    "signature": "(point_id: str, category: str, passenger_mode: str, best: SelectedUrbanObject | None, objects: tuple[SelectedUrbanObject, ...], rejected: tuple[UrbanJourneyTiming, ...], index: MetricResult, count: MetricResult, threshold: UrbanThreshold | None, coverage: UrbanCoverage | None, minimum_proven: bool, completeness: Literal['full', 'partial'], evidence_refs: tuple[str, ...], limitations: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "d2afc8df8338179c02556010d1997f67cc5513390c2931e852b133efb7629eb8"
+  },
+  "UrbanContext": {
+    "signature": "(city_id: str, territory_id: str, requested_departure_at: datetime.datetime, traffic_mode: Literal['static', 'typical', 'live', 'historical'], versions: UrbanVersions, search_parameters_id: str) -> None",
+    "frozen": true,
+    "fields_hash": "6538fad0506bc339bfef8d7dec5a147922b12b553885374862410585fa3dd14a"
+  },
+  "UrbanCoverage": {
+    "signature": "(scope: UrbanSearchScope, catalog_complete: bool, search_complete: bool, evidence_refs: tuple[str, ...], catalog_destination_ids: frozenset[str], provider_error: str | None = None) -> None",
+    "frozen": true,
+    "fields_hash": "a1eb7ea61b8cd8063d54ba675a54912436e8e007b0c9d54f0b670c646c190d8b"
+  },
+  "UrbanDestination": {
+    "signature": "(destination_id: str, object_identity: str, categories: frozenset[str], access_node_id: str, territory_id: str, eligible: bool | None, in_service_scope: bool, source_refs: tuple[str, ...], *, physical_node_id: str | None = None) -> None",
+    "frozen": true,
+    "fields_hash": "b6346ac695faee55b29bfdce358d227253a5da6dd6b800a5ed18c1d3f34151be"
+  },
+  "UrbanGeometry": {
+    "signature": "(coordinates: tuple[tuple[float, float], ...], evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "c784fdd20b4676df6e85979f7aff1e118bae2448cbaa805dff0facf66d9d4bfe"
+  },
+  "UrbanJourneyTiming": {
+    "signature": "(candidate: UrbanCandidate, total_seconds: float, walking_seconds: float, riding_seconds: float, initial_wait_seconds: float, transfer_wait_seconds: float, total_wait_seconds: float, waiting_share: MetricResult, admissible: bool, reason_code: str | None) -> None",
+    "frozen": true,
+    "fields_hash": "fd92b286ff62f151042a3f3f5383fbb0625fb760ec1731c5364bfdfd88fb271c"
+  },
+  "UrbanLeg": {
+    "signature": "(mode: str, kind: Literal['walk', 'ride', 'wait_initial', 'wait_transfer'], from_node_id: str, to_node_id: str, start_at: datetime.datetime, end_at: datetime.datetime, duration_seconds: float, service_id: str | None, evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "1f31d818db2289679dd83710423e4bb207fec3055659fb443ca3336b6f4d365a"
+  },
+  "UrbanPoint": {
+    "signature": "(point_id: str, cell_id: str, origin_node_id: str, access_node_id: str, access_distance_m: float, territory_id: str, population: float | None, population_year: int | None, population_method: str | None, source_refs: tuple[str, ...], population_share_id: str | None = None) -> None",
+    "frozen": true,
+    "fields_hash": "33fe85d1c16e4c8bd12e889859133e308d5692fe9bd8192e5d7a42a51f9dc6bf"
+  },
+  "UrbanPointResult": {
+    "signature": "(point: UrbanPoint, passenger_mode: str, categories: tuple[UrbanCategoryResult, ...], index: MetricResult, completeness: Literal['full', 'partial']) -> None",
+    "frozen": true,
+    "fields_hash": "0bb901808fb89a2c0f461cce0a2dc19e2649256dc0cd6691eb975d0d286a98bd"
+  },
+  "UrbanPopulationCoverage": {
+    "signature": "(context: UrbanContext, complete: bool, excluded_population: float | None, evidence_refs: tuple[str, ...], point_ids: frozenset[str]) -> None",
+    "frozen": true,
+    "fields_hash": "285318433258b334ce05e302b230298679bf61973642ac8a4699f3d5e82e83f1"
+  },
+  "UrbanSearchScope": {
+    "signature": "(context: UrbanContext, point_id: str, category: str, passenger_mode: str, max_total_wait_seconds: float) -> None",
+    "frozen": true,
+    "fields_hash": "67a024bc1766262c436d2552ac6ac4d276c9385b9d578d25959cda0eb8b8160c"
+  },
+  "UrbanTerritoryResult": {
+    "signature": "(passenger_mode: str, points: tuple[UrbanPointResult, ...], index: MetricResult, completeness: Literal['full', 'partial'], ranking_eligible: bool, evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "16980412bd0f001b743b3db76290d54b8811496f875b49cbebc37f1a01340e43"
+  },
+  "UrbanThreshold": {
+    "signature": "(city_id: str, passenger_mode: str, versions: UrbanVersions, traffic_mode: str, search_parameters_id: str, seconds: float | None, evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "f2b96a4547ca17dcef516bb9d8d57be0713023b88a47283c4ac827cdcf7046bc"
+  },
+  "UrbanVersions": {
+    "signature": "(snapshot_id: str, graph_version: str, calendar_version: str, population_version: str | None, geometry_version: str, methodology_version: str, config_hash: str, traffic_version: str) -> None",
+    "frozen": true,
+    "fields_hash": "aa7e64286fe140a7b717033d709d64a582fd7246ed11e48d3ff78025d5090990"
+  },
+  "analyze_urban_candidates": {
+    "signature": "(context: UrbanContext, points: collections.abc.Sequence[UrbanPoint], destinations: collections.abc.Sequence[UrbanDestination], candidates: collections.abc.Sequence[UrbanCandidate], coverage: collections.abc.Sequence[UrbanCoverage], *, area: UrbanArea, selected_categories: collections.abc.Mapping[str, str], modes: collections.abc.Sequence[str], population_coverage: UrbanPopulationCoverage, config: UrbanConfig, rules: UrbanJourneyRules, thresholds: collections.abc.Sequence[UrbanThreshold] = ()) -> UrbanAnalysis",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "validate_urban_journey": {
+    "signature": "(candidate: UrbanCandidate, *, rules: UrbanJourneyRules) -> UrbanJourneyTiming",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "UrbanTauRules": {
+    "signature": "(methodology_version: str, tau_days: int, tau_times: tuple[datetime.time, ...], max_total_wait_seconds: float, max_lookback_weeks: int = 8) -> None",
+    "frozen": true,
+    "fields_hash": "d1a2edd100a3081ce979747cea707602551f296cc58999ac5a73782a7bdbc815"
+  },
+  "load_urban_tau_rules": {
+    "signature": "(path: str | pathlib.Path | None = None) -> UrbanTauRules",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "urban_tau_rules_from_mapping": {
+    "signature": "(product: collections.abc.Mapping[str, object]) -> UrbanTauRules",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "UrbanODScope": {
+    "signature": "(city_id: str, passenger_mode: Literal['walk', 'public_transport', 'private_car'], versions: UrbanVersions, traffic_mode: Literal['static', 'typical', 'live', 'historical'], search_parameters_id: str, timezone: str, point_ids: frozenset[str], max_total_wait_seconds: float) -> None",
+    "frozen": true,
+    "fields_hash": "8b4563ce2bdddd7e59d5b8af019d2d2daa3cac2a219f1aee808d8dadbb8d7de1"
+  },
+  "UrbanODPair": {
+    "signature": "(origin_point_id: str, destination_point_id: str, state: Literal['reachable', 'confirmed_unreachable', 'unknown'], seconds: float | None, search_complete: bool, rules_confirmed: bool, evidence_refs: tuple[str, ...], reason_code: str | None = None) -> None",
+    "frozen": true,
+    "fields_hash": "19ecab09beda43b37ef8a35aa94479b3f06f2219d7252eefe2d71fb432f0af13"
+  },
+  "UrbanTauDay": {
+    "signature": "(service_date: datetime.date, ordinary: bool | None, is_holiday: bool | None, calendar_confirmed: bool, service_calendar_confirmed: bool, evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "e77fb722828a5f8efd4ba5b2db5975078c3bd059ba6b622965f5c708783dbf34"
+  },
+  "UrbanTauSlice": {
+    "signature": "(scope: UrbanODScope, service_date: datetime.date, local_time: datetime.time, departure_at: datetime.datetime, pairs: tuple[UrbanODPair, ...], coverage_confirmed: bool, evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "d7e20ce30bff8ee33ab91e037548fac24356aafcb814d211623adec0b113bfec"
+  },
+  "UrbanTauWeek": {
+    "signature": "(week_id: str, scope: UrbanODScope, week_start: datetime.date, calendar: tuple[UrbanTauDay, ...], slices: tuple[UrbanTauSlice, ...], evidence_refs: tuple[str, ...], typical_profile_accepted: bool, traffic_evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "539b9227a3ee5e225df7fc5add89c67bd1942c439357538590e92471ada93c67"
+  },
+  "UrbanTauSliceResult": {
+    "signature": "(service_date: datetime.date, local_time: datetime.time, departure_at: datetime.datetime, mean_seconds: MetricResult, reachable_weight: fractions.Fraction, confirmed_unreachable_weight: fractions.Fraction, unknown_weight: fractions.Fraction, weight_denominator: fractions.Fraction, unreachable_weight_share: fractions.Fraction | None, reasons: tuple[str, ...], evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "1a2690746c337dbceddffda61e7b1459e808a1d9ea85f8acd6ef7d1ef9462661"
+  },
+  "UrbanTauWeekResult": {
+    "signature": "(week_id: str, week_start: datetime.date, scope: UrbanODScope, tau_seconds: MetricResult, slices: tuple[UrbanTauSliceResult, ...], reasons: tuple[str, ...], evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "5f20494bf4d5d621920b5ccffb5e70b3093619265774bd484f540c013dacd238"
+  },
+  "UrbanTauResult": {
+    "signature": "(baseline_context: UrbanContext, passenger_mode: Literal['walk', 'public_transport', 'private_car'], timezone: str, reference_at: datetime.datetime, rules: UrbanTauRules, points: tuple[UrbanPoint, ...], population_coverage: UrbanPopulationCoverage, tau_seconds: MetricResult, selected_week: UrbanTauWeekResult | None, weeks: tuple[UrbanTauWeekResult, ...], reasons: tuple[str, ...], evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "7ef66c9fe6258f175092e1fd05f08b99e92cf29cfba98d70c3416bd6bced3419"
+  },
+  "calculate_urban_tau": {
+    "signature": "(baseline_context: UrbanContext, points: collections.abc.Sequence[UrbanPoint], population_coverage: UrbanPopulationCoverage, weeks: collections.abc.Sequence[UrbanTauWeek], *, passenger_mode: Literal['walk', 'public_transport', 'private_car'], timezone: str, reference_at: datetime.datetime, rules: UrbanTauRules) -> UrbanTauResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "ValhallaBuild": {
+    "signature": "(snapshot_id: str, source_graph_version: str, build_id: str, graph_version: str, engine_version: str, profile_version: str, pedestrian_options_json: str, evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "650ab209e9fc45880ffe656294e9d4932e0c00c057f337b0ad9f503afb89fa03"
+  },
+  "ValhallaCorrelation": {
+    "signature": "(build: ValhallaBuild, access_node_id: str, source_location: WalkCoordinate, correlated_location: WalkCoordinate, correlation_id: str, evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "efec0f7c719bef639690c366c4e1fe47c18e00e14aface7ae3ad929e15704eed"
+  },
+  "WalkCoordinate": {
+    "signature": "(lon: float, lat: float) -> None",
+    "frozen": true,
+    "fields_hash": "1f93244e363cf7400cfdc17d93c2c22e440b38d4f985dc336ac992ce65f6cc7e"
+  },
+  "WalkConnector": {
+    "signature": "(snapshot_id: str, source_graph_version: str, physical_node_id: str, access_node_id: str, physical_location: WalkCoordinate, access_location: WalkCoordinate, seconds: float | None, traversable: bool | None, time_basis: str, evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "3fde9cc48110f6a8fbac7809125ede8d43fe226791fbc504cf733087f9d10cbc"
+  },
+  "WalkRouteRequest": {
+    "signature": "(request_id: str, point_id: str, destination_id: str, build: ValhallaBuild, search_parameters_id: str, origin: ValhallaCorrelation, destination: ValhallaCorrelation, payload_json: str, evidence_refs: tuple[str, ...], path_scope: Literal['network_only'] = 'network_only') -> None",
+    "frozen": true,
+    "fields_hash": "a7086b5f32bf5a8d59af24a5b8a3d5687f13b3d9f0ce7125479a651c1c6cc381"
+  },
+  "WalkResponseEnvelope": {
+    "signature": "(request_id: str, point_id: str, destination_id: str, build: ValhallaBuild, request_payload_hash: str, origin_correlation_id: str, destination_correlation_id: str, outcome: Literal['response', 'timeout', 'http_error', 'limit', 'no_correlation'], response_json: str | None, evidence_refs: tuple[str, ...], search_complete: bool = False, minimum_time_evidence_refs: tuple[str, ...] = (), unreachable_evidence_refs: tuple[str, ...] = (), pure_walk_evidence_refs: tuple[str, ...] = (), matched_origin: WalkCoordinate | None = None, matched_destination: WalkCoordinate | None = None, endpoint_evidence_refs: tuple[str, ...] = ()) -> None",
+    "frozen": true,
+    "fields_hash": "8c7fda8e60edc8dd5dbd581d1b1c75f1e2f73d9c72d0adbaa356e0db2956e793"
+  },
+  "WalkRouteResult": {
+    "signature": "(request: WalkRouteRequest, state: Literal['reachable', 'confirmed_unreachable', 'unknown'], network_seconds: float | None, network_distance_m: float | None, network_geometry: UrbanGeometry | None, minimum_proven: bool, reason_code: str | None, evidence_refs: tuple[str, ...], response_hash: str | None = None) -> None",
+    "frozen": true,
+    "fields_hash": "568e3c0b95f9b7a08a933797afbd4990bdb5893e875b291cee45d9f94ccfb13a"
+  },
+  "normalize_walk_response": {
+    "signature": "(request: WalkRouteRequest, envelope: WalkResponseEnvelope) -> WalkRouteResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "WalkInputs": {
+    "signature": "(canonical_payload_hash: str, source_graph_version: str, context: UrbanContext, build: ValhallaBuild | None, points: tuple[UrbanPoint, ...], destinations: tuple[UrbanDestination, ...], point_endpoints: tuple[WalkEndpoint, ...], destination_endpoints: tuple[WalkEndpoint, ...], catalogs: tuple[WalkCatalog, ...], area: UrbanArea, population_coverage: UrbanPopulationCoverage, limitations: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "67975d4c2db05fd8bd066c748ba77cb8ef99bbbe2be7064a7e3742f6ffa1a4d3"
+  },
+  "WalkRoutePlan": {
+    "signature": "(inputs: WalkInputs, point_ids: tuple[str, ...], categories: tuple[str, ...], requests: tuple[WalkRouteRequest, ...], issues: tuple[WalkPlanIssue, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "cf4194e66ef99bae31997f470746865dfab0d5b8d98c44702774fa858a56c04a"
+  },
+  "WalkPlanIssue": {
+    "signature": "(point_id: str, destination_id: str, reasons: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "3482dad0203642b678f5801c71716f652f1a279212bf56f0fd848a1db9305667"
+  },
+  "WalkAnalysisResult": {
+    "signature": "(plan: WalkRoutePlan, routes: tuple[WalkRouteResult, ...], analysis: UrbanAnalysis) -> None",
+    "frozen": true,
+    "fields_hash": "348936fc0ecea9998998798d9d58f5bb166cf199dac83bddc11cd94c0b90ffe6"
+  },
+  "prepare_walk_inputs": {
+    "signature": "(accepted: collections.abc.Mapping[str, typing.Any], *, city_id: str, departure_at: datetime.datetime, methodology_version: str, config_hash: str, search_parameters_id: str, build: ValhallaBuild | None = None, connectors: collections.abc.Sequence[WalkConnector] = (), correlations: collections.abc.Sequence[ValhallaCorrelation] = ()) -> WalkInputs",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "plan_walk_routes": {
+    "signature": "(inputs: WalkInputs, *, point_ids: collections.abc.Sequence[str], categories: collections.abc.Sequence[str]) -> WalkRoutePlan",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "analyze_walk_responses": {
+    "signature": "(plan: WalkRoutePlan, responses: collections.abc.Sequence[WalkResponseEnvelope], *, selected_categories: collections.abc.Mapping[str, str], config: UrbanConfig, rules: UrbanJourneyRules, thresholds: collections.abc.Sequence[UrbanThreshold] = ()) -> WalkAnalysisResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "UrbanOriginalCell": {
+    "signature": "(cell_id: str, city_id: str, grid_version: str, population: float | None, population_year: int | None, population_method: str | None, point_id: str | None, excluded: bool, evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "b3fd9d3220b9d67e5a40b720b70d84a5572742f1aaf495d6c3560381189f74d6"
+  },
+  "UrbanDistrict": {
+    "signature": "(district_id: str, city_id: str, name: str, boundary_version: str, evidence_refs: tuple[str, ...], administrative_level: str = 'district') -> None",
+    "frozen": true,
+    "fields_hash": "8905fb01db91d71fab649446b063bada07e5639665597f02808d7bc29c6f61e8"
+  },
+  "UrbanDistrictShare": {
+    "signature": "(cell_id: str, district_id: str, population: float | None, evidence_refs: tuple[str, ...], area_share: float | None = None) -> None",
+    "frozen": true,
+    "fields_hash": "ccaef18e57bc3beb08872b8e30afc64684a15b37e9242e9a12f19729d60d4b9e"
+  },
+  "UrbanSharePrecision": {
+    "signature": "(cell_quantum: float, share_quantum: float, evidence_refs: tuple[str, ...], rule: str = 'cell_nearest_share_floor') -> None",
+    "frozen": true,
+    "fields_hash": "a92751919f48602b0062e131eed6dabc6a7a3f58a7adc5ebb542949216150ded"
+  },
+  "UrbanDistrictCoverage": {
+    "signature": "(context: UrbanContext, catalog_version: str, distribution_version: str, grid_versions: frozenset[str], district_boundary_versions: collections.abc.Mapping[str, str], expected_district_ids: frozenset[str], expected_cell_ids: frozenset[str], complete_district_ids: frozenset[str], original_cells_complete: bool, evidence_refs: tuple[str, ...], precision: UrbanSharePrecision | None = None) -> None",
+    "frozen": true,
+    "fields_hash": "d0d1df4199ffa324146d1864e105b9300709c5e440ab9590a1b53c6bff44f7ae"
+  },
+  "UrbanCellAllocation": {
+    "signature": "(cell_id: str, population: float | None, allocated_population: decimal.Decimal | None, residual_population: decimal.Decimal | None, documented_precision: bool, reasons: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "cb9f2193eff5bcb953cfeb227542f2d1ac80191fa929fcc649fb934169edb728"
+  },
+  "UrbanDistrictPopulation": {
+    "signature": "(district_id: str, population: decimal.Decimal | None, excluded_population: decimal.Decimal | None, reasons: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "c25f6c01205b7f5f3fe4ca9578fe7d5347fade60033ccad6c3085a199b82b07f"
+  },
+  "UrbanDistrictComparison": {
+    "signature": "(context: UrbanContext, passenger_mode: str, category: str | None, selected_categories: tuple[tuple[str, str], ...], h_seconds: MetricResult, catalog_version: str, distribution_version: str, grid_versions: frozenset[str], district_boundary_versions: tuple[tuple[str, str], ...], expected_district_ids: tuple[str, ...], administrative_level: str = 'district') -> None",
+    "frozen": true,
+    "fields_hash": "ffeaa8f5bdc74e463828f373a77da25393b11ceb0a9405bb7085c8221ca1e456"
+  },
+  "UrbanDistrictValue": {
+    "signature": "(district_id: str, index: MetricResult, deficit: MetricResult, ranking_eligible: bool, reasons: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "81f18d81dd91c8d70fe558d63a14a35289ec4f717391c34fec8d9bbdc4253873"
+  },
+  "UrbanDistrictRank": {
+    "signature": "(district_id: str, index: float, rank: int) -> None",
+    "frozen": true,
+    "fields_hash": "47021176cae3fde0a2d9797d0582caa0332aa6f8b6b816ded7fd66e33914e440"
+  },
+  "UrbanDistrictRanking": {
+    "signature": "(scope: UrbanDistrictComparison, entries: tuple[UrbanDistrictRank, ...], excluded: tuple[tuple[str, tuple[str, ...]], ...], complete: bool, positions_scope: str) -> None",
+    "frozen": true,
+    "fields_hash": "91ce59802d221ef8001bbcad16cc929367006638f2d67aa6c1c6fc8ede6cd7b8"
+  },
+  "UrbanDistrictMetric": {
+    "signature": "(scope: UrbanDistrictComparison, city_index: MetricResult, districts: tuple[UrbanDistrictValue, ...], gap: MetricResult, ranking: UrbanDistrictRanking) -> None",
+    "frozen": true,
+    "fields_hash": "d7cbfad36aa22b41c9349f41474c3e42fdd21dee58251a907ac5e382c2f05e00"
+  },
+  "UrbanDistrictModeResult": {
+    "signature": "(passenger_mode: str, overall: UrbanDistrictMetric, categories: tuple[UrbanDistrictMetric, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "87ef0c380d28a6f57040e3c5c336c854e28bc7400dc3ce203d7e0c6742452d8b"
+  },
+  "UrbanDistrictAnalysis": {
+    "signature": "(source_analysis: UrbanAnalysis, original_cells: tuple[UrbanOriginalCell, ...], district_catalog: tuple[UrbanDistrict, ...], population_shares: tuple[UrbanDistrictShare, ...], coverage: UrbanDistrictCoverage, cell_qa: tuple[UrbanCellAllocation, ...], district_populations: tuple[UrbanDistrictPopulation, ...], city_population: decimal.Decimal | None, allocated_population: decimal.Decimal | None, residual_population: decimal.Decimal | None, excluded_population: decimal.Decimal | None, modes: tuple[UrbanDistrictModeResult, ...], evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "722b4dade2fbc2f2bce13c7051563f76dab29c228d9e8bea803b65a189b6dc83"
+  },
+  "analyze_urban_districts": {
+    "signature": "(urban_analysis: UrbanAnalysis, original_cells: collections.abc.Sequence[UrbanOriginalCell], district_catalog: collections.abc.Sequence[UrbanDistrict], population_shares: collections.abc.Sequence[UrbanDistrictShare], coverage: UrbanDistrictCoverage) -> UrbanDistrictAnalysis",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "UrbanDistrictInputs": {
+    "signature": "(original_cells: tuple[UrbanOriginalCell, ...], district_catalog: tuple[UrbanDistrict, ...], population_shares: tuple[UrbanDistrictShare, ...], coverage: UrbanDistrictCoverage) -> None",
+    "frozen": true,
+    "fields_hash": "8743831bb05d4812914f7b2d51affcf1a5bcc3820ce6637a0fbd7902918ea15b"
+  },
+  "prepare_urban_district_inputs": {
+    "signature": "(urban_analysis: UrbanAnalysis, accepted: collections.abc.Mapping[str, typing.Any], supplement: collections.abc.Mapping[str, typing.Any], *, catalog_version: str, distribution_version: str, complete_district_ids: collections.abc.Sequence[str], original_cells_complete: bool, evidence_refs: collections.abc.Sequence[str], precision: UrbanSharePrecision | None = None) -> UrbanDistrictInputs",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "TimetableEvent": {
+    "signature": "(sequence: int, node_id: str, arrival_at: datetime.datetime, departure_at: datetime.datetime, pickup: bool, dropoff: bool, evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "439f7a20daa5c8e6cc11085c7da5895b1457933af7b7408ac5de75fcce9777e3"
+  },
+  "TimetableRun": {
+    "signature": "(snapshot_id: str, source_id: str, trip_id: str, service_date: datetime.date, timezone: str, transport_type: str, events: tuple[TimetableEvent, ...], active: bool | None, calendar_evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "4a6c46bf5693268f244a2b72f8ab71f44422cd25033d09a863cd4e3850de5db9"
+  },
+  "TimetableFootpath": {
+    "signature": "(path_id: str, from_node_id: str, to_node_id: str, seconds: float | None, confirmed: bool, evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "add27e574207d2e25c902a78ad975784b67db59159a513787450c820e7efb3aa"
+  },
+  "TimetableTransfer": {
+    "signature": "(rule_id: str, from_node_id: str, to_node_id: str, minimum_seconds: float | None, allowed: bool | None, evidence_refs: tuple[str, ...], from_run_id: str | None = None, to_run_id: str | None = None, semantics: Literal['alight_to_departure'] = 'alight_to_departure') -> None",
+    "frozen": true,
+    "fields_hash": "ecc6bbd6d425fc269a1a6a24d8b4a17006e1669f2f79063e6733af954e126cff"
+  },
+  "TimetableScope": {
+    "signature": "(snapshot_id: str, graph_version: str, calendar_version: str, timetable_version: str, footpath_version: str, transfer_version: str, timezone: str, start_at: datetime.datetime, end_at: datetime.datetime, node_ids: frozenset[str], schedule_complete: bool, calendar_complete: bool, footpaths_complete: bool, transfers_complete: bool, continuations_complete: bool, evidence_refs: tuple[str, ...], limitations: tuple[str, ...] = ()) -> None",
+    "frozen": true,
+    "fields_hash": "49998bf66fea8a536057cce4cb93f63a7d83ab73a167b79f7abe754d944d6910"
+  },
+  "Timetable": {
+    "signature": "(scope: TimetableScope, runs: tuple[TimetableRun, ...], footpaths: tuple[TimetableFootpath, ...], transfers: tuple[TimetableTransfer, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "88322765a590c2657b4e259d20148fb64cc6c7466c157a7f36d2891c598ee76a"
+  },
+  "TimetableStep": {
+    "signature": "(kind: Literal['walk', 'ride', 'wait_initial', 'wait_transfer'], from_node_id: str, to_node_id: str, start_at: datetime.datetime, end_at: datetime.datetime, transport_type: str, run_id: str | None, evidence_refs: tuple[str, ...], original_seconds: float | None = None, footpath_id: str | None = None) -> None",
+    "frozen": true,
+    "fields_hash": "1aabe644f20cd5a1bfb351ecc84bc077ad44fd55b73a37627e7e6ebf203ddcec"
+  },
+  "TimetablePath": {
+    "signature": "(origin_node_id: str, destination_node_id: str, departure_at: datetime.datetime, arrival_at: datetime.datetime, steps: tuple[TimetableStep, ...], boardings: tuple[tuple[str, int, datetime.datetime], ...]) -> None",
+    "frozen": true,
+    "fields_hash": "dfe2695a47a1618d9ad4f4918c66cab1f5f8cf65888d465de0fa1d983d4383f1"
+  },
+  "TimetableSearchResult": {
+    "signature": "(timetable: Timetable, origin_node_id: str, destination_node_id: str, departure_at: datetime.datetime, state: Literal['reachable', 'confirmed_unreachable', 'unknown'], best_known: TimetablePath | None, proven: bool, reasons: tuple[str, ...], evidence_refs: tuple[str, ...], expanded_states: int, interrupted: bool, max_wait_seconds: float, allow_transit: bool, require_transit: bool, first_boarding: tuple[str, int] | None, resource_limit: int | None) -> None",
+    "frozen": true,
+    "fields_hash": "f2902dac32987ca74706c7d04ef7609efef17daf36480c08130bbd0b59f1066f"
+  },
+  "solve_timetable": {
+    "signature": "(timetable: Timetable, origin_node_id: str, destination_node_id: str, departure_at: datetime.datetime, *, max_wait_seconds: float, allow_transit: bool = True, require_transit: bool = False, first_boarding: tuple[str, int] | None = None, resource_limit: int | None = None) -> TimetableSearchResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "UrbanTransitNetwork": {
+    "signature": "(context: UrbanContext, timetable: Timetable, evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "cb4c878d014a7e6ca89b1fa9882b549a6426a749851bfadc87d006d2b4ca93a6"
+  },
+  "UrbanTransitResult": {
+    "signature": "(network: UrbanTransitNetwork, point_id: str, destination_id: str, category: str, passenger_mode: str, search: TimetableSearchResult, best_known: UrbanJourneyTiming | None, seconds: MetricResult) -> None",
+    "frozen": true,
+    "fields_hash": "db67d6b2dfa9b28b2a1df3949a6c3b6571b9d2db0d989ae0c4ae025819e076dc"
+  },
+  "search_urban_transit": {
+    "signature": "(network: UrbanTransitNetwork, point: UrbanPoint, destination: UrbanDestination, *, category: str, rules: UrbanJourneyRules, passenger_mode: Literal['public_transport', 'walk'] = 'public_transport', resource_limit: int | None = None) -> UrbanTransitResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "UrbanReturnJourney": {
+    "signature": "(point_id: str, destination_id: str, leave_at: datetime.datetime, first_departure_at: datetime.datetime, arrival_at: datetime.datetime, legs: tuple[UrbanLeg, ...], totals: UrbanLegTotals, source_path: TimetablePath) -> None",
+    "frozen": true,
+    "fields_hash": "2c041af51d98dff89926b85272c41e5d33121e434b4fed1ba7368c31939110ad"
+  },
+  "UrbanLastReturnResult": {
+    "signature": "(network: UrbanTransitNetwork, point_id: str, destination_id: str, local_day: datetime.date, timezone: str, status: Literal['available', 'unknown', 'not_applicable'], state: Literal['reachable', 'confirmed_unreachable', 'unknown', 'walk_only'], proven: bool, best_known: UrbanReturnJourney | None, reasons: tuple[str, ...], evidence_refs: tuple[str, ...], expanded_states: int, interrupted: bool, rules: UrbanJourneyRules, lower_leave_at: datetime.datetime | None, resource_limit: int | None) -> None",
+    "frozen": true,
+    "fields_hash": "3c4445ba49d6ade7cbb890983cefbb666a7e8cccb36d29d4b856b2ed25224736"
+  },
+  "search_urban_last_return": {
+    "signature": "(network: UrbanTransitNetwork, point: UrbanPoint, selected_destination: UrbanDestination, *, local_day: datetime.date, rules: UrbanJourneyRules, lower_leave_at: datetime.datetime | None = None, passenger_mode: Literal['public_transport', 'walk'] = 'public_transport', resource_limit: int | None = None) -> UrbanLastReturnResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "RoadBuild": {
+    "signature": "(snapshot_id: str, source_graph_version: str, build_id: str, graph_version: str, profile_version: str, costing: Literal['auto', 'pedestrian'], options_json: str, evidence_refs: tuple[str, ...], engine_version: str = '3.5.1', traffic_mode: Literal['static'] = 'static') -> None",
+    "frozen": true,
+    "fields_hash": "de13c5f214911a7727944a59362e1619b593bc9b884153f38fa6aed76033abc6"
+  },
+  "RoadCoordinate": {
+    "signature": "(lon: float, lat: float) -> None",
+    "frozen": true,
+    "fields_hash": "1f93244e363cf7400cfdc17d93c2c22e440b38d4f985dc336ac992ce65f6cc7e"
+  },
+  "RoadEndpoint": {
+    "signature": "(build: RoadBuild, physical_node_id: str, access_node_id: str, coordinate: RoadCoordinate, correlation_id: str, direction: Literal['entry', 'exit'], seconds: float, evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "e8f9ecf0e2ac15c21128d0a2ca20c8d793fcaf92fa44217804be57dcb9bcb6ba"
+  },
+  "RoadRequest": {
+    "signature": "(origin_id: str, destination_id: str, origin: RoadEndpoint, destination: RoadEndpoint, departure_at: datetime.datetime, search_parameters_id: str, timezone: str) -> None",
+    "frozen": true,
+    "fields_hash": "1ef3b6b420196b499b9e9069298c05c173a7733405eb1593877dfc689dd3eef6"
+  },
+  "RoadResponse": {
+    "signature": "(request_id: str, payload_hash: str, profile_hash: str, outcome: Literal['response', 'timeout', 'cancelled', 'limit', 'http_error'], response_json: str | None, evidence_refs: tuple[str, ...], matched_origin: RoadCoordinate | None = None, matched_destination: RoadCoordinate | None = None, endpoint_evidence_refs: tuple[str, ...] = (), minimum_time_evidence_refs: tuple[str, ...] = (), unreachable_evidence_refs: tuple[str, ...] = (), search_complete: bool = False) -> None",
+    "frozen": true,
+    "fields_hash": "ef596b5584b6faae9c054899391e73e4281f67714b447557461eaa8519e707b9"
+  },
+  "RoadResult": {
+    "signature": "(request: RoadRequest, state: Literal['reachable', 'confirmed_unreachable', 'unknown'], network_seconds: float | None, network_distance_m: float | None, minimum_proven: bool, evidence_refs: tuple[str, ...], reason_code: str | None, response_hash: str | None) -> None",
+    "frozen": true,
+    "fields_hash": "49f85e182f77eedf711d51597e1e89ee624d239c38bfa3dc127c2ed8b261b0d2"
+  },
+  "normalize_road_response": {
+    "signature": "(request: RoadRequest, response: RoadResponse) -> RoadResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "CarInputs": {
+    "signature": "(context: UrbanContext, points: tuple[UrbanPoint, ...], destinations: tuple[UrbanDestination, ...], entries: tuple[tuple[str, RoadEndpoint], ...], exits: tuple[tuple[str, RoadEndpoint], ...], area: UrbanArea, population: UrbanPopulationCoverage, catalogs: tuple[tuple[str, bool, tuple[str, ...]], ...], timezone: str) -> None",
+    "frozen": true,
+    "fields_hash": "d2d35f43745cbae72ce88ad65139cb744ed795b564aedff149c90c603879dd84"
+  },
+  "CarPlan": {
+    "signature": "(inputs: CarInputs, categories: tuple[str, ...], requests: tuple[RoadRequest, ...], issues: tuple[tuple[str, str, str], ...]) -> None",
+    "frozen": true,
+    "fields_hash": "f1dfc0488f9ef293de897f79993f63ab9983463000b80df4f1dcd7023954bc5c"
+  },
+  "CarAnalysisResult": {
+    "signature": "(plan: CarPlan, routes: tuple[RoadResult, ...], analysis: UrbanAnalysis) -> None",
+    "frozen": true,
+    "fields_hash": "007a70f5e1a621b9516e1401de9a21f3add5516b91bd1c7d44773d67d33cba5d"
+  },
+  "plan_car_routes": {
+    "signature": "(inputs: CarInputs, *, categories: collections.abc.Sequence[str]) -> CarPlan",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "analyze_car_responses": {
+    "signature": "(plan: CarPlan, responses: collections.abc.Sequence[RoadResponse], *, selected_categories: collections.abc.Mapping[str, str], config: UrbanConfig, rules: UrbanJourneyRules, thresholds: collections.abc.Sequence[UrbanThreshold] = ()) -> CarAnalysisResult",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "UrbanODTask": {
+    "signature": "(plan_id: str, scope: UrbanODScope, profile_hash: str, departure_at: datetime.datetime, origin: UrbanPoint, destination: UrbanPoint) -> None",
+    "frozen": true,
+    "fields_hash": "d9f0e7b5ad0dba5ebd5348fa24d7b8d34db926815b969b00631b0a36e94c1f7d"
+  },
+  "UrbanODPlan": {
+    "signature": "(scope: UrbanODScope, points: tuple[UrbanPoint, ...], week_start: datetime.date, reference_at: datetime.datetime, calendar: tuple[UrbanTauDay, ...], departures: tuple[datetime.datetime, ...], profile_hash: str, evidence_refs: tuple[str, ...]) -> None",
+    "frozen": true,
+    "fields_hash": "8a616fe5a66a647d952d52be6c1b2c590c9711c6b5578bdcae5a399c2cd792f0"
+  },
+  "UrbanODObservation": {
+    "signature": "(task: UrbanODTask, pair: UrbanODPair, best_known_seconds: float | None = None) -> None",
+    "frozen": true,
+    "fields_hash": "8f7322563537497f9a28062d1b91a450f8cea8028ec59552c182265a5919563d"
+  },
+  "UrbanODCollector": {
+    "signature": "(plan: UrbanODPlan) -> None",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "plan_urban_od_week": {
+    "signature": "(scope: UrbanODScope, points: collections.abc.Sequence[UrbanPoint], *, week_start: datetime.date, reference_at: datetime.datetime, calendar: collections.abc.Sequence[UrbanTauDay], rules: UrbanTauRules, profile_hash: str, evidence_refs: tuple[str, ...]) -> UrbanODPlan",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "assemble_urban_od_week": {
+    "signature": "(plan: UrbanODPlan, observations: collections.abc.Iterable[UrbanODObservation]) -> UrbanTauWeek",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "od_road_request": {
+    "signature": "(task: UrbanODTask, entries: collections.abc.Mapping[str, RoadEndpoint], exits: collections.abc.Mapping[str, RoadEndpoint]) -> RoadRequest",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "od_road_observation": {
+    "signature": "(task: UrbanODTask, result: RoadResult) -> UrbanODObservation",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "od_timetable_observation": {
+    "signature": "(task: UrbanODTask, timetable: Timetable, *, resource_limit: int | None = None) -> UrbanODObservation",
+    "frozen": null,
+    "fields_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  }
+}

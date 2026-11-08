@@ -3,7 +3,8 @@
 Чистые расчёты ML1 по `docs/FORMULAS.md` и `config/product.json`: городские
 пассажирские индексы, одна межгородская пассажирская цепочка, городские/межгородские
 грузы, загрузка трубопровода, сравнение готовых результатов, городской τ, районные
-агрегаты и поиск прямой поездки/последнего возврата по нормализованному расписанию.
+агрегаты, поиск прямой поездки/последнего возврата по нормализованному расписанию,
+static car replay и построение направленных OD-задач/срезов для τ.
 Времена, население и подтверждения входных условий поступают от вызывающего слоя.
 Загрузки внешних расписаний, сетки, построения реальных OD-матриц, эталона A, изменения расписаний,
 сценарного движка, HTTP и LLM здесь нет.
@@ -12,44 +13,39 @@
 
 ```text
 a2_engine/
-  __init__.py                 # 120 явных публичных экспортов
-  shared/
-    __init__.py
-    config.py                 # конфигурации, загрузчики и их проверки
-    results.py                # MetricResult и численная валидация
-    scoring.py                # общая экспонента category_index
+  __init__.py                 # 141 явный публичный экспорт
+  shared/                     # конфигурация, MetricResult, общая экспонента
+    config.py                 # расположение и config/product.json path сохранены
+    results.py
+    scoring.py
   urban/
-    __init__.py
-    indices.py                # городские пассажирские индексы и H
-    models.py                 # нормализованный контекст и принятые входы
-    journeys.py               # проверка временных цепочек и ожиданий
-    selection.py              # минимум по физическим объектам
-    analysis.py               # точки, категории, режимы и территория
-    tau_models.py             # принятые OD-матрицы, календарь и scope
-    tau.py                    # выбор базовой недели и точный расчёт τ
-    walk.py                   # AcceptedData, план и сборка walk/static анализа
-    valhalla.py               # типы, запросы и проверка ответов route JSON 3.5.1
-    district_models.py        # исходные ячейки, районы, доли и покрытие
-    district_inputs.py        # сверка узкого дополнения с canonical
-    districts.py              # районные индексы, QA и сравнение
-    transit.py                # городской поиск по нормализованному расписанию
-    last_return.py            # позднейший выход от выбранного объекта
+    __init__.py                # предметные реэкспорты
+    models.py                  # общий контекст, точки, объекты, legs, coverage
+    indices.py                 # H и чистые индексы
+    journeys.py                # проверка городских временных цепочек
+    selection.py               # выбор физического объекта и tie-breaking
+    validation.py              # общая проверка точек для analysis и tau
+    analysis/                  # models.py, validation.py, calculation.py
+    valhalla/                  # models.py, requests.py, responses.py, codec.py
+    walk/                      # models.py, inputs.py, analysis.py
+    car/                       # models.py, analysis.py
+    transit/                   # models.py, journeys.py, search.py, last_return.py
+    tau/                       # models.py, calendar.py, calculation.py
+    od/                        # models.py, planning.py, collection.py
+    districts/                 # models.py, inputs.py, calculation.py
+    district_models.py         # совместимость: только aliases
+    district_inputs.py         # совместимость: только aliases
+    tau_models.py              # совместимость: models + city_zone
+    last_return.py             # совместимость: transit.last_return/models
   routing/
-    timetable_models.py       # исполнения, события, footpaths, transfers, scope
-    timetable.py              # независимое событийное ядро с бюджетом ожидания
-  intercity/
-    __init__.py
-    passenger.py              # пассажирская цепочка, эталон, автомобиль
-  freight/
-    __init__.py
-    urban.py                  # физические площадки и равновесный агрегат
-    intercity.py              # полная цепочка доставки по срочности
-  pipeline/
-    __init__.py
-    utilization.py            # основания и процент загрузки
-  comparison/
-    __init__.py
-    deltas.py                 # знаковые дельты и появление/потеря связи
+    road.py                    # независимый static auto/foot JSON boundary
+    timetable_models.py        # нормализованные исполнения и scope
+    timetable.py               # событийный поиск с бюджетом ожидания
+  intercity/passenger.py
+  freight/urban.py
+  freight/intercity.py
+  pipeline/utilization.py
+  comparison/deltas.py
 ```
 
 Городские и межгородские пассажирские расчёты разделены. Весь грузовой код —
@@ -65,7 +61,7 @@ Shared не импортирует предметные пакеты. Внутр
 её сигнатура, проверки, значения по умолчанию и поведение сохранены.
 Используемый только городским агрегатом _weighted_mean остаётся в urban/indices.py.
 
-### Перемещения и совместимость
+### История первого выделения доменных пакетов
 
 Пути в таблице указаны относительно src/a2_engine:
 
@@ -81,7 +77,7 @@ Shared не импортирует предметные пакеты. Внутр
 | pipeline.py | pipeline/utilization.py |
 | comparison.py | comparison/deltas.py |
 
-Основной контракт `from a2_engine import ...` сохранён целиком: прежние 37 имён,
+При первом выделении доменов контракт `from a2_engine import ...` сохранил прежние 37 имён,
 их сигнатуры и значения по умолчанию зафиксированы до переноса и проверяются
 в tests/test_public_api.py. Существующие пути a2_engine.urban, a2_engine.freight,
 a2_engine.pipeline и a2_engine.comparison сохранены пакетными __init__.py
@@ -102,10 +98,73 @@ a2_engine.config, a2_engine.results и a2_engine.passenger: эти пути ис
 Тест копирует пакет вне checkout и проверяет все три загрузчика с таким путём;
 отдельные процессы из другого cwd проверяют загрузку по умолчанию.
 
-Городской анализ добавил 23 экспорта; расчёт τ добавил ещё 12, пешая интеграция — 15, районы — 17, расписание/возврат — 16 (всего 120).
-Зафиксированы все 104 прежних сигнатуры; расширение destination прошлого этапа описано ниже. Предметные реализации могут импортировать свои внутренние
+История расширений: городской анализ добавил 23 экспорта, τ — 12, walk — 15,
+районы — 17, расписание/возврат — 16 (на том этапе 120), static car/OD — 21.
+Текущий API содержит 141 экспорт; структурный snapshot защищает сигнатуры и поля
+всех 141, включая последние расширения. Ранее snapshot охватывал 104 сигнатуры; расширение destination прошлого этапа описано ниже. Предметные реализации могут импортировать свои внутренние
 модули и shared; urban также использует независимый routing. Shared и routing не
 зависят от предметных пакетов.
+
+## Структурный этап urban (09.11.2026)
+
+Исходная база: `cd7572ebb0a2d1f054c974d304ab37a0bf9a81f1`. Только размещение кода
+и явные импорты; продуктовых функций и изменений алгоритмов здесь нет.
+
+| Старое расположение в urban | Каноническое расположение | Куда заходить |
+| --- | --- | --- |
+| analysis.py | analysis/models.py, validation.py, calculation.py | результаты, проверки кандидатов, сборка анализа |
+| valhalla.py | valhalla/models.py, requests.py, responses.py, codec.py | pedestrian JSON boundary и codec |
+| walk.py | walk/models.py, inputs.py, analysis.py | AcceptedData projection, план и replay |
+| car.py | car/models.py, analysis.py | static car inputs, план и сборка |
+| transit.py | transit/models.py, journeys.py, search.py | timetable projection и прямой поиск |
+| last_return.py | transit/models.py, last_return.py | последний возврат |
+| tau.py + tau_models.py | tau/models.py, calendar.py, calculation.py | OD/week модели, IANA calendar, точное τ |
+| od.py | od/models.py, planning.py, collection.py | задачи/батчи, внешняя routing boundary, приём результатов |
+| districts.py + district_models.py + district_inputs.py | districts/models.py, inputs.py, calculation.py | исходные доли/покрытие, supplement, районные агрегаты |
+
+Прежние одноимённые module paths теперь являются пакетами с явными реэкспортами:
+`urban.analysis`, `urban.valhalla`, `urban.walk`, `urban.car`, `urban.transit`,
+`urban.tau`, `urban.od`, `urban.districts`. Старого .py рядом с пакетом нет.
+Четыре файла совместимости в корне urban содержат только aliases:
+`district_models`, `district_inputs`, `tau_models`, `last_return`. Они позволяют
+существующим потребителям продолжать прямые импорты. Проверяется `old is new`,
+включая используемые private helpers, без sys.modules и подмены __module__.
+
+`_check_points` определён только в `urban/validation.py`; analysis и τ импортируют
+его напрямую. `_local_instant` принадлежит `tau/calendar.py`, OD больше не
+импортирует его из calculation или фасада. `check_urban_inputs`, `path_legs` и
+identity JSON helper принадлежат `transit/journeys.py` и общие для forward/return.
+Valhalla codec остаётся внутри urban, общий routing не начинает зависеть от urban.
+
+Реализации импортируют конкретные модули абсолютными путями; __init__.py — только
+точки экспорта. Shared не импортирует urban/routing, routing не импортирует urban,
+intercity/freight не используют urban. Функции не стали classmethod, dataclass
+fields/defaults/frozen не менялись, slots не добавлялись. Config.py не перемещён.
+Канонический __module__ закономерно изменился у перенесённых определений; старые
+пути по-прежнему возвращают тот же объект. Это не обещание сохранить старую строку
+__module__, а совместимость imports и сигнатур.
+
+До переноса сняты `tests/fixtures/public_api_structure.json` (141 сигнатура,
+порядок экспортов, frozen и fingerprint всех полей/defaults) и inventory старых
+импортов. Контроли результатов хранят 14 компактных SHA256 вместо больших дампов:
+walk, районы, transit/return, car, payload, OD tasks/observations, week, τ,
+threshold и partial/unknown варианты. Ожидания получены из исходного cd7572e.
+Сравниваются полные нормализованные результаты: числа, причины, доказательства,
+геометрия, порядок выбранных объектов и все вложенные identities/hashes.
+
+В tests/test_public_api.py CANONICAL_MODULES указывает новые настоящие определения;
+полный snapshot дополняет прежние signature guards. Отдельные процессы проверяют
+старые/новые пути в трёх порядках импорта и загрузчики из другого cwd. Прежний
+external config-path test сохранён. Tests/fixtures/examples не перемещались.
+
+Итог структурного этапа: 596 passed; Ruff/format src/tests и всех examples,
+strict mypy src/tests (77 файлов) и src/tests/examples (84 файла) прошли.
+Для mypy примеров указывайте source files вместе с examples: упаковка package=false
+не менялась. Отдельный mypy только examples не подтверждает импорт typed sources.
+
+Команды ниже остаются прежними; 10 executable README controls и оба car/OD replay
+исполняются теми же способами. Реальные HTTP/Valhalla данные и новые traffic
+profiles этим переносом не добавлены.
 
 ## Городские пассажирские вызовы: первый этап
 
@@ -1691,7 +1750,7 @@ PY
   площадки не увеличивают её вклад. Булевы подтверждения выдаёт принятый адаптер,
   не пользователь формы и не LLM.
 
-## Static car и направленные OD (09.11.2026)
+## Static car и направленные OD — функциональный этап до структурного переноса (09.11.2026)
 
 Новый путь не изменяет pedestrian `ValhallaBuild` и walk API. Основные вызовы
 экспортированы из `a2_engine`:

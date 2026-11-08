@@ -330,9 +330,9 @@ CANONICAL_MODULES = {
         "PassengerConfig",
         "UrbanConfig",
         "freight_config_from_mapping",
+        "load_urban_config",
         "load_freight_config",
         "load_passenger_config",
-        "load_urban_config",
         "passenger_config_from_mapping",
         "urban_config_from_mapping",
         "UrbanJourneyRules",
@@ -342,15 +342,6 @@ CANONICAL_MODULES = {
         "load_urban_tau_rules",
         "urban_tau_rules_from_mapping",
     ),
-    "a2_engine.shared.results": ("MetricResult",),
-    "a2_engine.shared.scoring": ("category_index",),
-    "a2_engine.urban.indices": (
-        "is_low_accessibility",
-        "point_index",
-        "point_indices_by_mode",
-        "select_h_seconds",
-        "territory_index",
-    ),
     "a2_engine.intercity.passenger": (
         "CarResult",
         "PassengerChain",
@@ -359,20 +350,36 @@ CANONICAL_MODULES = {
         "intercity_car_index",
         "intercity_passenger_index",
     ),
+    "a2_engine.freight.intercity": ("CargoDeliveryResult", "intercity_cargo_index"),
     "a2_engine.freight.urban": (
         "CargoScope",
         "CargoSiteResult",
         "urban_cargo_site_index",
         "urban_cargo_territory_index",
     ),
-    "a2_engine.freight.intercity": ("CargoDeliveryResult", "intercity_cargo_index"),
-    "a2_engine.pipeline.utilization": ("PipelineBasis", "PipelineResult", "pipeline_utilization"),
     "a2_engine.comparison.deltas": (
         "ComparisonContext",
         "DeltaResult",
         "TravelTime",
         "delta_index",
         "time_saved_seconds",
+    ),
+    "a2_engine.shared.results": ("MetricResult",),
+    "a2_engine.pipeline.utilization": ("PipelineBasis", "PipelineResult", "pipeline_utilization"),
+    "a2_engine.shared.scoring": ("category_index",),
+    "a2_engine.urban.indices": (
+        "is_low_accessibility",
+        "point_index",
+        "point_indices_by_mode",
+        "select_h_seconds",
+        "territory_index",
+    ),
+    "a2_engine.urban.selection": ("SelectedUrbanObject",),
+    "a2_engine.urban.analysis.models": (
+        "UrbanAnalysis",
+        "UrbanCategoryResult",
+        "UrbanPointResult",
+        "UrbanTerritoryResult",
     ),
     "a2_engine.urban.models": (
         "UrbanArea",
@@ -389,28 +396,19 @@ CANONICAL_MODULES = {
         "UrbanVersions",
     ),
     "a2_engine.urban.journeys": ("UrbanJourneyTiming", "validate_urban_journey"),
-    "a2_engine.urban.selection": ("SelectedUrbanObject",),
-    "a2_engine.urban.analysis": (
-        "UrbanAnalysis",
-        "UrbanCategoryResult",
-        "UrbanPointResult",
-        "UrbanTerritoryResult",
-        "analyze_urban_candidates",
-    ),
-    "a2_engine.urban.tau_models": (
+    "a2_engine.urban.analysis.calculation": ("analyze_urban_candidates",),
+    "a2_engine.urban.tau.models": (
         "UrbanODScope",
         "UrbanODPair",
         "UrbanTauDay",
         "UrbanTauSlice",
         "UrbanTauWeek",
-    ),
-    "a2_engine.urban.tau": (
         "UrbanTauSliceResult",
         "UrbanTauWeekResult",
         "UrbanTauResult",
-        "calculate_urban_tau",
     ),
-    "a2_engine.urban.valhalla": (
+    "a2_engine.urban.tau.calculation": ("calculate_urban_tau",),
+    "a2_engine.urban.valhalla.models": (
         "ValhallaBuild",
         "ValhallaCorrelation",
         "WalkCoordinate",
@@ -418,25 +416,22 @@ CANONICAL_MODULES = {
         "WalkRouteRequest",
         "WalkResponseEnvelope",
         "WalkRouteResult",
-        "normalize_walk_response",
     ),
-    "a2_engine.urban.walk": (
+    "a2_engine.urban.valhalla.responses": ("normalize_walk_response",),
+    "a2_engine.urban.walk.models": (
         "WalkInputs",
         "WalkRoutePlan",
         "WalkPlanIssue",
         "WalkAnalysisResult",
-        "prepare_walk_inputs",
-        "plan_walk_routes",
-        "analyze_walk_responses",
     ),
-    "a2_engine.urban.district_models": (
+    "a2_engine.urban.walk.inputs": ("prepare_walk_inputs",),
+    "a2_engine.urban.walk.analysis": ("plan_walk_routes", "analyze_walk_responses"),
+    "a2_engine.urban.districts.models": (
         "UrbanOriginalCell",
         "UrbanDistrict",
         "UrbanDistrictShare",
         "UrbanSharePrecision",
         "UrbanDistrictCoverage",
-    ),
-    "a2_engine.urban.districts": (
         "UrbanCellAllocation",
         "UrbanDistrictPopulation",
         "UrbanDistrictComparison",
@@ -446,9 +441,10 @@ CANONICAL_MODULES = {
         "UrbanDistrictMetric",
         "UrbanDistrictModeResult",
         "UrbanDistrictAnalysis",
-        "analyze_urban_districts",
+        "UrbanDistrictInputs",
     ),
-    "a2_engine.urban.district_inputs": ("UrbanDistrictInputs", "prepare_urban_district_inputs"),
+    "a2_engine.urban.districts.calculation": ("analyze_urban_districts",),
+    "a2_engine.urban.districts.inputs": ("prepare_urban_district_inputs",),
     "a2_engine.routing.timetable_models": (
         "TimetableEvent",
         "TimetableRun",
@@ -461,16 +457,33 @@ CANONICAL_MODULES = {
         "TimetableSearchResult",
     ),
     "a2_engine.routing.timetable": ("solve_timetable",),
-    "a2_engine.urban.transit": (
+    "a2_engine.urban.transit.models": (
         "UrbanTransitNetwork",
         "UrbanTransitResult",
-        "search_urban_transit",
-    ),
-    "a2_engine.urban.last_return": (
         "UrbanReturnJourney",
         "UrbanLastReturnResult",
-        "search_urban_last_return",
     ),
+    "a2_engine.urban.transit.search": ("search_urban_transit",),
+    "a2_engine.urban.transit.last_return": ("search_urban_last_return",),
+    "a2_engine.routing.road": (
+        "RoadBuild",
+        "RoadCoordinate",
+        "RoadEndpoint",
+        "RoadRequest",
+        "RoadResponse",
+        "RoadResult",
+        "normalize_road_response",
+    ),
+    "a2_engine.urban.car.models": ("CarInputs", "CarPlan", "CarAnalysisResult"),
+    "a2_engine.urban.car.analysis": ("plan_car_routes", "analyze_car_responses"),
+    "a2_engine.urban.od.models": ("UrbanODTask", "UrbanODPlan", "UrbanODObservation"),
+    "a2_engine.urban.od.collection": (
+        "UrbanODCollector",
+        "assemble_urban_od_week",
+        "od_road_observation",
+        "od_timetable_observation",
+    ),
+    "a2_engine.urban.od.planning": ("plan_urban_od_week", "od_road_request"),
 }
 
 NEW_PUBLIC_NAMES = {
@@ -493,37 +506,6 @@ NEW_PUBLIC_NAMES = {
 }
 
 
-CANONICAL_MODULES.update(
-    {
-        "a2_engine.routing.road": (
-            "RoadBuild",
-            "RoadCoordinate",
-            "RoadEndpoint",
-            "RoadRequest",
-            "RoadResponse",
-            "RoadResult",
-            "normalize_road_response",
-        ),
-        "a2_engine.urban.car": (
-            "CarInputs",
-            "CarPlan",
-            "CarAnalysisResult",
-            "plan_car_routes",
-            "analyze_car_responses",
-        ),
-        "a2_engine.urban.od": (
-            "UrbanODTask",
-            "UrbanODPlan",
-            "UrbanODObservation",
-            "UrbanODCollector",
-            "plan_urban_od_week",
-            "assemble_urban_od_week",
-            "od_road_request",
-            "od_road_observation",
-            "od_timetable_observation",
-        ),
-    }
-)
 NEW_PUBLIC_NAMES.update(
     {
         "RoadResponse",
@@ -687,3 +669,94 @@ def test_internal_imports_follow_shared_dependency_direction() -> None:
                         assert alias.name.startswith(import_allowed), path
     for domain in ("urban", "intercity", "freight", "pipeline", "comparison", "shared"):
         assert not (package / f"{domain}.py").exists()
+
+
+def test_all_141_pre_structure_signatures_fields_and_defaults() -> None:
+    """Snapshot captured at cd7572e before extracting any urban definition."""
+    import hashlib
+    from dataclasses import MISSING, fields
+
+    expected = json.loads(
+        (Path(__file__).parent / "fixtures/public_api_structure.json").read_text()
+    )
+    assert list(expected) == a2_engine.__all__
+    assert len(expected) == 141
+    for name, saved in expected.items():
+        obj = getattr(a2_engine, name)
+
+        def normalize(value: str) -> str:
+            return re.sub(r"\ba2_engine(?:\.[a-z_]+)+\.([A-Z][A-Za-z0-9_]*)", r"\1", value)
+
+        assert normalize(str(inspect.signature(obj))) == saved["signature"], name
+        metadata = []
+        if is_dataclass(obj):
+            metadata = [
+                {
+                    "name": f.name,
+                    "type": normalize(str(f.type)),
+                    "default": "<required>" if f.default is MISSING else normalize(repr(f.default)),
+                    "factory": "<none>"
+                    if f.default_factory is MISSING
+                    else normalize(str(f.default_factory)),
+                    "kw_only": f.kw_only,
+                    "init": f.init,
+                }
+                for f in fields(obj)
+            ]
+            assert getattr(obj, "__dataclass_params__").frozen == saved["frozen"], name
+        assert (
+            hashlib.sha256(
+                json.dumps(metadata, sort_keys=True, separators=(",", ":")).encode()
+            ).hexdigest()
+            == saved["fields_hash"]
+        ), name
+
+
+def test_legacy_urban_imports_are_canonical_aliases() -> None:
+    aliases = json.loads((Path(__file__).parent / "fixtures/urban_legacy_imports.json").read_text())
+    for legacy, name, canonical in aliases:
+        assert getattr(importlib.import_module(legacy), name) is getattr(
+            importlib.import_module(canonical), name
+        ), (legacy, name)
+
+
+def test_fresh_urban_submodule_import_orders(tmp_path: Path) -> None:
+    aliases = json.loads((Path(__file__).parent / "fixtures/urban_legacy_imports.json").read_text())
+    modules = sorted({module for legacy, _, canonical in aliases for module in (legacy, canonical)})
+    script = """
+import importlib,json,sys
+for module in json.loads(sys.argv[1]):
+    importlib.import_module(module)
+for legacy,name,canonical in json.loads(sys.argv[2]):
+    assert getattr(importlib.import_module(legacy),name) is getattr(importlib.import_module(canonical),name)
+import a2_engine
+assert len(a2_engine.__all__)==141
+"""
+    for order in (modules, list(reversed(modules)), modules[::2] + modules[1::2]):
+        subprocess.run(
+            [sys.executable, "-c", script, json.dumps(order), json.dumps(aliases)],
+            cwd=tmp_path,
+            env=os.environ | {"PYTHONPATH": str(SOURCE)},
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+
+def test_urban_implementation_imports_concrete_modules() -> None:
+    urban = SOURCE / "a2_engine/urban"
+    packages = {"analysis", "valhalla", "walk", "car", "transit", "tau", "od", "districts"}
+    compatibility = {"district_models", "district_inputs", "tau_models", "last_return"}
+    for name in packages:
+        assert (urban / name / "__init__.py").is_file()
+        assert not (urban / (name + ".py")).exists()
+    for name in compatibility:
+        tree = ast.parse((urban / (name + ".py")).read_text())
+        assert not any(isinstance(n, (ast.FunctionDef, ast.ClassDef)) for n in ast.walk(tree))
+    forbidden = {"a2_engine.urban." + n for n in packages | compatibility}
+    for path in urban.rglob("*.py"):
+        if path.name == "__init__.py" or path.parent == urban and path.stem in compatibility:
+            continue
+        for n in ast.walk(ast.parse(path.read_text())):
+            if isinstance(n, ast.ImportFrom):
+                assert n.module not in forbidden, (path, n.module)

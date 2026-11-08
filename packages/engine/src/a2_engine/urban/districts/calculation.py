@@ -1,19 +1,27 @@
-"""District means and comparisons over one already computed urban context."""
+"""districts / calculation — canonical urban implementation."""
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
 from decimal import Decimal, localcontext
 
 from a2_engine.shared.results import MetricResult, validate_index
-from a2_engine.urban.analysis import UrbanAnalysis
-from a2_engine.urban.district_models import (
+from a2_engine.urban.analysis.models import UrbanAnalysis
+from a2_engine.urban.districts.models import (
+    UrbanCellAllocation,
     UrbanDistrict,
+    UrbanDistrictAnalysis,
+    UrbanDistrictComparison,
     UrbanDistrictCoverage,
+    UrbanDistrictMetric,
+    UrbanDistrictModeResult,
+    UrbanDistrictPopulation,
+    UrbanDistrictRank,
+    UrbanDistrictRanking,
     UrbanDistrictShare,
+    UrbanDistrictValue,
     UrbanOriginalCell,
 )
 from a2_engine.urban.indices import territory_index
-from a2_engine.urban.models import UrbanContext, references
+from a2_engine.urban.models import references
 
 
 def _decimal(value: float) -> Decimal:
@@ -30,97 +38,6 @@ def _sum_decimal(values: Sequence[Decimal | None]) -> Decimal | None:
 
 def _sum(values: Sequence[float | None]) -> Decimal | None:
     return _sum_decimal([_decimal(value) if value is not None else None for value in values])
-
-
-@dataclass(frozen=True)
-class UrbanCellAllocation:
-    cell_id: str
-    population: float | None
-    allocated_population: Decimal | None
-    residual_population: Decimal | None
-    documented_precision: bool
-    reasons: tuple[str, ...]
-
-
-@dataclass(frozen=True)
-class UrbanDistrictPopulation:
-    district_id: str
-    population: Decimal | None
-    excluded_population: Decimal | None
-    reasons: tuple[str, ...]
-
-
-@dataclass(frozen=True)
-class UrbanDistrictComparison:
-    context: UrbanContext
-    passenger_mode: str
-    category: str | None
-    selected_categories: tuple[tuple[str, str], ...]
-    h_seconds: MetricResult
-    catalog_version: str
-    distribution_version: str
-    grid_versions: frozenset[str]
-    district_boundary_versions: tuple[tuple[str, str], ...]
-    expected_district_ids: tuple[str, ...]
-    administrative_level: str = "district"
-
-
-@dataclass(frozen=True)
-class UrbanDistrictValue:
-    district_id: str
-    index: MetricResult
-    deficit: MetricResult
-    ranking_eligible: bool
-    reasons: tuple[str, ...]
-
-
-@dataclass(frozen=True)
-class UrbanDistrictRank:
-    district_id: str
-    index: float
-    rank: int  # Competition ranking: 1,1,3; subset positions if incomplete.
-
-
-@dataclass(frozen=True)
-class UrbanDistrictRanking:
-    scope: UrbanDistrictComparison
-    entries: tuple[UrbanDistrictRank, ...]
-    excluded: tuple[tuple[str, tuple[str, ...]], ...]
-    complete: bool
-    positions_scope: str  # all_expected_districts | available_subset
-
-
-@dataclass(frozen=True)
-class UrbanDistrictMetric:
-    scope: UrbanDistrictComparison
-    city_index: MetricResult
-    districts: tuple[UrbanDistrictValue, ...]
-    gap: MetricResult
-    ranking: UrbanDistrictRanking
-
-
-@dataclass(frozen=True)
-class UrbanDistrictModeResult:
-    passenger_mode: str
-    overall: UrbanDistrictMetric
-    categories: tuple[UrbanDistrictMetric, ...]
-
-
-@dataclass(frozen=True)
-class UrbanDistrictAnalysis:
-    source_analysis: UrbanAnalysis
-    original_cells: tuple[UrbanOriginalCell, ...]
-    district_catalog: tuple[UrbanDistrict, ...]
-    population_shares: tuple[UrbanDistrictShare, ...]
-    coverage: UrbanDistrictCoverage
-    cell_qa: tuple[UrbanCellAllocation, ...]
-    district_populations: tuple[UrbanDistrictPopulation, ...]
-    city_population: Decimal | None
-    allocated_population: Decimal | None
-    residual_population: Decimal | None
-    excluded_population: Decimal | None
-    modes: tuple[UrbanDistrictModeResult, ...]
-    evidence_refs: tuple[str, ...]
 
 
 def _unique(rows: Sequence[object], keys: Sequence[object], name: str) -> None:

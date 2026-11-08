@@ -1,15 +1,20 @@
-"""Urban analysis over accepted candidates; no provider calls or graph search."""
+"""analysis / calculation — canonical urban implementation."""
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
-from types import MappingProxyType
 from typing import Literal
 
 from a2_engine.shared.config import UrbanConfig, UrbanJourneyRules
 from a2_engine.shared.results import MetricResult
 from a2_engine.shared.scoring import category_index
+from a2_engine.urban.analysis.models import (
+    UrbanAnalysis,
+    UrbanCategoryResult,
+    UrbanPointResult,
+    UrbanTerritoryResult,
+)
+from a2_engine.urban.analysis.validation import _check_candidate
 from a2_engine.urban.indices import point_index, select_h_seconds, territory_index
-from a2_engine.urban.journeys import UrbanJourneyTiming, validate_urban_journey
+from a2_engine.urban.journeys import UrbanJourneyTiming
 from a2_engine.urban.models import (
     Completeness,
     UrbanArea,
@@ -22,128 +27,8 @@ from a2_engine.urban.models import (
     UrbanThreshold,
     references,
 )
-from a2_engine.urban.selection import SelectedUrbanObject, select_urban_objects
-
-
-@dataclass(frozen=True)
-class UrbanCategoryResult:
-    point_id: str
-    category: str
-    passenger_mode: str
-    best: SelectedUrbanObject | None
-    objects: tuple[SelectedUrbanObject, ...]
-    rejected: tuple[UrbanJourneyTiming, ...]
-    index: MetricResult
-    count: MetricResult
-    threshold: UrbanThreshold | None
-    coverage: UrbanCoverage | None
-    minimum_proven: bool
-    completeness: Completeness
-    evidence_refs: tuple[str, ...]
-    limitations: tuple[str, ...]
-
-
-@dataclass(frozen=True)
-class UrbanPointResult:
-    point: UrbanPoint
-    passenger_mode: str
-    categories: tuple[UrbanCategoryResult, ...]
-    index: MetricResult
-    completeness: Completeness
-
-
-@dataclass(frozen=True)
-class UrbanTerritoryResult:
-    passenger_mode: str
-    points: tuple[UrbanPointResult, ...]
-    index: MetricResult
-    completeness: Completeness
-    ranking_eligible: bool
-    evidence_refs: tuple[str, ...]
-
-
-@dataclass(frozen=True)
-class UrbanAnalysis:
-    context: UrbanContext
-    area: UrbanArea
-    selected_categories: Mapping[str, str]
-    h_seconds: MetricResult
-    journeys: tuple[UrbanJourneyTiming, ...]
-    modes: tuple[UrbanTerritoryResult, ...]
-    population_coverage: UrbanPopulationCoverage
-    status: Literal["available", "partial", "unknown"]
-    limitations: tuple[str, ...]
-
-    def __post_init__(self) -> None:
-        object.__setattr__(
-            self, "selected_categories", MappingProxyType(dict(self.selected_categories))
-        )
-
-
-def _check_points(points: Sequence[UrbanPoint], context: UrbanContext) -> dict[str, UrbanPoint]:
-    by_id: dict[str, UrbanPoint] = {}
-    cells: dict[str, set[str | None]] = {}
-    for point in points:
-        if not isinstance(point, UrbanPoint) or point.territory_id != context.territory_id:
-            raise ValueError("POINT_TERRITORY_MISMATCH")
-        if point.point_id in by_id:
-            raise ValueError("DUPLICATE_POINT_ID")
-        shares = cells.setdefault(point.cell_id, set())
-        if point.population_share_id in shares or (
-            shares and (None in shares or point.population_share_id is None)
-        ):
-            raise ValueError("DUPLICATE_POPULATION_WEIGHT")
-        shares.add(point.population_share_id)
-        by_id[point.point_id] = point
-    return by_id
-
-
-def _check_candidate(
-    candidate: UrbanCandidate,
-    context: UrbanContext,
-    points: Mapping[str, UrbanPoint],
-    destinations: Mapping[str, UrbanDestination],
-    config: UrbanConfig,
-    rules: UrbanJourneyRules,
-) -> UrbanJourneyTiming:
-    if candidate.context != context:
-        raise ValueError("CANDIDATE_CONTEXT_MISMATCH")
-    if candidate.point_id not in points or candidate.destination_id not in destinations:
-        raise ValueError("UNKNOWN_POINT_OR_DESTINATION")
-    point, destination = points[candidate.point_id], destinations[candidate.destination_id]
-    if (
-        candidate.category not in config.categories
-        or candidate.category not in destination.categories
-    ):
-        raise ValueError("CATEGORY_DESTINATION_MISMATCH")
-    if candidate.passenger_mode not in config.modes:
-        raise ValueError("UNSUPPORTED_PASSENGER_MODE")
-    if candidate.origin_node_id != point.origin_node_id or candidate.destination_node_id != (
-        destination.physical_node_id or destination.access_node_id
-    ):
-        raise ValueError("CANDIDATE_BOUNDARY_MISMATCH")
-    timing = validate_urban_journey(candidate, rules=rules)
-    if point.access_distance_m > 0:
-        access_walk = 0.0
-        reached = False
-        for leg in candidate.legs:
-            if leg.kind != "walk":
-                break
-            access_walk += leg.duration_seconds
-            if leg.to_node_id == point.access_node_id:
-                reached = True
-                break
-        if not reached or access_walk <= 0:
-            raise ValueError("ACCESS_CONNECTOR_REQUIRED")
-    if destination.physical_node_id not in (None, destination.access_node_id):
-        final_leg = candidate.legs[-1]
-        if not (
-            final_leg.kind == "walk"
-            and final_leg.from_node_id == destination.access_node_id
-            and final_leg.to_node_id == destination.physical_node_id
-        ):
-            raise ValueError("DESTINATION_CONNECTOR_REQUIRED")
-    return timing
+from a2_engine.urban.selection import select_urban_objects
+from a2_engine.urban.validation import _check_points
 
 
 def _category_result(
