@@ -254,3 +254,63 @@ uv lock --check, uv pip check, check_product_config.py, git diff --check, пуб
 импорт и все 10 исполнимых примеров README прошли. Отдельный независимый DFS
 сравнил алгоритм на 80 крошечных расписаниях; replay ID проверен в разных
 PYTHONHASHSEED. Пример дополнительно проверен Ruff/mypy.
+
+## 09.11.2026 — static автомобиль и directed OD → τ
+
+Исходный опубликованный SHA: `c6531ad18176052bcdc11e856f076c78df587606`.
+Этап реализован в отдельной копии work/ml1; исходный checkout и a2-dev.bundle
+сохранены. Изменения ограничены engine и этим статусом; backend PR #8 не менялся.
+
+Добавлены `routing/road.py`, `urban/car.py`, `urban/od.py` и 21 additive export
+(141 public names; прежние 120 сохранены). Узкие frozen road types отдельно
+фиксируют source snapshot/graph, фактический build/graph, engine 3.5.1, auto/foot
+costing/options/profile hash, направленные entry/exit и correlation evidence.
+Автомобильная цепочка проходит существующие UrbanCandidate/journey validators,
+затем общий analyze_urban_candidates; formulas/районы/τ не дублируются.
+
+Valhalla 3.5.1 проверен по официальным исходникам: speed_types явно freeflow,
+depart-at type=1 и отдельное network entry после подхода. Static не отменяет
+calendar/access/turn restrictions. Используются только парные /route, matrix API
+не принимается: у каждой пары сохраняется своё время входа и независимый hash.
+Ferry в этом узком road-пути не подтверждается: filter исключает ferry correlation,
+summary с ferry/неизвестным ferry даёт unknown, а не пеший/автомобильный минимум.
+Дата upstream имеет минутную точность: subminute entry и ambiguous fold дают явный
+issue/unknown без округления. Raw дробные durations сохраняются; leg durations
+равны timestamp-разностям, submicrosecond positive durations не исчезают.
+
+Минимум требует независимого executor attestation для exact request/profile/time;
+summary elapsed/generalized cost не подменяют minimum-time proof. Без proof
+сохраняется best-known, полный индекс unknown. Геометрия полной цепочки unknown,
+без выдуманных внешних подходов. Нет connector — нет синтетического нуля.
+
+OD planner лениво выдаёт n*(n-1) directed tasks на каждом из 28 срезов конфигурации.
+Week/reference_at/IANA calendar явные; roster/population сохраняются, только
+доказанный zero product позволяет пропуск. Категории/каталог учреждений не участвуют.
+Collector принимает части/перестановки/идентичный replay, отвергает чужие задачи и
+конфликтующие retries. Хранит compact pair/proof/best-known, а не всю неделю путей.
+Для walk используется отдельный pedestrian RoadBuild (старый walk API не изменён),
+для car auto, для PT реально вызывается solve_timetable на физическом departure
+каждого среза с общим wait budget и pure-walk альтернативой. Срезы static никогда
+не переиспользуются автоматически; typical/live/historical не поддержаны.
+
+Контроли через новые planner/normalizer/collector:
+- car 60 walk +1620 ride +120 walk =1800s; H1800 → index50;
+- directed A→B600/B→A1800 в 28 срезах →τ1200;
+- первые14 means900/последние14 means3600 →τ2250 (не1800);
+- OD→τ→threshold→car count, unknown τ при сохранённом H;
+- concrete PT time/initial wait и interrupted proof;
+- missing/null/timeout/cancelled, roster/profile/boundary mismatch, fractional time,
+  conflicting replay, unknown/excluded population, equal coordinates/access IDs;
+- canonical task IDs совпадают в отдельных Python процессах с разными hash seeds.
+
+Проверки: полный engine suite **591 passed**; Ruff src/tests/new examples;
+format check; strict mypy src/tests/new examples (52 source files); 10 прежних
+README examples и 2 новых replay; frozen lock check/pip check; product config;
+git diff --check. Полные команды и точные новые сигнатуры — engine README.
+
+Реальные автомобильные индексы/τ Калининграда не вычислялись: нет принятых car
+connectors/build и внешнего Valhalla executor. Backend handler/DTO/ML2/infra не
+изменены; параллельному аудиту передаётся additive ML1 API, не новый canonical DTO.
+Следующий шаг — принятые typical directional profiles (graph/date/bin/day/season,
+coverage QA), затем live/historical observed_at/valid_until и path-entry-time;
+никакого static fallback под другим traffic mode.

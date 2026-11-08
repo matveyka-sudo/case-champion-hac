@@ -1690,3 +1690,141 @@ PY
   пропуски операций не нули, совпадение периода/единиц проверяемо, повторные записи
   площадки не увеличивают её вклад. Булевы подтверждения выдаёт принятый адаптер,
   не пользователь формы и не LLM.
+
+## Static car и направленные OD (09.11.2026)
+
+Новый путь не изменяет pedestrian `ValhallaBuild` и walk API. Основные вызовы
+экспортированы из `a2_engine`:
+
+- `RoadBuild(snapshot_id, source_graph_version, build_id, graph_version,
+  profile_version, costing, options_json, evidence_refs, engine_version="3.5.1",
+  traffic_mode="static")`: отдельный профиль auto или foot. Его hash включает
+  build/source/profile/options/evidence. Для auto обязательны
+  `speed_types=["freeflow"]`, запреты игнорировать access/restrictions/closures.
+  Отсутствующие параметры используют закреплённые defaults **3.5.1**;
+  executor обязан включить любые server overrides в принятый options_json.
+- `RoadEndpoint(build, physical_node_id, access_node_id, coordinate,
+  correlation_id, direction, seconds, evidence_refs)`: подтверждённая направленная
+  пешая связь entry либо exit и принятая фактическая correlation. Coordinate —
+  точка доступа на графе; физическая граница идентифицирована physical_node_id.
+  Evidence должно подтверждать направление, длительность (включая явный ноль),
+  автомобильную применимость и совпадение correlation с этой точкой доступа.
+  Pedestrian connector не становится автомобильным по совпадению координат.
+- `plan_car_routes(inputs: CarInputs, *, categories) -> CarPlan` обходит весь
+  переданный применимый каталог. Пропущенный connector даёт issue, не маршрут.
+- `normalize_road_response(request, response) -> RoadResult` проверяет exact
+  request/payload/profile, echo и отдельные actual endpoint attestations.
+  Request hash связывает физические/access IDs, correlation IDs, departure,
+  направление, profile/build/source graph и search parameters.
+- `analyze_car_responses(plan, responses, *, selected_categories, config, rules,
+  thresholds=()) -> CarAnalysisResult` вызывает существующий urban analyzer.
+
+`CarInputs(context, points, destinations, entries, exits, area, population,
+ catalogs, timezone)` принимает **уже нормализованные принятые входы**. Entries и
+exits — tuple `(entity_id, RoadEndpoint)`; catalogs — tuple
+`(category, complete, evidence_refs)`. UrbanPoint.access_node_id и
+UrbanDestination.access_node_id должны обозначать именно автомобильные доступы.
+Это новый mode-specific input, не изменение pedestrian ML2-проекции.
+
+Полная цепочка: physical origin → walk entry → auto ride → walk exit → physical
+object. Network departure = physical departure + entry. Парковка/посадка не
+добавляются. Raw секунды остаются в endpoint/result; timestamps округляются один
+раз при создании каждого интервала, duration равен фактической разности. Положительные
+значения ниже microsecond resolution отклоняются. Геометрия полной цепочки
+остаётся unknown: сетевой shape не выдаётся за геометрию внешних подходов.
+
+### Проверенная семантика Valhalla 3.5.1
+
+Прочитаны исходники именно tag 3.5.1:
+[SpeedMask_Parse](https://github.com/valhalla/valhalla/blob/3.5.1/src/sif/dynamiccost.cc),
+[AutoCost](https://github.com/valhalla/valhalla/blob/3.5.1/src/sif/autocost.cc),
+[route algorithm selection](https://github.com/valhalla/valhalla/blob/3.5.1/src/thor/route_action.cc),
+[matrix selection](https://github.com/valhalla/valhalla/blob/3.5.1/src/thor/matrix_action.cc),
+[time-distance matrix](https://github.com/valhalla/valhalla/blob/3.5.1/src/thor/timedistancematrix.cc),
+[datetime parsing](https://github.com/valhalla/valhalla/blob/3.5.1/src/baldr/datetime.cc).
+
+Auto elapsed secs и generalized cost различаются. Defaults speed mask допускают
+traffic; запрос явно задаёт freeflow и depart-at type=1, prioritize_bidirectional=false.
+Static не убирает временные access/turn ограничения. Исполнитель должен проверить
+тайл timezone, closure snapshot и фактически использованный timedep алгоритм:
+route selection может откатиться при превышении max_timedep_distance.
+
+3.5.1 разбирает date_time с точностью до минуты (`%FT%R`). Поэтому subminute
+network entry и неоднозначный fold не округляются: planner фиксирует issue,
+OD executor оставляет такую пару unknown. Для поддержки точных субминутных
+ограничений нужен отдельно проверенный protocol/executor, не silent rounding.
+
+Matrix алгоритм и поведение time зависят от costing/config/размера и выбора
+направления. Этот этап **не принимает sources_to_targets**. Используются парные
+`/route`: batch — только транспортная упаковка независимых запросов, у каждой
+строки своё network departure. Нет двусмысленного mapping row/column и arrive-by.
+
+HTTP 200, summary.time, shortest/alternates не доказывают minimum elapsed time.
+`RoadResponse.minimum_time_evidence_refs` и `search_complete` — независимые
+attestations исполнителя для **точного** request/profile/boundaries/time и всех
+ограничений. При их отсутствии найденный путь остаётся best-known, индекс unknown.
+Ошибка 442 становится confirmed_unreachable только с исчерпывающим доказательством
+внешнего исполнителя. Нормализатор сам доказательства не создаёт.
+
+### OD planner и collector
+
+`plan_urban_od_week(scope, points, *, week_start, reference_at, calendar, rules,
+ profile_hash, evidence_refs) -> UrbanODPlan` принимает одну завершённую ISO-неделю.
+`reference_at` явный; `rules.tau_days/tau_times` приходят из конфигурации. Calendar
+передаётся в существующий τ-калькулятор; отсутствующий календарь не считается
+обычной неделей. DST gaps/folds отвергаются существующим строгим конвертером.
+
+`plan.tasks()` — ленивые направленные задачи для всех различных point IDs на
+каждом срезе; `plan.batches(size)` — ограниченные tuple батчи. Полный roster и
+население сохранены; только подтверждённое нулевое произведение позволяет пропуск.
+Unknown population не удаляется. Coordinate/access совпадения не склеивают точки.
+Идентичности построены по canonical JSON, включая отсортированные множества;
+не зависят от Python hash seed или порядка входных точек.
+
+- `od_road_request(task, entries, exits)` создаёт road request между **точками**,
+  без UrbanDestination/категорий. `profile_hash=RoadBuild.profile_hash`.
+- `od_road_observation(task, normalize_road_response(request, response))`
+  сохраняет proven Tij либо unknown + best_known_seconds.
+- Для ОТ: `profile_hash=road_hash(timetable)` из `a2_engine.routing.road`;
+  `od_timetable_observation(task, timetable, *, resource_limit=None)` реально
+  вызывает solve_timetable между физическими узлами на departure каждого среза.
+  Allow transit=true, pure walk разрешён, общий лимит ожидания берётся из scope.
+- `UrbanODCollector(plan).add(observations)` принимает части в любом порядке.
+  Равный replay идемпотентен; конфликт отклоняется без last-wins. Compact
+  observations хранят pair/proofs/best-known, без подробных недельных маршрутов.
+- `collector.to_week()` или `assemble_urban_od_week(plan, observations)` сохраняет
+  все 28 slice identities, даже без ответов. Отсутствующая пара остаётся unknown.
+  Диагностика best-known доступна в collector.observations; внешние response/path
+  артефакты и их постоянное хранение принадлежат исполнителю, не τ-модели.
+- Готовый week передаётся без изменения формул в `calculate_urban_tau(...,
+  reference_at=plan.reference_at, rules=rules)`, затем `result.to_threshold()`.
+
+Срезы не переиспользуются автоматически даже для static: calendar restrictions
+могут различаться. В этом этапе reuse не предоставляется; каждое время требует
+собственного результата. Typical/live/historical явно отклоняются, static τ не
+переименовывается. Unknown τ блокирует count, но сохраняет готовый H-индекс.
+
+Исполнимые replay (все inputs/proofs искусственные):
+
+```bash
+PYTHONPATH=packages/engine/src uv run --frozen python packages/engine/examples/synthetic_car.py
+PYTHONPATH=packages/engine/src uv run --frozen python packages/engine/examples/synthetic_od.py
+```
+
+Контроли: walk60 + auto1620 + walk120 = 1800 секунд, H1800 →50;
+A→B600/B→A1800 на 28 срезах →τ1200; первые14 средних900 и последние14
+средних3600 →τ2250. Регрессия также проводит OD→τ→threshold→car count.
+
+Реальные car connectors/build/Valhalla executor и backend DTO adapter пока не
+подключены. Изменения только добавляют ML1 API; canonical BACKEND DTO не меняются.
+Реальных автомобильных индексов или τ Калининграда этот этап не подтверждает.
+Следующий этап: принятый directed edge typical profile с dates/bins/season/graph,
+затем live/historical freshness и path-entry-time validation, без static fallback.
+
+Для текущего узкого road replay ferry исключён на correlation boundary; ответ с
+`summary.has_ferry != false` остаётся unknown. Это не доказательство отсутствия
+паромной связи. Расширение ferry требует принятой модели её времени/ожидания.
+
+Итог этапа: 141 additive public exports (120 прежних), 591 engine tests;
+Ruff/format, strict mypy (src/tests + оба новых examples), 10 прежних README
+examples, новые car/OD replay, frozen lock/pip/config/diff checks пройдены.
