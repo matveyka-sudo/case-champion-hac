@@ -33,6 +33,19 @@ from a2_engine.urban.models import (
     UrbanVersions,
 )
 from a2_engine.urban.selection import SelectedUrbanObject
+from a2_engine.urban.tau import (
+    UrbanTauResult,
+    UrbanTauSliceResult,
+    UrbanTauWeekResult,
+    calculate_urban_tau,
+)
+from a2_engine.urban.tau_models import (
+    UrbanODPair,
+    UrbanODScope,
+    UrbanTauDay,
+    UrbanTauSlice,
+    UrbanTauWeek,
+)
 
 __all__ = [
     "SelectedUrbanObject",
@@ -61,4 +74,13 @@ __all__ = [
     "select_h_seconds",
     "territory_index",
     "validate_urban_journey",
+    "UrbanODPair",
+    "UrbanODScope",
+    "UrbanTauDay",
+    "UrbanTauResult",
+    "UrbanTauSlice",
+    "UrbanTauSliceResult",
+    "UrbanTauWeek",
+    "UrbanTauWeekResult",
+    "calculate_urban_tau",
 ]

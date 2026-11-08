@@ -3,6 +3,7 @@
 import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import time
 from pathlib import Path
 from types import MappingProxyType
 
@@ -302,3 +303,72 @@ def urban_journey_rules_from_mapping(product: Mapping[str, object]) -> UrbanJour
 
 def load_urban_journey_rules(path: str | Path | None = None) -> UrbanJourneyRules:
     return urban_journey_rules_from_mapping(_load_product(path))
+
+
+@dataclass(frozen=True)
+class UrbanTauRules:
+    methodology_version: str
+    tau_days: int
+    tau_times: tuple[time, ...]
+    max_total_wait_seconds: float
+    # IMPLEMENTATION.md, "Порог τ": eight preceding completed calendar weeks.
+    max_lookback_weeks: int = 8
+
+    def __post_init__(self) -> None:
+        _identifiers((self.methodology_version,), "methodology_version")
+        if (
+            isinstance(self.tau_days, bool)
+            or not isinstance(self.tau_days, int)
+            or not 1 <= self.tau_days <= 7
+        ):
+            raise ValueError("tau_days must select 1..7 days of an ISO week")
+        if (
+            isinstance(self.max_lookback_weeks, bool)
+            or not isinstance(self.max_lookback_weeks, int)
+            or self.max_lookback_weeks <= 0
+        ):
+            raise ValueError("max_lookback_weeks must be a positive integer")
+        clocks = tuple(self.tau_times)
+        if not clocks or any(
+            not isinstance(clock, time)
+            or clock.tzinfo is not None
+            or clock.second
+            or clock.microsecond
+            for clock in clocks
+        ):
+            raise ValueError("tau_times must be nonempty naive local minute times")
+        if len(set(clocks)) != len(clocks):
+            raise ValueError("Duplicate tau_times")
+        object.__setattr__(self, "tau_times", tuple(sorted(clocks)))
+        object.__setattr__(
+            self,
+            "max_total_wait_seconds",
+            finite_number(self.max_total_wait_seconds, "max_total_wait_seconds"),
+        )
+
+
+def urban_tau_rules_from_mapping(product: Mapping[str, object]) -> UrbanTauRules:
+    version, parameters = _method_parameters(product, "urban_passenger")
+    try:
+        days = parameters["tau_days"]
+        if not isinstance(days, int) or isinstance(days, bool):
+            raise ValueError("tau_days must be an integer")
+        raw_times = parameters["tau_times"]
+        if not isinstance(raw_times, list):
+            raise ValueError("tau_times must be a list of HH:MM strings")
+        times = []
+        for raw in raw_times:
+            if not isinstance(raw, str) or len(raw) != 5:
+                raise ValueError("tau_times must use HH:MM")
+            clock = time.fromisoformat(raw)
+            if clock.isoformat(timespec="minutes") != raw:
+                raise ValueError("tau_times must use HH:MM")
+            times.append(clock)
+        hours = finite_number(parameters["max_total_wait_hours"], "max_total_wait_hours")
+        return UrbanTauRules(version, days, tuple(times), hours * 3600.0)
+    except KeyError as exc:
+        raise ValueError(f"Missing configuration field: {exc.args[0]}") from exc
+
+
+def load_urban_tau_rules(path: str | Path | None = None) -> UrbanTauRules:
+    return urban_tau_rules_from_mapping(_load_product(path))

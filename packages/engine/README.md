@@ -2,9 +2,9 @@
 
 Чистые расчёты ML1 по `docs/FORMULAS.md` и `config/product.json`: городские
 пассажирские индексы, одна межгородская пассажирская цепочка, городские/межгородские
-грузы, загрузка трубопровода и сравнение уже рассчитанных результатов.
+грузы, загрузка трубопровода, сравнение готовых результатов и городской τ по OD-матрицам.
 Времена, население и подтверждения входных условий поступают от вызывающего слоя.
-Маршрутизации, сетки, расчёта τ, построения эталона A, изменения расписаний,
+Маршрутизации, сетки, построения реальных OD-матриц, эталона A, изменения расписаний,
 сценарного движка, HTTP и LLM здесь нет.
 
 ## Структура и зависимости
@@ -24,6 +24,8 @@ a2_engine/
     journeys.py               # проверка временных цепочек и ожиданий
     selection.py              # минимум по физическим объектам
     analysis.py               # точки, категории, режимы и территория
+    tau_models.py             # принятые OD-матрицы, календарь и scope
+    tau.py                    # выбор базовой недели и точный расчёт τ
   intercity/
     __init__.py
     passenger.py              # пассажирская цепочка, эталон, автомобиль
@@ -89,8 +91,8 @@ a2_engine.config, a2_engine.results и a2_engine.passenger: эти пути ис
 Тест копирует пакет вне checkout и проверяет все три загрузчика с таким путём;
 отдельные процессы из другого cwd проверяют загрузку по умолчанию.
 
-Городской анализ добавляет 23 явных экспорта (всего 60). Проверки старых 37
-сигнатур сохранены. Предметные реализации могут импортировать свои внутренние
+Городской анализ добавил 23 экспорта; расчёт τ добавляет ещё 12 (всего 72).
+Зафиксированы и проверяются все 60 сигнатур до добавления τ. Предметные реализации могут импортировать свои внутренние
 модули и shared; shared по-прежнему не зависит от предметных пакетов.
 
 ## Городские пассажирские вызовы: первый этап
@@ -455,8 +457,9 @@ load_urban_journey_rules(path: str | Path | None = None) -> UrbanJourneyRules
 urban_journey_rules_from_mapping(product: Mapping[str, object]) -> UrbanJourneyRules
 ```
 
-Это чистая обработка **переданных** цепочек. Сетевых вызовов, поиска по графу,
-построения τ и восстановления пропущенных интервалов нет. Численные индексы
+Это чистая обработка **переданных** цепочек. Сетевых вызовов, поиска по графу
+и восстановления пропущенных интервалов нет. Сам analyze_urban_candidates не
+пересчитывает τ: его отдельно вычисляет calculate_urban_tau по OD-матрицам. Численные индексы
 рассчитывают прежние select_h_seconds/category_index/point_index/territory_index.
 UrbanJourneyRules отдельно загружает max_total_wait_hours в секунды; сигнатура
 UrbanConfig не меняется. Полный time limit относится к сумме ожиданий, не total.
@@ -706,8 +709,228 @@ available JourneyResult публиковать только допустимые
   перемещение точки не меняет её population, дубли входов не увеличивают count,
   обслуживающий город объект за границей не удаляется автоматически.
 
-Реальные маршрутизаторы, приём реальных городских данных, расчёт τ, последний
+Реальные маршрутизаторы, построение реальных OD-матриц, последний
 обратный рейс, эталон A и graph overlay сценариев остаются следующими этапами.
+
+## Точный городской τ по принятым OD-матрицам
+
+```python
+load_urban_tau_rules(path: str | Path | None = None) -> UrbanTauRules
+urban_tau_rules_from_mapping(product: Mapping[str, object]) -> UrbanTauRules
+calculate_urban_tau(
+    baseline_context: UrbanContext, points: Sequence[UrbanPoint],
+    population_coverage: UrbanPopulationCoverage, weeks: Sequence[UrbanTauWeek], *,
+    passenger_mode: Literal["walk", "public_transport", "private_car"], timezone: str,
+    reference_at: datetime, rules: UrbanTauRules,
+) -> UrbanTauResult
+UrbanTauResult.to_threshold() -> UrbanThreshold
+```
+
+τ считается по поездкам **между расчётными точками**, не к учреждениям.
+UrbanTauRules читает tau_days/tau_times/max_total_wait_hours из product.json.
+В утверждённом профиле это 7 дней × 08:00/12:00/18:00/22:00 = 28 срезов.
+Правило max_lookback_weeks=8 взято из IMPLEMENTATION.md, раздел «Порог τ»:
+это явно документированное значение нового типа правил, поскольку поля в JSON нет.
+Изменения правил — операторские и версионированные, не коэффициенты пользователя UI.
+В тестовом профиле можно проверить иное число первых дней недели/местных времён;
+production использует опубликованный семидневный профиль без изменения JSON.
+
+### Нормализованные матрицы и календарь
+
+| Тип | Поля и обязательная семантика |
+| --- | --- |
+| UrbanODScope | city_id, passenger_mode, UrbanVersions, traffic_mode, search_parameters_id, IANA timezone, point_ids, max_total_wait_seconds; это OD-покрытие, не UrbanCoverage каталога учреждений |
+| UrbanODPair | origin/destination_point_id, state, seconds либо None, явные search_complete/rules_confirmed, evidence_refs, optional reason_code |
+| UrbanTauDay | service_date, ordinary/is_holiday (bool либо None), calendar_confirmed, service_calendar_confirmed, evidence_refs |
+| UrbanTauSlice | scope, service_date, local_time, aware departure_at, pairs, coverage_confirmed, evidence_refs |
+| UrbanTauWeek | стабильный week_id входного артефакта, scope, week_start, calendar, slices, evidence_refs, typical_profile_accepted, traffic_evidence_refs |
+
+Pair state — reachable / confirmed_unreachable / unknown. Число разрешено для
+reachable, но в среднее оно попадёт только при полном доказанном поиске, подтверждении
+городских правил и непустых evidence. rules_confirmed удостоверяет учтённые подходы,
+все ожидания и соблюдение лимита scope; производитель проверяет цепочки прежним
+validate_urban_journey и доказывает минимум маршрутизатором. Сам по себе известный
+путь в неполном поиске не является точным T_ij. Для confirmed_unreachable seconds
+обязательно None: ни 0, ни Infinity не кодируют отсутствие поездки.
+Без доказательств объявленная недостижимость становится неизвестным положительным
+весом, а не исключённой парой. Ошибку провайдера передавайте как unknown с причиной.
+
+Дубликат направленной пары, неизвестный ID, несовместимый scope внутри недели,
+повтор timestamp и некорректное число — ValueError. Диагональ игнорируется в математике,
+но некорректные исходные числа/ID всё равно отклоняются. Для положительных весов
+нужны все i != j: пропущенная запись остаётся unknown даже при coverage_confirmed=True.
+Пары с достоверным нулевым весом можно не передавать. Неизвестное население не ноль.
+Повторное использование полного cell_id/доли отвергается существующей проверкой точек.
+Потерянное население, неподтверждённый population roster и неизвестная версия населения
+блокируют полный городской τ. Для τ baseline_context.territory_id должен быть city_id.
+
+### Границы базовой недели
+
+Неделя — ISO-период с понедельника 00:00 до следующего понедельника 00:00
+в IANA-зоне города, конец исключён. Текущая неделя местной даты reference_at
+не используется. Рассматриваются восемь предыдущих завершённых ISO-недель:
+week_start от current_monday−8 недель до current_monday−1 недели включительно.
+Возраст измеряется номером завершённой календарной недели, а не 56×24 часами
+от времени суток запроса. На точном местном понедельнике 00:00 прошлая неделя
+уже завершена; за микросекунду до него она ещё текущая.
+
+Весь семидневный календарь должен быть явно подтверждён, ordinary=True,
+is_holiday=False. Для ОТ дополнительно подтверждаются реальные сервисные даты
+после календарных исключений. По названию дня или системному календарю праздников
+ничего не выводится. Typical требует принятого профиля с evidence; static не
+подменяет typical. Равные численные матрицы разных срезов допустимы.
+
+Local date/time каждого среза сверяются с UTC instant через ZoneInfo. Для дней
+перехода DST используются соответствующие смещения. Неоднозначное или несуществующее
+местное время заданного профиля делает неделю непригодной с отдельной причиной:
+движок не выбирает fold и не сдвигает час сам. В обычном профиле 08/12/18/22 это
+проверка редких календарных границ, а не добавление случайного зимнего коэффициента.
+
+Из подходящих недель выбирается ближайшая. Поздняя праздничная/неполная неделя
+не мешает выбрать более раннюю допустимую. Все переданные кандидаты сохраняются
+в result.weeks с причинами; при отсутствии подходящей недели τ unknown с
+NO_SUITABLE_BASELINE_WEEK и подробным result.reasons. Системные now/today не используются.
+
+### Математика, диагностика и численная устойчивость
+
+Для каждого среза считается Σ(P_i P_j T_ij) / Σ(P_i P_j) только по доказанно
+достижимым направленным парам. Затем — равновесное среднее всех обязательных
+срезов. Пул всех достижимых пар недели дал бы неверный результат при меняющейся
+достижимости. Один срез без положительного достижимого знаменателя либо с unknown
+положительным весом делает неделю непригодной; недостижимые пары не становятся нулевыми временами.
+
+UrbanTauResult сохраняет baseline_context, explicit reference_at, rules, точки и
+популяционное покрытие, выбранную selected_week, все weeks, τ/причины и evidence.
+UrbanTauWeekResult содержит week_id/start/scope, τ и обязательные slices; отсутствующий
+срез представлен диагностикой MISSING_MATRIX_SLICE с неизвестным весом, не нулевым средним.
+UrbanTauSliceResult содержит местную дату/время, UTC departure, mean_seconds,
+reachable_weight, confirmed_unreachable_weight, unknown_weight, weight_denominator,
+unreachable_weight_share, причины и evidence.
+
+Знаменатель доли недостижимости — **все** положительные Σ_{i != j} P_i P_j среза,
+включая unknown, а не только достижимые. За неделю он суммируется по обязательным
+срезам; числитель — сумма подтверждённо недостижимого веса по ним. Например,
+14 срезов с обеими достижимыми парами и 14 с одной недостижимой дают долю 1/4.
+Если оценка весов не выполнялась из-за непригодного календаря/населения, свойства
+веса недели возвращают None, а не выдуманный 0. При нулевом знаменателе доля None.
+
+Веса хранятся как Fraction (persons² на срез, сумма pair-slice весов за неделю).
+Все произведения и суммы вычисляются точно для переданных чисел, включая 1e308²;
+точные средние срезов используются и для окончательного τ. Только публикуемые
+секунды переводятся в float. Если положительное значение невозможно представить
+без обнуления — NUMERIC_UNDERFLOW/unknown; неконечное представление — NUMERIC_OVERFLOW.
+Для JSON BACKEND должен сериализовать Fraction явно, например numerator/denominator
+десятичными строками; преобразование больших весов в float недопустимо.
+
+### Подключение и фиксация базового τ
+
+result.to_threshold() сохраняет исходные city/mode/versions/traffic/search parameters.
+Аргумента для их подмены нет. Готовый UrbanThreshold передаётся в прежний
+analyze_urban_candidates(..., thresholds=(threshold,)). При unknown τ seconds=None:
+H-индексы продолжают работать, count получает TAU_UNAVAILABLE. Подробные причины
+нужно сохранять вместе с UrbanTauResult; существующий UrbanThreshold не заменяет
+артефакт с базовой неделей и диагностикой.
+
+Движение ползунка времени повторно использует тот же порог, не меняет reference_at
+и не запускает выбор недели автоматически. Для сценария хранится ссылка на baseline
+артефакт. При смене версии графа нельзя переписать versions порога: текущий городской
+анализ такой контекст отвергнет. Будущий scenario adapter должен различать baseline
+и overlay, сохраняя исходный τ; сценарный движок здесь не добавлен.
+
+Ключ неизменяемого артефакта для BACKEND: city/mode/timezone, selected week_id/start,
+точный roster/основание населения, все UrbanVersions, search_parameters_id, параметры
+UrbanTauRules и evidence принятого профиля. Для воспроизведения выбора сохраняются
+reference_at и идентичности всех недель-кандидатов. Текущее время запроса не подменяет
+момент выбора. Hashes, кеш, сохранение, реальные jobs/dependency_job_id — BACKEND.
+
+### Исполнимый пример τ: только синтетические матрицы
+
+Здесь подтверждения и evidence IDs тестовые. Это не расчёт по реальным маршрутам
+Калининграда. При тех же исходных версиях полученный threshold можно подставить
+в предыдущий городской пример вместо вручную заданного числа 1200.
+
+<!-- executable-example -->
+```python
+from datetime import UTC, date, datetime, timedelta
+from zoneinfo import ZoneInfo
+from a2_engine import (
+    UrbanContext, UrbanODPair, UrbanODScope, UrbanPoint, UrbanPopulationCoverage,
+    UrbanTauDay, UrbanTauSlice, UrbanTauWeek, UrbanVersions,
+    calculate_urban_tau, load_urban_tau_rules,
+)
+
+rules = load_urban_tau_rules()
+reference_at = datetime(2026, 11, 8, 12, tzinfo=UTC)
+versions = UrbanVersions("synthetic-snapshot", "synthetic-graph", "synthetic-calendar",
+    "synthetic-population", "synthetic-geometry", rules.methodology_version,
+    "synthetic-config-hash", "synthetic-traffic")
+context = UrbanContext("synthetic-city", "synthetic-city", reference_at, "static",
+                       versions, "synthetic-search-options")
+points = [UrbanPoint(f"p{i}", f"cell{i}", f"p{i}", f"p{i}", 0, context.city_id,
+    population, 2026, "synthetic-estimate", ("synthetic-population-evidence",))
+    for i, population in [(1, 90), (2, 10)]]
+ids = frozenset(p.point_id for p in points)
+population = UrbanPopulationCoverage(context, True, 0, ("synthetic-population-proof",), ids)
+scope = UrbanODScope(context.city_id, "walk", versions, "static", context.search_parameters_id,
+                     "Europe/Kaliningrad", ids, rules.max_total_wait_seconds)
+start = date(2026, 10, 26)
+calendar = tuple(UrbanTauDay(start + timedelta(days=i), True, False, True, True,
+    ("synthetic-calendar-proof",)) for i in range(7))
+pairs = (UrbanODPair("p1", "p2", "reachable", 600, True, True, ("synthetic-minimum-proof",)),
+         UrbanODPair("p2", "p1", "reachable", 1800, True, True, ("synthetic-minimum-proof",)))
+slices = tuple(UrbanTauSlice(scope, start + timedelta(days=i), clock,
+    datetime.combine(start + timedelta(days=i), clock, ZoneInfo(scope.timezone)),
+    pairs, True, ("synthetic-matrix-proof",))
+    for i in range(rules.tau_days) for clock in rules.tau_times)
+baseline = UrbanTauWeek("synthetic-week-2026-10-26", scope, start, calendar, slices,
+                        ("synthetic-week-proof",), False, ())
+tau_result = calculate_urban_tau(context, points, population, (baseline,),
+    passenger_mode="walk", timezone=scope.timezone, reference_at=reference_at, rules=rules)
+assert tau_result.tau_seconds.value == 1200
+assert tau_result.selected_week is not None and len(tau_result.selected_week.slices) == 28
+threshold = tau_result.to_threshold()
+assert threshold.seconds == 1200 and threshold.versions is context.versions
+```
+
+Контрольные результаты: две точки 90/10 и 600/1800с → 1200с; три точки 1/2/3
+с суммой весов 22 и взвешенной суммой 930мин → (930/22)×60 ≈2536.363636с;
+14 срезов со средним 15мин и 14 со средним 60мин →2250с, не ошибочные 1800с.
+Сквозное подключение к count проверяется в tests/test_urban_tau.py: 50/25,
+47.5 и counts 1/0; неизвестный τ не убирает готовый индекс.
+
+### Реальные входы и передача для построения матриц
+
+Проверена опубликованная work/ml2 до актуального 02221bf без слияния. После
+указанного в задании de32230 уже есть walk access nodes и адаптер AcceptedData v2:
+bundle kaliningrad-urban-2026-11-08.2 содержит 216 точек и 255 привязок, 39 принятых
+объектов, а QA указывает **277.8 жителей в исключённых ячейках**. Это не полные
+OD-времена и не основание полного городского τ. Готовых OD-матриц нет; расписания
+ОТ и автомобильные привязки пока отсутствуют. Текущий checkout ML1 эти данные
+не копирует и не объявляет реальный τ Калининграда рассчитанным.
+
+- **ML2, packages/data_pipeline/**: передать городской roster без повторных весов,
+  population version/year/method, полный учёт исключённых жителей, принятую
+  обычную неделю и календарь реальных сервисных дат, source/network connectors.
+  Нужно устранить потерю населения либо сохранить unknown полного τ; не раздать
+  277.8 жителей оставшимся точкам. Критерий: неизменяемое основание точек и весов,
+  все календарные подтверждения имеют evidence, неизвестное не превращается в 0.
+- **Маршрутный слой ML1**: построить точные направленные OD-матрицы всех положительных
+  пар для каждого обязательного среза. Пропуски/таймауты — unknown. Отдельно
+  доказать минимум допустимого времени либо отсутствие допустимого пути при
+  полном scope; учесть source/destination connectors и ожидания один раз.
+  Критерий: совпадают snapshot/graph/calendar/geometry/population/traffic/methodology/
+  config/options/roster; каждый положительный отсутствующий маршрут имеет явную
+  подтверждённую запись, а не просто пропущен.
+- **BACKEND, packages/contracts/src/a2_contracts/v2/ и apps/api adapter**:
+  нужен отдельный контракт OD-покрытия и сохранённый UrbanTauResult с неделей,
+  календарём, весами и baseline reference. Нельзя переиспользовать institutional
+  CoverageScope как доказательство матрицы. Подключить to_threshold без подмены
+  версий, сериализацию Fraction, кеш и настоящие фоновые задания. Приёмка:
+  неизвестный τ не блокирует H-Score, count не получает выдуманный pending job,
+  сдвиг ползунка не выбирает новую неделю, overlay не переписывает baseline.
+- **DEVOPS, packages/engine/pyproject.toml и CI**: остаются установка src-пакета и
+  запуск engine pytest/Ruff/mypy из закреплённого окружения; зависимостей для этого
+  этапа не добавлено. До исправления упаковки используется PYTHONPATH.
 
 ## Воспроизводимые проверки
 
@@ -732,11 +955,11 @@ git diff --check
 только в tests; реальные данные/рейтинги не создаются.
 
 Проверки переноса находятся в tests/test_public_api.py и входят в общий запуск
-pytest: сохранение 37 экспортов/сигнатур, тождественность каноническим объектам,
+pytest: сохранение 60 прежних экспортов/сигнатур, тождественность каноническим объектам,
 frozen dataclass, импорты предметных пакетов в разных порядках, все три загрузчика
 из другого cwd, явный путь вне checkout, прежние ошибки файла/JSON и направление
-зависимостей через shared и собственные модули. Шесть рабочих блоков README (пять
-прежних и новый городской пример) с меткой
+зависимостей через shared и собственные модули. Семь рабочих блоков README
+(все шесть прежних и новый τ-пример) с меткой
 executable-example можно выполнить отдельно из корня checkout:
 
 ```bash
@@ -746,7 +969,7 @@ import re
 
 text = Path("packages/engine/README.md").read_text()
 examples = re.findall(r"<!-- executable-example -->\s*```python\n(.*?)```", text, re.S)
-assert len(examples) == 6
+assert len(examples) == 7
 for number, source in enumerate(examples, 1):
     exec(compile(source, f"README example {number}", "exec"), {})
     print(f"README example {number}: PASS")

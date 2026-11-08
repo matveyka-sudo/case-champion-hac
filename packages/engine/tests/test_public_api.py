@@ -99,6 +99,83 @@ PUBLIC_SIGNATURES: dict[str, str] = {
     "urban_cargo_territory_index": "(sites: collections.abc.Sequence[CargoSiteResult], *, scope: "
     "CargoScope) -> MetricResult",
     "urban_config_from_mapping": "(product: collections.abc.Mapping[str, object]) -> UrbanConfig",
+    "UrbanJourneyRules": "(methodology_version: str, max_total_wait_seconds: float) -> None",
+    "load_urban_journey_rules": "(path: str | pathlib.Path | None = None) -> UrbanJourneyRules",
+    "urban_journey_rules_from_mapping": "(product: collections.abc.Mapping[str, object]) -> "
+    "UrbanJourneyRules",
+    "SelectedUrbanObject": "(destination: UrbanDestination, journey: UrbanJourneyTiming) -> None",
+    "UrbanAnalysis": "(context: UrbanContext, area: UrbanArea, selected_categories: "
+    "collections.abc.Mapping[str, str], h_seconds: MetricResult, journeys: "
+    "tuple[UrbanJourneyTiming, ...], modes: tuple[UrbanTerritoryResult, ...], "
+    "population_coverage: UrbanPopulationCoverage, status: Literal['available', "
+    "'partial', 'unknown'], limitations: tuple[str, ...]) -> None",
+    "UrbanArea": "(city_id: str, area_km2: float | None, geometry_version: str, source_refs: "
+    "tuple[str, ...]) -> None",
+    "UrbanCandidate": "(journey_id: str, point_id: str, destination_id: str, category: str, "
+    "passenger_mode: str, context: UrbanContext, origin_node_id: str, "
+    "destination_node_id: str, departure_at: datetime.datetime, arrival_at: "
+    "datetime.datetime, legs: tuple[UrbanLeg, ...], evidence_refs: tuple[str, "
+    "...], geometry: UrbanGeometry | None = None) -> None",
+    "UrbanCategoryResult": "(point_id: str, category: str, passenger_mode: str, best: "
+    "SelectedUrbanObject | None, objects: tuple[SelectedUrbanObject, ...], "
+    "rejected: tuple[UrbanJourneyTiming, ...], index: MetricResult, count: "
+    "MetricResult, threshold: UrbanThreshold | None, coverage: "
+    "UrbanCoverage | None, minimum_proven: bool, completeness: "
+    "Literal['full', 'partial'], evidence_refs: tuple[str, ...], "
+    "limitations: tuple[str, ...]) -> None",
+    "UrbanContext": "(city_id: str, territory_id: str, requested_departure_at: datetime.datetime, "
+    "traffic_mode: Literal['static', 'typical', 'live', 'historical'], versions: "
+    "UrbanVersions, search_parameters_id: str) -> None",
+    "UrbanCoverage": "(scope: UrbanSearchScope, catalog_complete: bool, search_complete: bool, "
+    "evidence_refs: tuple[str, ...], catalog_destination_ids: frozenset[str], "
+    "provider_error: str | None = None) -> None",
+    "UrbanDestination": "(destination_id: str, object_identity: str, categories: frozenset[str], "
+    "access_node_id: str, territory_id: str, eligible: bool | None, "
+    "in_service_scope: bool, source_refs: tuple[str, ...]) -> None",
+    "UrbanGeometry": "(coordinates: tuple[tuple[float, float], ...], evidence_refs: tuple[str, "
+    "...]) -> None",
+    "UrbanJourneyTiming": "(candidate: UrbanCandidate, total_seconds: float, walking_seconds: "
+    "float, riding_seconds: float, initial_wait_seconds: float, "
+    "transfer_wait_seconds: float, total_wait_seconds: float, "
+    "waiting_share: MetricResult, admissible: bool, reason_code: str | "
+    "None) -> None",
+    "UrbanLeg": "(mode: str, kind: Literal['walk', 'ride', 'wait_initial', 'wait_transfer'], "
+    "from_node_id: str, to_node_id: str, start_at: datetime.datetime, end_at: "
+    "datetime.datetime, duration_seconds: float, service_id: str | None, "
+    "evidence_refs: tuple[str, ...]) -> None",
+    "UrbanPoint": "(point_id: str, cell_id: str, origin_node_id: str, access_node_id: str, "
+    "access_distance_m: float, territory_id: str, population: float | None, "
+    "population_year: int | None, population_method: str | None, source_refs: "
+    "tuple[str, ...], population_share_id: str | None = None) -> None",
+    "UrbanPointResult": "(point: UrbanPoint, passenger_mode: str, categories: "
+    "tuple[UrbanCategoryResult, ...], index: MetricResult, completeness: "
+    "Literal['full', 'partial']) -> None",
+    "UrbanPopulationCoverage": "(context: UrbanContext, complete: bool, excluded_population: "
+    "float | None, evidence_refs: tuple[str, ...], point_ids: "
+    "frozenset[str]) -> None",
+    "UrbanSearchScope": "(context: UrbanContext, point_id: str, category: str, passenger_mode: "
+    "str, max_total_wait_seconds: float) -> None",
+    "UrbanTerritoryResult": "(passenger_mode: str, points: tuple[UrbanPointResult, ...], index: "
+    "MetricResult, completeness: Literal['full', 'partial'], "
+    "ranking_eligible: bool, evidence_refs: tuple[str, ...]) -> None",
+    "UrbanThreshold": "(city_id: str, passenger_mode: str, versions: UrbanVersions, traffic_mode: "
+    "str, search_parameters_id: str, seconds: float | None, evidence_refs: "
+    "tuple[str, ...]) -> None",
+    "UrbanVersions": "(snapshot_id: str, graph_version: str, calendar_version: str, "
+    "population_version: str | None, geometry_version: str, methodology_version: "
+    "str, config_hash: str, traffic_version: str) -> None",
+    "analyze_urban_candidates": "(context: UrbanContext, points: "
+    "collections.abc.Sequence[UrbanPoint], destinations: "
+    "collections.abc.Sequence[UrbanDestination], candidates: "
+    "collections.abc.Sequence[UrbanCandidate], coverage: "
+    "collections.abc.Sequence[UrbanCoverage], *, area: UrbanArea, "
+    "selected_categories: collections.abc.Mapping[str, str], modes: "
+    "collections.abc.Sequence[str], population_coverage: "
+    "UrbanPopulationCoverage, config: UrbanConfig, rules: "
+    "UrbanJourneyRules, thresholds: "
+    "collections.abc.Sequence[UrbanThreshold] = ()) -> UrbanAnalysis",
+    "validate_urban_journey": "(candidate: UrbanCandidate, *, rules: UrbanJourneyRules) -> "
+    "UrbanJourneyTiming",
 }
 
 CANONICAL_MODULES = {
@@ -116,6 +193,9 @@ CANONICAL_MODULES = {
         "UrbanJourneyRules",
         "load_urban_journey_rules",
         "urban_journey_rules_from_mapping",
+        "UrbanTauRules",
+        "load_urban_tau_rules",
+        "urban_tau_rules_from_mapping",
     ),
     "a2_engine.shared.results": ("MetricResult",),
     "a2_engine.shared.scoring": ("category_index",),
@@ -172,32 +252,34 @@ CANONICAL_MODULES = {
         "UrbanTerritoryResult",
         "analyze_urban_candidates",
     ),
+    "a2_engine.urban.tau_models": (
+        "UrbanODScope",
+        "UrbanODPair",
+        "UrbanTauDay",
+        "UrbanTauSlice",
+        "UrbanTauWeek",
+    ),
+    "a2_engine.urban.tau": (
+        "UrbanTauSliceResult",
+        "UrbanTauWeekResult",
+        "UrbanTauResult",
+        "calculate_urban_tau",
+    ),
 }
 
 NEW_PUBLIC_NAMES = {
-    "UrbanJourneyRules",
-    "load_urban_journey_rules",
-    "urban_journey_rules_from_mapping",
-    "SelectedUrbanObject",
-    "UrbanAnalysis",
-    "UrbanArea",
-    "UrbanCandidate",
-    "UrbanCategoryResult",
-    "UrbanContext",
-    "UrbanCoverage",
-    "UrbanDestination",
-    "UrbanGeometry",
-    "UrbanJourneyTiming",
-    "UrbanLeg",
-    "UrbanPoint",
-    "UrbanPointResult",
-    "UrbanPopulationCoverage",
-    "UrbanSearchScope",
-    "UrbanTerritoryResult",
-    "UrbanThreshold",
-    "UrbanVersions",
-    "analyze_urban_candidates",
-    "validate_urban_journey",
+    "UrbanODPair",
+    "UrbanODScope",
+    "UrbanTauDay",
+    "UrbanTauResult",
+    "UrbanTauRules",
+    "UrbanTauSlice",
+    "UrbanTauSliceResult",
+    "UrbanTauWeek",
+    "UrbanTauWeekResult",
+    "calculate_urban_tau",
+    "load_urban_tau_rules",
+    "urban_tau_rules_from_mapping",
 }
 
 
