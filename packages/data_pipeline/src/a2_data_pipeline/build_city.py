@@ -13,6 +13,7 @@ import csv
 import hashlib
 import json
 import math
+import re
 import statistics
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -24,8 +25,8 @@ import pyarrow.parquet as pq  # type: ignore[import-untyped]
 import shapely  # type: ignore[import-untyped]
 from pydantic import BaseModel
 
+from . import admnvrsk, klgd, obrnadzor, trmo
 from . import categories as cat
-from . import klgd, obrnadzor, trmo
 from .access import ACCESS_KIND, Access, WalkNetwork, load_walk_network, snap
 from .addresses import AddressIndex, parse_address
 from .bundle import (
@@ -65,8 +66,6 @@ from .paths import processed_dir, raw_dir
 from .store import publish_bundle
 
 PARSER_VERSION = "ml2-urban-0.2.0"
-GHSL_DATASET = "ghsl_pop.e2025-r2023a-100m-r3c20"
-GHSL_TIF = "GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0_R3_C20.tif"
 OURAIRPORTS_DATASET = "ourairports.airports-20261108"
 SEARCH_BUFFER_M = 10_000
 AIRPORT_BUFFER_M = 60_000
@@ -200,20 +199,28 @@ def _osm_hashes(osm_dir: Path, network: WalkNetwork) -> dict[str, str]:
 def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
     now = datetime.now(UTC)
     osm_manifest = load_dataset_manifest(config.osm_dataset_id)
-    ghsl_manifest = load_dataset_manifest(GHSL_DATASET)
+    ghsl_manifest = load_dataset_manifest(config.ghsl_dataset_id)
     airports_manifest = load_dataset_manifest(OURAIRPORTS_DATASET)
     osm_dir = processed_dir() / config.city_id / "osm"
     boundary_ids = {config.osm_boundary_relation, *config.osm_district_relations}
-    if not extract_is_current(osm_dir, boundary_ids):
-        extract(raw_dir() / osm_manifest.raw_path, boundary_ids, osm_dir)
+    if not extract_is_current(osm_dir, boundary_ids, config.extract_bbox, config.poi_bbox):
+        extract(
+            raw_dir() / osm_manifest.raw_path,
+            boundary_ids,
+            osm_dir,
+            config.extract_bbox,
+            config.poi_bbox,
+        )
     layers = load_osm_layers(osm_dir, config.osm_boundary_relation, config.osm_district_relations)
     grid = build_grid(layers, config.utm_epsg)
-    assign_population(grid, raw_dir() / ghsl_manifest.raw_path, GHSL_TIF)
+    assign_population(grid, raw_dir() / ghsl_manifest.raw_path, config.ghsl_tif)
     network = load_walk_network(osm_dir, config.utm_epsg, config.osm_dataset_id)
 
     checks: list[dict[str, Any]] = []
     book = EvidenceBook(osm_manifest, _osm_hashes(osm_dir, network))
-    ghsl_evidence = book.add(_dataset_evidence(ghsl_manifest, "ghsl:" + GHSL_DATASET, GHSL_TIF))
+    ghsl_evidence = book.add(
+        _dataset_evidence(ghsl_manifest, "ghsl:" + config.ghsl_dataset_id, config.ghsl_tif)
+    )
     snapshot_evidence = {
         "osm": book.add(_dataset_evidence(osm_manifest, "osm:dataset:" + osm_manifest.dataset_id)),
         "ghsl": ghsl_evidence,
@@ -239,10 +246,11 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
     if config.medical_registry_dataset_id:
         medical_manifest = load_dataset_manifest(config.medical_registry_dataset_id)
         source_manifests.append(medical_manifest)
-        medical = (trmo.read_units(raw_dir() / medical_manifest.raw_path), medical_manifest)
+        medical = (*_medical_objects(medical_manifest), medical_manifest)
         snapshot_evidence["medical_registry"] = book.add(
             _dataset_evidence(
-                medical_manifest, f"{trmo.SOURCE_ID}:dataset:{medical_manifest.dataset_id}"
+                medical_manifest,
+                f"{medical_manifest.source_id}:dataset:{medical_manifest.dataset_id}",
             )
         )
     education = None
@@ -276,13 +284,37 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
         _destination(config, draft, access) for draft, access in zip(drafts, destination_access)
     ]
     access_summary = _access_checks(points, destinations, network, checks)
+    registry_coverage: dict[str, tuple[str, str]] = {}
+    if roster is not None:
+        for category in KIND_TO_CATEGORY.values():
+            registry_coverage[category] = (
+                "Муниципальные учреждения подтверждены перечнем учредителя; региональные, "
+                "федеральные и частные не подтверждены",
+                "education_registry",
+            )
+    if medical is not None:
+        medical_reason = {
+            trmo.SOURCE_ID: "Городские поликлиники ОМС (ОКФС 13/14) по ТРМО ТФОМС; адреса, которых "
+            "нет в OSM, не размещены; частные и ведомственные не входят",
+            admnvrsk.SOURCE_ID: "Городские поликлиники по перечню учреждений здравоохранения на "
+            "сайте администрации (ОПФ ГБУЗ … МЗ КК); головные адреса, не все отделения",
+        }[medical[2].source_id]
+        for category in ("adult_polyclinic", "child_polyclinic"):
+            registry_coverage[category] = (medical_reason, "medical_registry")
+    if education is not None:
+        registry_coverage["college_university"] = (
+            "Государственные колледжи и вузы по реестру аккредитации Рособрнадзора; корпуса — по "
+            "названиям в OSM; частные, ведомственные и неаккредитованные не входят",
+            "higher_education_registry",
+        )
+        if roster is None:
+            registry_coverage["school"] = (
+                "Государственные и муниципальные школы по реестру аккредитации; только адрес "
+                "организации, другие корпуса не подтверждены",
+                "higher_education_registry",
+            )
     coverage = _coverage(
-        config,
-        destinations,
-        snapshot_evidence,
-        roster is not None,
-        medical is not None,
-        education is not None,
+        config, destinations, snapshot_evidence, registry_coverage, len(layers.districts)
     )
 
     failed = [check["check_id"] for check in checks if check["status"] == "fail"]
@@ -571,7 +603,7 @@ def _destination_drafts(
     book: EvidenceBook,
     checks: list[dict[str, Any]],
     roster: tuple[klgd.Roster, DatasetManifest] | None = None,
-    medical: tuple[list[trmo.Unit], DatasetManifest] | None = None,
+    medical: tuple[list[RegistryObject], dict[str, Any], DatasetManifest] | None = None,
     education: tuple[list[obrnadzor.EduOrg], DatasetManifest] | None = None,
 ) -> tuple[list[DestinationDraft], list[CategoryOwnership], dict[str, Any]]:
     rows = pq.read_table(osm_dir / "pois.parquet").to_pylist()
@@ -618,6 +650,16 @@ def _destination_drafts(
         ownership.extend(medical_ownership)
         candidates = rest + still_unmatched
         rule_counts["medical_registry"] = medical_stats
+    if education is not None and roster is None:
+        school_candidates = [c for c in candidates if c.category == "school"]
+        rest = [c for c in candidates if c.category != "school"]
+        school_drafts, school_ownership, school_unmatched, school_stats = _accredited_schools(
+            config, education, school_candidates, address_index(), city_utm, crs, book, checks
+        )
+        drafts.extend(school_drafts)
+        ownership.extend(school_ownership)
+        candidates = rest + school_unmatched
+        rule_counts["accredited_schools"] = school_stats
     if education is not None:
         college_candidates = [c for c in candidates if c.category == "college_university"]
         rest = [c for c in candidates if c.category != "college_university"]
@@ -706,6 +748,7 @@ def _destination_drafts(
         "airport_outside_boundary_kept",
         any(not d.inside_city_boundary for d in airports_in),
         "Scheduled airport outside the city boundary is kept (PRODUCT_SPEC §2)",
+        severity="warn",
         airports=[d.name for d in airports_in],
     )
     return drafts, ownership, rule_counts
@@ -822,7 +865,7 @@ def _registry_drafts(
 
 def _medical_drafts(
     config: CityConfig,
-    medical: tuple[list[trmo.Unit], DatasetManifest],
+    medical: tuple[list[RegistryObject], dict[str, Any], DatasetManifest],
     candidates: list[cat.Candidate],
     index: AddressIndex,
     city_utm: shapely.Geometry,
@@ -830,16 +873,16 @@ def _medical_drafts(
     book: EvidenceBook,
     checks: list[dict[str, Any]],
 ) -> tuple[list[DestinationDraft], list[CategoryOwnership], list[cat.Candidate], dict[str, Any]]:
-    """City polyclinics from the OMS register, placed at their OSM address.
+    """City polyclinics from an official register, placed at their OSM address.
 
     Objects of one category that land on the same OSM address object are one
     destination. Registry addresses of the city that OSM does not hold are
     reported in QA and not placed: no coordinates are invented.
     """
 
-    units, manifest = medical
-    objects, stats = trmo.polyclinics(units)
-    grouped: dict[tuple[str, str], list[tuple[trmo.MedicalObject, Any]]] = {}
+    objects, registry_stats, manifest = medical
+    stats = dict(registry_stats)
+    grouped: dict[tuple[str, str], list[tuple[RegistryObject, Any]]] = {}
     unlocated: list[dict[str, str]] = []
     for item in objects:
         hit = index.locate(item.address)
@@ -867,13 +910,13 @@ def _medical_drafts(
         records = [
             book.add(
                 Evidence(
-                    evidence_id=f"{trmo.SOURCE_ID}:{member.object_id}",
-                    source_id=trmo.SOURCE_ID,
+                    evidence_id=f"{manifest.source_id}:{member.object_id}",
+                    source_id=manifest.source_id,
                     dataset_id=manifest.dataset_id,
-                    record_id=";".join(sorted({u.unit_code for u in member.units})),
+                    record_id=member.record_id,
                     url=str(manifest.source_url),
                     fetched_at=manifest.retrieved_at,
-                    content_hash=member.record_hash(),
+                    content_hash=member.content_hash,
                     verification_state="verified",
                 )
             )
@@ -936,6 +979,164 @@ def _medical_drafts(
     return drafts, ownership, unmatched, stats
 
 
+@dataclass(frozen=True)
+class RegistryObject:
+    """One registry object of a public category, whatever register it comes from."""
+
+    object_id: str
+    category: str
+    ownership: str
+    address: str
+    name: str
+    record_id: str
+    content_hash: str
+
+
+def _medical_objects(manifest: DatasetManifest) -> tuple[list[RegistryObject], dict[str, Any]]:
+    raw = raw_dir() / manifest.raw_path
+    if manifest.source_id == trmo.SOURCE_ID:
+        objects, stats = trmo.polyclinics(trmo.read_units(raw))
+        return [
+            RegistryObject(
+                object_id=o.object_id,
+                category=o.category,
+                ownership=o.ownership,
+                address=o.address,
+                name=o.name,
+                record_id=";".join(sorted({u.unit_code for u in o.units})),
+                content_hash=o.record_hash(),
+            )
+            for o in objects
+        ], stats
+    if manifest.source_id == admnvrsk.SOURCE_ID:
+        rows, stats = admnvrsk.load(raw)
+        return [
+            RegistryObject(
+                object_id=r.object_id,
+                category=r.category,
+                ownership=r.ownership,
+                address=r.address,
+                name=r.unit or r.name,
+                record_id=f"row-{r.row_number}",
+                content_hash=r.record_hash(),
+            )
+            for r in rows
+        ], stats
+    raise ValueError(f"no polyclinic reader for source {manifest.source_id}")
+
+
+def _accredited_schools(
+    config: CityConfig,
+    education: tuple[list[obrnadzor.EduOrg], DatasetManifest],
+    candidates: list[cat.Candidate],
+    index: AddressIndex,
+    city_utm: shapely.Geometry,
+    crs: str,
+    book: EvidenceBook,
+    checks: list[dict[str, Any]],
+) -> tuple[list[DestinationDraft], list[CategoryOwnership], list[cat.Candidate], dict[str, Any]]:
+    """Public schools of the accreditation registry, for a city without a founder's roster.
+
+    The registry address is the school; OSM candidates join it by the roster rules
+    (equal numbers within 300 m, unnamed or type-only names within 60 m).
+    """
+
+    orgs, manifest = education
+    schools = [
+        o
+        for o in orgs
+        if _names_city(o.post_address, config.name) and obrnadzor.school_reason(o) is None
+    ]
+    placed: dict[str, tuple[obrnadzor.EduOrg, Any]] = {}
+    unlocated: list[dict[str, str]] = []
+    for org in schools:
+        hit = index.locate(org.post_address)
+        if hit is None:
+            parsed = parse_address(org.post_address)
+            if parsed is not None and parsed.settlement in index.settlements:
+                unlocated.append({"org": _org_name(org), "address": org.post_address})
+            continue
+        placed.setdefault(hit.osm_ref, (org, hit))
+    entries = sorted(placed.values(), key=lambda item: item[0].org_id)
+    buildings = [
+        klgd.Building(
+            map_id=org.org_id.lower(),
+            institution_id=org.org_id.lower(),
+            kind="school",
+            name=_org_name(org),
+            lat=hit.point.y,
+            lon=hit.point.x,
+            address_short=None,
+            licence=None,
+            accreditation=None,
+        )
+        for org, hit in entries
+    ]
+    matches, unmatched, stats = match_roster(buildings, candidates, crs)
+    drafts: list[DestinationDraft] = []
+    ownership: list[CategoryOwnership] = []
+    for (org, hit), match in zip(entries, matches):
+        record = book.add(
+            Evidence(
+                evidence_id=f"{obrnadzor.SOURCE_ID}:{org.org_id.lower()}",
+                source_id=obrnadzor.SOURCE_ID,
+                dataset_id=manifest.dataset_id,
+                record_id=org.org_id,
+                url=obrnadzor.REGISTRY_PAGE,
+                fetched_at=manifest.retrieved_at,
+                content_hash=obrnadzor.record_hash(org),
+                verification_state="verified",
+            )
+        )
+        osm_refs = sorted({ref for c in match.candidates for ref in c.osm_refs})
+        destination_id = f"{config.city_id}-school-{obrnadzor.SOURCE_ID}-{org.org_id.lower()}"
+        drafts.append(
+            DestinationDraft(
+                destination_id=destination_id,
+                category="school",
+                name=_org_name(org),
+                utm=match.point_utm,
+                lonlat=hit.point,
+                inside_city_boundary=city_utm.distance(match.point_utm) == 0,
+                osm_ref=osm_refs[0] if osm_refs else hit.osm_ref,
+                reasons=[],
+                evidence_ids=[record, book.osm(hit.osm_ref), *(book.osm(r) for r in osm_refs)],
+                location_source="registry_address",
+                ownership_verified=True,
+            )
+        )
+        ownership.append(
+            CategoryOwnership(
+                destination_id=destination_id,
+                category="school",
+                ownership=obrnadzor.ownership(org.full_name),  # type: ignore[arg-type]
+                basis="registry",
+                verification_state="verified",
+                evidence_ids=[record],
+            )
+        )
+    _check(
+        checks,
+        "accredited_schools_located",
+        not unlocated,
+        "Every public school of the accreditation registry in the city is found in OSM addresses",
+        severity="warn",
+        unlocated=unlocated,
+    )
+    stats |= {
+        "registry_schools": len(schools),
+        "placed": len(entries),
+        "unlocated": len(unlocated),
+    }
+    return drafts, ownership, unmatched, stats
+
+
+def _names_city(address: str, city: str) -> bool:
+    """The city as a whole word: «г. Новороссийск» yes, «ул. Новороссийская» no."""
+
+    return bool(re.search(rf"(?<![а-яё]){re.escape(city.lower())}(?![а-яё])", address.lower()))
+
+
 def _org_name(org: obrnadzor.EduOrg) -> str:
     short = org.short_name.strip()
     return short if len(short) > 2 else org.full_name
@@ -963,7 +1164,8 @@ def _university_drafts(
     local = [
         o
         for o in orgs
-        if config.name in o.post_address and obrnadzor.classify(o) != "NOT_COLLEGE_OR_UNIVERSITY"
+        if _names_city(o.post_address, config.name)
+        and obrnadzor.classify(o) != "NOT_COLLEGE_OR_UNIVERSITY"
     ]
     by_id = {o.org_id: o for o in local}
     reasons = {o.org_id: obrnadzor.classify(o) for o in local}
@@ -1214,10 +1416,12 @@ def _coverage(
     config: CityConfig,
     destinations: list[Destination],
     evidence: dict[str, str],
-    has_registry: bool = False,
-    has_medical_registry: bool = False,
-    has_education_registry: bool = False,
+    registry_coverage: dict[str, tuple[str, str]],
+    district_count: int,
 ) -> list[CoverageRecord]:
+    """Coverage records. ``registry_coverage`` maps a category confirmed by a register
+    to (reason, evidence key); other public categories stay unknown."""
+
     city = config.city_id
     start, end = ANALYSIS_WINDOW
     osm = [evidence["osm"]]
@@ -1226,7 +1430,7 @@ def _coverage(
             collection="territories",
             city_id=city,
             status="complete",
-            reason="Городской округ и все три района из OSM",
+            reason=f"Городской округ и {district_count} района(ов) из OSM",
             evidence_ids=osm,
             valid_from=start,
             valid_to=end,
@@ -1260,39 +1464,26 @@ def _coverage(
             valid_to=end,
         ),
     ]
-    registry_categories = set(KIND_TO_CATEGORY.values()) if has_registry else set()
     for category in PRODUCT_CATEGORIES:
         accepted = sum(1 for d in destinations if d.category == category and d.status == "accepted")
         extra: list[str] = []
-        if has_education_registry and category == "college_university":
+        if category in registry_coverage:
+            reason, key = registry_coverage[category]
             status = "partial"
-            reason = (
-                "Государственные колледжи и вузы по реестру аккредитации Рособрнадзора; корпуса — "
-                "по названиям в OSM; частные, ведомственные и неаккредитованные не входят"
-            )
-            extra = [evidence["higher_education_registry"]]
-        elif has_medical_registry and category in {"adult_polyclinic", "child_polyclinic"}:
-            status = "partial"
-            reason = (
-                "Городские поликлиники ОМС (ОКФС 13/14) по ТРМО ТФОМС; адреса, которых нет в OSM, "
-                "не размещены; частные и ведомственные не входят"
-            )
-            extra = [evidence["medical_registry"]]
-        elif category in registry_categories:
-            status = "partial"
-            reason = (
-                "Муниципальные учреждения подтверждены перечнем учредителя (klgd.ru); "
-                "региональные, федеральные и частные не подтверждены"
-            )
-            extra = [evidence["education_registry"]]
+            extra = [evidence[key]]
         elif category in OWNERSHIP_REQUIRED:
-            status, reason = (
-                "unknown",
-                "Кандидаты OSM в карантине: форма собственности не подтверждена реестром",
-            )
+            status = "unknown"
+            reason = "Кандидаты OSM в карантине: форма собственности не подтверждена реестром"
         elif category == "airport":
-            status = "complete" if accepted else "unknown"
-            reason = "Аэродромы с IATA в 60 км, регулярные рейсы подтверждены OurAirports"
+            if config.airport_service_unverified:
+                status = "partial" if accepted else "unknown"
+                reason = (
+                    "Аэродромы с IATA в 60 км по OurAirports; регулярность рейсов не проверена "
+                    "по расписаниям (ограничения полётов на юге России)"
+                )
+            else:
+                status = "complete" if accepted else "unknown"
+                reason = "Аэродромы с IATA в 60 км, регулярные рейсы подтверждены OurAirports"
         else:
             status = "partial"
             reason = (
@@ -1314,22 +1505,18 @@ def _coverage(
                 }
             )
         )
+    confirmed = sorted(registry_coverage)
     records.append(
         CoverageRecord(
             collection="category_ownership",
             city_id=city,
-            status="partial" if registry_categories or has_medical_registry else "unknown",
+            status="partial" if confirmed else "unknown",
             reason=(
-                "Школы и детсады — по перечню учредителя (муниципальные), поликлиники — по ТРМО "
-                "(ОКФС 13/14), колледжи и вузы — по реестру аккредитации; прочие не подтверждены"
-                if registry_categories or has_medical_registry
-                else "Официальный реестр учреждений ещё не загружен"
+                "Подтверждены реестрами: " + ", ".join(confirmed)
+                if confirmed
+                else "Официальный реестр учреждений не загружен"
             ),
-            evidence_ids=[
-                evidence[key]
-                for key in ("education_registry", "medical_registry", "higher_education_registry")
-                if key in evidence
-            ],
+            evidence_ids=sorted({evidence[key] for _, key in registry_coverage.values()}),
         )
     )
     for collection in NOT_COLLECTED:

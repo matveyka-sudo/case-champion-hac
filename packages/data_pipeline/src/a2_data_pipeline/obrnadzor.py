@@ -208,6 +208,28 @@ def classify(org: EduOrg) -> str | None:
     return None
 
 
+GENERAL_LEVELS = {
+    "Начальное общее образование",
+    "Основное общее образование",
+    "Среднее общее образование",
+}
+
+
+def school_reason(org: EduOrg) -> str | None:
+    """None when the organisation is a public general-education school, else the reason."""
+
+    name = org.full_name.lower()
+    if "общеобразовательн" not in name and not GENERAL_LEVELS & set(org.levels):
+        return "NOT_A_SCHOOL"
+    if any(word in name for word in ("профессиональн", "высшего образования")):
+        return "NOT_A_SCHOOL"
+    if "казенн" in name or "казённ" in name:
+        return "DEPARTMENTAL_INSTITUTION"
+    if ownership(org.full_name) not in {"federal", "regional", "municipal"}:
+        return "NOT_PUBLIC"
+    return None
+
+
 def record_hash(org: EduOrg) -> str:
     payload = json.dumps(asdict(org), sort_keys=True, ensure_ascii=False, separators=(",", ":"))
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()

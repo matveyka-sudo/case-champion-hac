@@ -122,3 +122,22 @@ def test_read_orgs_takes_active_records_of_region_and_local_branches(tmp_path: P
     assert [(o.org_id, o.is_branch) for o in orgs] == [("a", False), ("b", True)]
     assert orgs[0].levels == ("Среднее профессиональное образование",)
     assert "Иванов" not in repr(orgs)
+
+
+@pytest.mark.parametrize(
+    ("full_name", "levels", "reason"),
+    [
+        ("Муниципальное бюджетное общеобразовательное учреждение СОШ № 7", (), None),
+        (
+            "Государственное казенное общеобразовательное учреждение кадетская школа",
+            (),
+            "DEPARTMENTAL_INSTITUTION",
+        ),
+        ("Частное общеобразовательное учреждение «Школа»", (), "NOT_PUBLIC"),
+        (UNIVERSITY.full_name, ("Высшее образование - бакалавриат",), "NOT_A_SCHOOL"),
+        ("Муниципальное автономное дошкольное образовательное учреждение", (), "NOT_A_SCHOOL"),
+    ],
+)
+def test_school_reason(full_name: str, levels: tuple[str, ...], reason: str | None) -> None:
+    org = replace(UNIVERSITY, full_name=full_name, levels=levels)
+    assert ob.school_reason(org) == reason

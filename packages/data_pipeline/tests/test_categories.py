@@ -55,3 +55,15 @@ def test_city_named_passenger_station_is_terminal() -> None:
 )
 def test_ownership_hint_is_only_a_hint(name: str, ownership: str) -> None:
     assert ownership_hint({"name": name}) == ownership
+
+
+def test_main_station_named_as_city_is_terminal() -> None:
+    tags = {
+        "railway": "station",
+        "name": "Новороссийск",
+        "train": "yes",
+        "public_transport": "station",
+    }
+    assert classify(tags, "Новороссийск")[0] == "rail_terminal"
+    assert classify({**tags, "name": "Новороссийск-Товарная"}, "Новороссийск")[0] == "rail_terminal"
+    assert classify({**tags, "name": "Тоннельная"}, "Новороссийск")[0] is None

@@ -19,7 +19,9 @@ import osmium
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
-EXTRACT_VERSION = 5
+EXTRACT_VERSION = 6
+
+BBox = tuple[float, float, float, float]  # west, south, east, north (EPSG:4326)
 WALK_RULES_VERSION = "osm-walk-network-v1"
 
 WATER_TAGS = {
@@ -150,10 +152,19 @@ class _Tables:
     broken_ways: int = 0
 
 
+def _inside(lon: float, lat: float, bbox: BBox | None) -> bool:
+    return bbox is None or (bbox[0] <= lon <= bbox[2] and bbox[1] <= lat <= bbox[3])
+
+
 class _Handler(osmium.SimpleHandler):
-    def __init__(self, boundary_ids: set[int]) -> None:
+    """``bbox`` clips buildings, water, addresses and the walk network; ``poi_bbox``
+    clips destination candidates. Without a box the whole file is kept."""
+
+    def __init__(self, boundary_ids: set[int], bbox: BBox | None, poi_bbox: BBox | None) -> None:
         super().__init__()
         self.boundary_ids = boundary_ids
+        self.bbox = bbox
+        self.poi_bbox = poi_bbox or bbox
         self.wkb = osmium.geom.WKBFactory()
         self.tables = _Tables()
 
@@ -179,11 +190,15 @@ class _Handler(osmium.SimpleHandler):
             )
 
     def node(self, node: Any) -> None:
-        if "addr:housenumber" in node.tags:
+        tags = node.tags
+        if not len(tags) or not node.location.valid():
+            return
+        lon, lat = node.location.lon, node.location.lat
+        if "addr:housenumber" in tags and _inside(lon, lat, self.bbox):
             self._address(
                 _ref("node", node.id), node.tags, bytes.fromhex(self.wkb.create_point(node)), None
             )
-        if _is_poi(node.tags):
+        if _is_poi(tags) and _inside(lon, lat, self.poi_bbox):
             ref = _ref("node", node.id)
             tags = self._kept(node.tags, KEEP_TAGS)
             wkb = bytes.fromhex(self.wkb.create_point(node))
@@ -198,6 +213,9 @@ class _Handler(osmium.SimpleHandler):
 
     def way(self, way: Any) -> None:
         if not walkable(way.tags):
+            return
+        first = way.nodes[0].location if len(way.nodes) else None
+        if first is None or not first.valid() or not _inside(first.lon, first.lat, self.bbox):
             return
         ref = _ref("way", way.id)
         try:
@@ -217,10 +235,26 @@ class _Handler(osmium.SimpleHandler):
             }
         )
 
+    def _area_position(self, area: Any) -> tuple[bool, bool]:
+        """(inside bbox, inside poi bbox) by the first node of the first outer ring."""
+
+        for ring in area.outer_rings():
+            for node in ring:
+                lon, lat = node.lon, node.lat
+                return _inside(lon, lat, self.bbox), _inside(lon, lat, self.poi_bbox)
+        return False, False
+
     def area(self, area: Any) -> None:
         tags = area.tags
         kind = "way" if area.from_way() else "relation"
         ref = _ref(kind, area.orig_id())
+        is_boundary = kind == "relation" and area.orig_id() in self.boundary_ids
+        if self.bbox is None:
+            detail, poi = True, True
+        else:
+            detail, poi = self._area_position(area)
+        if not (detail or poi or is_boundary):
+            return
         try:
             geometry: bytes | None = None
 
@@ -242,7 +276,7 @@ class _Handler(osmium.SimpleHandler):
                         "content_hash": content_hash(ref, {"name": tags.get("name")}, geom()),
                     }
                 )
-            building = tags.get("building")
+            building = tags.get("building") if detail else None
             if building and building != "no" and "addr:housenumber" in tags:
                 self._address(ref, tags, geom(), 0.0)
             if building and building != "no":
@@ -254,9 +288,9 @@ class _Handler(osmium.SimpleHandler):
                         "content_hash": content_hash(ref, {"building": building}, geom()),
                     }
                 )
-            if any(tags.get(key) == value for key, value in WATER_TAGS):
+            if detail and any(tags.get(key) == value for key, value in WATER_TAGS):
                 self.tables.water.append({"osm_ref": ref, "wkb": geom()})
-            if _is_poi(tags):
+            if poi and _is_poi(tags):
                 kept = self._kept(tags, KEEP_TAGS)
                 self.tables.pois.append(
                     {
@@ -273,8 +307,14 @@ class _Handler(osmium.SimpleHandler):
 TABLES = ("boundaries", "buildings", "water", "pois", "walk_ways", "addresses")
 
 
-def extract(pbf: Path, boundary_ids: set[int], out_dir: Path) -> dict[str, int]:
-    handler = _Handler(boundary_ids)
+def extract(
+    pbf: Path,
+    boundary_ids: set[int],
+    out_dir: Path,
+    bbox: BBox | None = None,
+    poi_bbox: BBox | None = None,
+) -> dict[str, int]:
+    handler = _Handler(boundary_ids, bbox, poi_bbox)
     handler.apply_file(str(pbf), locations=True, idx="flex_mem")
     out_dir.mkdir(parents=True, exist_ok=True)
     counts: dict[str, int] = {}
@@ -293,13 +333,17 @@ def extract(pbf: Path, boundary_ids: set[int], out_dir: Path) -> dict[str, int]:
         "extract_version": EXTRACT_VERSION,
         "walk_rules": WALK_RULES_VERSION,
         "boundary_ids": sorted(boundary_ids),
+        "bbox": list(bbox) if bbox else None,
+        "poi_bbox": list(poi_bbox) if poi_bbox else None,
         "counts": counts,
     }
     (out_dir / "extract_meta.json").write_text(json.dumps(meta, indent=2) + "\n")
     return counts
 
 
-def extract_is_current(out_dir: Path, boundary_ids: set[int]) -> bool:
+def extract_is_current(
+    out_dir: Path, boundary_ids: set[int], bbox: BBox | None = None, poi_bbox: BBox | None = None
+) -> bool:
     path = out_dir / "extract_meta.json"
     if not path.is_file():
         return False
@@ -307,4 +351,6 @@ def extract_is_current(out_dir: Path, boundary_ids: set[int]) -> bool:
     return bool(
         meta.get("extract_version") == EXTRACT_VERSION
         and meta.get("boundary_ids") == sorted(boundary_ids)
+        and meta.get("bbox") == (list(bbox) if bbox else None)
+        and meta.get("poi_bbox") == (list(poi_bbox) if poi_bbox else None)
     )

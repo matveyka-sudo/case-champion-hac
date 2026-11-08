@@ -111,6 +111,8 @@ def classify(tags: dict[str, Any], city_name: str | None = None) -> tuple[str | 
         name = str(tags.get("name") or "")
         if passenger and city_name and name.startswith(f"{city_name}-"):
             return "rail_terminal", "passenger_station+name:<город>-"
+        if passenger and city_name and name == city_name:
+            return "rail_terminal", "passenger_station+name:<город>"
         return None, "rail_station_not_terminal"
     if tags.get("aeroway") == "aerodrome":
         if tags.get("iata"):

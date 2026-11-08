@@ -12,8 +12,8 @@ A registry address such as «236008, Калининградская област
   numbers must be equal, letters too when both sides have one.
 
 Settlement check: the city's own addresses must lie inside the city boundary;
-another settlement needs an equal OSM ``addr:city`` (a street name alone is not
-enough: «ул. Ленина» exists in many towns). Without an exact house, the nearest number of the
+another settlement — also a village inside the city's okrug — needs an equal OSM
+``addr:city`` (a street name alone is not enough: «ул. Ленина» exists in many towns). Without an exact house, the nearest number of the
 same parity on the same street (at most ±4) is used and reported as
 ``nearest_number``. Several OSM objects with one address collapse to the
 largest building, then the smallest OSM reference.
@@ -214,7 +214,7 @@ class AddressIndex:
             return False
         if settlement == self.city_name:
             return entry.in_city
-        return entry.city_tag == settlement and not entry.in_city
+        return entry.city_tag == settlement
 
     def locate(self, address: str) -> AddressHit | None:
         parsed = parse_address(address)
