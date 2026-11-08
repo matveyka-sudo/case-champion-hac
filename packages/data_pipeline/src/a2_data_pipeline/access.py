@@ -1,11 +1,13 @@
-"""Access nodes: where a sample point or a destination joins the walk network.
+"""Access nodes: where a point joins the walk network (people) or the road network (lorries).
 
 PRODUCT_SPEC §2: the access to the graph is built separately and its distance
 does not disappear from travel time. v1 projects the point onto the nearest
-way of the *largest connected component* of the OSM walk network
-(``osm-walk-network-v1``), so an access node never lands on an isolated
-fragment. Ties go to the smaller way id. The node id encodes the way and the
-offset along it, so identical inputs give identical ids.
+way of the *largest connected component* of the OSM network
+(``osm-walk-network-v1`` for sample points and destinations,
+``osm-road-network-v1`` for freight sites and nodes), so an access node never
+lands on an isolated fragment. Ties go to the smaller way id. The node id
+encodes the network, the way and the offset along it, so identical inputs give
+identical ids.
 
 Requires ``shapely`` and ``pyproj`` (see README).
 """
@@ -14,21 +16,25 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, Literal
 
 import numpy as np
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 import shapely  # type: ignore[import-untyped]
 
 from .geo import to_crs
-from .osm import WALK_RULES_VERSION
+from .osm import ROAD_RULES_VERSION, WALK_RULES_VERSION
 
+AccessKind = Literal["walk_network_projection", "road_network_projection"]
 ACCESS_KIND: Final = "walk_network_projection"
+ROAD_ACCESS_KIND: Final = "road_network_projection"
 TIE_TOLERANCE_M = 1e-3
 
 
 @dataclass
 class WalkNetwork:
+    """Main connected component of a walk or road network (the name is historical)."""
+
     crs: str
     graph_version: str
     lines: np.ndarray  # UTM LineStrings of the main component
@@ -36,6 +42,8 @@ class WalkNetwork:
     hashes: dict[str, str]
     tree: shapely.STRtree
     stats: dict[str, Any]
+    prefix: str = "walk"
+    kind: AccessKind = ACCESS_KIND
 
 
 @dataclass(frozen=True)
@@ -52,7 +60,27 @@ def _way_number(ref: str) -> int:
 
 
 def load_walk_network(osm_dir: Path, utm_epsg: int, dataset_id: str) -> WalkNetwork:
-    rows: list[dict[str, Any]] = pq.read_table(osm_dir / "walk_ways.parquet").to_pylist()
+    return load_network(
+        osm_dir, utm_epsg, dataset_id, "walk_ways", WALK_RULES_VERSION, "walk", ACCESS_KIND
+    )
+
+
+def load_road_network(osm_dir: Path, utm_epsg: int, dataset_id: str) -> WalkNetwork:
+    return load_network(
+        osm_dir, utm_epsg, dataset_id, "road_ways", ROAD_RULES_VERSION, "road", ROAD_ACCESS_KIND
+    )
+
+
+def load_network(
+    osm_dir: Path,
+    utm_epsg: int,
+    dataset_id: str,
+    table: str,
+    rules: str,
+    prefix: str,
+    kind: AccessKind,
+) -> WalkNetwork:
+    rows: list[dict[str, Any]] = pq.read_table(osm_dir / f"{table}.parquet").to_pylist()
     parent: dict[int, int] = {}
 
     def find(node: int) -> int:
@@ -82,7 +110,7 @@ def load_walk_network(osm_dir: Path, utm_epsg: int, dataset_id: str) -> WalkNetw
     kept_lines = lines[keep]
     total_length = float(lengths.sum())
     stats = {
-        "walk_rules": WALK_RULES_VERSION,
+        "rules": rules,
         "ways_total": len(rows),
         "ways_main_component": int(keep.sum()),
         "components": len(totals),
@@ -90,17 +118,19 @@ def load_walk_network(osm_dir: Path, utm_epsg: int, dataset_id: str) -> WalkNetw
     }
     return WalkNetwork(
         crs=crs,
-        graph_version=f"{dataset_id}:{WALK_RULES_VERSION}:main-component",
+        graph_version=f"{dataset_id}:{rules}:main-component",
         lines=kept_lines,
         refs=refs,
         hashes={row["osm_ref"]: row["content_hash"] for row in rows},
         tree=shapely.STRtree(kept_lines),
         stats=stats,
+        prefix=prefix,
+        kind=kind,
     )
 
 
 def snap(points_utm: list[shapely.Point], network: WalkNetwork) -> list[Access]:
-    """Project UTM points onto the main walk component.
+    """Project UTM points onto the main component of ``network``.
 
     The nearest way wins; ways within ``TIE_TOLERANCE_M`` of the minimum distance
     are a tie, resolved by the smaller way id, so float noise cannot pick a way.
@@ -117,7 +147,7 @@ def snap(points_utm: list[shapely.Point], network: WalkNetwork) -> list[Access]:
     result: list[Access] = []
     for index, point in enumerate(points_utm):
         if index not in minimum:
-            raise RuntimeError(f"point {index} has no walk way")
+            raise RuntimeError(f"point {index} has no {network.prefix} way")
         limit = minimum[index] + TIE_TOLERANCE_M
         candidates = network.tree.query(point, predicate="dwithin", distance=limit)
         line_index = min(
@@ -130,7 +160,7 @@ def snap(points_utm: list[shapely.Point], network: WalkNetwork) -> list[Access]:
         ref = network.refs[line_index]
         result.append(
             Access(
-                node_id=f"walk:way:{_way_number(ref)}:{offset:.1f}",
+                node_id=f"{network.prefix}:way:{_way_number(ref)}:{offset:.1f}",
                 way_ref=ref,
                 offset_m=offset,
                 point=projected,

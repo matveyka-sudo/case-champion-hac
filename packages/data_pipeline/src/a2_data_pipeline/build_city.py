@@ -1,5 +1,6 @@
-"""Build the urban passenger bundle of one city: territories, grid, points, population,
-destination candidates, access nodes, ownership status, coverage and QA.
+"""Build the urban bundle of one city: territories, grid, points, population,
+destination candidates, access nodes, ownership status, coverage and QA; for a
+city with ``freight`` also freight nodes and physical sites with road access.
 
 Usage (geo dependencies as an overlay until DEVOPS adds them, see README)::
 
@@ -19,15 +20,15 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 import shapely  # type: ignore[import-untyped]
 from pydantic import BaseModel
 
-from . import admnvrsk, klgd, obrnadzor, trmo
+from . import admnvrsk, freight, klgd, obrnadzor, trmo
 from . import categories as cat
-from .access import ACCESS_KIND, Access, WalkNetwork, load_walk_network, snap
+from .access import Access, WalkNetwork, load_road_network, load_walk_network, snap
 from .addresses import AddressIndex, parse_address
 from .bundle import (
     OWNERSHIP_REQUIRED,
@@ -37,9 +38,13 @@ from .bundle import (
     BundleManifest,
     CategoryOwnership,
     CoverageRecord,
+    CoverageStatus,
     Destination,
     DistrictShare,
     Evidence,
+    FreightKind,
+    FreightNode,
+    FreightSite,
     GridSpec,
     PopulationCell,
     SamplePoint,
@@ -75,6 +80,13 @@ REGISTRY_WARN_M = 150.0
 # population of an OSM state from 2026-11-07 are used for dates in November 2026.
 # Not a guarantee that objects are unchanged; schedules have their own periods.
 ANALYSIS_WINDOW = (date(2026, 11, 1), date(2026, 11, 30))
+PUBLIC_CATEGORY_NAMES = {
+    "adult_polyclinic": "взрослые поликлиники",
+    "child_polyclinic": "детские поликлиники",
+    "kindergarten": "детсады",
+    "school": "школы",
+    "college_university": "колледжи и вузы",
+}
 NOT_COLLECTED = (
     "stops",
     "trips",
@@ -183,11 +195,14 @@ class DestinationDraft:
     ownership_verified: bool = False
 
 
-def _osm_hashes(osm_dir: Path, network: WalkNetwork) -> dict[str, str]:
+def _osm_hashes(osm_dir: Path, networks: Sequence[WalkNetwork]) -> dict[str, str]:
     """Record hash per OSM reference; the first table that holds a reference wins."""
 
-    hashes = dict(network.hashes)
-    for name in ("boundaries", "pois", "buildings", "addresses"):
+    hashes: dict[str, str] = {}
+    for network in networks:
+        for ref, value in network.hashes.items():
+            hashes.setdefault(ref, value)
+    for name in ("boundaries", "pois", "buildings", "addresses", "freight"):
         table = pq.read_table(osm_dir / f"{name}.parquet", columns=["osm_ref", "content_hash"])
         for ref, value in zip(
             table.column("osm_ref").to_pylist(), table.column("content_hash").to_pylist()
@@ -215,9 +230,16 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
     grid = build_grid(layers, config.utm_epsg)
     assign_population(grid, raw_dir() / ghsl_manifest.raw_path, config.ghsl_tif)
     network = load_walk_network(osm_dir, config.utm_epsg, config.osm_dataset_id)
+    road = (
+        load_road_network(osm_dir, config.utm_epsg, config.osm_dataset_id)
+        if config.freight
+        else None
+    )
 
     checks: list[dict[str, Any]] = []
-    book = EvidenceBook(osm_manifest, _osm_hashes(osm_dir, network))
+    book = EvidenceBook(
+        osm_manifest, _osm_hashes(osm_dir, [network] if road is None else [network, road])
+    )
     ghsl_evidence = book.add(
         _dataset_evidence(ghsl_manifest, "ghsl:" + config.ghsl_dataset_id, config.ghsl_tif)
     )
@@ -268,6 +290,21 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
             )
         )
 
+    seaport = None
+    if config.seaport_dataset_id:
+        seaport_manifest = load_dataset_manifest(config.seaport_dataset_id)
+        source_manifests.append(seaport_manifest)
+        operators, facts = freight.load_seaport(
+            raw_dir() / seaport_manifest.raw_path, config.seaport_name or config.name
+        )
+        seaport = (operators, facts, seaport_manifest)
+        snapshot_evidence["seaport"] = book.add(
+            _dataset_evidence(
+                seaport_manifest,
+                f"{seaport_manifest.source_id}:dataset:{seaport_manifest.dataset_id}",
+            )
+        )
+
     territories = _territories(config, layers, grid, book, checks)
     cells, point_drafts = _cells(config, grid, ghsl_evidence, checks)
     drafts, ownership, rule_counts = _destination_drafts(
@@ -284,6 +321,22 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
         _destination(config, draft, access) for draft, access in zip(drafts, destination_access)
     ]
     access_summary = _access_checks(points, destinations, network, checks)
+    freight_nodes: list[FreightNode] = []
+    freight_sites: list[FreightSite] = []
+    freight_coverage: list[CoverageRecord] = []
+    freight_summary: dict[str, Any] | None = None
+    if road is not None:
+        freight_nodes, freight_sites, road_nodes, freight_summary = _freight(
+            config, osm_dir, layers, road, seaport, book, checks
+        )
+        access_nodes = sorted([*access_nodes, *road_nodes], key=lambda node: node.access_node_id)
+        freight_coverage = _freight_coverage(
+            config,
+            freight_nodes,
+            freight_sites,
+            len(seaport[0]) if seaport else None,
+            snapshot_evidence,
+        )
     registry_coverage: dict[str, tuple[str, str]] = {}
     if roster is not None:
         for category in KIND_TO_CATEGORY.values():
@@ -314,7 +367,12 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
                 "higher_education_registry",
             )
     coverage = _coverage(
-        config, destinations, snapshot_evidence, registry_coverage, len(layers.districts)
+        config,
+        destinations,
+        snapshot_evidence,
+        registry_coverage,
+        len(layers.districts),
+        freight_coverage,
     )
 
     failed = [check["check_id"] for check in checks if check["status"] == "fail"]
@@ -328,6 +386,7 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
         "parser_version": PARSER_VERSION,
         "category_rules": cat.RULES_VERSION,
         "graph_version": network.graph_version,
+        "road_graph_version": road.graph_version if road else None,
         "result": "fail" if failed else "pass",
         "failed_checks": failed,
         "warnings": warnings,
@@ -363,8 +422,30 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
                 for category in PRODUCT_CATEGORIES
             },
             "osm_rule_counts": rule_counts,
+            **({"freight": freight_summary} if freight_summary else {}),
         },
     }
+    limitations = [
+        "Границы — OSM (relation городского округа), не официальный реестр границ МО",
+        "Население — модельная оценка GHSL R2023A эпохи 2025, не перепись",
+        _public_limitation(registry_coverage),
+        "Ж/д вокзалы, автовокзалы и ТЦ отобраны правилами OSM v1 без сверки со справочником",
+        "Вход на граф — проекция на пешеходную сеть OSM v1, не размеченный вход здания",
+        "Период применимости 01–30.11.2026 заявлен ML2 для снимка OSM от 07.11.2026",
+    ]
+    if road is None:
+        limitations.append("Расписания и грузовые данные в этот bundle не входят")
+    else:
+        limitations += [
+            "Расписания в этот bundle не входят",
+            "Грузовые узлы: порт — территории OSM и операторы из перечня Росморпорта (в OSM "
+            "найдены не все), нефтяные терминалы — по названиям OSM; ж/д станции в карантине: "
+            "грузовые операции не подтверждены",
+            "Грузовые площадки — промзоны и склады OSM по правилам freight-osm-rules-v1, равные "
+            "веса; реестра предприятий и объёмов нет",
+            "Совместимость груза, услуги и подъезда неизвестна; въезд — проекция внутренней точки "
+            "контура на дорожную сеть OSM v1, не размеченные ворота; ограничения массы не учтены",
+        ]
     manifest = BundleManifest(
         format="a2-ml2-bundle",
         schema_version=2,
@@ -391,6 +472,7 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
             )
         ],
         graph_version=network.graph_version,
+        road_graph_version=road.graph_version if road else None,
         source_versions=[
             SourceVersion(
                 source_id=item.source_id,
@@ -405,15 +487,7 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
         files={},
         coverage=coverage,
         qa_report="qa_report.json",
-        limitations=[
-            "Границы — OSM (relation городского округа), не официальный реестр границ МО",
-            "Население — модельная оценка GHSL R2023A эпохи 2025, не перепись",
-            "Поликлиники, детсады, школы, колледжи и вузы в карантине до сверки с официальным реестром",
-            "Ж/д вокзалы, автовокзалы и ТЦ отобраны правилами OSM v1 без сверки со справочником",
-            "Вход на граф — проекция на пешеходную сеть OSM v1, не размеченный вход здания",
-            "Период применимости 01–30.11.2026 заявлен ML2 для снимка OSM от 07.11.2026",
-            "Расписания и грузовые данные в этот bundle не входят",
-        ],
+        limitations=limitations,
     )
     collections: dict[str, Sequence[BaseModel]] = {
         "evidence": book.rows(),
@@ -424,7 +498,29 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
         "category_ownership": ownership,
         "access_nodes": access_nodes,
     }
+    if road is not None:
+        collections |= {"freight_nodes": freight_nodes, "freight_sites": freight_sites}
     return publish_bundle(manifest, collections, qa_report)
+
+
+def _public_limitation(registry_coverage: dict[str, tuple[str, str]]) -> str:
+    missing = [
+        PUBLIC_CATEGORY_NAMES[c]
+        for c in PRODUCT_CATEGORIES
+        if c in OWNERSHIP_REQUIRED and c not in registry_coverage
+    ]
+    if len(missing) == len(OWNERSHIP_REQUIRED):
+        return "Поликлиники, детсады, школы, колледжи и вузы в карантине до сверки с официальным реестром"
+    if not missing:
+        return (
+            "Поликлиники, детсады, школы, колледжи и вузы приняты только по официальным реестрам; "
+            "объекты OSM без записи реестра — в карантине"
+        )
+    return (
+        "Без реестра собственности, в карантине: "
+        + ", ".join(missing)
+        + "; остальные публичные категории приняты только по официальным реестрам"
+    )
 
 
 def _territories(
@@ -1313,7 +1409,7 @@ def _access_nodes(
         lon, lat = _lonlat(access.point, crs)
         nodes[access.node_id] = AccessNode(
             access_node_id=access.node_id,
-            kind=ACCESS_KIND,
+            kind=network.kind,
             lon=lon,
             lat=lat,
             graph_version=network.graph_version,
@@ -1412,15 +1508,314 @@ def _access_checks(
     }
 
 
+SeaportRecord = tuple[list[freight.PortOperator], dict[str, Any], DatasetManifest]
+
+
+def _freight(
+    config: CityConfig,
+    osm_dir: Path,
+    layers: OsmLayers,
+    road: WalkNetwork,
+    seaport: SeaportRecord | None,
+    book: EvidenceBook,
+    checks: list[dict[str, Any]],
+) -> tuple[list[FreightNode], list[FreightSite], list[AccessNode], dict[str, Any]]:
+    """Freight nodes and physical sites inside the city, joined to the road network.
+
+    An area is located at its representative point (always inside the contour);
+    the access node is the projection of that point onto the main road component,
+    a proxy for the gate, not a mapped one. A port node carries the seaport
+    record and, when linked by name, its operator's record from the same page.
+    ``operator`` is that register operator for ports and the OSM tag otherwise.
+    """
+
+    crs = road.crs
+    city_utm = to_crs(layers.city, "EPSG:4326", crs)
+    rows = pq.read_table(osm_dir / "freight.parquet").to_pylist()
+    stations = [
+        row
+        for row in pq.read_table(osm_dir / "pois.parquet").to_pylist()
+        if freight.is_rail_station(json.loads(row["tags"]))
+    ]
+    operators = seaport[0] if seaport else None
+    facts: dict[str, Any] = seaport[1] if seaport else {}
+    node_drafts, site_drafts, counts = freight.classify(rows, stations, city_utm, crs, operators)
+    seaport_evidence: str | None = None
+    operator_evidence: dict[str, str] = {}
+    if seaport is not None:
+        manifest = seaport[2]
+        port_name = config.seaport_name or config.name
+        seaport_evidence = book.add(
+            Evidence(
+                evidence_id=f"{manifest.source_id}:seaport-{config.city_id}",
+                source_id=manifest.source_id,
+                dataset_id=manifest.dataset_id,
+                record_id=f"Морской порт {port_name}, рег. № {facts.get('registration_number')}",
+                url=str(manifest.source_url),
+                fetched_at=manifest.retrieved_at,
+                content_hash=_hash_json(facts),
+                verification_state="verified",
+            )
+        )
+        for operator in seaport[0]:
+            digest = hashlib.sha256(operator.name.encode("utf-8")).hexdigest()
+            operator_evidence[operator.name] = (
+                f"{manifest.source_id}:seaport-{config.city_id}:operator-{digest[:12]}"
+            )
+
+    def port_operator(name: str) -> str:
+        assert seaport is not None
+        manifest = seaport[2]
+        return book.add(
+            Evidence(
+                evidence_id=operator_evidence[name],
+                source_id=manifest.source_id,
+                dataset_id=manifest.dataset_id,
+                record_id=name,
+                url=str(manifest.source_url),
+                fetched_at=manifest.retrieved_at,
+                content_hash=hashlib.sha256(name.encode("utf-8")).hexdigest(),
+                verification_state="verified",
+            )
+        )
+
+    geometries = [d.geometry for d in node_drafts] + [d.geometry for d in site_drafts]
+    points = [to_crs(g, "EPSG:4326", crs).representative_point() for g in geometries]
+    accesses = snap(points, road)
+    road_nodes = _access_nodes(accesses, road, crs, book)
+    split = len(node_drafts)
+    nodes: list[FreightNode] = []
+    for draft, point, access in zip(node_drafts, points[:split], accesses[:split]):
+        evidence_ids = [book.osm(ref) for ref in draft.osm_refs]
+        if seaport_evidence is not None and draft.kind == "port":
+            if draft.operator:
+                evidence_ids.append(port_operator(draft.operator))
+            evidence_ids.append(seaport_evidence)
+        # the seaport record names the CPC offshore berths: support for CPC terminals
+        cpc = bool(draft.name and freight.CPC_NAME.search(draft.name))
+        if seaport_evidence and draft.kind == "pipeline_terminal" and cpc:
+            if facts.get("mentions_ktk_berths"):
+                evidence_ids.append(seaport_evidence)
+        reasons = list(draft.reasons)
+        if draft.name is None:
+            reasons.append("UNNAMED")
+        lon, lat = _lonlat(point, crs)
+        nodes.append(
+            FreightNode(
+                freight_node_id=f"{config.city_id}-{draft.kind}-{draft.osm_refs[0].replace('/', '-')}",
+                kind=draft.kind,  # type: ignore[arg-type]
+                city_id=config.city_id,
+                name=draft.name,
+                operator=draft.operator,
+                lon=lon,
+                lat=lat,
+                osm_refs=draft.osm_refs,
+                rule=f"{freight.RULES_VERSION}:{draft.rule}",
+                access_node_id=access.node_id,
+                access_distance_m=round(access.distance_m, 2),
+                status="quarantined" if reasons else "accepted",
+                quarantine_reasons=reasons,
+                evidence_ids=evidence_ids,
+            )
+        )
+    sites: list[FreightSite] = []
+    for site, point, access in zip(site_drafts, points[split:], accesses[split:]):
+        lon, lat = _lonlat(point, crs)
+        sites.append(
+            FreightSite(
+                site_id=f"{config.city_id}-site-{site.osm_ref.replace('/', '-')}",
+                kind=site.kind,  # type: ignore[arg-type]
+                city_id=config.city_id,
+                name=site.name,
+                lon=lon,
+                lat=lat,
+                area_m2=round(site.area_m2, 1),
+                osm_ref=site.osm_ref,
+                access_node_id=access.node_id,
+                access_distance_m=round(access.distance_m, 2),
+                evidence_ids=[book.osm(site.osm_ref)],
+            )
+        )
+    nodes.sort(key=lambda node: node.freight_node_id)
+    sites.sort(key=lambda site: site.site_id)
+    accepted = [node for node in nodes if node.status == "accepted"]
+    _check(
+        checks,
+        "road_network_main_component",
+        road.stats["main_component_length_share"] >= 0.9,
+        "Largest connected road component holds at least 90% of drivable length",
+        share=road.stats["main_component_length_share"],
+    )
+    far = [
+        {"id": row_id, "name": name, "distance_m": distance}
+        for row_id, name, distance in [
+            *((n.freight_node_id, n.name, n.access_distance_m) for n in accepted),
+            *((s.site_id, s.name, s.access_distance_m) for s in sites),
+        ]
+        if distance > ACCESS_WARN_M
+    ]
+    _check(
+        checks,
+        "freight_access_distance",
+        not far,
+        f"Accepted freight nodes and sites join the road network within {ACCESS_WARN_M:.0f} m "
+        "of their inner point",
+        severity="warn",
+        over_limit=far,
+    )
+    linked = sorted({n.operator for n in nodes if n.kind == "port" and n.operator})
+    if operators is not None:
+        _check(
+            checks,
+            "seaport_operators_located",
+            len(linked) == len(operators),
+            "Every stevedoring operator of the seaport record has a named OSM object in the city",
+            severity="warn",
+            unlinked=[op.name for op in operators if op.name not in linked],
+        )
+    summary = {
+        "rules": freight.RULES_VERSION,
+        "road_network": road.stats,
+        "rule_counts": counts,
+        "nodes": {
+            kind: {
+                status: sum(1 for n in nodes if n.kind == kind and n.status == status)
+                for status in ("accepted", "quarantined")
+            }
+            for kind in get_args(FreightKind)
+        },
+        "sites": {
+            "industrial": sum(1 for s in sites if s.kind == "industrial"),
+            "warehouse": sum(1 for s in sites if s.kind == "warehouse"),
+            "area_ha": round(sum(s.area_m2 for s in sites) / 1e4, 1),
+        },
+        "access_distance_m": {
+            "nodes": _distances([n.access_distance_m for n in accepted]) if accepted else None,
+            "sites": _distances([s.access_distance_m for s in sites]) if sites else None,
+        },
+        "seaport": (
+            {"record": facts, "operators": len(operators), "linked_operators": linked}
+            if operators is not None
+            else None
+        ),
+    }
+    return nodes, sites, road_nodes, summary
+
+
+def _freight_coverage(
+    config: CityConfig,
+    nodes: list[FreightNode],
+    sites: list[FreightSite],
+    seaport_operators: int | None,
+    evidence: dict[str, str],
+) -> list[CoverageRecord]:
+    """Freight coverage by node kind: an index for a kind without accepted nodes is unknown."""
+
+    city = config.city_id
+    start, end = ANALYSIS_WINDOW
+    osm = [evidence["osm"]]
+    port_refs = osm + ([evidence["seaport"]] if "seaport" in evidence else [])
+
+    def found(kind: str) -> bool:
+        return any(n.kind == kind and n.status == "accepted" for n in nodes)
+
+    linked = len({n.operator for n in nodes if n.kind == "port" and n.operator})
+    port_reason = (
+        "Портовые территории OSM в границе города и объекты операторов по перечню Росморпорта; "
+        f"подписанные объекты в OSM есть у {linked} из {seaport_operators} операторов"
+        if seaport_operators is not None
+        else "Портовые территории OSM без перечня операторов порта"
+    )
+    kinds: dict[FreightKind, tuple[CoverageStatus, str, list[str]]] = {
+        "port": ("partial" if found("port") else "unknown", port_reason, port_refs),
+        "pipeline_terminal": (
+            "partial" if found("pipeline_terminal") else "unknown",
+            "Нефтяные терминалы по названиям OSM (КТК, Шесхарис, ПНБ); реестра операторов нет",
+            osm,
+        ),
+        "rail_terminal": (
+            "unknown",
+            "Ж/д станции OSM в карантине: грузовые операции не подтверждены открытым реестром",
+            osm,
+        ),
+        "logistics_terminal": (
+            "not_collected",
+            "Логистические центры не собраны; пустой список не означает отсутствие",
+            [],
+        ),
+        "airport": (
+            "not_collected",
+            "Грузовые аэропорты не собраны; пустой список не означает отсутствие",
+            [],
+        ),
+    }
+    records = [
+        CoverageRecord(
+            collection="access_nodes",
+            city_id=city,
+            mode="road",
+            status="complete",
+            reason="Вход на главную связную компоненту дорожной сети OSM v1 (грузовой подъезд) "
+            "у каждого грузового узла и площадки",
+            evidence_ids=osm,
+            valid_from=start,
+            valid_to=end,
+        )
+    ]
+    for kind, (status, reason, refs) in kinds.items():
+        records.append(
+            CoverageRecord(
+                collection="freight_nodes",
+                city_id=city,
+                freight_kind=kind,
+                status=status,
+                reason=reason,
+                evidence_ids=refs,
+                valid_from=start,
+                valid_to=end,
+            )
+        )
+    records += [
+        CoverageRecord(
+            collection="freight_sites",
+            city_id=city,
+            status="partial" if sites else "unknown",
+            reason="Промзоны OSM от 0,5 га, склады и производственные здания от 1000 м² вне "
+            f"промзон и узлов ({freight.RULES_VERSION}); реестра предприятий нет, веса равные",
+            evidence_ids=osm,
+            valid_from=start,
+            valid_to=end,
+        ),
+        CoverageRecord(
+            collection="freight_compatibility",
+            city_id=city,
+            status="unknown",
+            reason="Совместимость груза, услуги и подъезда не подтверждена открытыми данными "
+            "операторов; строки не созданы",
+            evidence_ids=port_refs,
+        ),
+        CoverageRecord(
+            collection="pipeline_connections",
+            city_id=city,
+            status="not_collected",
+            reason="Только межгород; соединения и направления не собраны, терминалы города — "
+            "в freight_nodes",
+        ),
+    ]
+    return records
+
+
 def _coverage(
     config: CityConfig,
     destinations: list[Destination],
     evidence: dict[str, str],
     registry_coverage: dict[str, tuple[str, str]],
     district_count: int,
+    freight_records: Sequence[CoverageRecord] = (),
 ) -> list[CoverageRecord]:
     """Coverage records. ``registry_coverage`` maps a category confirmed by a register
-    to (reason, evidence key); other public categories stay unknown."""
+    to (reason, evidence key); other public categories stay unknown. Freight
+    records replace the ``not_collected`` rows of their collections."""
 
     city = config.city_id
     start, end = ANALYSIS_WINDOW
@@ -1519,7 +1914,11 @@ def _coverage(
             evidence_ids=sorted({evidence[key] for _, key in registry_coverage.values()}),
         )
     )
+    records.extend(freight_records)
+    covered = {record.collection for record in freight_records}
     for collection in NOT_COLLECTED:
+        if collection in covered:
+            continue
         records.append(
             CoverageRecord(
                 collection=collection,  # type: ignore[arg-type]

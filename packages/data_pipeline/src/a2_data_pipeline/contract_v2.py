@@ -8,7 +8,13 @@ only maps fields and never relaxes a rule:
 - districts are not v2 territories (``TerritoryLevel`` is city|region); they are
   exported separately as ``AreaOption`` rows for the product registry;
 - a destination category without a coverage scope stays uncovered (unknown);
-- ``calendar_version`` is ``not_collected`` while the bundle has no schedules.
+- ``calendar_version`` is ``not_collected`` while the bundle has no schedules;
+- quarantined freight nodes (railway stations without confirmed freight
+  operations) are left out; sites and nodes keep their road access nodes, and
+  ``provenance.graph_version`` names both graphs (walk+road);
+- freight coverage by node kind has no v2 scope yet (``CoverageScope`` holds
+  passenger categories only): it stays in the bundle's coverage records, and
+  ``freight_compatibility`` stays empty because compatibility is unknown.
 
 ``to_accepted_data_v2`` returns plain JSON data; ``load_accepted_data`` validates
 it with ``a2_contracts.v2`` when that package is importable.
@@ -20,7 +26,7 @@ import importlib
 from collections.abc import Iterator
 from typing import Any
 
-from .bundle import BundleData, CoverageRecord
+from .bundle import BundleData, CoverageRecord, FreightNode, FreightSite
 from .store import load_bundle
 
 CALENDAR_NOT_COLLECTED = "not_collected"
@@ -167,9 +173,34 @@ def to_accepted_data_v2(data: BundleData) -> dict[str, Any]:
         for d in usable
     ]
     registry_evidence, category_ownership = _ownership(data, {d.destination_id for d in usable})
+    freight_sites = [
+        {
+            "site_id": s.site_id,
+            "access_node_id": s.access_node_id,
+            "territory_id": s.city_id,
+            "location": _lonlat(s.lon, s.lat),
+            "source_refs": s.evidence_ids,
+        }
+        for s in data.freight_sites
+    ]
+    usable_nodes = [n for n in data.freight_nodes if n.status == "accepted"]
+    freight_nodes = [
+        {
+            "freight_node_id": n.freight_node_id,
+            "access_node_id": n.access_node_id,
+            "kind": n.kind,
+            "territory_id": n.city_id,
+            "location": _lonlat(n.lon, n.lat),
+            "source_refs": n.evidence_ids,
+        }
+        for n in usable_nodes
+    ]
+    freight_rows: list[FreightNode | FreightSite] = [*data.freight_sites, *usable_nodes]
     used_nodes = {p.access_node_id for p in data.sample_points} | {d.access_node_id for d in usable}
+    used_nodes |= {row.access_node_id for row in freight_rows}
     node_city = {p.access_node_id: cell_city[p.cell_id] for p in data.sample_points}
     node_city.update({d.access_node_id: d.serving_city_id for d in usable})
+    node_city.update({row.access_node_id: row.city_id for row in freight_rows})
     access_nodes = [
         {
             "node_id": node.access_node_id,
@@ -189,7 +220,9 @@ def to_accepted_data_v2(data: BundleData) -> dict[str, Any]:
         "valid_period": _period(manifest.valid_from, manifest.valid_to),
         "timezone": manifest.timezone,
         "provenance": {
-            "graph_version": manifest.graph_version,
+            "graph_version": "+".join(
+                v for v in (manifest.graph_version, manifest.road_graph_version) if v
+            ),
             "geometry_version": "+".join([*(t.boundary_version for t in cities), *sorted(grids)]),
             "calendar_version": CALENDAR_NOT_COLLECTED,
             "population_version": "+".join(population_versions) or None,
@@ -213,8 +246,8 @@ def to_accepted_data_v2(data: BundleData) -> dict[str, Any]:
         "access_nodes": access_nodes,
         "scheduled_services": [],
         "transfers": [],
-        "freight_sites": [],
-        "freight_nodes": [],
+        "freight_sites": freight_sites,
+        "freight_nodes": freight_nodes,
         "freight_compatibility": [],
         "pipeline_connections": [],
         "reference_edges": [],

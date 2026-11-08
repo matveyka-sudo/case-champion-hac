@@ -13,11 +13,15 @@ SQUARE = {
 }
 SQUARE_BBOX = (20.0, 54.0, 20.01, 54.01)
 GRAPH = "synthetic-walk-v1"
+ROAD_GRAPH = "synthetic-road-v1"
 EVIDENCE = "e-syn"
 
 
 def manifest(
-    bundle_id: str = "synthetic-test-v1", state: str = "accepted", coverage: list[Any] | None = None
+    bundle_id: str = "synthetic-test-v1",
+    state: str = "accepted",
+    coverage: list[Any] | None = None,
+    road_graph: str | None = None,
 ) -> BundleManifest:
     return BundleManifest.model_validate(
         {
@@ -46,6 +50,7 @@ def manifest(
                 }
             ],
             "graph_version": GRAPH,
+            "road_graph_version": road_graph,
             "source_versions": [
                 {
                     "source_id": "synthetic",
@@ -122,6 +127,51 @@ def access_node(node_id: str = "walk:way:1:0.0", graph: str = GRAPH) -> dict[str
         "osm_way_ref": "way/1",
         "offset_along_way_m": 0.0,
         "evidence_ids": [EVIDENCE],
+    }
+
+
+def road_node(node_id: str = "road:way:7:0.0", graph: str = ROAD_GRAPH) -> dict[str, Any]:
+    return {
+        **access_node(node_id, graph),
+        "kind": "road_network_projection",
+        "osm_way_ref": "way/7",
+    }
+
+
+def freight_node(node_id: str, kind: str = "port", **overrides: Any) -> dict[str, Any]:
+    return {
+        "freight_node_id": node_id,
+        "kind": kind,
+        "city_id": "syn",
+        "name": "Узел",
+        "operator": None,
+        "lon": 20.007,
+        "lat": 54.007,
+        "osm_refs": [f"way/{node_id}"],
+        "rule": "synthetic",
+        "access_node_id": "road:way:7:0.0",
+        "access_distance_m": 20.0,
+        "status": "accepted",
+        "quarantine_reasons": [],
+        "evidence_ids": [EVIDENCE],
+        **overrides,
+    }
+
+
+def freight_site(site_id: str, **overrides: Any) -> dict[str, Any]:
+    return {
+        "site_id": site_id,
+        "kind": "industrial",
+        "city_id": "syn",
+        "name": None,
+        "lon": 20.003,
+        "lat": 54.003,
+        "area_m2": 10_000.0,
+        "osm_ref": f"way/{site_id}",
+        "access_node_id": "road:way:7:0.0",
+        "access_distance_m": 30.0,
+        "evidence_ids": [EVIDENCE],
+        **overrides,
     }
 
 

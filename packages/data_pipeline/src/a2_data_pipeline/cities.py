@@ -24,6 +24,10 @@ class CityConfig:
     medical_registry_dataset_id: str | None = None
     region_name: str | None = None
     higher_education_registry_dataset_id: str | None = None
+    # urban freight: nodes and sites with road access; the seaport record confirms port nodes
+    freight: bool = False
+    seaport_dataset_id: str | None = None
+    seaport_name: str | None = None
 
     @property
     def grid_id(self) -> str:
@@ -63,5 +67,8 @@ CITIES: dict[str, CityConfig] = {
         higher_education_registry_dataset_id="obrnadzor_accreditation.20261108",
         medical_registry_dataset_id="admnvrsk_health.20261108",
         airport_service_unverified=True,
+        freight=True,
+        seaport_dataset_id="rosmorport.seaports-novorossiysk-20261108",
+        seaport_name="Новороссийск",
     ),
 }

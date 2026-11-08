@@ -51,6 +51,7 @@ Category = Literal[
     "airport",
     "shopping_center",
 ]
+FreightKind = Literal["port", "rail_terminal", "logistics_terminal", "airport", "pipeline_terminal"]
 VerificationState = Literal["verified", "absent", "unknown"]
 AcceptanceState = Literal["draft", "validated", "accepted", "quarantined"]
 CoverageStatus = Literal["complete", "partial", "unknown", "not_collected"]
@@ -81,6 +82,8 @@ PRODUCED_COLLECTIONS: tuple[Collection, ...] = (
     "destinations",
     "category_ownership",
     "access_nodes",
+    "freight_nodes",
+    "freight_sites",
 )
 
 
@@ -193,7 +196,7 @@ class AccessNode(Model):
     """Where a point or destination joins the routing graph; not a graph vertex itself."""
 
     access_node_id: Identifier
-    kind: Literal["walk_network_projection"]
+    kind: Literal["walk_network_projection", "road_network_projection"]
     lon: Lon
     lat: Lat
     graph_version: str
@@ -240,6 +243,47 @@ class Destination(Model):
         return self
 
 
+class FreightNode(Model):
+    """Port, rail freight station, logistics or pipeline terminal (road access for lorries)."""
+
+    freight_node_id: Identifier
+    kind: FreightKind
+    city_id: Identifier
+    name: str | None
+    operator: str | None
+    lon: Lon
+    lat: Lat
+    osm_refs: list[str]
+    rule: str
+    access_node_id: Identifier
+    access_distance_m: NonNegative
+    status: Literal["accepted", "quarantined"]
+    quarantine_reasons: list[str]
+    evidence_ids: Annotated[list[Identifier], Field(min_length=1)]
+
+    @model_validator(mode="after")
+    def quarantine_reasoned(self) -> Self:
+        if (self.status == "quarantined") != bool(self.quarantine_reasons):
+            raise ValueError("quarantine reasons are set exactly for quarantined nodes")
+        return self
+
+
+class FreightSite(Model):
+    """Physical production site or warehouse; equal weight, no volumes."""
+
+    site_id: Identifier
+    kind: Literal["industrial", "warehouse"]
+    city_id: Identifier
+    name: str | None
+    lon: Lon
+    lat: Lat
+    area_m2: NonNegative
+    osm_ref: str
+    access_node_id: Identifier
+    access_distance_m: NonNegative
+    evidence_ids: Annotated[list[Identifier], Field(min_length=1)]
+
+
 class CategoryOwnership(Model):
     destination_id: Identifier
     category: Category
@@ -255,6 +299,7 @@ class CoverageRecord(Model):
     collection: Collection
     city_id: Identifier | None
     category: Category | None = None
+    freight_kind: FreightKind | None = None
     mode: str | None = None
     valid_from: date | None = None
     valid_to: date | None = None
@@ -267,6 +312,8 @@ class CoverageRecord(Model):
     def absence_needs_complete_scope(self) -> Self:
         if self.confirmed_absence and self.status != "complete":
             raise ValueError("confirmed absence requires complete coverage of its scope")
+        if self.freight_kind is not None and self.collection != "freight_nodes":
+            raise ValueError("freight_kind scopes only freight_nodes coverage")
         return self
 
 
@@ -292,6 +339,7 @@ class BundleManifest(Model):
     timezone: str
     grids: list[GridSpec]
     graph_version: str | None
+    road_graph_version: str | None = None
     source_versions: list[SourceVersion]
     files: dict[str, FileRef]
     coverage: list[CoverageRecord]
@@ -318,6 +366,8 @@ class BundleData(Model):
     destinations: list[Destination]
     category_ownership: list[CategoryOwnership]
     access_nodes: list[AccessNode]
+    freight_nodes: list[FreightNode] = Field(default_factory=list)
+    freight_sites: list[FreightSite] = Field(default_factory=list)
     qa_report: dict[str, Any]
 
     @model_validator(mode="after")
@@ -348,8 +398,16 @@ class BundleData(Model):
 
         for item in self.evidence:
             resolve(item.source_id, source_ids, "evidence.source_id")
+        graphs = {self.manifest.graph_version, self.manifest.road_graph_version} - {None}
+        access_kinds = {node.access_node_id: node.kind for node in self.access_nodes}
+
+        def joins(value: str, kind: str, name: str) -> None:
+            resolve(value, access_ids, f"{name}.access_node_id")
+            if access_kinds[value] != kind:
+                raise ValueError(f"{name} must join the {kind}: {value}")
+
         for node in self.access_nodes:
-            if node.graph_version != self.manifest.graph_version:
+            if node.graph_version not in graphs:
                 raise ValueError(f"access node from another graph version: {node.access_node_id}")
             for evidence_id in node.evidence_ids:
                 resolve(evidence_id, evidence_ids, "access_nodes.evidence_ids")
@@ -369,7 +427,7 @@ class BundleData(Model):
         points_per_cell: dict[str, int] = {}
         for point in self.sample_points:
             resolve(point.cell_id, cell_ids, "sample_points.cell_id")
-            resolve(point.access_node_id, access_ids, "sample_points.access_node_id")
+            joins(point.access_node_id, "walk_network_projection", "sample_points")
             for evidence_id in point.evidence_ids:
                 resolve(evidence_id, evidence_ids, "sample_points.evidence_ids")
             if point.cell_id not in sampled:
@@ -386,9 +444,17 @@ class BundleData(Model):
             raise ValueError("at most one sample point per cell")
         if set(points_per_cell) != sampled:
             raise ValueError("every sampled cell needs exactly one sample point")
+        unique([row.freight_node_id for row in self.freight_nodes], "freight_nodes")
+        unique([row.site_id for row in self.freight_sites], "freight_sites")
+        freight_rows: list[FreightNode | FreightSite] = [*self.freight_nodes, *self.freight_sites]
+        for freight_row in freight_rows:
+            resolve(freight_row.city_id, scope, "freight.city_id")
+            joins(freight_row.access_node_id, "road_network_projection", "freight")
+            for evidence_id in freight_row.evidence_ids:
+                resolve(evidence_id, evidence_ids, "freight.evidence_ids")
         for destination in self.destinations:
             resolve(destination.serving_city_id, scope, "destinations.serving_city_id")
-            resolve(destination.access_node_id, access_ids, "destinations.access_node_id")
+            joins(destination.access_node_id, "walk_network_projection", "destinations")
             for evidence_id in destination.evidence_ids:
                 resolve(evidence_id, evidence_ids, "destinations.evidence_ids")
         categories = {row.destination_id: row.category for row in self.destinations}

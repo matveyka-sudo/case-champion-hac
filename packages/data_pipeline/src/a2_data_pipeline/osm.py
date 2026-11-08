@@ -19,10 +19,11 @@ import osmium
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
-EXTRACT_VERSION = 6
+EXTRACT_VERSION = 8
 
 BBox = tuple[float, float, float, float]  # west, south, east, north (EPSG:4326)
 WALK_RULES_VERSION = "osm-walk-network-v1"
+ROAD_RULES_VERSION = "osm-road-network-v1"
 
 WATER_TAGS = {
     ("natural", "water"),
@@ -106,6 +107,73 @@ FOOT_ALLOWED = {"yes", "designated", "permissive"}
 FOOT_DENIED = {"no", "private", "use_sidepath"}
 SIDEWALK_PRESENT = {"both", "left", "right", "yes"}
 WALK_TAGS = ("highway", "foot", "access", "sidewalk", "area")
+# Road network v1 for freight access: ways a lorry may use. No footways or tracks.
+# The most specific access tag decides (hgv > motor_vehicle > vehicle > access):
+# hgv=no closes a street with motor_vehicle=yes, hgv=yes opens one with access=no.
+DRIVE_HIGHWAYS = {
+    "motorway",
+    "motorway_link",
+    "trunk",
+    "trunk_link",
+    "primary",
+    "primary_link",
+    "secondary",
+    "secondary_link",
+    "tertiary",
+    "tertiary_link",
+    "unclassified",
+    "residential",
+    "living_street",
+    "service",
+    "road",
+}
+LORRY_DENIED = {"no", "private", "agricultural", "forestry"}
+LORRY_ACCESS_KEYS = ("hgv", "motor_vehicle", "vehicle", "access")
+ROAD_TAGS = ("highway", "access", "hgv", "motor_vehicle", "vehicle", "maxweight", "area")
+FREIGHT_VALUES = {
+    "landuse": {"industrial", "port"},
+    "building": {"warehouse", "industrial"},
+    "railway": {"yard"},
+    "man_made": {"works", "storage_tank", "pier"},
+}
+FREIGHT_ANY = ("industrial", "harbour", "port")
+FREIGHT_TAGS = (
+    "name",
+    "official_name",
+    "operator",
+    "owner",
+    "landuse",
+    "industrial",
+    "building",
+    "railway",
+    "man_made",
+    "product",
+    "content",
+    "substance",
+    "harbour",
+    "port",
+    "seamark:type",
+    "service",
+    "usage",
+    "disused",
+)
+
+
+def drivable(tags: Any) -> bool:
+    highway = tags.get("highway")
+    if highway not in DRIVE_HIGHWAYS or tags.get("area") == "yes":
+        return False
+    for key in LORRY_ACCESS_KEYS:
+        value = tags.get(key)
+        if value is not None:
+            return value not in LORRY_DENIED
+    return True
+
+
+def is_freight(tags: Any) -> bool:
+    if any(tags.get(key) in values for key, values in FREIGHT_VALUES.items()):
+        return True
+    return any(key in tags for key in FREIGHT_ANY)
 
 
 def walkable(tags: Any) -> bool:
@@ -148,6 +216,8 @@ class _Tables:
     pois: list[dict[str, Any]] = field(default_factory=list)
     walk_ways: list[dict[str, Any]] = field(default_factory=list)
     addresses: list[dict[str, Any]] = field(default_factory=list)
+    road_ways: list[dict[str, Any]] = field(default_factory=list)
+    freight: list[dict[str, Any]] = field(default_factory=list)
     broken_areas: int = 0
     broken_ways: int = 0
 
@@ -198,6 +268,18 @@ class _Handler(osmium.SimpleHandler):
             self._address(
                 _ref("node", node.id), node.tags, bytes.fromhex(self.wkb.create_point(node)), None
             )
+        if is_freight(tags) and _inside(lon, lat, self.bbox):
+            ref = _ref("node", node.id)
+            kept = self._kept(tags, FREIGHT_TAGS)
+            wkb = bytes.fromhex(self.wkb.create_point(node))
+            self.tables.freight.append(
+                {
+                    "osm_ref": ref,
+                    "tags": json.dumps(kept, ensure_ascii=False),
+                    "wkb": wkb,
+                    "content_hash": content_hash(ref, kept, wkb),
+                }
+            )
         if _is_poi(tags) and _inside(lon, lat, self.poi_bbox):
             ref = _ref("node", node.id)
             tags = self._kept(node.tags, KEEP_TAGS)
@@ -212,20 +294,27 @@ class _Handler(osmium.SimpleHandler):
             )
 
     def way(self, way: Any) -> None:
-        if not walkable(way.tags):
+        walk, road = walkable(way.tags), drivable(way.tags)
+        if not (walk or road):
             return
         first = way.nodes[0].location if len(way.nodes) else None
         if first is None or not first.valid() or not _inside(first.lon, first.lat, self.bbox):
             return
+        if road:
+            self._network_way(way, ROAD_TAGS, self.tables.road_ways)
+        if walk:
+            self._network_way(way, WALK_TAGS, self.tables.walk_ways)
+
+    def _network_way(self, way: Any, keys: tuple[str, ...], table: list[dict[str, Any]]) -> None:
         ref = _ref("way", way.id)
         try:
             wkb = bytes.fromhex(self.wkb.create_linestring(way))
         except Exception:  # noqa: BLE001 - osmium raises several geometry error types
             self.tables.broken_ways += 1
             return
-        tags = self._kept(way.tags, WALK_TAGS)
+        tags = self._kept(way.tags, keys)
         nodes = [int(node.ref) for node in way.nodes]
-        self.tables.walk_ways.append(
+        table.append(
             {
                 "osm_ref": ref,
                 "highway": tags["highway"],
@@ -290,6 +379,16 @@ class _Handler(osmium.SimpleHandler):
                 )
             if detail and any(tags.get(key) == value for key, value in WATER_TAGS):
                 self.tables.water.append({"osm_ref": ref, "wkb": geom()})
+            if detail and is_freight(tags):
+                kept = self._kept(tags, FREIGHT_TAGS)
+                self.tables.freight.append(
+                    {
+                        "osm_ref": ref,
+                        "tags": json.dumps(kept, ensure_ascii=False),
+                        "wkb": geom(),
+                        "content_hash": content_hash(ref, kept, geom()),
+                    }
+                )
             if poi and _is_poi(tags):
                 kept = self._kept(tags, KEEP_TAGS)
                 self.tables.pois.append(
@@ -304,7 +403,16 @@ class _Handler(osmium.SimpleHandler):
             self.tables.broken_areas += 1
 
 
-TABLES = ("boundaries", "buildings", "water", "pois", "walk_ways", "addresses")
+TABLES = (
+    "boundaries",
+    "buildings",
+    "water",
+    "pois",
+    "walk_ways",
+    "addresses",
+    "road_ways",
+    "freight",
+)
 
 
 def extract(
@@ -332,6 +440,7 @@ def extract(
     meta = {
         "extract_version": EXTRACT_VERSION,
         "walk_rules": WALK_RULES_VERSION,
+        "road_rules": ROAD_RULES_VERSION,
         "boundary_ids": sorted(boundary_ids),
         "bbox": list(bbox) if bbox else None,
         "poi_bbox": list(poi_bbox) if poi_bbox else None,

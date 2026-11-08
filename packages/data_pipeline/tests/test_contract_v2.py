@@ -8,7 +8,20 @@ import pytest
 from a2_data_pipeline.bundle import CoverageRecord
 from a2_data_pipeline.contract_v2 import registry_options, to_accepted_data_v2
 from a2_data_pipeline.store import list_bundles, load_bundle, publish_bundle
-from synthetic_bundle import EVIDENCE, QA, collections, destination, manifest, territory
+from synthetic_bundle import (
+    EVIDENCE,
+    GRAPH,
+    QA,
+    ROAD_GRAPH,
+    access_node,
+    collections,
+    destination,
+    freight_node,
+    freight_site,
+    manifest,
+    road_node,
+    territory,
+)
 
 COVERAGE = [
     CoverageRecord(
@@ -65,6 +78,47 @@ def test_mapping_keeps_rules(tmp_path: Path) -> None:
     assert payload["qa"]["checks"] == ["synthetic_check"]
 
 
+def freight_payload(tmp_path: Path) -> dict[str, Any]:
+    parts = collections(
+        access_nodes=[access_node(), road_node(), road_node("road:way:8:0.0")],
+        freight_nodes=[
+            freight_node("port-1", operator="АО «Синтетический порт»"),
+            freight_node(
+                "rail-1",
+                kind="rail_terminal",
+                access_node_id="road:way:8:0.0",
+                status="quarantined",
+                quarantine_reasons=["FREIGHT_OPERATIONS_UNVERIFIED"],
+            ),
+        ],
+        freight_sites=[freight_site("site-1")],
+    )
+    publish_bundle(manifest("freight-v1", road_graph=ROAD_GRAPH), parts, QA, root=tmp_path)
+    return to_accepted_data_v2(load_bundle("freight-v1", root=tmp_path))
+
+
+def test_freight_mapping_keeps_only_accepted_nodes(tmp_path: Path) -> None:
+    payload = freight_payload(tmp_path)
+    assert payload["freight_nodes"] == [
+        {
+            "freight_node_id": "port-1",
+            "access_node_id": "road:way:7:0.0",
+            "kind": "port",
+            "territory_id": "syn",
+            "location": {"lon": 20.007, "lat": 54.007},
+            "source_refs": [EVIDENCE],
+        }
+    ]
+    assert [s["site_id"] for s in payload["freight_sites"]] == ["site-1"]
+    # the quarantined station's road node is not exported; walk and road nodes are
+    assert {n["node_id"]: n["kind"] for n in payload["access_nodes"]} == {
+        "walk:way:1:0.0": "walk_network_projection",
+        "road:way:7:0.0": "road_network_projection",
+    }
+    assert payload["provenance"]["graph_version"] == f"{GRAPH}+{ROAD_GRAPH}"
+    assert payload["freight_compatibility"] == []
+
+
 def test_districts_become_area_options(tmp_path: Path) -> None:
     synthetic_payload(tmp_path)
     options = registry_options(load_bundle("synthetic-test-v1", root=tmp_path))
@@ -83,6 +137,7 @@ def test_backend_model_accepts_payloads(tmp_path: Path) -> None:
 
     v2 = pytest.importorskip("a2_contracts.v2")
     v2.AcceptedData.model_validate(synthetic_payload(tmp_path))
+    v2.AcceptedData.model_validate(freight_payload(tmp_path))
     for bundle_id in list_bundles():
         data = load_bundle(bundle_id)
         if data.manifest.acceptance_state == "accepted":

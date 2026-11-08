@@ -26,6 +26,8 @@ BUNDLE_COLLECTIONS = (
     "category_ownership",
     "access_nodes",
 )
+# collections added later: an older bundle without them loads as empty lists
+OPTIONAL_COLLECTIONS = ("freight_nodes", "freight_sites")
 
 
 class BundleError(Exception):
@@ -87,11 +89,12 @@ def publish_bundle(
     missing = set(BUNDLE_COLLECTIONS) - set(collections)
     if missing:
         raise BundleError(f"missing collections: {sorted(missing)}")
+    names = [*BUNDLE_COLLECTIONS, *(n for n in OPTIONAL_COLLECTIONS if n in collections)]
     staging = base / f".staging-{manifest.bundle_id}-{uuid.uuid4().hex}"
     staging.mkdir()
     try:
         files: dict[str, FileRef] = {}
-        for name in BUNDLE_COLLECTIONS:
+        for name in names:
             payload = _dump(collections[name])
             path = staging / f"{name}.json"
             path.write_bytes(payload)
@@ -134,6 +137,17 @@ def _load_dir(directory: Path, require_accepted: bool) -> BundleData:
         path = directory / ref.path
         actual = hashlib.sha256(path.read_bytes()).hexdigest()
         if actual != ref.sha256:
+            raise BundleIntegrityError(f"{name}: sha256 mismatch")
+        rows = read_collection(path)
+        if len(rows) != ref.rows:
+            raise BundleIntegrityError(f"{name}: row count mismatch")
+        payload[name] = rows
+    for name in OPTIONAL_COLLECTIONS:
+        ref = manifest.files.get(name)
+        if ref is None:
+            continue
+        path = directory / ref.path
+        if hashlib.sha256(path.read_bytes()).hexdigest() != ref.sha256:
             raise BundleIntegrityError(f"{name}: sha256 mismatch")
         rows = read_collection(path)
         if len(rows) != ref.rows:
