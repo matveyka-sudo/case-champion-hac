@@ -25,8 +25,9 @@ import shapely  # type: ignore[import-untyped]
 from pydantic import BaseModel
 
 from . import categories as cat
-from . import klgd
+from . import klgd, trmo
 from .access import ACCESS_KIND, Access, WalkNetwork, load_walk_network, snap
+from .addresses import AddressIndex, parse_address
 from .bundle import (
     OWNERSHIP_REQUIRED,
     PRODUCT_CATEGORIES,
@@ -57,7 +58,7 @@ from .geo import (
     rounded_geojson,
     to_crs,
 )
-from .institutions import KIND_TO_CATEGORY, match_roster
+from .institutions import KIND_TO_CATEGORY, match_points, match_roster
 from .manifest import DatasetManifest, load_dataset_manifest
 from .osm import extract, extract_is_current
 from .paths import processed_dir, raw_dir
@@ -184,12 +185,15 @@ class DestinationDraft:
 
 
 def _osm_hashes(osm_dir: Path, network: WalkNetwork) -> dict[str, str]:
+    """Record hash per OSM reference; the first table that holds a reference wins."""
+
     hashes = dict(network.hashes)
-    for name in ("boundaries", "pois", "buildings"):
+    for name in ("boundaries", "pois", "buildings", "addresses"):
         table = pq.read_table(osm_dir / f"{name}.parquet", columns=["osm_ref", "content_hash"])
-        hashes.update(
-            zip(table.column("osm_ref").to_pylist(), table.column("content_hash").to_pylist())
-        )
+        for ref, value in zip(
+            table.column("osm_ref").to_pylist(), table.column("content_hash").to_pylist()
+        ):
+            hashes.setdefault(ref, value)
     return hashes
 
 
@@ -231,11 +235,21 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
                 registry_manifest, f"{klgd.SOURCE_ID}:dataset:{registry_manifest.dataset_id}"
             )
         )
+    medical = None
+    if config.medical_registry_dataset_id:
+        medical_manifest = load_dataset_manifest(config.medical_registry_dataset_id)
+        source_manifests.append(medical_manifest)
+        medical = (trmo.read_units(raw_dir() / medical_manifest.raw_path), medical_manifest)
+        snapshot_evidence["medical_registry"] = book.add(
+            _dataset_evidence(
+                medical_manifest, f"{trmo.SOURCE_ID}:dataset:{medical_manifest.dataset_id}"
+            )
+        )
 
     territories = _territories(config, layers, grid, book, checks)
     cells, point_drafts = _cells(config, grid, ghsl_evidence, checks)
     drafts, ownership, rule_counts = _destination_drafts(
-        config, layers, osm_dir, airports_manifest, book, checks, roster
+        config, layers, osm_dir, airports_manifest, book, checks, roster, medical
     )
     accesses = snap([p.utm for p in point_drafts] + [d.utm for d in drafts], network)
     point_access, destination_access = accesses[: len(point_drafts)], accesses[len(point_drafts) :]
@@ -248,7 +262,9 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
         _destination(config, draft, access) for draft, access in zip(drafts, destination_access)
     ]
     access_summary = _access_checks(points, destinations, network, checks)
-    coverage = _coverage(config, destinations, snapshot_evidence, roster is not None)
+    coverage = _coverage(
+        config, destinations, snapshot_evidence, roster is not None, medical is not None
+    )
 
     failed = [check["check_id"] for check in checks if check["status"] == "fail"]
     warnings = [check["check_id"] for check in checks if check["status"] == "warn"]
@@ -536,6 +552,7 @@ def _destination_drafts(
     book: EvidenceBook,
     checks: list[dict[str, Any]],
     roster: tuple[klgd.Roster, DatasetManifest] | None = None,
+    medical: tuple[list[trmo.Unit], DatasetManifest] | None = None,
 ) -> tuple[list[DestinationDraft], list[CategoryOwnership], dict[str, Any]]:
     rows = pq.read_table(osm_dir / "pois.parquet").to_pylist()
     candidates, osm_rule_counts = cat.build_candidates(rows, config.name)
@@ -562,6 +579,17 @@ def _destination_drafts(
         ownership.extend(registry_ownership)
         candidates = others + unmatched
         rule_counts["registry_match"] = stats
+    if medical is not None:
+        medical_categories = {"adult_polyclinic", "child_polyclinic"}
+        medical_candidates = [c for c in candidates if c.category in medical_categories]
+        rest = [c for c in candidates if c.category not in medical_categories]
+        medical_drafts, medical_ownership, still_unmatched, medical_stats = _medical_drafts(
+            config, medical, medical_candidates, layers, city_utm, crs, osm_dir, book, checks
+        )
+        drafts.extend(medical_drafts)
+        ownership.extend(medical_ownership)
+        candidates = rest + still_unmatched
+        rule_counts["medical_registry"] = medical_stats
     airports = {
         row["iata_code"]: row
         for row in csv.DictReader((raw_dir() / airports_manifest.raw_path).open(encoding="utf-8"))
@@ -754,6 +782,125 @@ def _registry_drafts(
     return drafts, ownership, unmatched, stats
 
 
+def _medical_drafts(
+    config: CityConfig,
+    medical: tuple[list[trmo.Unit], DatasetManifest],
+    candidates: list[cat.Candidate],
+    layers: OsmLayers,
+    city_utm: shapely.Geometry,
+    crs: str,
+    osm_dir: Path,
+    book: EvidenceBook,
+    checks: list[dict[str, Any]],
+) -> tuple[list[DestinationDraft], list[CategoryOwnership], list[cat.Candidate], dict[str, Any]]:
+    """City polyclinics from the OMS register, placed at their OSM address.
+
+    Objects of one category that land on the same OSM address object are one
+    destination. Registry addresses of the city that OSM does not hold are
+    reported in QA and not placed: no coordinates are invented.
+    """
+
+    units, manifest = medical
+    objects, stats = trmo.polyclinics(units)
+    area = to_crs(city_utm.buffer(SEARCH_BUFFER_M), crs, "EPSG:4326")
+    index = AddressIndex(osm_dir, area, layers.city, config.name)
+    grouped: dict[tuple[str, str], list[tuple[trmo.MedicalObject, Any]]] = {}
+    unlocated: list[dict[str, str]] = []
+    for item in objects:
+        hit = index.locate(item.address)
+        if hit is None:
+            parsed = parse_address(item.address)
+            if parsed is not None and parsed.settlement in index.settlements:
+                unlocated.append(
+                    {"category": item.category, "name": item.name, "address": item.address}
+                )
+            continue
+        grouped.setdefault((item.category, hit.osm_ref), []).append((item, hit))
+    located = [
+        (members[0][0], members[0][1], [m for m, _ in members]) for members in grouped.values()
+    ]
+    located.sort(key=lambda entry: (entry[0].category, entry[0].object_id))
+    inputs = [
+        (item.object_id, item.category, item.name, to_crs(hit.point, "EPSG:4326", crs))
+        for item, hit, _ in located
+    ]
+    attached, unmatched = match_points(inputs, candidates, crs)
+    drafts: list[DestinationDraft] = []
+    ownership: list[CategoryOwnership] = []
+    approximate: list[dict[str, str]] = []
+    for (item, hit, members), (_, _, _, point_utm) in zip(located, inputs):
+        records = [
+            book.add(
+                Evidence(
+                    evidence_id=f"{trmo.SOURCE_ID}:{member.object_id}",
+                    source_id=trmo.SOURCE_ID,
+                    dataset_id=manifest.dataset_id,
+                    record_id=";".join(sorted({u.unit_code for u in member.units})),
+                    url=str(manifest.source_url),
+                    fetched_at=manifest.retrieved_at,
+                    content_hash=member.record_hash(),
+                    verification_state="verified",
+                )
+            )
+            for member in members
+        ]
+        osm_refs = sorted({ref for c in attached[item.object_id] for ref in c.osm_refs})
+        destination_id = f"{config.city_id}-{item.object_id}"
+        if hit.method != "exact":
+            approximate.append({"destination_id": destination_id, "address": item.address})
+        drafts.append(
+            DestinationDraft(
+                destination_id=destination_id,
+                category=item.category,
+                name=item.name,
+                utm=point_utm,
+                lonlat=hit.point,
+                inside_city_boundary=city_utm.distance(point_utm) == 0,
+                osm_ref=osm_refs[0] if osm_refs else hit.osm_ref,
+                reasons=[],
+                evidence_ids=[*records, book.osm(hit.osm_ref), *(book.osm(r) for r in osm_refs)],
+                location_source="registry_address",
+                ownership_verified=True,
+            )
+        )
+        ownership.append(
+            CategoryOwnership(
+                destination_id=destination_id,
+                category=item.category,  # type: ignore[arg-type]
+                ownership=item.ownership,  # type: ignore[arg-type]
+                basis="registry",
+                verification_state="verified",
+                evidence_ids=records,
+            )
+        )
+    _check(
+        checks,
+        "medical_registry_city_addresses_located",
+        not unlocated,
+        "Every register polyclinic of a settlement in the search area is found in OSM addresses",
+        severity="warn",
+        unlocated=unlocated,
+    )
+    _check(
+        checks,
+        "medical_registry_exact_addresses",
+        not approximate,
+        "Polyclinics are placed at the exact house (nearest same-parity number at most ±4 otherwise)",
+        severity="warn",
+        nearest_number=approximate,
+    )
+    stats |= {
+        "located_destinations": {
+            c: sum(1 for d in drafts if d.category == c)
+            for c in ("adult_polyclinic", "child_polyclinic")
+        },
+        "city_addresses_not_in_osm": len(unlocated),
+        "osm_candidates_attached": sum(len(v) for v in attached.values()),
+        "osm_candidates_unmatched": len(unmatched),
+    }
+    return drafts, ownership, unmatched, stats
+
+
 def _lonlat(point_utm: shapely.Point, crs: str) -> tuple[float, float]:
     point = to_crs(point_utm, crs, "EPSG:4326")
     return round(point.x, 7), round(point.y, 7)
@@ -873,6 +1020,7 @@ def _coverage(
     destinations: list[Destination],
     evidence: dict[str, str],
     has_registry: bool = False,
+    has_medical_registry: bool = False,
 ) -> list[CoverageRecord]:
     city = config.city_id
     start, end = ANALYSIS_WINDOW
@@ -920,7 +1068,14 @@ def _coverage(
     for category in PRODUCT_CATEGORIES:
         accepted = sum(1 for d in destinations if d.category == category and d.status == "accepted")
         extra: list[str] = []
-        if category in registry_categories:
+        if has_medical_registry and category in {"adult_polyclinic", "child_polyclinic"}:
+            status = "partial"
+            reason = (
+                "Городские поликлиники ОМС (ОКФС 13/14) по ТРМО ТФОМС; адреса, которых нет в OSM, "
+                "не размещены; частные и ведомственные не входят"
+            )
+            extra = [evidence["medical_registry"]]
+        elif category in registry_categories:
             status = "partial"
             reason = (
                 "Муниципальные учреждения подтверждены перечнем учредителя (klgd.ru); "
@@ -960,14 +1115,18 @@ def _coverage(
         CoverageRecord(
             collection="category_ownership",
             city_id=city,
-            status="partial" if registry_categories else "unknown",
+            status="partial" if registry_categories or has_medical_registry else "unknown",
             reason=(
-                "Муниципальные школы и детсады — по перечню учредителя; поликлиники, колледжи, "
-                "вузы и немуниципальные школы и детсады не подтверждены"
-                if registry_categories
+                "Школы и детсады — по перечню учредителя (муниципальные), поликлиники — по ТРМО "
+                "(ОКФС 13/14); колледжи, вузы и прочие школы и детсады не подтверждены"
+                if registry_categories or has_medical_registry
                 else "Официальный реестр учреждений ещё не загружен"
             ),
-            evidence_ids=[evidence["education_registry"]] if registry_categories else [],
+            evidence_ids=[
+                evidence[key]
+                for key in ("education_registry", "medical_registry")
+                if key in evidence
+            ],
         )
     )
     for collection in NOT_COLLECTED:

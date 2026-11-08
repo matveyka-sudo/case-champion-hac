@@ -226,7 +226,7 @@ class Destination(Model):
     lat: Lat
     inside_city_boundary: bool
     osm_ref: str | None
-    location_source: Literal["osm", "registry"] = "osm"
+    location_source: Literal["osm", "registry", "registry_address"] = "osm"
     access_node_id: Identifier
     access_distance_m: NonNegative
     status: Literal["accepted", "quarantined"]

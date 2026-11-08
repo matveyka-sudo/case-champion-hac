@@ -19,7 +19,7 @@ import osmium
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
-EXTRACT_VERSION = 3
+EXTRACT_VERSION = 5
 WALK_RULES_VERSION = "osm-walk-network-v1"
 
 WATER_TAGS = {
@@ -145,6 +145,7 @@ class _Tables:
     water: list[dict[str, Any]] = field(default_factory=list)
     pois: list[dict[str, Any]] = field(default_factory=list)
     walk_ways: list[dict[str, Any]] = field(default_factory=list)
+    addresses: list[dict[str, Any]] = field(default_factory=list)
     broken_areas: int = 0
     broken_ways: int = 0
 
@@ -160,7 +161,28 @@ class _Handler(osmium.SimpleHandler):
     def _kept(tags: Any, keys: tuple[str, ...]) -> dict[str, Any]:
         return {key: tags.get(key) for key in keys if key in tags}
 
+    def _address(self, ref: str, tags: Any, wkb: bytes, area: float | None) -> None:
+        street, house = tags.get("addr:street"), tags.get("addr:housenumber")
+        if street and house:
+            self.tables.addresses.append(
+                {
+                    "osm_ref": ref,
+                    "street": street,
+                    "housenumber": house,
+                    "city": tags.get("addr:city"),
+                    "wkb": wkb,
+                    "is_building": area is not None,
+                    "content_hash": content_hash(
+                        ref, {"addr:street": street, "addr:housenumber": house}, wkb
+                    ),
+                }
+            )
+
     def node(self, node: Any) -> None:
+        if "addr:housenumber" in node.tags:
+            self._address(
+                _ref("node", node.id), node.tags, bytes.fromhex(self.wkb.create_point(node)), None
+            )
         if _is_poi(node.tags):
             ref = _ref("node", node.id)
             tags = self._kept(node.tags, KEEP_TAGS)
@@ -221,6 +243,8 @@ class _Handler(osmium.SimpleHandler):
                     }
                 )
             building = tags.get("building")
+            if building and building != "no" and "addr:housenumber" in tags:
+                self._address(ref, tags, geom(), 0.0)
             if building and building != "no":
                 self.tables.buildings.append(
                     {
@@ -246,7 +270,7 @@ class _Handler(osmium.SimpleHandler):
             self.tables.broken_areas += 1
 
 
-TABLES = ("boundaries", "buildings", "water", "pois", "walk_ways")
+TABLES = ("boundaries", "buildings", "water", "pois", "walk_ways", "addresses")
 
 
 def extract(pbf: Path, boundary_ids: set[int], out_dir: Path) -> dict[str, int]:

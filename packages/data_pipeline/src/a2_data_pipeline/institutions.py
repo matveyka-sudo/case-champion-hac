@@ -123,3 +123,49 @@ def match_roster(
         },
     }
     return matches, unmatched, stats
+
+
+MEDICAL_GENERIC_WORDS = re.compile(
+    r"(поликлин\w*|отделени\w*|детск\w*|взросл\w*|городск\w*|больниц\w*|филиал\w*|"
+    r"гбуз|гауз|ко\b|[\s\d№.,\-–—«»\"'()/]+)",
+    re.IGNORECASE,
+)
+MEDICAL_SAME_NUMBER_M = 150.0
+
+
+def match_points(
+    objects: list[tuple[str, str, str, shapely.Point]],
+    candidates: list[Candidate],
+    crs: str,
+) -> tuple[dict[str, list[Candidate]], list[Candidate]]:
+    """Attach OSM candidates to located registry objects ``(object_id, category, name, point_utm)``.
+
+    Same rules as for rosters, with medical type words: equal numbers within 150 m,
+    an unnamed or type-only OSM name within 60 m, otherwise no match.
+    """
+
+    attached: dict[str, list[Candidate]] = {object_id: [] for object_id, *_ in objects}
+    unmatched: list[Candidate] = []
+    for candidate in candidates:
+        geometry = to_crs(candidate.geometry, "EPSG:4326", crs)
+        numbers = candidate_numbers(candidate)
+        generic = not MEDICAL_GENERIC_WORDS.sub("", candidate.name or "").strip()
+        best: tuple[float, str] | None = None
+        for object_id, category, name, point in objects:
+            if category != candidate.category:
+                continue
+            distance = float(geometry.distance(point))
+            registry_numbers = institution_numbers(name)
+            if numbers and registry_numbers and numbers & registry_numbers:
+                limit = MEDICAL_SAME_NUMBER_M
+            elif generic and not numbers:
+                limit = NO_NUMBER_M
+            else:
+                continue
+            if distance <= limit and (best is None or (distance, object_id) < best):
+                best = (distance, object_id)
+        if best is None:
+            unmatched.append(candidate)
+        else:
+            attached[best[1]].append(candidate)
+    return attached, unmatched
