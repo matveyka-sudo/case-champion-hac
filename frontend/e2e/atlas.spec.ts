@@ -199,7 +199,7 @@ test("scroll motion and reduced motion preserve the content", async ({
         ),
     )
     .toBeGreaterThan(0.5);
-  await page.locator("#features").scrollIntoViewIfNeeded();
+  await page.locator("#featTitle").scrollIntoViewIfNeeded();
   await expect(page.locator("#featTitle")).toHaveClass(/is-in/);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator("#featTitle")).toHaveCSS("opacity", "1");
