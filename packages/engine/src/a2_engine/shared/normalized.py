@@ -4,6 +4,7 @@ import hashlib
 import json
 from dataclasses import asdict, is_dataclass
 from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
 from typing import Any
 
 from a2_engine.shared.results import finite_number
@@ -33,8 +34,11 @@ def utc(value: datetime) -> datetime:
 
 def duration(seconds: float) -> timedelta:
     value = finite_number(seconds, "seconds")
+    micros = Decimal(str(value)) * 1000000
+    if micros != micros.to_integral_value():
+        raise ValueError("DURATION_REQUIRES_EXACT_MICROSECONDS")
     try:
-        result = timedelta(seconds=value)
+        result = timedelta(microseconds=int(micros))
     except OverflowError as exc:
         raise ValueError("DURATION_OVERFLOW") from exc
     if value and result == timedelta():

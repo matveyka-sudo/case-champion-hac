@@ -2,10 +2,40 @@
 
 from dataclasses import dataclass
 from datetime import datetime
+from math import isfinite
 from typing import Literal
 
 from a2_engine.shared.normalized import checked_id, content_hash, ids, utc
 from a2_engine.shared.results import finite_number
+
+
+@dataclass(frozen=True)
+class CargoTemperature:
+    controlled: bool
+    min_c: float | None
+    max_c: float | None
+    condition_id: str
+
+    def __post_init__(self) -> None:
+        checked_id(self.condition_id)
+        if type(self.controlled) is not bool:
+            raise ValueError("EXPLICIT_TEMPERATURE_CONTROL_REQUIRED")
+        for key in ("min_c", "max_c"):
+            value = getattr(self, key)
+            if value is not None:
+                if isinstance(value, bool) or not isinstance(value, (int, float)):
+                    raise ValueError("FINITE_CELSIUS_REQUIRED")
+                try:
+                    value = float(value)
+                except OverflowError as exc:
+                    raise ValueError("FINITE_CELSIUS_REQUIRED") from exc
+                if not isfinite(value):
+                    raise ValueError("FINITE_CELSIUS_REQUIRED")
+                object.__setattr__(self, key, value)
+        if self.controlled and (self.min_c is None or self.max_c is None):
+            raise ValueError("CONTROLLED_TEMPERATURE_RANGE_REQUIRED")
+        if self.min_c is not None and self.max_c is not None and self.min_c > self.max_c:
+            raise ValueError("REVERSED_TEMPERATURE_RANGE")
 
 
 @dataclass(frozen=True)
@@ -16,10 +46,12 @@ class CargoVehicle:
     width_m: float
     length_m: float
     access_class: str
+    restrictions: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         checked_id(self.vehicle_class)
         checked_id(self.access_class)
+        object.__setattr__(self, "restrictions", ids(self.restrictions, required=False))
         for key in ("mass_kg", "height_m", "width_m", "length_m"):
             object.__setattr__(self, key, finite_number(getattr(self, key), key, positive=True))
 
@@ -30,15 +62,19 @@ class CargoProfile:
     version: str
     goods: Literal["food", "nonfood"]
     urgency: str
-    temperature: str
+    temperature: CargoTemperature
     handling_requirements: tuple[str, ...]
     access_requirements: tuple[str, ...]
     vehicle: CargoVehicle
 
     def __post_init__(self) -> None:
-        for value in (self.profile_id, self.version, self.urgency, self.temperature):
+        for value in (self.profile_id, self.version, self.urgency):
             checked_id(value)
-        if self.goods not in ("food", "nonfood") or not isinstance(self.vehicle, CargoVehicle):
+        if (
+            self.goods not in ("food", "nonfood")
+            or not isinstance(self.vehicle, CargoVehicle)
+            or not isinstance(self.temperature, CargoTemperature)
+        ):
             raise ValueError("INVALID_CARGO_PROFILE")
         for key in ("handling_requirements", "access_requirements"):
             object.__setattr__(self, key, ids(getattr(self, key), required=False))

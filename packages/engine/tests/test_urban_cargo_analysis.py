@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
+from a2_engine.freight.models import CargoTemperature
 from a2_engine.freight.urban_analysis import CargoNode, UrbanCargoCoverage, analyze_urban_cargo
 from a2_engine.shared.config import load_freight_config
 
@@ -89,11 +90,12 @@ def test_profile_urgency_does_not_change_physical_requirements() -> None:
     assert replace(m.PROFILE, urgency="urgent").requirements_hash == m.PROFILE.requirements_hash
     assert (
         m.PROFILE.goods == "food"
-        and m.PROFILE.temperature == "ambient"
+        and not m.PROFILE.temperature.controlled
         and m.PROFILE.urgency == "ordinary"
     )
     assert (
-        replace(m.PROFILE, temperature="chilled").requirements_hash != m.PROFILE.requirements_hash
+        replace(m.PROFILE, temperature=CargoTemperature(True, 2, 8, "chilled")).requirements_hash
+        != m.PROFILE.requirements_hash
     )
 
 
@@ -163,3 +165,17 @@ def test_empty_complete_catalogue_vs_unknown_catalogue() -> None:
         config=load_freight_config(),
     )
     assert unknown.by_type[0].index.value is None
+
+
+def test_explicit_ambiguous_node_mapping_and_temperature_content() -> None:
+    terminal = CargoNode("terminal", "logistics_terminal", "terminal", m.CONTEXT, m.PROOF)
+    assert terminal.analysis_type == "terminal"
+    with pytest.raises(ValueError):
+        CargoNode("airport", "airport", "terminal", m.CONTEXT, m.PROOF)
+    frozen = CargoTemperature(True, -10, -2, "frozen-range")
+    assert frozen.min_c == -10 and frozen.max_c == -2
+    assert replace(m.PROFILE, temperature=frozen).requirements_hash != m.PROFILE.requirements_hash
+    with pytest.raises(ValueError):
+        CargoTemperature(True, 8, 2, "reversed")
+    with pytest.raises(ValueError):
+        CargoTemperature(True, None, None, "missing-range")

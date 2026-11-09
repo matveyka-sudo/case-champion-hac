@@ -1,8 +1,7 @@
 """Accepted freight routing boundary, never a passenger auto result cast to truck."""
 
 from dataclasses import dataclass
-from datetime import datetime
-from math import fsum
+from datetime import datetime, timedelta
 from typing import Literal
 
 from a2_engine.freight.models import CargoCompatibility, CargoContext, CargoVehicle
@@ -63,16 +62,17 @@ class TruckRoute:
         if self.network_seconds is None:
             return None
         try:
-            return finite_number(
-                fsum(
-                    (
+            return sum(
+                (
+                    duration(value)
+                    for value in (
                         self.network_seconds,
                         self.origin_access_seconds,
                         self.destination_access_seconds,
                     )
                 ),
-                "truck total",
-            )
+                timedelta(),
+            ).total_seconds()
         except OverflowError as exc:
             raise ValueError("TRUCK_TIME_OVERFLOW") from exc
 

@@ -44,6 +44,13 @@ class CargoNode:
             checked_id(value)
         if not isinstance(self.context, CargoContext):
             raise ValueError("CARGO_CONTEXT_REQUIRED")
+        permitted = {
+            "port": {"port"},
+            "rail_terminal": {"rail_freight_station"},
+            "logistics_terminal": {"terminal", "logistics_center"},
+        }
+        if self.analysis_type not in permitted.get(self.canonical_kind, set()):
+            raise ValueError("EXPLICIT_SUPPORTED_FREIGHT_NODE_MAPPING_REQUIRED")
         object.__setattr__(self, "mapping_evidence_refs", ids(self.mapping_evidence_refs))
 
 
@@ -116,6 +123,8 @@ def analyze_urban_cargo(
 ) -> UrbanCargoAnalysis:
     at = utc(requested_at)
     kinds = ids(selected_node_types)
+    if set(kinds) - {"port", "rail_freight_station", "terminal", "logistics_center"}:
+        raise ValueError("UNSUPPORTED_URBAN_FREIGHT_NODE_TYPE")
     context = coverage.context
     if (
         context.methodology_version != config.methodology_version
@@ -235,7 +244,7 @@ def analyze_urban_cargo(
                 best[0] if best is not None and proven else None,
                 h.value,
                 scope=cargo_scope,
-                compatibility_confirmed=True,
+                compatibility_confirmed=best is not None or proven,
                 confirmed_no_route=best is None and proven,
             )
             site_results.append(

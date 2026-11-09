@@ -2,7 +2,13 @@
 
 from datetime import UTC, datetime, timedelta
 
-from a2_engine.freight.models import CargoCompatibility, CargoContext, CargoProfile, CargoVehicle
+from a2_engine.freight.models import (
+    CargoCompatibility,
+    CargoContext,
+    CargoProfile,
+    CargoTemperature,
+    CargoVehicle,
+)
 from a2_engine.freight.truck import TruckRoute, TruckSearchReceipt
 from a2_engine.freight.urban_analysis import (
     CargoNode,
@@ -24,7 +30,7 @@ PROFILE = CargoProfile(
     "v1",
     "food",
     "ordinary",
-    "ambient",
+    CargoTemperature(False, None, None, "ambient"),
     ("sealed",),
     ("freight-entry",),
     CargoVehicle("truck", 12000, 3, 2.5, 8, "freight"),

@@ -401,3 +401,30 @@ def intercity_passenger_rules_from_mapping(
 
 def load_intercity_passenger_rules(path: str | Path | None = None) -> IntercityPassengerRules:
     return intercity_passenger_rules_from_mapping(_load_product(path))
+
+
+@dataclass(frozen=True)
+class CargoDeliveryRules:
+    methodology_version: str
+    departure_window_days: int
+
+    def __post_init__(self) -> None:
+        if self.methodology_version != "a2-methodology-v3":
+            raise ValueError("UNSUPPORTED_CARGO_METHODOLOGY")
+        if type(self.departure_window_days) is not int or self.departure_window_days <= 0:
+            raise ValueError("POSITIVE_CARGO_DEPARTURE_DAYS_REQUIRED")
+
+
+def cargo_delivery_rules_from_mapping(product: Mapping[str, object]) -> CargoDeliveryRules:
+    version, parameters = _method_parameters(product, "intercity_cargo")
+    try:
+        days = parameters["departure_window_days"]
+        if type(days) is not int:
+            raise ValueError("INTEGER_CARGO_DEPARTURE_DAYS_REQUIRED")
+        return CargoDeliveryRules(version, days)
+    except KeyError as exc:
+        raise ValueError("Missing cargo departure_window_days") from exc
+
+
+def load_cargo_delivery_rules(path: str | Path | None = None) -> CargoDeliveryRules:
+    return cargo_delivery_rules_from_mapping(_load_product(path))
