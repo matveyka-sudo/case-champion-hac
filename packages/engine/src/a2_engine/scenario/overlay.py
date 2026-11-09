@@ -159,6 +159,14 @@ def apply_scenario_overlay(
         if source.service_date != operation.service_date:
             raise ValueError("SCENARIO_SERVICE_DATE_MISMATCH")
         replacements: dict[str, TimetableRun] = {}
+        aliases = {source.run_id}
+        previous_aliases: set[str] = set()
+        while previous_aliases != aliases:
+            previous_aliases = set(aliases)
+            for dataset in inputs.timetables:
+                for group in dataset.physical_services:
+                    if aliases & set(group.run_ids):
+                        aliases.update(group.run_ids)
         if operation.template_id == "coordinate_transfer":
             if (
                 operation.new_run is not None
@@ -166,14 +174,6 @@ def apply_scenario_overlay(
                 or operation.demand_evidence_refs
             ):
                 raise ValueError("COORDINATION_CANNOT_CREATE_SERVICES")
-            aliases = {source.run_id}
-            previous_aliases: set[str] = set()
-            while previous_aliases != aliases:
-                previous_aliases = set(aliases)
-                for dataset in inputs.timetables:
-                    for group in dataset.physical_services:
-                        if aliases & set(group.run_ids):
-                            aliases.update(group.run_ids)
             if operation.incoming_execution_id in aliases:
                 raise ValueError("PHYSICAL_ALIAS_IS_NOT_A_TRANSFER")
             for dataset in inputs.timetables:
@@ -232,9 +232,8 @@ def apply_scenario_overlay(
         for dataset in inputs.timetables:
             runs = tuple(replacements.get(r.run_id, r) for r in dataset.timetable.runs)
             physical = dataset.physical_services
-            if (
-                operation.template_id == "additional_departure"
-                and dataset.network_id == target.network_id
+            if operation.template_id == "additional_departure" and any(
+                r.run_id in aliases for r in dataset.timetable.runs
             ):
                 assert operation.new_run is not None and operation.new_physical_service is not None
                 runs += (operation.new_run,)
