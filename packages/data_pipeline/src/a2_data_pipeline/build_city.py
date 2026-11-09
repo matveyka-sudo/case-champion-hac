@@ -26,7 +26,7 @@ import pyarrow.parquet as pq  # type: ignore[import-untyped]
 import shapely  # type: ignore[import-untyped]
 from pydantic import BaseModel
 
-from . import admnvrsk, freight, gortrans39, klgd, mgfoms, obrnadzor, trmo
+from . import admnvrsk, freight, gorono, gortrans39, klgd, mgfoms, obrnadzor, trmo
 from . import categories as cat
 from .access import Access, WalkNetwork, load_road_network, load_walk_network, snap
 from .addresses import AddressIndex, parse_address, street_tokens
@@ -281,6 +281,18 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
                 f"{medical_manifest.source_id}:dataset:{medical_manifest.dataset_id}",
             )
         )
+    kindergartens = None
+    if config.kindergarten_registry_dataset_id:
+        kindergarten_manifest = load_dataset_manifest(config.kindergarten_registry_dataset_id)
+        source_manifests.append(kindergarten_manifest)
+        records, kindergarten_stats = gorono.load(raw_dir() / kindergarten_manifest.raw_path)
+        kindergartens = (records, kindergarten_stats, kindergarten_manifest)
+        snapshot_evidence["kindergarten_registry"] = book.add(
+            _dataset_evidence(
+                kindergarten_manifest,
+                f"{kindergarten_manifest.source_id}:dataset:{kindergarten_manifest.dataset_id}",
+            )
+        )
     education = None
     if config.higher_education_registry_dataset_id and config.region_name:
         education_manifest = load_dataset_manifest(config.higher_education_registry_dataset_id)
@@ -314,7 +326,16 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
     territories = _territories(config, layers, grid, book, checks)
     cells, point_drafts = _cells(config, grid, ghsl_evidence, checks)
     drafts, ownership, rule_counts = _destination_drafts(
-        config, layers, osm_dir, airports_manifest, book, checks, roster, medical, education
+        config,
+        layers,
+        osm_dir,
+        airports_manifest,
+        book,
+        checks,
+        roster,
+        medical,
+        education,
+        kindergartens,
     )
     accesses = snap([p.utm for p in point_drafts] + [d.utm for d in drafts], network)
     point_access, destination_access = accesses[: len(point_drafts)], accesses[len(point_drafts) :]
@@ -378,6 +399,12 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
         }[medical[2].source_id]
         for category in ("adult_polyclinic", "child_polyclinic"):
             registry_coverage[category] = (medical_reason, "medical_registry")
+    if kindergartens is not None:
+        registry_coverage["kindergarten"] = (
+            "Муниципальные детсады по перечню учредителя (Управление образования, gorono.ru), "
+            "адрес учреждения; другие корпуса и частные детсады не подтверждены",
+            "kindergarten_registry",
+        )
     if education is not None:
         registry_coverage["college_university"] = (
             "Государственные колледжи и вузы по реестру аккредитации Рособрнадзора; корпуса — по "
@@ -749,6 +776,7 @@ def _destination_drafts(
     roster: tuple[klgd.Roster, DatasetManifest] | None = None,
     medical: tuple[list[RegistryObject], dict[str, Any], DatasetManifest] | None = None,
     education: tuple[list[obrnadzor.EduOrg], DatasetManifest] | None = None,
+    kindergartens: KindergartenInput | None = None,
 ) -> tuple[list[DestinationDraft], list[CategoryOwnership], dict[str, Any]]:
     rows = pq.read_table(osm_dir / "pois.parquet").to_pylist()
     candidates, osm_rule_counts = cat.build_candidates(rows, config.name)
@@ -794,6 +822,24 @@ def _destination_drafts(
         ownership.extend(medical_ownership)
         candidates = rest + still_unmatched
         rule_counts["medical_registry"] = medical_stats
+    if kindergartens is not None:
+        kindergarten_candidates = [c for c in candidates if c.category == "kindergarten"]
+        rest = [c for c in candidates if c.category != "kindergarten"]
+        kg_drafts, kg_ownership, kg_unmatched, kg_stats = _founder_kindergartens(
+            config, kindergartens, kindergarten_candidates, address_index(), city_utm, crs, book
+        )
+        drafts.extend(kg_drafts)
+        ownership.extend(kg_ownership)
+        candidates = rest + kg_unmatched
+        rule_counts["kindergarten_registry"] = kg_stats
+        _check(
+            checks,
+            "kindergarten_registry_located",
+            not kg_stats["unlocated"],
+            "Every kindergarten of the founder's list is found in OSM addresses",
+            severity="warn",
+            unlocated=kg_stats["unlocated"],
+        )
     if education is not None and roster is None:
         linked = {"school", "kindergarten"} if config.school_buildings_by_name else {"school"}
         school_candidates = [c for c in candidates if c.category in linked]
@@ -1450,6 +1496,112 @@ def _school_buildings(
         "occupied_by_another_school": occupied_skipped,
     }
     return rest, stats
+
+
+KindergartenInput = tuple[list[gorono.Kindergarten], dict[str, Any], DatasetManifest]
+
+
+def _founder_kindergartens(
+    config: CityConfig,
+    kindergartens: KindergartenInput,
+    candidates: list[cat.Candidate],
+    index: AddressIndex,
+    city_utm: shapely.Geometry,
+    crs: str,
+    book: EvidenceBook,
+) -> tuple[list[DestinationDraft], list[CategoryOwnership], list[cat.Candidate], dict[str, Any]]:
+    """Municipal kindergartens of the founder's list, placed at their OSM address.
+
+    Kindergartens that land on one OSM address object are one destination with
+    the evidence of each. OSM candidates join by the roster rules (equal numbers
+    within 300 m, unnamed or type-only names within 60 m) and add evidence.
+    """
+
+    records, registry_stats, manifest = kindergartens
+    grouped: dict[str, list[tuple[gorono.Kindergarten, Any]]] = {}
+    unlocated: list[dict[str, str]] = []
+    for record in records:
+        # the founder's list is the city's own: an address without a settlement is in the city
+        hit = index.locate(record.address, default_settlement=config.name)
+        if hit is None:
+            unlocated.append({"number": record.number, "address": record.address})
+            continue
+        grouped.setdefault(hit.osm_ref, []).append((record, hit))
+    entries = sorted(grouped.values(), key=lambda members: int(members[0][0].number))
+    buildings = [
+        klgd.Building(
+            map_id=f"gorono-{members[0][0].number}",
+            institution_id=members[0][0].number,
+            kind="kindergarten",
+            name=members[0][0].name,
+            lat=members[0][1].point.y,
+            lon=members[0][1].point.x,
+            address_short=None,
+            licence=None,
+            accreditation=None,
+        )
+        for members in entries
+    ]
+    matches, unmatched, stats = match_roster(buildings, candidates, crs)
+    drafts: list[DestinationDraft] = []
+    ownership: list[CategoryOwnership] = []
+    approximate = 0
+    for members, match in zip(entries, matches):
+        first, hit = members[0]
+        records_ids = [
+            book.add(
+                Evidence(
+                    evidence_id=f"{manifest.source_id}:{record.number}",
+                    source_id=manifest.source_id,
+                    dataset_id=manifest.dataset_id,
+                    record_id=f"ДОУ № {record.number}",
+                    url=gorono.CARD_URL.format(number=record.number),
+                    fetched_at=manifest.retrieved_at,
+                    content_hash=record.record_hash(),
+                    verification_state="verified",
+                )
+            )
+            for record, _ in members
+        ]
+        approximate += hit.method != "exact"
+        osm_refs = sorted({ref for c in match.candidates for ref in c.osm_refs})
+        destination_id = f"{config.city_id}-{first.object_id}"
+        drafts.append(
+            DestinationDraft(
+                destination_id=destination_id,
+                category="kindergarten",
+                name=first.name,
+                utm=match.point_utm,
+                lonlat=hit.point,
+                inside_city_boundary=city_utm.distance(match.point_utm) == 0,
+                osm_ref=osm_refs[0] if osm_refs else hit.osm_ref,
+                reasons=[],
+                evidence_ids=[
+                    *records_ids,
+                    book.osm(hit.osm_ref),
+                    *(book.osm(r) for r in osm_refs),
+                ],
+                location_source="registry_address",
+                ownership_verified=first.ownership == "municipal",
+            )
+        )
+        ownership.append(
+            CategoryOwnership(
+                destination_id=destination_id,
+                category="kindergarten",
+                ownership=first.ownership,  # type: ignore[arg-type]
+                basis="registry",
+                verification_state="verified",
+                evidence_ids=records_ids,
+            )
+        )
+    stats |= dict(registry_stats) | {
+        "placed_records": sum(len(m) for m in entries),
+        "destinations": len(drafts),
+        "nearest_number_placements": approximate,
+        "unlocated": unlocated,
+    }
+    return drafts, ownership, unmatched, stats
 
 
 def _names_city(address: str, city: str) -> bool:

@@ -70,9 +70,12 @@ HOUSE_WORDS = re.compile(
 )
 HOUSE_COMPONENT = re.compile(r"^(дом|д|здание|зд|владение|влд)\.?\s*\d|^\d+[а-я]?(\s|$|-|/)", re.I)
 ADMIN = re.compile(r"область|обл\b|район|р-н|округ|г\.о\.|муниципальн|^\d{6}$|россия", re.I)
+# «г. Город», «г.Город» and «город Город»; a leading postcode is not part of the name
 SETTLEMENT_PREFIX = re.compile(
-    r"^(г|город|п|пос|поселок|пгт|рп|с|село|д|деревня|ст|станица|х|хутор)\.?\s+", re.I
+    r"^(г|город|п|пос|поселок|пгт|рп|с|село|д|деревня|ст|станица|х|хутор)(\.\s*|\s+)", re.I
 )
+POSTCODE_PREFIX = re.compile(r"^\d{6}[\s,.]*")
+TRAILING_HOUSE = re.compile(r"^(.*?[а-яё.])\s+(\d+\s*[а-яё]?)$", re.I)
 
 
 def _clean(text: str) -> str:
@@ -87,8 +90,8 @@ def street_tokens(street: str) -> frozenset[str]:
 
 
 def settlement_name(component: str) -> str | None:
-    text = _clean(component).strip()
-    if ADMIN.search(text):
+    text = POSTCODE_PREFIX.sub("", _clean(component).strip())
+    if not text or ADMIN.search(text):
         return None
     text = SETTLEMENT_PREFIX.sub("", text).strip(" .")
     return text or None
@@ -139,6 +142,11 @@ def parse_address(address: str) -> ParsedAddress | None:
     house = house_key(street[same.start() :]) if same else None
     if house is None and street_index + 1 < len(parts):
         house = house_key(parts[street_index + 1])
+    if house is None and not same:
+        # «пр. Ленина 63»: the house number ends the street component
+        trailing = TRAILING_HOUSE.match(street)
+        if trailing and _typed(trailing.group(1)):
+            street, house = trailing.group(1), house_key(trailing.group(2))
     tokens = street_tokens(street[: same.start()] if same else street)
     if not tokens or house is None:
         return None
@@ -216,10 +224,15 @@ class AddressIndex:
             return entry.in_city
         return entry.city_tag == settlement
 
-    def locate(self, address: str) -> AddressHit | None:
+    def locate(self, address: str, default_settlement: str | None = None) -> AddressHit | None:
+        """Address object of ``address``; ``default_settlement`` is used for an address
+        without a settlement — only for a register of that settlement itself."""
+
         parsed = parse_address(address)
         if parsed is None:
             return None
+        if parsed.settlement is None and default_settlement is not None:
+            parsed = ParsedAddress(_clean(default_settlement), parsed.street, parsed.house)
         anchor = min(parsed.street, key=lambda t: len(self.by_token.get(t, [])))
         street = [
             e

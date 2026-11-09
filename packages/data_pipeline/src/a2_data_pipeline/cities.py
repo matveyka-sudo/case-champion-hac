@@ -30,6 +30,8 @@ class CityConfig:
     school_buildings_by_name: bool = False
     # stop timetables without trip ids: frequency reference only
     timetable_dataset_id: str | None = None
+    # founder's list of municipal kindergartens (name + address)
+    kindergarten_registry_dataset_id: str | None = None
     seaport_dataset_id: str | None = None
     seaport_name: str | None = None
 
@@ -107,6 +109,7 @@ CITIES: dict[str, CityConfig] = {
         region_name="Краснодарский край",
         higher_education_registry_dataset_id="obrnadzor_accreditation.20261108",
         medical_registry_dataset_id="admnvrsk_health.20261108",
+        kindergarten_registry_dataset_id="nvr_gorono.dou-20261109",
         airport_service_unverified=True,
         freight=True,
         seaport_dataset_id="rosmorport.seaports-novorossiysk-20261108",

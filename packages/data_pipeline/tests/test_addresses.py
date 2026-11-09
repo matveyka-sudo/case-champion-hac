@@ -65,6 +65,11 @@ from shapely.geometry import Point, box  # noqa: E402
             {"адмирала", "егорова"},
             HouseKey(2, None),
         ),
+        # postcode glued to the town, «г.» without a space
+        ("353900 г.Новороссийск, ул. Мира, 32", "новороссийск", {"мира"}, HouseKey(32, None)),
+        # the house number ends the street component
+        ("353913, г. Новороссийск, пр. Ленина 63", "новороссийск", {"ленина"}, HouseKey(63, None)),
+        ("Новороссийск, с.Глебовское, ул. Чехова 17", "глебовское", {"чехова"}, HouseKey(17, None)),
     ],
 )
 def test_parse_address(address: str, settlement: str, street: set[str], house: HouseKey) -> None:
@@ -124,3 +129,7 @@ def test_index_respects_settlements_and_nearest_number(tmp_path: Path) -> None:
     assert near is not None and near.osm_ref == "way/4" and near.method == "nearest_number"
     assert index.locate("236017, г Калининград, ул М.Расковой, д. 9") is None  # other parity
     assert isinstance(near.point, Point)
+    # an address without a settlement is found only when the caller names the city
+    assert index.locate("236000, ул. Ленина, д. 18") is None
+    own = index.locate("236000, ул. Ленина, д. 18", default_settlement="Калининград")
+    assert own is not None and own.osm_ref == "way/1"
