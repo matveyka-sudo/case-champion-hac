@@ -28,6 +28,8 @@ class CityConfig:
     freight: bool = False
     # school complexes (Moscow): OSM buildings named after an accredited school are its buildings
     school_buildings_by_name: bool = False
+    # stop timetables without trip ids: frequency reference only
+    timetable_dataset_id: str | None = None
     seaport_dataset_id: str | None = None
     seaport_name: str | None = None
 
@@ -87,6 +89,7 @@ CITIES: dict[str, CityConfig] = {
         freight=True,
         seaport_dataset_id="rosmorport.seaports-kaliningrad-20261108",
         seaport_name="Калининград",
+        timetable_dataset_id="gortrans39.routes-20261109",
     ),
     "novorossiysk": CityConfig(
         city_id="novorossiysk",

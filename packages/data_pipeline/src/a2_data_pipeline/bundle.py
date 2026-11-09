@@ -74,6 +74,7 @@ Collection = Literal[
     "reference_edges",
     "minimum_transfers",
     "traffic_profiles",
+    "stop_frequencies",
 ]
 PRODUCED_COLLECTIONS: tuple[Collection, ...] = (
     "territories",
@@ -84,6 +85,7 @@ PRODUCED_COLLECTIONS: tuple[Collection, ...] = (
     "access_nodes",
     "freight_nodes",
     "freight_sites",
+    "stop_frequencies",
 )
 
 
@@ -284,6 +286,49 @@ class FreightSite(Model):
     evidence_ids: Annotated[list[Identifier], Field(min_length=1)]
 
 
+class StopFrequency(Model):
+    """Departures of one route at one named stop on one day type.
+
+    A frequency reference from a stop timetable without trip ids: it is never
+    joined into trips. ``departures`` counts unique published times; an empty
+    published list is unknown (quarantined), never zero.
+    """
+
+    frequency_id: Identifier
+    city_id: Identifier
+    route_id: str
+    route_name: str
+    mode: Literal["bus", "trolleybus", "tram", "unknown"]
+    stop_name: str
+    stop_list_position: Annotated[int, Field(ge=0)]
+    day_type: Literal["weekdays", "saturday", "weekend"]
+    unified_timetable: bool
+    departures: Annotated[int, Field(ge=1)] | None
+    first_departure: Annotated[str, Field(pattern=r"^\d{2}:\d{2}$")] | None
+    last_departure: Annotated[str, Field(pattern=r"^\d{2}:\d{2}$")] | None
+    max_hourly_departures: Annotated[int, Field(ge=1)] | None
+    median_gap_min: NonNegative | None
+    duplicate_times: Annotated[int, Field(ge=0)]
+    lon: Lon | None
+    lat: Lat | None
+    osm_stop_refs: list[str]
+    status: Literal["accepted", "quarantined"]
+    quarantine_reasons: list[str]
+    evidence_ids: Annotated[list[Identifier], Field(min_length=1)]
+
+    @model_validator(mode="after")
+    def consistent(self) -> Self:
+        if (self.status == "quarantined") != bool(self.quarantine_reasons):
+            raise ValueError("quarantine reasons are set exactly for quarantined rows")
+        if self.status == "accepted" and self.departures is None:
+            raise ValueError("an accepted frequency needs known departures")
+        if (self.departures is None) != (self.first_departure is None):
+            raise ValueError("departures and first departure are known together")
+        if (self.lon is None) != (self.lat is None):
+            raise ValueError("lon and lat are set together")
+        return self
+
+
 class CategoryOwnership(Model):
     destination_id: Identifier
     category: Category
@@ -368,6 +413,7 @@ class BundleData(Model):
     access_nodes: list[AccessNode]
     freight_nodes: list[FreightNode] = Field(default_factory=list)
     freight_sites: list[FreightSite] = Field(default_factory=list)
+    stop_frequencies: list[StopFrequency] = Field(default_factory=list)
     qa_report: dict[str, Any]
 
     @model_validator(mode="after")
@@ -452,6 +498,11 @@ class BundleData(Model):
             joins(freight_row.access_node_id, "road_network_projection", "freight")
             for evidence_id in freight_row.evidence_ids:
                 resolve(evidence_id, evidence_ids, "freight.evidence_ids")
+        unique([row.frequency_id for row in self.stop_frequencies], "stop_frequencies")
+        for frequency in self.stop_frequencies:
+            resolve(frequency.city_id, scope, "stop_frequencies.city_id")
+            for evidence_id in frequency.evidence_ids:
+                resolve(evidence_id, evidence_ids, "stop_frequencies.evidence_ids")
         for destination in self.destinations:
             resolve(destination.serving_city_id, scope, "destinations.serving_city_id")
             joins(destination.access_node_id, "walk_network_projection", "destinations")

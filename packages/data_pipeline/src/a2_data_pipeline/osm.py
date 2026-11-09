@@ -19,7 +19,7 @@ import osmium
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
-EXTRACT_VERSION = 8
+EXTRACT_VERSION = 9
 
 BBox = tuple[float, float, float, float]  # west, south, east, north (EPSG:4326)
 WALK_RULES_VERSION = "osm-walk-network-v1"
@@ -137,6 +137,27 @@ FREIGHT_VALUES = {
     "man_made": {"works", "storage_tank", "pier"},
 }
 FREIGHT_ANY = ("industrial", "harbour", "port")
+# named public transport stops (nodes): timetable stops are located by these names
+STOP_TAGS = (
+    "name",
+    "highway",
+    "public_transport",
+    "railway",
+    "bus",
+    "trolleybus",
+    "tram",
+    "route_ref",
+)
+
+
+def is_stop(tags: Any) -> bool:
+    return bool(tags.get("name")) and (
+        tags.get("highway") == "bus_stop"
+        or tags.get("railway") == "tram_stop"
+        or tags.get("public_transport") in {"platform", "stop_position"}
+    )
+
+
 FREIGHT_TAGS = (
     "name",
     "official_name",
@@ -218,6 +239,7 @@ class _Tables:
     addresses: list[dict[str, Any]] = field(default_factory=list)
     road_ways: list[dict[str, Any]] = field(default_factory=list)
     freight: list[dict[str, Any]] = field(default_factory=list)
+    stops: list[dict[str, Any]] = field(default_factory=list)
     broken_areas: int = 0
     broken_ways: int = 0
 
@@ -267,6 +289,18 @@ class _Handler(osmium.SimpleHandler):
         if "addr:housenumber" in tags and _inside(lon, lat, self.bbox):
             self._address(
                 _ref("node", node.id), node.tags, bytes.fromhex(self.wkb.create_point(node)), None
+            )
+        if is_stop(tags) and _inside(lon, lat, self.bbox):
+            ref = _ref("node", node.id)
+            kept = self._kept(tags, STOP_TAGS)
+            wkb = bytes.fromhex(self.wkb.create_point(node))
+            self.tables.stops.append(
+                {
+                    "osm_ref": ref,
+                    "tags": json.dumps(kept, ensure_ascii=False),
+                    "wkb": wkb,
+                    "content_hash": content_hash(ref, kept, wkb),
+                }
             )
         if is_freight(tags) and _inside(lon, lat, self.bbox):
             ref = _ref("node", node.id)
@@ -412,6 +446,7 @@ TABLES = (
     "addresses",
     "road_ways",
     "freight",
+    "stops",
 )
 
 

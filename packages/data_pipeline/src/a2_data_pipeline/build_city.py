@@ -26,10 +26,10 @@ import pyarrow.parquet as pq  # type: ignore[import-untyped]
 import shapely  # type: ignore[import-untyped]
 from pydantic import BaseModel
 
-from . import admnvrsk, freight, klgd, mgfoms, obrnadzor, trmo
+from . import admnvrsk, freight, gortrans39, klgd, mgfoms, obrnadzor, trmo
 from . import categories as cat
 from .access import Access, WalkNetwork, load_road_network, load_walk_network, snap
-from .addresses import AddressIndex, parse_address
+from .addresses import AddressIndex, parse_address, street_tokens
 from .bundle import (
     OWNERSHIP_REQUIRED,
     PRODUCT_CATEGORIES,
@@ -49,6 +49,7 @@ from .bundle import (
     PopulationCell,
     SamplePoint,
     SourceVersion,
+    StopFrequency,
     Territory,
 )
 from .cities import CITIES, CityConfig
@@ -207,7 +208,7 @@ def _osm_hashes(osm_dir: Path, networks: Sequence[WalkNetwork]) -> dict[str, str
     for network in networks:
         for ref, value in network.hashes.items():
             hashes.setdefault(ref, value)
-    for name in ("boundaries", "pois", "buildings", "addresses", "freight"):
+    for name in ("boundaries", "pois", "buildings", "addresses", "freight", "stops"):
         table = pq.read_table(osm_dir / f"{name}.parquet", columns=["osm_ref", "content_hash"])
         for ref, value in zip(
             table.column("osm_ref").to_pylist(), table.column("content_hash").to_pylist()
@@ -342,6 +343,22 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
             seaport[0] if seaport else None,
             snapshot_evidence,
         )
+    frequencies: list[StopFrequency] = []
+    timetable_coverage: list[CoverageRecord] = []
+    timetable_summary: dict[str, Any] | None = None
+    if config.timetable_dataset_id:
+        timetable_manifest = load_dataset_manifest(config.timetable_dataset_id)
+        source_manifests.append(timetable_manifest)
+        snapshot_evidence["timetables"] = book.add(
+            _dataset_evidence(
+                timetable_manifest,
+                f"{timetable_manifest.source_id}:dataset:{timetable_manifest.dataset_id}",
+            )
+        )
+        frequencies, timetable_summary, timetable_record = _stop_frequencies(
+            config, osm_dir, layers, timetable_manifest, book, checks, snapshot_evidence
+        )
+        timetable_coverage = [timetable_record]
     registry_coverage: dict[str, tuple[str, str]] = {}
     if roster is not None:
         for category in KIND_TO_CATEGORY.values():
@@ -390,7 +407,7 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
         snapshot_evidence,
         registry_coverage,
         len(layers.districts),
-        freight_coverage,
+        [*freight_coverage, *timetable_coverage],
     )
 
     failed = [check["check_id"] for check in checks if check["status"] == "fail"]
@@ -441,6 +458,7 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
             },
             "osm_rule_counts": rule_counts,
             **({"freight": freight_summary} if freight_summary else {}),
+            **({"timetables": timetable_summary} if timetable_summary else {}),
         },
     }
     limitations = [
@@ -451,11 +469,19 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
         "Вход на граф — проекция на пешеходную сеть OSM v1, не размеченный вход здания",
         "Период применимости 01–30.11.2026 заявлен ML2 для снимка OSM от 07.11.2026",
     ]
+    if timetable_summary:
+        limitations.append(
+            "Расписаний (рейсов) нет: остановочные таблицы gortrans39 без trip_id дают только "
+            f"справку частоты, {len(timetable_summary['accepted_routes'])} из "
+            f"{timetable_summary['routes']} маршрутов муниципального перевозчика; направления и "
+            "даты действия не подтверждены"
+        )
+    else:
+        limitations.append("Расписания в этот bundle не входят")
     if road is None:
-        limitations.append("Расписания и грузовые данные в этот bundle не входят")
+        limitations.append("Грузовые данные в этот bundle не входят")
     else:
         limitations += [
-            "Расписания в этот bundle не входят",
             "Грузовые узлы: порт — портовые территории OSM и объекты со словом «порт» в названии в "
             "границе города с зарегистрированным морским портом; объекты, найденные только по "
             "скрытому в разметке перечню операторов Росморпорта, в карантине; нефтяные терминалы — "
@@ -520,6 +546,8 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
     }
     if road is not None:
         collections |= {"freight_nodes": freight_nodes, "freight_sites": freight_sites}
+    if config.timetable_dataset_id:
+        collections |= {"stop_frequencies": frequencies}
     return publish_bundle(manifest, collections, qa_report)
 
 
@@ -1714,6 +1742,212 @@ def _access_checks(
         "sample_points": _distances([p.access_distance_m for p in points]),
         "destinations": _distances([d.access_distance_m for d in destinations]),
     }
+
+
+STOP_CLUSTER_M = 300.0
+
+
+def _stop_key(name: str) -> frozenset[str]:
+    """Words of a stop name without street types and notes: «ул. Олега Кошевого (конечная)»."""
+
+    text = re.sub(r"\([^)]*\)", " ", name).replace("«", " ").replace("»", " ")
+    return street_tokens(text)
+
+
+def _compact(points: list[shapely.Point]) -> bool:
+    return all(a.distance(b) <= STOP_CLUSTER_M for a in points for b in points)
+
+
+def _stop_frequencies(
+    config: CityConfig,
+    osm_dir: Path,
+    layers: OsmLayers,
+    manifest: DatasetManifest,
+    book: EvidenceBook,
+    checks: list[dict[str, Any]],
+    evidence: dict[str, str],
+) -> tuple[list[StopFrequency], dict[str, Any], CoverageRecord]:
+    """Frequency reference from stop timetables (``gortrans39-frequency-rules-v1``).
+
+    A timetable stop gets the location of the OSM stops with the same name words
+    within 10 km of the city when they lie within 300 m of each other; otherwise
+    the stops whose ``route_ref`` names the route, under the same condition;
+    otherwise no location. Departures are never joined into trips.
+    """
+
+    crs = f"EPSG:{config.utm_epsg}"
+    area = to_crs(layers.city, "EPSG:4326", crs).buffer(SEARCH_BUFFER_M)
+    shapely.prepare(area)
+    index: dict[frozenset[str], list[tuple[str, shapely.Point, set[str]]]] = {}
+    for row in pq.read_table(osm_dir / "stops.parquet").to_pylist():
+        tags = json.loads(row["tags"])
+        utm = to_crs(shapely.from_wkb(row["wkb"]), "EPSG:4326", crs)
+        key = _stop_key(tags["name"])
+        if key and area.covers(utm):
+            route_refs = {
+                r.strip() for r in re.split(r"[;,]", tags.get("route_ref") or "") if r.strip()
+            }
+            index.setdefault(key, []).append((row["osm_ref"], utm, route_refs))
+    routes = gortrans39.load(raw_dir() / manifest.raw_path)
+    rows: list[StopFrequency] = []
+    unlocated: list[str] = []
+    located = 0
+    empty_days: list[str] = []
+    duplicates = 0
+    for route in routes:
+        number = re.sub(r"^\D+", "", route.route_id)
+        for stop in route.stops:
+            candidates = index.get(_stop_key(stop.name), [])
+            chosen = candidates if candidates and _compact([c[1] for c in candidates]) else []
+            if candidates and not chosen:
+                served = [c for c in candidates if number in c[2]]
+                chosen = served if served and _compact([c[1] for c in served]) else []
+            refs = sorted(c[0] for c in chosen)
+            lonlat = (
+                _lonlat(shapely.MultiPoint([c[1] for c in chosen]).centroid, crs)
+                if chosen
+                else None
+            )
+            if not route.reasons:
+                if chosen:
+                    located += 1
+                else:
+                    unlocated.append(f"{route.route_id}: {stop.name}")
+            record = book.add(
+                Evidence(
+                    evidence_id=f"{gortrans39.SOURCE_ID}:{route.route_id}:{stop.sequence}",
+                    source_id=manifest.source_id,
+                    dataset_id=manifest.dataset_id,
+                    record_id=f"{route.route_id}/{stop.name}",
+                    url=gortrans39.PAGE_URL.format(route_id=route.route_id),
+                    fetched_at=manifest.retrieved_at,
+                    content_hash=gortrans39.record_hash(route, stop),
+                    verification_state="verified",
+                )
+            )
+            stop_evidence = [record, *(book.osm(ref) for ref in refs)]
+            for day in gortrans39.DAY_TYPES:
+                value = gortrans39.frequency(stop.days.get(day, []))
+                reasons = list(route.reasons)
+                if value.departures is None:
+                    reasons.append("EMPTY_DAY_LIST")
+                    if not route.reasons and stop.sequence == 0:
+                        empty_days.append(f"{route.route_id}: {day}")
+                if not route.reasons:
+                    duplicates += value.duplicate_times
+                rows.append(
+                    StopFrequency(
+                        frequency_id=(
+                            f"{config.city_id}-{gortrans39.SOURCE_ID}-{route.route_id}-"
+                            f"{stop.sequence}-{day}"
+                        ),
+                        city_id=config.city_id,
+                        route_id=route.route_id,
+                        route_name=route.name,
+                        mode=route.mode,  # type: ignore[arg-type]
+                        stop_name=stop.name,
+                        stop_list_position=stop.sequence,
+                        day_type=day,  # type: ignore[arg-type]
+                        unified_timetable=route.unified,
+                        departures=value.departures,
+                        first_departure=value.first,
+                        last_departure=value.last,
+                        max_hourly_departures=value.max_hourly,
+                        median_gap_min=value.median_gap_min,
+                        duplicate_times=value.duplicate_times,
+                        lon=lonlat[0] if lonlat else None,
+                        lat=lonlat[1] if lonlat else None,
+                        osm_stop_refs=refs,
+                        status="quarantined" if reasons else "accepted",
+                        quarantine_reasons=reasons,
+                        evidence_ids=stop_evidence,
+                    )
+                )
+    accepted_routes = [r for r in routes if not r.reasons]
+    constant = [
+        r.route_id
+        for r in accepted_routes
+        if all(
+            len({b - a for a, b in zip(lst, lst[1:])}) == 1
+            for lst in r.first_lists()
+            if len(lst) > 2
+        )
+    ]
+    mismatched = [
+        r.route_id
+        for r in routes
+        if [gortrans39.normal_name(n) for n in r.listed_stops]
+        != [gortrans39.normal_name(s.name) for s in r.stops]
+    ]
+    _check(
+        checks,
+        "timetable_template_routes",
+        not any(r.reasons for r in routes),
+        "Every published route timetable is a schedule, not a shared template or a 30-minute grid",
+        severity="warn",
+        quarantined={r.route_id: r.reasons for r in routes if r.reasons},
+    )
+    _check(
+        checks,
+        "timetable_constant_headway",
+        not constant,
+        "Accepted routes do not run at one constant headway all day (an interval plan)",
+        severity="warn",
+        routes=constant,
+    )
+    _check(
+        checks,
+        "timetable_empty_day_lists",
+        not empty_days,
+        "Accepted routes publish departures for every day type (empty is unknown, not zero)",
+        severity="warn",
+        empty=empty_days,
+    )
+    _check(
+        checks,
+        "timetable_duplicate_times",
+        not duplicates,
+        "No departure time repeats at one stop of an accepted route (unique times are counted)",
+        severity="warn",
+        duplicates=duplicates,
+    )
+    _check(
+        checks,
+        "timetable_stops_located",
+        not unlocated,
+        "Every stop of an accepted route is found among named OSM stops",
+        severity="warn",
+        located=located,
+        unlocated=unlocated,
+    )
+    _check(
+        checks,
+        "timetable_stop_lists_match",
+        not mismatched,
+        "The page's stop list equals the stops of its timetable (no overwritten names)",
+        severity="warn",
+        routes=mismatched,
+    )
+    summary = gortrans39.stats(routes) | {
+        "rows": len(rows),
+        "accepted_rows": sum(1 for r in rows if r.status == "accepted"),
+        "accepted_stops_located": located,
+        "accepted_stops_unlocated": len(unlocated),
+    }
+    coverage = CoverageRecord(
+        collection="stop_frequencies",
+        city_id=config.city_id,
+        mode="public_transport",
+        status="partial" if accepted_routes else "unknown",
+        reason=(
+            "Справка частоты по остановочным таблицам gortrans39: "
+            f"{len(accepted_routes)} из {len(routes)} маршрутов АО «Калининград-ГорТранс», у "
+            "остальных шаблон вместо расписания; частные перевозчики не входят; рейсы, "
+            "направления и даты действия не подтверждены"
+        ),
+        evidence_ids=[evidence["timetables"]],
+    )
+    return rows, summary, coverage
 
 
 SeaportInput = tuple[freight.SeaportRecord, DatasetManifest]
