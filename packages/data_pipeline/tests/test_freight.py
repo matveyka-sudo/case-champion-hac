@@ -167,3 +167,15 @@ def test_port_without_seaport_record_is_quarantined() -> None:
 )
 def test_is_rail_station(tags: dict[str, str], expected: bool) -> None:
     assert freight.is_rail_station(tags) is expected
+
+
+def test_empty_capacity_label_is_not_a_value() -> None:
+    page = (
+        "<div><a>Морской порт Пустой</a></div>"
+        "<p>– наливные:<br>– сухие:<br>3 тыс. тонн в год;<br>"
+        "– контейнеры:<br>• Пропускная способность пассажирских терминалов:</p>"
+    )
+    facts = freight.parse_seaport(page, "Пустой").facts
+    assert "liquid_capacity" not in facts  # the next line is another label
+    assert facts["dry_capacity"] == "3 тыс. тонн в год;"  # en dash label, value below
+    assert "container_capacity" not in facts

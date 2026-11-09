@@ -59,7 +59,10 @@ PORT_AREA = (("landuse", "harbour"), ("landuse", "port"), ("industrial", "port")
 PORT_NAME = re.compile(r"(?<![а-яё])порт(?![а-яё])", re.I)
 COMMENT = re.compile(r"<!--.*?-->", re.S)
 SERVICE_ITEMS = '<div class="li-three">'
-CAPACITY = re.compile(r"^-\s*(наливные|сухие|контейнерные|контейнеры)\s*:\s*(.*)$")
+CAPACITY = re.compile(r"^[-–—]\s*(наливные|сухие|контейнерные|контейнеры)\s*:\s*(.*)$")
+# a value on the next line has a number or says «нет»; another label is not a value
+CAPACITY_VALUE = re.compile(r"\d|^нет\b", re.I)
+CAPACITY_LABEL = re.compile(r"^[-–—•]|:$")
 CAPACITY_KEYS = {
     "наливные": "liquid_capacity",
     "сухие": "dry_capacity",
@@ -166,8 +169,11 @@ def parse_seaport(page: str, port_name: str) -> SeaportRecord:
         if found:
             value = found.group(2).strip()
             if not value and index + 1 < len(visible):
-                value = visible[index + 1]
-            facts.setdefault(CAPACITY_KEYS[found.group(1)], value)
+                following = visible[index + 1]
+                if CAPACITY_VALUE.search(following) and not CAPACITY_LABEL.search(following):
+                    value = following
+            if value:  # an empty label is unknown, not a capacity
+                facts.setdefault(CAPACITY_KEYS[found.group(1)], value)
     facts |= {
         "registration_number": registration,
         "operators_published": published,
