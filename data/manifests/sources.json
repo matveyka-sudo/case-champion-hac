@@ -650,7 +650,7 @@
         "attribution": "Wikidata"
       },
       "status": "accepted",
-      "datasets": ["wikidata.ru-territories-20261109", "wikidata.ru-intercity-nodes-20261109"]
+      "datasets": ["wikidata.ru-territories-20261109", "wikidata.ru-intercity-nodes-20261109", "wikidata.pilot-population-20261109"]
     },
     {
       "source_id": "admnvrsk_health",

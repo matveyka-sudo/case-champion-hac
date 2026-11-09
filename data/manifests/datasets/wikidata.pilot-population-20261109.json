@@ -1,0 +1,34 @@
+{
+  "dataset_id": "wikidata.pilot-population-20261109",
+  "source_id": "wikidata",
+  "source_url": "https://query.wikidata.org/sparql",
+  "retrieved_at": "2026-11-09T15:49:00Z",
+  "publication_date": null,
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Границы bundle: городские округа Калининград и Новороссийск, Москва",
+  "license": {
+    "name": "CC0-1.0",
+    "url": "https://www.wikidata.org/wiki/Wikidata:Licensing",
+    "status": "permitted",
+    "attribution": "Wikidata"
+  },
+  "access_method": "api",
+  "raw_path": "wikidata/pilot-population-20261109.zip",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "ddbcbda058abb34cba81028132851c0936d28ec2b53450315bd0baedf4fd47ca",
+    "size_bytes": 3404
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "population.json": "P1082 с P585, P459 и ссылкой P248 (издатель P123)",
+    "population.rq": "текст запроса"
+  },
+  "coverage": "Утверждения о численности элементов, указанных тегом wikidata у границ bundle",
+  "limitations": [
+    "Официальная цифра — через Wikidata со ссылкой на публикацию Росстата; сайт Росстата из окружения не открывается"
+  ],
+  "status": "accepted",
+  "qa_report": "data/manifests/qa/population-rosstat-2026-11-09.json"
+}

@@ -1,0 +1,91 @@
+{
+  "rules": "population-rosstat-check-v1",
+  "created_at": "2026-11-09T15:49:13.114769+00:00",
+  "tolerance": 0.1,
+  "source": {
+    "dataset_id": "wikidata.pilot-population-20261109",
+    "raw_sha256": "ddbcbda058abb34cba81028132851c0936d28ec2b53450315bd0baedf4fd47ca",
+    "retrieved_at": "2026-11-09T15:49:00+00:00",
+    "license": "CC0-1.0"
+  },
+  "results": [
+    {
+      "bundle_id": "kaliningrad-urban-2026-11-09.1",
+      "city_id": "kaliningrad",
+      "osm_dataset_id": "osm_geofabrik.kaliningrad-261107",
+      "osm_sha256": "769a6a6ac552b534057f2480b88f1c2d0709636761ab6d08483efe69c1e97b69",
+      "boundary_relation": 331414,
+      "wikidata_id": "Q27554528",
+      "model": {
+        "population": 485776,
+        "methods": [
+          "ghsl_r2023a_e2025_100m_pixel_centroid"
+        ],
+        "years": [
+          2025
+        ],
+        "cells_unknown": 0
+      },
+      "rosstat": null,
+      "ratio_model_to_rosstat": null,
+      "status": "unknown",
+      "reason": "NO_ROSSTAT_STATEMENT_FOR_BOUNDARY_ITEM"
+    },
+    {
+      "bundle_id": "novorossiysk-urban-2026-11-09.1",
+      "city_id": "novorossiysk",
+      "osm_dataset_id": "osm_geofabrik.south-fed-district-261107",
+      "osm_sha256": "e867508d9240743dea215f130dcfe441a0a53980558b7d5002db91a6b87a57da",
+      "boundary_relation": 364545,
+      "wikidata_id": "Q4307505",
+      "model": {
+        "population": 316189,
+        "methods": [
+          "ghsl_r2023a_e2025_100m_pixel_centroid"
+        ],
+        "years": [
+          2025
+        ],
+        "cells_unknown": 0
+      },
+      "rosstat": {
+        "population": 345538,
+        "date": "2025-01-01",
+        "publication_id": "Q133797648",
+        "publication": "Численность постоянного населения Российской Федерации по муниципальным образованиям на 1 января 2025 года",
+        "method_id": "Q15911027"
+      },
+      "ratio_model_to_rosstat": 0.9151,
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "bundle_id": "moscow-urban-2026-11-09.2",
+      "city_id": "moscow",
+      "osm_dataset_id": "osm_geofabrik.central-fed-district-261107",
+      "osm_sha256": "d28d118c9269138ae33ea6561d4e29e492bd9954e6dd088f80b7a3b1372b77f2",
+      "boundary_relation": 102269,
+      "wikidata_id": "Q649",
+      "model": {
+        "population": 13277959,
+        "methods": [
+          "ghsl_r2023a_e2025_100m_pixel_centroid"
+        ],
+        "years": [
+          2025
+        ],
+        "cells_unknown": 0
+      },
+      "rosstat": {
+        "population": 13274285,
+        "date": "2025-01-01",
+        "publication_id": "Q133366769",
+        "publication": "Оценка численности постоянного населения на 1 января 2025 г. и в среднем за 2024 г. и компоненты её изменения",
+        "method_id": "Q15911027"
+      },
+      "ratio_model_to_rosstat": 1.0003,
+      "status": "pass",
+      "reason": null
+    }
+  ]
+}
