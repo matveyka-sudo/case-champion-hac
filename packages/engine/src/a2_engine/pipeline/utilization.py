@@ -1,7 +1,9 @@
 """Pipeline utilization is an infrastructure percentage, not a delivery index."""
 
 from dataclasses import dataclass
+from fractions import Fraction
 from math import isfinite
+from sys import float_info
 
 from a2_engine.shared.config import FreightConfig
 from a2_engine.shared.results import MetricResult, finite_number
@@ -57,6 +59,8 @@ def pipeline_utilization(
     if v is None or q is None:
         return PipelineResult(MetricResult(None, "unknown", "DATA_UNAVAILABLE"), ())
     utilization = (v / q) * 100.0
+    if 0 < v and v / q < float_info.min:
+        utilization = float(100 * Fraction(v) / Fraction(q))
     if not isfinite(utilization):
         raise ValueError("UTILIZATION_OVERFLOW")
     diagnostics = ("UTILIZATION_ABOVE_100",) if utilization > 100 else ()

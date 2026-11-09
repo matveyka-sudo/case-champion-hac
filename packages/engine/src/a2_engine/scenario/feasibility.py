@@ -123,7 +123,9 @@ def check_scenario_feasibility(
                 )
             else:
                 continue
-            identity = scenario_hash((job.job_id, execution.execution_id, execution.service_date))
+            identity = scenario_hash(
+                (job.scope.context, execution.execution_id, execution.service_date)
+            )
             physical[execution.execution_id] = identity
             definite = (
                 result.data_complete

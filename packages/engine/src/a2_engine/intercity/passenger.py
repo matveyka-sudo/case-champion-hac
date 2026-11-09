@@ -1,7 +1,9 @@
 """Indices of one supplied intercity passenger chain, without route search."""
 
 from dataclasses import dataclass
+from fractions import Fraction
 from math import sqrt
+from sys import float_info
 from typing import Literal
 
 from a2_engine.shared.config import PassengerConfig
@@ -87,7 +89,11 @@ def _path_index(
         return MetricResult(None, "unknown", "DATA_UNAVAILABLE"), diagnostics
     if reference.seconds > path:
         diagnostics += ("REFERENCE_INCONSISTENCY",)
-    return MetricResult(100.0 * min(1.0, reference.seconds / path), "available"), diagnostics
+    ratio = reference.seconds / path
+    value = 100.0 * min(1.0, ratio)
+    if 0 < reference.seconds and ratio < float_info.min:
+        value = float(100 * Fraction(reference.seconds) / Fraction(path))
+    return MetricResult(value, "available"), diagnostics
 
 
 def intercity_passenger_index(

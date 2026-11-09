@@ -358,9 +358,69 @@ def apply_scenario_overlay(
 
         if not any(paired(path) for path in result.candidates + result.incomplete_paths):
             raise ValueError("CARGO_SCENARIO_TRANSFER_NOT_CONFIRMED")
-        inputs = replace(
-            inputs, cargo=tuple(updated_job if j.job_id == job.job_id else j for j in inputs.cargo)
+        jobs = []
+        source_movements = frozenset(
+            (a.scheduled_at, a.seconds, a.mode)
+            for a in job.actions
+            if a.action_id in execution.action_ids and a.kind == "movement"
         )
+        for other in inputs.cargo:
+            if other.job_id == job.job_id:
+                jobs.append(updated_job)
+                continue
+            shared = next(
+                (
+                    e
+                    for e in other.executions
+                    if e.execution_id == execution.execution_id
+                    and e.service_date == execution.service_date
+                ),
+                None,
+            )
+            if shared is None or other.scope.context != job.scope.context:
+                jobs.append(other)
+                continue
+            movements = frozenset(
+                (a.scheduled_at, a.seconds, a.mode)
+                for a in other.actions
+                if a.action_id in shared.action_ids and a.kind == "movement"
+            )
+            if movements != source_movements:
+                raise ValueError("INCONSISTENT_SHARED_CARGO_EXECUTION")
+            cloned_actions = []
+            for action in other.actions:
+                if (
+                    action.action_id in shared.action_ids
+                    and action.scheduled_at is not None
+                    and (
+                        operation.timing_model == "whole_execution"
+                        or action.scheduled_at >= anchor.scheduled_at
+                    )
+                ):
+                    shifted = _shift_time(action.scheduled_at, operation.shift_seconds)
+                    changed.append(
+                        ScenarioEventChange(
+                            other.job_id,
+                            shared.execution_id,
+                            action.action_id,
+                            action.scheduled_at,
+                            action.scheduled_at,
+                            shifted,
+                            shifted,
+                        )
+                    )
+                    action = replace(
+                        action,
+                        scheduled_at=shifted,
+                        evidence_refs=tuple(
+                            sorted(set(action.evidence_refs + operation.evidence_refs))
+                        )
+                        if action.evidence_refs
+                        else (),
+                    )
+                cloned_actions.append(action)
+            jobs.append(replace(other, actions=tuple(cloned_actions)))
+        inputs = replace(inputs, cargo=tuple(jobs))
         affected.add(execution.execution_id)
     if not changed:
         raise ValueError("SCENARIO_NO_TRANSPORT_CHANGE")

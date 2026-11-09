@@ -3,6 +3,7 @@
 from math import fsum
 
 from a2_engine.scenario.models import ScenarioEffect, ScenarioImpact, ScenarioInputs
+from a2_engine.urban.models import UrbanPoint
 
 
 def scenario_impact(inputs: ScenarioInputs, effects: tuple[ScenarioEffect, ...]) -> ScenarioImpact:
@@ -22,25 +23,24 @@ def scenario_impact(inputs: ScenarioInputs, effects: tuple[ScenarioEffect, ...])
         if not job.population_coverage.complete or job.population_coverage.excluded_population != 0:
             population_complete = False
         cell_records = {cell.cell_id: cell.population for cell in job.original_cells}
+        share_cells = {p.cell_id for p in job.points if p.population_share_id is not None}
         if not cell_records:
-            point_records = {p.point_id: p for p in job.points}
-            for point in point_records.values():
-                if point.cell_id not in cell_records:
-                    cohort = [p for p in point_records.values() if p.cell_id == point.cell_id]
-                    cell_records[point.cell_id] = (
-                        fsum(p.population for p in cohort if p.population is not None)
-                        if all(p.population is not None for p in cohort)
-                        else None
-                    )
+            cohorts: dict[str, list[UrbanPoint]] = {}
+            for point in {p.point_id: p for p in job.points}.values():
+                cohorts.setdefault(point.cell_id, []).append(point)
+            for cell_id, cohort in cohorts.items():
+                cell_records[cell_id] = (
+                    fsum(p.population for p in cohort if p.population is not None)
+                    if all(p.population is not None for p in cohort)
+                    else None
+                )
         for point in job.points:
             key = (
                 job.context.city_id,
                 point.cell_id,
                 job.context.versions.population_version or "unknown",
             )
-            if not job.original_cells and any(
-                p.cell_id == point.cell_id and p.population_share_id is not None for p in job.points
-            ):
+            if not job.original_cells and point.cell_id in share_cells:
                 partial_cells.add(key)
             population = cell_records.get(point.cell_id)
             if key in populations and populations[key] != population:

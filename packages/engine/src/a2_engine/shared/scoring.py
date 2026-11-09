@@ -1,5 +1,7 @@
 """Shared exponential scoring with explicit seconds and missing-data states."""
 
+from decimal import Decimal, localcontext
+
 from a2_engine.shared.results import MetricResult, finite_number
 
 
@@ -26,4 +28,13 @@ def category_index(
         return MetricResult(None, "unknown", "DATA_UNAVAILABLE")
     if half_life is None:
         return MetricResult(None, "unknown", "H_UNAVAILABLE")
-    return MetricResult(100.0 * 2.0 ** (-travel / half_life), "available")
+    exponent = -travel / half_life
+    if -1100 < exponent < -1000:
+        # Keep the scale factor inside the high precision calculation: the
+        # unscaled power may round to zero while the percentage is representable.
+        with localcontext() as context:
+            context.prec = 80
+            value = float(Decimal(100) * Decimal(2) ** Decimal.from_float(exponent))
+    else:
+        value = 100.0 * 2.0**exponent
+    return MetricResult(value, "available")
