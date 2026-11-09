@@ -634,13 +634,13 @@
     {
       "source_id": "wikidata",
       "a2_ref": null,
-      "title": "Wikidata — субъекты РФ и города России (SPARQL)",
+      "title": "Wikidata — территории и межгородские узлы РФ (SPARQL)",
       "publisher": "Wikimedia Foundation, сообщество Wikidata",
       "source_url": "https://query.wikidata.org/",
       "role": "calculation",
       "analysis_kinds": ["intercity_passenger", "intercity_cargo"],
-      "provides": "Справочник территорий: субъекты РФ (код ISO 3166-2, столица, часовой пояс), города России (координаты, население с датой, субъект через P131)",
-      "limitations": "Данные сообщества, не официальный реестр; население — последнее утверждение Wikidata с его датой; у части субъектов только смещение UTC; шесть спорных субъектов помечены",
+      "provides": "Справочник территорий: субъекты РФ (код ISO 3166-2, столица, часовой пояс), города России (координаты, население с датой, субъект через P131); межгородские узлы: ж/д станции с кодами ЕСР и «Экспресс», автостанции, аэропорты с IATA/ICAO и обслуживаемым городом (P931)",
+      "limitations": "Данные сообщества, не официальный реестр; население — последнее утверждение Wikidata с его датой; у части субъектов только смещение UTC; шесть спорных субъектов помечены; узел не подтверждает отправления, автостанций мало",
       "access_method": "api",
       "geography": "РФ",
       "license": {
@@ -650,7 +650,7 @@
         "attribution": "Wikidata"
       },
       "status": "accepted",
-      "datasets": ["wikidata.ru-territories-20261109"]
+      "datasets": ["wikidata.ru-territories-20261109", "wikidata.ru-intercity-nodes-20261109"]
     },
     {
       "source_id": "admnvrsk_health",

@@ -1,0 +1,40 @@
+{
+  "dataset_id": "wikidata.ru-intercity-nodes-20261109",
+  "source_id": "wikidata",
+  "source_url": "https://query.wikidata.org/sparql",
+  "retrieved_at": "2026-11-09T15:12:52Z",
+  "publication_date": null,
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "РФ: ж/д станции, автостанции, аэропорты",
+  "license": {
+    "name": "CC0-1.0",
+    "url": "https://www.wikidata.org/wiki/Wikidata:Licensing",
+    "status": "permitted",
+    "attribution": "Wikidata"
+  },
+  "access_method": "api",
+  "raw_path": "wikidata/ru-intercity-nodes-20261109.zip",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "7506de88429834d2855dadbc4d0fdb043e41a1aa1dd8e5a8f34ab60138570d5f",
+    "size_bytes": 661653
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "rail.json": "объекты с P2815 (ЕСР) или P722 (Экспресс/UIC) в РФ: P31, P625, P576/P3999",
+    "bus.json": "подклассы Q494829: P625, P576/P3999",
+    "air.json": "аэропорты и аэродромы: P238, P239, P931, P625, P576/P3999",
+    "excluded.json": "грузовые, сортировочные, бывшие станции и военные аэродромы",
+    "admin.json": "текущие P131 над узлами",
+    "*.rq": "тексты запросов"
+  },
+  "coverage": "Ответы SPARQL на дату загрузки и тексты запросов",
+  "limitations": [
+    "Данные сообщества, не официальный реестр",
+    "Автостанций РФ в Wikidata мало",
+    "Наличие станции не подтверждает пассажирские отправления"
+  ],
+  "status": "accepted",
+  "qa_report": "data/directories/russia-intercity-nodes-2026-11-09.1/qa_report.json"
+}
