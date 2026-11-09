@@ -1079,3 +1079,27 @@ partial, воспроизводимый input bundle/retry и реальные p
 всю страну не заявлен. Общий E2E, реальные accepted данные, handler mapping и
 итоговая приёмка остаются совместной интеграции. Чужие пакеты/manifests/lock/config
 и a2-dev.bundle не изменялись; merge/rebase/force-push не выполнялись.
+
+## Независимый аудит ML1 — 09.11.2026 (частичный, полный этап открыт)
+
+Исходный9a2070085671bd3314e3ea8dca0e01bf406d57bc, основной PyCharm checkout,
+work/ml1; independently872 passed. Подтверждены и исправлены P1 shared cargo
+execution across jobs и преждевременный численный underflow трёх формул; исправлен
+P2 quadratic population impact. Новые тесты сначала воспроизвели дефекты.
+Дополнительно40 raw-graph DFS oracle checks и300 Decimal/metamorphic controls.
+Итог881 passed/13.10s, Ruff clean, strict mypy137 files, lock/pip/config/diff clean.
+16 README controls +12 synthetic examples PASS; API268 сохранён.
+
+Измерения impact2000:0.479→0.057s, traced memory324→495KB. Walk chain2000:
+2001 states,0.040s,16.54MB; API materializes full paths, memory O(V²) на цепи.
+Повторяемый script: packages/engine/examples/benchmark_audit.py.
+
+Полный отчёт, coverage/integration matrix и фактические пределы проверки:
+packages/engine/AUDIT.md. Полный независимый разбор всех97 модулей и large
+schedule/cargo/OD/scenario stress НЕ завершены: не объявлять весь финальный аудит
+закрытым. Bare package import без PYTHONPATH падает: DEVOPS owns engine manifest
+(package=false). BACKEND needs dated event/hash/timing supplements, infeasible DTO
+and lossless full-result publication; ML2 needs shared physical execution IDs,
+calendars/resources/compatibility. Актуальный ML2 remote216676a уже содержит
+accepted городские bundles/справочники; их реальное ingestion/E2E здесь не проверено.
+Чужие модули, manifests/lock/config и a2-dev.bundle не изменялись.
