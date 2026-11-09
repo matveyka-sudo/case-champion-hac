@@ -67,7 +67,7 @@ from .geo import (
 )
 from .institutions import KIND_TO_CATEGORY, match_points, match_roster
 from .manifest import DatasetManifest, load_dataset_manifest
-from .osm import extract, extract_is_current
+from .osm import extract, extract_is_current, file_sha256
 from .paths import processed_dir, raw_dir
 from .store import publish_bundle
 
@@ -224,13 +224,24 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
     airports_manifest = load_dataset_manifest(OURAIRPORTS_DATASET)
     osm_dir = processed_dir() / config.city_id / "osm"
     boundary_ids = {config.osm_boundary_relation, *config.osm_district_relations}
-    if not extract_is_current(osm_dir, boundary_ids, config.extract_bbox, config.poi_bbox):
+    osm_pbf = raw_dir() / osm_manifest.raw_path
+    # the cached extract is reused only for the PBF the manifest names
+    osm_sha256 = file_sha256(osm_pbf)
+    if osm_sha256 != osm_manifest.checksum.value:
+        raise ValueError(
+            f"{osm_manifest.dataset_id}: raw sha256 {osm_sha256} differs from the manifest"
+        )
+    if not extract_is_current(
+        osm_dir, boundary_ids, config.extract_bbox, config.poi_bbox, source_sha256=osm_sha256
+    ):
         extract(
-            raw_dir() / osm_manifest.raw_path,
+            osm_pbf,
             boundary_ids,
             osm_dir,
             config.extract_bbox,
             config.poi_bbox,
+            source_dataset_id=osm_manifest.dataset_id,
+            expected_sha256=osm_sha256,
         )
     layers = load_osm_layers(osm_dir, config.osm_boundary_relation, config.osm_district_relations)
     grid = build_grid(layers, config.utm_epsg)

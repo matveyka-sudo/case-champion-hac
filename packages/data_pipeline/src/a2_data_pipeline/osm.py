@@ -5,6 +5,11 @@ Requires ``osmium`` (not yet in the locked manifest; see README). Output: Parque
 tables with WKB geometry in EPSG:4326 under data/processed/<city>/osm/ and
 ``extract_meta.json``. Every row carries ``content_hash``: sha256 of the extracted
 record (reference, kept tags and geometry), used as evidence hash.
+
+The extract is a cache bound to its input: the meta records the sha256 of the PBF
+it was read from, the source dataset id, the walk and road rule versions and the
+table list. ``extract_is_current`` reuses it only when the expected PBF sha256,
+the rules, the boundaries, the boxes and every table file match.
 """
 
 from __future__ import annotations
@@ -456,10 +461,19 @@ def extract(
     out_dir: Path,
     bbox: BBox | None = None,
     poi_bbox: BBox | None = None,
+    *,
+    source_dataset_id: str,
+    expected_sha256: str | None = None,
 ) -> dict[str, int]:
+    source_sha256 = file_sha256(pbf)
+    if expected_sha256 is not None and source_sha256 != expected_sha256:
+        raise ValueError(f"{pbf}: sha256 {source_sha256} differs from expected {expected_sha256}")
     handler = _Handler(boundary_ids, bbox, poi_bbox)
     handler.apply_file(str(pbf), locations=True, idx="flex_mem")
     out_dir.mkdir(parents=True, exist_ok=True)
+    meta_path = out_dir / "extract_meta.json"
+    # invalidate first: a failed run must not leave old meta over new tables
+    meta_path.unlink(missing_ok=True)
     counts: dict[str, int] = {}
     for name in TABLES:
         rows = getattr(handler.tables, name)
@@ -474,27 +488,62 @@ def extract(
     counts["broken_ways"] = handler.tables.broken_ways
     meta = {
         "extract_version": EXTRACT_VERSION,
+        "source": {
+            "dataset_id": source_dataset_id,
+            "sha256": source_sha256,
+            "size_bytes": pbf.stat().st_size,
+        },
         "walk_rules": WALK_RULES_VERSION,
         "road_rules": ROAD_RULES_VERSION,
         "boundary_ids": sorted(boundary_ids),
         "bbox": list(bbox) if bbox else None,
         "poi_bbox": list(poi_bbox) if poi_bbox else None,
+        "tables": list(TABLES),
         "counts": counts,
     }
-    (out_dir / "extract_meta.json").write_text(json.dumps(meta, indent=2) + "\n")
+    staging = out_dir / "extract_meta.json.tmp"
+    staging.write_text(json.dumps(meta, indent=2) + "\n")
+    staging.replace(meta_path)
     return counts
 
 
+def file_sha256(path: Path) -> str:
+    """sha256 of a file read in 1 MiB chunks (a city PBF is hundreds of MB)."""
+
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def extract_is_current(
-    out_dir: Path, boundary_ids: set[int], bbox: BBox | None = None, poi_bbox: BBox | None = None
+    out_dir: Path,
+    boundary_ids: set[int],
+    bbox: BBox | None = None,
+    poi_bbox: BBox | None = None,
+    *,
+    source_sha256: str,
 ) -> bool:
+    """True only if the cached extract was read from this PBF with the current rules.
+
+    ``source_sha256`` is the expected hash of the input PBF (the dataset manifest's
+    checksum, checked against the file by the caller).
+    """
+
     path = out_dir / "extract_meta.json"
     if not path.is_file():
         return False
     meta = json.loads(path.read_text())
+    source = meta.get("source") or {}
     return bool(
         meta.get("extract_version") == EXTRACT_VERSION
+        and source.get("sha256") == source_sha256
+        and meta.get("walk_rules") == WALK_RULES_VERSION
+        and meta.get("road_rules") == ROAD_RULES_VERSION
         and meta.get("boundary_ids") == sorted(boundary_ids)
         and meta.get("bbox") == (list(bbox) if bbox else None)
         and meta.get("poi_bbox") == (list(poi_bbox) if poi_bbox else None)
+        and meta.get("tables") == list(TABLES)
+        and all((out_dir / f"{name}.parquet").is_file() for name in TABLES)
     )
