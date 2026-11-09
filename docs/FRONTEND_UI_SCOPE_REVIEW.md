@@ -1,5 +1,7 @@
 # Сверка пользовательских данных с ТЗ · 09.11.2026
 
+Текущее приложение: `apps/web/`; API-граница — [FRONTEND_INTEGRATION](FRONTEND_INTEGRATION.md).
+
 Основание: восемь PDF из принятого пакета «от моти», прежде всего PRODUCT_SPEC 2026-11-08.1 / FORMULAS v3; apps/api/docs/frontend-integration-handoff.md и contracts/generated/openapi.json. Методика не пересматривается. Изменено представление данных, HTTP/DTO не менялись.
 
 | Ответ API | Что остаётся в интерфейсе | Что используется только внутри связки |

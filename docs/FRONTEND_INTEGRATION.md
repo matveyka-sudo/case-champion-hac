@@ -6,12 +6,18 @@
 
 Изменены только `frontend/**` и `docs/tasks/frontend.md`. Ветка work/frontend; merge, commit и push не выполнялись. Проверка выполнена после fetch: HEAD f57d359, origin/dev 3446f7e, origin/work/backend 6ce4179, без переключения/слияния. OpenAPI и router совпадают. В origin/work/backend results.py усилена серверная проверка применимости directed references и обязательных journey operands; wire-поля не изменены. Клиент не дублирует эту доменную проверку и не пытается исправлять отклонённые зависимости.
 
+## Текущее расположение
+
+Приложение находится в `apps/web/`. Сокращённые `src/`, `tests/`, `scripts/` ниже
+относятся к приложению; canonical contracts остаются в корне. Исторические
+сведения о ветке и прежних путях выше сохранены.
+
 ## Запуск
 
 Использовать Node **24.22.2** и npm из принятого окружения.
 
 ```sh
-cd frontend
+cd apps/web
 npm ci
 cp .env.example .env.local
 ```
@@ -58,4 +64,4 @@ npm run test:e2e
 
 **ML1/ML2 через BACKEND:** реальные map_data/features и journey geometry с source_refs/geometry_kind; population с годом/методом; принятые операнды и ссылки. Приёмка: связанные IDs существуют в сохранённом результате, координаты/геометрии подтверждены, неизвестное сохраняется как unknown. Данные не добавлять на клиент в обход API.
 
-**DEVOPS:** production reverse proxy (при необходимости `infra/**`, клиент его не меняет) должен обслуживать frontend и `/api/v1` на одном публичном origin, сохранять cookie и Origin/Host, не кэшировать персональные session endpoints как общие. `npm ci && npm run build`, раздача dist, VITE_DATA_MODE=api при сборке; `/health` проверяет процесс, не расчётную готовность. Приёмка: HTTPS cookie/session и реальный POST без CORS-обходов, API-ошибка не возвращает HTML SPA.
+**DEVOPS:** production reverse proxy (при необходимости `infra/**`, клиент его не меняет) должен обслуживать frontend и `/api/v1` на одном публичном origin, сохранять cookie и Origin/Host, не кэшировать персональные session endpoints как общие. `npm ci && npm run build`, раздача `apps/web/dist`, VITE_DATA_MODE=api при сборке; `/health` проверяет процесс, не расчётную готовность. Приёмка: HTTPS cookie/session и реальный POST без CORS-обходов, API-ошибка не возвращает HTML SPA.

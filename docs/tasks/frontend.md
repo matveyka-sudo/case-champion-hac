@@ -1,6 +1,6 @@
 # FRONTEND
 
-Ветка work/frontend. Пути: frontend/.
+Ветка work/frontend. Текущие пути: apps/web/. Исторические отчёты ниже сохраняют прежние пути; актуальные инструкции — apps/web/README.md и docs/FRONTEND_INTEGRATION.md.
 
 Источник: ../PRODUCT_SPEC.md; контракты ../../packages/contracts/specs/README.md.
 
@@ -71,3 +71,47 @@ BACKEND: предоставить согласованный runtime с ready ca
 ## Предупреждения WebStorm — 9 ноября 2026
 
 Исправлены указанные восемь предупреждений: лишняя переменная proposals, локально выбрасываемая и тут же перехватываемая HTTP-ошибка, три проверки сценария/объяснения с прямой записью ошибки в состояние, два comma-expression в HTTP-тестах и искусственный throw в тесте отклонённого результата. Сохранены retry/idempotency/abort, проверки baseline/hash и очистка busy/chatBusy через finally. Проверки: build/strict typecheck, lint, 36 unit, 6 API E2E — успешно. Один параллельный lint прервался на удалении каталога test-results самим Playwright; после окончания E2E lint повторён успешно. WebStorm-инспекция непосредственно из IDE не запускалась; причины со скриншота устранены в коде без suppression. Индекс Git, commit и push не изменялись.
+
+## Структурный перенос в apps/web — 09.11.2026
+
+По прямому поручению пользователя работа выполнена в `fix-fullstack` из основного
+PyCharm checkout. Исходный HEAD `bbef1b6637931293a476c1e35c720e575dd30f2f`
+совпадал с актуальным origin/dev. Рабочие ветки участников и dev не изменялись.
+
+115 tracked файлов активного `frontend/` учтены после переноса: React, CSS, assets,
+fixtures, исходные тесты, npm manifest/lock не изменены по содержимому. Прежний
+apps/web scaffold изучен: временный profile API, экраны-заглушки и неиспользуемые
+зависимости заменены рабочим приложением. Код/manifest/lock scaffold доступны в
+истории исходного SHA; README сохранён в docs/archive/2026-11-09/web-scaffold.md,
+.npmrc с engine-strict сохранён в активном apps/web. Второй React-пакет не оставлен.
+
+Общие API integration и UI scope review перенесены в docs/FRONTEND_INTEGRATION.md
+и docs/FRONTEND_UI_SCOPE_REVIEW.md. Фото и visual QA — apps/web/docs/.
+Code generation остаётся apps/web/scripts/generate-api.mjs; изменён только путь
+к canonical contracts/generated/openapi.json (SHA256 a2e36eebe61c5ba82c048aaa0d9b80b28b2d709cda53fdd666cffdde7b1ccf0c).
+Генерация и check дают прежние schema.ts/validation.json без изменений.
+
+CI environment.yml: apps/web working-directory и npm cache lock, api:check,
+typecheck, build, lint, tests; добавлен root scripts/check_web_layout.mjs и trigger
+fix-fullstack. Guard проверяет единственный tracked web root, manifest/lock,
+отсутствие tracked build outputs, CI paths и codegen из корня. Vite/TS/Playwright
+и runtime imports/URL не потребовали изменений. Dockerfile/web deployment в
+исходном дереве отсутствовали; Compose содержит только PostgreSQL и не менялся.
+
+Node24.22.2/npm11.19.1, чистый npm ci до и после. В обоих расположениях:
+api:check, strict typecheck, lint, build,36 unit/API tests и21 Playwright E2E PASS.
+После переноса также api:generate PASS. Браузер — установленный Google Chrome,
+через PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH, headless, исходные E2E mocks сохранены.
+Все42 production build files побайтно совпадают с исходной сборкой. Все34 public
+files отданы Vite по прежним URL с теми же SHA256. Локальный echo API подтвердил
+проксирование /api/v1 и /health с сохранением Host/Origin/cookie/body; это проверка
+proxy, не live engine/data/LLM E2E. Lock/pip/product config/diff checks PASS.
+
+В tracked tree frontend/ отсутствует. В старом локальном каталоге оставлены
+ignored node_modules/dist/test-results после исходных проверок; они не удалялись
+и не включались в Git. a2-dev.bundle сохранён вне коммита. Backend/ML1/ML2,
+canonical contracts, Python manifests и uv.lock не изменялись.
+
+Следующий backend этап в fix-fullstack: отдельно исследовать API/worker entrypoints,
+их установку/окружение и реальный same-origin analysis/scenario E2E по согласованным
+данным. Новых backend-дефектов этим структурным переносом не заявлено.

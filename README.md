@@ -4,7 +4,7 @@
 
 **Итоговое ТЗ и формулы приняты для реализации. Модель — Alice AI LLM Flash.** Числа рассчитывает engine; неизвестные данные не подменяются нулями. [Формулы](docs/FORMULAS.md) · [План реализации](docs/IMPLEMENTATION.md) · [Ассистент](docs/ASSISTANT.md). [Действующее ТЗ](docs/PRODUCT_SPEC.md) · [Решения](docs/ML_PLAN.md) · [Задачи ролей](docs/tasks/) · [Контракты](packages/contracts/specs/README.md).
 
-Подготовлены ТЗ, формулы, конфигурация и контракты. frontend/ содержит интерфейс команды и демонстрационные fixtures; они сохранены. Backend, engine и реальные адаптеры ещё предстоит реализовать.
+React/Vite-приложение Waydex находится в `apps/web/`, backend — в `apps/api/`, библиотеки — в `packages/`. Demo fixtures сохранены и изолированы от API-режима; готовность данных и общего E2E проверяется отдельно.
 
 ## Окружение
 
@@ -24,11 +24,12 @@ uv sync --frozen --all-packages --group dev --group ml
 uv sync --frozen --all-packages --group dev --group notebooks --group ml
 ```
 
-Следующие команды выполняются из `frontend/` под Node.js 24.
+Следующие команды выполняются из `apps/web/` под Node.js 24.
 
 ```bash
 npm ci
 npm ls --depth=0
+npm run dev
 ```
 
 Compose можно проверить с безопасным примером окружения.
@@ -37,7 +38,7 @@ Compose можно проверить с безопасным примером �
 docker compose --env-file .env.example config --quiet
 ```
 
-Compose описывает PostgreSQL 17 с локальным портом и собственным томом. Для нового worktree создайте свой `.env` по `.env.example`. Выберите свободный `POSTGRES_PORT`, согласуйте с ним `DATABASE_URL`, задайте уникальное имя Compose-проекта и свои порты API и SPA для будущей интеграции. Для ассистента задаются `YANDEX_API_KEY`, `YANDEX_FOLDER_ID`, `YANDEX_MODEL=aliceai-llm-flash` и deployment-лимит расходов. До проверки ключа ассистент работает в режиме шаблонного объяснения; см. docs/ASSISTANT.md. Секреты хранятся на backend. Команды импорта и запуска API, worker и UI появятся после реализации точек входа.
+Compose описывает PostgreSQL 17 с локальным портом и собственным томом. Для нового worktree создайте свой `.env` по `.env.example`. Выберите свободный `POSTGRES_PORT`, согласуйте с ним `DATABASE_URL`, задайте уникальное имя Compose-проекта и свои порты API и SPA для будущей интеграции. Для ассистента задаются `YANDEX_API_KEY`, `YANDEX_FOLDER_ID`, `YANDEX_MODEL=aliceai-llm-flash` и deployment-лимит расходов. До проверки ключа ассистент работает в режиме шаблонного объяснения; см. docs/ASSISTANT.md. Секреты хранятся на backend. Frontend запускается командой выше; backend/worker описаны в `apps/api/README.md`. Настройка web API-режима и same-origin proxy — в [интеграционной инструкции](docs/FRONTEND_INTEGRATION.md).
 
 ## Работа команды
 
@@ -62,10 +63,28 @@ cd case-champion-hac
 ## Проверка постановки
 ```bash
 python3 scripts/check_product_config.py
-cd frontend
+cd apps/web
 npm ci
 npm run build
 npm run lint
+npm run api:check
+npm run typecheck
+npm test
+npm run test:e2e
 ```
 
 Старые regular/medical и коридор Калининград–Зеленоградск–Балтийск архивированы в docs/archive/2026-11-06. Рабочие ветки не удаляются; участники вливают обновления origin/dev по docs/OWNERSHIP.md.
+
+## Расположение frontend
+
+Единственный web npm-пакет: `apps/web/package.json` и его `package-lock.json`;
+корневых npm workspaces нет. `src/`, `public/`, `tests/`, `e2e/`, Vite/TS и
+локальный генератор относятся к приложению. Общие DTO/OpenAPI остаются в
+`packages/contracts/` и `contracts/generated/`, CI — в `.github/workflows/`,
+инфраструктура — в `infra/`. Общие документы: [API-handoff](docs/FRONTEND_INTEGRATION.md)
+и [сверка UI с ТЗ](docs/FRONTEND_UI_SCOPE_REVIEW.md). Фото и visual QA — в `apps/web/docs/`.
+
+Старый scaffold сохранён в Git history и [архивном описании](docs/archive/2026-11-09/web-scaffold.md).
+Из корня `node scripts/check_web_layout.mjs` проверяет отсутствие tracked `frontend/`,
+согласованность web manifest/lock, пути CI и актуальность generated API.
+Web-команды и proxy: [apps/web/README.md](apps/web/README.md).

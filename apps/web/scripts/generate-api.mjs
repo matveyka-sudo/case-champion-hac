@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import crypto from "node:crypto";
 const source = new URL(
-  "../../contracts/generated/openapi.json",
+  "../../../contracts/generated/openapi.json",
   import.meta.url,
 );
 const raw = fs.readFileSync(source, "utf8"),
