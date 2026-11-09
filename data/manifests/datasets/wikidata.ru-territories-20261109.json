@@ -1,0 +1,38 @@
+{
+  "dataset_id": "wikidata.ru-territories-20261109",
+  "source_id": "wikidata",
+  "source_url": "https://query.wikidata.org/sparql",
+  "retrieved_at": "2026-11-09T11:12:06.955663Z",
+  "publication_date": null,
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "РФ: субъекты и города",
+  "license": {
+    "name": "CC0-1.0",
+    "url": "https://www.wikidata.org/wiki/Wikidata:Licensing",
+    "status": "permitted",
+    "attribution": "Wikidata"
+  },
+  "access_method": "api",
+  "raw_path": "wikidata/ru-territories-20261109.zip",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "bbb35038b9017cc6222bd39115e154ffee6d713de1c7f1a4781674ad5e47fc0b",
+    "size_bytes": 565798
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "subjects.json": "Q43263: P300, P36, P421",
+    "cities.json": "городские классы: P625, P1082/P585, P421",
+    "admin.json": "текущие P131",
+    "admin_any.json": "все P131 (запасной путь)",
+    "*.rq": "тексты запросов"
+  },
+  "coverage": "Ответы SPARQL на дату загрузки и тексты запросов",
+  "limitations": [
+    "Данные сообщества, не официальный реестр",
+    "Города спорных территорий с P17=Украина в выборку не попадают"
+  ],
+  "status": "accepted",
+  "qa_report": "data/directories/russia-territories-2026-11-09.1/qa_report.json"
+}

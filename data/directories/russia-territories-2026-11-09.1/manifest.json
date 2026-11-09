@@ -1,0 +1,25 @@
+{
+  "format": "a2-ml2-territory-directory",
+  "directory_id": "russia-territories-2026-11-09.1",
+  "created_at": "2026-11-09T11:12:22.629753+00:00",
+  "rules": "ru-territories-rules-v1",
+  "source": {
+    "source_id": "wikidata",
+    "url": "https://query.wikidata.org/sparql",
+    "retrieved_at": "2026-11-09T11:12:06.955663+00:00",
+    "raw_sha256": "bbb35038b9017cc6222bd39115e154ffee6d713de1c7f1a4781674ad5e47fc0b",
+    "license": "CC0-1.0"
+  },
+  "files": {
+    "territories": {
+      "path": "territories.json",
+      "sha256": "cc37a9252569220dc4bfd4a228c89ce2d78accb67c998798d9303874d2de0cca",
+      "rows": 1210
+    },
+    "qa_report": {
+      "path": "qa_report.json",
+      "sha256": "84065889c03094dbbb7883334e71a651e5d689bf8a3a00f5ba968ba7466a22af",
+      "rows": 9
+    }
+  }
+}
