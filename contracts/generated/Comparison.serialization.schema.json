@@ -1,0 +1,676 @@
+{
+  "$defs": {
+    "AddTrip": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "anyOf": [
+            {
+              "enum": [
+                "rail",
+                "bus",
+                "walk"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mode"
+        },
+        "new_trip_id": {
+          "minLength": 1,
+          "title": "New Trip Id",
+          "type": "string"
+        },
+        "route_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Route Id"
+        },
+        "service_dates": {
+          "items": {
+            "format": "date",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Service Dates",
+          "type": "array"
+        },
+        "service_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Service Id"
+        },
+        "stop_time_shift_seconds": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stop Time Shift Seconds"
+        },
+        "stop_times": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ScenarioStopTime"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stop Times"
+        },
+        "template_trip_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Template Trip Id"
+        },
+        "type": {
+          "const": "add_trip",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "new_trip_id",
+        "service_dates"
+      ],
+      "title": "AddTrip",
+      "type": "object"
+    },
+    "ComparisonEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "After"
+        },
+        "base_run_id": {
+          "minLength": 1,
+          "title": "Base Run Id",
+          "type": "string"
+        },
+        "before": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Before"
+        },
+        "confirmed_improved_cases": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Confirmed Improved Cases"
+        },
+        "confirmed_worse_cases": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Confirmed Worse Cases"
+        },
+        "delta_interval_conservative": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Delta Interval Conservative"
+        },
+        "lower_bound_change": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Lower Bound Change"
+        },
+        "origin_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Origin Id"
+        },
+        "profile_id": {
+          "enum": [
+            "regular",
+            "medical",
+            "intercity"
+          ],
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "profile_version": {
+          "exclusiveMinimum": 0,
+          "title": "Profile Version",
+          "type": "integer"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        },
+        "scenario_run_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Scenario Run Id"
+        },
+        "status": {
+          "enum": [
+            "ok",
+            "partial",
+            "insufficient_data"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "task_set_hash": {
+          "minLength": 1,
+          "title": "Task Set Hash",
+          "type": "string"
+        },
+        "unresolved_cases": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Unresolved Cases"
+        },
+        "upper_bound_change": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Upper Bound Change"
+        },
+        "worst_worsened_case_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Worst Worsened Case Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "profile_id",
+        "profile_version",
+        "task_set_hash",
+        "base_run_id",
+        "scenario_run_id",
+        "origin_id",
+        "status",
+        "before",
+        "after",
+        "lower_bound_change",
+        "upper_bound_change",
+        "delta_interval_conservative",
+        "confirmed_improved_cases",
+        "confirmed_worse_cases",
+        "unresolved_cases",
+        "worst_worsened_case_ids",
+        "reason"
+      ],
+      "title": "ComparisonEntry",
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "bundle_id": {
+          "minLength": 1,
+          "title": "Bundle Id",
+          "type": "string"
+        },
+        "code_version": {
+          "minLength": 1,
+          "title": "Code Version",
+          "type": "string"
+        },
+        "completeness_scope": {
+          "minLength": 1,
+          "title": "Completeness Scope",
+          "type": "string"
+        },
+        "network_complete": {
+          "title": "Network Complete",
+          "type": "boolean"
+        },
+        "profile_id": {
+          "enum": [
+            "regular",
+            "medical",
+            "intercity"
+          ],
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "profile_version": {
+          "exclusiveMinimum": 0,
+          "title": "Profile Version",
+          "type": "integer"
+        },
+        "search_complete": {
+          "title": "Search Complete",
+          "type": "boolean"
+        },
+        "task_set_hash": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Task Set Hash"
+        }
+      },
+      "required": [
+        "bundle_id",
+        "profile_id",
+        "profile_version",
+        "code_version",
+        "completeness_scope",
+        "network_complete",
+        "search_complete"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    },
+    "ResourceDelta": {
+      "additionalProperties": false,
+      "properties": {
+        "departures": {
+          "title": "Departures",
+          "type": "integer"
+        },
+        "vehicle_minutes": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Vehicle Minutes"
+        }
+      },
+      "required": [
+        "departures",
+        "vehicle_minutes"
+      ],
+      "title": "ResourceDelta",
+      "type": "object"
+    },
+    "ScenarioStopTime": {
+      "additionalProperties": false,
+      "properties": {
+        "arrival_seconds": {
+          "minimum": 0,
+          "title": "Arrival Seconds",
+          "type": "integer"
+        },
+        "departure_seconds": {
+          "minimum": 0,
+          "title": "Departure Seconds",
+          "type": "integer"
+        },
+        "dropoff": {
+          "title": "Dropoff",
+          "type": "boolean"
+        },
+        "pickup": {
+          "title": "Pickup",
+          "type": "boolean"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "stop_id": {
+          "minLength": 1,
+          "title": "Stop Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stop_id",
+        "sequence",
+        "arrival_seconds",
+        "departure_seconds",
+        "pickup",
+        "dropoff"
+      ],
+      "title": "ScenarioStopTime",
+      "type": "object"
+    },
+    "ShiftTrip": {
+      "additionalProperties": false,
+      "properties": {
+        "delta_seconds": {
+          "maximum": 1800,
+          "minimum": -1800,
+          "title": "Delta Seconds",
+          "type": "integer"
+        },
+        "service_dates": {
+          "items": {
+            "format": "date",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Service Dates",
+          "type": "array"
+        },
+        "trip_id": {
+          "minLength": 1,
+          "title": "Trip Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "shift_trip",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "trip_id",
+        "service_dates",
+        "delta_seconds"
+      ],
+      "title": "ShiftTrip",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "assumption_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Assumption Ids",
+      "type": "array"
+    },
+    "base_run_ids": {
+      "additionalProperties": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "propertyNames": {
+        "enum": [
+          "regular",
+          "medical",
+          "intercity"
+        ]
+      },
+      "title": "Base Run Ids",
+      "type": "object"
+    },
+    "bundle_id": {
+      "minLength": 1,
+      "title": "Bundle Id",
+      "type": "string"
+    },
+    "code_version": {
+      "minLength": 1,
+      "title": "Code Version",
+      "type": "string"
+    },
+    "comparisons": {
+      "items": {
+        "$ref": "#/$defs/ComparisonEntry"
+      },
+      "title": "Comparisons",
+      "type": "array"
+    },
+    "evidence_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "operational_validation": {
+      "const": "not_verified",
+      "title": "Operational Validation",
+      "type": "string"
+    },
+    "operations": {
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "add_trip": "#/$defs/AddTrip",
+            "shift_trip": "#/$defs/ShiftTrip"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/ShiftTrip"
+          },
+          {
+            "$ref": "#/$defs/AddTrip"
+          }
+        ]
+      },
+      "maxItems": 10,
+      "minItems": 1,
+      "title": "Operations",
+      "type": "array"
+    },
+    "operations_hash": {
+      "minLength": 1,
+      "title": "Operations Hash",
+      "type": "string"
+    },
+    "params_hash": {
+      "minLength": 1,
+      "title": "Params Hash",
+      "type": "string"
+    },
+    "provenance": {
+      "items": {
+        "$ref": "#/$defs/Provenance"
+      },
+      "title": "Provenance",
+      "type": "array"
+    },
+    "resource_delta": {
+      "$ref": "#/$defs/ResourceDelta"
+    },
+    "result_hash": {
+      "minLength": 1,
+      "title": "Result Hash",
+      "type": "string"
+    },
+    "run_id": {
+      "minLength": 1,
+      "title": "Run Id",
+      "type": "string"
+    },
+    "scenario_id": {
+      "minLength": 1,
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "partial",
+        "insufficient_data"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "warnings": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "run_id",
+    "scenario_id",
+    "bundle_id",
+    "base_run_ids",
+    "status",
+    "operations",
+    "operations_hash",
+    "comparisons",
+    "resource_delta",
+    "operational_validation",
+    "provenance",
+    "evidence_ids",
+    "assumption_ids",
+    "code_version",
+    "params_hash",
+    "result_hash",
+    "warnings"
+  ],
+  "title": "Comparison",
+  "type": "object"
+}

@@ -1,0 +1,33 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "metric_id": {
+      "minLength": 1,
+      "title": "Metric Id",
+      "type": "string"
+    },
+    "unit": {
+      "minLength": 1,
+      "title": "Unit",
+      "type": "string"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Value"
+    }
+  },
+  "required": [
+    "metric_id",
+    "value",
+    "unit"
+  ],
+  "title": "NumericClaim",
+  "type": "object"
+}

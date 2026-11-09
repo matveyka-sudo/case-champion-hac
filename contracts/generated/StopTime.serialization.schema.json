@@ -1,0 +1,55 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "arrival_seconds": {
+      "minimum": 0,
+      "title": "Arrival Seconds",
+      "type": "integer"
+    },
+    "departure_seconds": {
+      "minimum": 0,
+      "title": "Departure Seconds",
+      "type": "integer"
+    },
+    "dropoff_allowed": {
+      "title": "Dropoff Allowed",
+      "type": "boolean"
+    },
+    "pickup_allowed": {
+      "title": "Pickup Allowed",
+      "type": "boolean"
+    },
+    "sequence": {
+      "minimum": 0,
+      "title": "Sequence",
+      "type": "integer"
+    },
+    "service_id": {
+      "minLength": 1,
+      "title": "Service Id",
+      "type": "string"
+    },
+    "stop_id": {
+      "minLength": 1,
+      "title": "Stop Id",
+      "type": "string"
+    },
+    "trip_id": {
+      "minLength": 1,
+      "title": "Trip Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "trip_id",
+    "stop_id",
+    "sequence",
+    "arrival_seconds",
+    "departure_seconds",
+    "service_id",
+    "pickup_allowed",
+    "dropoff_allowed"
+  ],
+  "title": "StopTime",
+  "type": "object"
+}

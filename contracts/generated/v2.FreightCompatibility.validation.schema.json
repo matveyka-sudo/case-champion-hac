@@ -1,0 +1,97 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "compatibility_id": {
+      "minLength": 1,
+      "title": "Compatibility Id",
+      "type": "string"
+    },
+    "compatible": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Compatible"
+    },
+    "direction": {
+      "enum": [
+        "inbound",
+        "outbound"
+      ],
+      "title": "Direction",
+      "type": "string"
+    },
+    "food_classes": {
+      "items": {
+        "enum": [
+          "food",
+          "nonfood"
+        ],
+        "type": "string"
+      },
+      "title": "Food Classes",
+      "type": "array"
+    },
+    "freight_node_id": {
+      "minLength": 1,
+      "title": "Freight Node Id",
+      "type": "string"
+    },
+    "handling_requirements": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Handling Requirements",
+      "type": "array"
+    },
+    "site_id": {
+      "minLength": 1,
+      "title": "Site Id",
+      "type": "string"
+    },
+    "source_refs": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "temperature_requirements": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Temperature Requirements",
+      "type": "array"
+    },
+    "vehicle_constraints": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Vehicle Constraints",
+      "type": "array"
+    }
+  },
+  "required": [
+    "source_refs",
+    "compatibility_id",
+    "site_id",
+    "freight_node_id",
+    "direction",
+    "food_classes",
+    "temperature_requirements",
+    "handling_requirements",
+    "vehicle_constraints",
+    "compatible"
+  ],
+  "title": "FreightCompatibility",
+  "type": "object"
+}

@@ -28,7 +28,7 @@ const states: [Status, string, string][] = [
   ["noroute", "ban", "Подтверждённо нет маршрута"],
   ["srcerr", "cloud-off", "Источник недоступен"],
   ["baddate", "calendar-x-2", "Дата не поддерживается"],
-  ["pending", "scale", "Формула ожидает утверждения"],
+  ["pending", "scale", "Индекс ещё не рассчитан"],
   ["agentoff", "bot-off", "Агент недоступен"],
 ];
 function useWindowWidth() {
@@ -132,15 +132,29 @@ export function AtlasPage() {
     selectedModel?.cells.find((c) => c.id === s.selection?.id) ||
     selectedModel?.canonCell;
   const mobileFocus = (
-    s.metric === "overall" ? Object.keys(s.applied.cats)[0] : s.metric
+    s.metric === "overall"
+      ? Object.keys(s.applied.cats).sort(
+          (a, b) =>
+            (s.applied.cats[b as keyof typeof categoryById] || 0) -
+            (s.applied.cats[a as keyof typeof categoryById] || 0),
+        )[0]
+      : s.metric
   ) as keyof typeof categoryById;
   const mobileValue = mobileCell?.values[s.applied.travel][mobileFocus];
-  const mobileDescription =
-    p.mode === "city" && mobileValue
-      ? `${s.scenario === "done" && s.scnView === "scn" ? mobileValue.scenarioTime : mobileValue.time} мин до: ${categoryById[mobileFocus]?.short.toLowerCase()} · индекс ${(s.scenario === "done" && s.scnView === "scn" ? mobileValue.scenarioScore : mobileValue.score).toFixed(1).replace(".", ",")}`
-      : p.mode === "pax" && fixtures.passenger[`${p.paxA}>${p.paxB}`]
-        ? `Самолёт: 2 ч 10 мин, ${fixtures.passenger[`${p.paxA}>${p.paxB}`].air.dep} отправлений в день · поезд и авто — неизвестно`
-        : "Демонстрационный результат";
+  const noResult = ["idle", "nd", "srcerr", "baddate"].includes(st);
+  const mobileDescription = noResult
+    ? "Для выбранных условий результата нет"
+    : p.mode === "city" &&
+        mobileCell &&
+        (mobileCell.ndPartial || (st === "partial" && mobileCell.j <= -6))
+      ? "Для выбранной ячейки нет подтверждённых данных"
+      : p.mode === "city" && st === "pending" && mobileValue
+        ? `${mobileValue.time} мин · индекс ещё не рассчитан`
+        : p.mode === "city" && mobileValue
+          ? `${s.scenario === "done" && s.scnView === "scn" ? mobileValue.scenarioTime : mobileValue.time} мин до: ${categoryById[mobileFocus]?.short.toLowerCase()} · индекс ${(s.scenario === "done" && s.scnView === "scn" ? mobileValue.scenarioScore : mobileValue.score).toFixed(1).replace(".", ",")}`
+          : p.mode === "pax" && fixtures.passenger[`${p.paxA}>${p.paxB}`]
+            ? `Самолёт: 2 ч 10 мин, ${fixtures.passenger[`${p.paxA}>${p.paxB}`].air.dep} отправлений в день · поезд и авто — неизвестно`
+            : "Демонстрационный результат";
   const title =
     p.mode === "city"
       ? p.city
@@ -161,7 +175,7 @@ export function AtlasPage() {
     noroute: "Подтверждённо нет маршрута",
     srcerr: "Источник недоступен",
     baddate: "Дата не поддерживается",
-    pending: "Формула индекса ожидает утверждения",
+    pending: "Индекс ещё не рассчитан",
     agentoff: "Результат получен",
     demoonly: "Демо-результат только для одного времени",
   };
@@ -574,9 +588,10 @@ export function AtlasPage() {
                         </span>
                       </div>
                       <p className="lg-note">
-                        Шкала 0–100 одинакова днём и ночью; пороги цветов
-                        утверждаются. Показаны заранее подготовленные
-                        демо-значения. Масштаб меняет отображение, не методику.
+                        Шкала 0–100 одинакова днём и ночью: ниже 50 — низкая
+                        доступность, от 75 — зелёная зона. Показаны заранее
+                        подготовленные демо-значения. Масштаб меняет
+                        отображение, не методику.
                       </p>
                     </div>
                   )}
@@ -645,7 +660,9 @@ export function AtlasPage() {
                 ["in", "plus", "Приблизить"],
                 ["out", "minus", "Отдалить"],
                 ["home", "globe", "Показать всю территорию"],
-                ...(cityView ? [["city", "locate-fixed", "К выбранному городу"]] : []),
+                ...(cityView
+                  ? [["city", "locate-fixed", "К выбранному городу"]]
+                  : []),
               ].map(([kind, icon, label]) => (
                 <button
                   className="zbtn"
@@ -720,7 +737,7 @@ export function AtlasPage() {
             </defs>
           </svg>
         </section>
-        <AgentChat key={`${p.mode}:${p.city}`} handle={chat} />
+        <AgentChat key={s.revision} handle={chat} />
       </div>
     </div>
   );

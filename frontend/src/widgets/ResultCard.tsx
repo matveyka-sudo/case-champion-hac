@@ -14,7 +14,7 @@ export function ResultCard({ analyze }: { analyze: () => void }) {
   const { state: s, dispatch } = useAtlas(),
     p = s.applied,
     st = currentStatus(s);
-  const active = s.p;
+  const active = s.applied;
   const close = () => dispatch({ type: "ui", patch: { cardHidden: true } });
   const head = (label: ReactNode, title: ReactNode) => (
     <div className="ctx-h">
@@ -50,7 +50,23 @@ export function ResultCard({ analyze }: { analyze: () => void }) {
     </div>
   );
   let content: ReactNode;
-  if (active.mode === "city") {
+  if (
+    active.mode !== "city" &&
+    ["idle", "nd", "srcerr", "baddate"].includes(st)
+  ) {
+    content = (
+      <>
+        {head("Транспортная связь", "Результата нет")}
+        <div className="ctx-b">
+          <Notice kind={st === "srcerr" ? "err" : "nd"}>
+            {st === "idle"
+              ? "Расчёт ещё не выполнялся."
+              : "Для выбранных условий нет подтверждённых данных — значения не показываются."}
+          </Notice>
+        </div>
+      </>
+    );
+  } else if (active.mode === "city") {
     const city = active.city;
     if (!city) {
       content = (
@@ -231,7 +247,7 @@ export function ResultCard({ analyze }: { analyze: () => void }) {
               </div>
             </>
           );
-        } else if (c.ndPartial) {
+        } else if (c.ndPartial || (st === "partial" && c.j <= -6)) {
           content = (
             <>
               {head("Ячейка 1 км", "Нет результата")}
@@ -291,7 +307,7 @@ export function ResultCard({ analyze }: { analyze: () => void }) {
                       </span>
                       {pending ? (
                         <span className="badge-s nd">
-                          индекс: формула не утверждена
+                          индекс ещё не рассчитан
                         </span>
                       ) : (
                         <span
@@ -360,7 +376,6 @@ export function ResultCard({ analyze }: { analyze: () => void }) {
                         "Ожидание пересадок",
                         `${T ? Math.round((xw / T) * 100) : 0} %`,
                       )}
-                      {kv("По прямой до объекта", `${f1(c.near[focus].km)} км`)}
                       {kv("Жители ячейки · модель", `≈ ${f0(roundPop(c.pop))}`)}
                     </div>
                   </>
@@ -480,8 +495,7 @@ export function ResultCard({ analyze }: { analyze: () => void }) {
                       один раз.
                     </li>
                     <li>
-                      Показаны заранее подготовленные демо-значения. Численная
-                      методика ещё утверждается.
+                      Показаны заранее подготовленные демо-значения, а не результат серверного расчёта.
                     </li>
                     <li>
                       Население — модельная оценка по растру, а не жители
@@ -610,7 +624,7 @@ export function ResultCard({ analyze }: { analyze: () => void }) {
           <div className="sect">
             <h4>Сводный индекс</h4>
             <Notice>
-              <b style={{ color: "var(--text)" }}>Методика не утверждена.</b>{" "}
+              <b style={{ color: "var(--text)" }}>Для этого демо нет сводного индекса.</b>{" "}
               Показаны исходные демонстрационные показатели по видам транспорта;
               сводная оценка не рассчитывается по случайным весам.
             </Notice>
@@ -704,7 +718,7 @@ export function ResultCard({ analyze }: { analyze: () => void }) {
           <div className="sect">
             <h4>Сводный грузовой индекс</h4>
             <Notice>
-              Формула не утверждена — показаны исходные показатели.
+              Индекс в этом демо не рассчитан — показаны исходные показатели.
             </Notice>
           </div>
           {ask}
@@ -823,8 +837,7 @@ export function ResultCard({ analyze }: { analyze: () => void }) {
           <div className="sect">
             <h4>Сводный грузовой индекс</h4>
             <Notice>
-              Формула, профили и пороги срочности не утверждены — индекс не
-              рассчитывается.
+              В этом демо нет расчёта полной доставки — сводный индекс не показан.
             </Notice>
           </div>
           {ask}

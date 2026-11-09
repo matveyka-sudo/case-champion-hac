@@ -1,0 +1,148 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "category": {
+      "anyOf": [
+        {
+          "enum": [
+            "adult_polyclinic",
+            "child_polyclinic",
+            "kindergarten",
+            "school",
+            "college_university",
+            "rail_terminal",
+            "bus_terminal",
+            "airport",
+            "shopping_center"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Category"
+    },
+    "destination_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Destination Id"
+    },
+    "kind": {
+      "enum": [
+        "sample_point",
+        "territory",
+        "category",
+        "freight_site",
+        "freight_node",
+        "connection",
+        "pipeline",
+        "city_pair"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "mode": {
+      "anyOf": [
+        {
+          "enum": [
+            "walk",
+            "public_transport",
+            "private_car",
+            "road",
+            "rail",
+            "air",
+            "water",
+            "mixed",
+            "pipeline"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Mode"
+    },
+    "node_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Node Id"
+    },
+    "origin_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Origin Id"
+    },
+    "point_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Point Id"
+    },
+    "site_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Site Id"
+    },
+    "territory_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Territory Id"
+    }
+  },
+  "required": [
+    "kind"
+  ],
+  "title": "SubjectRef",
+  "type": "object"
+}

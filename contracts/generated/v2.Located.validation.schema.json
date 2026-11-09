@@ -1,0 +1,54 @@
+{
+  "$defs": {
+    "LonLat": {
+      "additionalProperties": false,
+      "properties": {
+        "lat": {
+          "maximum": 90,
+          "minimum": -90,
+          "title": "Lat",
+          "type": "number"
+        },
+        "lon": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "Lon",
+          "type": "number"
+        }
+      },
+      "required": [
+        "lon",
+        "lat"
+      ],
+      "title": "LonLat",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "location": {
+      "$ref": "#/$defs/LonLat"
+    },
+    "source_refs": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "territory_id": {
+      "minLength": 1,
+      "title": "Territory Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source_refs",
+    "territory_id",
+    "location"
+  ],
+  "title": "Located",
+  "type": "object"
+}

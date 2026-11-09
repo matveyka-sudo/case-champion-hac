@@ -1,0 +1,18 @@
+{
+  "description": "Contract fixture only; no observed geographic or transport result.",
+  "payload": {
+    "analysis_kind": "urban_passenger",
+    "categories": [
+      "school"
+    ],
+    "city_id": "demo-city",
+    "departure_at": "2026-11-09T08:15:00+03:00",
+    "passenger_mode": "walk",
+    "priorities": {
+      "school": "high"
+    },
+    "schema_version": "2",
+    "traffic_mode": "static"
+  },
+  "synthetic": true
+}

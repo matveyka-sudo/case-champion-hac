@@ -77,11 +77,13 @@
     "source_sha256": "0ae2990b495655446c7f82de4e925fc94de16a0564e80093895f88069e1107bb"
   },
   "pipeline": {
-    "source": "трубопровод.png",
-    "image": "pipeline.webp",
-    "width": 988,
-    "height": 1386,
-    "source_sha256": "ebd649f8a98a0dcbb1e2cefcf43b3724cbccdcdecc65bd1834c931da48c68301"
-  }
+    "source": "codex-clipboard-cf411c59-2766-4095-b541-373b74f8eccf.png",
+    "image": "pipeline.jpg",
+    "width": 1042,
+    "height": 1354,
+    "source_sha256": "40408696269027714ae12c776a10b1072560a783a8aa8dfa97667d2706920a59"
+}
 }
 ```
+
+Фотография трубопроводов заменена на новое изображение пользователя из чата. Для сайта подготовлен JPEG quality 88 без изменения композиции.

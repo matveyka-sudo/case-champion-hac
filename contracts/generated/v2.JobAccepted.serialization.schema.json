@@ -1,0 +1,39 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "job_id": {
+      "minLength": 1,
+      "title": "Job Id",
+      "type": "string"
+    },
+    "poll_after_seconds": {
+      "default": 2,
+      "minimum": 1,
+      "title": "Poll After Seconds",
+      "type": "integer"
+    },
+    "request_id": {
+      "minLength": 1,
+      "title": "Request Id",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "queued",
+        "running",
+        "succeeded",
+        "failed",
+        "cancelled"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "job_id",
+    "status",
+    "request_id"
+  ],
+  "title": "JobAccepted",
+  "type": "object"
+}

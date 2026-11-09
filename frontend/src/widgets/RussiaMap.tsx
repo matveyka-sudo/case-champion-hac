@@ -180,7 +180,8 @@ export function RussiaMap({
 }) {
   const host = useRef<HTMLDivElement>(null),
     svgRef = useRef<SVGSVGElement>(null),
-    zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
+    zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null),
+    view = useRef<{ key: string; transform: d3.ZoomTransform; w: number; h: number } | null>(null);
   const [land, setLand] = useState<Feature<MultiPolygon> | null>(null),
     [failed, setFailed] = useState(false),
     [size, setSize] = useState({ w: 1000, h: 700 });
@@ -216,7 +217,7 @@ export function RussiaMap({
     const narrow = w < 700;
     const pad = {
       l: narrow ? 8 : 40,
-      r: narrow ? 8 : s.cardHidden || window.innerWidth < 768 ? 40 : 390,
+      r: narrow ? 8 : window.innerWidth < 768 ? 40 : 390,
       t: narrow ? 90 : 96,
       b: narrow ? 200 : 120,
     };
@@ -348,6 +349,8 @@ export function RussiaMap({
           .attr("class", "arc pipe")
           .attr("d", arc(a, b, -0.12));
     }
+    const key = JSON.stringify([p.mode, p.paxA, p.paxB, p.paxScale, p.cargoA, p.cargoB]);
+    const previous = view.current;
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
       .scaleExtent([1, 8])
@@ -356,6 +359,7 @@ export function RussiaMap({
         [w * 1.2, h * 1.2],
       ])
       .on("zoom", (event) => {
+        view.current = { key, transform: event.transform, w, h };
         g.attr("transform", event.transform);
         const k = event.transform.k;
         g.selectAll<SVGGElement, { point: number[]; rot: number }>(
@@ -369,7 +373,11 @@ export function RussiaMap({
       });
     zoomRef.current = zoom;
     svg.call(zoom).on("dblclick.zoom", null);
-    if (pair) {
+    if (previous?.key === key) {
+      svg.call(zoom.transform, d3.zoomIdentity
+        .translate(previous.transform.x * w / previous.w, previous.transform.y * h / previous.h)
+        .scale(previous.transform.k));
+    } else if (pair) {
       const [a, b] = pair as [number[], number[]];
       const x0 = Math.min(a[0], b[0]),
         x1 = Math.max(a[0], b[0]),
@@ -397,6 +405,7 @@ export function RussiaMap({
           .scale(k),
       );
     }
+    if (!pair && previous?.key !== key) svg.call(zoom.transform, d3.zoomIdentity);
     return () => {
       svg.on(".zoom", null);
       svg.interrupt();
@@ -412,7 +421,6 @@ export function RussiaMap({
     p.cargoB,
     p.cargoModes.pipe,
     p.profile.handling,
-    s.cardHidden,
     dispatch,
   ]);
   useEffect(() => {

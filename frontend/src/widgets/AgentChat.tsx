@@ -26,7 +26,8 @@ interface Message {
     | "cargo"
     | "scenario"
     | "scenariopending"
-    | "wrong";
+    | "wrong"
+    | "unavailable";
   text?: string;
 }
 export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
@@ -40,6 +41,8 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
     input = useRef<HTMLTextAreaElement>(null);
   const off = currentStatus(s) === "agentoff";
   const p = s.p;
+  const resultAvailable = ["ok", "partial", "agentoff"].includes(currentStatus(s));
+  const scenarioAvailable = !off && resultAvailable && p.mode === "city" && p.city === "msk" && p.travel === "pt" && !!p.cats.c01;
   useEffect(() => () => abort.current?.abort(), [s.revision]);
   useEffect(() => {
     log.current?.scrollTo({
@@ -96,6 +99,10 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
         text === "Проанализировать выбранную зону";
       const kind: Message["kind"] = !known
         ? "free"
+        : !resultAvailable
+          ? "unavailable"
+          : p.mode === "pax" && (!p.paxModes.air || !fixtures.passenger[`${p.paxA}>${p.paxB}`])
+            ? "unavailable"
         : p.mode === "city"
           ? p.city === "msk" && p.travel === "pt" && p.cats.c01
             ? "city"
@@ -103,13 +110,14 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
           : p.mode === "pax"
             ? "pax"
             : "cargo";
+      if (controller.signal.aborted) return;
       setMessages((m) => m.map((x) => (x.id === id ? { ...x, kind } : x)));
     } catch (error) {
       setMessages((m) => m.filter((x) => x.id !== id));
       if (!(error instanceof DOMException && error.name === "AbortError"))
         setDraft(text);
     } finally {
-      setBusy(false);
+      if (abort.current === controller) setBusy(false);
     }
   };
   useImperativeHandle(handle, () => ({
@@ -125,9 +133,7 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
     if (
       s.scenario !== "none" ||
       busy ||
-      p.city !== "msk" ||
-      p.travel !== "pt" ||
-      s.status === "stale"
+      !scenarioAvailable
     )
       return;
     setBusy(true);
@@ -137,15 +143,17 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
     abort.current = controller;
     try {
       await mockGateway.scenario(controller.signal);
+      if (controller.signal.aborted) return;
       dispatch({ type: "ui", patch: { scenario: "done", scnView: "scn" } });
       setMessages((m) =>
         m.map((x) => (x.id === id ? { ...x, kind: "scenario" } : x)),
       );
     } catch (error) {
+      setMessages((m) => m.filter((x) => x.id !== id));
       if (!(error instanceof DOMException && error.name === "AbortError"))
         dispatch({ type: "ui", patch: { scenario: "none" } });
     } finally {
-      setBusy(false);
+      if (abort.current === controller) setBusy(false);
     }
   };
   const setChat = (open: boolean) =>
@@ -222,6 +230,10 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
           </div>
         </div>
       );
+    if (m.kind === "unavailable") return <div className="msg a">
+      <Demo /><p className="lead">Для выбранных условий нет готового демо-результата.</p>
+      <p>Дождитесь расчёта или вернитесь к поддерживаемому примеру. Агент не может подтвердить числа и эффект сценария без результата для этих условий.</p>
+    </div>;
     if (m.kind === "wrong")
       return (
         <div className="msg a">
@@ -293,7 +305,7 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
                 (пример)
               </li>
               <li>Население: модельная сетка 1 км</li>
-              <li>Методика не утверждена; значения из прототипа</li>
+              <li>Значения из демонстрационного прототипа</li>
             </ul>
           </details>
           {actions}
@@ -307,7 +319,7 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
             <div className="acts" style={{ marginTop: 8 }}>
               <button
                 className="go"
-                disabled={s.scenario !== "none" || s.status === "stale"}
+                disabled={s.scenario !== "none" || busy || !scenarioAvailable}
                 onClick={() => void scenario()}
               >
                 <Icon name="flask-conical" />
@@ -395,7 +407,9 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
             перевозчика.
           </p>
         </details>
-        {actions}
+        <div className="acts"><button onClick={() => dispatch({ type: "ui", patch: { cardHidden: false } })}>
+          <Icon name="panel-right-open" />Подробнее
+        </button></div>
       </div>
     );
   };

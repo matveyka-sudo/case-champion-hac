@@ -1,0 +1,39 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "license_status": {
+      "enum": [
+        "permitted",
+        "restricted",
+        "unknown"
+      ],
+      "title": "License Status",
+      "type": "string"
+    },
+    "publisher": {
+      "minLength": 1,
+      "title": "Publisher",
+      "type": "string"
+    },
+    "source_id": {
+      "minLength": 1,
+      "title": "Source Id",
+      "type": "string"
+    },
+    "url": {
+      "format": "uri",
+      "maxLength": 2083,
+      "minLength": 1,
+      "title": "Url",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source_id",
+    "publisher",
+    "url",
+    "license_status"
+  ],
+  "title": "Source",
+  "type": "object"
+}

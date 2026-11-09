@@ -38,7 +38,7 @@ export function CityMap({
   const p = s.applied;
   const city = s.p.mode === "cargo" ? "nvr" : s.p.city || "msk";
   const { layers, cLayers, metric, selection, scenario, scnView } = s;
-  const { mode, cargoDir, profile } = s.p;
+  const { mode, cargoDir, profile } = s.applied;
   const handling = profile.handling;
   const status = currentStatus(s);
   const renderStatus = ["nd", "idle", "srcerr", "baddate", "pending", "partial", "noroute"].includes(status) ? status : "ok";
@@ -203,14 +203,14 @@ export function CityMap({
     if (!M) return;
     const scn = scenario === "done" && scnView === "scn",
       st = renderStatus;
-    const empty = ["nd", "idle", "srcerr", "baddate", "pending"].includes(st);
+    const empty = ["nd", "idle", "srcerr", "baddate"].includes(st);
     const partial = city === "kgd" || st === "partial";
     const selected =
       selection?.type === "cell" ? selection.id : M.canonCell?.id;
     const value = (c: Cell) =>
       layers.pop
         ? Math.max(0, Math.min(100, ((c.pop - 120) / 1900) * 100))
-        : cellScore(c, metric, p.travel, p.cats, scn);
+        : st === "pending" ? null : cellScore(c, metric, p.travel, p.cats, scn);
     const unavailable = (c: Cell) =>
       empty || (partial && (c.ndPartial || (st === "partial" && c.j <= -6)));
     const draw = (cells: Cell[], bounds: L.LatLngBoundsExpression) => {
@@ -243,6 +243,8 @@ export function CityMap({
           ? `Агрегат 4×4 км · ${cells.length} ячеек · ${f1(v)} (демо)`
           : unavailable(c)
             ? "Нет расписания — результата нет"
+            : st === "pending" && !layers.pop
+              ? `${c.values[p.travel][metric === "overall" ? (Object.keys(p.cats)[0] as CatId) : metric as CatId]?.time ?? "—"} мин · индекс ещё не рассчитан`
             : layers.pop
               ? `≈ ${c.pop} жит. · модель`
               : `${metric === "overall" ? "Общий индекс" : `${c.values[p.travel][metric as CatId]?.time} мин · индекс`} ${f1(v)} · демо`;

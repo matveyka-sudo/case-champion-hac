@@ -1,0 +1,84 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "assumption_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Assumption Ids",
+      "type": "array"
+    },
+    "case_id": {
+      "minLength": 1,
+      "title": "Case Id",
+      "type": "string"
+    },
+    "constraint_results": {
+      "additionalProperties": {
+        "enum": [
+          "pass",
+          "fail",
+          "unknown",
+          "not_requested"
+        ],
+        "type": "string"
+      },
+      "propertyNames": {
+        "minLength": 1
+      },
+      "title": "Constraint Results",
+      "type": "object"
+    },
+    "evidence_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "journey_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Journey Ids",
+      "type": "array"
+    },
+    "overall_feasibility": {
+      "enum": [
+        "pass",
+        "fail",
+        "unknown"
+      ],
+      "title": "Overall Feasibility",
+      "type": "string"
+    },
+    "reason_codes": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Reason Codes",
+      "type": "array"
+    },
+    "weight": {
+      "exclusiveMinimum": 0,
+      "title": "Weight",
+      "type": "number"
+    }
+  },
+  "required": [
+    "case_id",
+    "weight",
+    "overall_feasibility",
+    "constraint_results",
+    "reason_codes",
+    "journey_ids",
+    "evidence_ids",
+    "assumption_ids"
+  ],
+  "title": "CaseResult",
+  "type": "object"
+}

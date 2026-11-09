@@ -1,0 +1,88 @@
+{
+  "$defs": {
+    "LonLat": {
+      "additionalProperties": false,
+      "properties": {
+        "lat": {
+          "maximum": 90,
+          "minimum": -90,
+          "title": "Lat",
+          "type": "number"
+        },
+        "lon": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "Lon",
+          "type": "number"
+        }
+      },
+      "required": [
+        "lon",
+        "lat"
+      ],
+      "title": "LonLat",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "access_distance_m": {
+      "minimum": 0,
+      "title": "Access Distance M",
+      "type": "number"
+    },
+    "access_node_id": {
+      "minLength": 1,
+      "title": "Access Node Id",
+      "type": "string"
+    },
+    "building_id": {
+      "minLength": 1,
+      "title": "Building Id",
+      "type": "string"
+    },
+    "cell_id": {
+      "minLength": 1,
+      "title": "Cell Id",
+      "type": "string"
+    },
+    "initial_center": {
+      "$ref": "#/$defs/LonLat"
+    },
+    "location": {
+      "$ref": "#/$defs/LonLat"
+    },
+    "point_id": {
+      "minLength": 1,
+      "title": "Point Id",
+      "type": "string"
+    },
+    "source_refs": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "territory_id": {
+      "minLength": 1,
+      "title": "Territory Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source_refs",
+    "territory_id",
+    "location",
+    "point_id",
+    "cell_id",
+    "building_id",
+    "initial_center",
+    "access_node_id",
+    "access_distance_m"
+  ],
+  "title": "SamplePoint",
+  "type": "object"
+}

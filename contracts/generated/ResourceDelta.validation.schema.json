@@ -1,0 +1,27 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "departures": {
+      "title": "Departures",
+      "type": "integer"
+    },
+    "vehicle_minutes": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Vehicle Minutes"
+    }
+  },
+  "required": [
+    "departures",
+    "vehicle_minutes"
+  ],
+  "title": "ResourceDelta",
+  "type": "object"
+}

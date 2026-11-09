@@ -1,0 +1,118 @@
+{
+  "$defs": {
+    "Period": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "End"
+        },
+        "start": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Start"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "Period",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "categories": {
+      "items": {
+        "enum": [
+          "adult_polyclinic",
+          "child_polyclinic",
+          "kindergarten",
+          "school",
+          "college_university",
+          "rail_terminal",
+          "bus_terminal",
+          "airport",
+          "shopping_center"
+        ],
+        "type": "string"
+      },
+      "title": "Categories",
+      "type": "array"
+    },
+    "completeness": {
+      "enum": [
+        "full",
+        "partial"
+      ],
+      "title": "Completeness",
+      "type": "string"
+    },
+    "modes": {
+      "items": {
+        "enum": [
+          "walk",
+          "public_transport",
+          "private_car",
+          "road",
+          "rail",
+          "air",
+          "water",
+          "mixed",
+          "pipeline"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Modes",
+      "type": "array"
+    },
+    "source_refs": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "territory_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Territory Ids",
+      "type": "array"
+    },
+    "valid_period": {
+      "$ref": "#/$defs/Period"
+    }
+  },
+  "required": [
+    "source_refs",
+    "territory_ids",
+    "modes",
+    "categories",
+    "valid_period",
+    "completeness"
+  ],
+  "title": "CoverageScope",
+  "type": "object"
+}
