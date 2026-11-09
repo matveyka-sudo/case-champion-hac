@@ -12,7 +12,25 @@
 | Принятые bundle (небольшие, ODbL / CC BY 4.0, можно хранить в git) | `data/bundles/<bundle_id>/` |
 | Raw и промежуточные файлы (не в git) | `data/raw/`, `data/processed/` |
 
-Текущие bundle — `moscow-urban-2026-11-09.2`, `kaliningrad-urban-2026-11-09.1` и `novorossiysk-urban-2026-11-09.1` (accepted), все с городскими грузами; в Калининграде ещё и справка частоты ОТ. Старые версии оставлены: опубликованные bundle не меняются. Заявленный период применимости — 01–30.11.2026.
+Текущие bundle — `moscow-urban-2026-11-10.1`, `kaliningrad-urban-2026-11-10.1` и `novorossiysk-urban-2026-11-10.1` (accepted). Это версии `09.x` плюс проверенные связи точек и объектов с пешеходной сетью (`walk_connectors`), а в Москве ещё и ОТ: официальный GTFS по sha256 и его остановки, привязанные к сети. Все с городскими грузами; в Калининграде ещё и справка частоты ОТ. Старые версии оставлены: опубликованные bundle не меняются. Заявленный период применимости — 01–30.11.2026.
+
+### Связи с пешеходной сетью и ОТ Москвы — версии `2026-11-10.1`
+
+Движок ML1 подтверждает связь точки или объекта с входом на сеть (`WalkConnector`) и без неё блокирует пару (`CONNECTOR_UNCONFIRMED`). `a2_data_pipeline.supplements` выпускает новую версию bundle из предыдущей: те же коллекции плюс связи, а для Москвы — остановки GTFS.
+
+| | Калининград | Новороссийск | Москва |
+| --- | --- | --- | --- |
+| Связей проверено | 680 | 615 | 11 983 |
+| Проходимы (`traversable=true`) | 604 (89 %) | 544 (88 %) | 10 723 (89,5 %) |
+| Unknown: чужое здание / ж/д / вода / магистраль / >500 м | 70 / 5 / 3 / 0 / 3 | 54 / 7 / 3 / 5 / 10 | 1 208 / 16 / 10 / 27 / 13 |
+| ML1 считает подтверждёнными (при проверочной скорости) | 431 из 478 | 464 из 516 | 5 408 из 5 832 |
+
+ОТ Москвы в `moscow-urban-2026-11-10.1`:
+- `manifest.timetables` — ссылка на GTFS по sha256 с окном, неизвестными датами (4 ноября) и ограничениями;
+- `transit_stops` — 13 785 используемых рейсами остановок в 10 км от границы, привязанных к пешеходной сети: 13 751 принята, 34 дальше 150 м — в карантине;
+- `coverage` — `public_transport` partial на ноябрь.
+
+В `AcceptedData` v2 ничего из этого нет (там нет коллекций связей и остановок, а рейсы контракт ждёт внутри snapshot), поэтому v2 у новых версий тот же, что у `09.x`.
 
 ### Справочник территорий РФ — `russia-territories-2026-11-09.1`
 
@@ -240,6 +258,11 @@ QA: 22 проверки — 15 pass, 7 warn, 0 fail. Модель v2 прини�
   - Очертание города — отношение или замкнутая линия с тегом `wikidata` города справочника и `place=city|town` (чаще всего мультиполигон) или границей; связь — тег, а не название. Несколько очертаний города объединяются. Кольца, которые не замыкаются, попадают в отчёт и не чинятся.
   - Портовая территория — `landuse=harbour|port`, `industrial=port` (линии и мультиполигоны).
   - Результат привязан к sha256 выгрузки, правилам и списку городов так же, как кэш городского среза.
+- **Связи с пешеходной сетью** (`a2_data_pipeline.supplements`, правила `walk-connector-geometry-v1`). Прямой отрезок от точки или объекта до его входа на сеть проверяется по слоям того же OSM-среза (sha256 PBF сверен).
+  - Проходим (`traversable=true`), если не пересекает чужих зданий (своё — здание, на котором стоит точка, здание объекта в OSM и любое здание, где лежит сама точка), воды, наземной железной дороги (`rail`, `light_rail`, `narrow_gauge`, `monorail`; тоннели и мосты не считаются), магистралей (`motorway`, `trunk`) и не длиннее 500 м.
+  - Иначе — unknown с причинами, но не «непроходим»: там может быть мост, переход или калитка.
+  - Секунды ML2 не выдумывает: `walk_connectors()` считает их по скорости принятого пешеходного профиля Valhalla, которую ей передают с evidence. Без принятого профиля связь остаётся неподтверждённой.
+- **Остановки ОТ** (`transit-stops-v1`). Остановки GTFS, которые используют рейсы, в 10 км от границы города привязываются к пешеходной сети так же, как точки и объекты. Дальше 150 м от сети — карантин. Сам GTFS лежит вне bundle и привязан по sha256 (`manifest.timetables`).
 - **Морские порты РФ** (`a2_data_pipeline.seaports`, правила `ru-seaports-rules-v1`).
   - Основание узла — функция: зарегистрированный морской порт, где работает Росморпорт (видимый перечень на `/services/seaports/`). Регистрационный номер и мощности — из раздела порта на странице филиала, как опубликованы; число переводится в тыс. тонн или тыс. TEU в год («млн» ×1000, число без «тыс.» ÷1000). «нет» хранится как сказано, пустая подпись — unknown.
   - Город — город справочника с тем же названием (порт в реестре назван по месту; «Большой порт» и «Пассажирский порт» Санкт-Петербург — Санкт-Петербург). Название нескольких городов или не город — без привязки.
@@ -331,6 +354,23 @@ kgd = [n for n in nodes if "kaliningrad" in n.territory_ids]  # станции, 
 by_esr = {code: n for n in nodes for code in n.esr_codes}  # привязка расписаний по коду
 ```
 
+Связи и ОТ для ML1 (новые версии bundle):
+
+```python
+from a2_data_pipeline.store import load_bundle
+from a2_data_pipeline.supplements import walk_connectors
+
+rows = walk_connectors(
+    "moscow-urban-2026-11-10.1",
+    walking_speed_kmh=<walking_speed принятого профиля Valhalla>,
+    speed_evidence_refs=[<evidence сборки>],
+    profile_version=<profile_version сборки>,
+)  # поля WalkConnector ML1; unknown-связи — seconds=None
+moscow = load_bundle("moscow-urban-2026-11-10.1")
+gtfs = moscow.manifest.timetables[0]  # path и sha256 GTFS, окно, unknown_dates
+stops = [s for s in moscow.transit_stops if s.status == "accepted"]  # остановка → вход на сеть
+```
+
 Привязка к Яндекс.Расписаниям и входы ML1:
 
 ```python
@@ -408,6 +448,14 @@ PYTHONPATH=packages/data_pipeline/src python -m a2_data_pipeline.rasp_bindings y
 
 ```bash
 PYTHONPATH=packages/data_pipeline/src python -m a2_data_pipeline.mos_gtfs mos_ground_transport.gtfs-20261110 --from 2026-11-01 --to 2026-11-30 --agency mos_ground_transport.60663-20260504 --stops mos_ground_transport.60662-20261005 --routes mos_ground_transport.60664-20261005 --trips mos_ground_transport.60665-20261005 --calendar mos_ground_transport.60666-20261005 --stop-times mos_ground_transport.60661-20261023
+```
+
+Связи и ОТ — новая версия bundle из предыдущей (нужен актуальный OSM-срез города, его пересобирает `build_city`; Москва ~20 с и ~4 ГБ памяти):
+
+```bash
+PYTHONPATH=packages/data_pipeline/src python -m a2_data_pipeline.supplements kaliningrad-urban-2026-11-09.1 kaliningrad-urban-2026-11-10.1
+PYTHONPATH=packages/data_pipeline/src python -m a2_data_pipeline.supplements novorossiysk-urban-2026-11-09.1 novorossiysk-urban-2026-11-10.1
+PYTHONPATH=packages/data_pipeline/src python -m a2_data_pipeline.supplements moscow-urban-2026-11-09.2 moscow-urban-2026-11-10.1 --timetable data/manifests/timetables/mos-ground-transport-gtfs-20261110.json
 ```
 
 Все три сборки из сохранённых raw детерминированы: справочник узлов `.1` и `.2` и справочник портов пересобираются в те же байты.
@@ -584,7 +632,9 @@ Raw, которые использованы для сборки, перечис
 
 **Справка частоты (Калининград).** `stop_frequencies` — не рейсы: индекс ОТ из неё не считать. Как её использовать (например, оценка ожидания как половины интервала) — решение ML1, в bundle только факты таблиц.
 
-**Проверка движком ML1 (10.11).** `ml/ml1_readiness.py` повторяет шаги примеров ML1 (`check_walk_bundle.py`, `check_district_bundle.py`, они привязаны к Калининграду `.2`/`.4`) для любого bundle на движке и контрактах из `origin/dev` (bbef1b6). Все три текущих bundle проходят `load_accepted_data` → `prepare_walk_inputs` → `plan_walk_routes` → `analyze_urban_candidates` → `prepare_urban_district_inputs` → `analyze_urban_districts`; H — 30, 40 и 60 минут (Калининград, Новороссийск, Москва), население по районам раскладывается без потерь (485 776, 316 189, 13 277 959). Маршрутов нет только из-за отсутствия сборки Valhalla (`VALHALLA_BUILD_UNAVAILABLE`, executor BACKEND/DEVOPS). Ещё движок пишет `CONNECTOR_UNCONFIRMED` (проходимость связи точки и входа на сеть не подтверждена) и `INCOMPLETE_POPULATION_COVERAGE` (исключённые ячейки). Отчёт — `data/manifests/qa/ml1-readiness-2026-11-10.json`.
+**Проверка движком ML1 (10.11).** `ml/ml1_readiness.py` повторяет шаги примеров ML1 (`check_walk_bundle.py`, `check_district_bundle.py`, они привязаны к Калининграду `.2`/`.4`) для любого bundle на движке и контрактах ветки (после слияния `origin/dev`). Все текущие bundle (`09.x` и `2026-11-10.1`) проходят `load_accepted_data` → `prepare_walk_inputs` → `plan_walk_routes` → `analyze_urban_candidates` → `prepare_urban_district_inputs` → `analyze_urban_districts`; H — 30, 40 и 60 минут (Калининград, Новороссийск, Москва), население по районам раскладывается без потерь (485 776, 316 189, 13 277 959). Маршрутов нет только из-за отсутствия сборки Valhalla (`VALHALLA_BUILD_UNAVAILABLE`, executor BACKEND/DEVOPS). Ещё движок пишет `INCOMPLETE_POPULATION_COVERAGE` (исключённые ячейки) и `CONNECTOR_UNCONFIRMED`. Последнее с версиями `2026-11-10.1` касается только связей unknown: со связями ML2 и проверочной скоростью 5 км/ч (не принятой) движок считает подтверждёнными 431 из 478 концов в Калининграде, 464 из 516 в Новороссийске и 5 408 из 5 832 в Москве. Отчёт — `data/manifests/qa/ml1-readiness-2026-11-10.json`.
+
+**Что нужно ML1 от сборки Valhalla для связей:** принятый `walking_speed` пешеходного профиля, его `profile_version` и evidence — их передать в `supplements.walk_connectors(...)`; ML2 скорость не назначает. **ОТ Москвы:** GTFS — `load_bundle("moscow-urban-2026-11-10.1").manifest.timetables[0]` (путь и sha256; архив в `data/processed/gtfs/`, в git не кладётся), остановки с входами на пешеходную сеть — `transit_stops`; 4 ноября — unknown, у 9 направлений рейсы задвоены (отчёт GTFS).
 
 **Входы intercity под модели ML1** (проверено настоящими классами `origin/work/ml1` a4851c1): `capital_boundaries()` → 83 `CapitalBoundary` (субъект, столица, все узлы столицы; спорные субъекты без столиц — без строки, то есть unknown), `transport_mode_bindings()` → 7 `TransportModeBinding` для видов Расписаний. `Timetable`/`PhysicalService` из Расписаний ML2 не собирает: см. условия API в handoff BACKEND. Узлы в событиях расписания — наши `node_id`; код Расписаний узла — в `load_bindings(...)[0]`.
 
@@ -604,6 +654,6 @@ Raw, которые использованы для сборки, перечис
 
 **Критерий приёмки:**
 - `uv sync --frozen --all-packages --group dev` ставит пакеты;
-- `PYTHONPATH=packages/data_pipeline/src pytest packages/data_pipeline/tests` проходит без skip гео-тестов. Сейчас с оверлеем и контрактами — 190 passed, без них — 114 passed и 12 skipped.
+- `PYTHONPATH=packages/data_pipeline/src pytest packages/data_pipeline/tests` проходит без skip гео-тестов. Сейчас с оверлеем, контрактами и движком ML1 — 193 passed, без них — 114 passed и 13 skipped.
 
 Отдельно: CI сейчас не запускает pytest пакетов.
