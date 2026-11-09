@@ -241,8 +241,14 @@ def test_osm_bus_stations_join_or_add(tmp_path: Path) -> None:
         ),
         national / "bus_stations.parquet",
     )
-    nodes, report = intercity_nodes.build_nodes(*raw(tmp_path), directory(), national)
+    BUS.append(node("Q202", "Q494829", "Автобусная конечная Синтетическая"))
+    try:
+        nodes, report = intercity_nodes.build_nodes(*raw(tmp_path), directory(), national)
+    finally:
+        BUS.pop()
     by_id = {n.node_id: n for n in nodes}
+    assert "node-wd-q202" not in by_id  # v2: an urban terminus by name
+    assert report["dropped_counts"]["urban_terminus_name"] == 1
     assert by_id["node-wd-q200"].osm_refs == ["node/1"]  # joined, not a second node
     northern = by_id["node-osm-node-2"]
     assert (northern.osm_refs, northern.territory_ids) == (["node/2", "way/3"], ["kaliningrad"])

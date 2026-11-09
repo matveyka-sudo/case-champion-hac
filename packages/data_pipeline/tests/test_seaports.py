@@ -18,7 +18,7 @@ from shapely.geometry import box  # noqa: E402
 LIST = """<html><body><div>
 <h1>Перечень морских портов Российской Федерации, в которых осуществляет деятельность ФГУП «Росморпорт»</h1>
 <p>БАЛТИЙСКИЙ БАССЕЙН</p><p>Северо-Западный бассейновый филиал</p>
-<p>Калининград</p><p>Приморск</p>
+<p>Калининград</p><p>Приморск</p><p>Пассажирский порт Калининград</p>
 <p>АРКТИЧЕСКИЙ БАССЕЙН</p><p>Арктический бассейновый филиал</p><p>Сабетта</p>
 <!-- <p>Скрытый</p> -->
 </div><div><a>Морские порты</a></div></body></html>"""
@@ -104,7 +104,10 @@ def test_ports_join_roster_sections_cities_and_areas(tmp_path: Path) -> None:
     ]
     ports, report = seaports.build_ports(raw(tmp_path), national(tmp_path), directory)
     by_id = {p.node_id: p for p in ports}
-    assert report["listed"] == 3 and report["with_section"] == 2  # the hidden row is not listed
+    assert report["listed"] == 4 and report["with_section"] == 2  # the hidden row is not listed
+    passenger = by_id["seaport-passazhirskiy-port-kaliningrad"]
+    assert passenger.territory_ids == ["kaliningrad"] and passenger.lon is None
+    assert passenger.quarantine_reasons == ["PASSENGER_PORT_NOT_FREIGHT", "NO_PORT_SECTION"]
     kgd = by_id["seaport-kaliningrad"]
     assert (kgd.status, kgd.registration_number, kgd.territory_ids) == (
         "accepted",

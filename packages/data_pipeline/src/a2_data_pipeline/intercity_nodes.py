@@ -41,7 +41,8 @@ Rules:
   termini) inside a city outline (the OSM outline whose ``wikidata`` tag is the
   city); OSM objects of one city closer than 150 m are one station; an OSM
   station with the ``wikidata`` tag of a Wikidata bus node, or within 300 m of
-  one in the same city, is that node (its OSM refs are added).
+  one in the same city, is that node (its OSM refs are added); a Wikidata
+  «автостанция» named «конечная» or «автобусное кольцо» is an urban terminus.
 """
 
 from __future__ import annotations
@@ -70,6 +71,8 @@ from .paths import data_dir, processed_dir, raw_dir
 SOURCE_ID = "wikidata"
 RULES_VERSION = "ru-intercity-nodes-rules-v2"
 BUS_NAME = re.compile(r"автовокзал|автостанц|автобусн\w*\s+вокзал", re.I)
+# v2: a Wikidata «автостанция» named a terminus or a loop is an urban terminus
+URBAN_TERMINUS = re.compile(r"конечн|автобусное\s+кольцо", re.I)
 OSM_MERGE_M = 150.0
 SAME_STATION_M = 300.0
 NodeKind = Literal["rail_station", "bus_station", "airport"]
@@ -450,6 +453,10 @@ def build_nodes(  # noqa: C901
         if item["name"] is None:
             dropped["no_russian_label"].append(qid)
             continue
+        if national_dir is not None and item["kind"] == "bus_station":
+            if URBAN_TERMINUS.search(item["name"]):
+                dropped.setdefault("urban_terminus_name", []).append(label)
+                continue
         if len(item["kinds"]) > 1:  # e.g. a station building typed as a bus station too
             dropped["several_kinds"].append(label)
             continue

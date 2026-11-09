@@ -26,7 +26,8 @@ Rules:
 - the location is the representative point of the largest OSM port area inside
   the city outline; other port areas there are listed with it;
 - a port is accepted with a registration number, a city and a location;
-  otherwise it is kept quarantined with its reasons;
+  otherwise it is kept quarantined with its reasons; «Пассажирский порт» is a
+  passenger port, not a freight node, and takes no location of another port;
 - the stevedore list is hidden in the page markup on most branch pages: only its
   size is kept, the names are not used (see ``freight``).
 """
@@ -249,6 +250,9 @@ def build_ports(  # noqa: C901
         )
         city: territories.TerritoryEntry | None = matches[0] if len(matches) == 1 else None
         reasons: list[str] = []
+        passenger = _norm(record["port"]).startswith("пассажирский порт ")
+        if passenger:
+            reasons.append("PASSENGER_PORT_NOT_FREIGHT")
         section = record["section"]
         if section is None:
             reasons.append("NO_PORT_SECTION")
@@ -257,7 +261,7 @@ def build_ports(  # noqa: C901
         if city is None:
             reasons.append("CITY_NOT_ASSIGNED")
         inside: list[tuple[str, Any, float]] = []
-        if city is not None:
+        if city is not None and not passenger:
             outline = outlines.get(city.wikidata_id)
             if not outline:
                 reasons.append("NO_CITY_OUTLINE")
