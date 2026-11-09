@@ -2,12 +2,12 @@
 
 Ветка work/ml1. Пути: packages/engine/.
 
-**Текущая готовность (09.11.2026):** самостоятельный A и полный вычислительный
-анализ пассажирского межгорода по нормализованным расписаниям реализованы на
-синтетических данных. Поиск целых цепочек → общий A → максимум индекса по видам
-и общественный результат → физические отправления. Реальные API/accepted
-расписания России и BACKEND handler остаются интеграции. Последний этап и handoff
-описаны в конце этого файла и packages/engine/README.md. История сохранена.
+**Текущая готовность (09.11.2026):** самостоятельный A, пассажирский межгород,
+городская грузовая инфраструктура, поиск полной доставки и отдельный анализ
+принятых pipeline connections реализованы и проверены на нормализованной
+синтетике. Реальные accepted данные/HTTP/handler/deployment остаются интеграции.
+Последний грузовой этап и конкретный handoff — в конце файла и engine README.
+История предыдущих этапов сохранена.
 
 Источник: ../PRODUCT_SPEC.md; контракты ../../packages/contracts/specs/README.md.
 
@@ -766,3 +766,186 @@ best-known отдельно от proven winner; frequency завершать н�
 Измерить runtime/RAM на реальных accepted данных. HTTP/API ingestion и jobs не
 входят в engine. Реальные маршруты России, backend E2E и production performance
 не запускались и не объявляются PASS.
+
+
+## Грузовой анализ: инфраструктура, полная доставка и pipeline — 09.11.2026
+
+Рабочая папка пользователя:
+`/Users/matveyyuri/Desktop/Общее/хакатоны/case-champion-hac`, `work/ml1`.
+Исходный HEAD `48d36dca0e2cfd4b9c95b29e6d920504c9ea3946`; tracked tree был чист,
+ff-only pull — Already up to date. Самостоятельно подтверждены **782 passing tests**
+и **201 public exports**. a2-dev.bundle оставлен untracked и не изменён.
+
+### 1. Городские грузы
+
+`freight/models.py`: immutable CargoProfile, CargoTemperature (включая Celsius
+range), CargoVehicle, CargoContext и CargoCompatibility. Сохраняются независимые
+food/nonfood, urgency, temperature/control, handling/access/vehicle constraints,
+profile ID/version. Requirements hash включает полное физическое содержимое,
+но не urgency. Подтверждения привязаны к ID/context/profile/hash/service/direction/
+периоду/evidence. Unknown/forbidden/confirmed различаются, подмена binding
+отвергается. Никакая подлинность внешнего источника самим engine не утверждается.
+
+`freight/truck.py`: отдельный TruckRoute, network + два access elapsed time,
+vehicle/costing/profile/build/graph/query time и bound TruckSearchReceipt.
+Это не переименование auto RoadResult; минимальность пары подтверждает внешний
+принятый executor receipt, согласованный с fingerprint/query hash/evidence.
+`freight/urban_analysis.py`: analyze_urban_cargo проверяет expected physical-site
+roster, дедуплицирует одинаковые site records, отвергает конфликты, выбирает
+ближайший по времени совместимый узел каждого выбранного типа. Outbound site→node,
+inbound node→site, без зеркалирования. Неизвестная потенциальная альтернатива,
+неполный каталог/roster или неподтверждённый per-pair минимум блокируют полный
+индекс, оставляя observed times и best-known compatible route.
+
+Mapping node-specific: port→port, rail_terminal→rail_freight_station,
+logistics_terminal→**один** принятый terminal или logistics_center с evidence.
+Airport/pipeline_terminal не маскируются этими категориями. Profiles/directions/
+node types не усредняются между собой. H — административная площадь и текущая
+конфигурация. shared/area.py выделен без freight→urban: прежний public
+urban.select_h_seconds остаётся canonical owner с прежней сигнатурой/поведением.
+После выбора вызываются прежние urban_cargo_site_index/territory_index,
+физические площадки равновесны. Scalar-модули не менялись.
+
+Коммит подблока: `a36ca45`; контроль H1200, времена1200/2400 → **50/25/37.5**.
+Быстрый запрещённый port600 не обгоняет compatible1200; unknown600 не доказывает
+full minimum. Reverse1800 не подставляется из outbound600. Missing expected site
+не исключается из агрегата. Passenger auto не принимается как truck proof.
+
+### 2. Полная межгородская доставка
+
+`freight/delivery/models.py`, `search.py`, public __init__: scope/state/action/
+wait-policy/readiness/interval/path/mode/full-analysis. analyze_intercity_cargo
+сам ищет допустимую цепочку до completed state, включая исходную и конечную
+обработку. shared/config.py добавляет CargoDeliveryRules и approved mapping/path
+loaders; старый FreightConfig не меняется.
+
+Execution graph хранит prepared/in-transit/conditions/операции и направления.
+Из начального unprepared state нет движения до явной loading либо принятой
+not_required zero operation. Movement требует согласованного execution, активного
+календаря и explicit fixed departure, включая road. Passenger footpaths и наличие
+дороги не создают freight service. Initial readiness проверяется на общий start
+для всех заявленных initial states; missing/unknown не становится absence.
+Подтверждения temperature/handling/условий покрывают каждую нужную операцию,
+движение и положительный gap; gap без CargoWaitPolicy не становится ожиданием.
+Initial wait исключает уже учтённую погрузку, transfer wait отделён от обработки.
+
+Алгоритм — exact priority enumeration конечного принятого графа конкретных
+executions/obligations. Ключ содержит state ID, точное ready UTC time, origin,
+использованные action IDs, modes и first departure. Более раннее время само по
+себе не отбрасывает другое состояние с отличными допустимыми продолжениями.
+Action ID используется максимум раз: повторное реальное событие требует другого
+ID. Это отражает семантику уникальной execution-записи, а не произвольный лимит
+пересадок. Zero cycles не улучшают tie-break. Выбирается самое раннее **completion**,
+затем меньше actions и stable IDs, независимо от отображаемого округлённого score.
+Best-known completed candidate сохраняется даже при прерывании до его settlement.
+
+Все movements имеют явный scheduled_at; handling без appointment означает
+обязательную немедленную обработку при ready, не свободное continuous window.
+Если у источника есть другие допускаемые appointments/условия ожидания, их нужно
+передать принятыми альтернативными actions. Неописанная continuous availability
+не заменяется дискретизацией. Алгоритм точен для переданной конечной области;
+frontier может быть экспоненциальным, national-scale SLA не измерялся.
+
+Окно первого отправления [start,start+31d), для всех срочностей. Continuations и
+terminal handling могут быть позже. D24/72/744h — half-life, не deadline. Pipeline
+и reference A не входят в cargo maximum. Сохраняются road/rail/air/water/mixed
+и overall, без усреднения профилей. Mode определяется движением, не handling.
+Unknown handling сохраняет known movement/prefix, но total/index unknown. Known
+complete path при incomplete alternatives сохраняет preliminary score без proven
+winner. Missing calendar/compatibility/horizon/resource не подтверждают no-route.
+
+Коммит подблока: `0a299f4`. Контроль от00:00: wait3600 + movement57600 +
+handling18000 + transfer wait7200 = **86400, urgent index50**. Поиск строит
+load→road→transfer→rail→unload. Arrival10h+unload8h проигрывает 12h+1h=**13h**.
+Неизвестная unload сохраняет movement57600 без total/index. Loading2h запрещает
+departure01:00 при готовности00:00 и допускает03:00. D/2D →50/25 для трёх
+срочностей; microsecond boundary31d, UTC/DST, fractions, zero operations/cycles,
+versions/ID conflicts и resource best-known проверены. Independent raw-action
+DFS oracle на **25** малых сетях сравнивает completion/action path и breakdown.
+
+### 3. Pipeline connections и публичный API
+
+`pipeline/analysis.py`: PipelineContext, Endpoint, Connection, Measurement,
+Observation, AnalysisScope, ConnectionAnalysis/ConnectionsAnalysis и
+analyze_pipeline_connections. Проверяется выбор принятых directed **end-to-end**
+connections пары с подтверждёнными intake/delivery endpoints, territory/product/
+validity/version/evidence. Из A→X и X→B сквозная связь не выводится. Геометрия,
+транзит или название территории не создают подключение. Ограничения композиции
+сохраняются явно: для неё нужны принятые правила стыковки и end-to-end semantics,
+не гидравлика/max-flow или вымышленная commercial availability.
+
+Сопоставимые V/Q привязаны к connection/direction/product/normalized units/
+точному периоду/context, затем вызывают прежний pipeline_utilization. Даже
+одинаковая системная basis не подставляется на выбранную пару. Incomparable →
+INCOMPARABLE_PIPELINE_DATA; Q<=0 отвергается; U>100 сохраняется с QA. Нет aggregate
+U, среднего процентов, суммы Q/V участков или утверждения Q−V о свободной мощности.
+Связь, quantity availability и catalogue completeness хранятся независимо.
+
+Коммит: `7bffb31` (pipeline, общий public API и final resource/identity guards).
+Контроли oil A→B: **V120/Q100 →120% + UTILIZATION_ABOVE_100**; reverse/transit C/
+gas не выводятся. Unknown V/Q сохраняет connection, V0 даёт U0 при существующей
+связи. Empty partial catalogue unknown, full empty confirmed_absent. Records50/80
+не дают общего65. Новый API добавляет36 символов, всего **237**; все прежние201
+signatures/defaults/fields/frozen/order сохранены. Snapshot201 снят до изменений,
+исторические141/168/183 оставлены. Все импорты абсолютные; freight→urban и reverse
+routing→freight запрещены guards. Manifests/lock/config/canonical DTO не менялись.
+
+### Проверки
+
+Исходные **782 → итоговые830 passing tests**. Фактически выполнены:
+
+```sh
+PYTHONPATH=packages/engine/src uv run --frozen pytest packages/engine/tests -q
+uv run --frozen ruff check packages/engine
+uv run --frozen ruff format --check packages/engine
+PYTHONPATH=packages/engine/src uv run --frozen mypy --strict packages/engine/src packages/engine/tests packages/engine/examples
+uv lock --check
+uv pip check
+uv run --frozen python scripts/check_product_config.py
+git diff --check
+PYTHONPATH=packages/engine/src uv run --frozen python packages/engine/examples/synthetic_urban_cargo.py
+PYTHONPATH=packages/engine/src uv run --frozen python packages/engine/examples/synthetic_delivery.py
+PYTHONPATH=packages/engine/src uv run --frozen python packages/engine/examples/synthetic_pipeline.py
+```
+
+Ruff clean, **127 files formatted**, strict mypy **124 files clean**, lock
+resolved157 / pip checked56 compatible, product v3 valid, diff clean. Все **15**
+README executable controls и **11** standalone synthetic examples исполнены,
+включая прежние8. Hash seeds/fresh-process IDs проверяются для всех трёх новых
+analyzers. Предсуществующее pytest-asyncio fixture-scope warning сохранено.
+Реальные truck HTTP, грузовые executions РФ, pipeline подтверждения территорий,
+совместный backend E2E и production resources не проверялись и не названы PASS.
+
+### Точный mapping и передача другим ролям
+
+Прочитаны и сверены remote HEAD:
+BACKEND `6ce41795572b3708dc09f49868a3cefaa7e77fb3`,
+ML2 `0e6dbca005674f86c5cde7c2f2087477d509e7df` (без merge).
+README содержит field mapping canonical DeliveryCargoProfile/VehicleConstraints/
+FreightSite/FreightNode/FreightCompatibility/PipelineConnection/Quantity и
+Metric/Score/SubjectRef/evidence. Неуточнённый logistics_terminal не дублируется
+в terminal/logistics_center; canonical airport/pipeline_terminal не переименованы.
+
+**ML2 — packages/data_pipeline/**: expected physical-site roster, принятый
+node-specific mapping, profile contents/version/evidence compatibility, truck
+connectors и constraints; cargo executions/calendars/readiness/handling/wait
+conditions, достаточный declared horizon/coverage. Pipeline — end-to-end directed
+connections с intake/delivery и period-normalized V/Q. В текущем adapter
+freight_compatibility/pipeline_connections пустые, calendar=not_collected.
+Приёмка: реальные records проходят binding validation без guessed permissions,
+seconds, urgency/temperature assumptions и скрытой потери ожидаемых площадок.
+
+**BACKEND — contracts/API**: собрать нормализованные profiles с Celsius ranges,
+vehicle/access units и недостающими width/length/class/access supplements;
+контекстные receipts со service/period/hash bindings вместо raw compatible bool.
+Сохранить богатые results, scopes, observed/best-known, nullable full total,
+compatibility vs completeness vs proof, expected rosters и отдельный pipeline.
+Приёмка: controls37.5/86400→50/120% воспроизводятся; missing/unknown не получают
+full rating/0; pipeline не проходит delivery formula и U не подписывается score.
+
+**DEVOPS/executor — infra/routing**: freight truck costing/profile и проверенные
+vehicle/access rules, fixed graph/build/options, directed connectors с physical
+elapsed seconds и применимыми scoped minimum receipts. Для cargo — согласованный
+finite temporal model/horizon и worker CPU/RAM/resource budget. Нужны реальные
+performance измерения и joint E2E; неизвестные данные не заменять подтверждением
+минимума/нулевым временем. HTTP/production deployment этим этапом не выполнялись.

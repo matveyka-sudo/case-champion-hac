@@ -2,7 +2,8 @@
 
 Чистые расчёты ML1 по `docs/FORMULAS.md` и `config/product.json`: городские
 пассажирские индексы, анализ межгородских пассажирских цепочек по расписаниям, городские/межгородские
-грузы, загрузка трубопровода, сравнение готовых результатов, городской τ, районные
+грузовая инфраструктура и поиск полной доставки, отдельные трубопроводные связи/загрузка,
+сравнение готовых результатов, городской τ, районные
 агрегаты, поиск прямой поездки/последнего возврата по нормализованному расписанию,
 static car replay, типичный/живой/исторический traffic evaluator, направленные OD-срезы для τ
 и самостоятельное построение межгородского эталона A на принятом графе.
@@ -14,7 +15,7 @@ static car replay, типичный/живой/исторический traffic 
 
 ```text
 a2_engine/
-  __init__.py                 # 201 явный публичный экспорт (прежние 183 сохранены)
+  __init__.py                 # 237 явных публичных экспортов (прежние 201 сохранены)
   shared/                     # конфигурация, MetricResult, общая экспонента
     config.py                 # расположение и config/product.json path сохранены
     results.py
@@ -50,6 +51,11 @@ a2_engine/
   intercity/passenger.py
   freight/urban.py
   freight/intercity.py
+  freight/models.py            # профиль, vehicle/temperature, bound compatibility
+  freight/truck.py             # отдельный принятый грузовой routing input/proof
+  freight/urban_analysis.py    # roster, nearest compatible nodes и scalar aggregate
+  freight/delivery/           # models.py + search.py: delivery completion
+  pipeline/analysis.py        # только accepted end-to-end connections
   pipeline/utilization.py
   comparison/deltas.py
 ```
@@ -2731,3 +2737,266 @@ timetable_models, road (hash); обратные routing → intercity/urban за
 111 files clean, strict mypy src/tests/examples — 108 files clean; 12 README
 controls и 8 standalone examples; lock/pip/product-config/diff checks прошли.
 Точные команды и handoff записаны в docs/tasks/ml1.md.
+
+
+## Грузовой вычислительный слой: три самостоятельных анализа — 09.11.2026
+
+Текущая готовность: нормализованные принятые данные → вычисление городской
+доступности, полной доставки и отдельных pipeline connections. Старые scalar
+freight/urban.py, freight/intercity.py и pipeline/utilization.py не изменены.
+Ни реальные грузовые перевозки РФ, ни подключение российских территорий к трубам
+на основании этих синтетических примеров не подтверждаются. HTTP, jobs, ingestion,
+production deployment и совместный BACKEND E2E остаются внешней интеграции.
+
+### Общий профиль и подтверждения
+
+`CargoProfile` хранит profile ID/version, food/nonfood, независимую urgency,
+структурированный `CargoTemperature(controlled,min_c,max_c,condition_id)`,
+handling/access requirements и `CargoVehicle` (class, kg/metres, access class,
+restrictions). Допустимы отрицательные Celsius; диапазон и конечность проверяются.
+Food не означает urgent/chilled. `requirements_hash` включает всё физическое
+содержимое и версию, но исключает urgency: изменение только D не меняет физическую
+совместимость. `CargoContext` фиксирует snapshot/graph/build/calendar/rules/profile
+и v3. Контекст и требования включены в stable IDs.
+
+`CargoCompatibility` связывает context, profile ID/version/hash, направленные
+from/to IDs, service ID, inbound/outbound/delivery, период и evidence со статусом
+confirmed/forbidden/unknown. Проверяется весь binding, не только boolean:
+подмена профиля/ID/версий отвергается, непокрытый период становится unknown.
+Правдивость документа и приёмка внешнего источника остаются внешним условием.
+Подтверждения движения, обработки и **всего интервала ожидания** проверяются
+отдельно; chilled constraints нельзя молча потерять на терминале или стоянке.
+Новых сроков годности, коэффициентов потерь и временных допусков нет.
+
+Длительности нормализованы в целые микросекунды и aware UTC. Непредставимые
+дробные времена отклоняются, не округляются при поиске. Конечные времена
+сравниваются как timestamps, а не отображаемые score. Input collections
+замораживаются/сортируются; входные записи не меняются.
+
+### Городская инфраструктура
+
+```python
+analyze_urban_cargo(
+    profile, requested_at, sites, nodes, routes, receipts, coverage,
+    selected_node_types, area_km2, *, config,
+) -> UrbanCargoAnalysis
+```
+
+Модели: CargoSite, CargoNode, UrbanCargoCoverage, TruckRoute, TruckSearchReceipt;
+результаты UrbanCargoSiteAnalysis/TypeAnalysis/Analysis. `expected_site_ids` —
+независимый принятый roster физических площадок выбранной территории. Одинаковые
+повторные записи одной площадки дедуплицируются, конфликтующие отвергаются.
+Missing expected site создаёт unknown row и блокирует полный равновесный агрегат;
+неподтверждённый тоннаж/население/юридические адреса веса не заменяют.
+Incomplete roster при пустом списке — unknown, а не подтверждённое ZERO_WEIGHT.
+
+У каждого CargoNode ровно один explicit analysis_type с mapping evidence:
+port→port, rail_terminal→rail_freight_station; logistics_terminal требует
+принятого выбора **terminal либо logistics_center**, без двойной классификации
+одного node ID. Airport/pipeline_terminal не переименовываются в эти городские
+категории. Отсутствующую классификацию ML2 передаёт как ограничение каталога,
+а не как доказанную пустую категорию. Запрос оценивает каждый тип отдельно.
+
+Outbound — site→node, inbound — node→site. Route endpoints, direction и requested
+instant сверяются; обратное время не выводится. TruckRoute — новый грузовой тип
+с costing=truck, vehicle/access requirements, fixed graph/build/profile, физическими
+network+origin-access+destination-access seconds и evidence. Каждый подъезд задан
+явно, включая подтверждённый 0. Passenger RoadResult/RoadBuild auto не принимаются
+как freight proof. Receipt привязан к route fingerprint и query scope hash:
+`content_hash((context, profile.requirements_hash, from_id, to_id, requested_at, direction))`.
+Его complete/minimum flags являются принятым доказательством **внешнего truck
+executor**, не результатом собственного поиска engine по неизвестным road edges.
+Поддельную согласованность ID/hash engine проверяет; источник receipt не удостоверяет.
+
+Среди разрешённых кандидатов выбирается минимум времени к совместимому узлу.
+Unknown alternative, incomplete node catalogue или unproven per-pair minimum
+сохраняют best-known route и observed infrastructure times, но не полный site index.
+Подтверждённый запрет отличается от unknown. Полный no-route требует полного
+применимого roster/catalogue и подтверждений поиска по всем необходимым парам.
+Только тогда прежний scalar получает confirmed_no_route=True. H берётся из
+административной площади и текущих bands через shared/area.py; прежняя публичная
+urban.select_h_seconds сохранила owner/signature/поведение. freight→urban нет.
+Готовые site indices агрегируются прежним urban_cargo_territory_index равновесно.
+
+### Доставка до завершения конечных операций
+
+```python
+analyze_intercity_cargo(
+    scope, started_at, profile, states, actions, readiness,
+    *, config, rules, resource_limit=None,
+) -> IntercityCargoAnalysis
+```
+
+`CargoDeliveryRules` / `load_cargo_delivery_rules(path=None)` /
+`cargo_delivery_rules_from_mapping` читают departure_window_days из approved config.
+Старый FreightConfig не менялся. Первое movement departure из [start,start+31d)
+для всех urgent/ordinary/nonurgent; продолжения и completion могут быть позже.
+D=24/72/744h — half-life, не дедлайн и не отдельное окно; A не участвует в cargo score.
+
+CargoState сохраняет node, stage, execution и conditions ID. Начальная readiness
+подтверждается в начальном unprepared state на общий started_at. Unknown readiness
+или missing initial-state roster не подтверждает отсутствие доставки. Из unprepared
+нельзя сразу двигаться: явная загрузка (или принятая not_required zero operation)
+переводит в prepared конкретного execution. Movement требует совпадения execution
+на обоих концах; пересадка/смена execution проходит через принятую обработку.
+Финиш только в completed state destination, достигаемом handling, включая явное
+подтверждение отсутствия необходимости операции. Passenger footpaths не грузовые arcs.
+
+`CargoAction` — конкретное принятое исполнение/обязательство, с уникальным ID,
+calendar active True/False/None и evidence, необходимыми выполненными operations,
+physical seconds и compatibility. Movement имеет **фиксированное подтверждённое
+scheduled_at**, включая road: наличие road path не создаёт мгновенный truck departure.
+Handling с scheduled_at — фиксированный appointment; без него — **обязательная
+немедленная обработка при готовности**, не свободно выбираемое continuous window.
+Другие допустимые appointments/wait policies должны быть представлены принятыми
+альтернативными actions. Engine не дискретизирует непрерывную доступность и не
+заявляет точность для неописанного temporal model.
+
+Положительный gap до action допускается лишь при явной CargoWaitPolicy с
+initial_wait/transfer_wait и подтверждением условий на всём gap. После начала
+движения initial_wait не используется. Loading входит в handling, поэтому
+initial_wait **не** равен first departure−start при уже учтённой погрузке.
+Все CargoInterval идут подряд без пересечений; complete total совпадает с
+completed_at−started_at. Неизвестный gap/операция/условие не становится ожиданием/0.
+Known movement и префикс остаются в incomplete_paths, но total/index unknown;
+полный найденный маршрут при partial search сохраняет корректный preliminary score.
+
+Алгоритм — exact priority search конечного execution/operation graph. Метка хранит
+state, **точный ready timestamp**, origin, использованные конкретные action IDs,
+mode set и first departure. Более ранний ready не доминирует поздний без проверки
+воспроизводимости ожидания; поэтому такие метки сохраняются. Один execution/action
+записи используется не более раза (повторное реальное событие требует другого ID),
+что делает поиск конечным и безопасным на zero cycles. Completed candidates
+сохраняются при обнаружении, даже до resource stop. Выбор — минимум completion
+для каждого mode/mixed и overall, затем число actions и stable IDs. Все допустимые
+ветви изучаются; ранний приезд в терминал не завершает поиск.
+
+Это точный алгоритм для **переданного конечного графа**; frontier может быть
+экспоненциальным. Произвольных time/transfer cutoffs нет. Resource limit прерывает
+расширение states, сохраняет best-known и никогда не выдаёт полный победитель.
+Finite accepted horizon и coverage хранятся отдельно; выход за него — unknown.
+Подтверждение глобальной полноты зависит от services/calendars/operations/
+compatibility/modes coverage, а не от полноты одного найденного пути.
+
+### Трубы: отдельные принятые end-to-end connections
+
+```python
+analyze_pipeline_connections(scope, observations, *, config) -> PipelineConnectionsAnalysis
+```
+
+PipelineContext/AnalysisScope фиксируют snapshot/graph/registry, территории,
+направленные boundary sets, продукт и точный период. PipelineEndpoint отдельно
+подтверждает intake/delivery node, territory, product, period и evidence.
+PipelineConnection — принятая **end-to-end** связь, не геометрический участок трубы;
+транзитный регион не становится endpoint. Query не зеркалит направление и не
+переносит oil на gas. При A→X и X→B совпадение X ничего не композирует.
+`limitations` явно содержат ACCEPTED_END_TO_END_CONNECTIONS_ONLY,
+NO_CONNECTION_COMPOSITION и NO_AGGREGATE_UTILIZATION. Для будущей композиции нужны
+принятые правила стыковки/продукта/направления/приёма-сдачи; гидравлика/max-flow и
+коммерческая доступность не выдумываются. Full absence касается заявленного
+каталога end-to-end connections, не гипотетической физической прокачки по линиям.
+
+PipelineMeasurement хранит nullable value, прежний PipelineBasis, context и
+фактические period timestamps. V/Q проверяются и между собой, и против конкретного
+connection/product/direction/period/query. Даже одинаковые системные bases не
+подставляются на выбранную пару. Конверсия годовой Q или единиц автоматически не
+делается: нужно принятое нормализованное значение мощности за тот же период.
+Сопоставимые observations вызывают прежний pipeline_utilization. Несопоставимые
+дают INCOMPARABLE_PIPELINE_DATA, Q<=0 отвергается, U>100 сохраняется с QA.
+U разных связей не усредняется и не суммируется; общего U у анализа нет.
+Q−V не считается свободной коммерческой мощностью. Pipeline не проходит cargo index.
+Confirmed connection + unknown V/Q сохраняет связь; V=0 даёт U=0, не отсутствие.
+Empty partial catalogue → unknown, полный empty catalogue → confirmed_absent.
+
+### Canonical mapping и конкретные зависимости
+
+Прочитаны BACKEND `6ce41795572b3708dc09f49868a3cefaa7e77fb3` и ML2
+`0e6dbca005674f86c5cde7c2f2087477d509e7df`; contracts и чужие модули не менялись.
+
+| Canonical input/output | Нормализация / обязательное дополнение |
+|---|---|
+| DeliveryCargoProfile.food_class/urgency | CargoProfile.goods/urgency независимо |
+| temperature_requirements controlled/min/max | CargoTemperature, preserving Celsius range + accepted condition ID |
+| vehicle_constraints height/weight/restrictions | CargoVehicle metres / normalized kg / restrictions; недостающие actual width/length/class/access требуют supplement, без придуманных defaults |
+| FreightSite.site_id/access_node_id | физический site ID; truck access seconds сохраняются отдельно, expected roster из accepted scope |
+| FreightNode.kind | явный node-specific mapping в request freight_node_types, см. ограничения выше |
+| FreightCompatibility | дополнить context/profile version/hash/service/time binding и three-state provenance; raw compatible bool не подставлять напрямую |
+| CargoDeliveryResult / canonical Metric, Score | known raw movement/components отдельно; full total/index только completed chain; analysis proof/coverage передавать отдельно от scalar value |
+| PipelineConnection, Quantity | явные confirmed intake/delivery endpoints/territories и period context; Quantity basis connection ID/direction/product/unit/period привязать к выбранной записи |
+| SubjectRef + evidence | site/node/connection и direction/profile scope из request + accepted data; сохранять rich chosen path/conditions/snapshot/limitations |
+
+**ML2:** физические площадки и полный expected roster, node classification proof,
+совместимость по profile contents, truck connectors, cargo service executions,
+readiness/handling/wait conditions и calendar/coverage. Для pipeline — принятые
+end-to-end connections с intake/delivery и сопоставимыми V/Q. В опубликованном
+adapter freight_compatibility/pipeline_connections пока пусты; календарь not_collected.
+Это не блокировало синтетические вычисления, но реальную готовность не подтверждает.
+**BACKEND:** адаптеры профилей/units/periods и недостающие supplements, богатые
+результаты/nullable/proof states, expected rosters, отдельные directions/profiles,
+правильное unknown vs absent, никаких full ratings по known-only minima.
+**DEVOPS/executor:** грузовой routing profile с проверенными actual vehicle/access
+constraints, закреплёнными build/graph/options и scoped minimum receipts; accepted
+temporal model/horizon и worker resource limits. Нужны реальные CPU/RAM измерения,
+исполняемый truck provider и joint E2E; HTTP/deployment сюда не добавлены.
+
+### Примеры и проверки
+
+```sh
+PYTHONPATH=packages/engine/src uv run --frozen python packages/engine/examples/synthetic_urban_cargo.py
+PYTHONPATH=packages/engine/src uv run --frozen python packages/engine/examples/synthetic_delivery.py
+PYTHONPATH=packages/engine/src uv run --frozen python packages/engine/examples/synthetic_pipeline.py
+```
+
+<!-- executable-example -->
+```python
+import runpy
+
+urban = runpy.run_path("packages/engine/examples/synthetic_urban_cargo.py")["run_demo"]()
+assert urban.h_seconds.value == 1200
+assert [s.evaluation.index.value for s in urban.by_type[0].sites] == [50, 25]
+assert urban.by_type[0].index.value == 37.5
+```
+
+<!-- executable-example -->
+```python
+import runpy
+
+delivery = runpy.run_path("packages/engine/examples/synthetic_delivery.py")["run_demo"]()
+assert delivery.overall.best_known.evaluation.total_seconds.value == 86400
+assert delivery.overall.best_known.evaluation.index.value == 50
+assert delivery.overall.best_known.known_movement_seconds == 57600
+```
+
+<!-- executable-example -->
+```python
+import runpy
+
+pipeline = runpy.run_path("packages/engine/examples/synthetic_pipeline.py")["run_demo"]()
+assert pipeline.state == "connected"
+assert pipeline.connections[0].utilization.utilization_percent.value == 120
+assert pipeline.connections[0].utilization.diagnostics == ("UTILIZATION_ABOVE_100",)
+```
+
+Контроли: urban H1200 → site50/site25/mean37.5; unknown faster port не даёт
+полного минимума. Delivery: wait3600 + move57600 + handling18000 + transfer wait7200
+=86400, urgent50. Arrival10h+unload8h проигрывает 12h+1h=13h. D/2D дают50/25
+для всех срочностей при неизменном31d окне. Oil A→B U120% с QA, unknown quantities
+и zero volume не удаляют connection; reverse/transit/gas/несопоставимые данные
+не создают ложных связей и процентов.
+
+Полный suite **830 passed** (исходные782), strict mypy src/tests/examples
+**124 files clean**, Ruff check/format. Проверены все прежние **201** exports,
+signatures/defaults/fields/frozen, добавлено36, всего237. Historical snapshots
+141/168/183 сохранены. Прежние scalar outputs/static controls сохранены.
+Independent raw-action DFS oracle (25 малых сетей), direction/roster/compatibility,
+loading readiness/terminal handling/unknown gaps, half-open31d, fractional UTC/DST,
+zero operations/cycles, invalid numbers/IDs/versions, permutations и subprocess
+hash seeds покрыты тестами. Full command list и handoff — docs/tasks/ml1.md.
+
+
+Wire conventions: readiness receipt использует from_id=to_id initial node,
+service_id=`readiness:<state_id>`, direction=delivery, ready_at=started_at. Wait
+receipt использует from_id=to_id текущего узла, service_id будущего action и
+покрывает весь gap; operation/movement receipt связывает фактические from/to
+nodes этого action. Это normalized supplements, не утверждение, что canonical
+DTO уже содержит данные поля.
