@@ -847,6 +847,19 @@ def _destination_drafts(
                 evidence_ids=evidence_ids if required else [],
             )
         )
+    identities: dict[tuple[str, str], list[str]] = {}
+    for draft in drafts:
+        if not draft.reasons:
+            key = (draft.category, draft.osm_ref or draft.destination_id)
+            identities.setdefault(key, []).append(draft.destination_id)
+    repeated = sorted(ids for ids in identities.values() if len(ids) > 1)
+    _check(
+        checks,
+        "destination_identity_unique",
+        not repeated,
+        "An accepted object (OSM object or registry record) occurs once per category",
+        repeated=repeated[:20],
+    )
     accepted_public = [
         d.destination_id
         for d in drafts
@@ -1337,7 +1350,14 @@ def _school_buildings(
     rest: list[cat.Candidate] = []
     linked: dict[str, int] = {}
     too_far = 0
+    occupied_skipped = 0
+    # an OSM object already placed for a school (its registry address) is not relinked
+    occupied = {(d.category, d.osm_ref) for d in drafts if d.osm_ref}
     for candidate in sorted(candidates, key=lambda c: c.osm_refs[0]):
+        if any((candidate.category, ref) in occupied for ref in candidate.osm_refs):
+            occupied_skipped += 1
+            rest.append(candidate)
+            continue
         tags = candidate.tags
         number = _school_number(
             candidate.name, tags.get("name"), tags.get("official_name"), tags.get("short_name")
@@ -1392,12 +1412,14 @@ def _school_buildings(
             )
         )
         linked[candidate.category] = linked.get(candidate.category, 0) + 1
+        occupied.add((candidate.category, candidate.osm_refs[0]))
     stats = {
         "rules": SCHOOL_BUILDING_RULES,
         "numbered_registry_schools": len(by_number),
         "repeated_numbers": sum(1 for n in counts.values() if n > 1),
         "linked_buildings": linked,
         "beyond_campus_distance": too_far,
+        "occupied_by_another_school": occupied_skipped,
     }
     return rest, stats
 
@@ -1502,6 +1524,9 @@ def _university_drafts(
         if reason is None:
             linked_points.setdefault(org.org_id, []).append(point_utm)
     unlocated: list[dict[str, str]] = []
+    # one place per OSM object: organisations at one address share the destination
+    by_ref = {d.osm_ref: d for d in drafts if d.osm_ref and not d.reasons}
+    shared_address = 0
     for org in local:
         if reasons[org.org_id] is not None:
             continue
@@ -1516,6 +1541,12 @@ def _university_drafts(
         if any(point_utm.distance(p) <= 100 for p in linked_points.get(org.org_id, [])):
             continue
         record = org_evidence(org)
+        if hit.osm_ref in by_ref:
+            shared = by_ref[hit.osm_ref]
+            if record not in shared.evidence_ids:
+                shared.evidence_ids.append(record)
+            shared_address += 1
+            continue
         destination_id = (
             f"{config.city_id}-college_university-{obrnadzor.SOURCE_ID}-{org.org_id.lower()}"
         )
@@ -1534,6 +1565,7 @@ def _university_drafts(
                 ownership_verified=True,
             )
         )
+        by_ref[hit.osm_ref] = drafts[-1]
         ownership.append(
             CategoryOwnership(
                 destination_id=destination_id,
@@ -1563,6 +1595,7 @@ def _university_drafts(
         "public_orgs": sum(1 for r in reasons.values() if r is None),
         "rejected": rejected,
         "accepted_destinations": sum(1 for d in drafts if not d.reasons),
+        "organisations_sharing_an_address": shared_address,
         "osm_linked": links,
         "osm_unlinked": len(unmatched),
     }
