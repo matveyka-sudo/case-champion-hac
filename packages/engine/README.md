@@ -12,6 +12,9 @@ Scenario Engine выполняет immutable изменения расписан
 Загрузки внешних расписаний, сетки, построения реальных OD-матриц, HTTP и LLM здесь нет.
 
 Независимые находки, измерения и границы проверки: [AUDIT.md](AUDIT.md).
+Завершение критических oracle/stress-проверок: **922 tests passed**,
+**READY WITH EXTERNAL DEPENDENCIES**; установка пакета, DTO supplements,
+accepted data/executor и совместный E2E остаются условиями интеграции.
 Основной сценарный API и handoff описаны в разделе «Scenario Engine v3».
 
 ## Структура и зависимости

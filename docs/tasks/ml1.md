@@ -1103,3 +1103,42 @@ and lossless full-result publication; ML2 needs shared physical execution IDs,
 calendars/resources/compatibility. Актуальный ML2 remote216676a уже содержит
 accepted городские bundles/справочники; их реальное ingestion/E2E здесь не проверено.
 Чужие модули, manifests/lock/config и a2-dev.bundle не изменялись.
+
+## Завершение оставшихся проверок аудита — 09.11.2026
+
+Исходный HEAD8f2e3bbf31ac5232481d91158491b98f45e09b73, основной PyCharm checkout,
+work/ml1, FF без обновления. Независимо881 passed/12.19s. Предыдущие исправления
+сохранены. Новый P1: additional_departure создавал рейс только в target timetable,
+не в других datasets того же физического исполнения. Новый тест сначала упал;
+closure physical aliases теперь применяется к обоим шаблонам и новый рейс виден
+всем связанным jobs. Проверены before/after, repeat, unchanged baseline, publication
+attack и mismatch operation. Чужие даты не включаются через один trip_id.
+
+Новые independent raw DFS oracles:30 seeds расписаний (urban min arrival + wait cap,
+intercity whole-chain score/mode/frequency); cargo widths1/2/3/5 с terminal handling,
+unknown unload и лимитами; Fraction OD/28 slices, conflicting/idempotent batches,
+wrong mode/missing pair; last return after midnight/DST;7/31-day half-open boundaries.
+41 новых case, общий результат **922 passed/13.69s,0 skipped**. Ruff check/format144
+files, strict mypy140 files, all16 README controls/12 synthetic examples,
+lock/pip/config/diff PASS. Public API268 и compatibility/architecture guards сохранены.
+
+Нагрузки:60/240 timetable runs; intercity396/6858 states,0.43/4.15s;
+cargo width3/8,20/90 states,0.052/0.739s; OD12/32points,3696/27776pair-slices,
+0.305/2.307s; scenario4/16jobs,0.585/3.032s. Полные peak tracemalloc measurements,
+повтор walk500/2000, сложность и воспроизводимые команды — packages/engine/AUDIT.md.
+Walk predecessor rewrite не обоснован: materialized paths для всех nodes имеют
+O(V²) output lower bound на цепи, незаметная смена публичного API недопустима.
+
+Вердикт: **READY WITH EXTERNAL DEPENDENCIES** в нормализованной проверенной области.
+Закрыты оставшиеся критические oracle/stress-пункты; подтверждённых неисправленных
+P0/P1 в выполненных проверках нет. Full production E2E не заявлен.
+DEVOPS: build-system + src package discovery + установка engine, isolated wheel
+import без PYTHONPATH; config explicit deployment path. Минимальный TOML и
+acceptance test приведены в AUDIT.md; манифест не изменялся.
+BACKEND: infeasible DTO, dated event/hash/incoming/timing supplements; текущий
+whole_trip validator несовместим с departure_tail — не публиковать ложный whole_trip;
+lossless evidence/nullable/completeness/all worsening и atomic publication.
+ML2: accepted resources/calendars/physical IDs и достаточные normalized data.
+Data/bundles в checkout отсутствует,2 readiness CLI не запускались с реальными
+данными; все synthetic examples выполнены. Ветки BACKEND6ce4179 и ML2216676a
+проверены read-only. Merge/rebase/force-push и изменения чужих пакетов не выполнялись.
