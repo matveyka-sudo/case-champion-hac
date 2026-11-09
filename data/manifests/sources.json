@@ -81,7 +81,7 @@
         "attribution": "ФГУП «Росморпорт», rosmorport.ru"
       },
       "status": "accepted",
-      "datasets": ["rosmorport.seaports-kaliningrad-20261108", "rosmorport.seaports-novorossiysk-20261108"]
+      "datasets": ["rosmorport.seaports-kaliningrad-20261108", "rosmorport.seaports-novorossiysk-20261108", "rosmorport.seaports-ru-20261109"]
     },
     {
       "source_id": "osm_geofabrik",
@@ -105,6 +105,7 @@
       "datasets": [
         "osm_geofabrik.central-fed-district-261107",
         "osm_geofabrik.kaliningrad-261107",
+        "osm_geofabrik.russia-261108",
         "osm_geofabrik.south-fed-district-261107"
       ]
     },

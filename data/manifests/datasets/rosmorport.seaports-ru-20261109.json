@@ -1,0 +1,37 @@
+{
+  "dataset_id": "rosmorport.seaports-ru-20261109",
+  "source_id": "rosmorport",
+  "source_url": "https://www.rosmorport.ru/services/seaports/",
+  "retrieved_at": "2026-11-09T15:42:01Z",
+  "publication_date": null,
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "РФ: морские порты, где работает ФГУП «Росморпорт»",
+  "license": {
+    "name": "Используются только факты: перечень портов, регистрационные номера и мощности (ст. 1259 ГК РФ)",
+    "url": "https://www.rosmorport.ru/",
+    "status": "permitted",
+    "attribution": "ФГУП «Росморпорт», rosmorport.ru"
+  },
+  "access_method": "manual",
+  "raw_path": "rosmorport/seaports-ru-20261109.zip",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "fc13691e682bfce702d3f7f0ceeeca9019842f962edd57df2e6d86cf8c29ccf3",
+    "size_bytes": 921458
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "services_seaports.html": "перечень морских портов РФ по бассейнам и филиалам (видимый текст)",
+    "<филиал>_seaports.html": "разделы «Морской порт …»: регистрационный номер, мощности, перечень услуг",
+    "asf, mah": "страницы Астраханского и Махачкалинского филиалов: разделов портов нет"
+  },
+  "coverage": "Страницы /services/seaports/ и /filials/<филиал>_seaports/ девяти филиалов на дату загрузки (у anf, arf, azovb, mgf страниц нет — 404)",
+  "limitations": [
+    "Разделы с регистрационным номером есть у 42 из 54 портов перечня",
+    "Перечни стивидоров на большинстве страниц скрыты в HTML-комментарии",
+    "Мощности — как опубликованы; в разделе Приморска «89 500 тонн в год»"
+  ],
+  "status": "accepted",
+  "qa_report": "data/directories/russia-seaports-2026-11-09.1/qa_report.json"
+}

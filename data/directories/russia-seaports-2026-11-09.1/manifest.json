@@ -1,0 +1,63 @@
+{
+  "format": "a2-ml2-seaport-directory",
+  "directory_id": "russia-seaports-2026-11-09.1",
+  "created_at": "2026-11-09T16:14:42.737254+00:00",
+  "rules": "ru-seaports-rules-v1",
+  "territory_directory": {
+    "directory_id": "russia-territories-2026-11-09.1",
+    "manifest_sha256": "c168dc5104a8babccacb921593fb8c8a99eb691b369da3d78b11e4f17476bd6b"
+  },
+  "sources": [
+    {
+      "source_id": "rosmorport",
+      "dataset_id": "rosmorport.seaports-ru-20261109",
+      "url": "https://www.rosmorport.ru/services/seaports/",
+      "retrieved_at": "2026-11-09T15:42:01+00:00",
+      "raw_sha256": "fc13691e682bfce702d3f7f0ceeeca9019842f962edd57df2e6d86cf8c29ccf3",
+      "license": "Используются только факты: перечень портов, регистрационные номера и мощности (ст. 1259 ГК РФ)"
+    },
+    {
+      "source_id": "osm_geofabrik",
+      "dataset_id": "osm_geofabrik.russia-261108",
+      "url": "https://download.geofabrik.de/russia-261108.osm.pbf",
+      "retrieved_at": "2026-11-09T16:08:58+00:00",
+      "raw_sha256": "97f03c8b7a83514519616ccf46514e51317130ac350db3acfefe4e55da4cf014",
+      "license": "ODbL-1.0"
+    }
+  ],
+  "osm_national_rules": "osm-national-v1",
+  "coverage": {
+    "port": {
+      "status": "partial",
+      "reason": "ROSMORPORT_SEAPORTS_ONLY"
+    },
+    "rail_terminal": {
+      "status": "unknown",
+      "reason": "FREIGHT_OPERATIONS_SOURCE_UNAVAILABLE"
+    },
+    "logistics_terminal": {
+      "status": "not_collected",
+      "reason": "NOT_COLLECTED"
+    },
+    "airport": {
+      "status": "not_collected",
+      "reason": "NOT_COLLECTED"
+    },
+    "pipeline_terminal": {
+      "status": "not_collected",
+      "reason": "NOT_COLLECTED"
+    }
+  },
+  "files": {
+    "seaports": {
+      "path": "seaports.json",
+      "sha256": "0183dd86ea0d0a3c11fdbdfe5594de267b7d04dc9289bd3ff796866fe217e201",
+      "rows": 54
+    },
+    "qa_report": {
+      "path": "qa_report.json",
+      "sha256": "910195df82486f2c575c9341e2221d69049eaefd17fc3fc375698802ce1e0368",
+      "rows": 5
+    }
+  }
+}

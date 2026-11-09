@@ -1,0 +1,66 @@
+{
+  "format": "a2-ml2-intercity-node-directory",
+  "directory_id": "russia-intercity-nodes-2026-11-09.2",
+  "created_at": "2026-11-09T16:16:01.047923+00:00",
+  "rules": "ru-intercity-nodes-rules-v2",
+  "territory_directory": {
+    "directory_id": "russia-territories-2026-11-09.1",
+    "manifest_sha256": "c168dc5104a8babccacb921593fb8c8a99eb691b369da3d78b11e4f17476bd6b"
+  },
+  "sources": [
+    {
+      "source_id": "wikidata",
+      "dataset_id": "wikidata.ru-intercity-nodes-20261109",
+      "url": "https://query.wikidata.org/sparql",
+      "retrieved_at": "2026-11-09T15:12:52+00:00",
+      "raw_sha256": "7506de88429834d2855dadbc4d0fdb043e41a1aa1dd8e5a8f34ab60138570d5f",
+      "license": "CC0-1.0"
+    },
+    {
+      "source_id": "ourairports",
+      "dataset_id": "ourairports.airports-20261108",
+      "url": "https://davidmegginson.github.io/ourairports-data/airports.csv",
+      "retrieved_at": "2026-11-08T13:42:04.183446+00:00",
+      "raw_sha256": "5754df21f25cb08d2def8a80b3eb609ddc52a4217afa8eb48280b6428c06e78f",
+      "license": "Public Domain"
+    },
+    {
+      "source_id": "osm_geofabrik",
+      "dataset_id": "osm_geofabrik.russia-261108",
+      "url": "https://download.geofabrik.de/russia-261108.osm.pbf",
+      "retrieved_at": "2026-11-09T16:08:58+00:00",
+      "raw_sha256": "97f03c8b7a83514519616ccf46514e51317130ac350db3acfefe4e55da4cf014",
+      "license": "ODbL-1.0"
+    }
+  ],
+  "coverage": {
+    "rail_station": {
+      "status": "partial",
+      "reason": "COMMUNITY_DIRECTORY_PASSENGER_ROLE_UNVERIFIED"
+    },
+    "bus_station": {
+      "status": "partial",
+      "reason": "OSM_NAMED_BUS_STATIONS_IN_CITY_OUTLINES"
+    },
+    "airport": {
+      "status": "partial",
+      "reason": "COMMUNITY_DIRECTORY_SERVICE_UNVERIFIED"
+    },
+    "ferry_terminal": {
+      "status": "not_collected",
+      "reason": "NOT_COLLECTED"
+    }
+  },
+  "files": {
+    "nodes": {
+      "path": "nodes.json",
+      "sha256": "9f5b57eca5ddaee82efa8300cb01c0dffa1f81940759181dae19f58c1bc6cbdf",
+      "rows": 2957
+    },
+    "qa_report": {
+      "path": "qa_report.json",
+      "sha256": "7bf7cd8fd2c148285f9e144a1173c837c64bc5f2bdb72329ce8f7c7596392f30",
+      "rows": 7
+    }
+  }
+}
