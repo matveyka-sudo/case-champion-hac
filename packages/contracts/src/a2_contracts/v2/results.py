@@ -130,9 +130,43 @@ class Score(ContractModel):
     subject: SubjectRef
     ranking_eligible: bool = Field(strict=True)
     aggregation_basis: PopulationBasis | SiteBasis | None = None
+    calculation_kind: (
+        Literal["reference_ratio", "initial_wait", "aggregate", "delivery_deadline"] | None
+    ) = Field(default=None, exclude_if=lambda value: value is None)
     reference_ids: list[Identifier] = Field(
         default_factory=list, exclude_if=lambda value: not value
     )
+
+    def validate_calculation(self, analysis_kind: AnalysisKind) -> None:
+        """Shared calculation shape checks for analyses and saved scenario publication."""
+        if self.subject.kind == "territory" and self.aggregation_basis is not None:
+            expected = PopulationBasis if analysis_kind == "urban_passenger" else SiteBasis
+            if analysis_kind in ("urban_passenger", "urban_cargo") and not isinstance(
+                self.aggregation_basis, expected
+            ):
+                raise ValueError("Territorial weighting must match passenger/cargo meaning")
+        allowed = (
+            {"reference_ratio", "initial_wait", "aggregate"}
+            if analysis_kind == "intercity_passenger"
+            else {"reference_ratio", "delivery_deadline", "aggregate"}
+            if analysis_kind == "intercity_cargo"
+            else set()
+        )
+        if self.calculation_kind is not None and self.calculation_kind not in allowed:
+            raise ValueError("Calculation kind does not match analysis methodology")
+        if (
+            self.status != "available"
+            or self.completeness != "full"
+            or not analysis_kind.startswith("intercity_")
+        ):
+            return
+        if self.calculation_kind is None:
+            raise ValueError("Full intercity index requires explicit calculation semantics")
+        if self.calculation_kind == "aggregate":
+            if not self.components or any(c.kind != "score" for c in self.components):
+                raise ValueError("Full aggregate requires score operands")
+        elif not self.components or any(c.kind != "metric" for c in self.components):
+            raise ValueError("Full leaf index requires raw metric operands")
 
     @model_validator(mode="after")
     def genuine_score(self) -> Self:
@@ -150,6 +184,8 @@ class Score(ContractModel):
             raise ValueError("Duplicate score reference dependency")
         if self.status == "available" and self.completeness == "full":
             basis = self.aggregation_basis
+            if self.subject.kind == "territory" and basis is None:
+                raise ValueError("Full territorial index requires its aggregation basis")
             if isinstance(basis, PopulationBasis) and (
                 basis.population is None or basis.coverage < 1 or basis.unknown_positive_weight
             ):
@@ -223,6 +259,80 @@ def validate_score_dependencies(metrics: list[Metric], scores: list[Score]) -> N
         visit(identifier)
 
 
+def validate_score_context(
+    metrics: list[Metric], scores: list[Score], analysis_kind: AnalysisKind
+) -> None:
+    """Shared context checks after component identities and cycles were validated."""
+    metric_map = {item.metric_id: item for item in metrics}
+    score_map = {item.score_id: item for item in scores}
+    path_operands: dict[str, bool] = {}
+
+    def has_path_operand(score: Score) -> bool:
+        if score.score_id not in path_operands:
+            path_operands[score.score_id] = score.calculation_kind == "reference_ratio" or any(
+                component.kind == "score" and has_path_operand(score_map[component.id])
+                for component in score.components
+            )
+        return path_operands[score.score_id]
+
+    for score in scores:
+        score.validate_calculation(analysis_kind)
+        full = score.status == "available" and score.completeness == "full"
+        if (
+            full
+            and analysis_kind == "intercity_passenger"
+            and score.calculation_kind == "aggregate"
+            and not has_path_operand(score)
+        ):
+            raise ValueError("Passenger aggregate requires its path operand")
+        if (
+            full
+            and score.subject.kind == "territory"
+            and analysis_kind in ("urban_passenger", "urban_cargo")
+        ):
+            expected = PopulationBasis if analysis_kind == "urban_passenger" else SiteBasis
+
+            checked_weights: set[tuple[str, str]] = set()
+
+            def check_weight(component: ComponentRef) -> None:
+                key = (component.kind, component.id)
+                if key in checked_weights:
+                    return
+                checked_weights.add(key)
+                dependency = (
+                    metric_map[component.id]
+                    if component.kind == "metric"
+                    else score_map[component.id]
+                )
+                if isinstance(dependency, Metric):
+                    bases = [
+                        basis
+                        for basis in (dependency.population_basis, dependency.site_basis)
+                        if basis is not None
+                    ]
+                else:
+                    bases = (
+                        [dependency.aggregation_basis]
+                        if dependency.aggregation_basis is not None
+                        else []
+                    )
+                for basis in bases:
+                    if not isinstance(basis, expected) or basis.coverage < 1:
+                        raise ValueError(
+                            "Full territorial index requires complete compatible component weights"
+                        )
+                    if isinstance(basis, PopulationBasis) and (
+                        basis.population is None or basis.unknown_positive_weight
+                    ):
+                        raise ValueError("Unknown positive population weights block a full index")
+                if isinstance(dependency, Score):
+                    for child in dependency.components:
+                        check_weight(child)
+
+            for component in score.components:
+                check_weight(component)
+
+
 class AnalysisResult(ContractModel):
     schema_version: Literal["2"]
     analysis_id: Identifier
@@ -279,25 +389,29 @@ class AnalysisResult(ContractModel):
             if not set(item.source_refs) <= evidence:
                 raise ValueError("Unknown metric evidence reference")
         validate_score_dependencies(self.metrics, self.scores)
+        complete_chain_operands: dict[str, bool] = {}
+
+        def has_complete_chain_operand(score: Score) -> bool:
+            # The component graph was already validated as resolved and acyclic.
+            if score.score_id not in complete_chain_operands:
+                complete_chain_operands[score.score_id] = any(
+                    metrics[component.id].time_kind == "complete_chain"
+                    if component.kind == "metric"
+                    else has_complete_chain_operand(scores[component.id])
+                    for component in score.components
+                )
+            return complete_chain_operands[score.score_id]
+
         for score in self.scores:
             if (
                 score.methodology_version != self.methodology_version
                 or not set(score.evidence_refs) <= evidence
             ):
                 raise ValueError("Unknown score evidence or methodology")
-            if score.ranking_eligible and score.subject.kind == "territory":
-                expected = PopulationBasis if self.analysis_kind == "urban_passenger" else SiteBasis
-                if self.analysis_kind in ("urban_passenger", "urban_cargo") and not isinstance(
-                    score.aggregation_basis, expected
-                ):
-                    raise ValueError("Territorial weighting must match passenger/cargo meaning")
             if (
                 self.analysis_kind == "intercity_cargo"
                 and score.status == "available"
-                and not any(
-                    c.kind == "metric" and metrics[c.id].time_kind == "complete_chain"
-                    for c in score.components
-                )
+                and not has_complete_chain_operand(score)
             ):
                 raise ValueError("Cargo delivery score needs a complete-chain time operand")
         journeys = {j.journey_id: j for j in self.journeys}
@@ -343,17 +457,29 @@ class AnalysisResult(ContractModel):
         def check_required_dependencies(score: Score) -> None:
             full = score.status == "available" and score.completeness == "full"
             required_references = set(score.reference_ids)
+            kind = score.calculation_kind
             for component in score.components:
                 if component.kind != "metric":
                     continue
                 metric = metrics[component.id]
+                if (
+                    full
+                    and metric.journey_id is None
+                    and (
+                        kind == "initial_wait"
+                        or (kind == "reference_ratio" and not score.reference_ids)
+                    )
+                ):
+                    raise ValueError("Full path/wait index requires its journey operand")
                 if metric.journey_id is None:
                     continue
                 journey = journeys[metric.journey_id]
                 if full and (journey.status != "available" or journey.completeness != "full"):
                     raise ValueError("Full index requires its complete available journey")
-                if journey.reference_id is not None:
+                if kind == "reference_ratio" and journey.reference_id is not None:
                     required_references.add(journey.reference_id)
+            if full and kind == "reference_ratio" and not required_references:
+                raise ValueError("Reference-based index requires a reference operand")
             for identifier in required_references:
                 if identifier not in references:
                     raise ValueError("Unknown score reference dependency")
@@ -361,6 +487,7 @@ class AnalysisResult(ContractModel):
                 if full and (reference.status != "available" or reference.completeness != "full"):
                     raise ValueError("Full index requires its complete available reference")
 
+        validate_score_context(self.metrics, self.scores, self.analysis_kind)
         for score in self.scores:
             check_required_dependencies(score)
         if len({count.metric_id for count in self.counts}) != len(self.counts):

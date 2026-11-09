@@ -202,6 +202,7 @@ def _measure_key(value: Metric | Score) -> str:
     else:
         data.update(
             methodology_version=value.methodology_version,
+            calculation_kind=value.calculation_kind,
             aggregation_basis=value.aggregation_basis.model_dump(mode="json")
             if value.aggregation_basis
             else None,

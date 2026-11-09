@@ -463,7 +463,10 @@ class RaspProvider:
                     "GET",
                     self._url,
                     params=params,
-                    headers={"Authorization": self._key.get_secret_value()},
+                    headers={
+                        "Authorization": self._key.get_secret_value(),
+                        "Accept-Encoding": "identity",
+                    },
                     timeout=self._timeout,
                 )
                 if (
@@ -478,8 +481,18 @@ class RaspProvider:
                             request, follow_redirects=False, auth=None, stream=True
                         )
                         try:
+                            # HTTPX decodes gzip before yielding aiter_bytes chunks;
+                            # a small compressed chunk can allocate an unbounded
+                            # decoded buffer before our byte cap sees any data.
+                            # Reject actual compression, even if upstream ignores
+                            # Accept-Encoding, before any compression decoder runs.
+                            encoding = response.headers.get("Content-Encoding")
+                            if encoding is not None and encoding.strip().lower() != "identity":
+                                raise RaspError("invalid_response")
                             body = bytearray()
-                            async for chunk in response.aiter_bytes(chunk_size=65536):
+                            # Preserve transport chunks: HTTPX's fixed-size
+                            # rechunker copies a large input before yielding it.
+                            async for chunk in response.aiter_bytes():
                                 if len(body) + len(chunk) > self._max_response_bytes:
                                     raise RaspError("invalid_response")
                                 body.extend(chunk)

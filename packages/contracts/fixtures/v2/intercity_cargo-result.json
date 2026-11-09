@@ -104,7 +104,8 @@
           "site_id": null,
           "territory_id": null
         },
-        "value": 50.0
+        "value": 50.0,
+        "calculation_kind": "delivery_deadline"
       }
     ],
     "snapshot_id": "demo-snapshot",

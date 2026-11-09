@@ -329,6 +329,14 @@ def test_score_delta_uses_after_minus_before_without_computing_an_index() -> Non
         "evidence_refs": ["e-1"],
         "subject": {"kind": "territory", "territory_id": "city-1", "mode": "walk"},
         "ranking_eligible": False,
+        "aggregation_basis": dict(
+            population=100,
+            population_method="synthetic",
+            year=2026,
+            coverage=1.0,
+            unit="persons",
+            unknown_positive_weight=False,
+        ),
     }
     raw["before"] = {"metrics": [], "scores": [score]}
     raw["after"] = {"metrics": [], "scores": [score | {"score_id": "after-score", "value": 60.0}]}

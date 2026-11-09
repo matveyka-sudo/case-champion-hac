@@ -49,6 +49,14 @@ def score(identifier, value):
         evidence_refs=["e-1"],
         subject=dict(kind="territory", territory_id="city-1", mode="walk"),
         ranking_eligible=False,
+        aggregation_basis=dict(
+            population=100,
+            population_method="synthetic",
+            year=2026,
+            coverage=1.0,
+            unit="persons",
+            unknown_positive_weight=False,
+        ),
     )
 
 
@@ -259,7 +267,7 @@ def test_changed_population_basis_is_not_a_comparable_index():
         score("index", 60.0)
         | {
             "aggregation_basis": dict(
-                population=100.0,
+                population=200.0,
                 population_method="synthetic",
                 year=2026,
                 coverage=1.0,

@@ -92,6 +92,34 @@
         "value": 1800.0,
         "journey_id": "path",
         "time_kind": "complete_chain"
+      },
+      {
+        "completeness": "full",
+        "dependency_job_id": null,
+        "metric_id": "initial-wait",
+        "name": "Synthetic initial wait",
+        "population_basis": null,
+        "reason_code": null,
+        "site_basis": null,
+        "source_refs": [
+          "demo-evidence"
+        ],
+        "status": "available",
+        "subject": {
+          "category": null,
+          "destination_id": "demo-b",
+          "kind": "city_pair",
+          "mode": "rail",
+          "node_id": null,
+          "origin_id": "demo-a",
+          "point_id": null,
+          "site_id": null,
+          "territory_id": null
+        },
+        "unit": "seconds",
+        "value": 0.0,
+        "journey_id": "path",
+        "time_kind": null
       }
     ],
     "references": [
@@ -170,12 +198,18 @@
           "site_id": null,
           "territory_id": null
         },
-        "value": 50
+        "value": 50,
+        "calculation_kind": "reference_ratio"
       },
       {
         "aggregation_basis": null,
         "completeness": "full",
-        "components": [],
+        "components": [
+          {
+            "kind": "metric",
+            "id": "initial-wait"
+          }
+        ],
         "evidence_refs": [
           "demo-evidence"
         ],
@@ -196,7 +230,8 @@
           "site_id": null,
           "territory_id": null
         },
-        "value": 100
+        "value": 100,
+        "calculation_kind": "initial_wait"
       },
       {
         "aggregation_basis": null,
@@ -231,7 +266,8 @@
           "site_id": null,
           "territory_id": null
         },
-        "value": 70.71067811865476
+        "value": 70.71067811865476,
+        "calculation_kind": "aggregate"
       }
     ],
     "snapshot_id": "demo-snapshot",

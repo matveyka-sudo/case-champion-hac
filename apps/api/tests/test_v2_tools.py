@@ -192,6 +192,20 @@ async def test_saved_departures_match_equal_instants_with_different_offsets():
             ],
         )
     ]
+    # This control explains initial waiting, independently of any reference ratio.
+    payload["metrics"].append(
+        dict(
+            payload["metrics"][0],
+            metric_id="initial-wait",
+            value=0.0,
+            journey_id="synthetic-journey",
+        )
+    )
+    payload["scores"][0].update(
+        calculation_kind="initial_wait",
+        value=100.0,
+        components=[dict(kind="metric", id="initial-wait")],
+    )
     service.saved = AnalysisResult.model_validate(payload)
     access = scope(service).model_copy(update={"territory_ids": frozenset({"demo-a", "demo-b"})})
     result = await SavedTools(service).call(
@@ -300,6 +314,10 @@ async def test_departure_tool_integrates_real_gateway_through_mock_http_without_
         snapshot_id="synthetic-snapshot",
     )
     raw["snapshot_id"] = raw["versions"]["snapshot_id"] = "synthetic-snapshot"
+    # This tool control has a known raw time/reference ratio but no saved departures.
+    raw["journeys"] = []
+    raw["metrics"][0]["journey_id"] = None
+    raw["scores"][0]["reference_ids"] = [raw["references"][0]["reference_id"]]
     service.saved = AnalysisResult.model_validate(raw)
     service.registry.snapshots["synthetic-snapshot"] = snapshot()
     before = service.saved.model_dump_json()

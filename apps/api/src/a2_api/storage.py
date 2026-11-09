@@ -14,8 +14,13 @@ from a2_contracts.common import canonical_hash
 from a2_contracts.results import ProfileResult
 from a2_contracts.scenarios import Comparison, ScenarioRequest
 from a2_contracts.v2.requests import RequestBase, parse_analysis_request
-from a2_contracts.v2.results import AnalysisResult
-from a2_contracts.v2.scenarios import ScenarioProposal, ScenarioResult, ScenarioRunRequest
+from a2_contracts.v2.results import AnalysisResult, validate_score_context
+from a2_contracts.v2.scenarios import (
+    ScenarioProposal,
+    ScenarioResult,
+    ScenarioRunRequest,
+    _measure_key,
+)
 from pydantic import JsonValue, ValidationError
 
 from a2_api.jobs import (
@@ -582,6 +587,153 @@ class JobRepository:
         if claim.kind != "scenario" or not isinstance(claim.request, ScenarioRunRequest):
             raise DomainError(409, "incompatible_versions", "Scenario result differs from job kind")
         baseline = await self._check_scenario_inputs(connection, claim.request, context)
+        try:
+            validate_score_context(
+                result.after.metrics, result.after.scores, baseline.analysis_kind
+            )
+        except ValueError:
+            raise DomainError(
+                409, "incompatible_versions", "Scenario index weights are incomplete"
+            ) from None
+        references = {item.reference_id: item for item in baseline.references}
+        baseline_metrics = {item.metric_id: item for item in baseline.metrics}
+        after_metrics = {item.metric_id: item for item in result.after.metrics}
+        baseline_scores = {item.score_id: item for item in baseline.scores}
+        journeys = {item.journey_id: item for item in baseline.journeys}
+        renamed = {
+            effect.after_id: effect.before_id
+            for effect in result.deltas
+            if effect.kind == "metric" and effect.before_id and effect.after_id
+        }
+        renamed_scores = {
+            effect.after_id: effect.before_id
+            for effect in result.deltas
+            if effect.kind == "score" and effect.before_id and effect.after_id
+        }
+        for score in result.after.scores:
+            full = score.status == "available" and score.completeness == "full"
+            required_references = set(score.reference_ids)
+            previous_score = baseline_scores.get(score.score_id) or baseline_scores.get(
+                renamed_scores.get(score.score_id, "")
+            )
+            if previous_score is None:
+                matches_scores = [
+                    item
+                    for item in baseline.scores
+                    if _measure_key(
+                        item.model_copy(
+                            update={
+                                "completeness": score.completeness,
+                                "calculation_kind": score.calculation_kind,
+                            }
+                        )
+                    )
+                    == _measure_key(score)
+                ]
+                previous_score = matches_scores[0] if len(matches_scores) == 1 else None
+            if (
+                score.calculation_kind == "reference_ratio"
+                and previous_score is not None
+                and _measure_key(
+                    previous_score.model_copy(
+                        update={
+                            "completeness": score.completeness,
+                            "calculation_kind": score.calculation_kind,
+                        }
+                    )
+                )
+                == _measure_key(score)
+            ):
+                # A new declaration must not erase the frozen operands of this task.
+                required_references.update(previous_score.reference_ids)
+            try:
+                score.validate_calculation(baseline.analysis_kind)
+            except ValueError:
+                raise DomainError(
+                    409, "incompatible_versions", "Scenario index semantics are unavailable"
+                ) from None
+            for component in score.components:
+                if component.kind != "metric":
+                    continue
+                metric = after_metrics[component.id]
+                previous = baseline_metrics.get(metric.metric_id) or baseline_metrics.get(
+                    renamed.get(metric.metric_id, "")
+                )
+                if previous is None:
+                    matches = [
+                        item
+                        for item in baseline.metrics
+                        if _measure_key(item) == _measure_key(metric)
+                    ]
+                    previous = matches[0] if len(matches) == 1 else None
+                supplied_journey = journeys.get(metric.journey_id or "")
+                frozen_journey = (
+                    journeys.get(previous.journey_id or "") if previous is not None else None
+                )
+                if supplied_journey is not None and frozen_journey is not None:
+                    frozen_reference = references.get(frozen_journey.reference_id or "")
+                    origins = (
+                        frozen_reference.boundary_node_sets.origin_node_ids
+                        if frozen_reference
+                        else [frozen_journey.origin_node_id]
+                    )
+                    destinations = (
+                        frozen_reference.boundary_node_sets.destination_node_ids
+                        if frozen_reference
+                        else [frozen_journey.destination_node_id]
+                    )
+                    if (
+                        supplied_journey.origin_node_id not in origins
+                        or supplied_journey.destination_node_id not in destinations
+                    ):
+                        raise DomainError(
+                            409, "incompatible_versions", "Scenario journey belongs to another task"
+                        )
+                # Check both: a changed journey ID cannot replace the original
+                # task's frozen reference, even with another complete baseline journey.
+                dependency_journeys = [
+                    item for item in (frozen_journey, supplied_journey) if item is not None
+                ]
+                if full and score.calculation_kind == "initial_wait" and not dependency_journeys:
+                    raise DomainError(
+                        409, "incompatible_versions", "Scenario wait operand is unavailable"
+                    )
+                for journey in dependency_journeys:
+                    if full and (journey.status != "available" or journey.completeness != "full"):
+                        raise DomainError(
+                            409,
+                            "incompatible_versions",
+                            "Scenario journey dependency is unavailable",
+                        )
+                    if (
+                        score.calculation_kind == "reference_ratio"
+                        and journey.reference_id is not None
+                    ):
+                        required_references.add(journey.reference_id)
+            if full and score.calculation_kind == "reference_ratio" and not required_references:
+                raise DomainError(
+                    409, "incompatible_versions", "Scenario reference operand is unavailable"
+                )
+            if (
+                full
+                and score.calculation_kind == "delivery_deadline"
+                and not any(
+                    component.kind == "metric"
+                    and after_metrics[component.id].time_kind == "complete_chain"
+                    for component in score.components
+                )
+            ):
+                raise DomainError(
+                    409, "incompatible_versions", "Scenario delivery operand is incomplete"
+                )
+            for identifier in required_references:
+                reference = references.get(identifier)
+                if reference is None or (
+                    full and (reference.status != "available" or reference.completeness != "full")
+                ):
+                    raise DomainError(
+                        409, "incompatible_versions", "Scenario index reference is unavailable"
+                    )
         command = context.scenario_proposal
         assert command is not None
         if (

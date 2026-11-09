@@ -278,6 +278,24 @@
       "default": null,
       "title": "Aggregation Basis"
     },
+    "calculation_kind": {
+      "anyOf": [
+        {
+          "enum": [
+            "reference_ratio",
+            "initial_wait",
+            "aggregate",
+            "delivery_deadline"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Calculation Kind"
+    },
     "completeness": {
       "enum": [
         "full",

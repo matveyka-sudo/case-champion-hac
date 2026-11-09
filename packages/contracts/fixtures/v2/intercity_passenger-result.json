@@ -15,7 +15,49 @@
         "url": "https://example.org/synthetic"
       }
     ],
-    "journeys": [],
+    "journeys": [
+      {
+        "journey_id": "path",
+        "scope": "intercity",
+        "origin_node_id": "demo-a",
+        "destination_node_id": "demo-b",
+        "requested_departure_at": "2026-11-09T08:15:00+03:00",
+        "departure_at": "2026-11-09T08:15:00+03:00",
+        "arrival_at": "2026-11-09T08:45:00+03:00",
+        "total_seconds": 1800,
+        "initial_wait_seconds": 0,
+        "path_seconds": 1800,
+        "total_wait_seconds": 0,
+        "legs": [
+          {
+            "mode": "rail",
+            "kind": "ride",
+            "from_node_id": "demo-a",
+            "to_node_id": "demo-b",
+            "start_at": "2026-11-09T08:15:00+03:00",
+            "end_at": "2026-11-09T08:45:00+03:00",
+            "duration_seconds": 1800,
+            "service_id": "synthetic-train",
+            "evidence_refs": [
+              "demo-evidence"
+            ]
+          }
+        ],
+        "geometry": null,
+        "geometry_kind": "none",
+        "status": "available",
+        "reason_code": null,
+        "snapshot_id": "demo-snapshot",
+        "completeness": "full",
+        "traffic_mode": "static",
+        "time_kind": "complete_chain",
+        "reference_id": "reference",
+        "destination_object_id": null,
+        "evidence_refs": [
+          "demo-evidence"
+        ]
+      }
+    ],
     "last_returns": [],
     "limitations": [
       "synthetic_only"
@@ -46,10 +88,37 @@
           "territory_id": null
         },
         "unit": "seconds",
-        "value": 1800.0
+        "value": 1800.0,
+        "journey_id": "path",
+        "time_kind": "complete_chain"
       }
     ],
-    "references": [],
+    "references": [
+      {
+        "reference_id": "reference",
+        "seconds": 900,
+        "status": "available",
+        "completeness": "full",
+        "reason_code": null,
+        "profile_version": "edge-calibrated-v1",
+        "graph_version": "demo-graph",
+        "boundary_node_sets": {
+          "origin_node_ids": [
+            "demo-a"
+          ],
+          "destination_node_ids": [
+            "demo-b"
+          ]
+        },
+        "edges": [
+          "synthetic-edge"
+        ],
+        "necessary_operations": [],
+        "calibration_evidence": [
+          "demo-evidence"
+        ]
+      }
+    ],
     "request": {
       "analysis_kind": "intercity_passenger",
       "departure_at": "2026-11-09T08:15:00+03:00",
@@ -100,7 +169,8 @@
           "site_id": null,
           "territory_id": null
         },
-        "value": 50.0
+        "value": 50.0,
+        "calculation_kind": "reference_ratio"
       }
     ],
     "snapshot_id": "demo-snapshot",
