@@ -918,7 +918,7 @@ def test_urban_implementation_imports_concrete_modules() -> None:
                 assert n.module not in forbidden, (path, n.module)
 
 
-@pytest.mark.parametrize("count", [168, 183])
+@pytest.mark.parametrize("count", [168, 183, 201])
 def test_previous_exports_signatures_fields_and_defaults(count: int) -> None:
     from dataclasses import MISSING, fields
 
