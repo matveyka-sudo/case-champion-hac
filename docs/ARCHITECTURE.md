@@ -15,3 +15,14 @@ Python workspace, lock и PostgreSQL 17 сохраняются. Точки вх�
 Сценарное изменение расписания требует локальной изменяемой модели или поддерживающего API; внешний готовый маршрут не позволяет доказать эффект сдвига рейса. База и сценарий неизменяемы, ухудшения также показываются.
 
 Принятый runtime-план: PostgreSQL/PostGIS, jobs worker, Valhalla и OTP 2; Alice AI LLM Flash. Детали и порядок подключения — IMPLEMENTATION.md, tools — ASSISTANT.md. Не заменять действующий PostgreSQL-образ до проверки совместимости PostGIS владельцем infra.
+
+## Backend module boundaries
+
+В apps/api/src/a2_api выделены api/v2 (HTTP routers), services (application
+orchestration), db/repositories (asyncpg/raw SQL), workers (single worker/spawn),
+core (settings/config/internal job types), assistant (backend Alice adapters),
+providers (external HTTP) и exports. app.py остаётся стабильным ASGI entrypoint;
+старые import paths работают через тонкие facades. Canonical Pydantic v2 остаются
+в packages/contracts. SQLAlchemy используется только миграциями. Транзакции,
+lease fencing и atomic publication сохранены; полная карта —
+[backend README](../apps/api/README.md#module-boundaries-after-the-fix-fullstack-refactor).

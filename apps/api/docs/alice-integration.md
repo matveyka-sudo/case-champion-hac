@@ -87,3 +87,17 @@ Expected status is `template` with `reason_code=DISABLED` and `analysis_result_h
 3. **Live mode authorized:** **not yet**. The ledger and public RUB rates can be tested offline, but no operator amount/token ceiling has been selected, the actual billing currency is unknown, and `LLM_ENABLED` plus the separate currency-confirmation gate stay off. A later rollout requires an explicit authorization decision, vetted pricing/currency, deployment secrets and a separately authorized Flash tool-calling check if tools are enabled. Real analysis data and browser E2E are separate ML1/ML2/frontend dependencies.
 
 No API endpoint or DTO field changed. Generated OpenAPI and JSON Schema remain unchanged. The existing eight tools stay on their read-only allowlist and access-scope checks; enabling model tool calling is a separate deployment decision.
+
+## Расположение после структурного разделения fix-fullstack
+
+Каноническая backend-фабрика — `a2_api.assistant.alice`, read-only adapters —
+`a2_api.assistant.tools`, scoped explanation orchestration —
+`a2_api.assistant.explanations`. PostgreSQL ledger/SQL —
+`a2_api.db.repositories.budget`; hook/settings и CLI —
+`a2_api.assistant.budget` и `a2_api.assistant.budget_cli`.
+Библиотека `packages/assistant` не перемещалась и не менялась.
+
+Все прежние module:function hooks и команды выше работают через compatibility
+facades. `a2_api.alice.build_assistant` сохраняет точку внедрения SDKTransport;
+paid-call gates, восемь read-only tools, budgets/retries/timeouts/fallback и scope
+проверки не изменены. Тарифы и операционные лимиты этим переносом не пересматривались.

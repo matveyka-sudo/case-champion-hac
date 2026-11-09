@@ -8,8 +8,6 @@ from typing import Literal
 
 from a2_contracts.api import (
     AnalysisRequest,
-    ErrorCode,
-    FieldError,
     Job,
     JobAccepted,
     Place,
@@ -21,32 +19,7 @@ from a2_contracts.regions import StudyArea
 from a2_contracts.results import ProfileResult
 from a2_contracts.scenarios import Comparison, ScenarioRequest
 
-
-class DomainError(Exception):
-    def __init__(
-        self,
-        status_code: int,
-        code: ErrorCode,
-        message: str,
-        *,
-        retryable: bool = False,
-        field_errors: list[FieldError] | None = None,
-    ) -> None:
-        super().__init__(message)
-        self.status_code = status_code
-        self.code = code
-        self.message = message
-        self.retryable = retryable
-        self.field_errors = field_errors or []
-
-
-def unavailable() -> DomainError:
-    return DomainError(
-        503,
-        "engine_unavailable",
-        "Accepted data or calculation service unavailable",
-        retryable=True,
-    )
+from a2_api.core.errors import unavailable
 
 
 class Services:
