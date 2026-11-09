@@ -1,0 +1,30 @@
+{
+  "snapshot_id": "kaliningrad-urban-2026-11-08.2",
+  "canonical_payload_hash": "1c437d5a042f952eae17a1d787ad7836792aeafa89f0e4ba8377070f0e0c5f47",
+  "counts": {
+    "territories": 1,
+    "population_cells": 286,
+    "sample_points": 216,
+    "destinations": 39,
+    "access_nodes": 255,
+    "evidence": 1228
+  },
+  "point_ids": [
+    "kaliningrad-utm34n-1km-v1-e454-n6066-p",
+    "kaliningrad-utm34n-1km-v1-e455-n6054-p",
+    "kaliningrad-utm34n-1km-v1-e455-n6055-p"
+  ],
+  "category": "airport",
+  "source_graph_version": "osm_geofabrik.kaliningrad-261107:osm-walk-network-v1:main-component",
+  "calendar_version": "not_collected",
+  "excluded_population": 277.772,
+  "requests": 0,
+  "blocked_pairs": 3,
+  "limitations": [
+    "CONNECTOR_UNCONFIRMED",
+    "INCOMPLETE_POPULATION_COVERAGE",
+    "VALHALLA_BUILD_UNAVAILABLE",
+    "VALHALLA_CORRELATION_UNAVAILABLE"
+  ],
+  "network_run": false
+}

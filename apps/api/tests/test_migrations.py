@@ -10,13 +10,15 @@ async def test_migration_upgrade_twice_and_downgrade_preserve_unrelated_tables(d
     pool, schema, url = database
     await pool.execute("CREATE TABLE unrelated_table(note text)")
     await asyncio.to_thread(migrate, url, schema)
-    assert await pool.fetchval("SELECT version_num FROM alembic_version") == "0003_evidence_search"
+    assert await pool.fetchval("SELECT version_num FROM alembic_version") == "0004_alice_budget"
     await asyncio.to_thread(migrate, url, schema, "base", True)
     assert await pool.fetchval("SELECT to_regclass('jobs')") is None
     assert await pool.fetchval("SELECT to_regclass('runs')") is None
+    assert await pool.fetchval("SELECT to_regclass('assistant_budget')") is None
     assert await pool.fetchval("SELECT to_regclass('unrelated_table')") == "unrelated_table"
     await asyncio.to_thread(migrate, url, schema)
     assert await pool.fetchval("SELECT count(*) FROM jobs") == 0
+    assert await pool.fetchval("SELECT count(*) FROM assistant_budget") == 0
 
 
 @pytest.mark.asyncio

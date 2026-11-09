@@ -100,6 +100,7 @@ def _alice_env(monkeypatch, *, enabled=True, key=True, budget_hook=True):
     monkeypatch.setenv("YANDEX_FOLDER_ID", "synthetic-folder")
     monkeypatch.setenv("YANDEX_MODEL", "aliceai-llm-flash")
     monkeypatch.setenv("YANDEX_BASE_URL", "https://ai.api.cloud.yandex.net/v1")
+    monkeypatch.setenv("A2_ALICE_BILLING_CURRENCY_CONFIRMED", "true")
     monkeypatch.setenv(
         "A2_ASSISTANT_BUDGET_HOOK",
         "test_alice_runtime:synthetic_budget_hook" if budget_hook else "",
@@ -117,6 +118,17 @@ def test_factory_fails_closed_without_all_live_gates(monkeypatch, enabled, key, 
     assistant = build_assistant(AnalysisService())
     assert isinstance(assistant, FlashAssistant)
     assert assistant.transport is None
+
+
+def test_factory_requires_billing_currency_confirmation_before_live_transport(monkeypatch):
+    from a2_api import alice
+
+    _alice_env(monkeypatch)
+    monkeypatch.setenv("A2_ALICE_BILLING_CURRENCY_CONFIRMED", "false")
+    monkeypatch.setattr(alice, "SDKTransport", FakeSDKTransport)
+    FakeSDKTransport.instances = []
+    assert alice.build_assistant(AnalysisService()).transport is None
+    assert FakeSDKTransport.instances == []
 
 
 @pytest.mark.parametrize("missing", ["key", "budget_hook"])

@@ -41,7 +41,7 @@ DTO четырёх видов анализа, отдельные Metric и Score
 - [x] ProductRegistry с принятыми ID, версиями, датами, cargo profiles и отдельной readiness каждого вида; dynamic traffic не подменяется static.
 - [x] Production HTTP: analyses/jobs/cancel/results/capabilities/territories/explanation/saved scenarios/scenario runs; scope сессии и единый request_id.
 - [x] V2 durable queue/worker/proposals: PostgreSQL, heartbeat/lease, fenced publication, cancellation, scoped cache и миграция 0002; legacy изолирован.
-- [x] Flash adapter и восемь read-only tools, grounded numeric claims, template fallback и bounded calls/tokens/retries. Live выключен без внешнего durable deployment budget.
+- [x] Flash adapter и восемь read-only tools, grounded numeric claims, template fallback и bounded calls/tokens/retries. PostgreSQL DeploymentBudget резервирует общий денежный и независимый токенный лимит; бюджет устанавливается оператором явно. Live остаётся выключенным до отдельной авторизации и проверки платёжной валюты.
 - [x] Ограниченный адаптер Яндекс Расписаний с explicit partial/direct-only coverage, paging/quota/rate/retry/cache; реальные источники автоматически не подключаются.
 - [x] Воспроизводимый экспорт OpenAPI/JSON Schema, Ruff/format, strict mypy и полная регрессия с PostgreSQL.
 

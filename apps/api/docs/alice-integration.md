@@ -14,17 +14,51 @@ Set `A2_ASSISTANT_HOOK=a2_api.alice:build_assistant` for the API process. The fa
 | `YANDEX_MODEL` | Only `aliceai-llm-flash`; any other value is a safe startup configuration error. |
 | `YANDEX_BASE_URL` | Only `https://ai.api.cloud.yandex.net/v1`; another URL is rejected. |
 | `A2_ASSISTANT_BUDGET_HOOK` | Optional trusted `module:function(service)` returning a `DeploymentBudget` backed by a shared durable ledger. Without it, no SDK client is created. |
+| `A2_ALICE_CURRENCY` | Ledger accounting currency; the bundled public tariff currently supports `RUB`. This does not confirm the billing account currency. |
+| `A2_ALICE_TARIFF_ID` | Versioned price revision; currently `aliceai-llm-flash-sync-rub-2026-11-09`. Other revisions fail closed until vetted and added. |
+| `A2_ALICE_BUDGET_LIMIT` | Operator-chosen positive monetary ceiling across the deployment; no default. |
+| `A2_ALICE_TOKEN_LIMIT` | Operator-chosen positive total-token ceiling, independent of money; no default. |
+| `A2_ALICE_BILLING_CURRENCY_CONFIRMED` | `false` by default. Separate live gate; do not set it based on the working RUB assumption. |
 | `A2_ASSISTANT_TOOLS_ENABLED` | `false` by default. Enable only after a separately authorized Flash function-calling capability check. |
 
 `YANDEX_SERVICE_ACCOUNT_ID`, `YANDEX_API_KEY_ID` and `YANDEX_API_KEY_EXPIRES_AT` are not required for the configured API-key call. Keep `.env.example` as a template; do not put real credentials in it. Environment variables override local `.env` values. The API/worker database and calculation integration are configured separately as described in the backend README.
 
-The factory never creates `SDKTransport` until `LLM_ENABLED=true`, a nonempty key, a valid folder, and the budget hook are present. A disabled hook still returns `FlashAssistant`, which provides a template from the saved result. The runtime creates the assistant once with its active repository and closes the transport when FastAPI stops. Misconfigured model, URL, folder or budget hook fails startup with a generic error that omits secret values.
+The factory never creates `SDKTransport` until `LLM_ENABLED=true`, `A2_ALICE_BILLING_CURRENCY_CONFIRMED=true`, a nonempty key, a valid folder, and the budget hook are present. A disabled hook still returns `FlashAssistant`, which provides a template from the saved result. The runtime creates the assistant once with its active repository and closes the transport when FastAPI stops. Misconfigured model, URL, folder or budget hook fails startup with a generic error that omits secret values. Do not set either live gate during offline verification.
 
 ## Spending guard
 
 `DeploymentBudget.reserve` is called before **each** model attempt, including retries. It receives an opaque reservation ID, model and maximum input/output tokens; `record_usage` receives provider usage after the attempt. The assistant caps one explanation at four model calls, eight tool calls, 2000 output tokens and 90 seconds total. Retries occur only for 429/5xx and each needs a new reservation. These bounds do not replace a monetary ceiling.
 
-There is currently **no production ledger, approved spending ceiling or verified tariff table**. The supplied hook must atomically reserve the worst-case monetary amount in a shared durable store across all API processes. Minimal production implementation: a PostgreSQL deployment-budget row with currency, operator-approved positive ceiling and pricing revision; a unique reservation row keyed by reservation ID; transactional row lock or equivalent atomic update that refuses reservations exceeding the ceiling; a usage record/reconciliation step that never treats missing usage as free. The owner must supply confirmed Flash input/output token prices and billing currency, define how failed/unknown attempts are charged, and test simultaneous reservations from multiple processes. An in-memory counter, `durable=True` flag alone, arbitrary price or unlimited ceiling does not satisfy this contract. No such hook is bundled or enabled here.
+Migration `0004_alice_budget` adds a singleton `assistant_budget` row and unique `assistant_reservations` rows. Neither migration nor application startup creates a budget. The bundled `a2_api.budget_hook:build_budget` shares the API PostgreSQL pool. Each reservation locks the singleton row in a transaction, checks both money and total-token ceilings, and holds the maximum possible cost before a model attempt. Reusing a reservation ID never authorizes a second call. Reservations persist across restarts and are common to all API processes using the deployment schema. There is no daily request-count limit.
+
+The versioned public RUB tariff for synchronous Alice AI LLM Flash is [published by Yandex AI Studio](https://aistudio.yandex.ru/ru/docs/ai-studio/pricing): input 0.10 ₽, output 0.20 ₽ and cached input 0.025 ₽ per 1000 tokens. The ledger charges **all** input at the ordinary 0.10 ₽ rate; it never assumes a cache discount. Configuration selects a vetted currency/revision entry. Future verified currencies and revisions can be added without a ledger schema change. RUB is the working accounting currency; the organizers' actual billing-account currency has not been checked. Prices may change, so review the revision before live authorization.
+
+Known usage settles at the ordinary rate and releases only unused reserve. Failed attempts, timeout, cancellation, missing usage and process crashes retain the full reserve: no assumed zero cost or automatic expiry. Reported usage above the reservation is charged and blocks new reservations for operator investigation. Database faults, absent budget row, mismatched settings and unknown tariff deny a new reservation. A failed settlement yields a safe explanation fallback and preserves the hold. Raising ceilings does not erase usage or holds; `set-limit` never lowers a ceiling or clears a blocked budget.
+
+### Install, inspect and raise the deployment budget
+
+Use a dedicated PostgreSQL deployment schema, apply migrations and set these **operator-selected** values in the process environment or private `.env`. Placeholders are not a proposed budget:
+
+```sh
+A2_ALICE_CURRENCY=RUB
+A2_ALICE_TARIFF_ID=aliceai-llm-flash-sync-rub-2026-11-09
+A2_ALICE_BUDGET_LIMIT=YOUR_APPROVED_RUB_AMOUNT
+A2_ALICE_TOKEN_LIMIT=YOUR_APPROVED_TOTAL_TOKEN_COUNT
+A2_ASSISTANT_HOOK=a2_api.alice:build_assistant
+A2_ASSISTANT_BUDGET_HOOK=a2_api.budget_hook:build_budget
+LLM_ENABLED=false
+```
+
+From the repository root with backend `PYTHONPATH`, `A2_DATABASE_URL` and `A2_DATABASE_SCHEMA` configured as in the README:
+
+```sh
+.venv/bin/alembic -c apps/api/alembic.ini upgrade head
+.venv/bin/python -m a2_api.budget_cli status
+.venv/bin/python -m a2_api.budget_cli set-limit
+.venv/bin/python -m a2_api.budget_cli status
+```
+
+Before `set-limit`, status is `{"status":"unconfigured"}`. Afterwards it reports currency, tariff, money limit/charged/held/available, total token limit/charged/held/available, reservation count and a blocked flag. No request IDs or credentials appear. To increase a ceiling, raise one or both variables, run `set-limit`, then restart API processes so their settings match the row. Use a disposable test schema for experimentation. No budget is installed automatically.
 
 ## Safe local check
 
@@ -50,6 +84,6 @@ Expected status is `template` with `reason_code=DISABLED` and `analysis_result_h
 
 1. **Configuration ready:** the model, URL, folder and key can be loaded. The user reports a successful earlier SDK Flash smoke (16 input tokens, 2 output tokens); this work makes no live request.
 2. **Offline integration verified:** synthetic tests use a fake SDK transport and budget, run the existing HTTP endpoint against PostgreSQL, check saved claims, session isolation, errors, cancellation, limits and transport closure.
-3. **Live mode authorized:** **not yet**. Requires a confirmed budget and tariff, an atomic cross-process ledger hook, its concurrency tests, deployment secrets, and a separately authorized Flash tool-calling capability check if tools are enabled. Real analysis data and browser E2E are separate ML1/ML2/frontend dependencies.
+3. **Live mode authorized:** **not yet**. The ledger and public RUB rates can be tested offline, but no operator amount/token ceiling has been selected, the actual billing currency is unknown, and `LLM_ENABLED` plus the separate currency-confirmation gate stay off. A later rollout requires an explicit authorization decision, vetted pricing/currency, deployment secrets and a separately authorized Flash tool-calling check if tools are enabled. Real analysis data and browser E2E are separate ML1/ML2/frontend dependencies.
 
 No API endpoint or DTO field changed. Generated OpenAPI and JSON Schema remain unchanged. The existing eight tools stay on their read-only allowlist and access-scope checks; enabling model tool calling is a separate deployment decision.
