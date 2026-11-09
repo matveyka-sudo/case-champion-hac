@@ -117,7 +117,10 @@ def test_freight_mapping_keeps_only_accepted_nodes(tmp_path: Path) -> None:
         "walk:way:1:0.0": "walk_network_projection",
         "road:way:7:0.0": "road_network_projection",
     }
-    assert payload["provenance"]["graph_version"] == f"{GRAPH}+{ROAD_GRAPH}"
+    # ML1 matches the snapshot to the bundle manifest by the walk graph version;
+    # the road graph version stays in the bundle manifest
+    assert payload["provenance"]["graph_version"] == GRAPH
+    assert load_bundle("freight-v1", root=tmp_path).manifest.road_graph_version == ROAD_GRAPH
     assert payload["freight_compatibility"] == []
 
 

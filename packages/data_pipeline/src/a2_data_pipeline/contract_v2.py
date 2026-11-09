@@ -10,8 +10,11 @@ only maps fields and never relaxes a rule:
 - a destination category without a coverage scope stays uncovered (unknown);
 - ``calendar_version`` is ``not_collected`` while the bundle has no schedules;
 - quarantined freight nodes (railway stations without confirmed freight
-  operations) are left out; sites and nodes keep their road access nodes, and
-  ``provenance.graph_version`` names both graphs (walk+road);
+  operations) are left out; sites and nodes keep their road access nodes;
+- ``provenance.graph_version`` is the bundle manifest's ``graph_version`` (the walk
+  network): ML1 checks the snapshot against the bundle by it and binds Valhalla
+  builds to it. The road network version stays in the bundle manifest
+  (``road_graph_version``) until v2 has a field for it;
 - freight coverage by node kind has no v2 scope yet (``CoverageScope`` holds
   passenger categories only): it stays in the bundle's coverage records, and
   ``freight_compatibility`` stays empty because compatibility is unknown.
@@ -224,9 +227,7 @@ def to_accepted_data_v2(data: BundleData) -> dict[str, Any]:
         "valid_period": _period(manifest.valid_from, manifest.valid_to),
         "timezone": manifest.timezone,
         "provenance": {
-            "graph_version": "+".join(
-                v for v in (manifest.graph_version, manifest.road_graph_version) if v
-            ),
+            "graph_version": manifest.graph_version,
             "geometry_version": "+".join([*(t.boundary_version for t in cities), *sorted(grids)]),
             "calendar_version": CALENDAR_NOT_COLLECTED,
             "population_version": "+".join(population_versions) or None,
