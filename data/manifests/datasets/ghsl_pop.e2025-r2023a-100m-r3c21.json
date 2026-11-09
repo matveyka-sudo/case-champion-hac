@@ -29,6 +29,6 @@
     "Модельная оценка R2023A, эпоха 2025 — проекция, не перепись",
     "Постоянное население, не дневное"
   ],
-  "status": "fetched",
-  "qa_report": null
+  "status": "accepted",
+  "qa_report": "data/bundles/moscow-urban-2026-11-09.1/qa_report.json"
 }

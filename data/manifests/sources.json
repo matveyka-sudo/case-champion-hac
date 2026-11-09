@@ -102,7 +102,11 @@
         "attribution": "© OpenStreetMap contributors"
       },
       "status": "accepted",
-      "datasets": ["osm_geofabrik.kaliningrad-261107", "osm_geofabrik.south-fed-district-261107"]
+      "datasets": [
+        "osm_geofabrik.central-fed-district-261107",
+        "osm_geofabrik.kaliningrad-261107",
+        "osm_geofabrik.south-fed-district-261107"
+      ]
     },
     {
       "source_id": "tochno_settlements",
@@ -399,7 +403,11 @@
         "attribution": "Schiavina M. et al., GHS-POP R2023A, European Commission JRC"
       },
       "status": "accepted",
-      "datasets": ["ghsl_pop.e2025-r2023a-100m-r3c20", "ghsl_pop.e2025-r2023a-100m-r4c22"]
+      "datasets": [
+        "ghsl_pop.e2025-r2023a-100m-r3c20",
+        "ghsl_pop.e2025-r2023a-100m-r3c21",
+        "ghsl_pop.e2025-r2023a-100m-r4c22"
+      ]
     },
     {
       "source_id": "worldpop",
@@ -577,7 +585,8 @@
         "status": "permitted",
         "attribution": "МГФОМС, mgfoms.ru"
       },
-      "status": "registered"
+      "status": "accepted",
+      "datasets": ["mgfoms_med_org.20261108"]
     },
     {
       "source_id": "admnvrsk_health",
