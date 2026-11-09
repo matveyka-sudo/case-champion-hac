@@ -11,17 +11,33 @@ From the repository root:
 ```sh
 uvx --from uv==0.12.17 uv sync --frozen --all-packages --group dev
 export PYTHONPATH=packages/contracts/src:apps/api/src:packages/assistant/src
-.venv/bin/uvicorn a2_api.app:create_configured_app --factory --host 127.0.0.1 --port 8033
 ```
 
 Without a database, `/health` and `/api/v1/capabilities` work. Capabilities report actual integration readiness; published methodology does not imply accepted data. The territory catalog, snapshots and cargo profiles are supplied by a trusted synchronous `A2_REGISTRY_HOOK=module:function` returning `ProductRegistry`. The published urban scope comes from `config/product.json`; IDs and geometry come from accepted catalogs. Intercity territories are configured independently. Adding data for further regions does not require new HTTP handlers.
 
-Set `A2_DATABASE_URL`, a role-specific `A2_DATABASE_SCHEMA`, `A2_CODE_VERSION`, and trusted `A2_CALCULATION_HANDLER=module:function` together to enable the configured worker adapter. `ProductRegistry.ready_kinds` must explicitly declare integrated kinds. Optional async `A2_PREFLIGHT_HOOK(request, snapshot)` performs bounded readiness checks, never routing. Apply migrations before startup:
+Copy `.env.example` to a private `.env` in the repository root, fill its PostgreSQL credentials and set `DATABASE_URL` to the exposed Compose port. `DATABASE_SCHEMA` is optional and defaults to `a2_backend`. API, worker, Alembic and budget CLI load this file from the process working directory; process variables override it. Start PostgreSQL and apply migrations before API startup:
 
 ```sh
+docker compose up -d postgres
 .venv/bin/alembic -c apps/api/alembic.ini upgrade head
+.venv/bin/python -m a2_api.budget_cli status
+.venv/bin/python -m a2_api.budget_cli set-limit
+.venv/bin/python -m a2_api.budget_cli status
+```
+
+Start the API on loopback after migrations:
+
+```sh
+.venv/bin/uvicorn a2_api.app:create_configured_app --factory --host 127.0.0.1 --port 8033
+```
+
+The budget limit is installed only by `set-limit`, never by startup or migrations. The template keeps both live gates off. `ASSISTANT_HOOK` and `ASSISTANT_BUDGET_HOOK` configure the bundled Alice factory and durable ledger; an empty Yandex key/folder leaves the assistant in safe fallback mode. Set `A2_CODE_VERSION` and trusted `A2_CALCULATION_HANDLER=module:function` together only when a calculation adapter is ready, then start the worker separately:
+
+```sh
 .venv/bin/python -m a2_api.runtime worker
 ```
+
+`ProductRegistry.ready_kinds` must explicitly declare integrated kinds. Optional async `A2_PREFLIGHT_HOOK(request, snapshot)` performs bounded readiness checks, never routing.
 
 Worker and API must use the same database schema and code revision. Runtime SQL uses parameterized asyncpg; SQLAlchemy is used only for migrations. A single schema-specific advisory lock owns the worker. Claims are fenced, heartbeated and cancellable; calculations run in killable spawned processes. Interrupted work requires explicit retry rather than unbounded automatic reruns. Results and candidate proposals publish atomically.
 
@@ -47,9 +63,9 @@ The original user request is used for idempotency; normalized snapshot, methodol
 
 ## Assistant and providers
 
-`a2_assistant.FlashAssistant` supports the fixed read-only tool allowlist through `a2_api.tool_services.SavedTools`. The default explanation is a deterministic template. Optional trusted `A2_ASSISTANT_HOOK(service)` returns a configured `FlashAssistant`. The backend includes a PostgreSQL deployment-wide money and token ledger at migration head `0004_alice_budget`; it never installs a budget or invokes a paid API automatically. Tools expose scoped structured data and accepted document search. `EvidenceRepository` provides Russian PostgreSQL full-text retrieval with source/territory/period filters. The departure tool retains saved journeys and can include a separately labelled, partial provider observation through an explicitly injected `RaspDepartureGateway`; observations never become accepted snapshots automatically.
+`a2_assistant.FlashAssistant` supports the fixed read-only tool allowlist through `a2_api.tool_services.SavedTools`. The default explanation is a deterministic template. Optional trusted `ASSISTANT_HOOK(service)` returns a configured `FlashAssistant`. The backend includes a PostgreSQL deployment-wide money and token ledger at migration head `0004_alice_budget`; it never installs a budget or invokes a paid API automatically. Tools expose scoped structured data and accepted document search. `EvidenceRepository` provides Russian PostgreSQL full-text retrieval with source/territory/period filters. The departure tool retains saved journeys and can include a separately labelled, partial provider observation through an explicitly injected `RaspDepartureGateway`; observations never become accepted snapshots automatically.
 
-The backend-owned Alice hook is `A2_ASSISTANT_HOOK=a2_api.alice:build_assistant`; set `A2_ASSISTANT_BUDGET_HOOK=a2_api.budget_hook:build_budget` to use the bundled ledger. It reads existing Yandex settings, uses `SDKTransport` and closes it with the API lifespan. Missing key, `LLM_ENABLED=false`, unset currency authorization, absent hook or unconfigured budget keeps the endpoint on the saved-result template fallback. An operator must explicitly set the monetary and total-token ceilings; RUB prices are versioned public reference prices and do not confirm the billing account currency. See [Alice integration](docs/alice-integration.md) for CLI commands, offline checks and live rollout gates.
+The backend-owned Alice hook is `ASSISTANT_HOOK=a2_api.alice:build_assistant`; set `ASSISTANT_BUDGET_HOOK=a2_api.budget_hook:build_budget` to use the bundled ledger. It reads existing Yandex settings, uses `SDKTransport` and closes it with the API lifespan. Missing key, `LLM_ENABLED=false`, unset currency authorization, absent hook or unconfigured budget keeps the endpoint on the saved-result template fallback. An operator must explicitly install the monetary and total-token ceilings; RUB prices are versioned public reference prices and do not confirm the billing account currency. The model selects metric IDs and semantic codes; the backend assembles all values, units, evidence and narrative from the saved result. See [Alice integration](docs/alice-integration.md) for CLI commands, offline checks and live rollout gates.
 
 The separately injectable `a2_api.providers.rasp.RaspProvider` has bounded paging, retry/quota/rate limits, cache and explicit direct-only/partial coverage. It never supplies a complete multimodal index. Connecting it to ML2 ingestion or an engine adapter is an explicit integration step, not an HTTP side effect.
 

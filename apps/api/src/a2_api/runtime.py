@@ -12,24 +12,46 @@ from typing import Annotated, Literal, cast
 
 import asyncpg  # type: ignore[import-untyped]
 from fastapi import FastAPI
-from pydantic import Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import AliasChoices, Field
+from pydantic_settings import SettingsConfigDict
 
 from .configuration import CatalogServices, load_catalog
+from .env_settings import WaydexSettings
 from .job_services import Prepare, QueuedServices
 from .services import Services
 from .storage import JobRepository
 from .worker import Worker
 
 
-class RuntimeSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="A2_", extra="ignore", hide_input_in_errors=True)
+class RuntimeSettings(WaydexSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_prefix="A2_",
+        extra="ignore",
+        hide_input_in_errors=True,
+        populate_by_name=True,
+    )
+    alias_pairs = (
+        ("DATABASE_URL", "A2_DATABASE_URL"),
+        ("DATABASE_SCHEMA", "A2_DATABASE_SCHEMA"),
+        ("ASSISTANT_HOOK", "A2_ASSISTANT_HOOK"),
+    )
     contract_version: Literal["2", "legacy"] = "2"
     registry_hook: str | None = None
-    assistant_hook: str | None = None
+    assistant_hook: str | None = Field(
+        default=None, validation_alias=AliasChoices("ASSISTANT_HOOK", "A2_ASSISTANT_HOOK")
+    )
     secure_cookies: bool = False
-    database_url: str | None = Field(default=None, repr=False)
-    database_schema: Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{0,62}$")] = "a2_backend"
+    database_url: str | None = Field(
+        default=None, repr=False, validation_alias=AliasChoices("DATABASE_URL", "A2_DATABASE_URL")
+    )
+    database_schema: Annotated[
+        str,
+        Field(
+            pattern=r"^[a-z][a-z0-9_]{0,62}$",
+            validation_alias=AliasChoices("DATABASE_SCHEMA", "A2_DATABASE_SCHEMA"),
+        ),
+    ] = "a2_backend"
     catalog_path: Path | None = None
     code_version: str | None = None
     preflight_hook: str | None = None
@@ -40,7 +62,7 @@ class RuntimeSettings(BaseSettings):
 
 async def open_pool(settings: RuntimeSettings) -> asyncpg.Pool:
     if settings.database_url is None:
-        raise ValueError("A2_DATABASE_URL is required")
+        raise ValueError("DATABASE_URL is required")
     url = settings.database_url.replace("postgresql+asyncpg://", "postgresql://", 1)
     pool = await asyncpg.create_pool(
         url,

@@ -1,4 +1,4 @@
-"""Opt-in Alice AI factory for the existing A2_ASSISTANT_HOOK boundary."""
+"""Opt-in Alice AI factory for the configured assistant hook."""
 
 import importlib
 import re
@@ -7,16 +7,26 @@ from decimal import Decimal
 from typing import Literal, cast
 
 from a2_assistant import DeploymentBudget, FlashAssistant, FlashConfig, SDKTransport
-from pydantic import SecretStr, ValidationError
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import AliasChoices, Field, SecretStr, ValidationError
+from pydantic_settings import SettingsConfigDict
 
 from a2_api.analysis_service import AnalysisService
+from a2_api.env_settings import WaydexSettings
 from a2_api.tool_services import SavedTools
 
 
-class AliceSettings(BaseSettings):
+class AliceSettings(WaydexSettings):
     model_config = SettingsConfigDict(
-        env_file=".env", env_prefix="", extra="ignore", hide_input_in_errors=True
+        env_file=".env",
+        env_prefix="",
+        extra="ignore",
+        hide_input_in_errors=True,
+        populate_by_name=True,
+    )
+    alias_pairs = (
+        ("ASSISTANT_BUDGET_HOOK", "A2_ASSISTANT_BUDGET_HOOK"),
+        ("ASSISTANT_TOOLS_ENABLED", "A2_ASSISTANT_TOOLS_ENABLED"),
+        ("ALICE_BILLING_CURRENCY_CONFIRMED", "A2_ALICE_BILLING_CURRENCY_CONFIRMED"),
     )
 
     llm_enabled: bool = False
@@ -26,15 +36,26 @@ class AliceSettings(BaseSettings):
     yandex_base_url: Literal["https://ai.api.cloud.yandex.net/v1"] = (
         "https://ai.api.cloud.yandex.net/v1"
     )
-    a2_assistant_budget_hook: str | None = None
-    a2_assistant_tools_enabled: bool = False
-    a2_alice_billing_currency_confirmed: bool = False
+    assistant_budget_hook: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("ASSISTANT_BUDGET_HOOK", "A2_ASSISTANT_BUDGET_HOOK"),
+    )
+    assistant_tools_enabled: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("ASSISTANT_TOOLS_ENABLED", "A2_ASSISTANT_TOOLS_ENABLED"),
+    )
+    alice_billing_currency_confirmed: bool = Field(
+        default=False,
+        validation_alias=AliasChoices(
+            "ALICE_BILLING_CURRENCY_CONFIRMED", "A2_ALICE_BILLING_CURRENCY_CONFIRMED"
+        ),
+    )
 
 
 def _deployment_budget(path: str, service: AnalysisService) -> DeploymentBudget:
     module, separator, name = path.partition(":")
     if not separator or not module or not name:
-        raise ValueError("A2_ASSISTANT_BUDGET_HOOK must be a trusted module:function")
+        raise ValueError("ASSISTANT_BUDGET_HOOK must be a trusted module:function")
     try:
         factory = getattr(importlib.import_module(module), name)
         if not callable(factory):
@@ -52,7 +73,7 @@ def _deployment_budget(path: str, service: AnalysisService) -> DeploymentBudget:
         ):
             raise ValueError
     except Exception:
-        raise ValueError("A2_ASSISTANT_BUDGET_HOOK must provide a valid durable budget") from None
+        raise ValueError("ASSISTANT_BUDGET_HOOK must provide a valid durable budget") from None
     return budget
 
 
@@ -62,10 +83,12 @@ def build_assistant(service: AnalysisService) -> FlashAssistant:
         settings = AliceSettings()
         config = FlashConfig(
             api_key=settings.yandex_api_key,
-            folder_id=settings.yandex_folder_id,
+            folder_id=settings.yandex_folder_id or None,
             model_id=settings.yandex_model,
             base_url=settings.yandex_base_url,
-            tools_enabled=settings.a2_assistant_tools_enabled,
+            tools_enabled=settings.assistant_tools_enabled,
+            max_model_calls=4 if settings.assistant_tools_enabled else 1,
+            max_retries=2 if settings.assistant_tools_enabled else 0,
         )
     except ValidationError:
         raise ValueError(
@@ -74,15 +97,15 @@ def build_assistant(service: AnalysisService) -> FlashAssistant:
 
     enabled = (
         settings.llm_enabled
-        and settings.a2_alice_billing_currency_confirmed
+        and settings.alice_billing_currency_confirmed
         and bool(config.api_key is not None and config.api_key.get_secret_value())
     )
     if enabled and config.folder_id is None:
         raise ValueError("Alice AI configuration requires YANDEX_FOLDER_ID")
     # A configured key never opens a live SDK client without an explicit shared ledger.
     budget = (
-        _deployment_budget(settings.a2_assistant_budget_hook, service)
-        if enabled and settings.a2_assistant_budget_hook
+        _deployment_budget(settings.assistant_budget_hook, service)
+        if enabled and settings.assistant_budget_hook
         else None
     )
     transport = SDKTransport(config) if budget is not None else None

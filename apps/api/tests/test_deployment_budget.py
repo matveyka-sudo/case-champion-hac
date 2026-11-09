@@ -388,24 +388,13 @@ async def test_retry_and_cancellation_keep_uncertain_cost_reserved(database):
             return ModelReply(
                 content=json.dumps(
                     {
-                        "analysis_id": fact["analysis_id"],
                         "findings": [
                             {
-                                "text": "Показатель сохранён в расчёте.",
-                                "metric_ids": [metric["metric_id"]],
-                                "evidence_refs": [],
-                                "claims": [
-                                    {
-                                        "metric_id": metric["metric_id"],
-                                        "value": metric["value"],
-                                        "unit": metric["unit"],
-                                    }
-                                ],
+                                "metric_id": metric["metric_id"],
+                                "explanation_code": "saved_value",
                             }
                         ],
-                        "proposals": [],
-                        "evidence_refs": [],
-                        "limitations": [],
+                        "template_ids": [],
                     }
                 ),
                 finish_reason="stop",

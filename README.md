@@ -37,7 +37,7 @@ Compose можно проверить с безопасным примером �
 docker compose --env-file .env.example config --quiet
 ```
 
-Compose описывает PostgreSQL 17 с локальным портом и собственным томом. Для нового worktree создайте свой `.env` по `.env.example`. Выберите свободный `POSTGRES_PORT`, согласуйте с ним `DATABASE_URL`, задайте уникальное имя Compose-проекта и свои порты API и SPA для будущей интеграции. Для ассистента задаются `YANDEX_API_KEY`, `YANDEX_FOLDER_ID`, `YANDEX_MODEL=aliceai-llm-flash` и deployment-лимит расходов. До проверки ключа ассистент работает в режиме шаблонного объяснения; см. docs/ASSISTANT.md. Секреты хранятся на backend. Команды импорта и запуска API, worker и UI появятся после реализации точек входа.
+Compose описывает PostgreSQL 17 с локальным портом и собственным томом. Скопируйте `.env.example` в `.env`, задайте свободный `POSTGRES_PORT`, согласуйте с ним `DATABASE_URL` и заполните секреты только в локальном файле. `DATABASE_SCHEMA` можно не задавать: backend использует `a2_backend`. Из корня репозитория запустите `docker compose up -d postgres`, затем миграции и API по [инструкции backend](apps/api/README.md). API, worker, Alembic и бюджетный CLI читают локальный `.env`; переменные процесса имеют приоритет. `LLM_ENABLED=false` и `ALICE_BILLING_CURRENCY_CONFIRMED=false` оставляют Alice AI выключенной. Лимиты 10 RUB и 50 000 токенов записываются в PostgreSQL только явной командой `a2_api.budget_cli set-limit`; копирование шаблона не создаёт и не сбрасывает ledger. RUB здесь — внутренняя учётная валюта, а не подтверждение валюты организаторов.
 
 ## Работа команды
 

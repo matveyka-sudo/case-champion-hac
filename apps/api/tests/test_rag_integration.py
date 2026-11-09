@@ -72,20 +72,14 @@ class OfflineFlash:
             output_tokens=50,
             content=json.dumps(
                 dict(
-                    analysis_id=self.analysis_id,
                     findings=[
                         dict(
-                            text="Двести минут без проверки."
-                            if self.malicious
-                            else "Доступное время сохранено в расчёте.",
-                            metric_ids=["demo-time"],
-                            evidence_refs=["e-2"],
-                            claims=[dict(metric_id="demo-time", value=1800.0, unit="seconds")],
+                            metric_id="demo-time",
+                            explanation_code="travel_time",
+                            **({"text": "Двести минут без проверки."} if self.malicious else {}),
                         )
                     ],
-                    proposals=[],
-                    evidence_refs=["e-2"],
-                    limitations=[],
+                    template_ids=[],
                 )
             ),
         )
@@ -148,7 +142,7 @@ async def test_accepted_document_search_is_grounded_and_injection_cannot_publish
         assert explanation.status == "template" and explanation.reason_code == "INVALID_EXPLANATION"
     else:
         assert explanation.status == "generated"
-        assert explanation.findings[0].evidence_refs == ["e-2"]
+        assert set(explanation.findings[0].evidence_refs) <= set(saved.metrics[0].source_refs)
         assert explanation.retrieved_evidence[0].source_id == "source-2"
         assert str(explanation.retrieved_evidence[0].url) == str(record.url)
     assert await pool.fetchval("SELECT count(*) FROM jobs") == 1

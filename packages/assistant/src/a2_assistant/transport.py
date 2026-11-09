@@ -25,6 +25,7 @@ class FlashConfig(BaseModel):
     model_id: Literal["aliceai-llm-flash"] = "aliceai-llm-flash"
     tools_enabled: bool = Field(default=False, strict=True)
     max_model_calls: Annotated[int, Field(strict=True, ge=1, le=4)] = 4
+    max_retries: Annotated[int, Field(strict=True, ge=0, le=2)] = 2
     max_tool_calls: Annotated[int, Field(strict=True, ge=1, le=8)] = 8
     max_output_tokens: Annotated[int, Field(strict=True, ge=1, le=2000)] = 2000
     max_input_tokens: Annotated[int, Field(strict=True, ge=1024, le=30000)] = 12000
