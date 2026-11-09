@@ -75,6 +75,8 @@ Collection = Literal[
     "minimum_transfers",
     "traffic_profiles",
     "stop_frequencies",
+    "walk_connectors",
+    "transit_stops",
 ]
 PRODUCED_COLLECTIONS: tuple[Collection, ...] = (
     "territories",
@@ -86,6 +88,8 @@ PRODUCED_COLLECTIONS: tuple[Collection, ...] = (
     "freight_nodes",
     "freight_sites",
     "stop_frequencies",
+    "walk_connectors",
+    "transit_stops",
 )
 
 
@@ -338,6 +342,66 @@ class CategoryOwnership(Model):
     evidence_ids: list[Identifier]
 
 
+class WalkConnector(Model):
+    """The straight link between a point or destination and its walk access node.
+
+    Rule set ``walk-connector-geometry-v1``. ``traversable=True`` when the link
+    crosses no other building, water, railway or motorway and is at most 500 m;
+    a crossing is ``None`` (unknown: a bridge or a gate may exist), never ``False``.
+    Seconds are not stored: they come from the walking speed of the accepted
+    pedestrian profile (``supplements.walk_connectors``).
+    """
+
+    physical_node_id: Identifier
+    entity_kind: Literal["point", "destination"]
+    entity_id: Identifier
+    access_node_id: Identifier
+    length_m: NonNegative
+    traversable: Literal[True] | None
+    reasons: list[str]
+    evidence_ids: Annotated[list[Identifier], Field(min_length=1)]
+
+    @model_validator(mode="after")
+    def state_has_reasons(self) -> Self:
+        if self.physical_node_id != f"physical:{self.entity_kind}:{self.entity_id}":
+            raise ValueError("physical node id must be physical:<kind>:<entity id>")
+        if (self.traversable is None) != bool(self.reasons):
+            raise ValueError("an unknown connector needs reasons; a traversable one has none")
+        return self
+
+
+class TransitStop(Model):
+    """A timetable stop joined to the walk network like points and destinations."""
+
+    stop_id: Identifier
+    timetable_id: Identifier
+    gtfs_stop_id: str
+    name: str | None
+    lon: Lon
+    lat: Lat
+    access_node_id: Identifier
+    access_distance_m: NonNegative
+    status: Literal["accepted", "quarantined"]
+    quarantine_reasons: list[str]
+    evidence_ids: Annotated[list[Identifier], Field(min_length=1)]
+
+
+class TimetableRef(Model):
+    """A timetable kept outside the bundle (a GTFS archive), bound by its sha256."""
+
+    timetable_id: Identifier
+    format: Literal["gtfs"]
+    path: str
+    sha256: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+    dataset_ids: Annotated[list[str], Field(min_length=1)]
+    valid_from: date
+    valid_to: date
+    unknown_dates: list[date]
+    modes: list[str]
+    qa_report: str
+    limitations: list[str]
+
+
 class CoverageRecord(Model):
     """Completeness of one collection in one scope; absence only with an explicit scope."""
 
@@ -385,6 +449,7 @@ class BundleManifest(Model):
     grids: list[GridSpec]
     graph_version: str | None
     road_graph_version: str | None = None
+    timetables: list[TimetableRef] = Field(default_factory=list)
     source_versions: list[SourceVersion]
     files: dict[str, FileRef]
     coverage: list[CoverageRecord]
@@ -414,6 +479,8 @@ class BundleData(Model):
     freight_nodes: list[FreightNode] = Field(default_factory=list)
     freight_sites: list[FreightSite] = Field(default_factory=list)
     stop_frequencies: list[StopFrequency] = Field(default_factory=list)
+    walk_connectors: list[WalkConnector] = Field(default_factory=list)
+    transit_stops: list[TransitStop] = Field(default_factory=list)
     qa_report: dict[str, Any]
 
     @model_validator(mode="after")
@@ -499,6 +566,26 @@ class BundleData(Model):
             for evidence_id in freight_row.evidence_ids:
                 resolve(evidence_id, evidence_ids, "freight.evidence_ids")
         unique([row.frequency_id for row in self.stop_frequencies], "stop_frequencies")
+        entity_access = {
+            **{("point", p.point_id): p.access_node_id for p in self.sample_points},
+            **{("destination", d.destination_id): d.access_node_id for d in self.destinations},
+        }
+        unique([row.physical_node_id for row in self.walk_connectors], "walk_connectors")
+        for connector in self.walk_connectors:
+            entity = (connector.entity_kind, connector.entity_id)
+            if entity not in entity_access:
+                raise ValueError(f"connector of an unknown {entity[0]}: {entity[1]}")
+            if entity_access[entity] != connector.access_node_id:
+                raise ValueError(f"connector access node differs: {connector.physical_node_id}")
+            for evidence_id in connector.evidence_ids:
+                resolve(evidence_id, evidence_ids, "walk_connectors.evidence_ids")
+        timetable_ids = {t.timetable_id for t in self.manifest.timetables}
+        unique([row.stop_id for row in self.transit_stops], "transit_stops")
+        for stop in self.transit_stops:
+            resolve(stop.timetable_id, timetable_ids, "transit_stops.timetable_id")
+            joins(stop.access_node_id, "walk_network_projection", "transit_stops")
+            for evidence_id in stop.evidence_ids:
+                resolve(evidence_id, evidence_ids, "transit_stops.evidence_ids")
         for frequency in self.stop_frequencies:
             resolve(frequency.city_id, scope, "stop_frequencies.city_id")
             for evidence_id in frequency.evidence_ids:

@@ -27,7 +27,13 @@ BUNDLE_COLLECTIONS = (
     "access_nodes",
 )
 # collections added later: an older bundle without them loads as empty lists
-OPTIONAL_COLLECTIONS = ("freight_nodes", "freight_sites", "stop_frequencies")
+OPTIONAL_COLLECTIONS = (
+    "freight_nodes",
+    "freight_sites",
+    "stop_frequencies",
+    "walk_connectors",
+    "transit_stops",
+)
 
 
 class BundleError(Exception):
