@@ -1,0 +1,34 @@
+[
+  {
+    "territory_id": "city-1",
+    "name": "Москва",
+    "level": "city",
+    "timezone": "Europe/Moscow",
+    "parent_region_id": null,
+    "capital_city_id": null
+  },
+  {
+    "territory_id": "city-2",
+    "name": "Калининград",
+    "level": "city",
+    "timezone": "Europe/Kaliningrad",
+    "parent_region_id": null,
+    "capital_city_id": null
+  },
+  {
+    "territory_id": "region-1",
+    "name": "Москва",
+    "level": "region",
+    "timezone": "Europe/Moscow",
+    "parent_region_id": null,
+    "capital_city_id": null
+  },
+  {
+    "territory_id": "region-2",
+    "name": "Калининградская область",
+    "level": "region",
+    "timezone": "Europe/Kaliningrad",
+    "parent_region_id": null,
+    "capital_city_id": null
+  }
+]

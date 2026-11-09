@@ -1,0 +1,46 @@
+{
+  "schema_version": "2",
+  "scenario_id": "provisional-scenario",
+  "baseline_analysis_id": "demo-urban_passenger",
+  "template_id": "coordinate-transfer-v1",
+  "operation_type": "coordinate_transfer",
+  "fixed_parameters": {
+    "service_ids": [
+      "synthetic-service"
+    ],
+    "shift_seconds": 300,
+    "demand_evidence": [],
+    "resource_evidence": [],
+    "turnaround_evidence": [],
+    "resource_constraints": []
+  },
+  "evidence_refs": [
+    {
+      "evidence_id": "demo-evidence",
+      "observed_at": null,
+      "retrieved_at": "2026-11-08T09:00:00Z",
+      "section": "Synthetic test only",
+      "source_id": "demo-source",
+      "url": "https://example.org/synthetic"
+    }
+  ],
+  "assumptions": [
+    "synthetic_only"
+  ],
+  "status": "proposed",
+  "feasibility": "unverified",
+  "versions": {
+    "calendar_version": "demo-calendar",
+    "code_version": "demo-code",
+    "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+    "graph_version": "demo-graph",
+    "methodology_version": "a2-methodology-v3",
+    "population_version": null,
+    "snapshot_id": "demo-snapshot"
+  },
+  "baseline_result_hash": "demo-hash",
+  "editable_local_graph": true,
+  "limitations": [
+    "TURNAROUND_UNVERIFIED"
+  ]
+}

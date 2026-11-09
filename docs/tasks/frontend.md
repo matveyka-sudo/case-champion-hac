@@ -44,3 +44,30 @@ BACKEND handoff: текущие view models и mockGateway не канониче
 Исправлена гонка фокуса при клавиатурном выборе в списках, запрещён выбор отключённых пунктов; календарь переводит фокус на выбранный день. Обзорная карта сохраняет масштаб при закрытии карточки и перестроении размеров.
 
 Проверки: lint, strict typecheck в составе build, production build, 14 модульных и 15 браузерных тестов — успешно. В браузерные проверки добавлены смена контекста чата, отсутствие результатов на мобильном/межгородском экране, сохранение масштаба обзорной карты и сохранение прежнего результата до повторного расчёта. Контракты и backend не менялись. Расчёт и агент по-прежнему используют маркированные демо-данные. Коммит и push не выполнялись по указанию пользователя.
+
+
+## Подготовка API v2 — 9 ноября 2026
+
+Ветка work/frontend, исходный HEAD f57d359. После fetch прочитаны origin/dev 3446f7e и origin/work/backend 6ce4179; OpenAPI/router совпадают, в backend results.py усилена доменная проверка directed reference/journey operands без изменения wire-полей. Merge/переключение/commit/push не выполнялись. Изменения ограничены frontend/** и этим журналом.
+
+Добавлен явный API-режим с генерацией типов и runtime JSON Schema из contracts/generated/openapi.json (SHA256 a2e36eebe61c…), session bootstrap, same-origin proxy, устойчивым idempotency key, безопасными ошибками и ограниченными повторами. Реальные IDs/профили/areas/traffic из capabilities/catalog; четыре вида запросов, отдельный pipeline, IANA-время с отказом от неоднозначного local time. Draft revision защищает от поздних ответов; sequential jobs/cancel; предыдущий snapshot сохраняется. Карта и карточки используют только server geometry/metrics/scores/evidence; неизвестное не становится нулём, pending count не скрывает индекс. Saved explanation/hash/selection, template fallback, server proposals и отдельный scenario result с неизменной baseline и серверным знаком delta.
+
+API-composition использует существующий стиль и controls, отделена от demo-виджетов с прямыми fixture selectors; нового глобального state stack нет. Демо сохранено, API-ошибки не включают его автоматически. Подробнее об архитектуре, запуске и передаче — frontend/docs/API_INTEGRATION.md и frontend/README.md. .env.example не содержит угаданного backend-адреса или секретов.
+
+Проверки на Node 24.22.2: npm ci успешно, api:check успешно, strict typecheck в production build успешно, lint успешно, 36 unit-тестов успешно, 21 Playwright-тест успешно (15 прежних + 6 API; Chromium 1247 через PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH). Дополнительно проверены типы новых unit/E2E-файлов отдельным tsc --ignoreConfig; production npm audit — 0 уязвимостей. Изначальный запуск Playwright без переменной не смог найти Chromium 1254; все тесты повторены с установленным браузером. Baseline до изменений: 14 unit, lint и build проходили; реальные API-вызовы не использовались. Тестовые перехваты HTTP и fixtures явно synthetic-only.
+
+BACKEND: предоставить согласованный runtime с ready capabilities, принятыми данными, worker/storage и реальными проверяемыми условиями анализа; прогнать same-origin cookie→POST→job→result/cancel и scenario. ML1/ML2 через API: подтверждённые map_data/journey geometry/population/evidence; frontend не создаёт геометрию. DEVOPS: same-origin reverse proxy frontend + /api/v1, сохранение Host/Origin/cookie, VITE_DATA_MODE=api при сборке; ошибки API не должны превращаться в HTML SPA. Приёмка и точные границы ответственности записаны в frontend/docs/API_INTEGRATION.md. Live engine/data/LLM и настоящий proxy пока не проверены и не объявляются готовыми.
+
+Повторная установка по обновлённому lock-файлу: npm ci успешно. Полный audit сохраняет прежние 10 moderate в dev-инструментах; production audit — 0. Принудительное обновление major/обход peer-зависимостей не выполнялись.
+
+## Очистка пользовательских данных по пакету «от моти» — 9 ноября 2026
+
+Перечитаны восемь предоставленных PDF, PRODUCT_SPEC 2026-11-08.1 и действующие API handoff/OpenAPI. В пользовательском API-интерфейсе убраны служебные IDs, hashes, версии, операнды, model IDs и коды причин; они сохранены в исходных DTO и логике контроля baseline/jobs. Статусы, режимы, участки пути, грузовые профили и известные ограничения показаны понятными подписями. Неизвестные технические коды ограничений не выдаются за подтверждённые факты и не удаляются из DTO. Сохранены бизнес-метрики ТЗ: индексы, исходные времена, ожидания/пересадки, counts, last_returns, источники, условия/ограничения сценария и охват.
+
+В демо убраны расстояние по прямой из городской карточки, отдельная товарная группа raw и переключатель perish; исправлены устаревшие утверждения о неготовности методики в landing/atlas/карточках/чате/tooltip. Демо остаётся помеченным и не становится реальным расчётом. Обоснование по ответам API — frontend/docs/UI_SCOPE_REVIEW.md. Backend и контракты не менялись, commit/push не выполнялись.
+
+Проверки: production build/strict typecheck и lint — успешно; 36 unit — успешно; полный набор 21 E2E — успешно, затем после перевода дополнительных кодов ограничений повторно 6 API E2E — успешно. Визуально проверен desktop API-экран; E2E покрывает mobile и отсутствие служебных ID/hash в карточке/чате. HTTP-перехваты синтетические, live-интеграция этим не подтверждается.
+
+## Предупреждения WebStorm — 9 ноября 2026
+
+Исправлены указанные восемь предупреждений: лишняя переменная proposals, локально выбрасываемая и тут же перехватываемая HTTP-ошибка, три проверки сценария/объяснения с прямой записью ошибки в состояние, два comma-expression в HTTP-тестах и искусственный throw в тесте отклонённого результата. Сохранены retry/idempotency/abort, проверки baseline/hash и очистка busy/chatBusy через finally. Проверки: build/strict typecheck, lint, 36 unit, 6 API E2E — успешно. Один параллельный lint прервался на удалении каталога test-results самим Playwright; после окончания E2E lint повторён успешно. WebStorm-инспекция непосредственно из IDE не запускалась; причины со скриншота устранены в коде без suppression. Индекс Git, commit и push не изменялись.
