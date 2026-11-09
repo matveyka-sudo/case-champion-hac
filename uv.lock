@@ -93,7 +93,7 @@ requires-dist = [
 [[package]]
 name = "a2-engine"
 version = "0.1.0"
-source = { virtual = "packages/engine" }
+source = { editable = "packages/engine" }
 dependencies = [
     { name = "numpy" },
     { name = "tzdata" },
