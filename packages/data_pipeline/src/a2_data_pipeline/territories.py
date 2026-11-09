@@ -165,8 +165,8 @@ def _bindings(archive: zipfile.ZipFile, name: str) -> list[dict[str, Any]]:
     return rows
 
 
-def fetch(target: Path) -> Path:
-    """Run the three queries once and store the answers with their text (raw is immutable)."""
+def fetch(target: Path, queries: dict[str, str] | None = None) -> Path:
+    """Run the queries once and store the answers with their text (raw is immutable)."""
 
     import httpx
 
@@ -178,7 +178,7 @@ def fetch(target: Path) -> Path:
         "Accept": "application/sparql-results+json",
         "User-Agent": "a2-data-pipeline/0.1 (hackathon research; contact via repository)",
     }
-    for name, query in QUERIES.items():
+    for name, query in (queries or QUERIES).items():
         for attempt in range(4):
             response = httpx.get(SPARQL_URL, params={"query": query}, headers=headers, timeout=600)
             if response.status_code != 429 or attempt == 3:
