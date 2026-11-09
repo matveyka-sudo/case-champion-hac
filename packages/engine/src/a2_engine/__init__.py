@@ -24,6 +24,15 @@ from a2_engine.intercity import (
     intercity_passenger_index,
 )
 from a2_engine.pipeline import PipelineBasis, PipelineResult, pipeline_utilization
+from a2_engine.routing.road import (
+    RoadBuild,
+    RoadCoordinate,
+    RoadEndpoint,
+    RoadRequest,
+    RoadResponse,
+    RoadResult,
+    normalize_road_response,
+)
 from a2_engine.routing.timetable import (
     solve_timetable,
 )
@@ -38,6 +47,28 @@ from a2_engine.routing.timetable_models import (
     TimetableStep,
     TimetableTransfer,
 )
+from a2_engine.routing.traffic.evaluation import (
+    TrafficEndpoint,
+    TrafficMinimumReceipt,
+    TrafficPath,
+    TrafficPathResult,
+    TrafficRequest,
+    TrafficStep,
+    TrafficTransition,
+    evaluate_traffic_path,
+    verify_traffic_minimum,
+)
+from a2_engine.routing.traffic.models import (
+    TrafficCalendarDay,
+    TrafficEdge,
+    TrafficGroup,
+    TrafficObservation,
+    TrafficProfile,
+    TrafficProvenance,
+    TrafficScope,
+    TrafficSnapshot,
+)
+from a2_engine.routing.traffic.profiles import build_typical_profile, select_traffic_profile
 from a2_engine.shared.config import (
     AreaHBand,
     FreightConfig,
@@ -94,6 +125,19 @@ from a2_engine.urban import (
     territory_index,
     validate_urban_journey,
 )
+from a2_engine.urban.car import (
+    CarAnalysisResult,
+    CarInputs,
+    CarPlan,
+    analyze_car_responses,
+    plan_car_routes,
+)
+from a2_engine.urban.car.traffic import (
+    TrafficCarAnalysisResult,
+    TrafficCarInputs,
+    analyze_traffic_car,
+    traffic_car_requests,
+)
 from a2_engine.urban.district_inputs import UrbanDistrictInputs, prepare_urban_district_inputs
 from a2_engine.urban.district_models import (
     UrbanDistrict,
@@ -118,6 +162,23 @@ from a2_engine.urban.last_return import (
     UrbanLastReturnResult,
     UrbanReturnJourney,
     search_urban_last_return,
+)
+from a2_engine.urban.od import (
+    UrbanODCollector,
+    UrbanODObservation,
+    UrbanODPlan,
+    UrbanODTask,
+    assemble_urban_od_week,
+    od_road_observation,
+    od_road_request,
+    od_timetable_observation,
+    plan_urban_od_week,
+)
+from a2_engine.urban.od.traffic import (
+    TypicalODCollector,
+    plan_typical_od_week,
+    traffic_od_observation,
+    traffic_od_request,
 )
 from a2_engine.urban.transit import (
     UrbanTransitNetwork,
@@ -267,34 +328,6 @@ __all__ = [
     "search_urban_last_return",
 ]
 
-from a2_engine.routing.road import (
-    RoadBuild,
-    RoadCoordinate,
-    RoadEndpoint,
-    RoadRequest,
-    RoadResponse,
-    RoadResult,
-    normalize_road_response,
-)
-from a2_engine.urban.car import (
-    CarAnalysisResult,
-    CarInputs,
-    CarPlan,
-    analyze_car_responses,
-    plan_car_routes,
-)
-from a2_engine.urban.od import (
-    UrbanODCollector,
-    UrbanODObservation,
-    UrbanODPlan,
-    UrbanODTask,
-    assemble_urban_od_week,
-    od_road_observation,
-    od_road_request,
-    od_timetable_observation,
-    plan_urban_od_week,
-)
-
 __all__ += [
     "RoadBuild",
     "RoadCoordinate",
@@ -317,4 +350,34 @@ __all__ += [
     "od_road_request",
     "od_road_observation",
     "od_timetable_observation",
+]
+
+__all__ += [
+    "TrafficScope",
+    "TrafficEdge",
+    "TrafficGroup",
+    "TrafficCalendarDay",
+    "TrafficProvenance",
+    "TrafficObservation",
+    "TrafficProfile",
+    "TrafficSnapshot",
+    "build_typical_profile",
+    "select_traffic_profile",
+    "TrafficEndpoint",
+    "TrafficRequest",
+    "TrafficTransition",
+    "TrafficPath",
+    "TrafficStep",
+    "TrafficPathResult",
+    "TrafficMinimumReceipt",
+    "evaluate_traffic_path",
+    "verify_traffic_minimum",
+    "TrafficCarInputs",
+    "TrafficCarAnalysisResult",
+    "traffic_car_requests",
+    "analyze_traffic_car",
+    "plan_typical_od_week",
+    "traffic_od_request",
+    "traffic_od_observation",
+    "TypicalODCollector",
 ]

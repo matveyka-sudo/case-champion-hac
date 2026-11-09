@@ -533,6 +533,77 @@ NEW_PUBLIC_NAMES.update(
 )
 
 
+CANONICAL_MODULES.update(
+    {
+        "a2_engine.routing.traffic.models": (
+            "TrafficScope",
+            "TrafficEdge",
+            "TrafficGroup",
+            "TrafficCalendarDay",
+            "TrafficProvenance",
+            "TrafficObservation",
+            "TrafficProfile",
+            "TrafficSnapshot",
+        ),
+        "a2_engine.routing.traffic.profiles": ("build_typical_profile", "select_traffic_profile"),
+        "a2_engine.routing.traffic.evaluation": (
+            "TrafficEndpoint",
+            "TrafficRequest",
+            "TrafficTransition",
+            "TrafficPath",
+            "TrafficStep",
+            "TrafficPathResult",
+            "TrafficMinimumReceipt",
+            "evaluate_traffic_path",
+            "verify_traffic_minimum",
+        ),
+        "a2_engine.urban.car.traffic": (
+            "TrafficCarInputs",
+            "TrafficCarAnalysisResult",
+            "traffic_car_requests",
+            "analyze_traffic_car",
+        ),
+        "a2_engine.urban.od.traffic": (
+            "plan_typical_od_week",
+            "traffic_od_request",
+            "traffic_od_observation",
+            "TypicalODCollector",
+        ),
+    }
+)
+NEW_PUBLIC_NAMES.update(
+    {
+        "evaluate_traffic_path",
+        "TrafficProfile",
+        "TrafficEdge",
+        "TrafficPathResult",
+        "TrafficCarInputs",
+        "TrafficGroup",
+        "traffic_od_observation",
+        "TrafficPath",
+        "TypicalODCollector",
+        "analyze_traffic_car",
+        "TrafficCalendarDay",
+        "TrafficTransition",
+        "TrafficEndpoint",
+        "traffic_car_requests",
+        "TrafficStep",
+        "traffic_od_request",
+        "build_typical_profile",
+        "TrafficCarAnalysisResult",
+        "TrafficProvenance",
+        "select_traffic_profile",
+        "TrafficScope",
+        "TrafficMinimumReceipt",
+        "plan_typical_od_week",
+        "TrafficObservation",
+        "TrafficSnapshot",
+        "verify_traffic_minimum",
+        "TrafficRequest",
+    }
+)
+
+
 def test_public_names_signatures_and_defaults_are_unchanged() -> None:
     assert tuple(a2_engine.__all__[: len(PUBLIC_SIGNATURES)]) == tuple(PUBLIC_SIGNATURES)
     assert set(a2_engine.__all__) == set(PUBLIC_SIGNATURES) | NEW_PUBLIC_NAMES
@@ -679,7 +750,7 @@ def test_all_141_pre_structure_signatures_fields_and_defaults() -> None:
     expected = json.loads(
         (Path(__file__).parent / "fixtures/public_api_structure.json").read_text()
     )
-    assert list(expected) == a2_engine.__all__
+    assert list(expected) == a2_engine.__all__[:141]
     assert len(expected) == 141
     for name, saved in expected.items():
         obj = getattr(a2_engine, name)
@@ -730,7 +801,7 @@ for module in json.loads(sys.argv[1]):
 for legacy,name,canonical in json.loads(sys.argv[2]):
     assert getattr(importlib.import_module(legacy),name) is getattr(importlib.import_module(canonical),name)
 import a2_engine
-assert len(a2_engine.__all__)==141
+assert len(a2_engine.__all__)==168
 """
     for order in (modules, list(reversed(modules)), modules[::2] + modules[1::2]):
         subprocess.run(

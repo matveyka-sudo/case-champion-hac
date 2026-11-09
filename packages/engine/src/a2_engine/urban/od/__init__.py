@@ -9,6 +9,10 @@ from a2_engine.urban.od.models import UrbanODPlan as UrbanODPlan
 from a2_engine.urban.od.models import UrbanODTask as UrbanODTask
 from a2_engine.urban.od.planning import od_road_request as od_road_request
 from a2_engine.urban.od.planning import plan_urban_od_week as plan_urban_od_week
+from a2_engine.urban.od.traffic import TypicalODCollector as TypicalODCollector
+from a2_engine.urban.od.traffic import plan_typical_od_week as plan_typical_od_week
+from a2_engine.urban.od.traffic import traffic_od_observation as traffic_od_observation
+from a2_engine.urban.od.traffic import traffic_od_request as traffic_od_request
 
 __all__ = [
     "UrbanODTask",
@@ -20,4 +24,11 @@ __all__ = [
     "od_timetable_observation",
     "UrbanODCollector",
     "assemble_urban_od_week",
+]
+
+__all__ += [
+    "plan_typical_od_week",
+    "traffic_od_request",
+    "traffic_od_observation",
+    "TypicalODCollector",
 ]
