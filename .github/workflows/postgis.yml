@@ -1,6 +1,13 @@
 name: PostGIS smoke
 
 on:
+  push:
+    branches: [dev, main, 'work/**']
+    paths:
+      - '.github/workflows/postgis.yml'
+      - 'compose.yaml'
+      - 'compose.postgis.yaml'
+      - '.env.example'
   pull_request:
     branches: [dev, main]
     paths:
