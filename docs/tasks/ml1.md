@@ -384,3 +384,93 @@ README обновлён: актуальное дерево, 141 экспорт, 
 граница Valhalla 3.5.1, отсутствие typical/live/historical) сохранены.
 Backend/DTO/ветки коллег и a2-dev.bundle не изменялись. Следующий функциональный
 этап — принятые профили трафика; здесь он не реализовывался.
+
+## 09.11.2026 — traffic typical/live/historical и typical OD → τ
+
+Работа выполнена **в основной папке пользователя, открытой в PyCharm**:
+`/Users/matveyyuri/Desktop/Общее/хакатоны/case-champion-hac`, ветка work/ml1.
+Исходный HEAD и опубликованная ветка: f4c8ae476c431ef18501d7aa4e11bd7f1cbea783.
+Перед работой проверены status/diff/remotes; `pull --ff-only origin work/ml1`
+подтвердил актуальность. a2-dev.bundle сохранён; отдельная копия для изменений
+не использовалась. Исходная самостоятельно выполненная регрессия: 596 passed.
+
+Добавлен независимый `routing/traffic/`:
+- models.py: immutable scope/edge/calendar/provenance/observation/profile/snapshot;
+  graph/source/build/calendar/engine/costing/content fingerprints, явные единицы,
+  режимы, периоды и состояние closure;
+- profiles.py: реальная медиана сопоставимых наблюдений, >=5 различных локальных
+  дней по инженерному правилу IMPLEMENTATION.md v1; QA accepted aggregates без
+  заявления пересчёта отсутствующих raw samples; календарь observation/applicability,
+  duplicate/conflict handling, live/historical applicability;
+- evaluation.py: последовательная оценка переданного directed full-edge path,
+  точное время въезда после подхода/перехода, отдельные raw и timestamp durations,
+  entry_speed_v1, known time/profile/search/minimum separation и immutable receipt;
+- __init__.py: явный публичный фасад; routing не импортирует urban.
+
+`urban/car/traffic.py`: новые TrafficCarInputs и TrafficCarAnalysisResult,
+traffic_car_requests и analyze_traffic_car. Ни динамический результат, ни его proof
+не переименовываются в static RoadBuild/RoadResult. Прежний UrbanCandidate,
+validate_urban_journey, H/index/population/district semantics переиспользуются.
+Known-but-unproven маршрут сохраняется, полный индекс unknown; противоречивый
+receipt медленного пути при известной более быстрой альтернативе отклоняется.
+Live/historical count остаётся unknown без принятой baseline policy, typical τ
+не подставляется.
+
+`urban/od/traffic.py`: plan_typical_od_week, traffic_od_request,
+traffic_od_observation и TypicalODCollector. Старый planner остаётся static-only;
+общая подготовка недели выделена в приватный `_planning.py` с сохранением старой
+сигнатуры и IDs. Новый profile key связывает content hash **и search_scope_id**;
+проверяются graph/calendar/mode/timezone/границы/query time. Передаются только
+проверенные typical acceptance/evidence. Все 28 срезов и исходный roster сохранены,
+части и одинаковый replay принимаются, конфликт отклоняется. Missing/unknown,
+потерянное население и недоказанный минимум не превращаются в время0 или no-route.
+Формула calculate_urban_tau и Fraction-арифметика не менялись.
+
+Temporal policy явно versioned: L/v(entry) на полном ребре, а не интегрирование
+скорости при смене bin. Каждый следующий entry использует своё фактическое время;
+physical approach/exit и физические transitions учитываются один раз. Generalized
+routing penalty не добавляется во время. Scope/path/receipt связывают costing
+options, policy, graph/build и данные. Fractional raw seconds сохранены; duration
+legs соответствует UTC timestamps; submicrosecond positive durations отвергаются.
+Пеший boundary и RoadBuild 3.5.1 не изменены. Чистый evaluator не расширяет минутный
+HTTP протокол: exact subminute minimum требует отдельного executor proof.
+
+Live: observed_at не заменяется fetched_at, проверяются explicit checked_at и
+source TTL для всего использования ребра. Historical: отдельный реальный source
+UTC interval и period, полный source interval должен быть получен не раньше его
+завершения; «похожий день»/широкая applicability не расширяют историю. Никаких
+now(), придуманных TTL/скоростей/зимних коэффициентов/static fallback.
+Подлинность/принятие evidence остаётся внешним QA; engine проверяет согласованность.
+
+Численные synthetic controls:
+- медиана20/30/40/50/60 =40; шесть значений10..60 →35;
+- 08:13 +walk60 +edge60 +edge600 +walk60 =780s (второе entry08:15);
+- typical/live/historical car60+1620+120 =1800s, H1800→50 при отдельном
+  SYNTHETIC trusted minimum receipt; без него best-known и unknown индекс;
+- typical directed A→B600/B→A1800 на28 срезах →τ1200, threshold реально даёт
+  count0 для school1800; unknown τ оставляет H50;
+- исходный двухступенчатый τ-контроль2250 сохранён; path closure сам по себе
+  не выдаёт confirmed-unreachable pair;
+- midnight/DST, wrong direction/graph/costing/content/search scope, профиль4дня,
+  пять записейодногодня, conflicts, expiry, unknown observed_at, историческое
+  source coverage и неполное население проверены отдельно.
+
+Итоговые проверки: **656 passed**, 60 новых traffic cases поверх исходных596.
+Ruff src/tests/examples PASS; format PASS (94 файла); strict mypy
+src/tests/examples PASS (93 файла); 10 прежних executable README examples и все
+6 synthetic replay (walk/districts/transit/car/od/traffic) PASS. Frozen uv lock
+check, pip check (56 compatible packages), product config и git diff --check PASS.
+Сохранены исходные141 public signatures/defaults/fields и14 прежних структурных
+fingerprints, включая static payload/profile/request/OD task IDs. Всего168 exports,
+публичные фасады traffic/car/od проверены на identity. Исправления промежуточных
+отрицательных фикстур не ослабляли guards: hash substitution проверяется на
+валидном costing объекте, а не на более ранней ошибке его формы.
+
+README содержит конкретный handoff ML2/BACKEND/DEVOPS/executor, новый пример
+`packages/engine/examples/synthetic_traffic.py`, signatures, QA и границы времени.
+Требуются реальные принятые directed profiles/calendar/QA/evidence/car connectors
+от ML2; immutable context/result adapters от BACKEND; profile application и exact
+search/minimum receipts от executor/DEVOPS. Эти интеграции не подменены своей
+загрузкой/HTTP/map matching/вторым router. Manifests, lock, config, canonical DTO,
+backend PR#8 и ветки коллег не изменялись. Реальные пробки, τ и рейтинг Калининграда
+не вычислялись и не объявляются готовыми.

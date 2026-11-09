@@ -4,7 +4,7 @@
 пассажирские индексы, одна межгородская пассажирская цепочка, городские/межгородские
 грузы, загрузка трубопровода, сравнение готовых результатов, городской τ, районные
 агрегаты, поиск прямой поездки/последнего возврата по нормализованному расписанию,
-static car replay и построение направленных OD-задач/срезов для τ.
+static car replay, типичный/живой/исторический traffic evaluator и направленные OD-срезы для τ.
 Времена, население и подтверждения входных условий поступают от вызывающего слоя.
 Загрузки внешних расписаний, сетки, построения реальных OD-матриц, эталона A, изменения расписаний,
 сценарного движка, HTTP и LLM здесь нет.
@@ -13,7 +13,7 @@ static car replay и построение направленных OD-задач
 
 ```text
 a2_engine/
-  __init__.py                 # 141 явный публичный экспорт
+  __init__.py                 # 168 явных публичных экспортов
   shared/                     # конфигурация, MetricResult, общая экспонента
     config.py                 # расположение и config/product.json path сохранены
     results.py
@@ -28,10 +28,10 @@ a2_engine/
     analysis/                  # models.py, validation.py, calculation.py
     valhalla/                  # models.py, requests.py, responses.py, codec.py
     walk/                      # models.py, inputs.py, analysis.py
-    car/                       # models.py, analysis.py
+    car/                       # models.py, analysis.py, traffic.py
     transit/                   # models.py, journeys.py, search.py, last_return.py
     tau/                       # models.py, calendar.py, calculation.py
-    od/                        # models.py, planning.py, collection.py
+    od/                        # models.py, planning.py, collection.py, traffic.py, _planning.py
     districts/                 # models.py, inputs.py, calculation.py
     district_models.py         # совместимость: только aliases
     district_inputs.py         # совместимость: только aliases
@@ -39,6 +39,7 @@ a2_engine/
     last_return.py             # совместимость: transit.last_return/models
   routing/
     road.py                    # независимый static auto/foot JSON boundary
+    traffic/                   # models.py, profiles.py, evaluation.py: чистый traffic слой
     timetable_models.py        # нормализованные исполнения и scope
     timetable.py               # событийный поиск с бюджетом ожидания
   intercity/passenger.py
@@ -100,8 +101,8 @@ a2_engine.config, a2_engine.results и a2_engine.passenger: эти пути ис
 
 История расширений: городской анализ добавил 23 экспорта, τ — 12, walk — 15,
 районы — 17, расписание/возврат — 16 (на том этапе 120), static car/OD — 21.
-Текущий API содержит 141 экспорт; структурный snapshot защищает сигнатуры и поля
-всех 141, включая последние расширения. Ранее snapshot охватывал 104 сигнатуры; расширение destination прошлого этапа описано ниже. Предметные реализации могут импортировать свои внутренние
+На структурной базе f4c8ae4 API содержал 141 экспорт; snapshot защищает сигнатуры и поля
+этих 141. Traffic-этап добавил ещё 27 (теперь 168). Ранее snapshot охватывал 104 сигнатуры; расширение destination прошлого этапа описано ниже. Предметные реализации могут импортировать свои внутренние
 модули и shared; urban также использует независимый routing. Shared и routing не
 зависят от предметных пакетов.
 
@@ -1887,3 +1888,205 @@ A→B600/B→A1800 на 28 срезах →τ1200; первые14 средних
 Итог этапа: 141 additive public exports (120 прежних), 591 engine tests;
 Ruff/format, strict mypy (src/tests + оба новых examples), 10 прежних README
 examples, новые car/OD replay, frozen lock/pip/config/diff checks пройдены.
+
+## Traffic typical/live/historical — вычислительный этап (09.11.2026)
+
+Рабочий каталог этого этапа — основная папка PyCharm:
+`/Users/matveyyuri/Desktop/Общее/хакатоны/case-champion-hac`.
+База — f4c8ae4, 596 тестов и 141 export. Новые 27 exports дают всего 168.
+Старые static модели, сигнатуры и identities сохранены; динамический результат
+не упаковывается в RoadBuild/RoadResult. Новых зависимостей нет.
+
+### Файлы и публичный интерфейс
+
+Все перечисленные имена доступны из `a2_engine`; тематические фасады —
+`a2_engine.routing.traffic`, `a2_engine.urban.car`, `a2_engine.urban.od`.
+Внутренние реализации импортируют конкретные модули.
+
+| Файл | Новые публичные имена |
+| --- | --- |
+| routing/traffic/models.py | TrafficScope, TrafficEdge, TrafficGroup, TrafficCalendarDay, TrafficProvenance, TrafficObservation, TrafficProfile, TrafficSnapshot |
+| routing/traffic/profiles.py | build_typical_profile, select_traffic_profile |
+| routing/traffic/evaluation.py | TrafficEndpoint, TrafficRequest, TrafficTransition, TrafficPath, TrafficStep, TrafficPathResult, TrafficMinimumReceipt, evaluate_traffic_path, verify_traffic_minimum |
+| urban/car/traffic.py | TrafficCarInputs, TrafficCarAnalysisResult, traffic_car_requests, analyze_traffic_car |
+| urban/od/traffic.py | plan_typical_od_week, traffic_od_request, traffic_od_observation, TypicalODCollector |
+| urban/od/_planning.py | Общая внутренняя валидация/сборка OD-плана; прежний static wrapper оставляет исходный guard и идентичности |
+
+Основные сигнатуры:
+
+```python
+build_typical_profile(profile_id, group, observations, *, valid_from, valid_until,
+                      calendar, provenance)  # -> TrafficProfile
+select_traffic_profile(snapshot, group_edge_id, entry_at, *, checked_at)
+evaluate_traffic_path(request, path)         # -> TrafficPathResult
+verify_traffic_minimum(result, receipt)      # -> новый TrafficPathResult
+traffic_car_requests(inputs, *, categories)
+analyze_traffic_car(inputs, results, *, selected_categories, config, rules,
+                    thresholds=())         # -> TrafficCarAnalysisResult
+plan_typical_od_week(scope, points, snapshot, *, week_start, reference_at,
+                     calendar, rules, evidence_refs, search_scope_id)
+traffic_od_request(task, snapshot, entries, exits, *, checked_at, search_scope_id)
+traffic_od_observation(task, result)         # -> прежний UrbanODObservation
+TypicalODCollector(plan, snapshot, *, search_scope_id)
+```
+
+### Данные, QA и неизменяемость
+
+TrafficScope фиксирует base snapshot, source graph, фактический graph/build,
+traffic snapshot version, территорию, IANA timezone, mode, calendar_version,
+engine_version и полный canonical costing_options_json. `costing_profile_hash`
+проверяется как SHA256 canonical JSON `[engine_version, options, temporal_policy]`.
+Options обязательно указывают `costing="auto"`, `speed_source="accepted_snapshot"`.
+Это **внутренний контракт исполнителя**, не готовый HTTP payload Valhalla.
+
+TrafficSnapshot.content_hash вычисляется из scope, профилей, календаря и evidence.
+Переданный declared_content_hash проверяется. `version_key=traffic_version:content_hash`
+должен быть UrbanVersions.traffic_version; base snapshot/graph/calendar/city/mode
+проверяются адаптером. Одного совпадения строк версий недостаточно. Profiles и
+calendar нормализуются в immutable tuples; конфликтующие ID/edge content запрещены.
+
+TrafficGroup = точное направленное ребро (ID/from/to/length), scope, day_type,
+season и местный 15-minute bin. CalendarDay содержит явные день/группу/сезон/evidence:
+engine не угадывает holidays, weekdays, зимние коэффициенты или часы пик.
+TrafficProvenance содержит source/method/license/quality/evidence; это проверяемые
+принятые метаданные, не автоматическая аутентификация источника или лицензии.
+
+`build_typical_profile` реально считает медиану переданных скоростей km/h. Порог
+**пять разных локальных дней** — инженерное правило v1 IMPLEMENTATION.md, не новый
+параметр методики. Пять записей одного дня недостаточны. Проверяются сравнимость
+группы, календарь каждого наблюдения, валидность, ID и конфликтующие измерения
+одного источника в один instant. Идентичный replay дедуплицируется; last-wins нет.
+Недостаточная выборка даёт unknown-профиль с причиной, а не выдуманную скорость.
+Samples hash и `aggregation="median_recomputed_v1"` отмечают пересчёт.
+
+Уже агрегированный TrafficProfile с `aggregation="accepted_aggregate"` проходит
+проверку QA, различных observation_days, source period, group и calendar evidence;
+медиана без raw-наблюдений **не пересчитывается**. Calendar должен подтверждать и
+даты наблюдений, и даты применения. `snapshot.profile_reason(profile)` отличает
+отсутствующий календарь от несовместимой группы; `typical_accepted` выставляется
+только после этих проверок для всех предоставленных профилей. Это не обещание
+полного дорожного покрытия: пропущенные участки/пары всё ещё блокируют результат.
+
+Observed period (`observed_from/to`) независим от UTC applicability
+(`valid_from/valid_until`, полуоткрытый интервал). Закрытие — отдельный флаг;
+нулевая скорость недопустима, unknown closure не становится открытой дорогой.
+
+### Временная модель и минимум
+
+Поддержана только явно принятая `entry_speed_v1`: `seconds=L/(speed_kph/3.6)`
+на **въезде каждого ребра**. Скорость держится на полном ребре, даже если оно
+пересекает следующий bin; интегрирования скорости нет. Следующее ребро выбирает
+свой bin после предыдущего прибытия и дополнительных переходов. Данный контракт
+поддерживает полные directed edges; частичные начальные/конечные рёбра требуют
+отдельной нормализации/расширения, их длина не угадывается по координатам.
+
+TrafficPath привязан к тому же scope/build/graph/policy; проверяются непрерывность,
+границы и roster переходов. TrafficTransition содержит физические секунды и
+`included_in_previous_edge`: дополнительный переход учитывается один раз; уже
+включённый сохраняет raw_seconds, но не добавляет elapsed повторно. Evidence
+переходов должно подтверждать их применимость для переданного пути/запроса.
+Generalized penalties выбора пути не превращаются в физическое время.
+
+TrafficEndpoint подтверждает направленный внешний walk connector и correlation.
+Физическое отправление + entry = фактический network entry. Времена aware UTC;
+local date/bin получаются через IANA zone без округления фактических секунд.
+DST folds имеют разные UTC request IDs; один local-bin профиль применяется к обоим
+только в пределах своего явного UTC validity. Раздельные UTC validity могут задать
+разные профили; неоднозначная выдача остаётся unknown. Положительные submicrosecond
+длительности отклоняются, raw fractions и созданные timestamp durations сохранены.
+
+Чистый evaluator не расширяет минутную точность `/route` Valhalla 3.5.1.
+Executor должен подтвердить exact instant независимо от того, каким протоколом
+получен путь. Подтверждение другого/округлённого времени не подходит.
+
+TrafficPathResult отдельно хранит known_seconds, шаги, profile_complete,
+search_complete, minimum_proven, reasons и provenance. Полностью оценённый путь
+без search proof — best-known с известным временем и unknown полным H-индексом.
+Пересчёт static path с traffic не доказывает его optimality. Геометрия полной
+цепочки не выдумывается.
+
+TrafficMinimumReceipt связывает exact request, traffic content, path и evaluation
+hashes. Request ID включает UTC departure/check time, build/costing/policy, physical
+и access/correlation boundaries, search parameters/scope. Receipt требует search
+completeness, minimum flag и evidence предпосылок алгоритма. `exhaustive` либо
+`verified_temporal_algorithm` — утверждение доверенного executor, не выданное
+engine подтверждение. FIFO не предполагается, скачки не сглаживаются. Если метод
+executor требует FIFO, его evidence обязано подтверждать это для данного профиля.
+HTTP200, alternatives, static receipt и одиночный summary минимум не доказывают.
+Адаптеры повторяют evaluation/receipt validation; известная более быстрая
+альтернатива отклоняет противоречивый receipt медленного пути.
+
+Blocked edge означает невозможность **этого пути**, не пары. Missing, истечение,
+непринятый профиль и отсутствие minimum proof не дают confirmed_unreachable.
+Глобальный no-route этим supplied-path evaluator не устанавливается.
+
+### Live и historical
+
+`checked_at` обязателен и не берётся из now(). Для live отдельно проверяются
+observed_at, fetched_at, validity и применимость ко времени въезда/всего ребра.
+Fetched_at не заменяет observed_at; TTL engine не придумывает. При движении
+проверяется тот же неизменяемый snapshot; новые наблюдения не подмешиваются.
+
+Для historical обязательны реальные `observation_start_at/observation_end_at`
+и observed_at внутри них. Source coverage покрывает выбранное время и всё ребро;
+его конец не может быть позже fetched_at. Широкий applicability interval или
+«похожий день» не расширяют фактическое наблюдение. Код причины отличает missing,
+unknown timestamp, истечение во время ребра и неподтверждённое source coverage.
+
+### Typical OD → τ и городской анализ
+
+Новый planner использует исходный roster/правила недели/срезов и ленивые батчи.
+Его profile_hash связывает `[traffic content hash, search_scope_id]`. Поэтому
+пара/время/версии/search region входят в task identity. Query/collector проверяют
+те же scopes, календарь, mode, reference/check instant и физические границы.
+Collector принимает части и равный replay, отвергает конфликты и смешение snapshots.
+Он переиспользует прежний UrbanODCollector, добавляя только проверенный traffic
+bridge и typical_profile_accepted/evidence. Старые static задачи не переименованы.
+
+Из known-but-unproven пути сохраняется best_known_seconds; пригодного Tij нет.
+Пропущенная положительная пара, unknown population и excluded population остаются
+неизвестными. Все 28 идентичностей сохраняются, матрицы static/typical автоматически
+между срезами не копируются. `calculate_urban_tau` и Fraction-формула не изменены:
+среднее среза, затем равновесное среднее срезов; threshold сохраняет baseline versions.
+Unknown τ не уничтожает готовый H. Для live/historical политика baseline τ этим
+этапом не вводится: count unknown, typical threshold не подставляется.
+
+```bash
+PYTHONPATH=packages/engine/src uv run --frozen python packages/engine/examples/synthetic_traffic.py
+```
+
+Replay явно синтетический: 08:13 + walk60 + edge60 + edge600 + walk60 = **780s**;
+typical/live/historical цепочка **1800s**, H1800 → **50** только с отдельным fake
+trusted receipt; без него путь известен, индекс unknown. Typical A→B600/B→A1800
+на 28 срезах → **τ1200**, threshold используется в count (школа1800 →count0).
+Это не реальные пробки или τ Калининграда.
+
+### Handoff для общей интеграции
+
+- **ML2:** передать directed edge IDs/from/to/full length и base/source graph/build/
+  calendar versions; calendar для observation и application dates (IANA/day type/
+  season); raw TrafficObservation или accepted aggregate с distinct dates, QA и
+  отдельными периодами. Для historical — source UTC interval и fetched time после
+  его завершения; для live — observed/fetched/valid-until без выдуманного TTL.
+  Нужны source/method/license/quality/evidence и доказанные направленные car
+  connectors/correlations. Критерий: typed snapshot принимается, QA/coverage
+  неполнота остаётся явной, подмена группы/версии/content выявляется.
+- **BACKEND:** adapters к новым внутренним типам, immutable TrafficSnapshot и
+  checked_at; UrbanVersions.traffic_version=`snapshot.version_key`, graph/calendar/
+  mode должны совпасть. Передавать отдельно known time, completeness, minimum/search
+  proof, best-known и причины; numeric ranking только после полной существующей
+  urban validation. Сохранять raw step seconds и evidence, не делать null→0.
+  Canonical DTO в этом PR ML1 не изменены. Нужен отдельный handler/E2E этап.
+- **DEVOPS/executor:** загрузить именно content-bound profiles в закреплённый
+  граф/build, поддержать `entry_speed_v1` и exact query time/approaches/turn accounting,
+  вернуть подтверждённый directed path и отдельно receipt, связанный со всеми
+  hashes/boundaries/search scope. Принятие/подлинность evidence подтверждает внешний
+  контур. Stock minute Valhalla response сам по себе для subminute proof недостаточен;
+  если exact search/предпосылки не подтверждены, публикуется только best-known.
+  HTTP, ingest, map matching, graph deployment и постоянный cache не входят в engine.
+
+Проверки: исходная база **596 passed**, итоговый suite **656 passed**; Ruff/format,
+strict mypy src/tests/examples, прежние 141 signatures/fields и static hashes,
+все прежние README/replay, новый traffic replay, frozen lock/pip/config/diff checks.
+Реальные accepted traffic data, production executor и совместный backend E2E ещё
+не подключены. Реальные измерения пробок/автомобильный рейтинг не объявляются готовыми.
