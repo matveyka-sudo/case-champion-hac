@@ -489,11 +489,12 @@
       "role": "calculation",
       "analysis_kinds": ["urban_passenger"],
       "provides": "Наземный ГТ Москвы: маршруты, остановки, trips, stop_times, calendar",
-      "limitations": "Нет метро и электричек; битые ссылки stop_times; нет calendar_dates и shapes — карантин до ремонта",
+      "limitations": "Неофициальное зеркало, фид inactive, данные от 27.05.2025, лицензия не указана; нет метро, электричек, calendar_dates и shapes. Ремонт gtfs-repair-v1 убирает битые ссылки stop_times; набор в карантине до официального источника",
       "access_method": "file",
       "geography": "Москва",
       "license": {"name": null, "url": null, "status": "unknown"},
-      "status": "registered"
+      "status": "quarantined",
+      "datasets": ["gtfs_moscow_mdb3226.202606301640"]
     },
     {
       "source_id": "gortrans39",
