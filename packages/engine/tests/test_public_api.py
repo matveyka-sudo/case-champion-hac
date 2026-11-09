@@ -634,6 +634,47 @@ for _name, _module in REFERENCE_EXPORT_MODULES.items():
 NEW_PUBLIC_NAMES.update(REFERENCE_EXPORT_MODULES)
 
 
+SCHEDULED_EXPORT_MODULES = {
+    **dict.fromkeys(
+        (
+            "AcceptedIntercityCar",
+            "BoardingReadiness",
+            "CapitalBoundary",
+            "IntercityAnalysisScope",
+            "IntercityChainResult",
+            "IntercityFrequency",
+            "IntercityModeResult",
+            "IntercityPassengerAnalysis",
+            "PhysicalDeparture",
+            "PhysicalService",
+            "TransportModeBinding",
+        ),
+        "a2_engine.intercity.analysis.models",
+    ),
+    "analyze_intercity_passenger": "a2_engine.intercity.analysis.calculation",
+    **dict.fromkeys(
+        ("ScheduledChain", "ScheduledSearchResult", "search_scheduled_chains"),
+        "a2_engine.routing.scheduled",
+    ),
+    **dict.fromkeys(
+        (
+            "IntercityPassengerRules",
+            "intercity_passenger_rules_from_mapping",
+            "load_intercity_passenger_rules",
+        ),
+        "a2_engine.shared.config",
+    ),
+}
+for _name, _module in SCHEDULED_EXPORT_MODULES.items():
+    CANONICAL_MODULES[_module] = CANONICAL_MODULES.get(_module, ()) + (_name,)
+NEW_PUBLIC_NAMES.update(SCHEDULED_EXPORT_MODULES)
+INTERCITY_ROUTING_MODULES = {
+    "a2_engine.routing.scheduled",
+    "a2_engine.routing.timetable_models",
+    "a2_engine.routing.road",
+}
+
+
 def test_public_names_signatures_and_defaults_are_unchanged() -> None:
     assert tuple(a2_engine.__all__[: len(PUBLIC_SIGNATURES)]) == tuple(PUBLIC_SIGNATURES)
     assert set(a2_engine.__all__) == set(PUBLIC_SIGNATURES) | NEW_PUBLIC_NAMES
@@ -670,6 +711,8 @@ def test_fresh_import_orders_and_all_default_loaders_from_another_cwd(tmp_path: 
         "a2_engine.routing.reference.calibration",
         "a2_engine.routing.reference.search",
         "a2_engine.intercity.reference",
+        "a2_engine.intercity.analysis",
+        "a2_engine.routing.scheduled",
         "a2_engine.intercity",
         "a2_engine.freight",
         "a2_engine.pipeline",
@@ -759,7 +802,9 @@ def test_internal_imports_follow_shared_dependency_direction() -> None:
                         allowed += ("a2_engine.routing.",)
                     if domain == "intercity":
                         allowed += ("a2_engine.routing.reference.",)
-                    assert node.module.startswith(allowed), (
+                    assert node.module.startswith(allowed) or (
+                        domain == "intercity" and node.module in INTERCITY_ROUTING_MODULES
+                    ), (
                         path,
                         node.module,
                     )
@@ -775,7 +820,9 @@ def test_internal_imports_follow_shared_dependency_direction() -> None:
                             import_allowed += ("a2_engine.routing.",)
                         if domain == "intercity":
                             import_allowed += ("a2_engine.routing.reference.",)
-                        assert alias.name.startswith(import_allowed), path
+                        assert alias.name.startswith(import_allowed) or (
+                            domain == "intercity" and alias.name in INTERCITY_ROUTING_MODULES
+                        ), path
     for domain in ("urban", "intercity", "freight", "pipeline", "comparison", "shared"):
         assert not (package / f"{domain}.py").exists()
 
@@ -839,7 +886,7 @@ for module in json.loads(sys.argv[1]):
 for legacy,name,canonical in json.loads(sys.argv[2]):
     assert getattr(importlib.import_module(legacy),name) is getattr(importlib.import_module(canonical),name)
 import a2_engine
-assert len(a2_engine.__all__)==183
+assert len(a2_engine.__all__)==201
 """
     for order in (modules, list(reversed(modules)), modules[::2] + modules[1::2]):
         subprocess.run(
@@ -871,14 +918,15 @@ def test_urban_implementation_imports_concrete_modules() -> None:
                 assert n.module not in forbidden, (path, n.module)
 
 
-def test_all_168_pre_reference_exports_signatures_fields_and_defaults() -> None:
+@pytest.mark.parametrize("count", [168, 183])
+def test_previous_exports_signatures_fields_and_defaults(count: int) -> None:
     from dataclasses import MISSING, fields
 
-    expected = json.loads((Path(__file__).parent / "fixtures/public_api_168.json").read_text())
+    expected = json.loads((Path(__file__).parent / f"fixtures/public_api_{count}.json").read_text())
     import hashlib
 
-    assert list(expected) == a2_engine.__all__[:168]
-    assert len(expected) == 168
+    assert list(expected) == a2_engine.__all__[:count]
+    assert len(expected) == count
     for name, saved in expected.items():
         obj = getattr(a2_engine, name)
         assert str(inspect.signature(obj)) == saved["signature"], name

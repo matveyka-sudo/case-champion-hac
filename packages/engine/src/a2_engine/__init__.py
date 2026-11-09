@@ -23,6 +23,20 @@ from a2_engine.intercity import (
     intercity_car_index,
     intercity_passenger_index,
 )
+from a2_engine.intercity.analysis.calculation import analyze_intercity_passenger
+from a2_engine.intercity.analysis.models import (
+    AcceptedIntercityCar,
+    BoardingReadiness,
+    CapitalBoundary,
+    IntercityAnalysisScope,
+    IntercityChainResult,
+    IntercityFrequency,
+    IntercityModeResult,
+    IntercityPassengerAnalysis,
+    PhysicalDeparture,
+    PhysicalService,
+    TransportModeBinding,
+)
 from a2_engine.intercity.reference import ReferenceComparison, reference_time_from_result
 from a2_engine.pipeline import PipelineBasis, PipelineResult, pipeline_utilization
 from a2_engine.routing.reference.calibration import (
@@ -48,6 +62,11 @@ from a2_engine.routing.road import (
     RoadResponse,
     RoadResult,
     normalize_road_response,
+)
+from a2_engine.routing.scheduled import (
+    ScheduledChain,
+    ScheduledSearchResult,
+    search_scheduled_chains,
 )
 from a2_engine.routing.timetable import (
     solve_timetable,
@@ -88,12 +107,15 @@ from a2_engine.routing.traffic.profiles import build_typical_profile, select_tra
 from a2_engine.shared.config import (
     AreaHBand,
     FreightConfig,
+    IntercityPassengerRules,
     PassengerConfig,
     UrbanConfig,
     UrbanJourneyRules,
     UrbanTauRules,
     freight_config_from_mapping,
+    intercity_passenger_rules_from_mapping,
     load_freight_config,
+    load_intercity_passenger_rules,
     load_passenger_config,
     load_urban_config,
     load_urban_journey_rules,
@@ -414,4 +436,25 @@ __all__ += [
     "build_reference",
     "ReferenceComparison",
     "reference_time_from_result",
+]
+
+__all__ += [
+    "AcceptedIntercityCar",
+    "BoardingReadiness",
+    "CapitalBoundary",
+    "IntercityAnalysisScope",
+    "IntercityChainResult",
+    "IntercityFrequency",
+    "IntercityModeResult",
+    "IntercityPassengerAnalysis",
+    "PhysicalDeparture",
+    "PhysicalService",
+    "TransportModeBinding",
+    "analyze_intercity_passenger",
+    "ScheduledChain",
+    "ScheduledSearchResult",
+    "search_scheduled_chains",
+    "IntercityPassengerRules",
+    "intercity_passenger_rules_from_mapping",
+    "load_intercity_passenger_rules",
 ]

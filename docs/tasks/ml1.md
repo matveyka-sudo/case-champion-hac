@@ -2,12 +2,12 @@
 
 Ветка work/ml1. Пути: packages/engine/.
 
-**Текущая готовность (09.11.2026):** самостоятельный межгородской builder A на
-принятом направленном графе реализован и проверен на синтетических сетях;
-калибровка → состояния/операции → точный minimum → проверенный ReferenceTime →
-прежние пассажирские/car формулы. Реальный межгородской accepted graph и backend
-handler не подключены. Подробности и handoff — в последнем разделе этого файла
-и packages/engine/README.md. Ниже сохранена история предыдущих этапов.
+**Текущая готовность (09.11.2026):** самостоятельный A и полный вычислительный
+анализ пассажирского межгорода по нормализованным расписаниям реализованы на
+синтетических данных. Поиск целых цепочек → общий A → максимум индекса по видам
+и общественный результат → физические отправления. Реальные API/accepted
+расписания России и BACKEND handler остаются интеграции. Последний этап и handoff
+описаны в конце этого файла и packages/engine/README.md. История сохранена.
 
 Источник: ../PRODUCT_SPEC.md; контракты ../../packages/contracts/specs/README.md.
 
@@ -610,3 +610,159 @@ preference, без live/typical/historical traffic. Подлинность до�
 и приёмка исходной сети остаются во внешнем контуре. Нужен backend handler и
 реальный accepted graph для совместного E2E; синтетика не объявляется эталоном
 между реальными российскими городами.
+
+
+## Пассажирский межгород: расписания, максимум индекса и частота — 09.11.2026
+
+Исходная папка PyCharm:
+`/Users/matveyyuri/Desktop/Общее/хакатоны/case-champion-hac`, `work/ml1`.
+Проверен HEAD `4160a06b1c1c25733740485cc767aeb4209e77dc`, tracked tree чист,
+ff-only pull — Already up to date. Самостоятельная исходная регрессия:
+**742 passed**, **183 exports**. Старый a2-dev.bundle сохранён untracked.
+
+Реализованные файлы:
+- `routing/scheduled.py`: независимый event search. Перечисляет все допустимые
+  первые boardings, сохраняет first identity/onboard run/event/last alight/modes,
+  Pareto ready-time/action-order labels и лучшие завершения для каждого
+  first departure/mode set. Использует существующие timetable models/helpers,
+  не меняет urban solver и не переносит его wait budget.
+- `intercity/analysis/models.py`: frozen scope, mode mapping, physical service /
+  departure supplement, capital boundaries, readiness, accepted car, rich results.
+- `intercity/analysis/identity.py`: evidence-bound alias normalization; строгая
+  согласованность всей цепочки событий, remap run-specific transfer rules,
+  conflict rejection. Identity evidence не заполняет missing calendar/event proof.
+- `intercity/analysis/calculation.py`: analyze_intercity_passenger; independent
+  scope сверяется с timetable graph/snapshot/transfer version и rules/config,
+  затем прежний reference adapter и scalar formulas применяются к целым цепочкам.
+  Отдельные by-mode/mixed/public winners и car, raw times при unknown A.
+- `intercity/analysis/frequency.py`: физические первые departures с допустимым
+  продолжением до target; count по union IDs, отдельные nullable completeness/reasons.
+- `shared/config.py`: новый IntercityPassengerRules и mapping/path loaders читают
+  departure_window_days из approved config. PassengerConfig не изменён.
+- Public root/intercity facades, `tests/test_public_api.py`, новый baseline183
+  fixture, `tests/test_intercity_analysis.py`, `examples/synthetic_intercity.py`.
+  README содержит интерфейсы, алгоритм, границы и canonical mapping.
+
+### Алгоритм, время и полнота
+
+Фиксированы первое отправление и W0; при одном common A уменьшение T_path
+не уменьшает индекс. Поэтому достаточно earliest final arrival для каждого
+первого события и точного mode set, затем прежний intercity_passenger_index
+выбирает максимум полного score. Best-of-mode не выводится из одного global winner.
+Промежуточный score не является dominance criterion. При равных score выбираются
+раннее прибытие, меньше canonical actions, stable IDs. Pareto labels сохраняют
+нужные префиксы для этого tie-break; waits не входят в action order. Zero cycles
+не создают бесконечного улучшения. Новые импорты абсолютные.
+
+First departure window — [request,request+7 суток), из текущей конфигурации.
+Continuation horizon отдельный, без произвольной замены межгородского ожидания
+большим budget. Конец scope меньше конца окна или обрезанные продолжения дают
+неполноту; continuations_complete — внешнее принятое подтверждение достаточности.
+Внутренние пути/ожидания допускаются за 7 суток и свыше городских 4 часов.
+Start — pickup в origin, end — dropoff в destination; pre-access и final walk
+не создают общественный маршрут. Stay-onboard включает dwell один раз, без новой
+посадки. Minimum transfer проверяется от alight до departure, не прибавляется к
+walk+wait. Unknown/forbidden различаются. Readiness только из явного supplement.
+
+Сохранены: один common A, actual chosen nodes, city-pair vs exact-node, partial
+numeric score/PARTIAL_REFERENCE, cap100/REFERENCE_INCONSISTENCY, raw path/wait
+при unknown/nonapplicable reference. В последнем случае индексного winner нет.
+Автомобиль не входит в public maximum и не заменяет пустой public. Времена bus
+не умножаются дополнительно на traffic factor. Mixed = несколько movement modes;
+walk между поездами остаётся rail. Субъекты требуют accepted capital/node binding.
+
+PhysicalService идентифицирует конкретное физическое исполнение, aliases и
+sequence→departure ID с evidence. Два рейса в одно время не сливаются; повторный
+визит run в origin имеет отдельный event ID. Частота — первые физические
+отправления с хотя бы одним допустимым продолжением, не число плеч/комбинаций.
+Общий count — union по видам. Missing identity сохраняет known subset и count=None,
+не уничтожая известный score; physical_boardings_confirmed отдельно от operational
+boardings/transfers. Frequency period явный [start,end); при выходе за analysis
+first window запускается отдельный поиск с собственным результатом/бюджетом.
+
+Rich result хранит исходные supplements, normalized Timetable с versions/horizon,
+маршруты и interleaved steps, breakdown, chain_complete, physical boarding state,
+A completeness, timetable coverage, applicable modes, optimum_proven,
+frequency completeness, best-known и причины. Resource limit не превращает
+прерванный поиск в full; score100 не завершает частоту. Declared data coverage
+отделена от алгоритмического завершения. Полный no-route, unknown и interruption
+различаются; max(empty)/0-path/Infinity не создаются. Нет SLA на национальную сеть:
+размер Pareto front и нагрузка требуют отдельного production измерения.
+
+### Проверенные контроли
+
+- A1800: R1 start0/path3600 → 70.710678; R2 start3600/path1800 → 97.153194,
+  **выигрывает позже прибывающий R2**, компоненты одной и той же цепочки.
+- W043200/path7200/total50400, ride1800 + walk600 + wait1200 + ride3600;
+  alight_to_departure minimum1800 не прибавляется второй раз. A3600 → 50/50/50.
+- Through run 08:00→08:30–08:40→09:00: path3600, одна посадка/0 пересадок.
+- Inclusive start / end−1µs / exclusive end, продолжения после7d, >4h wait,
+  run-specific compatibility, unknown vs forbidden, boundaries и readiness.
+- By-mode rail/mixed сохраняются; car100 не повышает общественный score.
+- Два aliases одного physical departure, несколько продолжений, второй реальный
+  рейс в одно время → count2. Rail/mixed пересекаются, public считается по union.
+- DST/UTC/IANA, normalized >24h service dates, inactive/unknown calendar,
+  event/calendar evidence не заменяются alias proof; no-route vs unknown/resource.
+- Partial/missing/mismatched reference, cap/ties, zero-time walk/transfer cycles,
+  permutations/hash seeds, separate frequency period и immutable inputs.
+- Независимый exhaustive oracle на **35** конечных расписаниях из raw events
+  перебирает целые цепочки без engine queue/dominance/scorer и проверяет максимумы
+  по режимам/public, raw times и физические частоты. Это не earliest-arrival oracle.
+
+### Фактически выполненные проверки
+
+```sh
+PYTHONPATH=packages/engine/src uv run --frozen pytest packages/engine/tests -q
+uv run --frozen ruff check packages/engine
+uv run --frozen ruff format --check packages/engine
+PYTHONPATH=packages/engine/src uv run --frozen mypy --strict packages/engine/src packages/engine/tests packages/engine/examples
+uv lock --check
+uv pip check
+uv run --frozen python scripts/check_product_config.py
+git diff --check
+PYTHONPATH=packages/engine/src uv run --frozen python packages/engine/examples/synthetic_intercity.py
+```
+
+**782 passed** против исходных742; Ruff clean/111 formatted files; strict mypy
+clean/108 Python files. 12 executable README controls и все 8 standalone synthetic
+examples исполнены, включая прежние walk/districts/transit/car/od/traffic/reference.
+Lock resolved157, pip checked56 compatible; product config valid; diff clean.
+Сохранены все прежние **183** exports/order/signatures/defaults/fields/frozen,
+включая старые 141/168 guards; добавлено18, всего **201**. Архитектурный guard
+добавляет ровно scheduled/timetable_models/road к intercity→routing.reference;
+reverse routing→intercity/urban запрещён. Старый solver и urban не изменены.
+Предсуществующее pytest-asyncio fixture-scope warning сохранено, это не failure.
+Manifests/lock/config/canonical DTO/чужие модули не менялись.
+
+### Конкретный handoff
+
+Опубликованные ветки прочитаны через fetch/show без merge:
+BACKEND `6ce41795572b3708dc09f49868a3cefaa7e77fb3`,
+ML2 `0e6dbca005674f86c5cde7c2f2087477d509e7df`.
+
+**ML2 — packages/data_pipeline/**: согласованные executions/stop events, service
+calendar/exceptions/UTC timestamps, >24h преобразование и явное transport mapping;
+accepted alias groups с physical event IDs/evidence, directed footpaths и
+run-specific alight_to_departure rules, scope/versions и continuation coverage.
+Regions — явный accepted capital mapping. Не склеивать n-е строки независимых
+таблиц. В текущем adapter calendar_version=not_collected; реальные расписания и
+полный межгородской scope не подключены. Приёмка: controls example и unknown
+coverage воспроизводимы на принятых входах, без потери identities/версий.
+
+**BACKEND — packages/contracts/src/a2_contracts/v2/{dataset,journeys}.py,
+apps/api/**: handler AcceptedData→нормализованные inputs→analysis. README содержит
+точный JourneyResult/Leg mapping: canonical departure_at — **первое отправление**,
+не routing TimetablePath.departure_at=requested; total=W0+path, legs сохраняют wait.
+Nullable score не скрывает available raw journey. Хранить rich result/supplements:
+canonical ScheduledService/ServiceStopTime и Transfer пока не выражают physical
+alias events, run-specific permission/minimum, readiness и независимые proof /
+frequency states. trip_identity_confirmed не заменяет codeshare identity.
+Приёмка: R2 выиграл, mixed breakdown50, frequency2 и union, unknown A оставляет
+raw times, partial не становится full rating, car не входит в public.
+
+**DEVOPS — infra/worker**: согласовать immutable snapshot/graph/calendar/transfer
+versions, реальный accepted horizon и CPU/RAM/resource budget. При отмене хранить
+best-known отдельно от proven winner; frequency завершать независимо от cap100.
+Измерить runtime/RAM на реальных accepted данных. HTTP/API ingestion и jobs не
+входят в engine. Реальные маршруты России, backend E2E и production performance
+не запускались и не объявляются PASS.

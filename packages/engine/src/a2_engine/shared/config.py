@@ -372,3 +372,32 @@ def urban_tau_rules_from_mapping(product: Mapping[str, object]) -> UrbanTauRules
 
 def load_urban_tau_rules(path: str | Path | None = None) -> UrbanTauRules:
     return urban_tau_rules_from_mapping(_load_product(path))
+
+
+@dataclass(frozen=True)
+class IntercityPassengerRules:
+    methodology_version: str
+    departure_window_days: int
+
+    def __post_init__(self) -> None:
+        if self.methodology_version != "a2-methodology-v3":
+            raise ValueError("UNSUPPORTED_INTERCITY_PASSENGER_METHODOLOGY")
+        if type(self.departure_window_days) is not int or self.departure_window_days <= 0:
+            raise ValueError("POSITIVE_DEPARTURE_WINDOW_DAYS_REQUIRED")
+
+
+def intercity_passenger_rules_from_mapping(
+    product: Mapping[str, object],
+) -> IntercityPassengerRules:
+    version, parameters = _method_parameters(product, "intercity_passenger")
+    try:
+        days = parameters["departure_window_days"]
+        if type(days) is not int:
+            raise ValueError("INTEGER_DEPARTURE_WINDOW_DAYS_REQUIRED")
+        return IntercityPassengerRules(version, days)
+    except KeyError as exc:
+        raise ValueError("Missing departure_window_days") from exc
+
+
+def load_intercity_passenger_rules(path: str | Path | None = None) -> IntercityPassengerRules:
+    return intercity_passenger_rules_from_mapping(_load_product(path))
