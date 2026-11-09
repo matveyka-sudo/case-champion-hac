@@ -1,0 +1,93 @@
+{
+  "schema_version": "2",
+  "spec_version": "2026-11-08.1",
+  "methodology": {
+    "version": "a2-methodology-v3",
+    "config_hash": "test-config",
+    "reference_profile": "edge-calibrated-v1"
+  },
+  "analyses": [
+    {
+      "analysis_kind": "urban_passenger",
+      "contract_available": true,
+      "calculation_available": true,
+      "reason_code": null
+    },
+    {
+      "analysis_kind": "intercity_passenger",
+      "contract_available": true,
+      "calculation_available": true,
+      "reason_code": null
+    },
+    {
+      "analysis_kind": "urban_cargo",
+      "contract_available": true,
+      "calculation_available": true,
+      "reason_code": null
+    },
+    {
+      "analysis_kind": "intercity_cargo",
+      "contract_available": true,
+      "calculation_available": true,
+      "reason_code": null
+    }
+  ],
+  "urban_city_names": [
+    "Москва",
+    "Калининград",
+    "Новороссийск"
+  ],
+  "categories": [
+    "adult_polyclinic",
+    "child_polyclinic",
+    "kindergarten",
+    "school",
+    "college_university",
+    "rail_terminal",
+    "bus_terminal",
+    "airport",
+    "shopping_center"
+  ],
+  "traffic_modes": [
+    "static"
+  ],
+  "default_traffic_mode": "static",
+  "pipeline_products": [
+    "oil",
+    "oil_products",
+    "gas"
+  ],
+  "territory_catalog_available": true,
+  "national_catalog_complete": false,
+  "cargo_profiles": [
+    {
+      "kind": "delivery",
+      "profile_id": "demo-general",
+      "food_class": "nonfood",
+      "urgency": "ordinary",
+      "handling_requirements": [
+        "container"
+      ],
+      "temperature_requirements": {
+        "controlled": false,
+        "min_c": null,
+        "max_c": null
+      },
+      "vehicle_constraints": {
+        "max_height_m": null,
+        "max_weight_tonnes": null,
+        "restrictions": []
+      }
+    },
+    {
+      "kind": "pipeline",
+      "profile_id": "pipe-oil",
+      "product": "oil"
+    }
+  ],
+  "limitations": [
+    "SYNTHETIC_ONLY"
+  ],
+  "areas": [],
+  "snapshots": []
+}

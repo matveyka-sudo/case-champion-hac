@@ -95,9 +95,7 @@ test("free question is safe text and does not pretend to call AI", async ({
   const unsafeMessage = String.fromCharCode(60) + "img src=x onerror=alert(1)>";
   await page.getByLabel("Вопрос агенту").fill(unsafeMessage);
   await page.getByRole("button", { name: "Отправить", exact: true }).click();
-  await expect(page.locator(".msg.u")).toHaveText(
-    unsafeMessage,
-  );
+  await expect(page.locator(".msg.u")).toHaveText(unsafeMessage);
   await expect(page.locator(".msg.a").last()).toContainText(
     "агент не подключён",
   );
@@ -121,7 +119,10 @@ test("passenger direction and freight scopes are separate", async ({
     .click();
   await page.locator("#timedock .td-run").click();
   await expect(page.locator(".ctx")).toContainText("Москва → Новороссийск");
-  const liquidCargo: Locator = page.getByRole("button", { name: "Наливной", exact: true });
+  const liquidCargo: Locator = page.getByRole("button", {
+    name: "Наливной",
+    exact: true,
+  });
   await liquidCargo.click();
   await expect(
     page.getByRole("button", { name: "Газ", exact: true }),
@@ -145,7 +146,7 @@ test("all eleven demo states can be selected without crashing", async ({
     "Подтверждённо нет маршрута",
     "Источник недоступен",
     "Дата не поддерживается",
-    "Формула ожидает утверждения",
+    "Индекс ещё не рассчитан",
     "Агент недоступен",
   ]) {
     await page.getByRole("button", { name: "Состояния", exact: true }).click();
@@ -257,70 +258,116 @@ test("custom calendar selects a date and closes without hiding the atlas", async
   await expect(calendar).toBeFocused();
 });
 
-test("city map zooms out to Russia and returns without replacing the map", async ({ page }) => {
+test("city map zooms out to Russia and returns without replacing the map", async ({
+  page,
+}) => {
   await page.goto("/#atlas");
-  await page.locator("#filters").getByRole("button", { name: "Москва", exact: true }).click();
+  await page
+    .locator("#filters")
+    .getByRole("button", { name: "Москва", exact: true })
+    .click();
   const map = page.locator("#mapCity");
   await expect(map.locator("canvas")).toBeVisible();
   await map.evaluate((el) => el.setAttribute("data-instance-test", "original"));
-  await page.getByRole("button", { name: "Показать всю территорию", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Показать всю территорию", exact: true })
+    .click();
   await expect(map).toHaveAttribute("data-map-level", "0");
-  await expect(map.getByText("Калининград · демо-данные", { exact: true })).toHaveCount(1);
-  await expect(map.getByText("Калининград · демо-данные", { exact: true })).toBeVisible();
-  await expect(map.getByText("Новороссийск · демо-данные", { exact: true })).toBeVisible();
+  await expect(
+    map.getByText("Калининград · демо-данные", { exact: true }),
+  ).toHaveCount(1);
+  await expect(
+    map.getByText("Калининград · демо-данные", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    map.getByText("Новороссийск · демо-данные", { exact: true }),
+  ).toBeVisible();
   await page.locator("#timedock input[type=range]").fill("80");
   await expect(map).toHaveAttribute("data-map-level", "0");
   await expect(map).toHaveAttribute("data-instance-test", "original");
-  await page.getByRole("button", { name: "К выбранному городу", exact: true }).click();
+  await page
+    .getByRole("button", { name: "К выбранному городу", exact: true })
+    .click();
   await expect(map).toHaveAttribute("data-map-level", "2");
   await expect(map.locator("canvas")).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("button", { name: "Показать всю территорию", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Показать всю территорию", exact: true })
+    .click();
   await expect(map).toHaveAttribute("data-map-level", "0");
-  await expect(map.getByText("Калининград · демо-данные", { exact: true })).toHaveCount(1);
-  await expect(map.getByText("Калининград · демо-данные", { exact: true })).toBeVisible();
+  await expect(
+    map.getByText("Калининград · демо-данные", { exact: true }),
+  ).toHaveCount(1);
+  await expect(
+    map.getByText("Калининград · демо-данные", { exact: true }),
+  ).toBeVisible();
 });
 
-
-test("chat cancels old context and refuses a scenario without a current result", async ({ page }) => {
+test("chat cancels old context and refuses a scenario without a current result", async ({
+  page,
+}) => {
   await page.goto("/#atlas");
-  await page.locator("#filters").getByRole("button", { name: "Москва", exact: true }).click();
+  await page
+    .locator("#filters")
+    .getByRole("button", { name: "Москва", exact: true })
+    .click();
   await page.getByRole("button", { name: "Агент", exact: true }).click();
   const input = page.getByLabel("Вопрос агенту");
   await input.fill("Почему здесь низкая доступность поликлиник?");
   await page.getByRole("button", { name: "Отправить", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Проверить сценарий", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Проверить сценарий", exact: true }),
+  ).toBeVisible();
   await page.locator("#timedock input[type=range]").fill("80");
   await expect(page.locator(".ch-log .msg")).toHaveCount(0);
   await input.fill("Почему здесь низкая доступность поликлиник?");
   await page.getByRole("button", { name: "Отправить", exact: true }).click();
-  await expect(page.locator(".ch-log")).toContainText("нет готового демо-результата");
-  await expect(page.getByRole("button", { name: "Проверить сценарий", exact: true })).toHaveCount(0);
+  await expect(page.locator(".ch-log")).toContainText(
+    "нет готового демо-результата",
+  );
+  await expect(
+    page.getByRole("button", { name: "Проверить сценарий", exact: true }),
+  ).toHaveCount(0);
 });
 
-test("missing results are hidden on mobile and in intercity cards", async ({ page }) => {
+test("missing results are hidden on mobile and in intercity cards", async ({
+  page,
+}) => {
   await page.goto("/#atlas");
-  await page.locator("#filters").getByRole("button", { name: "Москва", exact: true }).click();
+  await page
+    .locator("#filters")
+    .getByRole("button", { name: "Москва", exact: true })
+    .click();
   await page.getByRole("button", { name: "Состояния", exact: true }).click();
-  await page.locator("#statesMenu").getByRole("button", { name: "Нет подтверждённых данных", exact: true }).click();
+  await page
+    .locator("#statesMenu")
+    .getByRole("button", { name: "Нет подтверждённых данных", exact: true })
+    .click();
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator(".m-sum")).toContainText("результата нет");
   await expect(page.locator(".m-sum")).not.toContainText("индекс 36");
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.locator("#modeTabs button").nth(1).click();
   await page.getByRole("button", { name: "Состояния", exact: true }).click();
-  await page.locator("#statesMenu").getByRole("button", { name: "Нет подтверждённых данных", exact: true }).click();
+  await page
+    .locator("#statesMenu")
+    .getByRole("button", { name: "Нет подтверждённых данных", exact: true })
+    .click();
   await expect(page.locator(".ctx")).toContainText("Результата нет");
   await expect(page.locator(".ctx")).not.toContainText("2 ч 10 мин");
 });
 
-test("overview map preserves its zoom when closing the card", async ({ page }) => {
+test("overview map preserves its zoom when closing the card", async ({
+  page,
+}) => {
   await page.goto("/#atlas");
   const group = page.locator("#mapRussia svg > g").first();
   await expect(group).toBeVisible();
   await page.getByRole("button", { name: "Приблизить", exact: true }).click();
   await expect(group).toHaveAttribute("transform", /scale\(1.5\)/);
   const transform = await group.getAttribute("transform");
-  await page.getByRole("button", { name: "Закрыть карточку", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Закрыть карточку", exact: true })
+    .click();
   await expect(group).toHaveAttribute("transform", transform!);
 });

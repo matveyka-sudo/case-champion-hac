@@ -244,7 +244,7 @@ export function CityMap({
           : unavailable(c)
             ? "Нет расписания — результата нет"
             : st === "pending" && !layers.pop
-              ? `${c.values[p.travel][metric === "overall" ? (Object.keys(p.cats)[0] as CatId) : metric as CatId]?.time ?? "—"} мин · формула индекса ожидает утверждения`
+              ? `${c.values[p.travel][metric === "overall" ? (Object.keys(p.cats)[0] as CatId) : metric as CatId]?.time ?? "—"} мин · индекс ещё не рассчитан`
             : layers.pop
               ? `≈ ${c.pop} жит. · модель`
               : `${metric === "overall" ? "Общий индекс" : `${c.values[p.travel][metric as CatId]?.time} мин · индекс`} ${f1(v)} · демо`;

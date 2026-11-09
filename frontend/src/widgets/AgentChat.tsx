@@ -305,7 +305,7 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
                 (пример)
               </li>
               <li>Население: модельная сетка 1 км</li>
-              <li>Методика не утверждена; значения из прототипа</li>
+              <li>Значения из демонстрационного прототипа</li>
             </ul>
           </details>
           {actions}

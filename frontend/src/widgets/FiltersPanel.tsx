@@ -466,7 +466,7 @@ export function FiltersPanel({ run }: { run: () => void }) {
             )}
             <div className="fgroup">
               <p className="flabel">
-                Профиль груза <small>утверждается</small>
+                Профиль груза <small>демо</small>
               </p>
               <p className="fhint" style={{ margin: "0 0 6px" }}>
                 Товарная группа
@@ -476,7 +476,6 @@ export function FiltersPanel({ run }: { run: () => void }) {
                 items={[
                   ["food", "Продовольствие"],
                   ["nonfood", "Непрод."],
-                  ["raw", "Сырьё"],
                 ]}
                 value={p.profile.group}
                 onChange={(v) => setProfile("group", v)}
@@ -502,7 +501,6 @@ export function FiltersPanel({ run }: { run: () => void }) {
               {chips(
                 [
                   ["temp", "Температурный режим"],
-                  ["perish", "Скоропортящийся"],
                   ["urgent", "Срочный"],
                 ],
                 p.profile.limits,
@@ -518,8 +516,8 @@ export function FiltersPanel({ run }: { run: () => void }) {
                   }),
               )}
               <p className="fhint">
-                «Продовольствие» и «скоропортящийся» — разные признаки.
-                Численные параметры профилей ещё не утверждены.
+                Демонстрационные условия. В API-режиме выбирается готовый
+                профиль с заданными срочностью, температурой и обработкой.
               </p>
             </div>
             {p.cargoScale === "inter" ? (
