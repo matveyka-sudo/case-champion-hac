@@ -318,6 +318,7 @@ async def test_departure_tool_integrates_real_gateway_through_mock_http_without_
     raw["journeys"] = []
     raw["metrics"][0]["journey_id"] = None
     raw["scores"][0]["reference_ids"] = [raw["references"][0]["reference_id"]]
+    raw["request"].update(origin_node_ids=["demo-a"], destination_node_ids=["demo-b"])
     service.saved = AnalysisResult.model_validate(raw)
     service.registry.snapshots["synthetic-snapshot"] = snapshot()
     before = service.saved.model_dump_json()

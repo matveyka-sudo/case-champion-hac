@@ -175,6 +175,7 @@ def test_initial_wait_is_independent_of_partial_reference():
 
 def test_reference_ratio_explicit_full_operand_survives_without_journey_link():
     raw = complete_result()
+    raw["request"].update(origin_node_ids=["demo-a"], destination_node_ids=["demo-b"])
     raw["scores"] = [raw["scores"][0]]
     raw["scores"][0]["reference_ids"] = ["reference"]
     raw["metrics"][0]["journey_id"] = None

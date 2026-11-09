@@ -14,7 +14,7 @@ from a2_api.storage import JobRepository
 from a2_contracts.v2.results import AnalysisResult
 from a2_contracts.v2.scenarios import ScenarioResult, ScenarioRunRequest
 from httpx import ASGITransport, AsyncClient
-from test_v2_storage import context, proposal, request, scenario_result
+from test_v2_storage import context, proposal, scenario_result
 
 
 @pytest.mark.asyncio
@@ -64,6 +64,7 @@ async def test_scenario_reference_cannot_be_rebound_to_another_baseline_task(dat
         foreign_journey["legs"] = deepcopy(raw["journeys"][0]["legs"])
     raw["journeys"].append(foreign_journey)
     if mode in {"direct_reference", "legacy_direct_reference"}:
+        raw["request"].update(origin_node_ids=["demo-a"], destination_node_ids=["demo-b"])
         raw["metrics"][0]["journey_id"] = None
         raw["scores"][0]["reference_ids"] = ["reference"]
     full = AnalysisResult.model_validate(raw)
@@ -79,8 +80,10 @@ async def test_scenario_reference_cannot_be_rebound_to_another_baseline_task(dat
     baseline = AnalysisResult.model_validate(raw)
     await repository.enqueue(
         "analysis",
-        request("intercity_passenger"),
-        context("intercity_passenger", analysis_id=baseline.analysis_id, scope=scope),
+        baseline.request.model_copy(update={"snapshot_id": None, "methodology": None}),
+        context("intercity_passenger", analysis_id=baseline.analysis_id, scope=scope).model_copy(
+            update={"normalized_request": baseline.request}
+        ),
         "partial-baseline",
         "trace",
         scope=scope,
