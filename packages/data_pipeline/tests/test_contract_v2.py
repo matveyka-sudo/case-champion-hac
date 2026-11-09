@@ -1,12 +1,14 @@
 """Mapping of ML2 bundles to BACKEND's a2_contracts.v2.AcceptedData."""
 
+import hashlib
 import importlib
+import json
 from pathlib import Path
 from typing import Any
 
 import pytest
 from a2_data_pipeline.bundle import CoverageRecord
-from a2_data_pipeline.contract_v2 import registry_options, to_accepted_data_v2
+from a2_data_pipeline.contract_v2 import registry_inputs, registry_options, to_accepted_data_v2
 from a2_data_pipeline.store import list_bundles, load_bundle, publish_bundle
 from synthetic_bundle import (
     EVIDENCE,
@@ -124,6 +126,64 @@ def test_districts_become_area_options(tmp_path: Path) -> None:
     options = registry_options(load_bundle("synthetic-test-v1", root=tmp_path))
     assert options["areas"] == [{"area_id": "syn-d1", "city_id": "syn", "name": "Синтетический"}]
     assert [t["territory_id"] for t in options["territories"]] == ["syn"]
+
+
+def write_directory(root: Path, timezone: str = "Europe/Kaliningrad") -> None:
+    """A minimal published territory directory holding the synthetic city and its region."""
+
+    rows = [
+        {
+            "territory_id": territory_id,
+            "level": level,
+            "name": "Синтетический",
+            "timezone": timezone,
+            "timezone_basis": "subject_iana",
+            "parent_region_id": parent,
+            "capital_city_id": capital,
+            "wikidata_id": wikidata_id,
+            "iso_code": None,
+            "population": None,
+            "population_date": None,
+            "disputed": False,
+        }
+        for territory_id, level, parent, capital, wikidata_id in (
+            ("region-syn", "region", None, "syn", "Q1"),
+            ("syn", "city", "region-syn", None, "Q10"),
+        )
+    ]
+    payload = json.dumps(rows).encode()
+    target = root / "syn-territories"
+    target.mkdir(parents=True)
+    (target / "territories.json").write_bytes(payload)
+    files = {"territories": {"path": "territories.json", "rows": len(rows)}}
+    files["territories"]["sha256"] = hashlib.sha256(payload).hexdigest()
+    (target / "manifest.json").write_text(json.dumps({"files": files}))
+
+
+def test_registry_inputs_list_each_territory_once(tmp_path: Path) -> None:
+    synthetic_payload(tmp_path)
+    write_directory(tmp_path / "directories")
+    inputs = registry_inputs(
+        "syn-territories",
+        ["synthetic-test-v1"],
+        directory_root=tmp_path / "directories",
+        bundle_root=tmp_path,
+    )
+    assert [t["territory_id"] for t in inputs["territories"]] == ["region-syn", "syn"]
+    assert inputs["territories"][1]["parent_region_id"] == "region-syn"
+    assert inputs["areas"] == [{"area_id": "syn-d1", "city_id": "syn", "name": "Синтетический"}]
+
+
+def test_registry_inputs_reject_a_zone_mismatch(tmp_path: Path) -> None:
+    synthetic_payload(tmp_path)
+    write_directory(tmp_path / "directories", timezone="Europe/Moscow")
+    with pytest.raises(ValueError, match="zone"):
+        registry_inputs(
+            "syn-territories",
+            ["synthetic-test-v1"],
+            directory_root=tmp_path / "directories",
+            bundle_root=tmp_path,
+        )
 
 
 def test_unaccepted_bundle_is_not_mapped(tmp_path: Path) -> None:

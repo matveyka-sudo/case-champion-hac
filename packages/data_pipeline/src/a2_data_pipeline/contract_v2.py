@@ -17,15 +17,19 @@ only maps fields and never relaxes a rule:
   ``freight_compatibility`` stays empty because compatibility is unknown.
 
 ``to_accepted_data_v2`` returns plain JSON data; ``load_accepted_data`` validates
-it with ``a2_contracts.v2`` when that package is importable.
+it with ``a2_contracts.v2`` when that package is importable. ``registry_inputs``
+gives the ``ProductRegistry`` catalogue: the national territory directory plus the
+districts of the urban bundles, each territory once.
 """
 
 from __future__ import annotations
 
 import importlib
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Any
 
+from . import territories as territory_directory
 from .bundle import BundleData, CoverageRecord, FreightNode, FreightSite
 from .store import load_bundle
 
@@ -347,6 +351,43 @@ def registry_options(data: BundleData) -> dict[str, list[dict[str, Any]]]:
         if t.level == "district"
     ]
     return {"territories": territories, "areas": areas}
+
+
+def registry_inputs(
+    directory_id: str,
+    bundle_ids: list[str],
+    directory_root: Path | None = None,
+    bundle_root: Path | None = None,
+) -> dict[str, list[dict[str, Any]]]:
+    """``TerritoryOption`` rows of the national directory and ``AreaOption`` rows of the bundles.
+
+    ``ProductRegistry`` rejects a territory listed twice, so a bundle city is not
+    added again: it must already be a directory city with the same time zone.
+    """
+
+    options = territory_directory.territory_options(
+        territory_directory.load_directory(directory_id, root=directory_root)
+    )
+    by_id = {option["territory_id"]: option for option in options}
+    areas: list[dict[str, Any]] = []
+    for bundle_id in bundle_ids:
+        bundle = registry_options(load_bundle(bundle_id, root=bundle_root))
+        for city in bundle["territories"]:
+            known = by_id.get(city["territory_id"])
+            if known is None or known["level"] != "city":
+                raise ValueError(
+                    f"{bundle_id}: city {city['territory_id']} is not in {directory_id}"
+                )
+            if known["timezone"] != city["timezone"]:
+                raise ValueError(
+                    f"{bundle_id}: {city['territory_id']} zone {city['timezone']} "
+                    f"differs from {directory_id} ({known['timezone']})"
+                )
+        areas.extend(bundle["areas"])
+    area_ids = [area["area_id"] for area in areas]
+    if len(set(area_ids)) != len(area_ids):
+        raise ValueError("an area is listed by two bundles")
+    return {"territories": options, "areas": areas}
 
 
 def load_accepted_data(bundle_id: str) -> Any:
