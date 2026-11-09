@@ -5,7 +5,7 @@ import asyncio
 import importlib
 import inspect
 import signal
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated, Literal, cast
@@ -141,7 +141,9 @@ def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
     if bool(config.calculation_handler) != bool(config.code_version):
         raise ValueError("Configure calculation handler and code version together")
 
-    def service(repository: JobRepository | None = None) -> AnalysisService:
+    def service(
+        repository: JobRepository | None = None, *, configure_assistant: bool = True
+    ) -> AnalysisService:
         result = AnalysisService(
             registry,
             repository,
@@ -149,7 +151,7 @@ def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
             engine_enabled=bool(config.calculation_handler),
             preflight=preflight,
         )
-        if config.assistant_hook:
+        if config.assistant_hook and configure_assistant:
             factory = cast(
                 Callable[[AnalysisService], FlashAssistant], configured_hook(config.assistant_hook)
             )
@@ -157,6 +159,12 @@ def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
             if not isinstance(result.assistant, FlashAssistant):
                 raise ValueError("Assistant hook must return FlashAssistant")
         return result
+
+    async def close_assistant(result: AnalysisService) -> None:
+        transport = result.assistant.transport if result.assistant is not None else None
+        close = getattr(transport, "aclose", None)
+        if callable(close):
+            await cast(Callable[[], Awaitable[None]], close)()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -170,12 +178,18 @@ def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
                 "Backend database startup failed; check migrations/configuration"
             ) from None
         try:
-            app.state.services = service(JobRepository(pool))
-            yield
+            active_service = service(JobRepository(pool))
+            app.state.services = active_service
+            try:
+                yield
+            finally:
+                await close_assistant(active_service)
         finally:
             await pool.close()
 
-    return create_app(service(), lifespan=lifespan, secure_cookies=config.secure_cookies)
+    return create_app(
+        service(configure_assistant=False), lifespan=lifespan, secure_cookies=config.secure_cookies
+    )
 
 
 async def run_worker(settings: RuntimeSettings, once: bool = False) -> None:
