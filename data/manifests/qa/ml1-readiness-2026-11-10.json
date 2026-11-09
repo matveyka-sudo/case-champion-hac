@@ -1,0 +1,112 @@
+{
+  "check": "ml1-readiness",
+  "date": "2026-11-10",
+  "engine": "origin/dev bbef1b6 a2_engine (ML1 a4851c1)",
+  "contracts": "origin/dev bbef1b6 a2_contracts.v2",
+  "script": "ml/ml1_readiness.py",
+  "note": "No routing: without a Valhalla build every pair is blocked (VALHALLA_BUILD_UNAVAILABLE), as expected",
+  "results": [
+    {
+      "bundle": "kaliningrad-urban-2026-11-09.1",
+      "load_accepted_data": "ok",
+      "prepare_walk_inputs": "ok",
+      "points": 216,
+      "destinations": 262,
+      "destination_categories": {
+        "adult_polyclinic": 16,
+        "airport": 1,
+        "bus_terminal": 2,
+        "child_polyclinic": 12,
+        "college_university": 26,
+        "kindergarten": 93,
+        "rail_terminal": 2,
+        "school": 76,
+        "shopping_center": 34
+      },
+      "limitations": [
+        "CONNECTOR_UNCONFIRMED",
+        "INCOMPLETE_POPULATION_COVERAGE",
+        "VALHALLA_BUILD_UNAVAILABLE",
+        "VALHALLA_CORRELATION_UNAVAILABLE"
+      ],
+      "plan_walk_routes": "ok",
+      "route_requests": 0,
+      "blocked_pairs": 786,
+      "analyze_urban_candidates": "ok",
+      "h_seconds": 1800.0,
+      "districts": 3,
+      "prepare_urban_district_inputs": "ok",
+      "analyze_urban_districts": "ok",
+      "city_population": "485776.410",
+      "allocated_population": "485776.273"
+    },
+    {
+      "bundle": "novorossiysk-urban-2026-11-09.1",
+      "load_accepted_data": "ok",
+      "prepare_walk_inputs": "ok",
+      "points": 409,
+      "destinations": 107,
+      "destination_categories": {
+        "adult_polyclinic": 5,
+        "airport": 1,
+        "bus_terminal": 2,
+        "child_polyclinic": 1,
+        "college_university": 12,
+        "kindergarten": 45,
+        "rail_terminal": 1,
+        "school": 25,
+        "shopping_center": 15
+      },
+      "limitations": [
+        "CONNECTOR_UNCONFIRMED",
+        "INCOMPLETE_POPULATION_COVERAGE",
+        "VALHALLA_BUILD_UNAVAILABLE",
+        "VALHALLA_CORRELATION_UNAVAILABLE"
+      ],
+      "plan_walk_routes": "ok",
+      "route_requests": 0,
+      "blocked_pairs": 321,
+      "analyze_urban_candidates": "ok",
+      "h_seconds": 2400.0,
+      "districts": 4,
+      "prepare_urban_district_inputs": "ok",
+      "analyze_urban_districts": "ok",
+      "city_population": "316189.365",
+      "allocated_population": "316189.104"
+    },
+    {
+      "bundle": "moscow-urban-2026-11-09.2",
+      "load_accepted_data": "ok",
+      "prepare_walk_inputs": "ok",
+      "points": 2361,
+      "destinations": 3471,
+      "destination_categories": {
+        "adult_polyclinic": 284,
+        "airport": 4,
+        "bus_terminal": 18,
+        "child_polyclinic": 232,
+        "college_university": 446,
+        "kindergarten": 742,
+        "rail_terminal": 19,
+        "school": 874,
+        "shopping_center": 852
+      },
+      "limitations": [
+        "CONNECTOR_UNCONFIRMED",
+        "INCOMPLETE_POPULATION_COVERAGE",
+        "VALHALLA_BUILD_UNAVAILABLE",
+        "VALHALLA_CORRELATION_UNAVAILABLE"
+      ],
+      "plan_walk_routes": "ok",
+      "route_requests": 0,
+      "blocked_pairs": 10413,
+      "analyze_urban_candidates": "ok",
+      "h_seconds": 3600.0,
+      "districts": 12,
+      "prepare_urban_district_inputs": "ok",
+      "analyze_urban_districts": "ok",
+      "city_population": "13277959.443",
+      "allocated_population": "13277958.069"
+    }
+  ]
+}
