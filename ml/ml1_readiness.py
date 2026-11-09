@@ -5,6 +5,11 @@ Kaliningrad ``.2``/``.4``; this runs the same steps for any bundle and city and
 prints one JSON line per bundle. No routing: without a Valhalla build the plan
 blocks every pair (``VALHALLA_BUILD_UNAVAILABLE``), which is the expected answer.
 
+A bundle with ``walk_connectors`` also gets its connectors passed as ML1
+``WalkConnector`` rows with a readiness-only walking speed (``READINESS_SPEED_KMH``,
+not an accepted one): the report counts the endpoints ML1 would treat as confirmed
+once the accepted pedestrian profile gives the real speed.
+
 Run from the repository root with ML1's engine and BACKEND's contracts importable:
 
     PYTHONPATH=packages/data_pipeline/src:packages/engine/src:packages/contracts/src \
@@ -16,6 +21,7 @@ import sys
 import traceback
 from collections import Counter
 from datetime import UTC, datetime
+from typing import Any
 
 from a2_data_pipeline.contract_v2 import load_accepted_data
 from a2_data_pipeline.store import load_bundle
@@ -42,6 +48,32 @@ def step(report, name, fn):
         return None
 
 
+READINESS_SPEED_KMH = 5.0
+
+
+def connectors_for(bundle: str) -> tuple[Any, ...]:
+    from a2_data_pipeline.supplements import walk_connectors
+    from a2_engine.urban.valhalla.models import WalkConnector, WalkCoordinate
+
+    rows = walk_connectors(
+        bundle,
+        walking_speed_kmh=READINESS_SPEED_KMH,
+        speed_evidence_refs=["readiness-only:unaccepted-speed"],
+        profile_version="readiness-only",
+    )
+    return tuple(
+        WalkConnector(
+            **{
+                **row,
+                "physical_location": WalkCoordinate(**row["physical_location"]),
+                "access_location": WalkCoordinate(**row["access_location"]),
+                "evidence_refs": tuple(row["evidence_refs"]),
+            }
+        )
+        for row in rows
+    )
+
+
 results = []
 for bundle in sys.argv[1:]:
     rep = {"bundle": bundle}
@@ -53,6 +85,14 @@ for bundle in sys.argv[1:]:
         continue
     raw = accepted.model_dump(mode="json")
     config = load_urban_config()
+    v2_ids = {f"physical:point:{p['point_id']}" for p in raw["sample_points"]} | {
+        f"physical:destination:{d['destination_id']}" for d in raw["destinations"]
+    }
+    connectors = tuple(
+        c
+        for c in (connectors_for(bundle) if producer.walk_connectors else ())
+        if c.physical_node_id in v2_ids
+    )
     inputs = step(
         rep,
         "prepare_walk_inputs",
@@ -63,6 +103,7 @@ for bundle in sys.argv[1:]:
             methodology_version=config.methodology_version,
             config_hash="readiness-unbound",
             search_parameters_id="readiness-unbound",
+            connectors=connectors,
         ),
     )
     if inputs is None:
@@ -74,6 +115,9 @@ for bundle in sys.argv[1:]:
         Counter(c for d in inputs.destinations for c in getattr(d, "categories", ()))
     )
     rep["limitations"] = list(inputs.limitations)
+    endpoints = [*inputs.point_endpoints, *inputs.destination_endpoints]
+    rep["connectors_confirmed"] = sum(1 for e in endpoints if e.connector and e.connector.confirmed)
+    rep["endpoints"] = len(endpoints)
     cats = sorted(rep["destination_categories"]) or ["airport"]
     plan = step(
         rep,

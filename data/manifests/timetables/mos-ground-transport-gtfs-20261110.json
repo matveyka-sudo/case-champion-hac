@@ -1,0 +1,36 @@
+{
+  "timetable_id": "mos-ground-transport-gtfs-20261110",
+  "source_id": "mos_ground_transport",
+  "stops_dataset_id": "mos_ground_transport.60662-20261005",
+  "url": "https://data.mos.ru/opendata/60662",
+  "retrieved_at": "2026-11-09T20:46:06Z",
+  "path": "processed/gtfs/mos_ground_transport.gtfs-20261110.gtfs-repair-v1.zip",
+  "sha256": "681afec73b21f8538a675194c95595093dbde03e95cfd72df0b4ef1f4114b2bc",
+  "dataset_ids": [
+    "mos_ground_transport.60663-20260504",
+    "mos_ground_transport.60662-20261005",
+    "mos_ground_transport.60664-20261005",
+    "mos_ground_transport.60665-20261005",
+    "mos_ground_transport.60666-20261005",
+    "mos_ground_transport.60661-20261023"
+  ],
+  "valid_from": "2026-11-01",
+  "valid_to": "2026-11-30",
+  "unknown_dates": [
+    "2026-11-04"
+  ],
+  "modes": [
+    "bus",
+    "tram",
+    "cable_tram"
+  ],
+  "qa_report": "data/manifests/qa/mos_ground_transport.gtfs-20261110.json",
+  "limitations": [
+    "Только наземный транспорт: метро, МЦД и электричек нет",
+    "Нет calendar_dates: 4 ноября (праздник) — сервис неизвестен",
+    "Наборы из разных релизов: 5,3 млн строк времени по остановкам без рейса отброшены",
+    "У 9 направлений две версии расписания с одинаковыми отправлениями: частоту считать по уникальным отправлениям"
+  ],
+  "coverage_reason": "Официальный GTFS наземного транспорта data.mos.ru (gtfs-repair-v1): автобус и трамвай; без метро, МЦД, электричек и исключений календаря",
+  "limitation": "Расписания: наземный транспорт Москвы — официальный GTFS data.mos.ru вне bundle (манифест timetables, sha256); метро, МЦД и электричек нет; 4 ноября — unknown"
+}
