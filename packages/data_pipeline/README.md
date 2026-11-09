@@ -256,7 +256,11 @@ disputed = [e.territory_id for e in entries if e.disputed]  # решение п�
 ```python
 from a2_data_pipeline.contract_v2 import load_accepted_data, registry_inputs
 
-bundles = ["kaliningrad-urban-2026-11-09.1", "novorossiysk-urban-2026-11-09.1", "moscow-urban-2026-11-09.2"]
+bundles = [
+    "kaliningrad-urban-2026-11-09.1",
+    "novorossiysk-urban-2026-11-09.1",
+    "moscow-urban-2026-11-09.2",
+]
 inputs = registry_inputs("russia-territories-2026-11-09.1", bundles)  # territories, areas
 snapshots = [load_accepted_data(b) for b in bundles]
 ```
