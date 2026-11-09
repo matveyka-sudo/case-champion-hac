@@ -13,8 +13,19 @@ permissions:
 jobs:
   environment:
     runs-on: ubuntu-latest
+    outputs:
+      backend_present: ${{ steps.backend_source.outputs.present }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Detect backend source
+        id: backend_source
+        run: |
+          if [ -f apps/api/src/a2_api/runtime.py ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "Backend source is absent from this revision. Backend checks will be skipped."
+          fi
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
         with:
           version: '0.12.17'
@@ -35,7 +46,66 @@ jobs:
           npm ls --depth=0
           npm run build
           npm run lint
+      - name: Run frontend unit tests
+        working-directory: frontend
+        run: npm test
       - name: Validate current product configuration
         run: python3 scripts/check_product_config.py
       - name: Validate PostgreSQL Compose configuration
         run: docker compose --env-file .env.example config --quiet
+
+  backend:
+    name: Backend checks with PostgreSQL
+    needs: environment
+    if: needs.environment.outputs.backend_present == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: a2_ci
+          POSTGRES_PASSWORD: a2_ci_password
+          POSTGRES_DB: a2_ci
+        ports:
+          - "55432:5432"
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -U a2_ci -d a2_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PYTHONPATH: packages/contracts/src:apps/api/src:packages/assistant/src
+      A2_TEST_DATABASE_URL: postgresql://a2_ci:a2_ci_password@127.0.0.1:55432/a2_ci
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: '0.12.17'
+      - name: Install locked Python dependencies
+        run: uv sync --frozen --all-packages --group dev
+      - name: Check backend lint and formatting
+        run: |
+          paths=(
+            packages/contracts/src packages/contracts/tests
+            apps/api/src apps/api/tests
+            packages/assistant/src packages/assistant/tests
+          )
+          .venv/bin/ruff check "${paths[@]}"
+          .venv/bin/ruff format --check "${paths[@]}"
+      - name: Check backend types
+        run: |
+          MYPYPATH="$PYTHONPATH" .venv/bin/python -m mypy --explicit-package-bases \
+            packages/contracts/src/a2_contracts apps/api/src/a2_api packages/assistant/src/a2_assistant
+      - name: Verify generated OpenAPI and schemas
+        run: .venv/bin/python -m a2_api.export --output contracts/generated --check
+      - name: Verify PostgreSQL migrations
+        env:
+          A2_DATABASE_URL: ${{ env.A2_TEST_DATABASE_URL }}
+          A2_DATABASE_SCHEMA: a2_ci_smoke
+        run: |
+          .venv/bin/alembic -c apps/api/alembic.ini upgrade head
+          .venv/bin/alembic -c apps/api/alembic.ini current --check-heads
+      - name: Run backend tests with PostgreSQL
+        run: |
+          .venv/bin/python -m pytest -q -rs -o asyncio_default_fixture_loop_scope=function \
+            apps/api/tests packages/contracts/tests packages/assistant/tests
