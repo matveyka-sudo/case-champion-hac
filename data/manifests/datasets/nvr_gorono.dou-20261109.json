@@ -1,0 +1,35 @@
+{
+  "dataset_id": "nvr_gorono.dou-20261109",
+  "source_id": "nvr_gorono",
+  "source_url": "https://gorono.ru/dou",
+  "retrieved_at": "2026-11-09T10:21:50.991338Z",
+  "publication_date": null,
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Новороссийск",
+  "license": {
+    "name": "Общедоступная официальная информация ОМСУ: используются только факты (ст. 1259 ГК РФ, 8-ФЗ)",
+    "url": "https://gorono.ru/",
+    "status": "permitted",
+    "attribution": "Управление образования МО г. Новороссийск, gorono.ru"
+  },
+  "access_method": "file",
+  "raw_path": "nvr_gorono/gorono-dou-20261109.zip",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "1c05a455c1636c24a26e9c18e80d73a9ebf29006bcaf3fd4f3e5dd1140e2026a",
+    "size_bytes": 102708
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "dou-list.html": "перечень ДОУ № N",
+    "blank-N.html": "карточка: наименование, адрес (ФИО и контакты не читаются)"
+  },
+  "coverage": "Страница перечня ДОУ и 60 карточек учреждений на дату загрузки (сами HTML-страницы, cp1251)",
+  "limitations": [
+    "Адрес учреждения, не всех корпусов",
+    "Только муниципальные детсады; частные не входят"
+  ],
+  "status": "accepted",
+  "qa_report": "data/bundles/novorossiysk-urban-2026-11-09.1/qa_report.json"
+}

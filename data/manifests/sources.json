@@ -596,6 +596,27 @@
       "datasets": ["mgfoms_med_org.20261108"]
     },
     {
+      "source_id": "nvr_gorono",
+      "a2_ref": null,
+      "title": "Управление образования Новороссийска — дошкольные образовательные учреждения",
+      "publisher": "Управление образования администрации МО город-герой Новороссийск",
+      "source_url": "https://gorono.ru/dou",
+      "role": "calculation",
+      "analysis_kinds": ["urban_passenger"],
+      "provides": "Перечень подведомственных муниципальных детсадов (ДОУ № N): официальное наименование и адрес учреждения",
+      "limitations": "Адрес учреждения, не всех корпусов; ФИО заведующих и контакты в данные не переносятся",
+      "access_method": "file",
+      "geography": "Новороссийск",
+      "license": {
+        "name": "Общедоступная официальная информация ОМСУ: используются только факты (ст. 1259 ГК РФ, 8-ФЗ)",
+        "url": "https://gorono.ru/",
+        "status": "permitted",
+        "attribution": "Управление образования МО г. Новороссийск, gorono.ru"
+      },
+      "status": "accepted",
+      "datasets": ["nvr_gorono.dou-20261109"]
+    },
+    {
       "source_id": "admnvrsk_health",
       "a2_ref": null,
       "title": "Администрация Новороссийска — учреждения здравоохранения города",
