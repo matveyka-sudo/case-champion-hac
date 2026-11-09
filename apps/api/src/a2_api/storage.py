@@ -14,7 +14,11 @@ from a2_contracts.common import canonical_hash
 from a2_contracts.results import ProfileResult
 from a2_contracts.scenarios import Comparison, ScenarioRequest
 from a2_contracts.v2.requests import RequestBase, parse_analysis_request
-from a2_contracts.v2.results import AnalysisResult, validate_score_context
+from a2_contracts.v2.results import (
+    AnalysisResult,
+    validate_reference_applicability,
+    validate_score_context,
+)
 from a2_contracts.v2.scenarios import (
     ScenarioProposal,
     ScenarioResult,
@@ -91,8 +95,27 @@ def _run_from_row(row: Mapping[str, object]) -> RunResult:
     }
     model = models[str(row["result_kind"])]
     try:
+        payload = json.loads(str(row["payload"]))
+        if not isinstance(payload, dict) or payload.get("result_hash") != row["result_hash"]:
+            raise ValueError("Stored hash mismatch")
+        unhashed = {key: value for key, value in payload.items() if key != "result_hash"}
+        if canonical_hash(unhashed) != row["result_hash"]:
+            raise ValueError("Stored payload hash mismatch")
         return model.model_validate_json(str(row["payload"]))
-    except ValidationError:
+    except (ValueError, ValidationError):
+        raise DomainError(
+            409, "stored_result_incompatible", "Stored result requires recalculation"
+        ) from None
+
+
+def _proposal_from_row(row: Mapping[str, object]) -> ScenarioProposal:
+    """Parse an already scoped immutable command without trusting stale hash metadata."""
+    try:
+        payload = json.loads(str(row["payload"]))
+        if canonical_hash(payload) != row["content_hash"]:
+            raise ValueError("Stored command hash mismatch")
+        return ScenarioProposal.model_validate_json(str(row["payload"]))
+    except (ValueError, ValidationError):
         raise DomainError(
             409, "stored_result_incompatible", "Stored result requires recalculation"
         ) from None
@@ -135,6 +158,8 @@ class JobRepository:
                 409, "idempotency_conflict", "Idempotency key used for another request"
             )
         job = job_from_row(row)
+        if job.status == "succeeded" and job.run_id is not None:
+            await self.get_run(job.run_id, scope)
         return JobAccepted(job_id=job.job_id, status=job.status)
 
     async def enqueue(
@@ -167,7 +192,7 @@ class JobRepository:
                 )
                 cached = cached_row["run_id"] if cached_row is not None else None
                 if cached is not None:
-                    await self._read_run(connection, cached, owner)
+                    await self._read_run(connection, cached, owner, lock=True)
                 if cached_row is not None and isinstance(context, V2JobContext):
                     expiry = context.cache_valid_until
                     original_expiry = cached_row["cache_valid_until"]
@@ -220,6 +245,8 @@ class JobRepository:
                         409, "idempotency_conflict", "Idempotency key used for another request"
                     )
                 job = job_from_row(row)
+                if job.status == "succeeded" and job.run_id is not None:
+                    await self._read_run(connection, job.run_id, owner, lock=True)
                 return JobAccepted(job_id=job.job_id, status=job.status)
 
     async def get_job(self, job_id: str, scope: str | None = None) -> Job:
@@ -227,14 +254,15 @@ class JobRepository:
         if row is None:
             raise DomainError(404, "unknown_id", "Job not found")
         _check_scope(row, scope)
-        return job_from_row(row)
+        job = job_from_row(row)
+        if job.status == "succeeded" and job.run_id is not None:
+            await self.get_run(job.run_id, scope)
+        return job
 
     async def get_run(self, run_id: str, scope: str | None = None) -> RunResult:
-        row = await self.pool.fetchrow("SELECT * FROM runs WHERE run_id=$1", run_id)
-        if row is None:
-            raise DomainError(404, "unknown_id", "Run not found")
-        _check_scope(row, scope)
-        return _run_from_row(row)
+        async with self.pool.acquire() as connection:
+            async with connection.transaction(isolation="repeatable_read", readonly=True):
+                return await self._read_run(connection, run_id, scope)
 
     async def get_run_parameters(
         self, run_id: str, scope: str | None = None
@@ -324,7 +352,7 @@ class JobRepository:
                     owner = _context_scope(claim.context)
                     _check_scope(current, owner)
                     if isinstance(claim.context, V2JobContext):
-                        await self._check_v2_result(connection, claim, result)
+                        await self._check_v2_result(connection, claim, saved)
                     elif proposals:
                         raise DomainError(
                             422, "invalid_request", "Legacy jobs cannot publish v2 proposals"
@@ -523,33 +551,63 @@ class JobRepository:
                     409, "incompatible_versions", "Normalized request changes user parameters"
                 )
 
-    @staticmethod
+    @classmethod
     async def _read_run(
-        connection: asyncpg.Connection, run_id: str, scope: str | None
+        cls, connection: asyncpg.Connection, run_id: str, scope: str | None, *, lock: bool = False
     ) -> RunResult:
-        row = await connection.fetchrow("SELECT * FROM runs WHERE run_id=$1", run_id)
+        suffix = " FOR SHARE" if lock else ""
+        row = await connection.fetchrow("SELECT * FROM runs WHERE run_id=$1" + suffix, run_id)
         if row is None:
             raise DomainError(404, "unknown_id", "Run not found")
         _check_scope(row, scope)
-        return _run_from_row(row)
+        result = _run_from_row(row)
+        if not isinstance(result, ScenarioResult):
+            return result
+        try:
+            baseline_row = await connection.fetchrow(
+                "SELECT * FROM runs WHERE run_id=$1" + suffix, result.baseline_analysis_id
+            )
+            if baseline_row is None:
+                raise ValueError("Missing baseline")
+            _check_scope(baseline_row, scope)
+            if baseline_row["result_kind"] != "analysis_v2":
+                raise ValueError("Invalid baseline kind")
+            baseline = _run_from_row(baseline_row)
+            if not isinstance(baseline, AnalysisResult):
+                raise ValueError("Invalid baseline")
+            proposal_row = await connection.fetchrow(
+                "SELECT payload,content_hash FROM scenario_proposals WHERE scenario_id=$1 AND access_scope=$2"
+                + suffix,
+                result.scenario_id,
+                scope,
+            )
+            if proposal_row is None:
+                raise ValueError("Missing proposal")
+            command = _proposal_from_row(proposal_row)
+            cls._validate_scenario_semantics(result, baseline, command)
+        except (DomainError, ValueError):
+            raise DomainError(
+                409, "stored_result_incompatible", "Stored result requires recalculation"
+            ) from None
+        return result
 
     async def _check_scenario_inputs(
         self, connection: asyncpg.Connection, request: ScenarioRunRequest, context: V2JobContext
     ) -> AnalysisResult:
         row = await connection.fetchrow(
-            "SELECT payload FROM scenario_proposals WHERE scenario_id=$1 AND access_scope=$2",
+            "SELECT payload,content_hash FROM scenario_proposals WHERE scenario_id=$1 AND access_scope=$2 FOR SHARE",
             request.scenario_id,
             context.access_scope,
         )
         if row is None:
             raise DomainError(404, "unknown_id", "Scenario proposal not found")
-        command = ScenarioProposal.model_validate_json(row["payload"])
+        command = _proposal_from_row(row)
         if command != context.scenario_proposal:
             raise DomainError(
                 409, "incompatible_versions", "Proposal differs from saved immutable command"
             )
         baseline = await self._read_run(
-            connection, request.baseline_analysis_id, context.access_scope
+            connection, request.baseline_analysis_id, context.access_scope, lock=True
         )
         if not isinstance(baseline, AnalysisResult):
             raise DomainError(404, "unknown_id", "Analysis not found")
@@ -587,6 +645,22 @@ class JobRepository:
         if claim.kind != "scenario" or not isinstance(claim.request, ScenarioRunRequest):
             raise DomainError(409, "incompatible_versions", "Scenario result differs from job kind")
         baseline = await self._check_scenario_inputs(connection, claim.request, context)
+        assert context.scenario_proposal is not None
+        self._validate_scenario_semantics(result, baseline, context.scenario_proposal)
+
+    @staticmethod
+    def _validate_scenario_semantics(
+        result: ScenarioResult, baseline: AnalysisResult, command: ScenarioProposal
+    ) -> None:
+        if (
+            result.versions != baseline.versions
+            or command.versions != baseline.versions
+            or command.baseline_analysis_id != baseline.analysis_id
+            or command.baseline_result_hash != baseline.result_hash
+        ):
+            raise DomainError(
+                409, "incompatible_versions", "Scenario baseline versions/hash differ"
+            )
         try:
             validate_score_context(
                 result.after.metrics, result.after.scores, baseline.analysis_kind
@@ -610,6 +684,22 @@ class JobRepository:
             for effect in result.deltas
             if effect.kind == "score" and effect.before_id and effect.after_id
         }
+        after_scores = {item.score_id: item for item in result.after.scores}
+        evaluated_metrics: dict[str, set[str]] = {}
+
+        def operand_metric_ids(score_id: str) -> set[str]:
+            # ScenarioValues already checked that the component graph is resolved
+            # and acyclic. Resolve the same transitive operands for every score.
+            if score_id not in evaluated_metrics:
+                linked: set[str] = set()
+                for component in after_scores[score_id].components:
+                    if component.kind == "metric":
+                        linked.add(component.id)
+                    else:
+                        linked.update(operand_metric_ids(component.id))
+                evaluated_metrics[score_id] = linked
+            return evaluated_metrics[score_id]
+
         for score in result.after.scores:
             full = score.status == "available" and score.completeness == "full"
             required_references = set(score.reference_ids)
@@ -631,19 +721,14 @@ class JobRepository:
                     == _measure_key(score)
                 ]
                 previous_score = matches_scores[0] if len(matches_scores) == 1 else None
-            if (
-                score.calculation_kind == "reference_ratio"
-                and previous_score is not None
-                and _measure_key(
-                    previous_score.model_copy(
-                        update={
-                            "completeness": score.completeness,
-                            "calculation_kind": score.calculation_kind,
-                        }
-                    )
+            if previous_score is not None and _measure_key(
+                previous_score.model_copy(
+                    update={
+                        "completeness": score.completeness,
+                        "calculation_kind": score.calculation_kind,
+                    }
                 )
-                == _measure_key(score)
-            ):
+            ) == _measure_key(score):
                 # A new declaration must not erase the frozen operands of this task.
                 required_references.update(previous_score.reference_ids)
             try:
@@ -652,10 +737,9 @@ class JobRepository:
                 raise DomainError(
                     409, "incompatible_versions", "Scenario index semantics are unavailable"
                 ) from None
-            for component in score.components:
-                if component.kind != "metric":
-                    continue
-                metric = after_metrics[component.id]
+            applicability_journeys = []
+            for metric_id in sorted(operand_metric_ids(score.score_id)):
+                metric = after_metrics[metric_id]
                 previous = baseline_metrics.get(metric.metric_id) or baseline_metrics.get(
                     renamed.get(metric.metric_id, "")
                 )
@@ -698,6 +782,7 @@ class JobRepository:
                     raise DomainError(
                         409, "incompatible_versions", "Scenario wait operand is unavailable"
                     )
+                applicability_journeys.extend(dependency_journeys)
                 for journey in dependency_journeys:
                     if full and (journey.status != "available" or journey.completeness != "full"):
                         raise DomainError(
@@ -734,8 +819,17 @@ class JobRepository:
                     raise DomainError(
                         409, "incompatible_versions", "Scenario index reference is unavailable"
                     )
-        command = context.scenario_proposal
-        assert command is not None
+                if full:
+                    try:
+                        validate_reference_applicability(
+                            reference, baseline.request, applicability_journeys
+                        )
+                    except ValueError:
+                        raise DomainError(
+                            409,
+                            "incompatible_versions",
+                            "Scenario reference does not apply to the task",
+                        ) from None
         if (
             result.baseline_analysis_id != baseline.analysis_id
             or result.scenario_id != command.scenario_id
@@ -781,25 +875,25 @@ class JobRepository:
 
     async def get_proposal(self, scenario_id: str, scope: str) -> ScenarioProposal:
         row = await self.pool.fetchrow(
-            "SELECT payload FROM scenario_proposals WHERE scenario_id=$1 AND access_scope=$2",
+            "SELECT payload,content_hash FROM scenario_proposals WHERE scenario_id=$1 AND access_scope=$2",
             scenario_id,
             scope,
         )
         if row is None:
             raise DomainError(404, "unknown_id", "Scenario proposal not found")
-        return ScenarioProposal.model_validate_json(row["payload"])
+        return _proposal_from_row(row)
 
     async def get_proposals(self, analysis_id: str, scope: str) -> list[ScenarioProposal]:
         baseline = await self.get_run(analysis_id, scope)
         if not isinstance(baseline, AnalysisResult):
             raise DomainError(404, "unknown_id", "Analysis not found")
         rows = await self.pool.fetch(
-            "SELECT payload FROM scenario_proposals WHERE baseline_analysis_id=$1 AND access_scope=$2 "
+            "SELECT payload,content_hash FROM scenario_proposals WHERE baseline_analysis_id=$1 AND access_scope=$2 "
             "ORDER BY created_at,scenario_id",
             analysis_id,
             scope,
         )
-        return [ScenarioProposal.model_validate_json(row["payload"]) for row in rows]
+        return [_proposal_from_row(row) for row in rows]
 
     async def save_proposals(
         self, proposals: Sequence[ScenarioProposal], scope: str
@@ -849,7 +943,7 @@ class JobRepository:
                 content_hash,
             )
             existing = await connection.fetchrow(
-                "SELECT access_scope,content_hash FROM scenario_proposals WHERE scenario_id=$1",
+                "SELECT access_scope,content_hash,payload FROM scenario_proposals WHERE scenario_id=$1",
                 command.scenario_id,
             )
             if (
@@ -860,6 +954,7 @@ class JobRepository:
                 raise DomainError(
                     409, "incompatible_versions", "Scenario proposal identity already published"
                 )
+            _proposal_from_row(existing)
             saved[command.scenario_id] = command
         return list(saved.values())
 
@@ -879,7 +974,10 @@ class JobRepository:
                         job_id,
                     )
                 assert row is not None
-                return job_from_row(row)
+                job = job_from_row(row)
+                if job.status == "succeeded" and job.run_id is not None:
+                    await self._read_run(connection, job.run_id, scope, lock=True)
+                return job
 
     async def heartbeat(self, claim: ClaimedJob) -> bool:
         updated = await self.pool.fetchval(
