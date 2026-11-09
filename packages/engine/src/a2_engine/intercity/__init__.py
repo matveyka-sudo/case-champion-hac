@@ -8,6 +8,7 @@ from a2_engine.intercity.passenger import (
     intercity_car_index,
     intercity_passenger_index,
 )
+from a2_engine.intercity.reference import ReferenceComparison, reference_time_from_result
 
 __all__ = [
     "CarResult",
@@ -16,4 +17,6 @@ __all__ = [
     "ReferenceTime",
     "intercity_car_index",
     "intercity_passenger_index",
+    "ReferenceComparison",
+    "reference_time_from_result",
 ]

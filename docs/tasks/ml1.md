@@ -2,6 +2,13 @@
 
 Ветка work/ml1. Пути: packages/engine/.
 
+**Текущая готовность (09.11.2026):** самостоятельный межгородской builder A на
+принятом направленном графе реализован и проверен на синтетических сетях;
+калибровка → состояния/операции → точный minimum → проверенный ReferenceTime →
+прежние пассажирские/car формулы. Реальный межгородской accepted graph и backend
+handler не подключены. Подробности и handoff — в последнем разделе этого файла
+и packages/engine/README.md. Ниже сохранена история предыдущих этапов.
+
 Источник: ../PRODUCT_SPEC.md; контракты ../../packages/contracts/specs/README.md.
 
 Расчёт времени, выбор ближайшего объекта, пересадки, направленные связи и сценарии. Реализовать FORMULAS.md, включая границы H, веса, τ и эталон A из IMPLEMENTATION.md. Разделить население и грузовые объекты; трубопроводы по продуктам.
@@ -474,3 +481,132 @@ search/minimum receipts от executor/DEVOPS. Эти интеграции не �
 загрузкой/HTTP/map matching/вторым router. Manifests, lock, config, canonical DTO,
 backend PR#8 и ветки коллег не изменялись. Реальные пробки, τ и рейтинг Калининграда
 не вычислялись и не объявляются готовыми.
+
+
+## Самостоятельное построение межгородского эталона A — 09.11.2026
+
+Работа выполнена в основной папке PyCharm:
+`/Users/matveyyuri/Desktop/Общее/хакатоны/case-champion-hac`, `work/ml1`.
+Исходный HEAD `d6d454ccfccf109a8ef3d6d4c844e538c866467c`; tracked tree был чист,
+`git pull --ff-only origin work/ml1` — Already up to date. Старый `a2-dev.bundle`
+оставлен untracked, его содержимое не менялось и в коммит он не включается.
+Исходная регрессия проверена самостоятельно: **656 passed**.
+
+### Реализация и границы
+
+- `routing/reference/models.py`: frozen accepted Network/Scope/State/Calibration/
+  Edge/Operation/Graph; current method/profile, snapshot/graph/acceptance/
+  applicability/compatibility, направленные states и fixed boundary sets.
+  Compatibility у edges/operations передаётся явно обязательным keyword:
+  True/False/None = подтверждена/запрещена/неизвестна. Никаких бесплатных связей
+  по совпавшим physical nodes, географии или владению автомобилем.
+- `routing/reference/calibration.py`: минимум подтверждённых edge-specific
+  running samples rail/air/water; road только физические static/freeflow elapsed
+  seconds одного fixed Valhalla 3.5.1 build/options. Conflicting fixed road costs,
+  чужие snapshots/versions/directions и несогласованные ссылки отклоняются.
+  Physical edge отличается от явно ограниченной logical connection; pairwise
+  RoadResult не раскладывается на выдуманные сегменты. Геодезическая длина air
+  только справочная, отсутствие геометрии не уничтожает известное время.
+- `routing/reference/search.py`: multi-source/target Dijkstra по departure/
+  arrival/transfer states; обязательные последовательные внутренние операции,
+  direction/parallel edges, восстановление ordered arcs и выбранной пары,
+  movement/operations/total seconds, все calibration/coverage evidence, omitted
+  IDs/reasons и fingerprint. Сравнение через Fraction без промежуточного
+  округления; (cost,hops,arc IDs,start state) обеспечивает детерминизм и
+  завершение на чистых zero-operation cycles. Переполнение candidate суммы
+  отклоняется до очереди. Начало только departure, конец только arrival:
+  pre-/post-boundary operations не добавляются по ошибке. Полнота состояний
+  означает, что normalizer сохраняет все существенные ограничения продолжения.
+- `intercity/reference.py`: ReferenceComparison и reference_time_from_result
+  сверяют независимо переданный actual comparison context и config. Exact pair
+  отличается от city-pair best-node; direction/graph/snapshot/boundaries/profile/
+  comparison kind/allowed modes/compatibility должны совпадать. Actual traffic
+  может быть static/typical/live/historical; static A от него не меняется.
+- `examples/synthetic_reference.py`: builder самостоятельно получает A=3600,
+  затем через адаптер вызывает прежние passenger и car formulas.
+
+Старые ReferenceTime/PassengerChain и обе index functions не изменены. Все прежние
+168 exports/order/signatures/fields/defaults/frozen проверяются новым baseline
+snapshot `tests/fixtures/public_api_168.json`, снятым до изменений; исторический
+141 snapshot сохранён. Добавлено 15 symbols, всего 183. Архитектурный guard
+сохранён: дополнительно разрешён intercity → routing.reference.*, reverse
+routing → intercity/urban запрещён, shared не зависит от доменных слоёв.
+Все новые импорты абсолютные.
+
+Unknown edges/operations/compatibility и неполнота alternatives дают partial,
+а не 0. Известный partial A остаётся numeric и даёт preliminary index с
+PARTIAL_REFERENCE; full ranking запрещён. `no_path_proven` полной области
+отличается от `known_subnetwork_no_path` неполной. A=None сохраняет actual path
+и waiting index. A>actual не исправляется: cap100 + REFERENCE_INCONSISTENCY.
+Ресурсных отсечек/прерывания в этом API нет: незавершённый вызов не публикует A;
+будущий executor budget потребует отдельный best-known/search-incomplete result.
+
+### Контроли и выполненные проверки
+
+- direct5000 против rail1800 + transfer300 + air1500 → **A=3600**;
+  actual path7200/wait43200 → path50, wait50, passenger≈50, car50.
+- AB samples1000/4000, BC samples4000/1000, transfer300 → **A=2300**.
+- unknown transfer → **partial5000**, без direct → **None**;
+  forbidden transfer → **full5000** по оставшейся полной допустимой сети.
+- Неодинаковые arrival states одного physical node сохраняют совместимый
+  медленный приход; нет неявной пересадки или разрешения car carriage.
+- Common A1/A2→B1/B2 → **600**, chosen A1/B1; exact A2/B2 → **900**;
+  несовместимые scopes не смешиваются. A9000/actual7200 → **100** + диагностика.
+- Дополнительно: zero cycles (в том числе только операции), несколько внутренних
+  operations, parallel/equal paths, precise sum/tie counterexample, input
+  permutations, fresh processes/PYTHONHASHSEED, evidence/versions/numbers/IDs/FK.
+  Независимый exhaustive oracle: 45 малых movement/state графов с операциями
+  и 20 внутренних operation-state графов. Oracle не использует Dijkstra engine.
+
+Реально выполнены из корня проекта:
+
+```sh
+PYTHONPATH=packages/engine/src uv run --frozen pytest packages/engine/tests -q
+uv run --frozen ruff check packages/engine
+uv run --frozen ruff format --check packages/engine
+PYTHONPATH=packages/engine/src uv run --frozen mypy --strict packages/engine/src packages/engine/tests packages/engine/examples
+uv lock --check
+uv pip check
+uv run --frozen python scripts/check_product_config.py
+git diff --check
+```
+
+Итог: **742 passed**, Ruff check/format clean (103 files), strict mypy clean
+(100 Python files), frozen lock resolved157 / pip checked56 compatible,
+product config valid. Прежние static structure controls и API guards прошли
+в полном suite. Отдельно исполнены все **11 README controls** и **7 examples**:
+synthetic_walk/districts/transit/car/od/traffic/reference. До изменений suite
+уже выдавал предупреждение pytest-asyncio о fixture loop scope; это не test failure.
+Manifests/lock/config, canonical DTO, чужие модули и ветки не менялись.
+
+### Конкретный handoff
+
+**ML2 — packages/data_pipeline/**: accepted directed reference edges с edge-level
+running-time samples, scope/snapshot/versions/evidence и coverage; обязательные
+minimum operations и их совместимость, state IDs с платформой/входящим ребром/
+car possession; unknown/forbidden не смешиваются. Полная область — подтверждение
+всех допустимых alternatives/operations, а не только выбранного пути. В прочитанном
+`work/ml2@0e6dbca005674f86c5cde7c2f2087477d509e7df` contract_v2.py массивы
+reference_edges/minimum_transfers пока пустые. Приёмка: реальные принятые записи
+нормализуются в ReferenceGraph без придуманных seconds и скрытой неполноты.
+
+**BACKEND — packages/contracts/src/a2_contracts/v2/journeys.py и apps/api/**:
+прочитан опубликованный `work/backend@6ce41795572b3708dc09f49868a3cefaa7e77fb3`.
+Точный mapping ReferenceResult приведён в README: ID/seconds/status/completeness/
+reason/profile/graph/boundary sets/edges/necessary operations/calibration evidence.
+Хранить rich result: текущему DTO недостаёт selected pair, snapshot/acceptance/
+compatibility/applicability/methodology, mode/comparison scope, interleaved order,
+breakdown, selected samples, omissions и search_status. До расширения DTO эти
+поля нельзя терять во внутреннем результате. Handler нормализует canonical inputs,
+вызывает build_reference и проверенный adapter с одним common scope, сохраняет
+nullable A/partial diagnostics. При отказе applicability canonical seconds=None.
+Приёмка: mixed3600 → indices50; partial5000 → numeric preliminary, no full ranking;
+unknown A → raw times/wait index сохранены; чужой scope → not_applicable.
+
+**DEVOPS/executor — infra и принятый road build**: fixed version/build/graph/
+options/evidence, accepted static physical elapsed edge seconds или явно
+ограниченных logical connections. Доказать, что cost — seconds, а не generalized
+preference, без live/typical/historical traffic. Подлинность документов/evidence
+и приёмка исходной сети остаются во внешнем контуре. Нужен backend handler и
+реальный accepted graph для совместного E2E; синтетика не объявляется эталоном
+между реальными российскими городами.

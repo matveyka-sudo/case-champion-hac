@@ -4,16 +4,17 @@
 пассажирские индексы, одна межгородская пассажирская цепочка, городские/межгородские
 грузы, загрузка трубопровода, сравнение готовых результатов, городской τ, районные
 агрегаты, поиск прямой поездки/последнего возврата по нормализованному расписанию,
-static car replay, типичный/живой/исторический traffic evaluator и направленные OD-срезы для τ.
+static car replay, типичный/живой/исторический traffic evaluator, направленные OD-срезы для τ
+и самостоятельное построение межгородского эталона A на принятом графе.
 Времена, население и подтверждения входных условий поступают от вызывающего слоя.
-Загрузки внешних расписаний, сетки, построения реальных OD-матриц, эталона A, изменения расписаний,
+Загрузки внешних расписаний, сетки, построения реальных OD-матриц, изменения расписаний,
 сценарного движка, HTTP и LLM здесь нет.
 
 ## Структура и зависимости
 
 ```text
 a2_engine/
-  __init__.py                 # 168 явных публичных экспортов
+  __init__.py                 # 183 явных публичных экспорта (прежние 168 сохранены)
   shared/                     # конфигурация, MetricResult, общая экспонента
     config.py                 # расположение и config/product.json path сохранены
     results.py
@@ -38,10 +39,12 @@ a2_engine/
     tau_models.py              # совместимость: models + city_zone
     last_return.py             # совместимость: transit.last_return/models
   routing/
+    reference/                 # models.py, calibration.py, search.py: самостоятельный A
     road.py                    # независимый static auto/foot JSON boundary
     traffic/                   # models.py, profiles.py, evaluation.py: чистый traffic слой
     timetable_models.py        # нормализованные исполнения и scope
     timetable.py               # событийный поиск с бюджетом ожидания
+  intercity/reference.py       # проверенный адаптер rich result → прежний ReferenceTime
   intercity/passenger.py
   freight/urban.py
   freight/intercity.py
@@ -257,11 +260,13 @@ selection = {"school": "low", "airport": "high"}
 no_route = category_index(None, h, confirmed_no_route=True)
 p1 = point_index(
     {"school": category_index(0, h), "airport": no_route},
-    selection, config=config,
+    selection,
+    config=config,
 )
 p2 = point_index(
     {"school": category_index(0, h), "airport": category_index(0, h)},
-    selection, config=config,
+    selection,
+    config=config,
 )
 territory = territory_index({"p1": p1, "p2": p2}, {"p1": 90, "p2": 10})
 assert p1.value == 25
@@ -314,7 +319,8 @@ intercity_car_index(chain_id: str, path_seconds: float | None, reference: Refere
 `ReferenceTime(reference_id, seconds, profile_version, completeness,
 applicability_confirmed)` передаётся вызывающим слоем. Подтверждение применимости
 означает совпадение границ/узлов, области и версий пути с эталоном. Profile version
-проверяется против конфигурации. Сам эталон здесь не строится.
+проверяется против конфигурации. Scalar-функции сами не строят эталон;
+новые build_reference и reference_time_from_result описаны в разделе ниже.
 
 `PassengerResult`: chain, reference, path_index, waiting_index, index,
 completeness, diagnostics. `CarResult`: chain_id, reference, path_index,
@@ -337,14 +343,19 @@ partial completeness и null у зависимого индекса. Status ни
 ```python
 from math import isclose
 from a2_engine import (
-    PassengerChain, ReferenceTime, intercity_car_index,
-    intercity_passenger_index, load_passenger_config,
+    PassengerChain,
+    ReferenceTime,
+    intercity_car_index,
+    intercity_passenger_index,
+    load_passenger_config,
 )
 
 config = load_passenger_config()
 reference = ReferenceTime("test-ref", 3600, config.reference_profile, "full", True)
 result = intercity_passenger_index(
-    PassengerChain("test-chain", 7200, 43200), reference, config=config,
+    PassengerChain("test-chain", 7200, 43200),
+    reference,
+    config=config,
 )
 assert result.path_index.value == result.waiting_index.value == 50
 assert isclose(result.index.value, 50)
@@ -394,8 +405,12 @@ index. Времена — MetricResult в секундах. Все четыре 
 <!-- executable-example -->
 ```python
 from a2_engine import (
-    CargoScope, intercity_cargo_index, load_freight_config, select_h_seconds,
-    urban_cargo_site_index, urban_cargo_territory_index,
+    CargoScope,
+    intercity_cargo_index,
+    load_freight_config,
+    select_h_seconds,
+    urban_cargo_site_index,
+    urban_cargo_territory_index,
 )
 
 config = load_freight_config()
@@ -403,14 +418,20 @@ h = select_h_seconds(100, bands=config.area_h_bands).value
 scope = CargoScope("port", "outbound", "test-nonfood")
 sites = [
     urban_cargo_site_index("test-site-a", 0, h, scope=scope, compatibility_confirmed=True),
-    urban_cargo_site_index("test-site-b", None, h, scope=scope,
-                           compatibility_confirmed=True, confirmed_no_route=True),
+    urban_cargo_site_index(
+        "test-site-b", None, h, scope=scope, compatibility_confirmed=True, confirmed_no_route=True
+    ),
 ]
 assert urban_cargo_territory_index(sites, scope=scope).value == 50
 delivery = intercity_cargo_index(
-    cargo_profile_id="test-nonfood", urgency="urgent", initial_wait_seconds=3600,
-    movement_seconds=80000, handling_seconds=1800, transfer_wait_seconds=1000,
-    compatibility_confirmed=True, config=config,
+    cargo_profile_id="test-nonfood",
+    urgency="urgent",
+    initial_wait_seconds=3600,
+    movement_seconds=80000,
+    handling_seconds=1800,
+    transfer_wait_seconds=1000,
+    compatibility_confirmed=True,
+    config=config,
 )
 assert delivery.total_seconds.value == 86400
 assert delivery.index.value == 50
@@ -447,8 +468,12 @@ from a2_engine import PipelineBasis, load_freight_config, pipeline_utilization
 
 basis = PipelineBasis("oil", "2026", "tonnes", "test-pipeline", "test-a->test-b")
 result = pipeline_utilization(
-    120, 100, volume_basis=basis, capacity_basis=basis,
-    connection_confirmed=True, config=load_freight_config(),
+    120,
+    100,
+    volume_basis=basis,
+    capacity_basis=basis,
+    connection_confirmed=True,
+    config=load_freight_config(),
 )
 assert result.utilization_percent.value == 120
 assert result.diagnostics == ("UTILIZATION_ABOVE_100",)
@@ -493,14 +518,26 @@ NO_FEASIBLE_ROUTE и доступной связью допустима и та�
 from a2_engine import ComparisonContext, MetricResult, TravelTime, delta_index, time_saved_seconds
 
 comparison = ComparisonContext(True, "test-comparability-check")
-assert delta_index(
-    MetricResult(70, "available"), MetricResult(55, "available"), comparison=comparison,
-).value == -15
-assert time_saved_seconds(
-    TravelTime(1800, True), TravelTime(2100, True), comparison=comparison,
-).value == -300
+assert (
+    delta_index(
+        MetricResult(70, "available"),
+        MetricResult(55, "available"),
+        comparison=comparison,
+    ).value
+    == -15
+)
+assert (
+    time_saved_seconds(
+        TravelTime(1800, True),
+        TravelTime(2100, True),
+        comparison=comparison,
+    ).value
+    == -300
+)
 new_connection = time_saved_seconds(
-    TravelTime(None, False), TravelTime(600, True), comparison=comparison,
+    TravelTime(None, False),
+    TravelTime(600, True),
+    comparison=comparison,
 )
 assert new_connection.value is None
 assert new_connection.reason_code == "CONNECTION_APPEARED"
@@ -664,50 +701,139 @@ jobs нет: dependency_job_id может назначить только BACKEN
 ```python
 from datetime import UTC, datetime, timedelta
 from a2_engine import (
-    UrbanArea, UrbanCandidate, UrbanContext, UrbanCoverage, UrbanDestination,
-    UrbanLeg, UrbanPoint, UrbanPopulationCoverage, UrbanSearchScope, UrbanThreshold,
-    UrbanVersions, analyze_urban_candidates, load_urban_config, load_urban_journey_rules,
+    UrbanArea,
+    UrbanCandidate,
+    UrbanContext,
+    UrbanCoverage,
+    UrbanDestination,
+    UrbanLeg,
+    UrbanPoint,
+    UrbanPopulationCoverage,
+    UrbanSearchScope,
+    UrbanThreshold,
+    UrbanVersions,
+    analyze_urban_candidates,
+    load_urban_config,
+    load_urban_journey_rules,
 )
 
 config, rules = load_urban_config(), load_urban_journey_rules()
 versions = UrbanVersions(
-    "synthetic-snapshot", "synthetic-graph", "synthetic-calendar", "synthetic-population",
-    "synthetic-geometry", config.methodology_version, "synthetic-config-hash", "synthetic-traffic",
+    "synthetic-snapshot",
+    "synthetic-graph",
+    "synthetic-calendar",
+    "synthetic-population",
+    "synthetic-geometry",
+    config.methodology_version,
+    "synthetic-config-hash",
+    "synthetic-traffic",
 )
-context = UrbanContext("synthetic-city", "synthetic-city", datetime(2026, 11, 8, 8, tzinfo=UTC),
-                       "static", versions, "synthetic-search-options")
+context = UrbanContext(
+    "synthetic-city",
+    "synthetic-city",
+    datetime(2026, 11, 8, 8, tzinfo=UTC),
+    "static",
+    versions,
+    "synthetic-search-options",
+)
 area = UrbanArea(context.city_id, 100, versions.geometry_version, ("synthetic-area-evidence",))
-points = [UrbanPoint(
-    f"p{i}", f"cell{i}", f"p{i}", f"p{i}", 0, context.territory_id,
-    population, 2026, "synthetic-estimate", ("synthetic-population-evidence",),
-) for i, population in [(1, 90), (2, 10)]]
+points = [
+    UrbanPoint(
+        f"p{i}",
+        f"cell{i}",
+        f"p{i}",
+        f"p{i}",
+        0,
+        context.territory_id,
+        population,
+        2026,
+        "synthetic-estimate",
+        ("synthetic-population-evidence",),
+    )
+    for i, population in [(1, 90), (2, 10)]
+]
 destination = UrbanDestination(
-    "school-record", "physical-school", frozenset({"school"}), "school-node",
-    context.city_id, True, True, ("synthetic-registry-evidence",),
+    "school-record",
+    "physical-school",
+    frozenset({"school"}),
+    "school-node",
+    context.city_id,
+    True,
+    True,
+    ("synthetic-registry-evidence",),
 )
 candidates = []
 for point, seconds in zip(points, (1200, 2400), strict=True):
-    start, end = context.requested_departure_at, context.requested_departure_at + timedelta(seconds=seconds)
-    leg = UrbanLeg("walk", "walk", point.origin_node_id, destination.access_node_id,
-                   start, end, seconds, None, ("synthetic-route-evidence",))
-    candidates.append(UrbanCandidate(
-        f"route-{point.point_id}", point.point_id, destination.destination_id, "school", "walk",
-        context, point.origin_node_id, destination.access_node_id, start, end, (leg,),
+    start, end = (
+        context.requested_departure_at,
+        context.requested_departure_at + timedelta(seconds=seconds),
+    )
+    leg = UrbanLeg(
+        "walk",
+        "walk",
+        point.origin_node_id,
+        destination.access_node_id,
+        start,
+        end,
+        seconds,
+        None,
         ("synthetic-route-evidence",),
-    ))
-coverage = [UrbanCoverage(
-    UrbanSearchScope(context, point.point_id, "school", "walk", rules.max_total_wait_seconds),
-    True, True, ("synthetic-search-proof",), frozenset({destination.destination_id}),
-) for point in points]
+    )
+    candidates.append(
+        UrbanCandidate(
+            f"route-{point.point_id}",
+            point.point_id,
+            destination.destination_id,
+            "school",
+            "walk",
+            context,
+            point.origin_node_id,
+            destination.access_node_id,
+            start,
+            end,
+            (leg,),
+            ("synthetic-route-evidence",),
+        )
+    )
+coverage = [
+    UrbanCoverage(
+        UrbanSearchScope(context, point.point_id, "school", "walk", rules.max_total_wait_seconds),
+        True,
+        True,
+        ("synthetic-search-proof",),
+        frozenset({destination.destination_id}),
+    )
+    for point in points
+]
 population_coverage = UrbanPopulationCoverage(
-    context, True, 0, ("synthetic-sampling-proof",), frozenset(p.point_id for p in points),
+    context,
+    True,
+    0,
+    ("synthetic-sampling-proof",),
+    frozenset(p.point_id for p in points),
 )
-tau = UrbanThreshold(context.city_id, "walk", versions, "static", context.search_parameters_id,
-                     1200, ("synthetic-tau-proof",))
+tau = UrbanThreshold(
+    context.city_id,
+    "walk",
+    versions,
+    "static",
+    context.search_parameters_id,
+    1200,
+    ("synthetic-tau-proof",),
+)
 result = analyze_urban_candidates(
-    context, points, [destination], candidates, coverage, area=area,
-    selected_categories={"school": "medium"}, modes=("walk",),
-    population_coverage=population_coverage, config=config, rules=rules, thresholds=(tau,),
+    context,
+    points,
+    [destination],
+    candidates,
+    coverage,
+    area=area,
+    selected_categories={"school": "medium"},
+    modes=("walk",),
+    population_coverage=population_coverage,
+    config=config,
+    rules=rules,
+    thresholds=(tau,),
 )
 assert [p.index.value for p in result.modes[0].points] == [50, 25]
 assert [p.categories[0].count.value for p in result.modes[0].points] == [1, 0]
@@ -927,38 +1053,103 @@ reference_at и идентичности всех недель-кандидат�
 from datetime import UTC, date, datetime, timedelta
 from zoneinfo import ZoneInfo
 from a2_engine import (
-    UrbanContext, UrbanODPair, UrbanODScope, UrbanPoint, UrbanPopulationCoverage,
-    UrbanTauDay, UrbanTauSlice, UrbanTauWeek, UrbanVersions,
-    calculate_urban_tau, load_urban_tau_rules,
+    UrbanContext,
+    UrbanODPair,
+    UrbanODScope,
+    UrbanPoint,
+    UrbanPopulationCoverage,
+    UrbanTauDay,
+    UrbanTauSlice,
+    UrbanTauWeek,
+    UrbanVersions,
+    calculate_urban_tau,
+    load_urban_tau_rules,
 )
 
 rules = load_urban_tau_rules()
 reference_at = datetime(2026, 11, 8, 12, tzinfo=UTC)
-versions = UrbanVersions("synthetic-snapshot", "synthetic-graph", "synthetic-calendar",
-    "synthetic-population", "synthetic-geometry", rules.methodology_version,
-    "synthetic-config-hash", "synthetic-traffic")
-context = UrbanContext("synthetic-city", "synthetic-city", reference_at, "static",
-                       versions, "synthetic-search-options")
-points = [UrbanPoint(f"p{i}", f"cell{i}", f"p{i}", f"p{i}", 0, context.city_id,
-    population, 2026, "synthetic-estimate", ("synthetic-population-evidence",))
-    for i, population in [(1, 90), (2, 10)]]
+versions = UrbanVersions(
+    "synthetic-snapshot",
+    "synthetic-graph",
+    "synthetic-calendar",
+    "synthetic-population",
+    "synthetic-geometry",
+    rules.methodology_version,
+    "synthetic-config-hash",
+    "synthetic-traffic",
+)
+context = UrbanContext(
+    "synthetic-city", "synthetic-city", reference_at, "static", versions, "synthetic-search-options"
+)
+points = [
+    UrbanPoint(
+        f"p{i}",
+        f"cell{i}",
+        f"p{i}",
+        f"p{i}",
+        0,
+        context.city_id,
+        population,
+        2026,
+        "synthetic-estimate",
+        ("synthetic-population-evidence",),
+    )
+    for i, population in [(1, 90), (2, 10)]
+]
 ids = frozenset(p.point_id for p in points)
 population = UrbanPopulationCoverage(context, True, 0, ("synthetic-population-proof",), ids)
-scope = UrbanODScope(context.city_id, "walk", versions, "static", context.search_parameters_id,
-                     "Europe/Kaliningrad", ids, rules.max_total_wait_seconds)
+scope = UrbanODScope(
+    context.city_id,
+    "walk",
+    versions,
+    "static",
+    context.search_parameters_id,
+    "Europe/Kaliningrad",
+    ids,
+    rules.max_total_wait_seconds,
+)
 start = date(2026, 10, 26)
-calendar = tuple(UrbanTauDay(start + timedelta(days=i), True, False, True, True,
-    ("synthetic-calendar-proof",)) for i in range(7))
-pairs = (UrbanODPair("p1", "p2", "reachable", 600, True, True, ("synthetic-minimum-proof",)),
-         UrbanODPair("p2", "p1", "reachable", 1800, True, True, ("synthetic-minimum-proof",)))
-slices = tuple(UrbanTauSlice(scope, start + timedelta(days=i), clock,
-    datetime.combine(start + timedelta(days=i), clock, ZoneInfo(scope.timezone)),
-    pairs, True, ("synthetic-matrix-proof",))
-    for i in range(rules.tau_days) for clock in rules.tau_times)
-baseline = UrbanTauWeek("synthetic-week-2026-10-26", scope, start, calendar, slices,
-                        ("synthetic-week-proof",), False, ())
-tau_result = calculate_urban_tau(context, points, population, (baseline,),
-    passenger_mode="walk", timezone=scope.timezone, reference_at=reference_at, rules=rules)
+calendar = tuple(
+    UrbanTauDay(start + timedelta(days=i), True, False, True, True, ("synthetic-calendar-proof",))
+    for i in range(7)
+)
+pairs = (
+    UrbanODPair("p1", "p2", "reachable", 600, True, True, ("synthetic-minimum-proof",)),
+    UrbanODPair("p2", "p1", "reachable", 1800, True, True, ("synthetic-minimum-proof",)),
+)
+slices = tuple(
+    UrbanTauSlice(
+        scope,
+        start + timedelta(days=i),
+        clock,
+        datetime.combine(start + timedelta(days=i), clock, ZoneInfo(scope.timezone)),
+        pairs,
+        True,
+        ("synthetic-matrix-proof",),
+    )
+    for i in range(rules.tau_days)
+    for clock in rules.tau_times
+)
+baseline = UrbanTauWeek(
+    "synthetic-week-2026-10-26",
+    scope,
+    start,
+    calendar,
+    slices,
+    ("synthetic-week-proof",),
+    False,
+    (),
+)
+tau_result = calculate_urban_tau(
+    context,
+    points,
+    population,
+    (baseline,),
+    passenger_mode="walk",
+    timezone=scope.timezone,
+    reference_at=reference_at,
+    rules=rules,
+)
 assert tau_result.tau_seconds.value == 1200
 assert tau_result.selected_week is not None and len(tau_result.selected_week.slices) == 28
 threshold = tau_result.to_threshold()
@@ -1166,7 +1357,11 @@ import runpy
 
 demo = runpy.run_path("packages/engine/examples/synthetic_walk.py")
 result = demo["run_demo"]()
-assert [leg.duration_seconds for leg in result.analysis.journeys[0].candidate.legs] == [60, 1620, 120]
+assert [leg.duration_seconds for leg in result.analysis.journeys[0].candidate.legs] == [
+    60,
+    1620,
+    120,
+]
 assert result.analysis.journeys[0].total_seconds == 1800
 assert result.analysis.h_seconds.value == 1800
 assert result.analysis.modes[0].points[0].index.value == 50
@@ -1280,14 +1475,22 @@ sampled/excluded и parent_id районов. Возвращает UrbanDistrict
 
 ```python
 prepared = prepare_urban_district_inputs(
-    analysis, accepted.model_dump(mode="json"), bundle.model_dump(mode="json"),
-    catalog_version=catalog_version, distribution_version=distribution_version,
-    complete_district_ids=confirmed_district_ids, original_cells_complete=True,
-    evidence_refs=coverage_evidence, precision=accepted_precision,
+    analysis,
+    accepted.model_dump(mode="json"),
+    bundle.model_dump(mode="json"),
+    catalog_version=catalog_version,
+    distribution_version=distribution_version,
+    complete_district_ids=confirmed_district_ids,
+    original_cells_complete=True,
+    evidence_refs=coverage_evidence,
+    precision=accepted_precision,
 )
 result = analyze_urban_districts(
-    analysis, prepared.original_cells, prepared.district_catalog,
-    prepared.population_shares, prepared.coverage,
+    analysis,
+    prepared.original_cells,
+    prepared.district_catalog,
+    prepared.population_shares,
+    prepared.coverage,
 )
 ```
 
@@ -1632,13 +1835,20 @@ demo = runpy.run_path("packages/engine/examples/synthetic_transit.py")
 outbound, analysis, last = demo["run_demo"]()
 assert outbound.seconds.value == 1920
 assert outbound.best_known is not None
-assert (outbound.best_known.walking_seconds, outbound.best_known.riding_seconds,
-        outbound.best_known.total_wait_seconds) == (600, 900, 420)
+assert (
+    outbound.best_known.walking_seconds,
+    outbound.best_known.riding_seconds,
+    outbound.best_known.total_wait_seconds,
+) == (600, 900, 420)
 assert outbound.best_known.waiting_share.value == 0.21875
 assert analysis.modes[0].index.value is not None
 assert analysis.modes[0].points[0].categories[0].count.reason_code == "TAU_UNAVAILABLE"
 zone = ZoneInfo("Europe/Kaliningrad")
-assert last.leave_at is not None and last.first_departure_at is not None and last.arrival_at is not None
+assert (
+    last.leave_at is not None
+    and last.first_departure_at is not None
+    and last.arrival_at is not None
+)
 assert last.leave_at.astimezone(zone).isoformat() == "2026-11-08T23:45:00+02:00"
 assert last.first_departure_at.astimezone(zone).isoformat() == "2026-11-08T23:50:00+02:00"
 assert last.arrival_at.astimezone(zone).isoformat() == "2026-11-09T00:15:00+02:00"
@@ -2090,3 +2300,205 @@ strict mypy src/tests/examples, прежние 141 signatures/fields и static h
 все прежние README/replay, новый traffic replay, frozen lock/pip/config/diff checks.
 Реальные accepted traffic data, production executor и совместный backend E2E ещё
 не подключены. Реальные измерения пробок/автомобильный рейтинг не объявляются готовыми.
+
+
+## Межгородской эталон A: самостоятельный builder (2026-11-09)
+
+Текущий этап реализует accepted graph → per-edge calibration → explicit state graph
+→ точный поиск → rich result → проверенный ReferenceTime → прежние индексы.
+Это вычислительное ядро на нормализованных принятых входах. Межгородские реальные
+данные не загружались; приведённые ниже маршруты и подтверждения синтетические.
+Реальное расписание, actual journey search, частоты, cargo/scenario, HTTP и handler
+остаются вне этого этапа. Численные FORMULAS v3 и product.json не изменены.
+
+Публичные вызовы (из `a2_engine` либо канонических модулей):
+
+```python
+calibrate_reference_graph(graph: ReferenceGraph, scope: ReferenceScope) -> CalibratedReferenceGraph
+build_reference(graph: ReferenceGraph, scope: ReferenceScope) -> ReferenceSearchResult
+reference_time_from_result(result: ReferenceSearchResult, comparison: ReferenceComparison,
+                           *, config: PassengerConfig) -> ReferenceTime
+```
+
+`routing/reference/models.py`: frozen ReferenceNetwork, ReferenceScope,
+ReferenceState, ReferenceCalibration, ReferenceEdge, ReferenceOperation, ReferenceGraph.
+Input collections копируются в отсортированные tuples; ID, версии, единицы, evidence,
+NaN/Infinity/negative/boolean costs, дубликаты и конфликтующие ID, все FK и направление
+проверяются до поиска. Порядок входных рёбер, состояний и observations не влияет на ID.
+Поддержан только текущий `a2-methodology-v3 / edge-calibrated-v1`; config в адаптере
+проверяется отдельно. Graph coverage и accepted evidence — утверждения внешнего
+контура приёмки, а не доказательства, которые engine может получить из интернета.
+Непустые evidence IDs связаны с контекстом и fingerprint; подлинность/допустимость
+самих документов, лицензий, источников и полнота их реестра проверяются до вызова.
+
+`ReferenceNetwork` фиксирует graph/snapshot/acceptance/applicability/compatibility
+versions, method/profile, evidence и optional RoadBuild. `ReferenceScope` фиксирует
+направленные территории, наборы transport nodes, allowed modes и comparison kind.
+`exact_node_pair` требует singleton sets; `city_pair_best_node` выбирает любую пару
+из фиксированных общих наборов. Пересекающиеся boundary sets отклоняются как
+неоднозначные межгородские границы; пустой нулевой маршрут не создаётся.
+Один common scope передаётся для всех сравниваемых actual chains/видов транспорта,
+включая отдельный автомобильный индекс: reference не перестраивается по actual mode.
+
+Каждое movement edge ведёт departure state → arrival state того же режима.
+Состояние обязано различать существенные платформу, входящий сервис/ребро, владение
+автомобилем и другие ограничения посредством уникального state/context ID. Перевод
+arrival → [transfer states] → departure возможен только через явные совместимые
+ReferenceOperation; несколько обязательных операций сохраняются раздельно.
+в том числе при одинаковом physical node ID. Входная нормализация обязана не
+сливать состояния, у которых разные допустимые продолжения. Operation может быть
+между разными узлами, но никаких связей по близости/координатам не выводится.
+Перенос автомобиля на rail/air не предполагается без принятого перехода.
+
+`compatible` — обязательный keyword аргумент edge и operation, без принятия
+совместимости по умолчанию. `compatible=True/False/None` означает подтверждена/запрещена/неизвестна;
+`seconds=None` — неизвестное время, не 0. Подтверждённый 0 допустим. `operation_kind`
+является описанием, не фильтром: одна и та же операция внутри цепочки включается,
+до первого departure и после последнего arrival не включается благодаря границам.
+Отсутствующая операция в графе с `coverage=full` означает отсутствие разрешённой
+связи; если связь возможна, но ещё не подтверждена, ML2 обязан передать unknown
+операцию либо partial network coverage. Отсутствие записи не может означать
+молчаливую полноту ещё не обследованной сети.
+
+Калибровка rail/air/water: минимум `confirmed=True` running-time samples **каждого**
+направленного edge. Все samples связаны с edge ID, from/to states и одним Network.
+Неподтверждённые samples не используются как seconds и сохраняют partial coverage.
+Нет правила 5 дней, ожиданий, универсальных скоростей или historical whole-trip min.
+Разные edges могут выбирать разные принятые source services в одном scope.
+
+Road требует `static_freeflow_elapsed`, seconds, `RoadBuild` с закреплёнными
+Valhalla 3.5.1, source/snapshot/build/graph/profile/options/evidence и auto freeflow.
+Build каждого sample должен совпадать с build Network; конфликтующие elapsed costs
+одного fixed edge/build отклоняются. `boundary_semantics` различает physical edge
+и явно ограниченную logical connection. Последняя требует принятого physical
+elapsed time между указанными states. Полное время pairwise RoadResult **нельзя**
+раздавать физическим рёбрам; preference penalties и dynamic traffic не принимаются.
+Для воздуха геодезическая длина только informational speed, не cost и не geometry.
+Отсутствие geometry_ref не делает известный running time неизвестным.
+
+`calibration.py` хранит принятый граф, scope, откалиброванные arcs, выбранные samples,
+coverage, excluded IDs, причины пропусков и fingerprint. `search.py` выполняет
+multi-source/multi-target Dijkstra по **состояниям**, поддерживает parallel edges,
+восстанавливает чередование movement/operations и выбранные origin/destination.
+Сравнение точное над рациональным представлением входных float, без промежуточного
+округления. Финальные секунды — float. Tie-break `(cost, hops, arc IDs, start state)`
+не допускает бесконечного улучшения на нулевом цикле. Никаких отсечек пересадок или
+длительности нет. Переполнение суммы выявляется до помещения candidate в очередь и
+завершает вызов ошибкой `REFERENCE_PATH_SUM_OVERFLOW`, без публикации A.
+Стоимость хранения labels включает последовательность arcs; это CPU/in-memory
+builder, не утверждение готовности к поиску на национальном production-графе.
+
+| Данные/поиск | `search_status` | seconds и completeness |
+|---|---|---|
+| Полная принятая область, путь найден | minimum_proven | numeric, full |
+| Подтверждённая часть, неизвестные альтернативы/операции/coverage | minimum_proven | numeric, partial; минимум только известной подсети |
+| Полная область, пути нет | no_path_proven | None, full coverage; REFERENCE_NO_FEASIBLE_PATH |
+| Неполная область, известного пути нет | known_subnetwork_no_path | None, partial; REFERENCE_COVERAGE_INCOMPLETE |
+
+`full_ranking_eligible` истинен только при numeric minimum и full coverage. Полный
+рейтинг partial reference запрещён, даже если найденный путь целиком подтверждён:
+неизвестная альтернатива могла быть быстрее. Неполнота не обнуляет известный A.
+Адаптер сохраняет numeric partial и прежний `PARTIAL_REFERENCE`, preliminary index.
+A=None оставляет known actual times и waiting index. A>actual сохраняет исходный A,
+cap 100 и `REFERENCE_INCONSISTENCY`. Полнота reference не означает полноту всего
+пассажирского анализа: actual modes, chains и их evidence проверяет вызывающий слой.
+
+Ресурсного прерывания API нет: вызов возвращается после доказательства минимума
+известной подсети либо исчерпания достижимых состояний. Отмена/ошибка не возвращает
+best-known как A. Если executor позже добавит budget/cancel, ему потребуется отдельный
+search-incomplete result с best-known и seconds=None, без полного рейтинга.
+
+`ReferenceComparison` должен быть создан из контекста actual analysis. Адаптер
+сравнивает весь scope, method/profile config и принадлежность actual nodes общим
+boundary sets. В city-pair actual A2/B2 допустимы при выбранных эталонных A1/B1;
+в exact-node это другой анализ. При несовпадении возвращает scalar с
+`applicability_confirmed=False`; прежние формулы дают REFERENCE_NOT_APPLICABLE либо
+REFERENCE_VERSION_MISMATCH. Actual static/typical/live/historical допустимы;
+новые traffic observations не меняют зафиксированный static A.
+
+### Mapping к опубликованному canonical DTO
+
+Прочитан BACKEND `work/backend@6ce41795572b3708dc09f49868a3cefaa7e77fb3`,
+`packages/contracts/src/a2_contracts/v2/journeys.py:ReferenceResult` и
+`dataset.py:ReferenceEdge/MinimumTransfer`. Код DTO и backend не изменён.
+
+| canonical ReferenceResult | engine source / правило |
+|---|---|
+| reference_id | result.reference_id, hash algorithm version + accepted graph + scope + result |
+| seconds | result.seconds; None при отсутствии пути |
+| status | available при numeric, иначе unknown; not_applicable при отказе адаптера |
+| completeness | result.completeness (coverage); в not_applicable ответе сохранить partial/diagnostics анализа |
+| reason_code | numeric full: None; numeric partial: PARTIAL_REFERENCE; no_path_proven: REFERENCE_NO_FEASIBLE_PATH; partial no-path: REFERENCE_COVERAGE_INCOMPLETE; отказ: REFERENCE_NOT_APPLICABLE |
+| profile_version | result.scope.network.profile_version |
+| graph_version | result.scope.network.graph_version |
+| boundary_node_sets | scope.origin_node_ids / destination_node_ids, **не** только выбранная пара |
+| edges | result.path.edge_ids либо [] |
+| necessary_operations | result.path.operation_ids либо [] |
+| calibration_evidence | result.evidence_refs: network/coverage, все samples/edges/operations, в том числе unchosen/unknown alternatives |
+
+Для `not_applicable` canonical seconds обязаны быть None (scalar внутри сохраняет
+A для диагностики). Текущий DTO не выражает выбранную пару, snapshot/acceptance/
+applicability/compatibility/methodology, comparison kind, allowed modes, порядок
+movement+operations вместе, breakdown, выбранные calibrations, omitted IDs/причины,
+search_status и graph fingerprint. BACKEND должен хранить богатый result или
+расширить DTO до их включения. Нельзя выбрасывать их ради успешной сериализации.
+Плоские canonical ReferenceEdge без state/compatibility и готовый scalar running
+не доказывают полноту калибровок. MinimumTransfer с node IDs нужно нормализовать
+в конкретные arrival/departure states и applicability, не соединять все режимы.
+
+### Пример, контроли и интеграционный handoff
+
+```sh
+PYTHONPATH=packages/engine/src uv run --frozen python packages/engine/examples/synthetic_reference.py
+```
+
+<!-- executable-example -->
+```python
+import runpy
+
+reference, passenger, car = runpy.run_path("packages/engine/examples/synthetic_reference.py")[
+    "run_demo"
+]()
+assert reference.seconds == 3600 and reference.full_ranking_eligible
+assert reference.path.edge_ids == ("rail", "air")
+assert reference.path.operation_ids == ("transfer",)
+assert passenger.path_index.value == passenger.waiting_index.value == car.path_index.value == 50
+assert abs(passenger.index.value - 50) < 1e-10
+```
+
+Контроли: direct 5000 против 1800+300+1500 → A=3600; actual path=7200,
+wait=43200 → path/wait/passenger/car=50. По отдельным samples AB=(1000,4000),
+BC=(4000,1000), transfer=300 → A=2300. Unknown transfer → partial 5000,
+без direct → unknown. Forbidden transfer → full 5000. Common sets A1/A2→B1/B2
+дают 600 и выбранные A1/B1; exact A2/B2 даёт 900. A=9000/actual=7200 → cap 100.
+Тесты также проверяют 45 случайных малых графов независимым полным перебором
+простых **state paths с operations**, ещё 20 operation-state графов, zero cycles, ties, reversed direction,
+parallel edges, numeric/ID/provenance ошибки и subprocess/PYTHONHASHSEED identity.
+
+- **ML2:** accepted directed reference edges и edge-level running samples, fixed
+  source scope/snapshot, обязательные minimum transfers, unknown/forbidden
+  compatibility, достаточные state IDs, network/calibration coverage и provenance.
+  Проверен опубликованный `work/ml2@0e6dbca005674f86c5cde7c2f2087477d509e7df`:
+  `contract_v2.py` пока экспортирует пустые reference_edges/minimum_transfers.
+  Это не помешало вычислительному синтетическому builder, но реальный A не рассчитан.
+- **BACKEND:** adapter canonical accepted input → engine normalized graph; handler
+  build_reference → ReferenceComparison(actual scope) → reference_time_from_result
+  → прежние formulas. Сохранять rich result, один common scope, nullable states,
+  partial diagnostics и запрет полного рейтинга. Не вызывать builder по actual mode.
+- **DEVOPS/executor:** закреплённые Valhalla engine/build/graph/costing options,
+  accepted static physical elapsed seconds для directed reference edges (или явно
+  ограниченных logical connections); внешняя проверка acceptance/evidence.
+
+Проверка публичной совместимости: сохранены порядок, подписи, поля/defaults/frozen
+всех прежних 168 symbols (`tests/fixtures/public_api_168.json`, захвачен до изменений).
+Добавлено 15, всего 183. Старый snapshot 141 не заменён. Архитектурный guard разрешает
+intercity → routing.reference.*, обратные routing → intercity/urban по-прежнему
+запрещены. Manifests/lock/config/canonical DTO и другие владельцы не изменены.
+
+
+Проверки этого этапа: исходные 656 → **742 passing tests**, Ruff check/format
+(103 files), strict mypy src/tests/examples (100 Python files), все 11 README
+controls и 7 самостоятельных synthetic examples; uv lock --check, uv pip check,
+product-config validator и git diff --check прошли. Полный набор команд и точные
+результаты записаны в docs/tasks/ml1.md. Проверка выполнялась с PYTHONPATH для
+текущего package=false; manifest/lock не изменялись.
