@@ -1,0 +1,13 @@
+{
+  "description": "Contract fixture only; no observed geographic or transport result.",
+  "payload": {
+    "analysis_kind": "intercity_passenger",
+    "departure_at": "2026-11-09T08:15:00+03:00",
+    "destination_id": "demo-b",
+    "origin_id": "demo-a",
+    "schema_version": "2",
+    "territory_level": "city",
+    "traffic_mode": "static"
+  },
+  "synthetic": true
+}

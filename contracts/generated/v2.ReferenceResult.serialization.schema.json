@@ -1,0 +1,134 @@
+{
+  "$defs": {
+    "BoundaryNodeSets": {
+      "additionalProperties": false,
+      "properties": {
+        "destination_node_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Destination Node Ids",
+          "type": "array"
+        },
+        "origin_node_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Origin Node Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "origin_node_ids",
+        "destination_node_ids"
+      ],
+      "title": "BoundaryNodeSets",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "boundary_node_sets": {
+      "$ref": "#/$defs/BoundaryNodeSets"
+    },
+    "calibration_evidence": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Calibration Evidence",
+      "type": "array"
+    },
+    "completeness": {
+      "enum": [
+        "full",
+        "partial"
+      ],
+      "title": "Completeness",
+      "type": "string"
+    },
+    "edges": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Edges",
+      "type": "array"
+    },
+    "graph_version": {
+      "minLength": 1,
+      "title": "Graph Version",
+      "type": "string"
+    },
+    "necessary_operations": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Necessary Operations",
+      "type": "array"
+    },
+    "profile_version": {
+      "const": "edge-calibrated-v1",
+      "title": "Profile Version",
+      "type": "string"
+    },
+    "reason_code": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Reason Code"
+    },
+    "reference_id": {
+      "minLength": 1,
+      "title": "Reference Id",
+      "type": "string"
+    },
+    "seconds": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Seconds"
+    },
+    "status": {
+      "enum": [
+        "available",
+        "unknown",
+        "not_applicable"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "reference_id",
+    "seconds",
+    "status",
+    "completeness",
+    "reason_code",
+    "profile_version",
+    "graph_version",
+    "boundary_node_sets",
+    "edges",
+    "necessary_operations",
+    "calibration_evidence"
+  ],
+  "title": "ReferenceResult",
+  "type": "object"
+}

@@ -1,0 +1,37 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "evidence_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "parent_station_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Parent Station Id"
+    },
+    "stop_id": {
+      "minLength": 1,
+      "title": "Stop Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "stop_id",
+    "parent_station_id",
+    "evidence_ids"
+  ],
+  "title": "Stop",
+  "type": "object"
+}

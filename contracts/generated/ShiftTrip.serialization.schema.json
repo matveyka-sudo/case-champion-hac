@@ -1,0 +1,38 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "delta_seconds": {
+      "maximum": 1800,
+      "minimum": -1800,
+      "title": "Delta Seconds",
+      "type": "integer"
+    },
+    "service_dates": {
+      "items": {
+        "format": "date",
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Service Dates",
+      "type": "array"
+    },
+    "trip_id": {
+      "minLength": 1,
+      "title": "Trip Id",
+      "type": "string"
+    },
+    "type": {
+      "const": "shift_trip",
+      "title": "Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "trip_id",
+    "service_dates",
+    "delta_seconds"
+  ],
+  "title": "ShiftTrip",
+  "type": "object"
+}

@@ -1,0 +1,57 @@
+{
+  "additionalProperties": false,
+  "description": "Known applicability facts; None means unverified, not unrestricted access.",
+  "properties": {
+    "evidence_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "passenger_categories": {
+      "anyOf": [
+        {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Passenger Categories"
+    },
+    "requires_referral": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Requires Referral"
+    },
+    "restrictions": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Restrictions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "passenger_categories",
+    "requires_referral",
+    "restrictions",
+    "evidence_ids"
+  ],
+  "title": "Applicability",
+  "type": "object"
+}

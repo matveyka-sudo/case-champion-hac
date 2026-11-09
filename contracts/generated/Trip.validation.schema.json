@@ -1,0 +1,46 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "evidence_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "mode": {
+      "enum": [
+        "rail",
+        "bus",
+        "walk"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "operator_id": {
+      "minLength": 1,
+      "title": "Operator Id",
+      "type": "string"
+    },
+    "service_id": {
+      "minLength": 1,
+      "title": "Service Id",
+      "type": "string"
+    },
+    "trip_id": {
+      "minLength": 1,
+      "title": "Trip Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "trip_id",
+    "service_id",
+    "operator_id",
+    "mode",
+    "evidence_ids"
+  ],
+  "title": "Trip",
+  "type": "object"
+}

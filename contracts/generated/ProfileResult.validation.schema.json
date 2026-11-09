@@ -1,0 +1,355 @@
+{
+  "$defs": {
+    "CaseResult": {
+      "additionalProperties": false,
+      "properties": {
+        "assumption_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Assumption Ids",
+          "type": "array"
+        },
+        "case_id": {
+          "minLength": 1,
+          "title": "Case Id",
+          "type": "string"
+        },
+        "constraint_results": {
+          "additionalProperties": {
+            "enum": [
+              "pass",
+              "fail",
+              "unknown",
+              "not_requested"
+            ],
+            "type": "string"
+          },
+          "propertyNames": {
+            "minLength": 1
+          },
+          "title": "Constraint Results",
+          "type": "object"
+        },
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "journey_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Journey Ids",
+          "type": "array"
+        },
+        "overall_feasibility": {
+          "enum": [
+            "pass",
+            "fail",
+            "unknown"
+          ],
+          "title": "Overall Feasibility",
+          "type": "string"
+        },
+        "reason_codes": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Reason Codes",
+          "type": "array"
+        },
+        "weight": {
+          "exclusiveMinimum": 0,
+          "title": "Weight",
+          "type": "number"
+        }
+      },
+      "required": [
+        "case_id",
+        "weight",
+        "overall_feasibility",
+        "constraint_results",
+        "reason_codes",
+        "journey_ids",
+        "evidence_ids",
+        "assumption_ids"
+      ],
+      "title": "CaseResult",
+      "type": "object"
+    },
+    "CityScore": {
+      "additionalProperties": false,
+      "properties": {
+        "origin_id": {
+          "minLength": 1,
+          "title": "Origin Id",
+          "type": "string"
+        },
+        "resolved_weight_share": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Resolved Weight Share",
+          "type": "number"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Score"
+        },
+        "score_lower": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Score Lower",
+          "type": "number"
+        },
+        "score_upper": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Score Upper",
+          "type": "number"
+        },
+        "task_count": {
+          "exclusiveMinimum": 0,
+          "title": "Task Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "origin_id",
+        "score",
+        "score_lower",
+        "score_upper",
+        "task_count",
+        "resolved_weight_share"
+      ],
+      "title": "CityScore",
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "bundle_id": {
+          "minLength": 1,
+          "title": "Bundle Id",
+          "type": "string"
+        },
+        "code_version": {
+          "minLength": 1,
+          "title": "Code Version",
+          "type": "string"
+        },
+        "completeness_scope": {
+          "minLength": 1,
+          "title": "Completeness Scope",
+          "type": "string"
+        },
+        "network_complete": {
+          "title": "Network Complete",
+          "type": "boolean"
+        },
+        "profile_id": {
+          "enum": [
+            "regular",
+            "medical",
+            "intercity"
+          ],
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "profile_version": {
+          "exclusiveMinimum": 0,
+          "title": "Profile Version",
+          "type": "integer"
+        },
+        "search_complete": {
+          "title": "Search Complete",
+          "type": "boolean"
+        },
+        "task_set_hash": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Task Set Hash"
+        }
+      },
+      "required": [
+        "bundle_id",
+        "profile_id",
+        "profile_version",
+        "code_version",
+        "completeness_scope",
+        "network_complete",
+        "search_complete"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "assumption_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Assumption Ids",
+      "type": "array"
+    },
+    "bundle_id": {
+      "minLength": 1,
+      "title": "Bundle Id",
+      "type": "string"
+    },
+    "case_results": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/CaseResult"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Case Results"
+    },
+    "cities": {
+      "items": {
+        "$ref": "#/$defs/CityScore"
+      },
+      "title": "Cities",
+      "type": "array"
+    },
+    "code_version": {
+      "minLength": 1,
+      "title": "Code Version",
+      "type": "string"
+    },
+    "evidence_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "missing_fields": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Missing Fields",
+      "type": "array"
+    },
+    "params_hash": {
+      "minLength": 1,
+      "title": "Params Hash",
+      "type": "string"
+    },
+    "profile_id": {
+      "enum": [
+        "regular",
+        "medical",
+        "intercity"
+      ],
+      "title": "Profile Id",
+      "type": "string"
+    },
+    "profile_version": {
+      "exclusiveMinimum": 0,
+      "title": "Profile Version",
+      "type": "integer"
+    },
+    "provenance": {
+      "$ref": "#/$defs/Provenance"
+    },
+    "reason_codes": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Reason Codes",
+      "type": "array"
+    },
+    "result_hash": {
+      "minLength": 1,
+      "title": "Result Hash",
+      "type": "string"
+    },
+    "run_id": {
+      "minLength": 1,
+      "title": "Run Id",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "partial",
+        "insufficient_data"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "task_set_hash": {
+      "minLength": 1,
+      "title": "Task Set Hash",
+      "type": "string"
+    },
+    "unit": {
+      "const": "points_0_100",
+      "title": "Unit",
+      "type": "string"
+    },
+    "warnings": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "run_id",
+    "status",
+    "bundle_id",
+    "profile_id",
+    "profile_version",
+    "task_set_hash",
+    "code_version",
+    "params_hash",
+    "result_hash",
+    "unit",
+    "provenance",
+    "evidence_ids",
+    "assumption_ids",
+    "warnings",
+    "cities"
+  ],
+  "title": "ProfileResult",
+  "type": "object"
+}

@@ -1,0 +1,44 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "max_height_m": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Max Height M"
+    },
+    "max_weight_tonnes": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Max Weight Tonnes"
+    },
+    "restrictions": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Restrictions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "max_height_m",
+    "max_weight_tonnes",
+    "restrictions"
+  ],
+  "title": "VehicleConstraints",
+  "type": "object"
+}

@@ -1,0 +1,271 @@
+{
+  "$defs": {
+    "Applicability": {
+      "additionalProperties": false,
+      "description": "Known applicability facts; None means unverified, not unrestricted access.",
+      "properties": {
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "passenger_categories": {
+          "anyOf": [
+            {
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Passenger Categories"
+        },
+        "requires_referral": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Requires Referral"
+        },
+        "restrictions": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Restrictions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "passenger_categories",
+        "requires_referral",
+        "restrictions",
+        "evidence_ids"
+      ],
+      "title": "Applicability",
+      "type": "object"
+    },
+    "AvailabilityWindow": {
+      "additionalProperties": false,
+      "description": "Recurring local opening window, distinct from a passenger's activity window.\n\nWeekdays refer to the start date (Monday=0); end_day_offset=1 explicitly\nplaces the end on the following date. UTC conversion belongs to the engine.",
+      "properties": {
+        "end": {
+          "format": "time",
+          "title": "End",
+          "type": "string"
+        },
+        "end_day_offset": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "End Day Offset",
+          "type": "integer"
+        },
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "start": {
+          "format": "time",
+          "title": "Start",
+          "type": "string"
+        },
+        "timezone": {
+          "minLength": 1,
+          "title": "Timezone",
+          "type": "string"
+        },
+        "valid_period": {
+          "$ref": "#/$defs/ValidityPeriod"
+        },
+        "verification_state": {
+          "enum": [
+            "verified",
+            "absent",
+            "unknown"
+          ],
+          "title": "Verification State",
+          "type": "string"
+        },
+        "weekdays": {
+          "items": {
+            "maximum": 6,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "minItems": 1,
+          "title": "Weekdays",
+          "type": "array"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "end_day_offset",
+        "weekdays",
+        "valid_period",
+        "timezone",
+        "verification_state",
+        "evidence_ids"
+      ],
+      "title": "AvailabilityWindow",
+      "type": "object"
+    },
+    "ValidityPeriod": {
+      "additionalProperties": false,
+      "properties": {
+        "valid_from": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid From"
+        },
+        "valid_to": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid To"
+        }
+      },
+      "required": [
+        "valid_from",
+        "valid_to"
+      ],
+      "title": "ValidityPeriod",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "applicability": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Applicability"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "availability_windows": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/AvailabilityWindow"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Availability Windows"
+    },
+    "destination_id": {
+      "minLength": 1,
+      "title": "Destination Id",
+      "type": "string"
+    },
+    "eligibility": {
+      "minLength": 1,
+      "title": "Eligibility",
+      "type": "string"
+    },
+    "evidence_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "hours_verified": {
+      "enum": [
+        "verified",
+        "absent",
+        "unknown"
+      ],
+      "title": "Hours Verified",
+      "type": "string"
+    },
+    "service_type_id": {
+      "minLength": 1,
+      "title": "Service Type Id",
+      "type": "string"
+    },
+    "service_verified": {
+      "enum": [
+        "verified",
+        "absent",
+        "unknown"
+      ],
+      "title": "Service Verified",
+      "type": "string"
+    },
+    "valid_from": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Valid From"
+    },
+    "valid_to": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Valid To"
+    }
+  },
+  "required": [
+    "valid_from",
+    "valid_to",
+    "destination_id",
+    "service_type_id",
+    "eligibility",
+    "service_verified",
+    "hours_verified",
+    "evidence_ids"
+  ],
+  "title": "ServiceOffering",
+  "type": "object"
+}

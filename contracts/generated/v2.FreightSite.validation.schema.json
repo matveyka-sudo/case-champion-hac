@@ -1,0 +1,66 @@
+{
+  "$defs": {
+    "LonLat": {
+      "additionalProperties": false,
+      "properties": {
+        "lat": {
+          "maximum": 90,
+          "minimum": -90,
+          "title": "Lat",
+          "type": "number"
+        },
+        "lon": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "Lon",
+          "type": "number"
+        }
+      },
+      "required": [
+        "lon",
+        "lat"
+      ],
+      "title": "LonLat",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "access_node_id": {
+      "minLength": 1,
+      "title": "Access Node Id",
+      "type": "string"
+    },
+    "location": {
+      "$ref": "#/$defs/LonLat"
+    },
+    "site_id": {
+      "minLength": 1,
+      "title": "Site Id",
+      "type": "string"
+    },
+    "source_refs": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "territory_id": {
+      "minLength": 1,
+      "title": "Territory Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source_refs",
+    "territory_id",
+    "location",
+    "site_id",
+    "access_node_id"
+  ],
+  "title": "FreightSite",
+  "type": "object"
+}

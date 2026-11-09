@@ -1,0 +1,52 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "bundle_id": {
+      "minLength": 1,
+      "title": "Bundle Id",
+      "type": "string"
+    },
+    "include_case_results": {
+      "title": "Include Case Results",
+      "type": "boolean"
+    },
+    "origin_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Origin Ids",
+      "type": "array"
+    },
+    "profile_id": {
+      "enum": [
+        "regular",
+        "medical",
+        "intercity"
+      ],
+      "title": "Profile Id",
+      "type": "string"
+    },
+    "profile_version": {
+      "exclusiveMinimum": 0,
+      "title": "Profile Version",
+      "type": "integer"
+    },
+    "task_set_hash": {
+      "minLength": 1,
+      "title": "Task Set Hash",
+      "type": "string"
+    }
+  },
+  "required": [
+    "bundle_id",
+    "profile_id",
+    "profile_version",
+    "task_set_hash",
+    "origin_ids",
+    "include_case_results"
+  ],
+  "title": "AnalysisRequest",
+  "type": "object"
+}

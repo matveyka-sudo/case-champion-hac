@@ -1,0 +1,31 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "pipeline",
+      "title": "Kind",
+      "type": "string"
+    },
+    "product": {
+      "enum": [
+        "oil",
+        "oil_products",
+        "gas"
+      ],
+      "title": "Product",
+      "type": "string"
+    },
+    "profile_id": {
+      "minLength": 1,
+      "title": "Profile Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "profile_id",
+    "kind",
+    "product"
+  ],
+  "title": "PipelineCargoProfile",
+  "type": "object"
+}

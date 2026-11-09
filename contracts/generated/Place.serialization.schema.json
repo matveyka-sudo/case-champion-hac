@@ -1,0 +1,52 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "enum": [
+        "city",
+        "municipality",
+        "terminal",
+        "stop"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "lat": {
+      "maximum": 90,
+      "minimum": -90,
+      "title": "Lat",
+      "type": "number"
+    },
+    "lon": {
+      "maximum": 180,
+      "minimum": -180,
+      "title": "Lon",
+      "type": "number"
+    },
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "place_id": {
+      "minLength": 1,
+      "title": "Place Id",
+      "type": "string"
+    },
+    "region_id": {
+      "minLength": 1,
+      "title": "Region Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "place_id",
+    "name",
+    "kind",
+    "region_id",
+    "lon",
+    "lat"
+  ],
+  "title": "Place",
+  "type": "object"
+}

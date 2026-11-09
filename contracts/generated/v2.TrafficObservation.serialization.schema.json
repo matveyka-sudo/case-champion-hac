@@ -1,0 +1,33 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "date": {
+      "format": "date",
+      "title": "Date",
+      "type": "string"
+    },
+    "graph_version": {
+      "minLength": 1,
+      "title": "Graph Version",
+      "type": "string"
+    },
+    "season": {
+      "minLength": 1,
+      "title": "Season",
+      "type": "string"
+    },
+    "weekday_type": {
+      "minLength": 1,
+      "title": "Weekday Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "date",
+    "weekday_type",
+    "season",
+    "graph_version"
+  ],
+  "title": "TrafficObservation",
+  "type": "object"
+}
