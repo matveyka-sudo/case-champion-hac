@@ -617,6 +617,21 @@
       "datasets": ["nvr_gorono.dou-20261109"]
     },
     {
+      "source_id": "rzd_tr4_stations",
+      "a2_ref": null,
+      "title": "ОАО «РЖД» — Тарифное руководство № 4, книга 2: станции и параграфы грузовых операций",
+      "publisher": "ОАО «РЖД»",
+      "source_url": "https://cargo.rzd.ru/",
+      "role": "validation",
+      "analysis_kinds": ["urban_cargo", "intercity_cargo"],
+      "provides": "Перечень станций с кодом ЕСР и параграфами операций (приём и выдача грузов повагонными, контейнерными и мелкими отправками): подтверждение грузовой станции",
+      "limitations": "Сайты РЖД (rzd.ru, cargo.rzd.ru, company.rzd.ru) из окружения не открываются (09.11.2026). Проверенные замены не дают операций: справочник ЕСР osm.sbin.ru/esr (коды, типы и названия, обновлён 12.07.2021), railwagonlocation.com (только название и дорога, коды картинками), gdevagon.ru не открывается. Без этого источника ж/д станции остаются в карантине FREIGHT_OPERATIONS_UNVERIFIED",
+      "access_method": "manual",
+      "geography": "РФ",
+      "license": {"name": null, "url": null, "status": "unknown"},
+      "status": "unavailable"
+    },
+    {
       "source_id": "admnvrsk_health",
       "a2_ref": null,
       "title": "Администрация Новороссийска — учреждения здравоохранения города",
