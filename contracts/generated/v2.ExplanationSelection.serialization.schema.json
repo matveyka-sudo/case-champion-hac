@@ -1,0 +1,30 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "entity_id": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Entity Id",
+      "type": "string"
+    },
+    "entity_kind": {
+      "enum": [
+        "cell",
+        "sample_point",
+        "destination",
+        "freight_site",
+        "freight_node",
+        "access_node",
+        "territory"
+      ],
+      "title": "Entity Kind",
+      "type": "string"
+    }
+  },
+  "required": [
+    "entity_kind",
+    "entity_id"
+  ],
+  "title": "ExplanationSelection",
+  "type": "object"
+}

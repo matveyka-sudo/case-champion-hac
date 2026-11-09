@@ -1,0 +1,28 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "coverage": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Coverage",
+      "type": "number"
+    },
+    "site_count": {
+      "minimum": 0,
+      "title": "Site Count",
+      "type": "integer"
+    },
+    "weighting": {
+      "const": "equal_physical_sites",
+      "title": "Weighting",
+      "type": "string"
+    }
+  },
+  "required": [
+    "site_count",
+    "weighting",
+    "coverage"
+  ],
+  "title": "SiteBasis",
+  "type": "object"
+}

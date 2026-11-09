@@ -1,0 +1,62 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "anchor_id": {
+      "minLength": 1,
+      "title": "Anchor Id",
+      "type": "string"
+    },
+    "city_id": {
+      "minLength": 1,
+      "title": "City Id",
+      "type": "string"
+    },
+    "evidence_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "lat": {
+      "maximum": 90,
+      "minimum": -90,
+      "title": "Lat",
+      "type": "number"
+    },
+    "lon": {
+      "maximum": 180,
+      "minimum": -180,
+      "title": "Lon",
+      "type": "number"
+    },
+    "origin_id": {
+      "minLength": 1,
+      "title": "Origin Id",
+      "type": "string"
+    },
+    "timezone": {
+      "minLength": 1,
+      "title": "Timezone",
+      "type": "string"
+    },
+    "type": {
+      "minLength": 1,
+      "title": "Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "origin_id",
+    "city_id",
+    "anchor_id",
+    "lon",
+    "lat",
+    "timezone",
+    "type",
+    "evidence_ids"
+  ],
+  "title": "Origin",
+  "type": "object"
+}

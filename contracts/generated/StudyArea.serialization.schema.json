@@ -1,0 +1,74 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "area_id": {
+      "minLength": 1,
+      "title": "Area Id",
+      "type": "string"
+    },
+    "area_version": {
+      "exclusiveMinimum": 0,
+      "title": "Area Version",
+      "type": "integer"
+    },
+    "basis": {
+      "enum": [
+        "scenario",
+        "verified"
+      ],
+      "title": "Basis",
+      "type": "string"
+    },
+    "city_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "City Ids",
+      "type": "array"
+    },
+    "demo_city_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Demo City Ids",
+      "type": "array"
+    },
+    "evidence_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "region_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Region Ids",
+      "type": "array"
+    },
+    "timezone": {
+      "minLength": 1,
+      "title": "Timezone",
+      "type": "string"
+    }
+  },
+  "required": [
+    "area_id",
+    "area_version",
+    "region_ids",
+    "city_ids",
+    "demo_city_ids",
+    "timezone",
+    "basis",
+    "evidence_ids"
+  ],
+  "title": "StudyArea",
+  "type": "object"
+}

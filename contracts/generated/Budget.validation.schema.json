@@ -1,0 +1,21 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "amount": {
+      "minimum": 0,
+      "title": "Amount",
+      "type": "number"
+    },
+    "currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    }
+  },
+  "required": [
+    "amount",
+    "currency"
+  ],
+  "title": "Budget",
+  "type": "object"
+}

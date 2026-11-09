@@ -1,0 +1,235 @@
+{
+  "$defs": {
+    "Period": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "End"
+        },
+        "start": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Start"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "Period",
+      "type": "object"
+    },
+    "TrafficObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "format": "date",
+          "title": "Date",
+          "type": "string"
+        },
+        "graph_version": {
+          "minLength": 1,
+          "title": "Graph Version",
+          "type": "string"
+        },
+        "season": {
+          "minLength": 1,
+          "title": "Season",
+          "type": "string"
+        },
+        "weekday_type": {
+          "minLength": 1,
+          "title": "Weekday Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "date",
+        "weekday_type",
+        "season",
+        "graph_version"
+      ],
+      "title": "TrafficObservation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "confidence": {
+      "anyOf": [
+        {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Confidence"
+    },
+    "directed_edge_id": {
+      "minLength": 1,
+      "title": "Directed Edge Id",
+      "type": "string"
+    },
+    "graph_version": {
+      "minLength": 1,
+      "title": "Graph Version",
+      "type": "string"
+    },
+    "is_closed": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Is Closed"
+    },
+    "local_15min_bin": {
+      "exclusiveMaximum": 96,
+      "minimum": 0,
+      "title": "Local 15Min Bin",
+      "type": "integer"
+    },
+    "method": {
+      "minLength": 1,
+      "title": "Method",
+      "type": "string"
+    },
+    "observations": {
+      "items": {
+        "$ref": "#/$defs/TrafficObservation"
+      },
+      "title": "Observations",
+      "type": "array"
+    },
+    "observed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Observed At"
+    },
+    "observed_period": {
+      "$ref": "#/$defs/Period"
+    },
+    "profile_id": {
+      "minLength": 1,
+      "title": "Profile Id",
+      "type": "string"
+    },
+    "sample_count": {
+      "minimum": 0,
+      "title": "Sample Count",
+      "type": "integer"
+    },
+    "season": {
+      "minLength": 1,
+      "title": "Season",
+      "type": "string"
+    },
+    "source_refs": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "speed_kph": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Speed Kph"
+    },
+    "status": {
+      "enum": [
+        "available",
+        "unknown"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "traffic_mode": {
+      "enum": [
+        "static",
+        "typical",
+        "live",
+        "historical"
+      ],
+      "title": "Traffic Mode",
+      "type": "string"
+    },
+    "valid_until": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Valid Until"
+    },
+    "weekday_type": {
+      "minLength": 1,
+      "title": "Weekday Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source_refs",
+    "profile_id",
+    "directed_edge_id",
+    "graph_version",
+    "traffic_mode",
+    "status",
+    "speed_kph",
+    "is_closed",
+    "weekday_type",
+    "local_15min_bin",
+    "season",
+    "observed_period",
+    "observations",
+    "sample_count",
+    "observed_at",
+    "valid_until",
+    "method",
+    "confidence"
+  ],
+  "title": "TrafficProfile",
+  "type": "object"
+}

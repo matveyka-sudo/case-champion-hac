@@ -1,0 +1,52 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "applicability": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Applicability",
+      "type": "array"
+    },
+    "from_node_id": {
+      "minLength": 1,
+      "title": "From Node Id",
+      "type": "string"
+    },
+    "minimum_id": {
+      "minLength": 1,
+      "title": "Minimum Id",
+      "type": "string"
+    },
+    "seconds": {
+      "minimum": 0,
+      "title": "Seconds",
+      "type": "number"
+    },
+    "source_refs": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "to_node_id": {
+      "minLength": 1,
+      "title": "To Node Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source_refs",
+    "minimum_id",
+    "from_node_id",
+    "to_node_id",
+    "seconds",
+    "applicability"
+  ],
+  "title": "MinimumTransfer",
+  "type": "object"
+}

@@ -1,0 +1,123 @@
+{
+  "$defs": {
+    "ServiceStopTime": {
+      "additionalProperties": false,
+      "properties": {
+        "arrival_seconds": {
+          "minimum": 0,
+          "title": "Arrival Seconds",
+          "type": "integer"
+        },
+        "departure_seconds": {
+          "minimum": 0,
+          "title": "Departure Seconds",
+          "type": "integer"
+        },
+        "dropoff": {
+          "title": "Dropoff",
+          "type": "boolean"
+        },
+        "node_id": {
+          "minLength": 1,
+          "title": "Node Id",
+          "type": "string"
+        },
+        "pickup": {
+          "title": "Pickup",
+          "type": "boolean"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "node_id",
+        "sequence",
+        "arrival_seconds",
+        "departure_seconds",
+        "pickup",
+        "dropoff"
+      ],
+      "title": "ServiceStopTime",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "mode": {
+      "enum": [
+        "walk",
+        "public_transport",
+        "private_car",
+        "road",
+        "rail",
+        "air",
+        "water",
+        "mixed",
+        "pipeline"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "service_dates": {
+      "items": {
+        "format": "date",
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Service Dates",
+      "type": "array"
+    },
+    "service_id": {
+      "minLength": 1,
+      "title": "Service Id",
+      "type": "string"
+    },
+    "source_refs": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "stop_times": {
+      "items": {
+        "$ref": "#/$defs/ServiceStopTime"
+      },
+      "minItems": 2,
+      "title": "Stop Times",
+      "type": "array"
+    },
+    "timezone": {
+      "minLength": 1,
+      "title": "Timezone",
+      "type": "string"
+    },
+    "trip_id": {
+      "minLength": 1,
+      "title": "Trip Id",
+      "type": "string"
+    },
+    "trip_identity_confirmed": {
+      "const": true,
+      "title": "Trip Identity Confirmed",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "source_refs",
+    "service_id",
+    "trip_id",
+    "mode",
+    "timezone",
+    "service_dates",
+    "trip_identity_confirmed",
+    "stop_times"
+  ],
+  "title": "ScheduledService",
+  "type": "object"
+}

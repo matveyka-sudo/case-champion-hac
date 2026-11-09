@@ -1,0 +1,78 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "anchor_id": {
+      "minLength": 1,
+      "title": "Anchor Id",
+      "type": "string"
+    },
+    "city_id": {
+      "minLength": 1,
+      "title": "City Id",
+      "type": "string"
+    },
+    "destination_id": {
+      "minLength": 1,
+      "title": "Destination Id",
+      "type": "string"
+    },
+    "entrance_id": {
+      "minLength": 1,
+      "title": "Entrance Id",
+      "type": "string"
+    },
+    "evidence_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "lat": {
+      "maximum": 90,
+      "minimum": -90,
+      "title": "Lat",
+      "type": "number"
+    },
+    "lon": {
+      "maximum": 180,
+      "minimum": -180,
+      "title": "Lon",
+      "type": "number"
+    },
+    "timezone": {
+      "minLength": 1,
+      "title": "Timezone",
+      "type": "string"
+    },
+    "type": {
+      "minLength": 1,
+      "title": "Type",
+      "type": "string"
+    },
+    "verification_state": {
+      "enum": [
+        "verified",
+        "absent",
+        "unknown"
+      ],
+      "title": "Verification State",
+      "type": "string"
+    }
+  },
+  "required": [
+    "destination_id",
+    "city_id",
+    "anchor_id",
+    "entrance_id",
+    "lon",
+    "lat",
+    "timezone",
+    "type",
+    "verification_state",
+    "evidence_ids"
+  ],
+  "title": "Destination",
+  "type": "object"
+}

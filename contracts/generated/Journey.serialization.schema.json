@@ -1,0 +1,154 @@
+{
+  "$defs": {
+    "Leg": {
+      "additionalProperties": false,
+      "properties": {
+        "arrival_at": {
+          "format": "date-time",
+          "title": "Arrival At",
+          "type": "string"
+        },
+        "departure_at": {
+          "format": "date-time",
+          "title": "Departure At",
+          "type": "string"
+        },
+        "duration_seconds": {
+          "minimum": 0,
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "from_id": {
+          "minLength": 1,
+          "title": "From Id",
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "rail",
+            "bus",
+            "walk"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "to_id": {
+          "minLength": 1,
+          "title": "To Id",
+          "type": "string"
+        },
+        "trip_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Trip Id"
+        }
+      },
+      "required": [
+        "mode",
+        "from_id",
+        "to_id",
+        "trip_id",
+        "departure_at",
+        "arrival_at",
+        "duration_seconds",
+        "evidence_ids"
+      ],
+      "title": "Leg",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "currency": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Z]{3}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Currency"
+    },
+    "journey_id": {
+      "minLength": 1,
+      "title": "Journey Id",
+      "type": "string"
+    },
+    "legs": {
+      "items": {
+        "$ref": "#/$defs/Leg"
+      },
+      "minItems": 1,
+      "title": "Legs",
+      "type": "array"
+    },
+    "outbound_minutes": {
+      "minimum": 0,
+      "title": "Outbound Minutes",
+      "type": "number"
+    },
+    "return_minutes": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Return Minutes"
+    },
+    "total_fare": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Total Fare"
+    },
+    "transfers": {
+      "minimum": 0,
+      "title": "Transfers",
+      "type": "integer"
+    },
+    "waiting_minutes": {
+      "minimum": 0,
+      "title": "Waiting Minutes",
+      "type": "number"
+    }
+  },
+  "required": [
+    "journey_id",
+    "legs",
+    "outbound_minutes",
+    "return_minutes",
+    "waiting_minutes",
+    "transfers",
+    "total_fare",
+    "currency"
+  ],
+  "title": "Journey",
+  "type": "object"
+}

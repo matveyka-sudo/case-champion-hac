@@ -1,0 +1,39 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "assumption_id": {
+      "minLength": 1,
+      "title": "Assumption Id",
+      "type": "string"
+    },
+    "basis": {
+      "enum": [
+        "scenario",
+        "verified"
+      ],
+      "title": "Basis",
+      "type": "string"
+    },
+    "description": {
+      "minLength": 1,
+      "title": "Description",
+      "type": "string"
+    },
+    "evidence_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    }
+  },
+  "required": [
+    "assumption_id",
+    "description",
+    "basis",
+    "evidence_ids"
+  ],
+  "title": "Assumption",
+  "type": "object"
+}

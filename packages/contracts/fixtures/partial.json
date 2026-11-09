@@ -1,0 +1,76 @@
+{
+  "description": "Development fixture only; no actual cities, sources or transport calculations.",
+  "fixture_kind": "partial",
+  "model": "ProfileResult",
+  "payload": {
+    "assumption_ids": [
+      "demo-synthetic-only"
+    ],
+    "bundle_id": "demo-synthetic-bundle",
+    "case_results": null,
+    "cities": [
+      {
+        "origin_id": "demo-city-1",
+        "resolved_weight_share": 0.5,
+        "score": null,
+        "score_lower": 0,
+        "score_upper": 50,
+        "task_count": 2
+      },
+      {
+        "origin_id": "demo-city-2",
+        "resolved_weight_share": 0.5,
+        "score": null,
+        "score_lower": 0,
+        "score_upper": 50,
+        "task_count": 2
+      },
+      {
+        "origin_id": "demo-city-3",
+        "resolved_weight_share": 0.5,
+        "score": null,
+        "score_lower": 0,
+        "score_upper": 50,
+        "task_count": 2
+      },
+      {
+        "origin_id": "demo-city-4",
+        "resolved_weight_share": 0.5,
+        "score": null,
+        "score_lower": 0,
+        "score_upper": 50,
+        "task_count": 2
+      }
+    ],
+    "code_version": "demo-code",
+    "evidence_ids": [],
+    "missing_fields": [
+      "return_calendar"
+    ],
+    "params_hash": "demo-params",
+    "profile_id": "regular",
+    "profile_version": 1,
+    "provenance": {
+      "bundle_id": "demo-synthetic-bundle",
+      "code_version": "demo-code",
+      "completeness_scope": "synthetic_unit_test_only",
+      "network_complete": false,
+      "profile_id": "regular",
+      "profile_version": 1,
+      "search_complete": true,
+      "task_set_hash": "demo-task-hash"
+    },
+    "reason_codes": [
+      "return_calendar_unverified"
+    ],
+    "result_hash": "demo-result",
+    "run_id": "demo-run-partial",
+    "status": "partial",
+    "task_set_hash": "demo-task-hash",
+    "unit": "points_0_100",
+    "warnings": [
+      "synthetic_example_not_city_results"
+    ]
+  },
+  "synthetic": true
+}
