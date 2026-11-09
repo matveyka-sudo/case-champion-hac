@@ -166,6 +166,14 @@ def analyze_intercity_cargo(
         nonlocal serial
         serial += 1
         heapq.heappush(queue, (label.at, len(label.actions), label.actions, serial, label))
+        state = state_by_id[label.state_id]
+        if (
+            state.stage == "completed"
+            and state.node_id in scope.destination_node_ids
+            and label.first_departure_at is not None
+        ):
+            candidate = path(label)
+            complete_paths[candidate.path_id] = candidate
 
     def path(
         label: _Label, blocked: str | None = None, reason: str | None = None

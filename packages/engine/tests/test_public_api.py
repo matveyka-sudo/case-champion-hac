@@ -675,6 +675,58 @@ INTERCITY_ROUTING_MODULES = {
 }
 
 
+CARGO_EXPORT_MODULES = {
+    "a2_engine.freight.models": [
+        "CargoVehicle",
+        "CargoProfile",
+        "CargoContext",
+        "CargoCompatibility",
+        "CargoTemperature",
+    ],
+    "a2_engine.freight.truck": ["TruckRoute", "TruckSearchReceipt"],
+    "a2_engine.freight.urban_analysis": [
+        "CargoSite",
+        "CargoNode",
+        "UrbanCargoCoverage",
+        "UrbanCargoSiteAnalysis",
+        "UrbanCargoTypeAnalysis",
+        "UrbanCargoAnalysis",
+        "analyze_urban_cargo",
+    ],
+    "a2_engine.freight.delivery.models": [
+        "CargoDeliveryScope",
+        "CargoState",
+        "CargoWaitPolicy",
+        "CargoAction",
+        "CargoReadiness",
+        "CargoInterval",
+        "CargoDeliveryPath",
+        "CargoModeAnalysis",
+        "IntercityCargoAnalysis",
+    ],
+    "a2_engine.freight.delivery.search": ["analyze_intercity_cargo"],
+    "a2_engine.pipeline.analysis": [
+        "PipelineContext",
+        "PipelineEndpoint",
+        "PipelineConnection",
+        "PipelineMeasurement",
+        "PipelineObservation",
+        "PipelineAnalysisScope",
+        "PipelineConnectionAnalysis",
+        "PipelineConnectionsAnalysis",
+        "analyze_pipeline_connections",
+    ],
+    "a2_engine.shared.config": [
+        "CargoDeliveryRules",
+        "cargo_delivery_rules_from_mapping",
+        "load_cargo_delivery_rules",
+    ],
+}
+for _module, _names in CARGO_EXPORT_MODULES.items():
+    CANONICAL_MODULES[_module] = CANONICAL_MODULES.get(_module, ()) + tuple(_names)
+    NEW_PUBLIC_NAMES.update(_names)
+
+
 def test_public_names_signatures_and_defaults_are_unchanged() -> None:
     assert tuple(a2_engine.__all__[: len(PUBLIC_SIGNATURES)]) == tuple(PUBLIC_SIGNATURES)
     assert set(a2_engine.__all__) == set(PUBLIC_SIGNATURES) | NEW_PUBLIC_NAMES
@@ -886,7 +938,7 @@ for module in json.loads(sys.argv[1]):
 for legacy,name,canonical in json.loads(sys.argv[2]):
     assert getattr(importlib.import_module(legacy),name) is getattr(importlib.import_module(canonical),name)
 import a2_engine
-assert len(a2_engine.__all__)==201
+assert len(a2_engine.__all__)==237
 """
     for order in (modules, list(reversed(modules)), modules[::2] + modules[1::2]):
         subprocess.run(
@@ -959,11 +1011,13 @@ def test_reference_dependency_remains_one_way() -> None:
         for path in (package / domain).rglob("*.py"):
             for node in ast.walk(ast.parse(path.read_text())):
                 if isinstance(node, ast.ImportFrom) and node.module:
-                    assert not node.module.startswith(("a2_engine.intercity", "a2_engine.urban")), (
-                        path
-                    )
+                    assert not node.module.startswith(
+                        ("a2_engine.intercity", "a2_engine.urban", "a2_engine.freight")
+                    ), path
                 if isinstance(node, ast.Import):
                     assert not any(
-                        alias.name.startswith(("a2_engine.intercity", "a2_engine.urban"))
+                        alias.name.startswith(
+                            ("a2_engine.intercity", "a2_engine.urban", "a2_engine.freight")
+                        )
                         for alias in node.names
                     ), path

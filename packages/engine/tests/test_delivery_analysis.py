@@ -215,6 +215,9 @@ def test_unknown_wait_coverage_partial_search_and_resource_limits() -> None:
     interrupted = analyze(resource_limit=0)
     assert interrupted.interrupted and interrupted.connection_state == "unknown"
     assert not interrupted.search_complete and not interrupted.full_ranking_eligible
+    known = analyze(resource_limit=5)
+    assert known.overall.best_known is not None and known.interrupted
+    assert not known.overall.optimum_proven
 
 
 def test_profile_content_version_and_execution_bindings_rejected() -> None:
