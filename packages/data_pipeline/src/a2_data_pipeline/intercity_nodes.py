@@ -1,4 +1,4 @@
-"""Directory of intercity passenger nodes of Russia (rule set ``ru-intercity-nodes-rules-v1``).
+"""Directory of intercity passenger nodes of Russia (rule set ``ru-intercity-nodes-rules-v2``).
 
 PRODUCT_SPEC §3: an intercity trip starts and ends at nodes; TZ §«Пассажирские
 связи»: with several stations or airports the result names the node pair, so the
@@ -11,7 +11,8 @@ Sources:
   with IATA/ICAO codes and «place served» (P931), items of excluded classes, and
   the current «located in» (P131) graph above them;
 - OurAirports (public domain) ``airports.csv``: the ``scheduled_service`` flag;
-- the accepted territory directory: city ids, regions and the disputed flag.
+- the accepted territory directory: city ids, regions and the disputed flag;
+- v2: the national OSM pass (``osm_national``): bus stations and city outlines.
 
 Rules:
 
@@ -34,7 +35,13 @@ Rules:
   timetable (Yandex Rasp, carriers): the directory makes no service claim, the
   OurAirports flag is kept as reported, not as a schedule;
 - the codes (ESR, Express, IATA, ICAO) are kept so a provider directory can be
-  joined by code, never by name.
+  joined by code, never by name;
+- v2 adds OSM bus stations: ``amenity=bus_station`` named «автовокзал» or
+  «автостанция» (the urban rule ``osm-category-rules-v1``; other names are urban
+  termini) inside a city outline (the OSM outline whose ``wikidata`` tag is the
+  city); OSM objects of one city closer than 150 m are one station; an OSM
+  station with the ``wikidata`` tag of a Wikidata bus node, or within 300 m of
+  one in the same city, is that node (its OSM refs are added).
 """
 
 from __future__ import annotations
@@ -43,7 +50,9 @@ import argparse
 import csv
 import hashlib
 import json
+import math
 import os
+import re
 import shutil
 import uuid
 import zipfile
@@ -56,10 +65,13 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from . import territories
 from .manifest import Identifier, load_dataset_manifest
-from .paths import data_dir, raw_dir
+from .paths import data_dir, processed_dir, raw_dir
 
 SOURCE_ID = "wikidata"
-RULES_VERSION = "ru-intercity-nodes-rules-v1"
+RULES_VERSION = "ru-intercity-nodes-rules-v2"
+BUS_NAME = re.compile(r"автовокзал|автостанц|автобусн\w*\s+вокзал", re.I)
+OSM_MERGE_M = 150.0
+SAME_STATION_M = 300.0
 NodeKind = Literal["rail_station", "bus_station", "airport"]
 
 RAIL_CLASS_IDS = (
@@ -159,12 +171,12 @@ class IntercityNode(BaseModel):
     node_id: Identifier
     kind: NodeKind
     name: str
-    wikidata_id: str
-    wikidata_classes: list[str] = Field(min_length=1)
+    wikidata_id: str | None
+    wikidata_classes: list[str]
     lon: float = Field(ge=-180, le=180)
     lat: float = Field(ge=-90, le=90)
     territory_ids: list[Identifier] = Field(min_length=1)
-    assignment_basis: Literal["located_in", "served_place"]
+    assignment_basis: Literal["located_in", "served_place", "osm_outline"]
     esr_codes: list[str]
     express_codes: list[str]
     iata: str | None
@@ -172,6 +184,7 @@ class IntercityNode(BaseModel):
     ourairports_ident: str | None
     ourairports_scheduled_service: bool | None
     disputed: bool
+    osm_refs: list[str] = Field(default_factory=list)
 
 
 def _qid(uri: str) -> str:
@@ -206,6 +219,136 @@ def _nearest_cities(
     return []
 
 
+def _metres(a: tuple[float, float], b: tuple[float, float]) -> float:
+    lon1, lat1, lon2, lat2 = map(math.radians, (*a, *b))
+    h = (
+        math.sin((lat2 - lat1) / 2) ** 2
+        + math.cos(lat1) * math.cos(lat2) * math.sin((lon2 - lon1) / 2) ** 2
+    )
+    return 2 * 6_371_000 * math.asin(math.sqrt(h))
+
+
+def _osm_bus_stations(  # noqa: C901
+    nodes: list[IntercityNode],
+    national_dir: Path,
+    directory: list[territories.TerritoryEntry],
+    report: dict[str, Any],
+) -> list[IntercityNode]:
+    """Nodes with OSM bus stations added or merged (rules in the module docstring)."""
+
+    from shapely import wkb as shapely_wkb  # type: ignore[import-untyped]
+    from shapely.geometry import Point  # type: ignore[import-untyped]
+    from shapely.ops import unary_union  # type: ignore[import-untyped]
+    from shapely.prepared import prep  # type: ignore[import-untyped]
+
+    from .osm_national import load_table
+
+    city_by_qid = {e.wikidata_id: e for e in directory if e.level == "city"}
+    shapes: dict[str, list[Any]] = {}
+    for row in load_table(national_dir, "city_boundaries"):
+        shapes.setdefault(row["city_wikidata"], []).append(shapely_wkb.loads(row["wkb"]))
+    outlines = [
+        (city_by_qid[q], unary_union(parts))
+        for q, parts in sorted(shapes.items())
+        if q in city_by_qid
+    ]
+    prepared = [(city, shape.bounds, prep(shape)) for city, shape in outlines]
+    stations = load_table(national_dir, "bus_stations")
+    named = [s for s in stations if s["name"] and BUS_NAME.search(s["name"])]
+    by_city: dict[str, list[dict[str, Any]]] = {}
+    outside = ambiguous = 0
+    for station in sorted(named, key=lambda s: s["osm_ref"]):
+        point = Point(station["lon"], station["lat"])
+        hits = [
+            city
+            for city, (w, south, e, n), shape in prepared
+            if w <= station["lon"] <= e and south <= station["lat"] <= n and shape.contains(point)
+        ]
+        if len(hits) == 1:
+            by_city.setdefault(hits[0].territory_id, []).append(station)
+        elif hits:
+            ambiguous += 1
+        else:
+            outside += 1
+    city_entry = {e.territory_id: e for e in directory}
+    result = list(nodes)
+    index = {n.node_id: i for i, n in enumerate(result)}
+    wikidata_bus = [n for n in nodes if n.kind == "bus_station"]
+    used_qids = {n.wikidata_id for n in nodes if n.wikidata_id}
+    merged: list[str] = []
+    added = 0
+    for territory_id in sorted(by_city):
+        groups: list[list[dict[str, Any]]] = []
+        for station in by_city[territory_id]:
+            here = (station["lon"], station["lat"])
+            group = next(
+                (g for g in groups if _metres(here, (g[0]["lon"], g[0]["lat"])) < OSM_MERGE_M),
+                None,
+            )
+            if group is None:
+                groups.append([station])
+            else:
+                group.append(station)
+        for group in groups:
+            first = group[0]
+            refs = [s["osm_ref"] for s in group]
+            here = (first["lon"], first["lat"])
+            tags = {s["wikidata"] for s in group if s["wikidata"]}
+            target = next(
+                (n for n in wikidata_bus if n.wikidata_id in tags),
+                None,
+            ) or next(
+                (
+                    n
+                    for n in wikidata_bus
+                    if territory_id in n.territory_ids
+                    and _metres(here, (n.lon, n.lat)) < SAME_STATION_M
+                ),
+                None,
+            )
+            if target is not None:
+                current = result[index[target.node_id]]
+                result[index[target.node_id]] = current.model_copy(
+                    update={"osm_refs": sorted({*current.osm_refs, *refs})}
+                )
+                merged.append(f"{first['name']} → {target.name}")
+                continue
+            city = city_entry[territory_id]
+            tag = sorted(tags)[0] if tags else None
+            result.append(
+                IntercityNode(
+                    node_id=f"node-osm-{first['osm_ref'].replace('/', '-')}",
+                    kind="bus_station",
+                    name=first["name"],
+                    wikidata_id=tag if tag not in used_qids else None,
+                    wikidata_classes=[],
+                    lon=round(first["lon"], 6),
+                    lat=round(first["lat"], 6),
+                    territory_ids=[territory_id],
+                    assignment_basis="osm_outline",
+                    esr_codes=[],
+                    express_codes=[],
+                    iata=None,
+                    icao=None,
+                    ourairports_ident=None,
+                    ourairports_scheduled_service=None,
+                    disputed=city.disputed,
+                    osm_refs=refs,
+                )
+            )
+            added += 1
+    report["osm_bus_stations"] = {
+        "amenity_bus_station": len(stations),
+        "named_bus_station": len(named),
+        "outside_city_outlines": outside,
+        "in_several_outlines": ambiguous,
+        "added": added,
+        "merged_with_wikidata": sorted(merged),
+        "cities_with_outline": len(outlines),
+    }
+    return result
+
+
 def _ourairports(path: Path) -> tuple[dict[str, dict[str, str]], dict[str, dict[str, str]]]:
     by_iata: dict[str, dict[str, str]] = {}
     by_icao: dict[str, dict[str, str]] = {}
@@ -224,6 +367,7 @@ def build_nodes(  # noqa: C901
     raw_zip: Path,
     ourairports_csv: Path,
     directory: list[territories.TerritoryEntry],
+    national_dir: Path | None = None,
 ) -> tuple[list[IntercityNode], dict[str, Any]]:
     with zipfile.ZipFile(raw_zip) as archive:
         rows = {name: territories._bindings(archive, name) for name in QUERIES}
@@ -357,6 +501,8 @@ def build_nodes(  # noqa: C901
             )
         )
     report["candidates"] = dict(sorted(candidates.items()))
+    if national_dir is not None:
+        nodes = _osm_bus_stations(nodes, national_dir, directory, report)
     report["urban_bus_termini_left_out"] = len(
         urban_termini - {q for q in items if items[q]["kinds"]}
     )
@@ -390,8 +536,11 @@ def build_nodes(  # noqa: C901
     }
     report["cities_with_nodes"] = cities_with
     report["cities_in_directory"] = len(city_by_qid)
+    coverage = dict(COVERAGE)
+    if national_dir is not None:
+        coverage["bus_station"] = ("partial", "OSM_NAMED_BUS_STATIONS_IN_CITY_OUTLINES")
     report["coverage"] = {
-        kind: {"status": status, "reason": reason} for kind, (status, reason) in COVERAGE.items()
+        kind: {"status": status, "reason": reason} for kind, (status, reason) in coverage.items()
     }
     return nodes, report
 
@@ -458,7 +607,7 @@ def _checks(nodes: list[IntercityNode], report: dict[str, Any]) -> list[dict[str
             "severity": "warn",
             "details": {
                 "cities_with_bus_station": report["cities_with_nodes"]["bus_station"],
-                "reason": COVERAGE["bus_station"][1],
+                "reason": report["coverage"]["bus_station"]["reason"],
             },
         },
     ]
@@ -469,17 +618,30 @@ def _digest(path: Path) -> str:
 
 
 def publish(
-    dataset_id: str, ourairports_dataset_id: str, territory_directory_id: str, directory_id: str
+    dataset_id: str,
+    ourairports_dataset_id: str,
+    territory_directory_id: str,
+    directory_id: str,
+    osm_dataset_id: str | None = None,
 ) -> Path:
     raw_manifest = load_dataset_manifest(dataset_id)
     airports_manifest = load_dataset_manifest(ourairports_dataset_id)
+    sources = [raw_manifest, airports_manifest]
+    national_dir = None
+    if osm_dataset_id is not None:
+        osm_manifest = load_dataset_manifest(osm_dataset_id)
+        national_dir = processed_dir() / osm_dataset_id / "national"
+        meta = json.loads((national_dir / "extract_meta.json").read_text())
+        if meta["source"]["sha256"] != osm_manifest.checksum.value:
+            raise ValueError(f"{national_dir}: not extracted from {osm_dataset_id}")
+        sources.append(osm_manifest)
     raw_zip = raw_dir() / raw_manifest.raw_path
     airports_csv = raw_dir() / airports_manifest.raw_path
     for source, path in ((raw_manifest, raw_zip), (airports_manifest, airports_csv)):
         if _digest(path) != source.checksum.value:
             raise ValueError(f"{source.dataset_id}: raw sha256 mismatch")
     directory = territories.load_directory(territory_directory_id)
-    nodes, report = build_nodes(raw_zip, airports_csv, directory)
+    nodes, report = build_nodes(raw_zip, airports_csv, directory, national_dir)
     checks = _checks(nodes, report)
     failed = [c["check_id"] for c in checks if c["status"] == "fail"]
     if failed:
@@ -491,7 +653,8 @@ def publish(
     staging = base / f".staging-{directory_id}-{uuid.uuid4().hex}"
     staging.mkdir(parents=True)
     try:
-        rows = [n.model_dump(mode="json") for n in nodes]
+        # an empty ``osm_refs`` is left out: a v1 rebuild keeps its bytes
+        rows = [n.model_dump(mode="json", exclude_defaults=True) for n in nodes]
         payload = (json.dumps(rows, ensure_ascii=False, separators=(",", ":")) + "\n").encode()
         qa = {"directory_id": directory_id, "result": "pass", "checks": checks, "summary": report}
         qa_bytes = (json.dumps(qa, ensure_ascii=False, indent=2) + "\n").encode()
@@ -516,7 +679,7 @@ def publish(
                     "raw_sha256": m.checksum.value,
                     "license": m.license.name,
                 }
-                for m in (raw_manifest, airports_manifest)
+                for m in sources
             ],
             "coverage": report["coverage"],
             "files": {
@@ -566,6 +729,7 @@ def main() -> None:
     build_cmd.add_argument("ourairports_dataset_id")
     build_cmd.add_argument("territory_directory_id")
     build_cmd.add_argument("directory_id")
+    build_cmd.add_argument("--osm-dataset-id")
     args = parser.parse_args()
     if args.command == "fetch":
         print(territories.fetch(raw_dir() / SOURCE_ID / args.raw_name, QUERIES))
@@ -576,6 +740,7 @@ def main() -> None:
             args.ourairports_dataset_id,
             args.territory_directory_id,
             args.directory_id,
+            args.osm_dataset_id,
         )
     )
 

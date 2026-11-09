@@ -199,3 +199,54 @@ def test_publish_and_load_round_trip(tmp_path: Path, monkeypatch: pytest.MonkeyP
     (target / "nodes.json").write_text("[]")
     with pytest.raises(ValueError, match="sha256"):
         intercity_nodes.load_nodes("syn-nodes-v1")
+
+
+def test_osm_bus_stations_join_or_add(tmp_path: Path) -> None:
+    pa = pytest.importorskip("pyarrow")
+    pq = pytest.importorskip("pyarrow.parquet")
+    shapely_wkb = pytest.importorskip("shapely.wkb")
+    from shapely.geometry import box
+
+    national = tmp_path / "national"
+    national.mkdir()
+    outline = box(20.40, 54.65, 20.60, 54.80)
+    pq.write_table(
+        pa.Table.from_pylist(
+            [
+                {
+                    "osm_ref": "relation/1674442",
+                    "city_wikidata": "Q10",
+                    "name": "Калининград",
+                    "admin_level": None,
+                    "boundary": "city",
+                    "wkb": shapely_wkb.dumps(outline),
+                }
+            ]
+        ),
+        national / "city_boundaries.parquet",
+    )
+
+    def station(ref: str, name: str | None, lon: float, lat: float, qid: str | None = None):
+        return {"osm_ref": ref, "name": name, "wikidata": qid, "lon": lon, "lat": lat}
+
+    pq.write_table(
+        pa.Table.from_pylist(
+            [
+                station("node/1", "Автовокзал", 20.5001, 54.7001),  # 15 m from the Wikidata node
+                station("node/2", "Автостанция Северная", 20.45, 54.78),
+                station("way/3", "Автостанция Северная", 20.4505, 54.7801),  # the same station
+                station("node/4", "Конечная остановка автобуса", 20.48, 54.70),  # urban terminus
+                station("node/5", "Автостанция Пригородная", 21.0, 54.7),  # outside the outline
+            ]
+        ),
+        national / "bus_stations.parquet",
+    )
+    nodes, report = intercity_nodes.build_nodes(*raw(tmp_path), directory(), national)
+    by_id = {n.node_id: n for n in nodes}
+    assert by_id["node-wd-q200"].osm_refs == ["node/1"]  # joined, not a second node
+    northern = by_id["node-osm-node-2"]
+    assert (northern.osm_refs, northern.territory_ids) == (["node/2", "way/3"], ["kaliningrad"])
+    assert northern.assignment_basis == "osm_outline"
+    stats = report["osm_bus_stations"]
+    assert (stats["named_bus_station"], stats["added"], stats["outside_city_outlines"]) == (4, 1, 1)
+    assert report["coverage"]["bus_station"]["reason"] == "OSM_NAMED_BUS_STATIONS_IN_CITY_OUTLINES"
