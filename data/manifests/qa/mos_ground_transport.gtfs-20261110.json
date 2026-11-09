@@ -10,42 +10,42 @@
       "dataset_id": "mos_ground_transport.60663-20260504",
       "raw_sha256": "2f23c19f89addf9f6bbb4fa9d51b8cee5de034d9b84905ea61f9a25005d72d40",
       "publication_date": "2026-05-04",
-      "license_status": "unknown"
+      "license_status": "permitted"
     },
     {
       "table": "stops.txt",
       "dataset_id": "mos_ground_transport.60662-20261005",
       "raw_sha256": "85f5e1241854b3b1c012ae4ab78d2cf3400020147135b2984970dddf2c012199",
       "publication_date": "2026-10-05",
-      "license_status": "unknown"
+      "license_status": "permitted"
     },
     {
       "table": "routes.txt",
       "dataset_id": "mos_ground_transport.60664-20261005",
       "raw_sha256": "2e90d587d7d1ccc63717c63f2eb51ba243d507bda34e7b2eeabc23eb2b2de7d4",
       "publication_date": "2026-10-05",
-      "license_status": "unknown"
+      "license_status": "permitted"
     },
     {
       "table": "trips.txt",
       "dataset_id": "mos_ground_transport.60665-20261005",
       "raw_sha256": "d43604a6aa024838cd4db6e06d9b7e28f8d04932ac92da6cbb7b8592ff9b0fb3",
       "publication_date": "2026-10-05",
-      "license_status": "unknown"
+      "license_status": "permitted"
     },
     {
       "table": "calendar.txt",
       "dataset_id": "mos_ground_transport.60666-20261005",
       "raw_sha256": "c2e462715926986340ee795eeefecff963c3e7ae6fbfa6309de1c469f0a2d069",
       "publication_date": "2026-10-05",
-      "license_status": "unknown"
+      "license_status": "permitted"
     },
     {
       "table": "stop_times.txt",
       "dataset_id": "mos_ground_transport.60661-20261023",
       "raw_sha256": "dfa4230968f16270b751d707a826a23a882685fa6bbaf69a659ccf928e2bebea",
       "publication_date": "2026-10-23",
-      "license_status": "unknown"
+      "license_status": "permitted"
     }
   ],
   "versions_differ": true,
