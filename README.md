@@ -39,6 +39,21 @@ docker compose --env-file .env.example config --quiet
 
 Compose описывает PostgreSQL 17 с локальным портом и собственным томом. Для нового worktree создайте свой `.env` по `.env.example`. Выберите свободный `POSTGRES_PORT`, согласуйте с ним `DATABASE_URL`, задайте уникальное имя Compose-проекта и свои порты API и SPA для будущей интеграции. Для ассистента задаются `YANDEX_API_KEY`, `YANDEX_FOLDER_ID`, `YANDEX_MODEL=aliceai-llm-flash` и deployment-лимит расходов. До проверки ключа ассистент работает в режиме шаблонного объяснения; см. docs/ASSISTANT.md. Секреты хранятся на backend. Команды импорта и запуска API, worker и UI появятся после реализации точек входа.
 
+### PostgreSQL с PostGIS
+
+Для пространственных запросов подключите `compose.postgis.yaml`. Он использует отдельный том `postgis_data` и инициализирует PostGIS в базе при первом старте. Пример поднимает отдельный Compose-проект на порту `55433`. Выберите своё имя проекта и свободный порт, если на машине работает несколько копий.
+
+```bash
+export COMPOSE_FILE=compose.yaml:compose.postgis.yaml
+export COMPOSE_PROJECT_NAME=a2-postgis-local
+export POSTGRES_PORT=55433
+docker compose --env-file .env.example up -d --wait postgres
+docker compose --env-file .env.example exec -T postgres psql -X -v ON_ERROR_STOP=1 -U a2 -d a2 \
+  -c 'SELECT PostGIS_Full_Version(), ST_AsText(ST_MakePoint(20.5, 54.7));'
+```
+
+Для миграций в этом примере задайте `A2_DATABASE_URL=postgresql://a2:a2_local_dev@127.0.0.1:55433/a2` и следуйте [инструкции API](apps/api/README.md#run). На Apple Silicon для этого образа нужна эмуляция `linux/amd64` в Docker Desktop.
+
 ## Работа команды
 
 У каждой роли своя постоянная ветка `work/<role>`. Общая ветка `dev` служит для интеграции через PR, `main` хранит проверенные версии. Точные ветки, границы ролей и порядок синхронизации описаны в [правилах командной работы](docs/OWNERSHIP.md).

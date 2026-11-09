@@ -1,0 +1,51 @@
+name: PostGIS smoke
+
+on:
+  pull_request:
+    branches: [dev, main]
+    paths:
+      - '.github/workflows/postgis.yml'
+      - 'compose.yaml'
+      - 'compose.postgis.yaml'
+      - '.env.example'
+      - 'apps/api/alembic.ini'
+      - 'apps/api/migrations/**'
+      - 'apps/api/pyproject.toml'
+      - 'uv.lock'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  postgis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      COMPOSE_FILE: compose.yaml:compose.postgis.yaml
+      COMPOSE_PROJECT_NAME: a2-postgis-${{ github.run_id }}-${{ github.run_attempt }}
+      POSTGRES_PORT: '55433'
+      A2_DATABASE_URL: postgresql://a2:a2_local_dev@127.0.0.1:55433/a2
+      A2_DATABASE_SCHEMA: a2_postgis_smoke
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Start isolated PostGIS database
+        run: docker compose --env-file .env.example up -d --wait --wait-timeout 90 postgres
+      - name: Run spatial SQL
+        run: |
+          docker compose --env-file .env.example exec -T postgres sh -ec '
+            export PGPASSWORD="$POSTGRES_PASSWORD"
+            psql -X -v ON_ERROR_STOP=1 -h 127.0.0.1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+              -c "SELECT PostGIS_Full_Version(), ST_AsText(ST_SetSRID(ST_MakePoint(20.5, 54.7), 4326));"
+          '
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: '0.12.17'
+      - name: Apply and verify API migrations
+        run: |
+          uv sync --frozen --all-packages --group dev
+          .venv/bin/alembic -c apps/api/alembic.ini upgrade head
+          .venv/bin/alembic -c apps/api/alembic.ini current --check-heads
+      - name: Remove disposable Compose project
+        if: always()
+        run: docker compose --env-file .env.example down --volumes
