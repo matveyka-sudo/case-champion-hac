@@ -1,0 +1,28 @@
+diff --git a/contracts/generated/openapi.json b/contracts/generated/openapi.json
+index 4cff053..49910e8 100644
+--- a/contracts/generated/openapi.json
++++ b/contracts/generated/openapi.json
+@@ -3257,6 +3257,23 @@
+             ],
+             "title": "Aggregation Basis"
+           },
++          "calculation_kind": {
++            "anyOf": [
++              {
++                "enum": [
++                  "reference_ratio",
++                  "initial_wait",
++                  "aggregate",
++                  "delivery_deadline"
++                ],
++                "type": "string"
++              },
++              {
++                "type": "null"
++              }
++            ],
++            "title": "Calculation Kind"
++          },
+           "completeness": {
+             "enum": [
+               "full",

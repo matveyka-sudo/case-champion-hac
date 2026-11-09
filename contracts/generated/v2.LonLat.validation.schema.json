@@ -1,0 +1,23 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "lat": {
+      "maximum": 90,
+      "minimum": -90,
+      "title": "Lat",
+      "type": "number"
+    },
+    "lon": {
+      "maximum": 180,
+      "minimum": -180,
+      "title": "Lon",
+      "type": "number"
+    }
+  },
+  "required": [
+    "lon",
+    "lat"
+  ],
+  "title": "LonLat",
+  "type": "object"
+}

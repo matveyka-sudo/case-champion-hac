@@ -1,0 +1,398 @@
+{
+  "description": "Synthetic contract fixture only. Geometry, source, registry, traffic and transport IDs do not assert real locations, operating services or accepted production coverage. QA acceptance applies only to the test payload.",
+  "payload": {
+    "access_nodes": [
+      {
+        "kind": "stop",
+        "location": {
+          "lat": 60.5,
+          "lon": 30.5
+        },
+        "node_id": "node-1",
+        "source_refs": [
+          "e-1"
+        ],
+        "territory_id": "city-1"
+      },
+      {
+        "kind": "stop",
+        "location": {
+          "lat": 60.5,
+          "lon": 30.5
+        },
+        "node_id": "node-2",
+        "source_refs": [
+          "e-1"
+        ],
+        "territory_id": "city-1"
+      }
+    ],
+    "category_ownership": [
+      {
+        "category": "adult_polyclinic",
+        "destination_id": "destination-1",
+        "ownership": "municipal",
+        "registry_evidence_ids": [
+          "registry-e-1"
+        ],
+        "source_refs": [
+          "e-1"
+        ]
+      }
+    ],
+    "confirmed_absence_scope": [],
+    "coverage_by_mode_date_category": [
+      {
+        "categories": [
+          "adult_polyclinic"
+        ],
+        "completeness": "partial",
+        "modes": [
+          "walk"
+        ],
+        "source_refs": [
+          "e-1"
+        ],
+        "territory_ids": [
+          "city-1"
+        ],
+        "valid_period": {
+          "end": "2026-11-30",
+          "start": "2026-11-01"
+        }
+      }
+    ],
+    "destinations": [
+      {
+        "access_node_id": "node-2",
+        "categories": [
+          "adult_polyclinic"
+        ],
+        "destination_id": "destination-1",
+        "location": {
+          "lat": 60.5,
+          "lon": 30.5
+        },
+        "object_identity": "facility-1",
+        "source_refs": [
+          "e-1"
+        ],
+        "territory_id": "city-1"
+      }
+    ],
+    "evidence": [
+      {
+        "content_hash": "synthetic-hash",
+        "evidence_id": "e-1",
+        "license": "synthetic_only",
+        "retrieved_at": "2026-11-08T10:00:00Z",
+        "source_id": "source-1",
+        "source_version": "v1",
+        "url": "https://example.org/synthetic",
+        "valid_period": {
+          "end": "2026-11-30",
+          "start": "2026-11-01"
+        },
+        "verified": true
+      }
+    ],
+    "freight_compatibility": [
+      {
+        "compatibility_id": "compat-1",
+        "compatible": null,
+        "direction": "outbound",
+        "food_classes": [
+          "nonfood"
+        ],
+        "freight_node_id": "freight-1",
+        "handling_requirements": [],
+        "site_id": "site-1",
+        "source_refs": [
+          "e-1"
+        ],
+        "temperature_requirements": [],
+        "vehicle_constraints": []
+      }
+    ],
+    "freight_nodes": [
+      {
+        "access_node_id": "node-1",
+        "freight_node_id": "freight-1",
+        "kind": "pipeline_terminal",
+        "location": {
+          "lat": 60.5,
+          "lon": 30.5
+        },
+        "source_refs": [
+          "e-1"
+        ],
+        "territory_id": "city-1"
+      },
+      {
+        "access_node_id": "node-2",
+        "freight_node_id": "freight-2",
+        "kind": "pipeline_terminal",
+        "location": {
+          "lat": 60.5,
+          "lon": 30.5
+        },
+        "source_refs": [
+          "e-1"
+        ],
+        "territory_id": "city-1"
+      }
+    ],
+    "freight_sites": [
+      {
+        "access_node_id": "node-1",
+        "location": {
+          "lat": 60.5,
+          "lon": 30.5
+        },
+        "site_id": "site-1",
+        "source_refs": [
+          "e-1"
+        ],
+        "territory_id": "city-1"
+      }
+    ],
+    "geographic_scope": [
+      "city-1"
+    ],
+    "minimum_transfers": [
+      {
+        "applicability": [],
+        "from_node_id": "node-1",
+        "minimum_id": "minimum-1",
+        "seconds": 60,
+        "source_refs": [
+          "e-1"
+        ],
+        "to_node_id": "node-2"
+      }
+    ],
+    "pipeline_connections": [
+      {
+        "capacity": {
+          "period": {
+            "end": "2026-11-30",
+            "start": "2026-11-01"
+          },
+          "product": "oil",
+          "unit": "tonnes",
+          "value": 100
+        },
+        "connection_confirmed": true,
+        "connection_id": "pipe-1",
+        "direction_confirmed": true,
+        "from_node_id": "freight-1",
+        "product": "oil",
+        "quantity_status": "available",
+        "source_refs": [
+          "e-1"
+        ],
+        "to_node_id": "freight-2",
+        "volume": {
+          "period": {
+            "end": "2026-11-30",
+            "start": "2026-11-01"
+          },
+          "product": "oil",
+          "unit": "tonnes",
+          "value": 120
+        }
+      }
+    ],
+    "population_cells": [
+      {
+        "cell_id": "cell-1",
+        "exclusion_reason": null,
+        "geometry": {
+          "bbox": {
+            "east": 31.0,
+            "north": 61.0,
+            "south": 60.0,
+            "west": 30.0
+          },
+          "geometry_id": "geom-1",
+          "source_refs": [
+            "e-1"
+          ],
+          "version": "geometry-v1"
+        },
+        "grid_origin_m": [
+          0,
+          0
+        ],
+        "grid_version": "grid-v1",
+        "population": 0,
+        "population_method": "synthetic",
+        "population_year": 2026,
+        "projection": "local-metric-source-crs",
+        "sample_status": "included",
+        "source_refs": [
+          "e-1"
+        ],
+        "territory_id": "city-1",
+        "unit": "persons"
+      }
+    ],
+    "provenance": {
+      "calendar_version": "calendar-v1",
+      "geometry_version": "geometry-v1",
+      "graph_version": "graph-v1",
+      "population_version": "population-v1"
+    },
+    "qa": {
+      "acceptance_state": "accepted",
+      "accepted_at": "2026-11-08T10:00:00Z",
+      "accepted_by": "reviewer",
+      "checks": [
+        "synthetic_test_only"
+      ]
+    },
+    "reference_edges": [
+      {
+        "calibration_method": "synthetic-static",
+        "edge_id": "edge-1",
+        "from_node_id": "node-1",
+        "geometry": {
+          "bbox": {
+            "east": 31.0,
+            "north": 61.0,
+            "south": 60.0,
+            "west": 30.0
+          },
+          "geometry_id": "geom-1",
+          "source_refs": [
+            "e-1"
+          ],
+          "version": "geometry-v1"
+        },
+        "length_m": 1000,
+        "mode": "road",
+        "running_time_seconds": 120,
+        "source_refs": [
+          "e-1"
+        ],
+        "to_node_id": "node-2"
+      }
+    ],
+    "registry_evidence": [
+      {
+        "category": "adult_polyclinic",
+        "destination_id": "destination-1",
+        "ownership": "municipal",
+        "registry_evidence_id": "registry-e-1",
+        "registry_id": "synthetic-registry",
+        "source_refs": [
+          "e-1"
+        ],
+        "verified": true
+      }
+    ],
+    "sample_points": [
+      {
+        "access_distance_m": 30,
+        "access_node_id": "node-1",
+        "building_id": "building-1",
+        "cell_id": "cell-1",
+        "initial_center": {
+          "lat": 60.5,
+          "lon": 30.5
+        },
+        "location": {
+          "lat": 60.5,
+          "lon": 30.5
+        },
+        "point_id": "point-1",
+        "source_refs": [
+          "e-1"
+        ],
+        "territory_id": "city-1"
+      }
+    ],
+    "scheduled_services": [
+      {
+        "mode": "public_transport",
+        "service_dates": [
+          "2026-11-09"
+        ],
+        "service_id": "service-1",
+        "source_refs": [
+          "e-1"
+        ],
+        "stop_times": [
+          {
+            "arrival_seconds": 90600,
+            "departure_seconds": 90700,
+            "dropoff": true,
+            "node_id": "node-1",
+            "pickup": true,
+            "sequence": 0
+          },
+          {
+            "arrival_seconds": 91200,
+            "departure_seconds": 91300,
+            "dropoff": true,
+            "node_id": "node-2",
+            "pickup": true,
+            "sequence": 1
+          }
+        ],
+        "timezone": "Europe/Moscow",
+        "trip_id": "feed:trip-1",
+        "trip_identity_confirmed": true
+      }
+    ],
+    "schema_version": "2",
+    "snapshot_id": "synthetic-snapshot",
+    "source_versions": {
+      "source-1": "v1"
+    },
+    "territories": [
+      {
+        "area_km2": 80,
+        "geometry": {
+          "bbox": {
+            "east": 31.0,
+            "north": 61.0,
+            "south": 60.0,
+            "west": 30.0
+          },
+          "geometry_id": "geom-1",
+          "source_refs": [
+            "e-1"
+          ],
+          "version": "geometry-v1"
+        },
+        "level": "city",
+        "name": "Synthetic city",
+        "source_refs": [
+          "e-1"
+        ],
+        "territory_id": "city-1",
+        "timezone": "Europe/Moscow"
+      }
+    ],
+    "timezone": "Europe/Moscow",
+    "traffic_profiles": [],
+    "transfers": [
+      {
+        "from_node_id": "node-1",
+        "seconds": 300,
+        "source_refs": [
+          "e-1"
+        ],
+        "to_node_id": "node-2",
+        "transfer_id": "transfer-1",
+        "verification_state": "verified"
+      }
+    ],
+    "valid_period": {
+      "end": "2026-11-30",
+      "start": "2026-11-01"
+    }
+  },
+  "synthetic": true
+}

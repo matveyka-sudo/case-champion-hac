@@ -1,0 +1,16 @@
+{
+  "additionalProperties": false,
+  "description": "Public body; IDs come from the path and saved server-owned proposal.",
+  "properties": {
+    "schema_version": {
+      "const": "2",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version"
+  ],
+  "title": "ScenarioRunOptions",
+  "type": "object"
+}

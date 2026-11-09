@@ -1,0 +1,56 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "origin_id": {
+      "minLength": 1,
+      "title": "Origin Id",
+      "type": "string"
+    },
+    "resolved_weight_share": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Resolved Weight Share",
+      "type": "number"
+    },
+    "score": {
+      "anyOf": [
+        {
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Score"
+    },
+    "score_lower": {
+      "maximum": 100,
+      "minimum": 0,
+      "title": "Score Lower",
+      "type": "number"
+    },
+    "score_upper": {
+      "maximum": 100,
+      "minimum": 0,
+      "title": "Score Upper",
+      "type": "number"
+    },
+    "task_count": {
+      "exclusiveMinimum": 0,
+      "title": "Task Count",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "origin_id",
+    "score",
+    "score_lower",
+    "score_upper",
+    "task_count",
+    "resolved_weight_share"
+  ],
+  "title": "CityScore",
+  "type": "object"
+}

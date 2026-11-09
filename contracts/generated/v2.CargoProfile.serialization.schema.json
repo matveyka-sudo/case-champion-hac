@@ -1,0 +1,189 @@
+{
+  "$defs": {
+    "DeliveryCargoProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "food_class": {
+          "enum": [
+            "food",
+            "nonfood"
+          ],
+          "title": "Food Class",
+          "type": "string"
+        },
+        "handling_requirements": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Handling Requirements",
+          "type": "array"
+        },
+        "kind": {
+          "const": "delivery",
+          "title": "Kind",
+          "type": "string"
+        },
+        "profile_id": {
+          "minLength": 1,
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "temperature_requirements": {
+          "$ref": "#/$defs/TemperatureRequirements"
+        },
+        "urgency": {
+          "enum": [
+            "urgent",
+            "ordinary",
+            "nonurgent"
+          ],
+          "title": "Urgency",
+          "type": "string"
+        },
+        "vehicle_constraints": {
+          "$ref": "#/$defs/VehicleConstraints"
+        }
+      },
+      "required": [
+        "profile_id",
+        "kind",
+        "food_class",
+        "urgency",
+        "temperature_requirements",
+        "handling_requirements",
+        "vehicle_constraints"
+      ],
+      "title": "DeliveryCargoProfile",
+      "type": "object"
+    },
+    "PipelineCargoProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "pipeline",
+          "title": "Kind",
+          "type": "string"
+        },
+        "product": {
+          "enum": [
+            "oil",
+            "oil_products",
+            "gas"
+          ],
+          "title": "Product",
+          "type": "string"
+        },
+        "profile_id": {
+          "minLength": 1,
+          "title": "Profile Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "profile_id",
+        "kind",
+        "product"
+      ],
+      "title": "PipelineCargoProfile",
+      "type": "object"
+    },
+    "TemperatureRequirements": {
+      "additionalProperties": false,
+      "properties": {
+        "controlled": {
+          "title": "Controlled",
+          "type": "boolean"
+        },
+        "max_c": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Max C"
+        },
+        "min_c": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Min C"
+        }
+      },
+      "required": [
+        "controlled",
+        "min_c",
+        "max_c"
+      ],
+      "title": "TemperatureRequirements",
+      "type": "object"
+    },
+    "VehicleConstraints": {
+      "additionalProperties": false,
+      "properties": {
+        "max_height_m": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Max Height M"
+        },
+        "max_weight_tonnes": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Max Weight Tonnes"
+        },
+        "restrictions": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Restrictions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "max_height_m",
+        "max_weight_tonnes",
+        "restrictions"
+      ],
+      "title": "VehicleConstraints",
+      "type": "object"
+    }
+  },
+  "discriminator": {
+    "mapping": {
+      "delivery": "#/$defs/DeliveryCargoProfile",
+      "pipeline": "#/$defs/PipelineCargoProfile"
+    },
+    "propertyName": "kind"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/DeliveryCargoProfile"
+    },
+    {
+      "$ref": "#/$defs/PipelineCargoProfile"
+    }
+  ]
+}

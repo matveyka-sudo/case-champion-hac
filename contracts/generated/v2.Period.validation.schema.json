@@ -1,0 +1,35 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "end": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "End"
+    },
+    "start": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Start"
+    }
+  },
+  "required": [
+    "start",
+    "end"
+  ],
+  "title": "Period",
+  "type": "object"
+}

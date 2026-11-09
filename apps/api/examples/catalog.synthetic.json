@@ -1,0 +1,134 @@
+{
+  "profiles": [
+    {
+      "assumption_ids": [
+        "demo-synthetic-only"
+      ],
+      "basis": "scenario",
+      "destination_ids": [
+        "demo-destination-work"
+      ],
+      "end_date": "2026-11-15",
+      "evidence_ids": [],
+      "half_life_minutes": null,
+      "horizon_hours": null,
+      "metric_kind": "activity_feasibility",
+      "modes": [
+        "rail",
+        "walk"
+      ],
+      "profile_id": "regular",
+      "profile_version": 1,
+      "rules": {
+        "budget": null,
+        "max_access_walk_minutes": 20,
+        "max_one_way_minutes": 90,
+        "max_transfers": 2,
+        "require_step_free": false
+      },
+      "service_type_ids": [],
+      "start_date": "2026-11-09",
+      "start_times": [
+        "06:00:00"
+      ],
+      "study_area_id": "demo-leningrad-area",
+      "study_area_version": 1,
+      "timezone": "Europe/Moscow",
+      "weighting": "uniform"
+    },
+    {
+      "assumption_ids": [
+        "demo-synthetic-only"
+      ],
+      "basis": "scenario",
+      "destination_ids": [],
+      "end_date": "2026-11-15",
+      "evidence_ids": [],
+      "half_life_minutes": null,
+      "horizon_hours": null,
+      "metric_kind": "activity_feasibility",
+      "modes": [
+        "rail",
+        "walk"
+      ],
+      "profile_id": "medical",
+      "profile_version": 1,
+      "rules": {
+        "budget": null,
+        "max_access_walk_minutes": 20,
+        "max_one_way_minutes": 90,
+        "max_transfers": 2,
+        "require_step_free": false
+      },
+      "service_type_ids": [
+        "demo-service-type"
+      ],
+      "start_date": "2026-11-09",
+      "start_times": [
+        "06:00:00"
+      ],
+      "study_area_id": "demo-leningrad-area",
+      "study_area_version": 1,
+      "timezone": "Europe/Moscow",
+      "weighting": "uniform"
+    },
+    {
+      "assumption_ids": [
+        "demo-synthetic-only"
+      ],
+      "basis": "scenario",
+      "destination_ids": [
+        "demo-city-b"
+      ],
+      "end_date": "2026-11-15",
+      "evidence_ids": [],
+      "half_life_minutes": 60,
+      "horizon_hours": 48,
+      "metric_kind": "time_decay",
+      "modes": [
+        "rail",
+        "walk"
+      ],
+      "profile_id": "intercity",
+      "profile_version": 1,
+      "rules": {
+        "budget": null,
+        "max_access_walk_minutes": 20,
+        "max_one_way_minutes": 90,
+        "max_transfers": 2,
+        "require_step_free": false
+      },
+      "service_type_ids": [],
+      "start_date": "2026-11-09",
+      "start_times": [
+        "06:00:00"
+      ],
+      "study_area_id": "demo-leningrad-area",
+      "study_area_version": 1,
+      "timezone": "Europe/Moscow",
+      "weighting": "uniform"
+    }
+  ],
+  "study_areas": [
+    {
+      "area_id": "demo-leningrad-area",
+      "area_version": 1,
+      "basis": "scenario",
+      "city_ids": [
+        "demo-city-a",
+        "demo-city-b",
+        "demo-city-c",
+        "demo-city-d"
+      ],
+      "demo_city_ids": [
+        "demo-city-a"
+      ],
+      "evidence_ids": [],
+      "region_ids": [
+        "demo-leningrad-region"
+      ],
+      "timezone": "Europe/Moscow"
+    }
+  ],
+  "task_sets": []
+}

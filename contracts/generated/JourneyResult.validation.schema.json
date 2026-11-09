@@ -1,0 +1,370 @@
+{
+  "$defs": {
+    "Assumption": {
+      "additionalProperties": false,
+      "properties": {
+        "assumption_id": {
+          "minLength": 1,
+          "title": "Assumption Id",
+          "type": "string"
+        },
+        "basis": {
+          "enum": [
+            "scenario",
+            "verified"
+          ],
+          "title": "Basis",
+          "type": "string"
+        },
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "assumption_id",
+        "description",
+        "basis",
+        "evidence_ids"
+      ],
+      "title": "Assumption",
+      "type": "object"
+    },
+    "Journey": {
+      "additionalProperties": false,
+      "properties": {
+        "currency": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Z]{3}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Currency"
+        },
+        "journey_id": {
+          "minLength": 1,
+          "title": "Journey Id",
+          "type": "string"
+        },
+        "legs": {
+          "items": {
+            "$ref": "#/$defs/Leg"
+          },
+          "minItems": 1,
+          "title": "Legs",
+          "type": "array"
+        },
+        "outbound_minutes": {
+          "minimum": 0,
+          "title": "Outbound Minutes",
+          "type": "number"
+        },
+        "return_minutes": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Return Minutes"
+        },
+        "total_fare": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Total Fare"
+        },
+        "transfers": {
+          "minimum": 0,
+          "title": "Transfers",
+          "type": "integer"
+        },
+        "waiting_minutes": {
+          "minimum": 0,
+          "title": "Waiting Minutes",
+          "type": "number"
+        }
+      },
+      "required": [
+        "journey_id",
+        "legs",
+        "outbound_minutes",
+        "return_minutes",
+        "waiting_minutes",
+        "transfers",
+        "total_fare",
+        "currency"
+      ],
+      "title": "Journey",
+      "type": "object"
+    },
+    "Leg": {
+      "additionalProperties": false,
+      "properties": {
+        "arrival_at": {
+          "format": "date-time",
+          "title": "Arrival At",
+          "type": "string"
+        },
+        "departure_at": {
+          "format": "date-time",
+          "title": "Departure At",
+          "type": "string"
+        },
+        "duration_seconds": {
+          "minimum": 0,
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "from_id": {
+          "minLength": 1,
+          "title": "From Id",
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "rail",
+            "bus",
+            "walk"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "to_id": {
+          "minLength": 1,
+          "title": "To Id",
+          "type": "string"
+        },
+        "trip_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Trip Id"
+        }
+      },
+      "required": [
+        "mode",
+        "from_id",
+        "to_id",
+        "trip_id",
+        "departure_at",
+        "arrival_at",
+        "duration_seconds",
+        "evidence_ids"
+      ],
+      "title": "Leg",
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "bundle_id": {
+          "minLength": 1,
+          "title": "Bundle Id",
+          "type": "string"
+        },
+        "code_version": {
+          "minLength": 1,
+          "title": "Code Version",
+          "type": "string"
+        },
+        "completeness_scope": {
+          "minLength": 1,
+          "title": "Completeness Scope",
+          "type": "string"
+        },
+        "network_complete": {
+          "title": "Network Complete",
+          "type": "boolean"
+        },
+        "profile_id": {
+          "enum": [
+            "regular",
+            "medical",
+            "intercity"
+          ],
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "profile_version": {
+          "exclusiveMinimum": 0,
+          "title": "Profile Version",
+          "type": "integer"
+        },
+        "search_complete": {
+          "title": "Search Complete",
+          "type": "boolean"
+        },
+        "task_set_hash": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Task Set Hash"
+        }
+      },
+      "required": [
+        "bundle_id",
+        "profile_id",
+        "profile_version",
+        "code_version",
+        "completeness_scope",
+        "network_complete",
+        "search_complete"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "assumption_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Assumption Ids",
+      "type": "array"
+    },
+    "assumptions": {
+      "items": {
+        "$ref": "#/$defs/Assumption"
+      },
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "constraints": {
+      "additionalProperties": {
+        "enum": [
+          "pass",
+          "fail",
+          "unknown",
+          "not_requested"
+        ],
+        "type": "string"
+      },
+      "propertyNames": {
+        "minLength": 1
+      },
+      "title": "Constraints",
+      "type": "object"
+    },
+    "evidence_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "missing_fields": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Missing Fields",
+      "type": "array"
+    },
+    "optimality": {
+      "enum": [
+        "proven_in_scope",
+        "not_proven"
+      ],
+      "title": "Optimality",
+      "type": "string"
+    },
+    "overall_feasibility": {
+      "enum": [
+        "pass",
+        "fail",
+        "unknown"
+      ],
+      "title": "Overall Feasibility",
+      "type": "string"
+    },
+    "provenance": {
+      "$ref": "#/$defs/Provenance"
+    },
+    "reason_codes": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Reason Codes",
+      "type": "array"
+    },
+    "routes": {
+      "items": {
+        "$ref": "#/$defs/Journey"
+      },
+      "title": "Routes",
+      "type": "array"
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "partial",
+        "insufficient_data"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "status",
+    "routes",
+    "overall_feasibility",
+    "constraints",
+    "missing_fields",
+    "reason_codes",
+    "evidence_ids",
+    "assumptions",
+    "assumption_ids",
+    "provenance",
+    "optimality"
+  ],
+  "title": "JourneyResult",
+  "type": "object"
+}

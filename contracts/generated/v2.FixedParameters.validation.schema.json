@@ -1,0 +1,60 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "demand_evidence": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Demand Evidence",
+      "type": "array"
+    },
+    "resource_constraints": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Resource Constraints",
+      "type": "array"
+    },
+    "resource_evidence": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Resource Evidence",
+      "type": "array"
+    },
+    "service_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Service Ids",
+      "type": "array"
+    },
+    "shift_seconds": {
+      "title": "Shift Seconds",
+      "type": "integer"
+    },
+    "turnaround_evidence": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Turnaround Evidence",
+      "type": "array"
+    }
+  },
+  "required": [
+    "service_ids",
+    "shift_seconds",
+    "demand_evidence",
+    "resource_evidence",
+    "turnaround_evidence",
+    "resource_constraints"
+  ],
+  "title": "FixedParameters",
+  "type": "object"
+}

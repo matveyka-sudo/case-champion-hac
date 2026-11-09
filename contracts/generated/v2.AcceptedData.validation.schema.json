@@ -1,0 +1,1900 @@
+{
+  "$defs": {
+    "AccessNode": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "minLength": 1,
+          "title": "Kind",
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/$defs/LonLat"
+        },
+        "node_id": {
+          "minLength": 1,
+          "title": "Node Id",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "territory_id": {
+          "minLength": 1,
+          "title": "Territory Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_refs",
+        "territory_id",
+        "location",
+        "node_id",
+        "kind"
+      ],
+      "title": "AccessNode",
+      "type": "object"
+    },
+    "Bounds": {
+      "additionalProperties": false,
+      "properties": {
+        "east": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "East",
+          "type": "number"
+        },
+        "north": {
+          "maximum": 90,
+          "minimum": -90,
+          "title": "North",
+          "type": "number"
+        },
+        "south": {
+          "maximum": 90,
+          "minimum": -90,
+          "title": "South",
+          "type": "number"
+        },
+        "west": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "West",
+          "type": "number"
+        }
+      },
+      "required": [
+        "west",
+        "south",
+        "east",
+        "north"
+      ],
+      "title": "Bounds",
+      "type": "object"
+    },
+    "CategoryOwnership": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "enum": [
+            "adult_polyclinic",
+            "child_polyclinic",
+            "kindergarten",
+            "school",
+            "college_university",
+            "rail_terminal",
+            "bus_terminal",
+            "airport",
+            "shopping_center"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "destination_id": {
+          "minLength": 1,
+          "title": "Destination Id",
+          "type": "string"
+        },
+        "ownership": {
+          "enum": [
+            "government",
+            "municipal",
+            "private",
+            "unknown"
+          ],
+          "title": "Ownership",
+          "type": "string"
+        },
+        "registry_evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Registry Evidence Ids",
+          "type": "array"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "source_refs",
+        "destination_id",
+        "category",
+        "ownership",
+        "registry_evidence_ids"
+      ],
+      "title": "CategoryOwnership",
+      "type": "object"
+    },
+    "CoverageScope": {
+      "additionalProperties": false,
+      "properties": {
+        "categories": {
+          "items": {
+            "enum": [
+              "adult_polyclinic",
+              "child_polyclinic",
+              "kindergarten",
+              "school",
+              "college_university",
+              "rail_terminal",
+              "bus_terminal",
+              "airport",
+              "shopping_center"
+            ],
+            "type": "string"
+          },
+          "title": "Categories",
+          "type": "array"
+        },
+        "completeness": {
+          "enum": [
+            "full",
+            "partial"
+          ],
+          "title": "Completeness",
+          "type": "string"
+        },
+        "modes": {
+          "items": {
+            "enum": [
+              "walk",
+              "public_transport",
+              "private_car",
+              "road",
+              "rail",
+              "air",
+              "water",
+              "mixed",
+              "pipeline"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Modes",
+          "type": "array"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "territory_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Territory Ids",
+          "type": "array"
+        },
+        "valid_period": {
+          "$ref": "#/$defs/Period"
+        }
+      },
+      "required": [
+        "source_refs",
+        "territory_ids",
+        "modes",
+        "categories",
+        "valid_period",
+        "completeness"
+      ],
+      "title": "CoverageScope",
+      "type": "object"
+    },
+    "Destination": {
+      "additionalProperties": false,
+      "properties": {
+        "access_node_id": {
+          "minLength": 1,
+          "title": "Access Node Id",
+          "type": "string"
+        },
+        "categories": {
+          "items": {
+            "enum": [
+              "adult_polyclinic",
+              "child_polyclinic",
+              "kindergarten",
+              "school",
+              "college_university",
+              "rail_terminal",
+              "bus_terminal",
+              "airport",
+              "shopping_center"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Categories",
+          "type": "array"
+        },
+        "destination_id": {
+          "minLength": 1,
+          "title": "Destination Id",
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/$defs/LonLat"
+        },
+        "object_identity": {
+          "minLength": 1,
+          "title": "Object Identity",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "territory_id": {
+          "minLength": 1,
+          "title": "Territory Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_refs",
+        "territory_id",
+        "location",
+        "destination_id",
+        "categories",
+        "access_node_id",
+        "object_identity"
+      ],
+      "title": "Destination",
+      "type": "object"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "content_hash": {
+          "minLength": 1,
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "evidence_id": {
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "license": {
+          "minLength": 1,
+          "title": "License",
+          "type": "string"
+        },
+        "retrieved_at": {
+          "format": "date-time",
+          "title": "Retrieved At",
+          "type": "string"
+        },
+        "source_id": {
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_version": {
+          "minLength": 1,
+          "title": "Source Version",
+          "type": "string"
+        },
+        "url": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "title": "Url",
+          "type": "string"
+        },
+        "valid_period": {
+          "$ref": "#/$defs/Period"
+        },
+        "verified": {
+          "title": "Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "source_id",
+        "source_version",
+        "url",
+        "retrieved_at",
+        "valid_period",
+        "license",
+        "content_hash",
+        "verified"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "FreightCompatibility": {
+      "additionalProperties": false,
+      "properties": {
+        "compatibility_id": {
+          "minLength": 1,
+          "title": "Compatibility Id",
+          "type": "string"
+        },
+        "compatible": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Compatible"
+        },
+        "direction": {
+          "enum": [
+            "inbound",
+            "outbound"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "food_classes": {
+          "items": {
+            "enum": [
+              "food",
+              "nonfood"
+            ],
+            "type": "string"
+          },
+          "title": "Food Classes",
+          "type": "array"
+        },
+        "freight_node_id": {
+          "minLength": 1,
+          "title": "Freight Node Id",
+          "type": "string"
+        },
+        "handling_requirements": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Handling Requirements",
+          "type": "array"
+        },
+        "site_id": {
+          "minLength": 1,
+          "title": "Site Id",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "temperature_requirements": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Temperature Requirements",
+          "type": "array"
+        },
+        "vehicle_constraints": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Vehicle Constraints",
+          "type": "array"
+        }
+      },
+      "required": [
+        "source_refs",
+        "compatibility_id",
+        "site_id",
+        "freight_node_id",
+        "direction",
+        "food_classes",
+        "temperature_requirements",
+        "handling_requirements",
+        "vehicle_constraints",
+        "compatible"
+      ],
+      "title": "FreightCompatibility",
+      "type": "object"
+    },
+    "FreightNode": {
+      "additionalProperties": false,
+      "properties": {
+        "access_node_id": {
+          "minLength": 1,
+          "title": "Access Node Id",
+          "type": "string"
+        },
+        "freight_node_id": {
+          "minLength": 1,
+          "title": "Freight Node Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "port",
+            "rail_terminal",
+            "logistics_terminal",
+            "airport",
+            "pipeline_terminal"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/$defs/LonLat"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "territory_id": {
+          "minLength": 1,
+          "title": "Territory Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_refs",
+        "territory_id",
+        "location",
+        "freight_node_id",
+        "access_node_id",
+        "kind"
+      ],
+      "title": "FreightNode",
+      "type": "object"
+    },
+    "FreightSite": {
+      "additionalProperties": false,
+      "properties": {
+        "access_node_id": {
+          "minLength": 1,
+          "title": "Access Node Id",
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/$defs/LonLat"
+        },
+        "site_id": {
+          "minLength": 1,
+          "title": "Site Id",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "territory_id": {
+          "minLength": 1,
+          "title": "Territory Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_refs",
+        "territory_id",
+        "location",
+        "site_id",
+        "access_node_id"
+      ],
+      "title": "FreightSite",
+      "type": "object"
+    },
+    "GeometryRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bbox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Bounds"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "geometry_id": {
+          "minLength": 1,
+          "title": "Geometry Id",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_refs",
+        "geometry_id",
+        "version"
+      ],
+      "title": "GeometryRef",
+      "type": "object"
+    },
+    "LonLat": {
+      "additionalProperties": false,
+      "properties": {
+        "lat": {
+          "maximum": 90,
+          "minimum": -90,
+          "title": "Lat",
+          "type": "number"
+        },
+        "lon": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "Lon",
+          "type": "number"
+        }
+      },
+      "required": [
+        "lon",
+        "lat"
+      ],
+      "title": "LonLat",
+      "type": "object"
+    },
+    "MinimumTransfer": {
+      "additionalProperties": false,
+      "properties": {
+        "applicability": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Applicability",
+          "type": "array"
+        },
+        "from_node_id": {
+          "minLength": 1,
+          "title": "From Node Id",
+          "type": "string"
+        },
+        "minimum_id": {
+          "minLength": 1,
+          "title": "Minimum Id",
+          "type": "string"
+        },
+        "seconds": {
+          "minimum": 0,
+          "title": "Seconds",
+          "type": "number"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "to_node_id": {
+          "minLength": 1,
+          "title": "To Node Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_refs",
+        "minimum_id",
+        "from_node_id",
+        "to_node_id",
+        "seconds",
+        "applicability"
+      ],
+      "title": "MinimumTransfer",
+      "type": "object"
+    },
+    "Period": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "End"
+        },
+        "start": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Start"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "Period",
+      "type": "object"
+    },
+    "PipelineConnection": {
+      "additionalProperties": false,
+      "properties": {
+        "capacity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Quantity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "connection_confirmed": {
+          "const": true,
+          "title": "Connection Confirmed",
+          "type": "boolean"
+        },
+        "connection_id": {
+          "minLength": 1,
+          "title": "Connection Id",
+          "type": "string"
+        },
+        "direction_confirmed": {
+          "const": true,
+          "title": "Direction Confirmed",
+          "type": "boolean"
+        },
+        "from_node_id": {
+          "minLength": 1,
+          "title": "From Node Id",
+          "type": "string"
+        },
+        "product": {
+          "enum": [
+            "oil",
+            "oil_products",
+            "gas"
+          ],
+          "title": "Product",
+          "type": "string"
+        },
+        "quantity_status": {
+          "enum": [
+            "available",
+            "unknown"
+          ],
+          "title": "Quantity Status",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "to_node_id": {
+          "minLength": 1,
+          "title": "To Node Id",
+          "type": "string"
+        },
+        "volume": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Quantity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "source_refs",
+        "connection_id",
+        "product",
+        "from_node_id",
+        "to_node_id",
+        "connection_confirmed",
+        "direction_confirmed",
+        "volume",
+        "capacity",
+        "quantity_status"
+      ],
+      "title": "PipelineConnection",
+      "type": "object"
+    },
+    "PopulationCell": {
+      "additionalProperties": false,
+      "properties": {
+        "cell_id": {
+          "minLength": 1,
+          "title": "Cell Id",
+          "type": "string"
+        },
+        "exclusion_reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Exclusion Reason"
+        },
+        "geometry": {
+          "$ref": "#/$defs/GeometryRef"
+        },
+        "grid_origin_m": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Grid Origin M",
+          "type": "array"
+        },
+        "grid_version": {
+          "minLength": 1,
+          "title": "Grid Version",
+          "type": "string"
+        },
+        "population": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Population"
+        },
+        "population_method": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Population Method"
+        },
+        "population_year": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Population Year"
+        },
+        "projection": {
+          "minLength": 1,
+          "title": "Projection",
+          "type": "string"
+        },
+        "sample_status": {
+          "enum": [
+            "included",
+            "excluded"
+          ],
+          "title": "Sample Status",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "territory_id": {
+          "minLength": 1,
+          "title": "Territory Id",
+          "type": "string"
+        },
+        "unit": {
+          "const": "persons",
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_refs",
+        "cell_id",
+        "territory_id",
+        "grid_version",
+        "grid_origin_m",
+        "projection",
+        "geometry",
+        "population",
+        "population_year",
+        "population_method",
+        "unit",
+        "sample_status",
+        "exclusion_reason"
+      ],
+      "title": "PopulationCell",
+      "type": "object"
+    },
+    "QAReport": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance_state": {
+          "const": "accepted",
+          "title": "Acceptance State",
+          "type": "string"
+        },
+        "accepted_at": {
+          "format": "date-time",
+          "title": "Accepted At",
+          "type": "string"
+        },
+        "accepted_by": {
+          "minLength": 1,
+          "title": "Accepted By",
+          "type": "string"
+        },
+        "checks": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Checks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "acceptance_state",
+        "accepted_by",
+        "accepted_at",
+        "checks"
+      ],
+      "title": "QAReport",
+      "type": "object"
+    },
+    "Quantity": {
+      "additionalProperties": false,
+      "properties": {
+        "period": {
+          "$ref": "#/$defs/Period"
+        },
+        "product": {
+          "enum": [
+            "oil",
+            "oil_products",
+            "gas"
+          ],
+          "title": "Product",
+          "type": "string"
+        },
+        "unit": {
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "minimum": 0,
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "value",
+        "unit",
+        "period",
+        "product"
+      ],
+      "title": "Quantity",
+      "type": "object"
+    },
+    "ReferenceEdge": {
+      "additionalProperties": false,
+      "properties": {
+        "calibration_method": {
+          "minLength": 1,
+          "title": "Calibration Method",
+          "type": "string"
+        },
+        "edge_id": {
+          "minLength": 1,
+          "title": "Edge Id",
+          "type": "string"
+        },
+        "from_node_id": {
+          "minLength": 1,
+          "title": "From Node Id",
+          "type": "string"
+        },
+        "geometry": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GeometryRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "length_m": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Length M"
+        },
+        "mode": {
+          "enum": [
+            "walk",
+            "public_transport",
+            "private_car",
+            "road",
+            "rail",
+            "air",
+            "water",
+            "mixed",
+            "pipeline"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "running_time_seconds": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Running Time Seconds"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "to_node_id": {
+          "minLength": 1,
+          "title": "To Node Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_refs",
+        "edge_id",
+        "from_node_id",
+        "to_node_id",
+        "mode",
+        "length_m",
+        "running_time_seconds",
+        "calibration_method",
+        "geometry"
+      ],
+      "title": "ReferenceEdge",
+      "type": "object"
+    },
+    "RegistryEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "enum": [
+            "adult_polyclinic",
+            "child_polyclinic",
+            "kindergarten",
+            "school",
+            "college_university",
+            "rail_terminal",
+            "bus_terminal",
+            "airport",
+            "shopping_center"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "destination_id": {
+          "minLength": 1,
+          "title": "Destination Id",
+          "type": "string"
+        },
+        "ownership": {
+          "enum": [
+            "government",
+            "municipal",
+            "private",
+            "unknown"
+          ],
+          "title": "Ownership",
+          "type": "string"
+        },
+        "registry_evidence_id": {
+          "minLength": 1,
+          "title": "Registry Evidence Id",
+          "type": "string"
+        },
+        "registry_id": {
+          "minLength": 1,
+          "title": "Registry Id",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "verified": {
+          "title": "Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "source_refs",
+        "registry_evidence_id",
+        "registry_id",
+        "destination_id",
+        "category",
+        "ownership",
+        "verified"
+      ],
+      "title": "RegistryEvidence",
+      "type": "object"
+    },
+    "SamplePoint": {
+      "additionalProperties": false,
+      "properties": {
+        "access_distance_m": {
+          "minimum": 0,
+          "title": "Access Distance M",
+          "type": "number"
+        },
+        "access_node_id": {
+          "minLength": 1,
+          "title": "Access Node Id",
+          "type": "string"
+        },
+        "building_id": {
+          "minLength": 1,
+          "title": "Building Id",
+          "type": "string"
+        },
+        "cell_id": {
+          "minLength": 1,
+          "title": "Cell Id",
+          "type": "string"
+        },
+        "initial_center": {
+          "$ref": "#/$defs/LonLat"
+        },
+        "location": {
+          "$ref": "#/$defs/LonLat"
+        },
+        "point_id": {
+          "minLength": 1,
+          "title": "Point Id",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "territory_id": {
+          "minLength": 1,
+          "title": "Territory Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_refs",
+        "territory_id",
+        "location",
+        "point_id",
+        "cell_id",
+        "building_id",
+        "initial_center",
+        "access_node_id",
+        "access_distance_m"
+      ],
+      "title": "SamplePoint",
+      "type": "object"
+    },
+    "ScheduledService": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "walk",
+            "public_transport",
+            "private_car",
+            "road",
+            "rail",
+            "air",
+            "water",
+            "mixed",
+            "pipeline"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "service_dates": {
+          "items": {
+            "format": "date",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Service Dates",
+          "type": "array"
+        },
+        "service_id": {
+          "minLength": 1,
+          "title": "Service Id",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "stop_times": {
+          "items": {
+            "$ref": "#/$defs/ServiceStopTime"
+          },
+          "minItems": 2,
+          "title": "Stop Times",
+          "type": "array"
+        },
+        "timezone": {
+          "minLength": 1,
+          "title": "Timezone",
+          "type": "string"
+        },
+        "trip_id": {
+          "minLength": 1,
+          "title": "Trip Id",
+          "type": "string"
+        },
+        "trip_identity_confirmed": {
+          "const": true,
+          "title": "Trip Identity Confirmed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "source_refs",
+        "service_id",
+        "trip_id",
+        "mode",
+        "timezone",
+        "service_dates",
+        "trip_identity_confirmed",
+        "stop_times"
+      ],
+      "title": "ScheduledService",
+      "type": "object"
+    },
+    "ServiceStopTime": {
+      "additionalProperties": false,
+      "properties": {
+        "arrival_seconds": {
+          "minimum": 0,
+          "title": "Arrival Seconds",
+          "type": "integer"
+        },
+        "departure_seconds": {
+          "minimum": 0,
+          "title": "Departure Seconds",
+          "type": "integer"
+        },
+        "dropoff": {
+          "title": "Dropoff",
+          "type": "boolean"
+        },
+        "node_id": {
+          "minLength": 1,
+          "title": "Node Id",
+          "type": "string"
+        },
+        "pickup": {
+          "title": "Pickup",
+          "type": "boolean"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "node_id",
+        "sequence",
+        "arrival_seconds",
+        "departure_seconds",
+        "pickup",
+        "dropoff"
+      ],
+      "title": "ServiceStopTime",
+      "type": "object"
+    },
+    "SnapshotProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "calendar_version": {
+          "minLength": 1,
+          "title": "Calendar Version",
+          "type": "string"
+        },
+        "geometry_version": {
+          "minLength": 1,
+          "title": "Geometry Version",
+          "type": "string"
+        },
+        "graph_version": {
+          "minLength": 1,
+          "title": "Graph Version",
+          "type": "string"
+        },
+        "population_version": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Population Version"
+        }
+      },
+      "required": [
+        "graph_version",
+        "geometry_version",
+        "calendar_version",
+        "population_version"
+      ],
+      "title": "SnapshotProvenance",
+      "type": "object"
+    },
+    "Territory": {
+      "additionalProperties": false,
+      "properties": {
+        "area_km2": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Area Km2"
+        },
+        "geometry": {
+          "$ref": "#/$defs/GeometryRef"
+        },
+        "level": {
+          "enum": [
+            "city",
+            "region"
+          ],
+          "title": "Level",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "territory_id": {
+          "minLength": 1,
+          "title": "Territory Id",
+          "type": "string"
+        },
+        "timezone": {
+          "minLength": 1,
+          "title": "Timezone",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_refs",
+        "territory_id",
+        "level",
+        "name",
+        "timezone",
+        "geometry",
+        "area_km2"
+      ],
+      "title": "Territory",
+      "type": "object"
+    },
+    "TrafficObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "format": "date",
+          "title": "Date",
+          "type": "string"
+        },
+        "graph_version": {
+          "minLength": 1,
+          "title": "Graph Version",
+          "type": "string"
+        },
+        "season": {
+          "minLength": 1,
+          "title": "Season",
+          "type": "string"
+        },
+        "weekday_type": {
+          "minLength": 1,
+          "title": "Weekday Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "date",
+        "weekday_type",
+        "season",
+        "graph_version"
+      ],
+      "title": "TrafficObservation",
+      "type": "object"
+    },
+    "TrafficProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Confidence"
+        },
+        "directed_edge_id": {
+          "minLength": 1,
+          "title": "Directed Edge Id",
+          "type": "string"
+        },
+        "graph_version": {
+          "minLength": 1,
+          "title": "Graph Version",
+          "type": "string"
+        },
+        "is_closed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Is Closed"
+        },
+        "local_15min_bin": {
+          "exclusiveMaximum": 96,
+          "minimum": 0,
+          "title": "Local 15Min Bin",
+          "type": "integer"
+        },
+        "method": {
+          "minLength": 1,
+          "title": "Method",
+          "type": "string"
+        },
+        "observations": {
+          "items": {
+            "$ref": "#/$defs/TrafficObservation"
+          },
+          "title": "Observations",
+          "type": "array"
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Observed At"
+        },
+        "observed_period": {
+          "$ref": "#/$defs/Period"
+        },
+        "profile_id": {
+          "minLength": 1,
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "sample_count": {
+          "minimum": 0,
+          "title": "Sample Count",
+          "type": "integer"
+        },
+        "season": {
+          "minLength": 1,
+          "title": "Season",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "speed_kph": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Speed Kph"
+        },
+        "status": {
+          "enum": [
+            "available",
+            "unknown"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "traffic_mode": {
+          "enum": [
+            "static",
+            "typical",
+            "live",
+            "historical"
+          ],
+          "title": "Traffic Mode",
+          "type": "string"
+        },
+        "valid_until": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid Until"
+        },
+        "weekday_type": {
+          "minLength": 1,
+          "title": "Weekday Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_refs",
+        "profile_id",
+        "directed_edge_id",
+        "graph_version",
+        "traffic_mode",
+        "status",
+        "speed_kph",
+        "is_closed",
+        "weekday_type",
+        "local_15min_bin",
+        "season",
+        "observed_period",
+        "observations",
+        "sample_count",
+        "observed_at",
+        "valid_until",
+        "method",
+        "confidence"
+      ],
+      "title": "TrafficProfile",
+      "type": "object"
+    },
+    "Transfer": {
+      "additionalProperties": false,
+      "properties": {
+        "from_node_id": {
+          "minLength": 1,
+          "title": "From Node Id",
+          "type": "string"
+        },
+        "seconds": {
+          "minimum": 0,
+          "title": "Seconds",
+          "type": "number"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "to_node_id": {
+          "minLength": 1,
+          "title": "To Node Id",
+          "type": "string"
+        },
+        "transfer_id": {
+          "minLength": 1,
+          "title": "Transfer Id",
+          "type": "string"
+        },
+        "verification_state": {
+          "enum": [
+            "verified",
+            "absent",
+            "unknown"
+          ],
+          "title": "Verification State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_refs",
+        "transfer_id",
+        "from_node_id",
+        "to_node_id",
+        "seconds",
+        "verification_state"
+      ],
+      "title": "Transfer",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "access_nodes": {
+      "items": {
+        "$ref": "#/$defs/AccessNode"
+      },
+      "title": "Access Nodes",
+      "type": "array"
+    },
+    "category_ownership": {
+      "items": {
+        "$ref": "#/$defs/CategoryOwnership"
+      },
+      "title": "Category Ownership",
+      "type": "array"
+    },
+    "confirmed_absence_scope": {
+      "items": {
+        "$ref": "#/$defs/CoverageScope"
+      },
+      "title": "Confirmed Absence Scope",
+      "type": "array"
+    },
+    "coverage_by_mode_date_category": {
+      "items": {
+        "$ref": "#/$defs/CoverageScope"
+      },
+      "title": "Coverage By Mode Date Category",
+      "type": "array"
+    },
+    "destinations": {
+      "items": {
+        "$ref": "#/$defs/Destination"
+      },
+      "title": "Destinations",
+      "type": "array"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/Evidence"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "freight_compatibility": {
+      "items": {
+        "$ref": "#/$defs/FreightCompatibility"
+      },
+      "title": "Freight Compatibility",
+      "type": "array"
+    },
+    "freight_nodes": {
+      "items": {
+        "$ref": "#/$defs/FreightNode"
+      },
+      "title": "Freight Nodes",
+      "type": "array"
+    },
+    "freight_sites": {
+      "items": {
+        "$ref": "#/$defs/FreightSite"
+      },
+      "title": "Freight Sites",
+      "type": "array"
+    },
+    "geographic_scope": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Geographic Scope",
+      "type": "array"
+    },
+    "minimum_transfers": {
+      "items": {
+        "$ref": "#/$defs/MinimumTransfer"
+      },
+      "title": "Minimum Transfers",
+      "type": "array"
+    },
+    "pipeline_connections": {
+      "items": {
+        "$ref": "#/$defs/PipelineConnection"
+      },
+      "title": "Pipeline Connections",
+      "type": "array"
+    },
+    "population_cells": {
+      "items": {
+        "$ref": "#/$defs/PopulationCell"
+      },
+      "title": "Population Cells",
+      "type": "array"
+    },
+    "provenance": {
+      "$ref": "#/$defs/SnapshotProvenance"
+    },
+    "qa": {
+      "$ref": "#/$defs/QAReport"
+    },
+    "reference_edges": {
+      "items": {
+        "$ref": "#/$defs/ReferenceEdge"
+      },
+      "title": "Reference Edges",
+      "type": "array"
+    },
+    "registry_evidence": {
+      "items": {
+        "$ref": "#/$defs/RegistryEvidence"
+      },
+      "title": "Registry Evidence",
+      "type": "array"
+    },
+    "sample_points": {
+      "items": {
+        "$ref": "#/$defs/SamplePoint"
+      },
+      "title": "Sample Points",
+      "type": "array"
+    },
+    "scheduled_services": {
+      "items": {
+        "$ref": "#/$defs/ScheduledService"
+      },
+      "title": "Scheduled Services",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "snapshot_id": {
+      "minLength": 1,
+      "title": "Snapshot Id",
+      "type": "string"
+    },
+    "source_versions": {
+      "additionalProperties": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "propertyNames": {
+        "minLength": 1
+      },
+      "title": "Source Versions",
+      "type": "object"
+    },
+    "territories": {
+      "items": {
+        "$ref": "#/$defs/Territory"
+      },
+      "title": "Territories",
+      "type": "array"
+    },
+    "timezone": {
+      "minLength": 1,
+      "title": "Timezone",
+      "type": "string"
+    },
+    "traffic_profiles": {
+      "items": {
+        "$ref": "#/$defs/TrafficProfile"
+      },
+      "title": "Traffic Profiles",
+      "type": "array"
+    },
+    "transfers": {
+      "items": {
+        "$ref": "#/$defs/Transfer"
+      },
+      "title": "Transfers",
+      "type": "array"
+    },
+    "valid_period": {
+      "$ref": "#/$defs/Period"
+    }
+  },
+  "required": [
+    "schema_version",
+    "snapshot_id",
+    "source_versions",
+    "geographic_scope",
+    "valid_period",
+    "timezone",
+    "provenance",
+    "qa",
+    "evidence",
+    "registry_evidence",
+    "territories",
+    "population_cells",
+    "sample_points",
+    "destinations",
+    "access_nodes",
+    "scheduled_services",
+    "transfers",
+    "freight_sites",
+    "freight_nodes",
+    "freight_compatibility",
+    "pipeline_connections",
+    "reference_edges",
+    "minimum_transfers",
+    "traffic_profiles",
+    "category_ownership",
+    "coverage_by_mode_date_category",
+    "confirmed_absence_scope"
+  ],
+  "title": "AcceptedData",
+  "type": "object"
+}

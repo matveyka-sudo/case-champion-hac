@@ -1,0 +1,210 @@
+{
+  "$defs": {
+    "Bounds": {
+      "additionalProperties": false,
+      "properties": {
+        "east": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "East",
+          "type": "number"
+        },
+        "north": {
+          "maximum": 90,
+          "minimum": -90,
+          "title": "North",
+          "type": "number"
+        },
+        "south": {
+          "maximum": 90,
+          "minimum": -90,
+          "title": "South",
+          "type": "number"
+        },
+        "west": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "West",
+          "type": "number"
+        }
+      },
+      "required": [
+        "west",
+        "south",
+        "east",
+        "north"
+      ],
+      "title": "Bounds",
+      "type": "object"
+    },
+    "GeometryRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bbox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Bounds"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "geometry_id": {
+          "minLength": 1,
+          "title": "Geometry Id",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_refs",
+        "geometry_id",
+        "version"
+      ],
+      "title": "GeometryRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "cell_id": {
+      "minLength": 1,
+      "title": "Cell Id",
+      "type": "string"
+    },
+    "exclusion_reason": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Exclusion Reason"
+    },
+    "geometry": {
+      "$ref": "#/$defs/GeometryRef"
+    },
+    "grid_origin_m": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "title": "Grid Origin M",
+      "type": "array"
+    },
+    "grid_version": {
+      "minLength": 1,
+      "title": "Grid Version",
+      "type": "string"
+    },
+    "population": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Population"
+    },
+    "population_method": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Population Method"
+    },
+    "population_year": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Population Year"
+    },
+    "projection": {
+      "minLength": 1,
+      "title": "Projection",
+      "type": "string"
+    },
+    "sample_status": {
+      "enum": [
+        "included",
+        "excluded"
+      ],
+      "title": "Sample Status",
+      "type": "string"
+    },
+    "source_refs": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "territory_id": {
+      "minLength": 1,
+      "title": "Territory Id",
+      "type": "string"
+    },
+    "unit": {
+      "const": "persons",
+      "title": "Unit",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source_refs",
+    "cell_id",
+    "territory_id",
+    "grid_version",
+    "grid_origin_m",
+    "projection",
+    "geometry",
+    "population",
+    "population_year",
+    "population_method",
+    "unit",
+    "sample_status",
+    "exclusion_reason"
+  ],
+  "title": "PopulationCell",
+  "type": "object"
+}

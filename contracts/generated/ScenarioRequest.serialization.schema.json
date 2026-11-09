@@ -1,0 +1,261 @@
+{
+  "$defs": {
+    "AddTrip": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "anyOf": [
+            {
+              "enum": [
+                "rail",
+                "bus",
+                "walk"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mode"
+        },
+        "new_trip_id": {
+          "minLength": 1,
+          "title": "New Trip Id",
+          "type": "string"
+        },
+        "route_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Route Id"
+        },
+        "service_dates": {
+          "items": {
+            "format": "date",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Service Dates",
+          "type": "array"
+        },
+        "service_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Service Id"
+        },
+        "stop_time_shift_seconds": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stop Time Shift Seconds"
+        },
+        "stop_times": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ScenarioStopTime"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stop Times"
+        },
+        "template_trip_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Template Trip Id"
+        },
+        "type": {
+          "const": "add_trip",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "new_trip_id",
+        "service_dates"
+      ],
+      "title": "AddTrip",
+      "type": "object"
+    },
+    "ScenarioStopTime": {
+      "additionalProperties": false,
+      "properties": {
+        "arrival_seconds": {
+          "minimum": 0,
+          "title": "Arrival Seconds",
+          "type": "integer"
+        },
+        "departure_seconds": {
+          "minimum": 0,
+          "title": "Departure Seconds",
+          "type": "integer"
+        },
+        "dropoff": {
+          "title": "Dropoff",
+          "type": "boolean"
+        },
+        "pickup": {
+          "title": "Pickup",
+          "type": "boolean"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "stop_id": {
+          "minLength": 1,
+          "title": "Stop Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stop_id",
+        "sequence",
+        "arrival_seconds",
+        "departure_seconds",
+        "pickup",
+        "dropoff"
+      ],
+      "title": "ScenarioStopTime",
+      "type": "object"
+    },
+    "ShiftTrip": {
+      "additionalProperties": false,
+      "properties": {
+        "delta_seconds": {
+          "maximum": 1800,
+          "minimum": -1800,
+          "title": "Delta Seconds",
+          "type": "integer"
+        },
+        "service_dates": {
+          "items": {
+            "format": "date",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Service Dates",
+          "type": "array"
+        },
+        "trip_id": {
+          "minLength": 1,
+          "title": "Trip Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "shift_trip",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "trip_id",
+        "service_dates",
+        "delta_seconds"
+      ],
+      "title": "ShiftTrip",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "base_run_ids": {
+      "additionalProperties": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "propertyNames": {
+        "enum": [
+          "regular",
+          "medical",
+          "intercity"
+        ]
+      },
+      "title": "Base Run Ids",
+      "type": "object"
+    },
+    "evaluate_profile_ids": {
+      "items": {
+        "enum": [
+          "regular",
+          "medical",
+          "intercity"
+        ],
+        "type": "string"
+      },
+      "maxItems": 3,
+      "minItems": 1,
+      "title": "Evaluate Profile Ids",
+      "type": "array"
+    },
+    "operations": {
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "add_trip": "#/$defs/AddTrip",
+            "shift_trip": "#/$defs/ShiftTrip"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/ShiftTrip"
+          },
+          {
+            "$ref": "#/$defs/AddTrip"
+          }
+        ]
+      },
+      "maxItems": 10,
+      "minItems": 1,
+      "title": "Operations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "base_run_ids",
+    "evaluate_profile_ids",
+    "operations"
+  ],
+  "title": "ScenarioRequest",
+  "type": "object"
+}

@@ -1,0 +1,38 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "controlled": {
+      "title": "Controlled",
+      "type": "boolean"
+    },
+    "max_c": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Max C"
+    },
+    "min_c": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Min C"
+    }
+  },
+  "required": [
+    "controlled",
+    "min_c",
+    "max_c"
+  ],
+  "title": "TemperatureRequirements",
+  "type": "object"
+}

@@ -1,0 +1,40 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "calendar_version": {
+      "minLength": 1,
+      "title": "Calendar Version",
+      "type": "string"
+    },
+    "geometry_version": {
+      "minLength": 1,
+      "title": "Geometry Version",
+      "type": "string"
+    },
+    "graph_version": {
+      "minLength": 1,
+      "title": "Graph Version",
+      "type": "string"
+    },
+    "population_version": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Population Version"
+    }
+  },
+  "required": [
+    "graph_version",
+    "geometry_version",
+    "calendar_version",
+    "population_version"
+  ],
+  "title": "SnapshotProvenance",
+  "type": "object"
+}

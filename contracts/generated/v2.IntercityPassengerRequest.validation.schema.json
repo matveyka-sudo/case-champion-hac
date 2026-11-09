@@ -1,0 +1,167 @@
+{
+  "$defs": {
+    "MethodologyRef": {
+      "additionalProperties": false,
+      "properties": {
+        "config_hash": {
+          "minLength": 1,
+          "title": "Config Hash",
+          "type": "string"
+        },
+        "reference_profile": {
+          "const": "edge-calibrated-v1",
+          "default": "edge-calibrated-v1",
+          "title": "Reference Profile",
+          "type": "string"
+        },
+        "version": {
+          "const": "a2-methodology-v3",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "config_hash"
+      ],
+      "title": "MethodologyRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "analysis_kind": {
+      "const": "intercity_passenger",
+      "title": "Analysis Kind",
+      "type": "string"
+    },
+    "departure_at": {
+      "format": "date-time",
+      "title": "Departure At",
+      "type": "string"
+    },
+    "destination_id": {
+      "minLength": 1,
+      "title": "Destination Id",
+      "type": "string"
+    },
+    "destination_node_ids": {
+      "anyOf": [
+        {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Destination Node Ids"
+    },
+    "methodology": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MethodologyRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "origin_id": {
+      "minLength": 1,
+      "title": "Origin Id",
+      "type": "string"
+    },
+    "origin_node_ids": {
+      "anyOf": [
+        {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Origin Node Ids"
+    },
+    "passenger_modes": {
+      "anyOf": [
+        {
+          "items": {
+            "enum": [
+              "road",
+              "rail",
+              "air",
+              "water",
+              "mixed",
+              "private_car"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Passenger Modes"
+    },
+    "schema_version": {
+      "const": "2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "snapshot_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Snapshot Id"
+    },
+    "territory_level": {
+      "enum": [
+        "city",
+        "region"
+      ],
+      "title": "Territory Level",
+      "type": "string"
+    },
+    "traffic_mode": {
+      "enum": [
+        "static",
+        "typical",
+        "live",
+        "historical"
+      ],
+      "title": "Traffic Mode",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "departure_at",
+    "traffic_mode",
+    "territory_level",
+    "origin_id",
+    "destination_id",
+    "analysis_kind"
+  ],
+  "title": "IntercityPassengerRequest",
+  "type": "object"
+}
