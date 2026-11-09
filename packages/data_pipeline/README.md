@@ -43,6 +43,20 @@
 
 Коды нужны, чтобы привязать расписания по коду, а не по названию: в справочнике станций Яндекс.Расписаний у станций есть код ЕСР, у аэропортов — IATA.
 
+### Привязка к Яндекс.Расписаниям — `rasp-bindings-2026-11-09.1` (кэш, не в git)
+
+Для `RaspPlaceBinding` бэкенда: один подтверждённый код Расписаний на территорию, без сопоставления по названию. Источник — ответ `stations_list` (один запрос, скачан со своим ключом, `data/raw/yandex_rasp/`).
+
+| Что | Значение |
+| --- | --- |
+| Узлы | 2 415 из 2 957: ж/д — 2 050 по коду ЕСР (неоднозначных нет), аэропорты — 133 (единственный аэропорт Расписаний в 5 км: IATA там нет), автовокзалы — 232 (единственный автовокзал в 300 м) |
+| Города | 743: 695 — все узлы в одном пункте Расписаний, 21 — по большинству (Москва `c213`: 91 из 101, остальное — Зеленоград и др.), 27 столиц и городов только с аэропортом — код аэропорта (`s…`) |
+| Субъекты | 83 из 89 — через столицу; 6 спорных без столиц в справочнике не привязаны |
+| Без привязки | 11 городов без большинства (Артём, Балашиха, Домодедово…), Мурино (его Девяткино у Расписаний в Санкт-Петербурге) |
+| Пилотные | Калининград `c22`, Новороссийск `c970`, Москва `c213` |
+
+Условия API (https://yandex.ru/legal/rasp_api/) разрешают хранить ответы только как кэш для работы сервиса (п. 3.2.4). Поэтому raw и привязки лежат в `data/raw` и `data/processed` и в git не попадают; в git — код, манифест и сводка `data/manifests/qa/rasp-bindings-2026-11-09.1.json` без кодов Расписаний. Датасет имеет статус `validated`, а не `accepted`: валидатор манифестов не пускает в accepted данные с ограниченной лицензией.
+
 ### Морские порты РФ — `russia-seaports-2026-11-09.1`
 
 Межгородские грузы: узлы разных типов отдельно, выбор «основных» узлов — с проверяемым основанием (ТЗ, «Грузовые связи»). Здесь основание — функция: зарегистрированный морской порт, где работает Росморпорт. `load_seaports()` сверяет sha256.
@@ -300,6 +314,18 @@ kgd = [n for n in nodes if "kaliningrad" in n.territory_ids]  # станции, 
 by_esr = {code: n for n in nodes for code in n.esr_codes}  # привязка расписаний по коду
 ```
 
+Привязка к Яндекс.Расписаниям и входы ML1:
+
+```python
+from a2_data_pipeline.intercity_nodes import capital_boundaries
+from a2_data_pipeline.rasp_bindings import load_bindings, transport_mode_bindings
+
+node_codes, bindings = load_bindings("rasp-bindings-2026-11-09.1")  # кэш, sha256 сверен
+moscow = next(b for b in bindings if b.territory_id == "moscow")  # provider_code c213
+modes = transport_mode_bindings()  # plane→air, train/suburban→rail, bus→road, water/sea→water
+capitals = capital_boundaries(entries, nodes, ["directory:russia-intercity-nodes-2026-11-09.2"])
+```
+
 Морские порты:
 
 ```python
@@ -353,6 +379,12 @@ PYTHONPATH=packages/data_pipeline/src python -m a2_data_pipeline.osm_national os
 PYTHONPATH=packages/data_pipeline/src python -m a2_data_pipeline.intercity_nodes build wikidata.ru-intercity-nodes-20261109 ourairports.airports-20261108 russia-territories-2026-11-09.1 russia-intercity-nodes-2026-11-09.2 --osm-dataset-id osm_geofabrik.russia-261108
 PYTHONPATH=packages/data_pipeline/src python -m a2_data_pipeline.seaports rosmorport.seaports-ru-20261109 osm_geofabrik.russia-261108 russia-territories-2026-11-09.1 russia-seaports-2026-11-09.1
 PYTHONPATH=packages/data_pipeline/src python -m a2_data_pipeline.population_check check wikidata.pilot-population-20261109 population-rosstat-<дата>.json kaliningrad-urban-2026-11-09.1 novorossiysk-urban-2026-11-09.1 moscow-urban-2026-11-09.2
+```
+
+Привязка к Расписаниям (raw `stations_list` скачивается со своим ключом: `https://api.rasp.yandex.net/v3.0/stations_list/?apikey=…&lang=ru_RU&format=json`, ключ в репозиторий не кладётся):
+
+```bash
+PYTHONPATH=packages/data_pipeline/src python -m a2_data_pipeline.rasp_bindings yandex_rasp.stations_list-20261109 russia-intercity-nodes-2026-11-09.2 russia-territories-2026-11-09.1 rasp-bindings-2026-11-09.1
 ```
 
 Все три сборки из сохранённых raw детерминированы: справочник узлов `.1` и `.2` и справочник портов пересобираются в те же байты.
@@ -452,6 +484,7 @@ Raw, которые использованы для сборки, перечис
   - Место — портовая территория OSM в очертании города. В 7 городах её нет (Высоцк, Невельск, Николаевск-на-Амуре, Певек, Геленджик, Сочи, Мезень), у 3 городов нет очертания (Корсаков, Анапа, Туапсе).
   - Мощности — как опубликованы. У Приморска на сайте «89 500 тонн в год», это не сходится с масштабом порта, но хранится как есть. Перечень стивидоров на страницах скрыт в разметке: имена не используются.
   - Мощность порта — показатель территории, а не поток пары городов (PRODUCT_SPEC §4).
+- **Яндекс.Расписания.** Справочник станций — не расписание. Аэропорты и автовокзалы привязаны по месту (кодов IATA у Расписаний нет): 41 аэропорт без аэропорта Расписаний в 5 км (в основном аэродромы без рейсов), 249 автовокзалов без автовокзала Расписаний в 300 м. Ж/д узлы без совпадения ЕСР (249) — остановочные пункты и станции, которых нет в справочнике.
 - **Не сделаны:** расписания, подъезд по дорогам для `private_car`, проверка грузовых операций ж/д станций (см. выше).
 
 ## Handoff
@@ -496,7 +529,9 @@ Raw, которые использованы для сборки, перечис
 
 **Каталог для `ProductRegistry`.** `registry_inputs("russia-territories-2026-11-09.1", <три bundle>)` даёт 1 210 `TerritoryOption` и 19 `AreaOption`. Проверено на `origin/dev`: настоящий `a2_api.product_registry.ProductRegistry` собирается с ними и тремя snapshot, `capabilities()` показывает три snapshot, `territory("kaliningrad")` возвращает `parent_region_id=region-ru-kgd`. Решить BACKEND: можно ли включать `national_catalog_complete=true` — в справочнике 1 121 город из 1 117 у Росстата, но шести городов нет (см. выше), так что ML2 предлагает оставить `false`.
 
-**Межгородские узлы и Яндекс.Расписания.** `RaspPlaceBinding` требует подтверждённый код провайдера, угадывать его по названию нельзя. ML2 не может получить коды без ключа API Расписаний (`stations_list`), а ключ у владельца провайдера. Предложение: когда ключ будет, ML2 один раз сохраняет `stations_list` как raw с sha256 и сопоставляет узлы `russia-intercity-nodes-2026-11-09.1` по коду ЕСР (станции) и IATA (аэропорты). Код города (`c…`) берётся по однозначному совпадению узлов города. Критерий: у каждой привязки есть evidence на raw `stations_list`, а неоднозначные совпадения не привязываются.
+**Межгородские узлы и Яндекс.Расписания.** Привязки готовы: `load_bindings("rasp-bindings-2026-11-09.1")` даёт строки `RaspPlaceBinding` без `snapshot_id` (его ставит BACKEND) — `territory_id`, `provider_code` (`c…` или `s…`), IANA-пояс из справочника, `evidence_id` на raw `stations_list`. 743 города и 83 субъекта; ни один код не называет два города (QA fail). Код субъекта — код его столицы: региональный результат идёт через столицу (PRODUCT_SPEC §1), поэтому у `moscow` и `region-ru-mow` один код по построению.
+- Привязки — кэш вне git (условия API, п. 3.2.4). Пересобрать их можно одной командой из раздела «Пересборка», нужен только ответ `stations_list`.
+- Нужно решить команде: условия API запрещают сохранять и обрабатывать данные Расписаний, кроме кэша для работы сервиса. Значит, рейсы Расписаний нельзя сделать принятым snapshot для расчёта индексов без письменного согласия Яндекса; в рамках условий остаётся `provider_observation` бэкенда (`accepted_snapshot=false`, partial). Ещё условия требуют подпись «Данные предоставлены сервисом Яндекс.Расписания» со ссылкой на rasp.yandex.ru рядом с данными (п. 2.3.5) и только бесплатный открытый сайт (п. 2.3.2) — это FRONTEND.
 
 Отдельно: в первом handoff BACKEND первым регионом названа Ленинградская область, а по PRODUCT_SPEC это Москва, Калининград и Новороссийск.
 
@@ -525,6 +560,8 @@ Raw, которые использованы для сборки, перечис
 
 **Справка частоты (Калининград).** `stop_frequencies` — не рейсы: индекс ОТ из неё не считать. Как её использовать (например, оценка ожидания как половины интервала) — решение ML1, в bundle только факты таблиц.
 
+**Входы intercity под модели ML1** (проверено настоящими классами `origin/work/ml1` a4851c1): `capital_boundaries()` → 83 `CapitalBoundary` (субъект, столица, все узлы столицы; спорные субъекты без столиц — без строки, то есть unknown), `transport_mode_bindings()` → 7 `TransportModeBinding` для видов Расписаний. `Timetable`/`PhysicalService` из Расписаний ML2 не собирает: см. условия API в handoff BACKEND. Узлы в событиях расписания — наши `node_id`; код Расписаний узла — в `load_bindings(...)[0]`.
+
 **Межгород.** Узлы — `load_nodes("russia-intercity-nodes-2026-11-09.2")`: id `node-wd-q…` (Wikidata) и `node-osm-…` (автовокзалы OSM), вид узла, координаты, города (`territory_ids`), коды ЕСР/«Экспресс»/IATA/ICAO, ссылки OSM. Грузовые порты — `load_seaports("russia-seaports-2026-11-09.1")`, только `status=accepted`; это узлы вида `port`, мощности — показатель территории, не поток пары. Входов на дорожную сеть у межгородских узлов нет: подъезд строит Valhalla ML1 от координат. Субъекты — через столицы из справочника территорий (`capital_city_id`). Рейсов между узлами пока нет: их даст провайдер расписаний; эталонных рёбер ж/д, авиа и воды тоже нет — по FORMULAS §6 их калибруют по подтверждённым рейсам.
 
 **Чего ещё нет:** рейсов ОТ (trips, stop_times, calendars) и подъезда по дорожной сети для `private_car`.
@@ -541,6 +578,6 @@ Raw, которые использованы для сборки, перечис
 
 **Критерий приёмки:**
 - `uv sync --frozen --all-packages --group dev` ставит пакеты;
-- `PYTHONPATH=packages/data_pipeline/src pytest packages/data_pipeline/tests` проходит без skip гео-тестов. Сейчас с оверлеем и контрактами — 184 passed, без них — 108 passed и 12 skipped.
+- `PYTHONPATH=packages/data_pipeline/src pytest packages/data_pipeline/tests` проходит без skip гео-тестов. Сейчас с оверлеем и контрактами — 188 passed, без них — 112 passed и 12 skipped.
 
 Отдельно: CI сейчас не запускает pytest пакетов.
