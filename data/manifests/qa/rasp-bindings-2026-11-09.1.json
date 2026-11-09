@@ -1,0 +1,192 @@
+{
+  "output_id": "rasp-bindings-2026-11-09.1",
+  "created_at": "2026-11-09T20:40:13.835118+00:00",
+  "rules": "rasp-bindings-v1",
+  "source": {
+    "dataset_id": "yandex_rasp.stations_list-20261109",
+    "raw_sha256": "18b7382af2eab939d230ce1d7c7ad21ee411d168ff9f6e7481bf0f7dbcd6e5c5",
+    "retrieved_at": "2026-11-09T20:32:09+00:00",
+    "evidence_id": "yandex_rasp:stations_list:18b7382af2eab939"
+  },
+  "inputs": {
+    "nodes": "russia-intercity-nodes-2026-11-09.2",
+    "territories": "russia-territories-2026-11-09.1"
+  },
+  "checks": [
+    {
+      "check_id": "territory_bound_once",
+      "status": "pass",
+      "severity": "fail",
+      "details": {
+        "duplicates": []
+      }
+    },
+    {
+      "check_id": "provider_code_names_one_city",
+      "status": "pass",
+      "severity": "fail",
+      "details": {
+        "shared": []
+      }
+    },
+    {
+      "check_id": "pilot_cities_bound",
+      "status": "pass",
+      "severity": "warn",
+      "details": {
+        "bound": [
+          "kaliningrad",
+          "moscow",
+          "novorossiysk"
+        ]
+      }
+    },
+    {
+      "check_id": "cities_with_several_settlements",
+      "status": "warn",
+      "severity": "warn",
+      "details": {
+        "cities": [
+          "Коломна",
+          "Долгопрудный",
+          "Красногорск",
+          "Кубинка",
+          "Новый Уренгой",
+          "Одинцово",
+          "Сергиев Посад",
+          "Подольск",
+          "Сосногорск",
+          "Ступино",
+          "Воронеж",
+          "Сочи",
+          "Грозный",
+          "Киров",
+          "Пенза",
+          "Зеленоградск",
+          "Санкт-Петербург",
+          "Дзержинск",
+          "Волгоград",
+          "Пермь",
+          "Москва"
+        ]
+      }
+    },
+    {
+      "check_id": "cities_without_majority",
+      "status": "warn",
+      "severity": "warn",
+      "details": {
+        "cities": [
+          "Артём",
+          "Балашиха",
+          "Домодедово",
+          "Кашира",
+          "Лобня",
+          "Павловский Посад",
+          "Пушкино",
+          "Северобайкальск",
+          "Химки",
+          "Щёлково",
+          "Электроугли"
+        ]
+      }
+    },
+    {
+      "check_id": "regions_bound_through_capitals",
+      "status": "warn",
+      "severity": "warn",
+      "details": {
+        "unbound": [
+          "Херсонская область",
+          "Запорожская область",
+          "Республика Крым",
+          "Донецкая Народная Республика",
+          "Луганская Народная Республика",
+          "Севастополь"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "rules": "rasp-bindings-v1",
+    "rasp_russian_stations": 94109,
+    "nodes": {
+      "rail_station": 2299,
+      "airport": 176,
+      "bus_station": 482
+    },
+    "nodes_bound": {
+      "bus_station_within_300m": 232,
+      "esr_code": 2050,
+      "airport_within_5km": 133
+    },
+    "nodes_unbound": {
+      "airport_none": 41,
+      "airport_several": 2,
+      "bus_station_none": 249,
+      "bus_station_several": 1,
+      "rail_no_esr_match": 249
+    },
+    "cities_bound": 743,
+    "cities_with_nodes": 846,
+    "cities_several_settlements": [
+      "Коломна",
+      "Долгопрудный",
+      "Красногорск",
+      "Кубинка",
+      "Новый Уренгой",
+      "Одинцово",
+      "Сергиев Посад",
+      "Подольск",
+      "Сосногорск",
+      "Ступино",
+      "Воронеж",
+      "Сочи",
+      "Грозный",
+      "Киров",
+      "Пенза",
+      "Зеленоградск",
+      "Санкт-Петербург",
+      "Дзержинск",
+      "Волгоград",
+      "Пермь",
+      "Москва"
+    ],
+    "cities_without_majority": [
+      "Артём",
+      "Балашиха",
+      "Домодедово",
+      "Кашира",
+      "Лобня",
+      "Павловский Посад",
+      "Пушкино",
+      "Северобайкальск",
+      "Химки",
+      "Щёлково",
+      "Электроугли"
+    ],
+    "cities_sharing_a_settlement": [
+      "Мурино"
+    ],
+    "regions_bound": 83,
+    "regions_unbound": [
+      "Херсонская область",
+      "Запорожская область",
+      "Республика Крым",
+      "Донецкая Народная Республика",
+      "Луганская Народная Республика",
+      "Севастополь"
+    ],
+    "provider_codes_shared_by_cities": []
+  },
+  "files": {
+    "node_codes.json": {
+      "sha256": "299608e15d58371fd7c633234a90f47115fb9f8ed092a560419dddd08e8ea076",
+      "rows": 2415
+    },
+    "bindings.json": {
+      "sha256": "246d734558373de94add58b6430ed79fe46a4a47f30b47c84156c32a428dd03b",
+      "rows": 826
+    }
+  }
+}

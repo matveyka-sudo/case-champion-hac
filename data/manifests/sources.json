@@ -477,9 +477,10 @@
       "limitations": "Нужен серверный ключ; квоты и право кеширования по условиям ключа; не полный мультимодальный граф",
       "access_method": "api",
       "geography": "РФ",
-      "license": {"name": "Условия API Яндекс Расписаний", "url": "https://yandex.ru/dev/rasp/doc/ru/", "status": "unknown"},
-      "status": "registered",
-      "notes": "Адаптер и rate limit — BACKEND; нормализация узлов и QA ответов — ML2"
+      "license": {"name": "Условия использования API Яндекс.Расписаний: хранение только как кэш для работы сервиса (п. 3.2.4), ссылка «Данные предоставлены сервисом Яндекс.Расписания» (п. 2.3.5), только бесплатный открытый сайт (п. 2.3.2)", "url": "https://yandex.ru/legal/rasp_api/", "status": "restricted"},
+      "status": "fetched",
+      "datasets": ["yandex_rasp.stations_list-20261109"],
+      "notes": "Адаптер и rate limit — BACKEND; привязка узлов и территорий к кодам — ML2 (rasp_bindings, только кэш вне git). Сохранять рейсы как принятый snapshot для расчёта индексов условия не разрешают без письменного согласия Яндекса — решение команды"
     },
     {
       "source_id": "gtfs_moscow_mdb3226",
