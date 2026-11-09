@@ -1,0 +1,37 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "acceptance_state": {
+      "const": "accepted",
+      "title": "Acceptance State",
+      "type": "string"
+    },
+    "accepted_at": {
+      "format": "date-time",
+      "title": "Accepted At",
+      "type": "string"
+    },
+    "accepted_by": {
+      "minLength": 1,
+      "title": "Accepted By",
+      "type": "string"
+    },
+    "checks": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Checks",
+      "type": "array"
+    }
+  },
+  "required": [
+    "acceptance_state",
+    "accepted_by",
+    "accepted_at",
+    "checks"
+  ],
+  "title": "QAReport",
+  "type": "object"
+}

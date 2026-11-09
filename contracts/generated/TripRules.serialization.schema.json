@@ -1,0 +1,87 @@
+{
+  "$defs": {
+    "Budget": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "minimum": 0,
+          "title": "Amount",
+          "type": "number"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "currency"
+      ],
+      "title": "Budget",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "budget": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Budget"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "max_access_walk_minutes": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Max Access Walk Minutes"
+    },
+    "max_one_way_minutes": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Max One Way Minutes"
+    },
+    "max_transfers": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Max Transfers"
+    },
+    "require_step_free": {
+      "title": "Require Step Free",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "max_one_way_minutes",
+    "max_transfers",
+    "max_access_walk_minutes",
+    "budget",
+    "require_step_free"
+  ],
+  "title": "TripRules",
+  "type": "object"
+}

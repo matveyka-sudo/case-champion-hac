@@ -1,0 +1,62 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "capital_city_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Capital City Id"
+    },
+    "level": {
+      "enum": [
+        "city",
+        "region"
+      ],
+      "title": "Level",
+      "type": "string"
+    },
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "parent_region_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parent Region Id"
+    },
+    "territory_id": {
+      "minLength": 1,
+      "title": "Territory Id",
+      "type": "string"
+    },
+    "timezone": {
+      "minLength": 1,
+      "title": "Timezone",
+      "type": "string"
+    }
+  },
+  "required": [
+    "territory_id",
+    "level",
+    "name",
+    "timezone"
+  ],
+  "title": "TerritoryOption",
+  "type": "object"
+}

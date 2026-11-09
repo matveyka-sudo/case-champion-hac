@@ -1,0 +1,104 @@
+{
+  "$defs": {
+    "MethodologyRef": {
+      "additionalProperties": false,
+      "properties": {
+        "config_hash": {
+          "minLength": 1,
+          "title": "Config Hash",
+          "type": "string"
+        },
+        "reference_profile": {
+          "const": "edge-calibrated-v1",
+          "default": "edge-calibrated-v1",
+          "title": "Reference Profile",
+          "type": "string"
+        },
+        "version": {
+          "const": "a2-methodology-v3",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "config_hash"
+      ],
+      "title": "MethodologyRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "area_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Area Id"
+    },
+    "city_id": {
+      "minLength": 1,
+      "title": "City Id",
+      "type": "string"
+    },
+    "departure_at": {
+      "format": "date-time",
+      "title": "Departure At",
+      "type": "string"
+    },
+    "methodology": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MethodologyRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "schema_version": {
+      "const": "2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "snapshot_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Snapshot Id"
+    },
+    "traffic_mode": {
+      "enum": [
+        "static",
+        "typical",
+        "live",
+        "historical"
+      ],
+      "title": "Traffic Mode",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "departure_at",
+    "traffic_mode",
+    "city_id"
+  ],
+  "title": "UrbanBase",
+  "type": "object"
+}

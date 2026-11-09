@@ -1,0 +1,179 @@
+{
+  "$defs": {
+    "ErrorDetail": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "field_errors": {
+          "items": {
+            "$ref": "#/$defs/FieldError"
+          },
+          "title": "Field Errors",
+          "type": "array"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "request_id": {
+          "minLength": 1,
+          "title": "Request Id",
+          "type": "string"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "field_errors",
+        "request_id",
+        "retryable"
+      ],
+      "title": "ErrorDetail",
+      "type": "object"
+    },
+    "FieldError": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "location": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Location",
+          "type": "array"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "location",
+        "code",
+        "message"
+      ],
+      "title": "FieldError",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "analysis_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Analysis Id"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ErrorDetail"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "finished_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Finished At"
+    },
+    "job_id": {
+      "minLength": 1,
+      "title": "Job Id",
+      "type": "string"
+    },
+    "poll_after_seconds": {
+      "default": 2,
+      "minimum": 1,
+      "title": "Poll After Seconds",
+      "type": "integer"
+    },
+    "request_id": {
+      "minLength": 1,
+      "title": "Request Id",
+      "type": "string"
+    },
+    "scenario_run_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Scenario Run Id"
+    },
+    "started_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Started At"
+    },
+    "status": {
+      "enum": [
+        "queued",
+        "running",
+        "succeeded",
+        "failed",
+        "cancelled"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "job_id",
+    "status",
+    "request_id",
+    "created_at",
+    "started_at",
+    "finished_at",
+    "analysis_id",
+    "scenario_run_id",
+    "error"
+  ],
+  "title": "JobView",
+  "type": "object"
+}

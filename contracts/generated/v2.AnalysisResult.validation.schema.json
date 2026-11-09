@@ -1,0 +1,2536 @@
+{
+  "$defs": {
+    "AnalysisMapData": {
+      "additionalProperties": false,
+      "properties": {
+        "completeness": {
+          "default": "partial",
+          "enum": [
+            "full",
+            "partial"
+          ],
+          "title": "Completeness",
+          "type": "string"
+        },
+        "features": {
+          "items": {
+            "$ref": "#/$defs/MapFeature"
+          },
+          "title": "Features",
+          "type": "array"
+        },
+        "reason_code": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "MAP_DATA_UNAVAILABLE",
+          "title": "Reason Code"
+        },
+        "status": {
+          "default": "unknown",
+          "enum": [
+            "available",
+            "unknown"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "title": "AnalysisMapData",
+      "type": "object"
+    },
+    "BoundaryNodeSets": {
+      "additionalProperties": false,
+      "properties": {
+        "destination_node_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Destination Node Ids",
+          "type": "array"
+        },
+        "origin_node_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Origin Node Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "origin_node_ids",
+        "destination_node_ids"
+      ],
+      "title": "BoundaryNodeSets",
+      "type": "object"
+    },
+    "ComponentRef": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "metric",
+            "score"
+          ],
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ],
+      "title": "ComponentRef",
+      "type": "object"
+    },
+    "CountResult": {
+      "additionalProperties": false,
+      "properties": {
+        "dependency_job_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Dependency Job Id"
+        },
+        "evidence_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "metric_id": {
+          "minLength": 1,
+          "title": "Metric Id",
+          "type": "string"
+        },
+        "reason_code": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason Code"
+        },
+        "status": {
+          "enum": [
+            "available",
+            "unknown",
+            "not_applicable",
+            "pending"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "threshold_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Threshold Seconds"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "metric_id",
+        "threshold_seconds",
+        "value",
+        "status",
+        "reason_code",
+        "dependency_job_id",
+        "evidence_refs"
+      ],
+      "title": "CountResult",
+      "type": "object"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Observed At"
+        },
+        "retrieved_at": {
+          "format": "date-time",
+          "title": "Retrieved At",
+          "type": "string"
+        },
+        "section": {
+          "minLength": 1,
+          "title": "Section",
+          "type": "string"
+        },
+        "source_id": {
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "url": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "source_id",
+        "url",
+        "retrieved_at",
+        "observed_at",
+        "section"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "IntercityCargoRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis_kind": {
+          "const": "intercity_cargo",
+          "title": "Analysis Kind",
+          "type": "string"
+        },
+        "cargo_modes": {
+          "anyOf": [
+            {
+              "items": {
+                "enum": [
+                  "road",
+                  "rail",
+                  "air",
+                  "water",
+                  "mixed",
+                  "pipeline"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cargo Modes"
+        },
+        "cargo_profile_id": {
+          "minLength": 1,
+          "title": "Cargo Profile Id",
+          "type": "string"
+        },
+        "cargo_transport": {
+          "enum": [
+            "multimodal",
+            "pipeline"
+          ],
+          "title": "Cargo Transport",
+          "type": "string"
+        },
+        "departure_at": {
+          "format": "date-time",
+          "title": "Departure At",
+          "type": "string"
+        },
+        "destination_id": {
+          "minLength": 1,
+          "title": "Destination Id",
+          "type": "string"
+        },
+        "destination_node_ids": {
+          "anyOf": [
+            {
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Destination Node Ids"
+        },
+        "methodology": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MethodologyRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "origin_id": {
+          "minLength": 1,
+          "title": "Origin Id",
+          "type": "string"
+        },
+        "origin_node_ids": {
+          "anyOf": [
+            {
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Origin Node Ids"
+        },
+        "pipeline_product": {
+          "anyOf": [
+            {
+              "enum": [
+                "oil",
+                "oil_products",
+                "gas"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pipeline Product"
+        },
+        "schema_version": {
+          "const": "2",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Snapshot Id"
+        },
+        "territory_level": {
+          "enum": [
+            "city",
+            "region"
+          ],
+          "title": "Territory Level",
+          "type": "string"
+        },
+        "traffic_mode": {
+          "enum": [
+            "static",
+            "typical",
+            "live",
+            "historical"
+          ],
+          "title": "Traffic Mode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "departure_at",
+        "traffic_mode",
+        "territory_level",
+        "origin_id",
+        "destination_id",
+        "analysis_kind",
+        "cargo_profile_id",
+        "cargo_transport"
+      ],
+      "title": "IntercityCargoRequest",
+      "type": "object"
+    },
+    "IntercityPassengerRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis_kind": {
+          "const": "intercity_passenger",
+          "title": "Analysis Kind",
+          "type": "string"
+        },
+        "departure_at": {
+          "format": "date-time",
+          "title": "Departure At",
+          "type": "string"
+        },
+        "destination_id": {
+          "minLength": 1,
+          "title": "Destination Id",
+          "type": "string"
+        },
+        "destination_node_ids": {
+          "anyOf": [
+            {
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Destination Node Ids"
+        },
+        "methodology": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MethodologyRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "origin_id": {
+          "minLength": 1,
+          "title": "Origin Id",
+          "type": "string"
+        },
+        "origin_node_ids": {
+          "anyOf": [
+            {
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Origin Node Ids"
+        },
+        "passenger_modes": {
+          "anyOf": [
+            {
+              "items": {
+                "enum": [
+                  "road",
+                  "rail",
+                  "air",
+                  "water",
+                  "mixed",
+                  "private_car"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Passenger Modes"
+        },
+        "schema_version": {
+          "const": "2",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Snapshot Id"
+        },
+        "territory_level": {
+          "enum": [
+            "city",
+            "region"
+          ],
+          "title": "Territory Level",
+          "type": "string"
+        },
+        "traffic_mode": {
+          "enum": [
+            "static",
+            "typical",
+            "live",
+            "historical"
+          ],
+          "title": "Traffic Mode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "departure_at",
+        "traffic_mode",
+        "territory_level",
+        "origin_id",
+        "destination_id",
+        "analysis_kind"
+      ],
+      "title": "IntercityPassengerRequest",
+      "type": "object"
+    },
+    "JourneyResult": {
+      "additionalProperties": false,
+      "properties": {
+        "arrival_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Arrival At"
+        },
+        "completeness": {
+          "enum": [
+            "full",
+            "partial"
+          ],
+          "title": "Completeness",
+          "type": "string"
+        },
+        "departure_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Departure At"
+        },
+        "destination_node_id": {
+          "minLength": 1,
+          "title": "Destination Node Id",
+          "type": "string"
+        },
+        "destination_object_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Destination Object Id"
+        },
+        "evidence_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "geometry": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineGeometry"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "geometry_kind": {
+          "enum": [
+            "actual",
+            "schematic",
+            "none"
+          ],
+          "title": "Geometry Kind",
+          "type": "string"
+        },
+        "initial_wait_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Initial Wait Seconds"
+        },
+        "journey_id": {
+          "minLength": 1,
+          "title": "Journey Id",
+          "type": "string"
+        },
+        "legs": {
+          "items": {
+            "$ref": "#/$defs/Leg"
+          },
+          "title": "Legs",
+          "type": "array"
+        },
+        "origin_node_id": {
+          "minLength": 1,
+          "title": "Origin Node Id",
+          "type": "string"
+        },
+        "path_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Path Seconds"
+        },
+        "point_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Point Id"
+        },
+        "reason_code": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason Code"
+        },
+        "reference_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reference Id"
+        },
+        "requested_departure_at": {
+          "format": "date-time",
+          "title": "Requested Departure At",
+          "type": "string"
+        },
+        "scope": {
+          "enum": [
+            "urban",
+            "intercity"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "minLength": 1,
+          "title": "Snapshot Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "available",
+            "unknown",
+            "not_applicable"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "time_kind": {
+          "enum": [
+            "movement",
+            "complete_chain"
+          ],
+          "title": "Time Kind",
+          "type": "string"
+        },
+        "total_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Total Seconds"
+        },
+        "total_wait_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Total Wait Seconds"
+        },
+        "traffic_mode": {
+          "enum": [
+            "static",
+            "typical",
+            "live",
+            "historical"
+          ],
+          "title": "Traffic Mode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "journey_id",
+        "scope",
+        "origin_node_id",
+        "destination_node_id",
+        "requested_departure_at",
+        "departure_at",
+        "arrival_at",
+        "total_seconds",
+        "initial_wait_seconds",
+        "path_seconds",
+        "total_wait_seconds",
+        "legs",
+        "geometry",
+        "geometry_kind",
+        "status",
+        "reason_code",
+        "snapshot_id",
+        "completeness",
+        "traffic_mode",
+        "time_kind",
+        "reference_id",
+        "destination_object_id",
+        "evidence_refs"
+      ],
+      "title": "JourneyResult",
+      "type": "object"
+    },
+    "LastReturn": {
+      "additionalProperties": false,
+      "properties": {
+        "arrival_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Arrival At"
+        },
+        "destination_object_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Destination Object Id"
+        },
+        "evidence_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "first_departure_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "First Departure At"
+        },
+        "journey_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Journey Id"
+        },
+        "leave_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Leave At"
+        },
+        "point_id": {
+          "minLength": 1,
+          "title": "Point Id",
+          "type": "string"
+        },
+        "reason_code": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason Code"
+        },
+        "service_date": {
+          "format": "date",
+          "title": "Service Date",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "available",
+            "unknown",
+            "not_applicable"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "timezone": {
+          "minLength": 1,
+          "title": "Timezone",
+          "type": "string"
+        }
+      },
+      "required": [
+        "point_id",
+        "destination_object_id",
+        "journey_id",
+        "status",
+        "reason_code",
+        "service_date",
+        "timezone",
+        "leave_at",
+        "first_departure_at",
+        "arrival_at",
+        "evidence_refs"
+      ],
+      "title": "LastReturn",
+      "type": "object"
+    },
+    "Leg": {
+      "additionalProperties": false,
+      "properties": {
+        "duration_seconds": {
+          "minimum": 0,
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "end_at": {
+          "format": "date-time",
+          "title": "End At",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "from_node_id": {
+          "minLength": 1,
+          "title": "From Node Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "walk",
+            "ride",
+            "wait_initial",
+            "wait_transfer",
+            "handling",
+            "transfer_operation"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "walk",
+            "public_transport",
+            "private_car",
+            "road",
+            "rail",
+            "air",
+            "water",
+            "mixed"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "service_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Service Id"
+        },
+        "start_at": {
+          "format": "date-time",
+          "title": "Start At",
+          "type": "string"
+        },
+        "to_node_id": {
+          "minLength": 1,
+          "title": "To Node Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "mode",
+        "kind",
+        "from_node_id",
+        "to_node_id",
+        "start_at",
+        "end_at",
+        "duration_seconds",
+        "service_id",
+        "evidence_refs"
+      ],
+      "title": "Leg",
+      "type": "object"
+    },
+    "LineGeometry": {
+      "additionalProperties": false,
+      "properties": {
+        "coordinates": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "minItems": 2,
+          "title": "Coordinates",
+          "type": "array"
+        },
+        "evidence_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "type": {
+          "const": "LineString",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "coordinates",
+        "evidence_refs"
+      ],
+      "title": "LineGeometry",
+      "type": "object"
+    },
+    "MapFeature": {
+      "additionalProperties": false,
+      "properties": {
+        "categories": {
+          "items": {
+            "enum": [
+              "adult_polyclinic",
+              "child_polyclinic",
+              "kindergarten",
+              "school",
+              "college_university",
+              "rail_terminal",
+              "bus_terminal",
+              "airport",
+              "shopping_center"
+            ],
+            "type": "string"
+          },
+          "title": "Categories",
+          "type": "array"
+        },
+        "cell_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cell Id"
+        },
+        "entity_id": {
+          "minLength": 1,
+          "title": "Entity Id",
+          "type": "string"
+        },
+        "entity_kind": {
+          "enum": [
+            "cell",
+            "sample_point",
+            "destination",
+            "freight_site",
+            "freight_node",
+            "access_node",
+            "territory"
+          ],
+          "title": "Entity Kind",
+          "type": "string"
+        },
+        "geometry": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "MultiPolygon": "#/$defs/MultiPolygonGeometry",
+                  "Point": "#/$defs/PointGeometry",
+                  "Polygon": "#/$defs/PolygonGeometry"
+                },
+                "propertyName": "type"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/PointGeometry"
+                },
+                {
+                  "$ref": "#/$defs/PolygonGeometry"
+                },
+                {
+                  "$ref": "#/$defs/MultiPolygonGeometry"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Geometry"
+        },
+        "geometry_kind": {
+          "enum": [
+            "actual",
+            "schematic",
+            "none"
+          ],
+          "title": "Geometry Kind",
+          "type": "string"
+        },
+        "geometry_ref": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Geometry Ref"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "point_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Point Id"
+        },
+        "population": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Population"
+        },
+        "population_method": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Population Method"
+        },
+        "population_year": {
+          "anyOf": [
+            {
+              "maximum": 2200,
+              "minimum": 1900,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Population Year"
+        },
+        "reason_code": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason Code"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "territory_id": {
+          "minLength": 1,
+          "title": "Territory Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "entity_kind",
+        "entity_id",
+        "territory_id",
+        "geometry",
+        "geometry_kind",
+        "source_refs"
+      ],
+      "title": "MapFeature",
+      "type": "object"
+    },
+    "MethodologyRef": {
+      "additionalProperties": false,
+      "properties": {
+        "config_hash": {
+          "minLength": 1,
+          "title": "Config Hash",
+          "type": "string"
+        },
+        "reference_profile": {
+          "const": "edge-calibrated-v1",
+          "default": "edge-calibrated-v1",
+          "title": "Reference Profile",
+          "type": "string"
+        },
+        "version": {
+          "const": "a2-methodology-v3",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "config_hash"
+      ],
+      "title": "MethodologyRef",
+      "type": "object"
+    },
+    "Metric": {
+      "additionalProperties": false,
+      "properties": {
+        "completeness": {
+          "enum": [
+            "full",
+            "partial"
+          ],
+          "title": "Completeness",
+          "type": "string"
+        },
+        "dependency_job_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dependency Job Id"
+        },
+        "journey_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Journey Id"
+        },
+        "metric_id": {
+          "minLength": 1,
+          "title": "Metric Id",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "population_basis": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PopulationBasis"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "reason_code": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason Code"
+        },
+        "site_basis": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SiteBasis"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "available",
+            "unknown",
+            "not_applicable",
+            "methodology_pending",
+            "pending"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "subject": {
+          "$ref": "#/$defs/SubjectRef"
+        },
+        "time_kind": {
+          "anyOf": [
+            {
+              "enum": [
+                "movement",
+                "complete_chain"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Time Kind"
+        },
+        "unit": {
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "metric_id",
+        "name",
+        "value",
+        "unit",
+        "status",
+        "reason_code",
+        "source_refs",
+        "subject",
+        "completeness"
+      ],
+      "title": "Metric",
+      "type": "object"
+    },
+    "MultiPolygonGeometry": {
+      "additionalProperties": false,
+      "properties": {
+        "coordinates": {
+          "items": {
+            "items": {
+              "items": {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "maximum": 180,
+                    "minimum": -180,
+                    "type": "number"
+                  },
+                  {
+                    "maximum": 90,
+                    "minimum": -90,
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              "minItems": 4,
+              "type": "array"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "minItems": 1,
+          "title": "Coordinates",
+          "type": "array"
+        },
+        "type": {
+          "const": "MultiPolygon",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "coordinates"
+      ],
+      "title": "MultiPolygonGeometry",
+      "type": "object"
+    },
+    "PointGeometry": {
+      "additionalProperties": false,
+      "properties": {
+        "coordinates": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "maximum": 180,
+              "minimum": -180,
+              "type": "number"
+            },
+            {
+              "maximum": 90,
+              "minimum": -90,
+              "type": "number"
+            }
+          ],
+          "title": "Coordinates",
+          "type": "array"
+        },
+        "type": {
+          "const": "Point",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "coordinates"
+      ],
+      "title": "PointGeometry",
+      "type": "object"
+    },
+    "PolygonGeometry": {
+      "additionalProperties": false,
+      "properties": {
+        "coordinates": {
+          "items": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "maximum": 180,
+                  "minimum": -180,
+                  "type": "number"
+                },
+                {
+                  "maximum": 90,
+                  "minimum": -90,
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            "minItems": 4,
+            "type": "array"
+          },
+          "minItems": 1,
+          "title": "Coordinates",
+          "type": "array"
+        },
+        "type": {
+          "const": "Polygon",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "coordinates"
+      ],
+      "title": "PolygonGeometry",
+      "type": "object"
+    },
+    "PopulationBasis": {
+      "additionalProperties": false,
+      "properties": {
+        "coverage": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Coverage",
+          "type": "number"
+        },
+        "population": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Population"
+        },
+        "population_method": {
+          "minLength": 1,
+          "title": "Population Method",
+          "type": "string"
+        },
+        "unit": {
+          "const": "persons",
+          "title": "Unit",
+          "type": "string"
+        },
+        "unknown_positive_weight": {
+          "title": "Unknown Positive Weight",
+          "type": "boolean"
+        },
+        "year": {
+          "anyOf": [
+            {
+              "maximum": 2200,
+              "minimum": 1900,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Year"
+        }
+      },
+      "required": [
+        "population",
+        "population_method",
+        "year",
+        "coverage",
+        "unit",
+        "unknown_positive_weight"
+      ],
+      "title": "PopulationBasis",
+      "type": "object"
+    },
+    "ReferenceResult": {
+      "additionalProperties": false,
+      "properties": {
+        "boundary_node_sets": {
+          "$ref": "#/$defs/BoundaryNodeSets"
+        },
+        "calibration_evidence": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Calibration Evidence",
+          "type": "array"
+        },
+        "completeness": {
+          "enum": [
+            "full",
+            "partial"
+          ],
+          "title": "Completeness",
+          "type": "string"
+        },
+        "edges": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Edges",
+          "type": "array"
+        },
+        "graph_version": {
+          "minLength": 1,
+          "title": "Graph Version",
+          "type": "string"
+        },
+        "necessary_operations": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Necessary Operations",
+          "type": "array"
+        },
+        "profile_version": {
+          "const": "edge-calibrated-v1",
+          "title": "Profile Version",
+          "type": "string"
+        },
+        "reason_code": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason Code"
+        },
+        "reference_id": {
+          "minLength": 1,
+          "title": "Reference Id",
+          "type": "string"
+        },
+        "seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Seconds"
+        },
+        "status": {
+          "enum": [
+            "available",
+            "unknown",
+            "not_applicable"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "reference_id",
+        "seconds",
+        "status",
+        "completeness",
+        "reason_code",
+        "profile_version",
+        "graph_version",
+        "boundary_node_sets",
+        "edges",
+        "necessary_operations",
+        "calibration_evidence"
+      ],
+      "title": "ReferenceResult",
+      "type": "object"
+    },
+    "Score": {
+      "additionalProperties": false,
+      "properties": {
+        "aggregation_basis": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PopulationBasis"
+            },
+            {
+              "$ref": "#/$defs/SiteBasis"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Aggregation Basis"
+        },
+        "calculation_kind": {
+          "anyOf": [
+            {
+              "enum": [
+                "reference_ratio",
+                "initial_wait",
+                "aggregate",
+                "delivery_deadline"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Calculation Kind"
+        },
+        "completeness": {
+          "enum": [
+            "full",
+            "partial"
+          ],
+          "title": "Completeness",
+          "type": "string"
+        },
+        "components": {
+          "items": {
+            "$ref": "#/$defs/ComponentRef"
+          },
+          "title": "Components",
+          "type": "array"
+        },
+        "evidence_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "methodology_version": {
+          "const": "a2-methodology-v3",
+          "title": "Methodology Version",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "ranking_eligible": {
+          "title": "Ranking Eligible",
+          "type": "boolean"
+        },
+        "reason_code": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason Code"
+        },
+        "reference_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Reference Ids",
+          "type": "array"
+        },
+        "score_id": {
+          "minLength": 1,
+          "title": "Score Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "available",
+            "unknown",
+            "not_applicable",
+            "methodology_pending"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "subject": {
+          "$ref": "#/$defs/SubjectRef"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "score_id",
+        "name",
+        "value",
+        "status",
+        "completeness",
+        "methodology_version",
+        "reason_code",
+        "components",
+        "evidence_refs",
+        "subject",
+        "ranking_eligible"
+      ],
+      "title": "Score",
+      "type": "object"
+    },
+    "SiteBasis": {
+      "additionalProperties": false,
+      "properties": {
+        "coverage": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Coverage",
+          "type": "number"
+        },
+        "site_count": {
+          "minimum": 0,
+          "title": "Site Count",
+          "type": "integer"
+        },
+        "weighting": {
+          "const": "equal_physical_sites",
+          "title": "Weighting",
+          "type": "string"
+        }
+      },
+      "required": [
+        "site_count",
+        "weighting",
+        "coverage"
+      ],
+      "title": "SiteBasis",
+      "type": "object"
+    },
+    "SubjectRef": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "anyOf": [
+            {
+              "enum": [
+                "adult_polyclinic",
+                "child_polyclinic",
+                "kindergarten",
+                "school",
+                "college_university",
+                "rail_terminal",
+                "bus_terminal",
+                "airport",
+                "shopping_center"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Category"
+        },
+        "destination_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Destination Id"
+        },
+        "kind": {
+          "enum": [
+            "sample_point",
+            "territory",
+            "category",
+            "freight_site",
+            "freight_node",
+            "connection",
+            "pipeline",
+            "city_pair"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "enum": [
+                "walk",
+                "public_transport",
+                "private_car",
+                "road",
+                "rail",
+                "air",
+                "water",
+                "mixed",
+                "pipeline"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mode"
+        },
+        "node_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node Id"
+        },
+        "origin_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Origin Id"
+        },
+        "point_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Point Id"
+        },
+        "site_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Site Id"
+        },
+        "territory_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Territory Id"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "SubjectRef",
+      "type": "object"
+    },
+    "UrbanCargoRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis_kind": {
+          "const": "urban_cargo",
+          "title": "Analysis Kind",
+          "type": "string"
+        },
+        "area_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Area Id"
+        },
+        "cargo_profile_id": {
+          "minLength": 1,
+          "title": "Cargo Profile Id",
+          "type": "string"
+        },
+        "city_id": {
+          "minLength": 1,
+          "title": "City Id",
+          "type": "string"
+        },
+        "departure_at": {
+          "format": "date-time",
+          "title": "Departure At",
+          "type": "string"
+        },
+        "direction": {
+          "enum": [
+            "outbound",
+            "inbound"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "freight_node_types": {
+          "anyOf": [
+            {
+              "items": {
+                "enum": [
+                  "port",
+                  "rail_freight_station",
+                  "terminal",
+                  "logistics_center"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Freight Node Types"
+        },
+        "methodology": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MethodologyRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "schema_version": {
+          "const": "2",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Snapshot Id"
+        },
+        "traffic_mode": {
+          "enum": [
+            "static",
+            "typical",
+            "live",
+            "historical"
+          ],
+          "title": "Traffic Mode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "departure_at",
+        "traffic_mode",
+        "city_id",
+        "analysis_kind",
+        "cargo_profile_id",
+        "direction"
+      ],
+      "title": "UrbanCargoRequest",
+      "type": "object"
+    },
+    "UrbanPassengerRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis_kind": {
+          "const": "urban_passenger",
+          "title": "Analysis Kind",
+          "type": "string"
+        },
+        "area_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Area Id"
+        },
+        "categories": {
+          "items": {
+            "enum": [
+              "adult_polyclinic",
+              "child_polyclinic",
+              "kindergarten",
+              "school",
+              "college_university",
+              "rail_terminal",
+              "bus_terminal",
+              "airport",
+              "shopping_center"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Categories",
+          "type": "array"
+        },
+        "city_id": {
+          "minLength": 1,
+          "title": "City Id",
+          "type": "string"
+        },
+        "departure_at": {
+          "format": "date-time",
+          "title": "Departure At",
+          "type": "string"
+        },
+        "methodology": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MethodologyRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "passenger_mode": {
+          "enum": [
+            "walk",
+            "public_transport",
+            "private_car"
+          ],
+          "title": "Passenger Mode",
+          "type": "string"
+        },
+        "priorities": {
+          "additionalProperties": {
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "type": "string"
+          },
+          "propertyNames": {
+            "enum": [
+              "adult_polyclinic",
+              "child_polyclinic",
+              "kindergarten",
+              "school",
+              "college_university",
+              "rail_terminal",
+              "bus_terminal",
+              "airport",
+              "shopping_center"
+            ]
+          },
+          "title": "Priorities",
+          "type": "object"
+        },
+        "schema_version": {
+          "const": "2",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Snapshot Id"
+        },
+        "traffic_mode": {
+          "enum": [
+            "static",
+            "typical",
+            "live",
+            "historical"
+          ],
+          "title": "Traffic Mode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "departure_at",
+        "traffic_mode",
+        "city_id",
+        "analysis_kind",
+        "passenger_mode",
+        "categories",
+        "priorities"
+      ],
+      "title": "UrbanPassengerRequest",
+      "type": "object"
+    },
+    "VersionRefs": {
+      "additionalProperties": false,
+      "properties": {
+        "calendar_version": {
+          "minLength": 1,
+          "title": "Calendar Version",
+          "type": "string"
+        },
+        "code_version": {
+          "minLength": 1,
+          "title": "Code Version",
+          "type": "string"
+        },
+        "config_hash": {
+          "minLength": 1,
+          "title": "Config Hash",
+          "type": "string"
+        },
+        "graph_version": {
+          "minLength": 1,
+          "title": "Graph Version",
+          "type": "string"
+        },
+        "methodology_version": {
+          "const": "a2-methodology-v3",
+          "title": "Methodology Version",
+          "type": "string"
+        },
+        "population_version": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Population Version"
+        },
+        "snapshot_id": {
+          "minLength": 1,
+          "title": "Snapshot Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "snapshot_id",
+        "graph_version",
+        "calendar_version",
+        "population_version",
+        "methodology_version",
+        "config_hash",
+        "code_version"
+      ],
+      "title": "VersionRefs",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "analysis_id": {
+      "minLength": 1,
+      "title": "Analysis Id",
+      "type": "string"
+    },
+    "analysis_kind": {
+      "enum": [
+        "urban_passenger",
+        "intercity_passenger",
+        "urban_cargo",
+        "intercity_cargo"
+      ],
+      "title": "Analysis Kind",
+      "type": "string"
+    },
+    "config_hash": {
+      "minLength": 1,
+      "title": "Config Hash",
+      "type": "string"
+    },
+    "counts": {
+      "items": {
+        "$ref": "#/$defs/CountResult"
+      },
+      "title": "Counts",
+      "type": "array"
+    },
+    "evidence_refs": {
+      "items": {
+        "$ref": "#/$defs/EvidenceRef"
+      },
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "journeys": {
+      "items": {
+        "$ref": "#/$defs/JourneyResult"
+      },
+      "title": "Journeys",
+      "type": "array"
+    },
+    "last_returns": {
+      "items": {
+        "$ref": "#/$defs/LastReturn"
+      },
+      "title": "Last Returns",
+      "type": "array"
+    },
+    "limitations": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "map_data": {
+      "$ref": "#/$defs/AnalysisMapData"
+    },
+    "methodology_version": {
+      "const": "a2-methodology-v3",
+      "title": "Methodology Version",
+      "type": "string"
+    },
+    "metrics": {
+      "items": {
+        "$ref": "#/$defs/Metric"
+      },
+      "title": "Metrics",
+      "type": "array"
+    },
+    "references": {
+      "items": {
+        "$ref": "#/$defs/ReferenceResult"
+      },
+      "title": "References",
+      "type": "array"
+    },
+    "request": {
+      "discriminator": {
+        "mapping": {
+          "intercity_cargo": "#/$defs/IntercityCargoRequest",
+          "intercity_passenger": "#/$defs/IntercityPassengerRequest",
+          "urban_cargo": "#/$defs/UrbanCargoRequest",
+          "urban_passenger": "#/$defs/UrbanPassengerRequest"
+        },
+        "propertyName": "analysis_kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/UrbanPassengerRequest"
+        },
+        {
+          "$ref": "#/$defs/IntercityPassengerRequest"
+        },
+        {
+          "$ref": "#/$defs/UrbanCargoRequest"
+        },
+        {
+          "$ref": "#/$defs/IntercityCargoRequest"
+        }
+      ],
+      "title": "Request"
+    },
+    "result_hash": {
+      "minLength": 1,
+      "title": "Result Hash",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scores": {
+      "items": {
+        "$ref": "#/$defs/Score"
+      },
+      "title": "Scores",
+      "type": "array"
+    },
+    "snapshot_id": {
+      "minLength": 1,
+      "title": "Snapshot Id",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "available",
+        "partial",
+        "unknown"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "traffic_mode": {
+      "enum": [
+        "static",
+        "typical",
+        "live",
+        "historical"
+      ],
+      "title": "Traffic Mode",
+      "type": "string"
+    },
+    "versions": {
+      "$ref": "#/$defs/VersionRefs"
+    }
+  },
+  "required": [
+    "schema_version",
+    "analysis_id",
+    "analysis_kind",
+    "request",
+    "snapshot_id",
+    "methodology_version",
+    "config_hash",
+    "traffic_mode",
+    "status",
+    "metrics",
+    "scores",
+    "evidence_refs",
+    "limitations",
+    "versions",
+    "journeys",
+    "references",
+    "counts",
+    "last_returns",
+    "result_hash"
+  ],
+  "title": "AnalysisResult",
+  "type": "object"
+}

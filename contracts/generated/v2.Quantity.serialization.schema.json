@@ -1,0 +1,72 @@
+{
+  "$defs": {
+    "Period": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "End"
+        },
+        "start": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Start"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "Period",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "period": {
+      "$ref": "#/$defs/Period"
+    },
+    "product": {
+      "enum": [
+        "oil",
+        "oil_products",
+        "gas"
+      ],
+      "title": "Product",
+      "type": "string"
+    },
+    "unit": {
+      "minLength": 1,
+      "title": "Unit",
+      "type": "string"
+    },
+    "value": {
+      "minimum": 0,
+      "title": "Value",
+      "type": "number"
+    }
+  },
+  "required": [
+    "value",
+    "unit",
+    "period",
+    "product"
+  ],
+  "title": "Quantity",
+  "type": "object"
+}

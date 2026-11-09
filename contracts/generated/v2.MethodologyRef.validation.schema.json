@@ -1,0 +1,27 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "config_hash": {
+      "minLength": 1,
+      "title": "Config Hash",
+      "type": "string"
+    },
+    "reference_profile": {
+      "const": "edge-calibrated-v1",
+      "default": "edge-calibrated-v1",
+      "title": "Reference Profile",
+      "type": "string"
+    },
+    "version": {
+      "const": "a2-methodology-v3",
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "version",
+    "config_hash"
+  ],
+  "title": "MethodologyRef",
+  "type": "object"
+}

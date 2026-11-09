@@ -1,0 +1,13 @@
+{
+  "description": "Contract fixture only; no observed geographic or transport result.",
+  "payload": {
+    "analysis_kind": "urban_cargo",
+    "cargo_profile_id": "demo-general",
+    "city_id": "demo-city",
+    "departure_at": "2026-11-09T08:15:00+03:00",
+    "direction": "outbound",
+    "schema_version": "2",
+    "traffic_mode": "static"
+  },
+  "synthetic": true
+}

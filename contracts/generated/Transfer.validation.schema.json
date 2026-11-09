@@ -1,0 +1,74 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "access_state": {
+      "enum": [
+        "verified",
+        "absent",
+        "unknown"
+      ],
+      "title": "Access State",
+      "type": "string"
+    },
+    "basis": {
+      "enum": [
+        "scenario",
+        "verified"
+      ],
+      "title": "Basis",
+      "type": "string"
+    },
+    "duration_seconds": {
+      "minimum": 0,
+      "title": "Duration Seconds",
+      "type": "number"
+    },
+    "evidence_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "from_id": {
+      "minLength": 1,
+      "title": "From Id",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "access",
+        "transfer",
+        "egress"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "restrictions": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Restrictions",
+      "type": "array"
+    },
+    "to_id": {
+      "minLength": 1,
+      "title": "To Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "from_id",
+    "to_id",
+    "duration_seconds",
+    "access_state",
+    "basis",
+    "kind",
+    "restrictions",
+    "evidence_ids"
+  ],
+  "title": "Transfer",
+  "type": "object"
+}

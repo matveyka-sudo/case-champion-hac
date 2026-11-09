@@ -1,0 +1,60 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "coverage": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Coverage",
+      "type": "number"
+    },
+    "population": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Population"
+    },
+    "population_method": {
+      "minLength": 1,
+      "title": "Population Method",
+      "type": "string"
+    },
+    "unit": {
+      "const": "persons",
+      "title": "Unit",
+      "type": "string"
+    },
+    "unknown_positive_weight": {
+      "title": "Unknown Positive Weight",
+      "type": "boolean"
+    },
+    "year": {
+      "anyOf": [
+        {
+          "maximum": 2200,
+          "minimum": 1900,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Year"
+    }
+  },
+  "required": [
+    "population",
+    "population_method",
+    "year",
+    "coverage",
+    "unit",
+    "unknown_positive_weight"
+  ],
+  "title": "PopulationBasis",
+  "type": "object"
+}

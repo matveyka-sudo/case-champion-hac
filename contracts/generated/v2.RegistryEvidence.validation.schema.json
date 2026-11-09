@@ -1,0 +1,69 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "category": {
+      "enum": [
+        "adult_polyclinic",
+        "child_polyclinic",
+        "kindergarten",
+        "school",
+        "college_university",
+        "rail_terminal",
+        "bus_terminal",
+        "airport",
+        "shopping_center"
+      ],
+      "title": "Category",
+      "type": "string"
+    },
+    "destination_id": {
+      "minLength": 1,
+      "title": "Destination Id",
+      "type": "string"
+    },
+    "ownership": {
+      "enum": [
+        "government",
+        "municipal",
+        "private",
+        "unknown"
+      ],
+      "title": "Ownership",
+      "type": "string"
+    },
+    "registry_evidence_id": {
+      "minLength": 1,
+      "title": "Registry Evidence Id",
+      "type": "string"
+    },
+    "registry_id": {
+      "minLength": 1,
+      "title": "Registry Id",
+      "type": "string"
+    },
+    "source_refs": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "verified": {
+      "title": "Verified",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "source_refs",
+    "registry_evidence_id",
+    "registry_id",
+    "destination_id",
+    "category",
+    "ownership",
+    "verified"
+  ],
+  "title": "RegistryEvidence",
+  "type": "object"
+}

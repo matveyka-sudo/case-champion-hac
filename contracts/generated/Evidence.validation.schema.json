@@ -1,0 +1,90 @@
+{
+  "$defs": {
+    "ValidityPeriod": {
+      "additionalProperties": false,
+      "properties": {
+        "valid_from": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid From"
+        },
+        "valid_to": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid To"
+        }
+      },
+      "required": [
+        "valid_from",
+        "valid_to"
+      ],
+      "title": "ValidityPeriod",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "content_hash": {
+      "minLength": 1,
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "evidence_id": {
+      "minLength": 1,
+      "title": "Evidence Id",
+      "type": "string"
+    },
+    "fetched_at": {
+      "format": "date-time",
+      "title": "Fetched At",
+      "type": "string"
+    },
+    "record_id": {
+      "minLength": 1,
+      "title": "Record Id",
+      "type": "string"
+    },
+    "source_id": {
+      "minLength": 1,
+      "title": "Source Id",
+      "type": "string"
+    },
+    "valid_period": {
+      "$ref": "#/$defs/ValidityPeriod"
+    },
+    "verification_state": {
+      "enum": [
+        "verified",
+        "absent",
+        "unknown"
+      ],
+      "title": "Verification State",
+      "type": "string"
+    }
+  },
+  "required": [
+    "evidence_id",
+    "source_id",
+    "record_id",
+    "fetched_at",
+    "valid_period",
+    "content_hash",
+    "verification_state"
+  ],
+  "title": "Evidence",
+  "type": "object"
+}

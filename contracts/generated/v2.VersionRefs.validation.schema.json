@@ -1,0 +1,58 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "calendar_version": {
+      "minLength": 1,
+      "title": "Calendar Version",
+      "type": "string"
+    },
+    "code_version": {
+      "minLength": 1,
+      "title": "Code Version",
+      "type": "string"
+    },
+    "config_hash": {
+      "minLength": 1,
+      "title": "Config Hash",
+      "type": "string"
+    },
+    "graph_version": {
+      "minLength": 1,
+      "title": "Graph Version",
+      "type": "string"
+    },
+    "methodology_version": {
+      "const": "a2-methodology-v3",
+      "title": "Methodology Version",
+      "type": "string"
+    },
+    "population_version": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Population Version"
+    },
+    "snapshot_id": {
+      "minLength": 1,
+      "title": "Snapshot Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "snapshot_id",
+    "graph_version",
+    "calendar_version",
+    "population_version",
+    "methodology_version",
+    "config_hash",
+    "code_version"
+  ],
+  "title": "VersionRefs",
+  "type": "object"
+}

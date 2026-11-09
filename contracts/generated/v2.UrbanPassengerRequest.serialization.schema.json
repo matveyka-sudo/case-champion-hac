@@ -1,0 +1,166 @@
+{
+  "$defs": {
+    "MethodologyRef": {
+      "additionalProperties": false,
+      "properties": {
+        "config_hash": {
+          "minLength": 1,
+          "title": "Config Hash",
+          "type": "string"
+        },
+        "reference_profile": {
+          "const": "edge-calibrated-v1",
+          "default": "edge-calibrated-v1",
+          "title": "Reference Profile",
+          "type": "string"
+        },
+        "version": {
+          "const": "a2-methodology-v3",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "config_hash"
+      ],
+      "title": "MethodologyRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "analysis_kind": {
+      "const": "urban_passenger",
+      "title": "Analysis Kind",
+      "type": "string"
+    },
+    "area_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Area Id"
+    },
+    "categories": {
+      "items": {
+        "enum": [
+          "adult_polyclinic",
+          "child_polyclinic",
+          "kindergarten",
+          "school",
+          "college_university",
+          "rail_terminal",
+          "bus_terminal",
+          "airport",
+          "shopping_center"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Categories",
+      "type": "array"
+    },
+    "city_id": {
+      "minLength": 1,
+      "title": "City Id",
+      "type": "string"
+    },
+    "departure_at": {
+      "format": "date-time",
+      "title": "Departure At",
+      "type": "string"
+    },
+    "methodology": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MethodologyRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "passenger_mode": {
+      "enum": [
+        "walk",
+        "public_transport",
+        "private_car"
+      ],
+      "title": "Passenger Mode",
+      "type": "string"
+    },
+    "priorities": {
+      "additionalProperties": {
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "type": "string"
+      },
+      "propertyNames": {
+        "enum": [
+          "adult_polyclinic",
+          "child_polyclinic",
+          "kindergarten",
+          "school",
+          "college_university",
+          "rail_terminal",
+          "bus_terminal",
+          "airport",
+          "shopping_center"
+        ]
+      },
+      "title": "Priorities",
+      "type": "object"
+    },
+    "schema_version": {
+      "const": "2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "snapshot_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Snapshot Id"
+    },
+    "traffic_mode": {
+      "enum": [
+        "static",
+        "typical",
+        "live",
+        "historical"
+      ],
+      "title": "Traffic Mode",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "departure_at",
+    "traffic_mode",
+    "city_id",
+    "analysis_kind",
+    "passenger_mode",
+    "categories",
+    "priorities"
+  ],
+  "title": "UrbanPassengerRequest",
+  "type": "object"
+}

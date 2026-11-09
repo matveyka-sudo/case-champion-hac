@@ -1,0 +1,33 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "evidence_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "operation": {
+      "enum": [
+        "add",
+        "remove"
+      ],
+      "title": "Operation",
+      "type": "string"
+    },
+    "service_date": {
+      "format": "date",
+      "title": "Service Date",
+      "type": "string"
+    }
+  },
+  "required": [
+    "service_date",
+    "operation",
+    "evidence_ids"
+  ],
+  "title": "CalendarException",
+  "type": "object"
+}
