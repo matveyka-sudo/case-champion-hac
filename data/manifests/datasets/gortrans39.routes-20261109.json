@@ -1,0 +1,36 @@
+{
+  "dataset_id": "gortrans39.routes-20261109",
+  "source_id": "gortrans39",
+  "source_url": "https://gortrans39.ru/routes/",
+  "retrieved_at": "2026-11-09T09:57:23.969008Z",
+  "publication_date": null,
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Калининград: 23 маршрута АО «Калининград-ГорТранс» (автобус, троллейбус, трамвай)",
+  "license": {
+    "name": "Общедоступная информация муниципального перевозчика: используются только факты (ст. 1259 ГК РФ)",
+    "url": "https://gortrans39.ru/",
+    "status": "permitted",
+    "attribution": "АО «Калининград-ГорТранс», gortrans39.ru"
+  },
+  "access_method": "file",
+  "raw_path": "gortrans39/gortrans39-routes-20261109.zip",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "8f09b5d9a9a8f17b8a40d51daaf45ea934b4461f59374fb1ee7dbca8afc67332",
+    "size_bytes": 704988
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "scheduleData": "остановка → отправления по типу дня (weekdays/saturday/weekend) или единый список"
+  },
+  "coverage": "Страница списка маршрутов и 23 страницы маршрутов на дату загрузки (сами HTML-страницы)",
+  "limitations": [
+    "Нет trip_id и направлений: отправления разных остановок не склеиваются в рейсы",
+    "Срок действия и праздничные исключения не указаны",
+    "У 16 маршрутов вместо расписания шаблон (одинаковая сетка через 30 минут)",
+    "Только муниципальный перевозчик; частные маршруты не входят"
+  ],
+  "status": "accepted",
+  "qa_report": "data/bundles/kaliningrad-urban-2026-11-09.1/qa_report.json"
+}

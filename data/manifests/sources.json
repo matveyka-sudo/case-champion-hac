@@ -499,7 +499,7 @@
       "source_id": "gortrans39",
       "a2_ref": null,
       "title": "Калининград — расписания gortrans39.ru",
-      "publisher": "МКУ «Калининград-ГорТранс»",
+      "publisher": "АО «Калининград-ГорТранс»",
       "source_url": "https://gortrans39.ru/routes/",
       "role": "calculation",
       "analysis_kinds": ["urban_passenger"],
@@ -507,8 +507,14 @@
       "limitations": "Нет trip_id: списки остановок нельзя склеивать по индексу; направления, сроки действия и праздники проверять",
       "access_method": "file",
       "geography": "Калининград",
-      "license": {"name": null, "url": null, "status": "unknown"},
-      "status": "registered"
+      "license": {
+        "name": "Общедоступная информация муниципального перевозчика: используются только факты (ст. 1259 ГК РФ)",
+        "url": "https://gortrans39.ru/",
+        "status": "permitted",
+        "attribution": "АО «Калининград-ГорТранс», gortrans39.ru"
+      },
+      "status": "accepted",
+      "datasets": ["gortrans39.routes-20261109"]
     },
     {
       "source_id": "nvrsk_mptn",
