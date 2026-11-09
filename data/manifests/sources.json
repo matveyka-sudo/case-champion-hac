@@ -499,6 +499,22 @@
       "datasets": ["gtfs_moscow_mdb3226.202606301640"]
     },
     {
+      "source_id": "mos_ground_transport",
+      "a2_ref": null,
+      "title": "data.mos.ru — Маршруты и остановки наземного городского пассажирского транспорта",
+      "publisher": "Правительство Москвы (портал открытых данных)",
+      "source_url": "https://data.mos.ru/",
+      "role": "calculation",
+      "analysis_kinds": ["urban_passenger"],
+      "provides": "Официальный GTFS наземного транспорта Москвы по отдельным наборам: 60663 перевозчики, 60662 остановки, 60664 маршруты, 60665 рейсы, 60666 календарь, 60661 время по остановкам",
+      "limitations": "Наборы обновляются по отдельности (время по остановкам новее рейсов и календаря); нет calendar_dates, метро, МЦД и электричек; лицензия не проверена — паспорт набора из окружения не открывается",
+      "access_method": "manual",
+      "geography": "Москва",
+      "license": {"name": null, "url": "https://data.mos.ru/", "status": "unknown"},
+      "status": "fetched",
+      "datasets": ["mos_ground_transport.60661-20261023", "mos_ground_transport.60662-20261005", "mos_ground_transport.60663-20260504", "mos_ground_transport.60664-20261005", "mos_ground_transport.60665-20261005", "mos_ground_transport.60666-20261005"]
+    },
+    {
       "source_id": "gortrans39",
       "a2_ref": null,
       "title": "Калининград — расписания gortrans39.ru",

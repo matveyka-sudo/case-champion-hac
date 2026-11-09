@@ -1,0 +1,299 @@
+{
+  "output_id": "mos_ground_transport.gtfs-20261110",
+  "rules": [
+    "mos-gtfs-assembly-v1",
+    "gtfs-repair-v1"
+  ],
+  "sources": [
+    {
+      "table": "agency.txt",
+      "dataset_id": "mos_ground_transport.60663-20260504",
+      "raw_sha256": "2f23c19f89addf9f6bbb4fa9d51b8cee5de034d9b84905ea61f9a25005d72d40",
+      "publication_date": "2026-05-04",
+      "license_status": "unknown"
+    },
+    {
+      "table": "stops.txt",
+      "dataset_id": "mos_ground_transport.60662-20261005",
+      "raw_sha256": "85f5e1241854b3b1c012ae4ab78d2cf3400020147135b2984970dddf2c012199",
+      "publication_date": "2026-10-05",
+      "license_status": "unknown"
+    },
+    {
+      "table": "routes.txt",
+      "dataset_id": "mos_ground_transport.60664-20261005",
+      "raw_sha256": "2e90d587d7d1ccc63717c63f2eb51ba243d507bda34e7b2eeabc23eb2b2de7d4",
+      "publication_date": "2026-10-05",
+      "license_status": "unknown"
+    },
+    {
+      "table": "trips.txt",
+      "dataset_id": "mos_ground_transport.60665-20261005",
+      "raw_sha256": "d43604a6aa024838cd4db6e06d9b7e28f8d04932ac92da6cbb7b8592ff9b0fb3",
+      "publication_date": "2026-10-05",
+      "license_status": "unknown"
+    },
+    {
+      "table": "calendar.txt",
+      "dataset_id": "mos_ground_transport.60666-20261005",
+      "raw_sha256": "c2e462715926986340ee795eeefecff963c3e7ae6fbfa6309de1c469f0a2d069",
+      "publication_date": "2026-10-05",
+      "license_status": "unknown"
+    },
+    {
+      "table": "stop_times.txt",
+      "dataset_id": "mos_ground_transport.60661-20261023",
+      "raw_sha256": "dfa4230968f16270b751d707a826a23a882685fa6bbaf69a659ccf928e2bebea",
+      "publication_date": "2026-10-23",
+      "license_status": "unknown"
+    }
+  ],
+  "versions_differ": true,
+  "assembly": {
+    "rules": "mos-gtfs-assembly-v1",
+    "rows": {
+      "agency.txt": 5,
+      "calendar.txt": 1915,
+      "routes.txt": 962,
+      "stop_times.txt": 10790612,
+      "stops.txt": 17850,
+      "trips.txt": 211298
+    },
+    "stop_times_of_trips_not_in_trips_dataset": {
+      "rows": 5296848,
+      "trips": 202508
+    }
+  },
+  "assembled_sha256": "339b3171230735c4484b2ad2fba324ad5c9409609e0d72caa748c5dfbd2ca965",
+  "repaired_sha256": "681afec73b21f8538a675194c95595093dbde03e95cfd72df0b4ef1f4114b2bc",
+  "repaired_path": "processed/gtfs/mos_ground_transport.gtfs-20261110.gtfs-repair-v1.zip",
+  "holidays_without_exceptions": {
+    "2026-11-04": "День народного единства"
+  },
+  "service_overlaps": {
+    "route_directions_with_two_services": 17,
+    "duplicated": 9,
+    "cases": [
+      {
+        "route_id": "141500517",
+        "direction_id": "0",
+        "services": [
+          "100033623",
+          "100033770"
+        ],
+        "shared_first_departures": 1.0
+      },
+      {
+        "route_id": "141500518",
+        "direction_id": "0",
+        "services": [
+          "100033630",
+          "100033766"
+        ],
+        "shared_first_departures": 1.0
+      },
+      {
+        "route_id": "141500518",
+        "direction_id": "1",
+        "services": [
+          "100033630",
+          "100033766"
+        ],
+        "shared_first_departures": 1.0
+      },
+      {
+        "route_id": "141500520",
+        "direction_id": "0",
+        "services": [
+          "100033553",
+          "100034582"
+        ],
+        "shared_first_departures": 0.0
+      },
+      {
+        "route_id": "141500520",
+        "direction_id": "1",
+        "services": [
+          "100033553",
+          "100034582"
+        ],
+        "shared_first_departures": 0.0
+      },
+      {
+        "route_id": "141500524",
+        "direction_id": "0",
+        "services": [
+          "100033569",
+          "100034586"
+        ],
+        "shared_first_departures": 0.0
+      },
+      {
+        "route_id": "141500525",
+        "direction_id": "0",
+        "services": [
+          "100033570",
+          "100034578"
+        ],
+        "shared_first_departures": 0.0
+      },
+      {
+        "route_id": "141500526",
+        "direction_id": "0",
+        "services": [
+          "100033682",
+          "100034594"
+        ],
+        "shared_first_departures": 0.0
+      },
+      {
+        "route_id": "141500533",
+        "direction_id": "0",
+        "services": [
+          "100033661",
+          "100033816"
+        ],
+        "shared_first_departures": 1.0
+      },
+      {
+        "route_id": "141500544",
+        "direction_id": "0",
+        "services": [
+          "100034117",
+          "100034530"
+        ],
+        "shared_first_departures": 0.0
+      },
+      {
+        "route_id": "141500593",
+        "direction_id": "0",
+        "services": [
+          "100040147",
+          "100040193"
+        ],
+        "shared_first_departures": 1.0
+      },
+      {
+        "route_id": "141500593",
+        "direction_id": "1",
+        "services": [
+          "100040147",
+          "100040193"
+        ],
+        "shared_first_departures": 1.0
+      },
+      {
+        "route_id": "4029",
+        "direction_id": "0",
+        "services": [
+          "100026503",
+          "100026504"
+        ],
+        "shared_first_departures": 0.231
+      },
+      {
+        "route_id": "4029",
+        "direction_id": "1",
+        "services": [
+          "100026503",
+          "100026504"
+        ],
+        "shared_first_departures": 0.231
+      },
+      {
+        "route_id": "4677",
+        "direction_id": "0",
+        "services": [
+          "100033681",
+          "100036336"
+        ],
+        "shared_first_departures": 0.91
+      },
+      {
+        "route_id": "4692",
+        "direction_id": "0",
+        "services": [
+          "100035155",
+          "100035330"
+        ],
+        "shared_first_departures": 1.0
+      },
+      {
+        "route_id": "4692",
+        "direction_id": "1",
+        "services": [
+          "100035155",
+          "100035330"
+        ],
+        "shared_first_departures": 1.0
+      }
+    ]
+  },
+  "repair": {
+    "repair_version": "gtfs-repair-v1",
+    "output": {
+      "path": "data/processed/gtfs/mos_ground_transport.gtfs-20261110.gtfs-repair-v1.zip",
+      "sha256": "681afec73b21f8538a675194c95595093dbde03e95cfd72df0b4ef1f4114b2bc"
+    },
+    "input_rows": {
+      "agency": 5,
+      "calendar": 1915,
+      "routes": 962,
+      "stops": 17850,
+      "trips": 211298,
+      "stop_times": 10790612
+    },
+    "output_rows": {
+      "agency": 5,
+      "calendar": 1915,
+      "routes": 962,
+      "stops": 17850,
+      "trips": 208173,
+      "stop_times": 5426461
+    },
+    "losses": {
+      "stop_time_unknown_stop": 723,
+      "stop_time_unknown_trip": 5354642,
+      "trip_time_goes_backwards": 155,
+      "trip_unknown_route": 2970
+    },
+    "dropped_columns": {
+      "agency.txt": [],
+      "calendar.txt": [],
+      "routes.txt": [],
+      "stops.txt": [],
+      "trips.txt": [],
+      "stop_times.txt": []
+    },
+    "unused": {
+      "routes": 0,
+      "stops": 4027,
+      "services": 21
+    },
+    "modes": {
+      "bus": 925,
+      "cable_tram": 1,
+      "tram": 36
+    },
+    "window": {
+      "from": "2026-11-01",
+      "to": "2026-11-30",
+      "services_running": 1894,
+      "trips_running": 208173,
+      "routes_running": 962,
+      "modes_running": {
+        "bus": 925,
+        "cable_tram": 1,
+        "tram": 36
+      }
+    },
+    "service_end_years": {
+      "2030": 1894
+    },
+    "unrepaired": {
+      "agencies_without_url": 4,
+      "calendar_dates": "absent: holidays and other exceptions are unknown",
+      "shapes": "absent"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "dataset_id": "mos_ground_transport.60665-20261005",
+  "source_id": "mos_ground_transport",
+  "source_url": "https://data.mos.ru/opendata/60665",
+  "retrieved_at": "2026-11-09T20:46:23Z",
+  "publication_date": "2026-10-05",
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Москва: наземный городской пассажирский транспорт",
+  "license": {
+    "name": null,
+    "url": "https://data.mos.ru/",
+    "status": "unknown"
+  },
+  "access_method": "manual",
+  "raw_path": "mos_ground_transport/60665-20261005.zip",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "d43604a6aa024838cd4db6e06d9b7e28f8d04932ac92da6cbb7b8592ff9b0fb3",
+    "size_bytes": 1349323
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "data-60665-05-10-2026.json": "GTFS trips.txt (набор «Маршруты и остановки наземного городского пассажирского транспорта (Рейсы маршрутов)», JSON)"
+  },
+  "coverage": "Выгрузка набора 60665 от 05.10.2026, скачана вручную в браузере",
+  "limitations": [
+    "Лицензия не проверена: паспорт набора с data.mos.ru из окружения не открывается"
+  ],
+  "status": "fetched",
+  "qa_report": "data/manifests/qa/mos_ground_transport.gtfs-20261110.json"
+}
