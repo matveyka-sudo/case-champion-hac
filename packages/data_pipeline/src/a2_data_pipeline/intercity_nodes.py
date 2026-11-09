@@ -726,6 +726,38 @@ def load_nodes(directory_id: str, root: Path | None = None) -> list[IntercityNod
     return [IntercityNode.model_validate(row) for row in rows]
 
 
+def capital_boundaries(
+    directory: list[territories.TerritoryEntry],
+    nodes: list[IntercityNode],
+    evidence_refs: list[str],
+) -> list[dict[str, Any]]:
+    """ML1 ``CapitalBoundary`` rows: a region's result goes through its capital's nodes.
+
+    A region without a capital in the directory (the disputed ones) or a capital
+    without nodes gets no row: unknown, not an empty boundary.
+    """
+
+    by_city: dict[str, list[str]] = {}
+    for node in nodes:
+        for territory_id in node.territory_ids:
+            by_city.setdefault(territory_id, []).append(node.node_id)
+    rows = []
+    for region in sorted(directory, key=lambda e: e.territory_id):
+        if region.level != "region" or not region.capital_city_id:
+            continue
+        node_ids = sorted(by_city.get(region.capital_city_id, []))
+        if node_ids:
+            rows.append(
+                {
+                    "region_id": region.territory_id,
+                    "capital_city_id": region.capital_city_id,
+                    "node_ids": node_ids,
+                    "evidence_refs": list(evidence_refs),
+                }
+            )
+    return rows
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -752,7 +784,7 @@ def main() -> None:
     )
 
 
-__all__ = ["IntercityNode", "build_nodes", "load_nodes", "publish"]
+__all__ = ["IntercityNode", "build_nodes", "capital_boundaries", "load_nodes", "publish"]
 
 if __name__ == "__main__":
     main()
