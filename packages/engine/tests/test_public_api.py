@@ -727,6 +727,46 @@ for _module, _names in CARGO_EXPORT_MODULES.items():
     NEW_PUBLIC_NAMES.update(_names)
 
 
+SCENARIO_EXPORT_MODULES = {
+    "a2_engine.scenario.models": [
+        "CargoExecution",
+        "CargoScenarioInput",
+        "IntercityScenarioInput",
+        "PipelineScenarioInput",
+        "ScenarioBaseline",
+        "ScenarioComputation",
+        "ScenarioEffect",
+        "ScenarioEventChange",
+        "ScenarioFeasibility",
+        "ScenarioFeasibilityInputs",
+        "ScenarioImpact",
+        "ScenarioInputs",
+        "ScenarioMeasure",
+        "ScenarioOperation",
+        "ScenarioOverlay",
+        "ScenarioResourceBlock",
+        "ScenarioResourceLink",
+        "ScenarioResult",
+        "ScenarioTimetable",
+        "UrbanCargoScenarioInput",
+        "UrbanScenarioInput",
+        "UrbanScenarioResult",
+    ],
+    "a2_engine.scenario.engine": [
+        "create_scenario_baseline",
+        "simulate_scenario",
+        "validate_scenario_result",
+    ],
+    "a2_engine.scenario.effects": ["compare_scenario_metrics", "validate_effect_coverage"],
+    "a2_engine.scenario.feasibility": ["check_scenario_feasibility"],
+    "a2_engine.scenario.identity": ["scenario_hash"],
+    "a2_engine.scenario.overlay": ["apply_scenario_overlay", "execution_hash"],
+}
+for _module, _names in SCENARIO_EXPORT_MODULES.items():
+    CANONICAL_MODULES[_module] = CANONICAL_MODULES.get(_module, ()) + tuple(_names)
+    NEW_PUBLIC_NAMES.update(_names)
+
+
 def test_public_names_signatures_and_defaults_are_unchanged() -> None:
     assert tuple(a2_engine.__all__[: len(PUBLIC_SIGNATURES)]) == tuple(PUBLIC_SIGNATURES)
     assert set(a2_engine.__all__) == set(PUBLIC_SIGNATURES) | NEW_PUBLIC_NAMES
@@ -749,7 +789,15 @@ def test_root_and_domain_exports_are_the_same_canonical_objects() -> None:
             assert canonical.__module__ == module_name
             if is_dataclass(canonical):
                 assert getattr(canonical, "__dataclass_params__").frozen
-    for domain in ("urban", "intercity", "freight", "pipeline", "comparison", "routing"):
+    for domain in (
+        "urban",
+        "intercity",
+        "freight",
+        "pipeline",
+        "comparison",
+        "routing",
+        "scenario",
+    ):
         package = importlib.import_module(f"a2_engine.{domain}")
         for name in package.__all__:
             assert getattr(package, name) is getattr(a2_engine, name)
@@ -770,6 +818,8 @@ def test_fresh_import_orders_and_all_default_loaders_from_another_cwd(tmp_path: 
         "a2_engine.pipeline",
         "a2_engine.comparison",
         "a2_engine.shared.scoring",
+        *SCENARIO_EXPORT_MODULES,
+        "a2_engine.scenario",
     ]
     script = """
 import importlib
@@ -850,6 +900,18 @@ def test_internal_imports_follow_shared_dependency_direction() -> None:
                 if node.module is not None and node.module.startswith("a2_engine."):
                     domain = path.relative_to(package).parts[0]
                     allowed: tuple[str, ...] = ("a2_engine.shared.", f"a2_engine.{domain}.")
+                    if domain == "scenario":
+                        allowed += tuple(
+                            f"a2_engine.{d}."
+                            for d in (
+                                "routing",
+                                "urban",
+                                "intercity",
+                                "freight",
+                                "pipeline",
+                                "comparison",
+                            )
+                        )
                     if domain == "urban":
                         allowed += ("a2_engine.routing.",)
                     if domain == "intercity":
@@ -868,6 +930,18 @@ def test_internal_imports_follow_shared_dependency_direction() -> None:
                             "a2_engine.shared.",
                             f"a2_engine.{domain}.",
                         )
+                        if domain == "scenario":
+                            import_allowed += tuple(
+                                f"a2_engine.{d}."
+                                for d in (
+                                    "routing",
+                                    "urban",
+                                    "intercity",
+                                    "freight",
+                                    "pipeline",
+                                    "comparison",
+                                )
+                            )
                         if domain == "urban":
                             import_allowed += ("a2_engine.routing.",)
                         if domain == "intercity":
@@ -938,7 +1012,7 @@ for module in json.loads(sys.argv[1]):
 for legacy,name,canonical in json.loads(sys.argv[2]):
     assert getattr(importlib.import_module(legacy),name) is getattr(importlib.import_module(canonical),name)
 import a2_engine
-assert len(a2_engine.__all__)==237
+assert len(a2_engine.__all__)==268
 """
     for order in (modules, list(reversed(modules)), modules[::2] + modules[1::2]):
         subprocess.run(
@@ -970,7 +1044,7 @@ def test_urban_implementation_imports_concrete_modules() -> None:
                 assert n.module not in forbidden, (path, n.module)
 
 
-@pytest.mark.parametrize("count", [168, 183, 201])
+@pytest.mark.parametrize("count", [168, 183, 201, 237])
 def test_previous_exports_signatures_fields_and_defaults(count: int) -> None:
     from dataclasses import MISSING, fields
 
@@ -1020,4 +1094,17 @@ def test_reference_dependency_remains_one_way() -> None:
                             ("a2_engine.intercity", "a2_engine.urban", "a2_engine.freight")
                         )
                         for alias in node.names
+                    ), path
+
+
+def test_scenario_dependency_remains_one_way_including_facades() -> None:
+    package = SOURCE / "a2_engine"
+    for domain in ("routing", "shared", "urban", "intercity", "freight", "pipeline", "comparison"):
+        for path in (package / domain).rglob("*.py"):
+            for node in ast.walk(ast.parse(path.read_text())):
+                if isinstance(node, ast.ImportFrom) and node.module:
+                    assert not node.module.startswith("a2_engine.scenario"), path
+                if isinstance(node, ast.Import):
+                    assert not any(
+                        alias.name.startswith("a2_engine.scenario") for alias in node.names
                     ), path

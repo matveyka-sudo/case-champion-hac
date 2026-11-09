@@ -3000,3 +3000,201 @@ receipt использует from_id=to_id текущего узла, service_id
 покрывает весь gap; operation/movement receipt связывает фактические from/to
 nodes этого action. Это normalized supplements, не утверждение, что canonical
 DTO уже содержит данные поля.
+
+## Scenario Engine v3 — 09.11.2026
+
+`a2_engine.scenario` — чистый детерминированный слой над существующими solvers:
+`create_scenario_baseline(inputs)` → `simulate_scenario(baseline, operation,
+feasibility=...)` → `validate_scenario_result(...)` перед публикацией. IO,
+провайдеров и LLM внутри нет. Старые237 root exports сохранены в исходном порядке,
+с прежними signatures/defaults/fields/frozen; добавлен31, всего268.
+
+### Разрешённые изменения
+
+Allowlist сверен с `apps/api/src/a2_api/analysis_service.py:DEFAULT_TEMPLATES`
+опубликованного BACKEND `6ce41795572b3708dc09f49868a3cefaa7e77fb3`:
+`coordinate_transfer`, `additional_departure`. Это проверенные имена server-side
+шаблонов; engine дополнительно проверяет содержание операции. Проверенная ML2
+ветка: `0e6dbca005674f86c5cde7c2f2087477d509e7df`. Чужие ветки не слиты.
+
+`ScenarioOperation` связывает baseline ID, operation/template ID, target kind и
+network/job ID, конкретный execution ID, service date, stop sequence/action ID,
+ожидаемый execution hash, целочисленный ненулевой signed shift, incoming execution
+и event, evidence. Один trip в разные service dates не является одним execution.
+
+- `coordinate_transfer`, timetable: проверяются реальная пара рейсов, разрешённые
+  pickup/dropoff, принятые stop/calendar/transfer/walk proofs и достаточный gap
+  после изменения. `whole_execution` сдвигает все времена выбранного исполнения;
+  `departure_tail` сохраняет предшествующие события и arrival выбранной остановки,
+  сдвигает её departure и все последующие arrival/departure. Существующий validator
+  отвергает отрицательную стоянку, нарушенный порядок и интервалы. Принятые физические
+  aliases меняются вместе, все их копии в анализируемой области согласованы.
+- `coordinate_transfer`, cargo: явный CargoExecution связывает дату и принадлежащие
+  ему CargoAction; сдвигаются scheduled departure actions конкретного execution.
+  Новый поиск должен доказать реальную цепь incoming→outgoing, включая обработку,
+  готовность, совместимость и конечное завершение. Durations/profile/urgency не
+  редактируются. Это расписание, не новый шаблон изменения длительности обработки.
+- `additional_departure`, timetable: новая принятая физическая идентичность,
+  evidence потребности, точная копия маршрута и stop pattern с объявленным сдвигом,
+  активный календарь, полные physical departure IDs, ресурсы и оборот. Engine
+  принимает её только при `feasibility=feasible`. Сам по себе большой headway
+  доказательством не является. Run-specific transfer permissions не клонируются
+  по догадке: нужны применимые уже принятые generic rules.
+
+Обработка грузов с изменением duration, создание терминалов, изменение truck road
+inputs, трубопроводов и cargo additional departure отклоняются: отдельных
+утверждённых шаблонов/исполнений для них нет. Одно допустимое строковое имя не
+разрешает произвольную подмену входов.
+
+### Входы, неизменность и повторный расчёт
+
+`ScenarioInputs` содержит отсортированные именованные `ScenarioTimetable` и jobs:
+`UrbanScenarioInput`, `IntercityScenarioInput`, `CargoScenarioInput`,
+`UrbanCargoScenarioInput`, `PipelineScenarioInput`. Для timetable execution hash
+используйте `execution_hash(baseline, "timetable", network_id, run_id)`, для cargo —
+`execution_hash(baseline, "cargo", job_id, execution_id)`.
+
+Baseline включает полные normalized inputs, дорассчитанный before и хеши обоих.
+Зафиксированы normalized request/context, scope, time/timezone, snapshot/graph/
+calendar/build identities, configs/methodology, population/cells/district shares,
+категории/приоритеты, H, τ thresholds/исходный UrbanTauResult, reference A,
+readiness/physical services и routing rules/resource limit. TrafficSnapshot также
+можно сохранить в `traffic_snapshots`: никакой live refresh не выполняется.
+Сценарное расписание получает отдельный timetable version; graph, calendar и
+traffic identities остаются прежними. Baseline проверяется по входам и реальному
+повторному before, а не только по supplied result hash.
+
+Overlay создаётся через immutable replacements. Он содержит changed events и
+affected execution IDs; исходные события, соседние даты и входы не мутируют.
+Повтор с теми же входами даёт тот же результат; overlay нельзя передать вместо
+baseline для незаметного удвоения сдвига. Разные PYTHONHASHSEED и перестановки
+записей проверены. `scenario_hash` — engine content identity, не canonical wire ID.
+
+Полностью пересчитывается **вся переданная ограниченная область**:
+
+- город: `search_urban_transit` по всем point/category/mode/destination,
+  `analyze_urban_candidates`, `analyze_urban_districts` и опциональный
+  `search_urban_last_return` с вновь выбранным объектом. H и τ не переоцениваются;
+- межгород: `analyze_intercity_passenger`, максимум индекса целой цепочки, W0,
+  T_path/total, режимы/public, physical frequency; прежний common reference A;
+- грузовой межгород: `analyze_intercity_cargo`, минимум полного времени доставки,
+  включая конечную разгрузку, пересадки и условия ожидания;
+- городские грузы: `analyze_urban_cargo`; трубы:
+  `analyze_pipeline_connections`. При текущих расписательных операциях их входы
+  неизменны, и их повторно рассчитанные результаты остаются прежними.
+
+Принятые road/private-car candidates разрешены как `fixed_candidates`, потому что
+операции не изменяют road inputs и момент самостоятельной поездки. ОТ/пешеходные
+candidates подставить готовыми нельзя. Пересчёт bus travel times из traffic profile
+не придумывается: расписание остаётся принятым расписанием исполнения.
+
+### Полнота эффектов и охвата
+
+`ScenarioMeasure.metric_id` основан на semantic key (job, subject, category/mode,
+metric name), единице, направлении улучшения и замороженном scope hash.
+Конкретный journey ID/выбранный объект не участвует в сопоставимости. Поэтому
+смена лучшего маршрута или объекта не прячет прежнюю метрику.
+
+Engine сам строит все `ScenarioEffect`: improved/worsened/unchanged, доказанные
+new_connection/lost_connection и unknown. Index delta = after−before; time saved =
+before−after, через прежние comparison functions. Потеря/появление связи имеют
+nullable delta, отсутствие маршрута не превращается в нулевое время или Infinity.
+Unknown→known и known→unknown не считаются появлением/потерей связи. Неполный
+best-known сохраняется в богатом result, но эффект неизвестен. `complete`
+означает полноту эффектов, независимо от feasibility и population completeness.
+
+`validate_effect_coverage` сравнивает полный roster, metric IDs/units/scope и все
+дельты/worsened IDs. Для публикации нужен **`validate_scenario_result`**: он заново
+воспроизводит after/effects/impact из baseline + операции + constraints и отвергает
+подмену известного ухудшения на null/unknown даже с согласованным фальшивым delta.
+Цена этой защиты — повторный полный расчёт; отдельная оптимизация не заявлена.
+
+`ScenarioImpact` считает потенциально затронутых жителей по уникальным исходным
+(city, original cell, population version), один раз для нескольких категорий/jobs.
+Это не пассажиропоток. При неизвестном населении/неполном coverage или только
+долях без original-cell population выдаются known lower bound, unknown cell IDs и
+`population_complete=False`. Для грузов — уникальные physical site IDs, не
+терминалы, юрлица или тонны. Межгородской cargo job должен передать принятый
+`physical_sites`; без него изменившийся job отражён в `unmapped_site_job_ids`, и
+`sites_complete=False`. Все scope job IDs и версии сохраняются в полном результате.
+
+### Реализуемость отдельно от эффекта
+
+`ScenarioFeasibilityInputs` — принятые baseline/operation-bound resource blocks,
+covered execution IDs, validity period, resource/calendar/infrastructure coverage,
+availability, явные turnaround links и minimum before/after. Универсальных норм
+нет; отсутствующее minimum неизвестно, принятый явный0 допустим.
+
+Проверяются фактические окна занятости, availability, соседние исполнения и
+минимальные интервалы, включая объединение одного resource ID из разных network
+extracts и physical aliases. Cargo occupancy извлекается из настоящего полного
+поиска, без выдуманной длительности недоказанной обработки. Недостаточное покрытие,
+неизвестная обработка/календарь или устаревший evidence дают unverified. Подтверждённый
+конфликт даёт infeasible, достаточные принятые ограничения — feasible.
+Без constraints модельный эффект разрешён, но label:
+**«Модельный эксперимент — реализуемость не подтверждена»**.
+
+### Исполнимый пример
+
+```sh
+PYTHONPATH=packages/engine/src uv run --frozen python packages/engine/examples/synthetic_scenario.py
+```
+
+<!-- executable-example -->
+```python
+import runpy
+
+scenario = runpy.run_path("packages/engine/examples/synthetic_scenario.py")["run_demo"]()
+assert scenario.complete and scenario.feasibility.state == "unverified"
+assert scenario.impact.known_affected_population == 100
+assert any(effect.outcome == "new_connection" for effect in scenario.effects)
+assert any(
+    effect.outcome == "worsened" and effect.delta.value == -180 for effect in scenario.effects
+)
+```
+
+Контроль: incoming прибывает08:10, minimum transfer5мин, outgoing08:12→08:15;
+для p1 настоящий solver находит новую поездку1500с, для p2 время1320→1500с,
+ухудшение−180с сохранено. Население90+10, по двум категориям без удвоения.
+Отдельные тесты: downstream connection lost с null временем; H=τ=1200,
+1500→900 и count0→1; fixed-A межгород; груз24ч→23ч с конечной обработкой;
+полные независимые reruns вручную изменённых малых расписаний; publication attacks,
+перестановки/hash seeds и unchanged static/typical snapshots/τ.
+
+### Точный handoff
+
+**BACKEND — `apps/api` и `packages/contracts`:** wire Scenarios v2 из проверенной
+ветки содержит два operation_type, service_ids/shift_seconds и resource evidence,
+но не полный engine supplement: нужны конкретные service_date, stop/event ID,
+expected execution hash, incoming event/execution, явный timing model и accepted
+physical/resource bindings. DTO ServiceChange whole_trip/subsequent_stops_updated
+нужно согласовать с departure_tail без ложного whole_trip=True. Feasibility DTO
+сейчас verified/unverified: engine требует отдельный infeasible с причинами; feasible
+можно отображать в verified только в принятом constraint scope. Не превращать
+new/lost nullable delta в0. Mapper должен сохранить rich before/after, semantic keys,
+все worsening/unknown и отдельные coverage/feasibility/impact flags; canonical IDs
+выдаются по backend rules с сохранением engine IDs как provenance. Хранить inputs,
+operation и constraints для `validate_scenario_result` перед атомарной публикацией;
+не публиковать урезанный frontend список эффектов как полный. Acceptance: пропуск,
+null/unknown подмена или смена route ID не скрывают подтверждённое ухудшение.
+
+**ML2 — `packages/data_pipeline`:** полные dated executions с событиями, pickup/
+dropoff, физическими aliases, accepted transfer/walk permissions/calendars;
+CargoExecution→CargoAction/date bindings, loading/compatibility/processing/wait
+conditions и physical site roster. Resource/vehicle blocks должны содержать все
+соседние исполнения в области, scope/validity/evidence, availability и явные
+turnaround/boundary minimums. Пустые данные не заполнять guessed permissions или
+нулевыми нормами. Acceptance: реальные accepted snapshots проходят baseline и
+feasibility binding; недостаточность остаётся unverified/partial.
+
+**DEVOPS — `infra`/worker:** ограничить область и CPU/RAM/time budget, сохранять
+resource-limit incompleteness, повторять worker с тем же immutable input bundle,
+замерить стоимость baseline + full recompute + publication guard. Нужны реальные
+performance/E2E и атомарное backend хранение; SLA на страну этим этапом не заявлен.
+Реальные транспортные данные и production интеграция здесь не проверялись.
+
+Проверки этапа: самостоятельно запущенная исходная регрессия830 → итоговая872;
+40 scenario cases и2 compatibility/architecture cases. Ruff check/format clean
+(138 files), strict mypy src/tests/examples135 files clean; frozen lock/pip/product
+config/diff checks пройдены. Все16 README controls и12 standalone examples
+исполнены. Прежнее pytest-asyncio fixture-scope warning не изменялось.
