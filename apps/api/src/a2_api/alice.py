@@ -28,6 +28,7 @@ class AliceSettings(BaseSettings):
     )
     a2_assistant_budget_hook: str | None = None
     a2_assistant_tools_enabled: bool = False
+    a2_alice_billing_currency_confirmed: bool = False
 
 
 def _deployment_budget(path: str, service: AnalysisService) -> DeploymentBudget:
@@ -71,8 +72,10 @@ def build_assistant(service: AnalysisService) -> FlashAssistant:
             "Alice AI configuration is invalid; check model, URL and folder ID"
         ) from None
 
-    enabled = settings.llm_enabled and bool(
-        config.api_key is not None and config.api_key.get_secret_value()
+    enabled = (
+        settings.llm_enabled
+        and settings.a2_alice_billing_currency_confirmed
+        and bool(config.api_key is not None and config.api_key.get_secret_value())
     )
     if enabled and config.folder_id is None:
         raise ValueError("Alice AI configuration requires YANDEX_FOLDER_ID")
