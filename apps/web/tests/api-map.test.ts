@@ -8,11 +8,16 @@ import { scenarioJourneys } from "../src/api/adapters/scenario";
 import { scenarioRouteFixture } from "./fixtures/scenario-routes";
 const drawn = vi.hoisted(() => ({
   layers: [] as { style?: Record<string, unknown>; marker?: Record<string, unknown>; tooltip: string; geometry?: unknown }[],
+  pans: [] as unknown[], zooms: [] as unknown[],
+  commands: [] as string[],
 }));
 vi.mock("leaflet", () => ({
   default: {
     map: () => {
-      const map = { fitBounds: () => map, invalidateSize: vi.fn(), remove: vi.fn() };
+      const map = { fitBounds: () => { drawn.commands.push("home"); return map; }, invalidateSize: vi.fn(), remove: vi.fn(), getZoom: () => 10,
+        zoomIn: () => drawn.commands.push("in"), zoomOut: () => drawn.commands.push("out"),
+        setZoomAround: (location: unknown, zoom: number) => drawn.zooms.push({ location, zoom }),
+        panInside: (location: unknown) => drawn.pans.push(location) };
       return map;
     },
     tileLayer: () => ({ on: () => ({ addTo: vi.fn() }) }),
@@ -41,7 +46,50 @@ vi.mock("leaflet", () => ({
 }));
 beforeEach(() => {
   drawn.layers.length = 0;
+  drawn.pans.length = 0;
+  drawn.zooms.length = 0;
+  drawn.commands.length = 0;
   vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
+});
+describe("explicit calculated-point focus", () => {
+  it.each(["in", "out", "home"])("consumes the %s command across later selection/result renders", (kind) => {
+    const result = decode("AnalysisResult", structuredClone(resultRaw));
+    const props = { result, scores: result.scores, onSelect: vi.fn() };
+    const view = render(createElement(ApiMap, { ...props, selection: null, zoomAction: { id: 0, kind: "home" } }));
+    view.rerender(createElement(ApiMap, { ...props, selection: null, zoomAction: { id: 1, kind } }));
+    const commands = [...drawn.commands];
+    expect(commands.at(-1)).toBe(kind);
+    view.rerender(createElement(ApiMap, { ...props, result: structuredClone(result), selection: { entity_kind: "sample_point", entity_id: "demo-point" }, zoomAction: { id: 1, kind } }));
+    expect(drawn.commands).toEqual(commands);
+    expect(drawn.pans).toEqual([]);
+    expect(drawn.zooms).toEqual([]);
+  });
+  it("highlights and reveals a selected point only after a focus action", () => {
+    const result = decode("AnalysisResult", structuredClone(resultRaw));
+    result.map_data = { status: "available", features: [{
+      entity_kind: "sample_point", entity_id: "demo-point", territory_id: "city-1",
+      geometry: { type: "Point", coordinates: [37, 55] }, geometry_kind: "actual", source_refs: ["demo-evidence"],
+    }] };
+    const props = { result, scores: result.scores, onSelect: vi.fn(), zoomAction: { id: 0, kind: "home" } };
+    const view = render(createElement(ApiMap, { ...props, selection: null }));
+    expect(drawn.pans).toEqual([]);
+    const selection = { entity_kind: "sample_point" as const, entity_id: "demo-point" };
+    view.rerender(createElement(ApiMap, { ...props, selection }));
+    expect(drawn.pans).toEqual([]);
+    expect(drawn.layers.at(-1)?.marker?.color).toBe("#2f5bff");
+    view.rerender(createElement(ApiMap, { ...props, selection, zoomAction: { id: 1, kind: "selection" } }));
+    expect(drawn.layers.at(-1)?.marker?.color).toBe("#2f5bff");
+    expect(drawn.pans).toEqual([[55, 37]]);
+    expect(drawn.zooms).toEqual([{ location: [55, 37], zoom: 12 }]);
+  });
+  it("does not invent a position when the selected point geometry is absent", () => {
+    const result = decode("AnalysisResult", structuredClone(resultRaw));
+    const props = { result, scores: result.scores, onSelect: vi.fn(), selection: { entity_kind: "sample_point" as const, entity_id: "missing-point" } };
+    const view = render(createElement(ApiMap, { ...props, zoomAction: { id: 0, kind: "home" } }));
+    view.rerender(createElement(ApiMap, { ...props, zoomAction: { id: 1, kind: "selection" } }));
+    expect(drawn.pans).toEqual([]);
+    expect(drawn.zooms).toEqual([]);
+  });
 });
 describe("scenario map paths", () => {
   it("draws the changed nonwinner and reused route, then restores only baseline lines", () => {
