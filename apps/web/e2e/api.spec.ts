@@ -9,6 +9,7 @@ import pax from "../tests/fixtures/api/intercity_passenger.json" with { type: "j
 import cargo from "../tests/fixtures/api/urban_cargo.json" with { type: "json" };
 import interCargo from "../tests/fixtures/api/intercity_cargo.json" with { type: "json" };
 import { scenarioRouteFixture } from "../tests/fixtures/scenario-routes";
+import { returnContextFixture } from "../tests/fixtures/return-context";
 const fixtures = {
   urban_passenger: urban,
   intercity_passenger: pax,
@@ -550,32 +551,7 @@ test("API: pipeline profile choices track the chosen product and reset on produc
 });
 
 test("API: selected point and destination scope return times and partial map assessments stay identified", async ({ page }) => {
-  const data = structuredClone(urban) as AnalysisResult;
-  const destinationMetric = {
-    ...data.metrics[0], metric_id: "destination-time", name: "Synthetic destination time",
-    subject: { kind: "category" as const, destination_id: "school-a", category: "school" as const },
-  };
-  data.metrics.push(destinationMetric);
-  data.scores[0].completeness = "partial";
-  data.map_data = { status: "available", completeness: "full", features: [
-    ["sample_point", "demo-point", "Выбранная точка", 37],
-    ["sample_point", "other-point", "Другая точка", 37.01],
-    ["destination", "school-a", "Школа А", 37.02],
-    ["destination", "school-b", "Школа Б", 37.03],
-  ].map(([kind, id, name, longitude]) => ({
-    entity_kind: kind as "sample_point" | "destination", entity_id: id as string, name: name as string, territory_id: "city-1",
-    geometry: { type: "Point" as const, coordinates: [longitude as number, 55] },
-    geometry_kind: "actual" as const, source_refs: [],
-  })) };
-  data.last_returns = [
-    ["demo-point", "school-a", "18:00"],
-    ["other-point", "school-a", "19:00"],
-    ["demo-point", "school-b", "20:00"],
-  ].map(([point, destination, time]) => ({
-    point_id: point, destination_object_id: destination, leave_at: `2026-11-09T${time}:00+03:00`,
-    first_departure_at: null, arrival_at: null, service_date: "2026-11-09", timezone: "Europe/Moscow",
-    status: "available", journey_id: null, reason_code: null, evidence_refs: [],
-  }));
+  const data = returnContextFixture();
   await mockApi(page, { result: data, emptyProposals: true });
   await page.route("**/explanation", (route) => route.fulfill({ json: {
     analysis_id: data.analysis_id, analysis_result_hash: data.result_hash,
