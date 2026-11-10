@@ -1041,3 +1041,132 @@ def test_new_numeric_urban_task_cannot_omit_its_actual_chain_proof(attack, with_
         scenario_journeys(
             forged, case[3], endpoint_scope=trusted_urban_scope(case) if with_scope else None
         )
+
+
+def forged_time_task(result, attack):
+    """Exact reviewer attack: incomparable raw scope cannot retain full indices."""
+    payload = result.model_dump(mode="json")
+    omitted = {row["journey_id"] for row in payload["after_journeys"] if row["point_id"] == "p1"}
+    payload["after_journeys"] = [
+        row for row in payload["after_journeys"] if row["point_id"] != "p1"
+    ]
+    changed = set()
+    for metric in payload["after"]["metrics"]:
+        if metric["journey_id"] in omitted:
+            metric["journey_id"] = None
+            if attack == "kind":
+                metric["subject"]["kind"] = "territory"
+            else:
+                metric["unit"] = "objects"
+            changed.add(metric["metric_id"])
+    for effect in payload["deltas"]:
+        if effect["kind"] == "metric" and effect["after_id"] in changed:
+            effect.update(outcome="unknown", delta=None, reason_code="INCOMPARABLE_SCOPE")
+    payload["status"] = "partial"
+    return ScenarioResult.model_validate(payload)
+
+
+@pytest.mark.parametrize("attack", ["kind", "unit"])
+def test_changed_point_time_kind_or_unit_cannot_bypass_chain_proof_and_keep_full_indices(attack):
+    from a2_api.db.validation import _validate_scenario_semantics
+
+    case = make_case()
+    claim, facts, document, baseline, _ = with_claim(case)
+    scope = trusted_urban_scope(case)
+    result = bridge.calculate(
+        claim, baseline=baseline, inputs=facts, document=document, profile_id=document.profile_id
+    )
+    forged = forged_time_task(result, attack)
+    assert all(
+        score.value > 0 and score.completeness == "full"
+        for score in forged.after.scores
+        if score.subject.point_id == "p1"
+    )
+    with pytest.raises(DomainError, match="time task identity"):
+        _validate_scenario_semantics(
+            forged,
+            baseline,
+            claim.context.scenario_proposal,
+            endpoint_scope=scope,
+            expected_snapshot_hash=scope.snapshot_hash,
+        )
+
+
+@pytest.mark.parametrize("wrong_dimension", ["point", "category"])
+def test_full_point_index_cannot_use_another_point_or_category_time(wrong_dimension):
+    from a2_api.db.validation import _validate_scenario_semantics
+
+    case = make_case()
+    claim, facts, document, baseline, _ = with_claim(case)
+    scope = trusted_urban_scope(case)
+    result = bridge.calculate(
+        claim, baseline=baseline, inputs=facts, document=document, profile_id=document.profile_id
+    )
+    payload = result.model_dump(mode="json")
+    other = next(
+        row
+        for row in payload["after"]["metrics"]
+        if row["subject"]["point_id"] == ("p2" if wrong_dimension == "point" else "p1")
+        and row["subject"]["category"] == ("school" if wrong_dimension == "point" else "airport")
+        and row["unit"] == "seconds"
+    )
+    score = next(
+        row
+        for row in payload["after"]["scores"]
+        if row["subject"]["point_id"] == "p1" and row["subject"]["category"] == "school"
+    )
+    score["components"] = [
+        dict(kind="metric", id=other["metric_id"]),
+        dict(kind="metric", id="urban-h"),
+    ]
+    forged = ScenarioResult.model_validate(payload)
+    with pytest.raises(DomainError, match="another time task"):
+        _validate_scenario_semantics(
+            forged,
+            baseline,
+            claim.context.scenario_proposal,
+            endpoint_scope=scope,
+            expected_snapshot_hash=scope.snapshot_hash,
+        )
+
+
+def test_unknown_positive_population_cannot_be_removed_from_full_city_index_basis():
+    from a2_api.db.validation import _validate_scenario_semantics
+
+    case = make_case(unknown_population=True)
+    claim, facts, document, baseline, _ = with_claim(case)
+    scope = trusted_urban_scope(case)
+    result = bridge.calculate(
+        claim, baseline=baseline, inputs=facts, document=document, profile_id=document.profile_id
+    )
+    payload = result.model_dump(mode="json")
+    score = next(
+        row
+        for row in payload["after"]["scores"]
+        if row["score_id"] == "urban-territory-public_transport"
+    )
+    assert score["value"] is None and score["aggregation_basis"]["unknown_positive_weight"]
+    score.update(
+        value=80.0,
+        status="available",
+        completeness="full",
+        reason_code=None,
+        components=[dict(kind="score", id="urban-point-p2")],
+        aggregation_basis=dict(
+            population=100.0,
+            population_method="accepted_original_cell_weights",
+            year=None,
+            coverage=1.0,
+            unit="persons",
+            unknown_positive_weight=False,
+        ),
+    )
+    forged = ScenarioResult.model_validate(payload)
+    with pytest.raises(DomainError, match="index task identity"):
+        _validate_scenario_semantics(
+            forged,
+            baseline,
+            claim.context.scenario_proposal,
+            endpoint_scope=scope,
+            expected_snapshot_hash=scope.snapshot_hash,
+        )
