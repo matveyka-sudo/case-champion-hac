@@ -11,7 +11,9 @@ import argparse
 import hashlib
 import json
 import math
+import os
 import re
+import stat
 import tempfile
 from dataclasses import asdict, dataclass
 from datetime import UTC, date, datetime, time, timedelta
@@ -34,7 +36,7 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool, Ty
 from .intercity_nodes import load_nodes
 from .paths import data_dir
 from .rasp_bindings import load_bindings
-from .runtime_inputs import _publish_directory
+from .runtime_inputs import _publication_lock
 from .territories import load_directory
 
 SOURCE = "https://api.rasp.yandex.net/v3.0/search/"
@@ -397,7 +399,7 @@ def normalize_rasp(envelope_path: Path, expected_sha256: str, *, now: datetime) 
         if counter in used_counters:
             raise ValueError("DUPLICATE_DAILY_QUOTA_COUNTER")
         used_counters.add(counter)
-        if not envelope.retrieved_at <= ref.fetched_at < envelope.expires_at:
+        if not envelope.retrieved_at <= ref.fetched_at <= now < envelope.expires_at:
             raise ValueError("PAGE_RETRIEVAL_OUTSIDE_CACHE_EPISODE")
         page = _read(root, ref)
         if (
@@ -747,6 +749,57 @@ def normalize_rasp(envelope_path: Path, expected_sha256: str, *, now: datetime) 
     )
 
 
+def _assert_owner_private(target: Path) -> None:
+    """Reject links, foreign owners and unsafe existing modes without changing them."""
+    info = target.lstat()
+    if (
+        not stat.S_ISDIR(info.st_mode)
+        or info.st_uid != os.getuid()
+        or stat.S_IMODE(info.st_mode) != 0o700
+    ):
+        raise ValueError("PRIVATE_CACHE_OWNER_OR_MODE_INVALID")
+    for path in target.iterdir():
+        info = path.lstat()
+        if (
+            not stat.S_ISREG(info.st_mode)
+            or info.st_uid != os.getuid()
+            or stat.S_IMODE(info.st_mode) != 0o600
+        ):
+            raise ValueError("PRIVATE_CACHE_OWNER_OR_MODE_INVALID")
+
+
+def _publish_private_payloads(payloads: dict[str, bytes], target: Path) -> None:
+    """Publish owner-only bytes; this helper grants no source acceptance."""
+    if any(Path(name).name != name for name in payloads):
+        raise ValueError("PRIVATE_CACHE_FILENAME_REQUIRED")
+
+    def verify(path: Path) -> None:
+        _assert_owner_private(path)
+        if {p.name for p in path.iterdir()} != set(payloads) or any(
+            (path / k).read_bytes() != v for k, v in payloads.items()
+        ):
+            raise ValueError("PRIVATE_CACHE_IMMUTABLE")
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=target.parent, prefix=".rasp-cache-") as folder:
+        stage = Path(folder) / "payload"
+        stage.mkdir(mode=0o700)
+        stage.chmod(0o700)
+        for name, payload in payloads.items():
+            descriptor = os.open(stage / name, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(descriptor, "wb") as handle:
+                os.fchmod(handle.fileno(), 0o600)
+                handle.write(payload)
+        _assert_owner_private(stage)
+        # Unlike raw restoration, a private cache never repairs an existing
+        # empty reservation or alters any existing directory's permissions.
+        with _publication_lock(target):
+            if os.path.lexists(target):
+                verify(target)
+            else:
+                os.rename(stage, target)
+
+
 def publish_private(inputs: NormalizedRasp, target: Path, *, now: datetime) -> dict[str, Any]:
     inputs.cache_policy.assert_valid(now=now)
     if (
@@ -794,24 +847,13 @@ def publish_private(inputs: NormalizedRasp, target: Path, *, now: datetime) -> d
     }
     payloads["manifest.json"] = (json.dumps(manifest, sort_keys=True, indent=2) + "\n").encode()
 
-    def verify(path: Path) -> None:
-        if {p.name for p in path.iterdir()} != set(payloads) or any(
-            (path / k).read_bytes() != v for k, v in payloads.items()
-        ):
-            raise ValueError("PRIVATE_CACHE_IMMUTABLE")
-
-    target.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(dir=target.parent, prefix=".rasp-cache-") as folder:
-        stage = Path(folder) / "payload"
-        stage.mkdir()
-        for k, v in payloads.items():
-            (stage / k).write_bytes(v)
-        _publish_directory(stage, target, verify)
+    _publish_private_payloads(payloads, target)
     return manifest
 
 
 def load_private(target: Path, expected_manifest_sha256: str, *, now: datetime) -> NormalizedRasp:
     """Consumers must perform this wall-clock expiry check on every cache load."""
+    _assert_owner_private(target)
     with (target / "manifest.json").open("rb") as stream:
         raw = stream.read(2 * 1024 * 1024 + 1)
     if len(raw) > 2 * 1024 * 1024 or hashlib.sha256(raw).hexdigest() != expected_manifest_sha256:

@@ -3,6 +3,8 @@
 import copy
 import hashlib
 import json
+import os
+import stat
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
@@ -367,6 +369,8 @@ def test_expired_cache_consumer_refuses_before_reading_any_source_documents(tmp_
     }
     raw = json.dumps(manifest).encode()
     (tmp_path / "manifest.json").write_bytes(raw)
+    (tmp_path / "manifest.json").chmod(0o600)
+    tmp_path.chmod(0o700)
     with pytest.raises(ValueError, match="EXPIRED"):
         module.load_private(tmp_path, hashlib.sha256(raw).hexdigest(), now=NOW)
     with pytest.raises(ValueError, match="MANIFEST_HASH"):
@@ -466,3 +470,81 @@ def test_frozen_input_validity_must_be_rechecked_at_publication_and_reuse(
         policy.assert_valid(now=datetime(2026, 11, 10, 20, tzinfo=UTC))
     assert policy.usage_scope == "temporary_provider_service_cache"
     assert policy.authorization_ref == "TEST_ONLY_USAGE_REVIEW"
+
+
+@pytest.mark.parametrize("mask", [0o022, 0o000])
+def test_private_byte_publisher_enforces_modes_independently_of_umask(
+    tmp_path: Path, mask: int
+) -> None:
+    # Generic marker bytes exercise the filesystem boundary without publishing
+    # synthetic AcceptedData or a provider cache episode.
+    target = tmp_path / "TEST_ONLY_byte_layout"
+    payloads = {"manifest.json": b"TEST_ONLY_MARKER", "document.json": b"TEST_ONLY_BYTES"}
+    previous = os.umask(mask)
+    try:
+        module._publish_private_payloads(payloads, target)
+    finally:
+        os.umask(previous)
+    assert stat.S_IMODE(target.stat().st_mode) == 0o700
+    assert all(stat.S_IMODE(p.stat().st_mode) == 0o600 for p in target.iterdir())
+    original = {p.name: p.stat().st_mtime_ns for p in target.iterdir()}
+    module._publish_private_payloads(payloads, target)
+    assert {p.name: p.stat().st_mtime_ns for p in target.iterdir()} == original
+    (target / "document.json").chmod(0o644)
+    with pytest.raises(ValueError, match="OWNER_OR_MODE"):
+        module._publish_private_payloads(payloads, target)
+    assert stat.S_IMODE((target / "document.json").stat().st_mode) == 0o644
+    assert (target / "document.json").read_bytes() == payloads["document.json"]
+
+
+@pytest.mark.parametrize("empty", [False, True])
+def test_existing_unsafe_directory_is_not_repaired_or_replaced(tmp_path: Path, empty: bool) -> None:
+    target = tmp_path / "TEST_ONLY_existing"
+    target.mkdir(mode=0o755)
+    target.chmod(0o755)
+    if not empty:
+        (target / "document.json").write_bytes(b"TEST_ONLY_BYTES")
+    with pytest.raises(ValueError, match="OWNER_OR_MODE"):
+        module._publish_private_payloads({"document.json": b"TEST_ONLY_BYTES"}, target)
+    assert stat.S_IMODE(target.stat().st_mode) == 0o755
+    assert list(target.iterdir()) == ([] if empty else [target / "document.json"])
+
+
+@pytest.mark.parametrize("unsafe_part", ["directory", "document"])
+def test_cache_load_checks_permissions_before_reading_metadata(
+    tmp_path: Path, unsafe_part: str
+) -> None:
+    target = tmp_path / "TEST_ONLY_load"
+    target.mkdir(mode=0o700)
+    raw = b"{}"
+    path = target / "manifest.json"
+    path.write_bytes(raw)
+    path.chmod(0o600)
+    if unsafe_part == "directory":
+        target.chmod(0o755)
+    else:
+        path.chmod(0o644)
+    with pytest.raises(ValueError, match="OWNER_OR_MODE"):
+        module.load_private(target, hashlib.sha256(raw).hexdigest(), now=NOW)
+    assert path.read_bytes() == raw
+
+
+@pytest.mark.parametrize(
+    "timestamp,accepted",
+    [
+        ("2026-11-10T18:59:59Z", True),
+        ("2026-11-10T19:00:00Z", True),
+        ("2026-11-10T19:00:00.000001Z", False),
+        ("2026-11-10T19:30:00Z", False),
+    ],
+)
+def test_page_capture_cannot_be_later_than_current_clock(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, timestamp: str, accepted: bool
+) -> None:
+    path, envelope = fixture(tmp_path, monkeypatch)
+    envelope["pages"][0]["fetched_at"] = timestamp
+    if accepted:
+        assert len(normalize(path, envelope).timetable.runs) == 1
+    else:
+        with pytest.raises(ValueError, match="PAGE_RETRIEVAL_OUTSIDE_CACHE_EPISODE"):
+            normalize(path, envelope)

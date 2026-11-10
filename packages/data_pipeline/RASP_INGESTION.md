@@ -51,7 +51,8 @@ checked; at most 32 pages enter an episode. Required fields:
 | `copyright` | Actual copyright JSON preserving provider URL/text and at least one banner. A valid authorized cached response may be reused. Fresh retrieval uses the same quota. Ingestion stores opaque HTML; it never executes it or follows its URLs. |
 
 `retrieved_at` is the beginning of the capture episode. Page timestamps must
-fall between it and `expires_at`. Travel departure/window dates are separate
+satisfy `retrieved_at <= fetched_at <= server_now < expires_at`; future captures
+are rejected without a clock-skew allowance. Travel departure/window dates are separate
 from wall-clock cache validity. Operator authorization selects expiry; the
 documentation supplies no universal TTL. Reservations must precede capture,
 match request/day, have unique IDs/counters and satisfy baseline < total ≤
@@ -72,7 +73,10 @@ Compute and review the envelope's SHA256. Credentials are never command inputs:
 `AcceptedData`, typed `Timetable`, physical-service/departure bindings, original
 copyright fields and QA report. `publish_private` is atomic/exclusive and refuses
 synthetic, expired, data-tree or Git-tree output. Existing differing files are
-not replaced. Output: `accepted-data.json`, `timetable.json`,
+not replaced. New final directories are owner-only `0700`; documents are `0600`
+regardless of umask. Immutable reuse and loads reject foreign ownership, links
+or unsafe modes without changing existing permissions, including empty
+directories. Output: `accepted-data.json`, `timetable.json`,
 `physical-services.json`, `copyright.json`, `normalization-report.json`, manifest.
 
 `NormalizedRasp.cache_policy` is a typed `PrivateCachePolicy`, also retained in
