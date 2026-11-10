@@ -1323,3 +1323,51 @@ async def test_score_selection_after_first_twenty_uses_saved_subject():
     answer = await explain_saved(agent, AnalysisResult.model_validate(saved), point="point-24")
     assert answer.status == "generated"
     assert answer.findings[0].score_ids == ["score-24"]
+
+
+def test_mutable_template_cannot_remove_partial_score_limitation():
+    saved = score_analysis(partial=True)
+    explanation = module().template_explanation(saved, "request", "DISABLED")
+    explanation.findings[0].text = "Индекс доступности подтверждён полностью."
+    with pytest.raises(ValueError, match="narrative_invalid"):
+        module().render_explanation(explanation, saved)
+
+
+@pytest.mark.asyncio
+async def test_mixed_citywide_facts_fit_existing_model_budget():
+    saved = many_metrics().model_dump(mode="json")
+    prototype = score_analysis().model_dump(mode="json")["scores"][0]
+    saved["scores"] = [
+        prototype
+        | {
+            "score_id": f"score-{index}",
+            "subject": {"kind": "sample_point", "point_id": f"point-{index}"},
+        }
+        for index in range(25)
+    ]
+    agent, transport, _, _ = assistant(
+        [
+            reply(
+                {
+                    "findings": [
+                        {
+                            "score_id": "score-0",
+                            "explanation_code": "saved_value",
+                        }
+                    ]
+                }
+            )
+        ]
+    )
+    answer = await explain_saved(agent, AnalysisResult.model_validate(saved))
+    assert answer.status == "generated" and len(transport.calls) == 1
+    payload = json.loads(transport.calls[0]["messages"][1]["content"])
+    facts = payload["saved_facts"]
+    assert facts["metrics"] and facts["scores"]
+    assert len(facts["metrics"]) + len(facts["scores"]) <= 20
+    encoded = (
+        module()
+        ._json({"messages": transport.calls[0]["messages"], "tools": transport.calls[0]["tools"]})
+        .encode()
+    )
+    assert len(encoded) + 1024 <= agent.config.max_input_tokens
