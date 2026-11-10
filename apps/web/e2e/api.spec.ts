@@ -1102,6 +1102,9 @@ test("API: generated transport snapshot remains explicitly demo through canonica
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
   await expect(page.getByRole("status")).toContainText("Результат получен");
   await expect(page.locator("#apiResultCard .k")).toHaveText("Демонстрационный анализ");
+  await expect(page.getByRole("button", { name: "Центр Москвы", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Все точки", exact: true }).click();
+  await page.getByRole("button", { name: "Центр Москвы", exact: true }).click();
   await page.getByRole("button", { name: "Агент", exact: true }).click();
   await page.getByRole("button", { name: "Проверить сценарий", exact: true }).click();
   await expect(page.getByRole("button", { name: "Сценарий", exact: true })).toBeVisible();
