@@ -1,11 +1,12 @@
 """TEST_ONLY saved facts; server wording makes no network or formula calls."""
 
+import json
 from copy import deepcopy
 
 import pytest
 from a2_assistant import core
 from a2_contracts.v2.results import AnalysisResult
-from test_assistant import analysis, score_analysis
+from test_assistant import analysis, assistant, explain_saved, reply, score_analysis
 
 
 @pytest.mark.parametrize("value,partial", [(25.0, False), (0.497, True), (None, True)])
@@ -68,3 +69,43 @@ def test_saved_limitations_remain_bounded_with_readable_notes():
     answer = core.template_explanation(saved, "request", "DISABLED")
     assert len(answer.limitations) <= 20
     assert core._URBAN_FORMULA_NOTE in answer.limitations
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("value,partial", [(25.0, False), (0.497, True), (None, True)])
+async def test_prompt_supplies_exact_saved_status_code_for_scores(value, partial):
+    saved = score_analysis(value=value, partial=partial)
+    code = "saved_value" if value is not None else "unknown"
+    agent, transport, *_ = assistant(
+        [reply({"findings": [{"score_id": "accessibility", "explanation_code": code}]})]
+    )
+    answer = await explain_saved(agent, saved, point="point")
+    assert answer.status == "generated"
+    messages = transport.calls[0]["messages"]
+    facts = json.loads(messages[1]["content"])["saved_facts"]
+    assert facts["scores"][0]["required_explanation_code"] == code
+    assert "COPY explanation_code EXACTLY" in messages[0]["content"]
+    assert "Never use completeness, reason_code" in messages[0]["content"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "status", ["available", "unknown", "not_applicable", "methodology_pending", "pending"]
+)
+async def test_prompt_supplies_exact_saved_status_code_for_metrics(status):
+    saved = analysis()
+    if status != "available":
+        payload = saved.model_dump(mode="json")
+        payload["status"] = "partial"
+        payload["metrics"][0].update(status=status, value=None, reason_code="TEST_ONLY-unavailable")
+        if status == "pending":
+            payload["metrics"][0]["dependency_job_id"] = "TEST_ONLY-dependent-job"
+        saved = AnalysisResult.model_validate(payload)
+    code = "saved_value" if status == "available" else status
+    agent, transport, *_ = assistant(
+        [reply({"findings": [{"metric_id": "travel-time", "explanation_code": code}]})]
+    )
+    answer = await explain_saved(agent, saved, point="point")
+    assert answer.status == "generated"
+    facts = json.loads(transport.calls[0]["messages"][1]["content"])["saved_facts"]
+    assert facts["metrics"][0]["required_explanation_code"] == code

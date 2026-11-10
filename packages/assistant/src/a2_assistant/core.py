@@ -626,6 +626,9 @@ class FlashAssistant:
                     "unit": metric.unit,
                     "completeness": metric.completeness,
                     "reason_code": metric.reason_code,
+                    "required_explanation_code": "saved_value"
+                    if metric.status == "available"
+                    else metric.status,
                 }
                 for metric in initial_metrics
             ],
@@ -637,6 +640,9 @@ class FlashAssistant:
                     "completeness": score.completeness,
                     "reason_code": score.reason_code,
                     "ranking_eligible": score.ranking_eligible,
+                    "required_explanation_code": "saved_value"
+                    if score.status == "available"
+                    else score.status,
                 }
                 for score in initial_scores
             ],
@@ -678,8 +684,9 @@ class FlashAssistant:
             "Return exactly one JSON object, no Markdown, code fences, or text outside JSON. "
             "Select one to five relevant saved metrics or scores. For each, give exactly one of "
             "metric_id or score_id, and explanation_code. Never identify a score as a metric. "
-            "Use saved_value for available metrics, travel_time only for available time metrics, "
-            "and otherwise the exact metric status as explanation_code. "
+            "COPY explanation_code EXACTLY from required_explanation_code on each selected saved fact. "
+            "This applies to BOTH metrics and scores, including preliminary numeric scores. "
+            "Never use completeness, reason_code, a display label, or invented wording as explanation_code. "
             "Give template_ids only from registered_template_ids, or []. "
             "Do not write analysis_id, values, units, evidence, prose, or claims. "
             "The server adds all facts and sentences. The response_example is valid for the first metric. "
