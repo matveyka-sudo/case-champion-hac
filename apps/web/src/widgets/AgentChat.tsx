@@ -5,12 +5,12 @@ import {
   useRef,
   useImperativeHandle,
   type Ref,
-  type FormEvent,
 } from "react";
 import { useAtlas, currentStatus } from "../features/state";
 import { mockGateway } from "../mocks/gateway";
 import { fixtures, aggregate } from "../mocks/model";
 import { Icon, Demo } from "../shared/ui";
+import { AgentChatView } from "./AgentChatView";
 import { f1, f0, roundPop, timeLabel } from "../shared/format";
 export interface ChatHandle {
   analyze: () => void;
@@ -413,92 +413,15 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
       </div>
     );
   };
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    void answer();
-  };
-  return (
-    <aside
-      className={`at-chat ${s.chatOpen ? "m-open" : "is-closed"}`}
-      id="chat"
-      aria-label="Агент Waydex"
-      inert={!s.chatOpen}
-    >
-      <div className="ch-in">
-        <div className="ch-head">
-          <span className="ch-ava">
-            <Icon name="sparkles" />
-          </span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <b>Агент Waydex</b>
-            <span>Объясняет по результатам расчёта · демо-режим</span>
-          </div>
-          <button
-            className="ctx-x"
-            aria-label="Новый диалог"
-            onClick={() => {
-              abort.current?.abort();
-              setMessages([]);
-              setBusy(false);
-              dispatch({
-                type: "ui",
-                patch: { scenario: s.scenario === "done" ? "done" : "none" },
-              });
-            }}
-          >
-            <Icon name="square-pen" />
-          </button>
-          <button
-            className="ctx-x"
-            aria-label="Свернуть чат"
-            onClick={() => setChat(false)}
-          >
-            <Icon name="panel-right-close" />
-          </button>
-        </div>
-        <details className="ch-ctx">
-          <summary>
-            <Icon name="crosshair" />
-            <span className="t">
-              {ctx} ·{" "}
-              {p.mode === "city"
-                ? "В городе"
-                : p.mode === "pax"
-                  ? "Пассажиры"
-                  : "Грузы"}
-            </span>
-            <Icon name="chevron-down" />
-          </summary>
-          <dl>
-            <dt>Контекст</dt>
-            <dd>{ctx}</dd>
-            <dt>Условия</dt>
-            <dd>
-              {p.date} · {timeLabel(p.t)} · демо
-            </dd>
-            <dt>Результат</dt>
-            <dd>
-              {s.status === "stale"
-                ? "Для предыдущих условий"
-                : "Демонстрационный набор"}
-            </dd>
-          </dl>
-        </details>
-        <div className="ch-log" ref={log} aria-live="polite">
-          {!messages.length && (
-            <div className="ch-empty">
-              <h3>Спросите о выбранной области</h3>
-              <p>
-                Агент видит контекст выше: режим, территорию, условия и текущий
-                результат. Он объясняет причину и предлагает сценарий, который
-                можно проверить отдельно.
-              </p>
-            </div>
-          )}
-          {messages.map((m) => (
-            <Fragment key={m.id}>{render(m)}</Fragment>
-          ))}
-          {off && (
+  return <AgentChatView open={s.chatOpen} onClose={() => setChat(false)} onNewDialog={() => {
+    abort.current?.abort(); setMessages([]); setBusy(false);
+    dispatch({ type: "ui", patch: { scenario: s.scenario === "done" ? "done" : "none" } });
+  }} subtitle="Объясняет по результатам расчёта · демо-режим"
+    contextLabel={<>{ctx} · {p.mode === "city" ? "В городе" : p.mode === "pax" ? "Пассажиры" : "Грузы"}</>}
+    contextRows={[{ label: "Контекст", value: ctx }, { label: "Условия", value: `${p.date} · ${timeLabel(p.t)} · демо` },
+      { label: "Результат", value: s.status === "stale" ? "Для предыдущих условий" : "Демонстрационный набор" }]}
+    messages={<>{messages.map((m) => <Fragment key={m.id}>{render(m)}</Fragment>)}</>} hasMessages={messages.length > 0}
+    error={<>          {off && (
             <div className="ch-err" role="alert">
               <b>
                 <Icon name="bot-off" /> Агент временно недоступен
@@ -520,64 +443,9 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
               </div>
             </div>
           )}
-        </div>
-        <div className="ch-foot">
-          {!messages.length && (
-            <div className="sugs">
-              {suggestions.map((q) => (
-                <button
-                  className="sug"
-                  key={q}
-                  onClick={() => {
-                    setDraft(q);
-                    input.current?.focus();
-                  }}
-                >
-                  <Icon name="message-circle-question" />
-                  {q}
-                </button>
-              ))}
-            </div>
-          )}
-          <form className="composer" onSubmit={submit}>
-            <label htmlFor="chatInput" className="visually-hidden">
-              Вопрос агенту
-            </label>
-            <textarea
-              ref={input}
-              id="chatInput"
-              rows={1}
-              value={draft}
-              disabled={off || busy}
-              onChange={(e) => {
-                setDraft(e.target.value);
-                e.target.style.height = "auto";
-                e.target.style.height =
-                  Math.min(120, e.target.scrollHeight) + "px";
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  void answer();
-                }
-              }}
-              placeholder="Спросите о выбранной области или связи"
-            />
-            <button
-              className="send"
-              type="submit"
-              aria-label="Отправить"
-              disabled={off || busy || !draft.trim()}
-            >
-              <Icon name="arrow-up" />
-            </button>
-          </form>
-          <p className="ch-note">
-            Числа берутся только из результата расчёта. Прототип: ответы —
-            заранее подготовленный демо-диалог.
-          </p>
-        </div>
-      </div>
-    </aside>
-  );
+</>}
+    suggestions={suggestions} onSuggestion={(question) => { setDraft(question); input.current?.focus(); }}
+    draft={draft} onDraftChange={setDraft} onSend={() => void answer()} disabled={off} busy={busy}
+    logRef={log} inputRef={input}
+    note="Числа берутся только из результата расчёта. Прототип: ответы — заранее подготовленный демо-диалог." />;
 }

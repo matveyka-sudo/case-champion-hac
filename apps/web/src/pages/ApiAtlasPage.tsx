@@ -75,6 +75,7 @@ import { TimeDockView } from "../widgets/TimeDockView";
 import { Seg } from "../widgets/SegmentedControl";
 import { FiltersPanelView } from "../widgets/FiltersPanelView";
 import { CategoryChoices } from "../widgets/CategoryChoices";
+import { AgentChatView } from "../widgets/AgentChatView";
 const phaseLabels: Record<string, string> = {
   idle: "Выберите условия и запустите анализ",
   running: "Расчёт выполняется",
@@ -193,6 +194,7 @@ export function ApiAtlasPage() {
   const session = useAnalysisSession();
   const resultCard = useRef<HTMLElement>(null), resultTitleRef = useRef<HTMLHeadingElement>(null);
   const demoBanner = useRef<HTMLElement>(null);
+  const chatInput = useRef<HTMLTextAreaElement>(null);
   const { result, scenario, dirty, phase } = session;
   const urban = draft.kind.startsWith("urban_"),
     cargo = draft.kind.endsWith("cargo");
@@ -276,7 +278,7 @@ export function ApiAtlasPage() {
     () => false,
   );
   useModalFocus("apiFilters", mobile && filtersOpen);
-  useModalFocus("apiChat", mobile && chatOpen);
+  useModalFocus("chat", mobile && chatOpen);
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -549,7 +551,7 @@ export function ApiAtlasPage() {
         title={origin?.name || "Россия · выберите город"} theme={theme} onThemeChange={setTheme}
         onModeChange={(mode) => toggleMode(mode === "city" ? "urban_passenger" : mode === "pax" ? "intercity_passenger" : draft.kind.endsWith("cargo") ? draft.kind : "urban_cargo")}
         onFilters={() => { setFiltersOpen(true); setChatOpen(false); }} chatOpen={chatOpen}
-        onChat={() => { setChatOpen((value) => !value); setFiltersOpen(false); }} />} notice={      <DemoModelBanner selectedSnapshotId={snapshotId} savedSnapshotId={result?.snapshot_id} hasSavedResult={!!result} bannerRef={demoBanner} />}>
+        onChat={() => { const open = !chatOpen; setChatOpen(open); setFiltersOpen(false); if (window.innerWidth < 1520) setFiltersCollapsed(open); }} />} notice={      <DemoModelBanner selectedSnapshotId={snapshotId} savedSnapshotId={result?.snapshot_id} hasSavedResult={!!result} bannerRef={demoBanner} />}>
         <FiltersPanelView id="apiFilters" collapsed={filtersCollapsed} mobileOpen={filtersOpen}
           onClose={() => setFiltersOpen(false)} onExpand={() => setFiltersCollapsed(false)}
           onToggle={() => { setFiltersCollapsed((value) => !value); if (filtersCollapsed && window.innerWidth < 1360) setChatOpen(false); }}
@@ -1175,29 +1177,13 @@ export function ApiAtlasPage() {
             </div>
           </div>
         </main>
-        <aside
-          id="apiChat"
-          className={`at-chat api-chat ${chatOpen ? "m-open" : "is-closed"}`}
-          aria-label="Агент Waydex"
-          hidden={!chatOpen}
-        >
-          <div className="api-panel-head">
-            <b>Агент Waydex</b>
-            <button
-              className="ctx-x"
-              aria-label="Свернуть чат"
-              onClick={() => setChatOpen(false)}
-            >
-              <Icon name="x" />
-            </button>
-          </div>
-          <p className="fhint">
-            {result
-              ? `${requestTitle}${dirty ? " · прежние условия" : " · сохранённый результат"}`
-              : "Объяснение доступно после анализа"}
-          </p>
-          <div className="api-chat-log" aria-live="polite">
-            {session.messages.map((m, i) => (
+        <AgentChatView open={chatOpen} onClose={() => { setChatOpen(false); if (window.innerWidth < 1520) setFiltersCollapsed(false); }} onNewDialog={session.clearExplanation}
+          subtitle="Объясняет по сохранённому результату"
+          contextLabel={result ? `${requestTitle} · ${dirty ? "прежние условия" : "сохранённый результат"}` : "Объяснение доступно после анализа"}
+          contextRows={[{ label: "Контекст", value: result ? requestTitle : "Результат ещё не получен" },
+            { label: "Условия", value: result ? timestampText(result.request.departure_at, savedOrigin?.timezone) : "Не выбраны" },
+            { label: "Результат", value: dirty ? "Для предыдущих условий" : result ? statusText[result.status] : "Не получен" }]}
+          messages={<>            {session.messages.map((m, i) => (
               <div key={i}>
                 <div className="msg u">{m.question}</div>
                 <div className="msg a">
@@ -1258,36 +1244,11 @@ export function ApiAtlasPage() {
                 )}
               </div>
             ))}
-          </div>
-          <form
-            className="composer"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void session.explain(question, selection);
-              setQuestion("");
-            }}
-          >
-            <textarea
-              aria-label="Вопрос агенту"
-              placeholder="Спросите о сохранённом результате"
-              value={question}
-              maxLength={2000}
-              disabled={!result || session.chatBusy}
-              onChange={(e) => setQuestion(e.target.value)}
-            />
-            <button
-              className="send"
-              aria-label="Отправить"
-              disabled={!result || session.chatBusy || !question.trim()}
-            >
-              <Icon name="arrow-up" />
-            </button>
-          </form>
-          <p className="ch-note">
-            Объяснение не запускает сценарий. Числа поступают из сохранённого
-            расчёта.
-          </p>
-        </aside>
+</>} hasMessages={session.messages.length > 0 || session.chatBusy || session.proposals.length > 0}
+          suggestions={["Объясни выбранную точку и ограничения результата", "Какая часть пути занимает больше всего времени?", "Какие изменения можно проверить?"]}
+          onSuggestion={(value) => { setQuestion(value); chatInput.current?.focus(); }} draft={question} onDraftChange={setQuestion}
+          onSend={() => { void session.explain(question, selection); setQuestion(""); }} disabled={!result} busy={session.chatBusy}
+          inputRef={chatInput} note="Числа берутся только из сохранённого расчёта. Сценарий запускается отдельно по кнопке." />
     </AtlasShell>
   );
 }

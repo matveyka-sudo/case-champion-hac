@@ -6,6 +6,7 @@ import { AtlasShell } from "../src/widgets/AtlasShell";
 import { TimeDockView } from "../src/widgets/TimeDockView";
 import { CategoryChoices } from "../src/widgets/CategoryChoices";
 import { FiltersPanelView } from "../src/widgets/FiltersPanelView";
+import { AgentChatView } from "../src/widgets/AgentChatView";
 afterEach(cleanup);
 describe("shared atlas presentation", () => {
   it("uses the incumbent three tabs and keyboard navigation without a data source dependency", () => {
@@ -45,5 +46,17 @@ describe("shared atlas presentation", () => {
     expect(view.container.querySelector(".at-filters>.f-head")).not.toBeNull();
     expect(view.container.querySelector(".at-filters>.f-scroll")?.textContent).toBe("Fields");
     expect(view.container.querySelector(".at-filters>.f-foot")?.textContent).toBe("Run");
+  });
+  it("shares the original chat shell while suggestions only populate input and Enter sends explicitly", () => {
+    const onSuggestion = vi.fn(), onSend = vi.fn();
+    const view = render(createElement(AgentChatView, { open: true, onClose: vi.fn(), onNewDialog: vi.fn(), subtitle: "Saved result",
+      contextLabel: "Москва", contextRows: [{ label: "Результат", value: "Частичный" }], messages: null, hasMessages: false,
+      suggestions: ["Объясни результат"], onSuggestion, draft: "Вопрос", onDraftChange: vi.fn(), onSend, disabled: false, busy: false, note: "Saved facts only" }));
+    expect(view.container.querySelector(".at-chat>.ch-in>.ch-head")).not.toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Объясни результат" }));
+    expect(onSuggestion).toHaveBeenCalledWith("Объясни результат");
+    expect(onSend).not.toHaveBeenCalled();
+    fireEvent.keyDown(screen.getByRole("textbox", { name: "Вопрос агенту" }), { key: "Enter" });
+    expect(onSend).toHaveBeenCalledOnce();
   });
 });

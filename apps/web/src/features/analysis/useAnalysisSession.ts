@@ -222,6 +222,11 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
         setError(e instanceof Error ? e : new Error("Не удалось отменить"));
     }
   };
+  const clearExplanation = () => {
+    chat.current?.abort();
+    setMessages([]);
+    setChatBusy(false);
+  };
   const explain = async (question: string, selection: Selection | null) => {
     const base = currentResult.current;
     const q = question.trim();
@@ -281,5 +286,6 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     runScenario,
     cancel,
     explain,
+    clearExplanation,
   };
 }
