@@ -9,6 +9,8 @@ from a2_engine import WalkResponseEnvelope, WalkRouteRequest, normalize_walk_res
 from pydantic import Field, model_validator
 
 MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024
+MAX_ROUTE_ARTIFACT_BYTES = 8 * 1024 * 1024
+MAX_RETAINED_ROUTE_BYTES = 256 * 1024 * 1024
 
 
 class PlannedPair(ContractModel):
@@ -23,7 +25,15 @@ class PlannedPair(ContractModel):
 
 
 class BatchPlan(ContractModel):
-    schema_version: Literal["waydex-walk-execution/1", "waydex-walk-execution/2"]
+    schema_version: Literal[
+        "waydex-walk-execution/1", "waydex-walk-execution/2", "waydex-walk-execution/3"
+    ]
+    checkpoint_format: Literal["artifact_refs_v2"] | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+    max_route_artifact_bytes: int | None = Field(
+        default=None, ge=1, le=MAX_RETAINED_ROUTE_BYTES, exclude_if=lambda value: value is None
+    )
     runtime_binding_hash: str | None = Field(
         default=None, pattern="^[a-f0-9]{64}$", exclude_if=lambda value: value is None
     )
@@ -71,11 +81,19 @@ class BatchPlan(ContractModel):
     @model_validator(mode="after")
     def bounded_inventory(self) -> Self:
         bound = self.runtime_binding_hash is not None and self.executor_fingerprint is not None
-        if self.schema_version == "waydex-walk-execution/2":
+        if self.schema_version in {"waydex-walk-execution/2", "waydex-walk-execution/3"}:
             if not bound:
                 raise ValueError("OD_PROFILE_BINDING_AND_EXECUTOR_REQUIRED")
         elif self.runtime_binding_hash is not None or self.executor_fingerprint is not None:
             raise ValueError("OD_LEGACY_EXECUTION_CANNOT_CLAIM_PROFILE_BINDING")
+        if self.schema_version == "waydex-walk-execution/3":
+            if (
+                self.checkpoint_format != "artifact_refs_v2"
+                or self.max_route_artifact_bytes is None
+            ):
+                raise ValueError("OD_COMPACT_ARTIFACT_BUDGET_REQUIRED")
+        elif self.checkpoint_format is not None or self.max_route_artifact_bytes is not None:
+            raise ValueError("OD_INLINE_EXECUTION_CANNOT_CLAIM_ARTIFACT_REFS")
         if self.approved_pair_count != len(self.pairs) + self.unresolved_pair_count:
             raise ValueError("APPROVED_PHYSICAL_PAIR_INVENTORY_MISMATCH")
         identities = [pair.pair_id for pair in self.pairs]
@@ -116,24 +134,68 @@ class PairObservation(ContractModel):
     raw_observations: list[RawObservation] = Field(max_length=8)
 
 
+class PairObservationRef(ContractModel):
+    pair_id: str = Field(pattern="^[a-f0-9]{64}$")
+    artifact_sha256: str = Field(pattern="^[a-f0-9]{64}$")
+    size_bytes: int = Field(ge=1, le=MAX_ROUTE_ARTIFACT_BYTES)
+    # Count the immutable envelope and its complete raw observation closure.
+    retained_bytes: int = Field(ge=1, le=9 * MAX_ROUTE_ARTIFACT_BYTES)
+
+
 class BatchCheckpoint(ContractModel):
-    schema_version: Literal["waydex-walk-checkpoint/1"]
+    schema_version: Literal["waydex-walk-checkpoint/1", "waydex-walk-checkpoint/2"]
     execution_identity: str = Field(pattern="^[a-f0-9]{64}$")
     batch_id: str = Field(pattern="^[a-f0-9]{64}$")
-    observations: list[PairObservation] = Field(min_length=1, max_length=16)
+    observations: list[PairObservation | PairObservationRef] = Field(min_length=1, max_length=16)
+
+    @model_validator(mode="after")
+    def exact_protocol(self) -> Self:
+        expected = PairObservationRef if self.schema_version.endswith("/2") else PairObservation
+        if any(not isinstance(observation, expected) for observation in self.observations):
+            raise ValueError("OD_CHECKPOINT_OBSERVATION_PROTOCOL_MISMATCH")
+        return self
+
+    @property
+    def retained_route_bytes(self) -> int:
+        return sum(
+            observation.retained_bytes
+            for observation in self.observations
+            if isinstance(observation, PairObservationRef)
+        )
 
     @property
     def content_hash(self) -> str:
         return canonical_hash(self.model_dump(mode="json"))
 
-    def validate_inventory(self, execution: BatchExecution) -> None:
+    def validate_pair_inventory(self, execution: BatchExecution) -> None:
         batches = dict(execution.batches)
         if self.execution_identity != execution.identity or self.batch_id not in batches:
             raise ValueError("OD_CHECKPOINT_EXECUTION_MISMATCH")
         planned = batches[self.batch_id]
         if [o.pair_id for o in self.observations] != [p.pair_id for p in planned]:
             raise ValueError("OD_CHECKPOINT_PAIR_INVENTORY_MISMATCH")
-        for expected, observation in zip(planned, self.observations, strict=True):
+        compact = execution.checkpoint_format == "artifact_refs_v2"
+        if compact != self.schema_version.endswith("/2"):
+            raise ValueError("OD_CHECKPOINT_EXECUTION_PROTOCOL_MISMATCH")
+
+    def validate_inventory(
+        self, execution: BatchExecution, *, resolved: list[PairObservation] | None = None
+    ) -> None:
+        self.validate_pair_inventory(execution)
+        if resolved is None:
+            if any(
+                isinstance(observation, PairObservationRef) for observation in self.observations
+            ):
+                raise ValueError("OD_ARTIFACT_REFERENCES_REQUIRE_RESOLUTION")
+            observations = [o for o in self.observations if isinstance(o, PairObservation)]
+        else:
+            observations = resolved
+            if self.schema_version.endswith("/1") and observations != self.observations:
+                raise ValueError("OD_INLINE_RESOLUTION_MISMATCH")
+        planned = dict(execution.batches)[self.batch_id]
+        if [o.pair_id for o in observations] != [p.pair_id for p in planned]:
+            raise ValueError("OD_RESOLVED_PAIR_INVENTORY_MISMATCH")
+        for expected, observation in zip(planned, observations, strict=True):
             # This public boundary checks request/payload/build/correlation identities
             # and conservatively retains provider failures and unproven minima.
             normalize_walk_response(expected.request, observation.envelope)

@@ -436,6 +436,29 @@ def test_binding_rejects_cross_scope_and_same_id_source_mutations(tmp_path, monk
         walk_runtime.load_binding(bound.root, reference, snapshot=snapshot, scope=scope)
 
 
+def test_validated_binding_rechecks_pinned_bytes_without_reparsing_sources(tmp_path, monkeypatch):
+    from a2_api.core.errors import DomainError
+
+    entry = city_profile(tmp_path, SNAPSHOTS[0])
+    configure(tmp_path, monkeypatch, [entry])
+    bound = next(iter(load_runtime().walk_bindings.values()))
+    assert bound.inventory is not None
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("semantic source projection must not repeat within this job")
+
+    monkeypatch.setattr(walk_runtime, "load_binding", forbidden)
+    monkeypatch.setattr(walk_runtime, "load_bundle", forbidden)
+    approval, digest, runtime = walk_batches.load_approval(bound=bound, snapshot=entry["snapshot"])
+    assert approval is bound.approval and runtime is bound.runtime
+    assert digest == bound.approval_sha256
+    path = entry["folder"] / "artifact.json"
+    original = path.read_bytes()
+    path.write_bytes(b"x" + original[1:])
+    with pytest.raises(DomainError, match="WALK_BATCH_APPROVAL_OR_BINDING_UNAVAILABLE"):
+        walk_batches.load_approval(bound=bound, snapshot=entry["snapshot"])
+
+
 @pytest.mark.asyncio
 async def test_approved_category_subset_is_dynamic_and_foreign_category_is_unavailable(
     tmp_path, monkeypatch

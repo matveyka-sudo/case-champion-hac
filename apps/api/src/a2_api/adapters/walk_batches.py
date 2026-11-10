@@ -3,6 +3,7 @@
 import asyncio
 import os
 from dataclasses import replace
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast
 
@@ -19,9 +20,10 @@ from a2_engine import (
     WalkPlanIssue,
     WalkRoutePlan,
     WalkRouteRequest,
-    analyze_walk_responses,
+    analyze_normalized_walk_routes,
     load_urban_config,
     load_urban_journey_rules,
+    normalize_walk_response,
     plan_walk_routes,
     prepare_walk_inputs,
 )
@@ -31,9 +33,11 @@ from a2_api.adapters import walk_pilot
 from a2_api.adapters.product_projection import Projection, project_urban
 from a2_api.adapters.product_runtime import FileRef, read_document
 from a2_api.core.batches import (
+    MAX_RETAINED_ROUTE_BYTES,
     BatchCheckpoint,
     BatchPlan,
     PairObservation,
+    PairObservationRef,
     PlannedPair,
     RawObservation,
 )
@@ -41,6 +45,11 @@ from a2_api.core.config import RuntimeSettings
 from a2_api.core.errors import DomainError
 from a2_api.core.jobs import ClaimedJob, V2JobContext
 from a2_api.core.registry import ProductRegistry
+from a2_api.core.walk_route_artifacts import (
+    RouteArtifactContext,
+    resolve_checkpoint,
+    write_route_artifact,
+)
 from a2_api.workers.checkpoint_channel import CheckpointChannel
 
 if TYPE_CHECKING:
@@ -83,6 +92,12 @@ class Approval(ContractModel):
     max_checkpoint_bytes: int = Field(ge=1, le=16 * 1024 * 1024)
     observation_retention_seconds: int = Field(ge=1, le=2592000)
     valid_until: Timestamp
+    checkpoint_format: Literal["artifact_refs_v2"] | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+    max_route_artifact_bytes: int | None = Field(
+        default=None, ge=1, le=MAX_RETAINED_ROUTE_BYTES, exclude_if=lambda value: value is None
+    )
 
     @field_validator("categories")
     @classmethod
@@ -105,6 +120,18 @@ def load_approval(
         if snapshot is None:
             raise _unavailable("BOUND_WALK_SNAPSHOT_REQUIRED")
         try:
+            if bound.inventory is not None:
+                from a2_api.adapters.walk_runtime import executor_fingerprint
+
+                if (
+                    snapshot.snapshot_id != bound.scope.snapshot_id
+                    or canonical_hash(snapshot.model_dump(mode="json")) != bound.scope.snapshot_hash
+                ):
+                    raise ValueError("APPROVED_WALK_SNAPSHOT_CHANGED")
+                bound.inventory.assert_current(
+                    executor_fingerprint=executor_fingerprint(), now=datetime.now(UTC)
+                )
+                return bound.approval, bound.approval_sha256, bound.runtime
             current = load_binding(
                 bound.root, bound.reference, snapshot=snapshot, scope=bound.scope
             )
@@ -223,8 +250,20 @@ def _prepare(
         pairs.append(PlannedPair(pair_id=canonical_hash(serialized), request=route))
     if not pairs:
         raise _unavailable("NO_APPROVED_PHYSICAL_PAIR_HAS_CONFIRMED_CONNECTORS")
+    if (approval.checkpoint_format is None) != (approval.max_route_artifact_bytes is None):
+        raise _unavailable("WALK_COMPACT_CHECKPOINT_BUDGET_REQUIRED")
+    if approval.checkpoint_format is not None and bound is None:
+        raise _unavailable("WALK_COMPACT_CHECKPOINT_REQUIRES_BOUND_PROFILE")
     batch = BatchPlan(
-        schema_version="waydex-walk-execution/1" if bound is None else "waydex-walk-execution/2",
+        schema_version=(
+            "waydex-walk-execution/3"
+            if approval.checkpoint_format == "artifact_refs_v2"
+            else "waydex-walk-execution/1"
+            if bound is None
+            else "waydex-walk-execution/2"
+        ),
+        checkpoint_format=approval.checkpoint_format,
+        max_route_artifact_bytes=approval.max_route_artifact_bytes,
         runtime_binding_hash=bound.binding_sha256 if bound is not None else None,
         executor_fingerprint=bound.executor_fingerprint if bound is not None else None,
         snapshot_id=snapshot.snapshot_id,
@@ -288,6 +327,8 @@ def calculate(
     ):
         raise _unavailable("QUEUED_WALK_BATCH_INPUTS_CHANGED")
     completed = {checkpoint.batch_id: checkpoint for checkpoint in channel.completed}
+    artifact_context = RouteArtifactContext(execution) if execution.checkpoint_format else None
+    retained_bytes = sum(checkpoint.retained_route_bytes for checkpoint in completed.values())
     with httpx.Client(
         timeout=15, headers={"Accept-Encoding": "identity"}, trust_env=False
     ) as client:
@@ -296,7 +337,7 @@ def calculate(
                 continue
             load_approval(bound=bound, snapshot=snapshot)
             walk_pilot.check_status(runtime)
-            observations = []
+            observations: list[PairObservation | PairObservationRef] = []
             for pair in pairs:
                 envelope, pair_evidence = walk_pilot.execute_route(client, runtime, pair.request)
                 raw = []
@@ -304,16 +345,28 @@ def calculate(
                     digest = ref.evidence_id.removeprefix("valhalla-observation-")
                     source = runtime.evidence_dir / (digest + ".json")
                     raw.append(RawObservation(sha256=digest, size_bytes=source.stat().st_size))
-                observations.append(
-                    PairObservation(
-                        pair_id=pair.pair_id,
-                        envelope=envelope,
-                        evidence=pair_evidence,
-                        raw_observations=raw,
-                    )
+                observation = PairObservation(
+                    pair_id=pair.pair_id,
+                    envelope=envelope,
+                    evidence=pair_evidence,
+                    raw_observations=raw,
                 )
+                if artifact_context is not None:
+                    reference = write_route_artifact(
+                        observation,
+                        artifact_context,
+                        remaining_bytes=artifact_context.max_retained_bytes - retained_bytes,
+                    )
+                    retained_bytes += reference.retained_bytes
+                    if retained_bytes > artifact_context.max_retained_bytes:
+                        raise _unavailable("WALK_RETAINED_ROUTE_ARTIFACT_BYTE_BUDGET_EXCEEDED")
+                    observations.append(reference)
+                else:
+                    observations.append(observation)
             checkpoint = BatchCheckpoint(
-                schema_version="waydex-walk-checkpoint/1",
+                schema_version="waydex-walk-checkpoint/2"
+                if artifact_context
+                else "waydex-walk-checkpoint/1",
                 execution_identity=execution.identity,
                 batch_id=batch_id,
                 observations=observations,
@@ -322,12 +375,25 @@ def calculate(
             completed[batch_id] = checkpoint
     load_approval(bound=bound, snapshot=snapshot)
     walk_pilot.check_status(runtime)
-    responses = [
-        o.envelope for batch_id, _ in execution.batches for o in completed[batch_id].observations
-    ]
-    calculated = analyze_walk_responses(
+    planned = {pair.pair_id: pair.request for pair in execution.pairs}
+    normalized_routes = []
+    observed_evidence: dict[str, EvidenceRef] = {}
+    # Resolve and validate at most one existing 16-pair window before releasing
+    # raw JSON. Only normalized public ML1 route values survive reduction.
+    for batch_id, _ in execution.batches:
+        window = resolve_checkpoint(completed[batch_id], execution, context=artifact_context)
+        for observation in window:
+            normalized_routes.append(
+                normalize_walk_response(planned[observation.pair_id], observation.envelope)
+            )
+            for evidence_ref in observation.evidence:
+                previous = observed_evidence.get(evidence_ref.evidence_id)
+                if previous is None or evidence_ref.retrieved_at < previous.retrieved_at:
+                    observed_evidence[evidence_ref.evidence_id] = evidence_ref
+        del window
+    calculated = analyze_normalized_walk_routes(
         plan,
-        responses,
+        normalized_routes,
         selected_categories={str(k): str(v) for k, v in request.priorities.items()},
         config=load_urban_config(),
         rules=load_urban_journey_rules(),
@@ -345,12 +411,7 @@ def calculate(
     }
     for row in (
         *runtime.evidence,
-        *(
-            ref
-            for batch_id, _ in execution.batches
-            for o in completed[batch_id].observations
-            for ref in o.evidence
-        ),
+        *observed_evidence.values(),
     ):
         previous = evidence.get(row.evidence_id)
         if previous is None or row.retrieved_at < previous.retrieved_at:
