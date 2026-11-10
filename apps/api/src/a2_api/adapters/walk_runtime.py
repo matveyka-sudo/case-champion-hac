@@ -407,10 +407,18 @@ def load_binding(
         raise ValueError("WALK_APPROVED_CORRELATIONS_OR_CONNECTORS_UNAVAILABLE")
     map_features: tuple[MapFeature, ...] = ()
     if binding.map_features is not None:
-        from a2_api.adapters.walk_map_sources import validate_walk_map_features
+        from a2_api.adapters.walk_map_sources import (
+            WalkMapSourceSelection,
+            validate_walk_map_features,
+        )
 
         _, document = _read(path.parent, binding.map_features, remaining, 2 * 1024 * 1024)
-        map_features = validate_walk_map_features(document, snapshot=snapshot, bundle=bundle)
+        selection = WalkMapSourceSelection.model_validate(document)
+        if selection.city_id != scope.city_id:
+            raise ValueError("WALK_MAP_PROFILE_CITY_MISMATCH")
+        map_features = validate_walk_map_features(
+            selection.model_dump(mode="json"), snapshot=snapshot, bundle=bundle
+        )
     return BoundWalkBinding(
         root.resolve(),
         reference,

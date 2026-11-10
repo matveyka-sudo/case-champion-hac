@@ -4,6 +4,7 @@ import pytest
 from a2_api.adapters.product_runtime import FileRef, load_runtime
 from a2_api.adapters.walk_map import attach_walk_map
 from a2_api.adapters.walk_map_sources import validate_walk_map_features
+from a2_api.adapters.walk_runtime import load_binding
 from a2_contracts.common import canonical_hash
 from a2_data_pipeline.store import load_bundle
 from test_walk_map import calculate
@@ -67,3 +68,32 @@ def test_attaching_source_polygons_preserves_metrics_population_and_rejects_muta
     changed = features[0].model_copy(update={"population": 999999})
     with pytest.raises(ValueError, match="POPULATION_MISMATCH"):
         attach_walk_map(before, snapshot, calculated, names, map_features=[changed])
+
+
+def test_map_selector_cannot_select_another_profile_city(tmp_path, monkeypatch):
+    entry = city_profile(tmp_path, SNAPSHOTS[0])
+    reference = write(entry["folder"] / "map.json", selection(entry["snapshot"]))
+    binding = write(
+        entry["folder"] / "binding.json", entry["binding"] | {"map_features": reference}
+    )
+    entry["profile"] = entry["profile"].model_copy(
+        update={
+            "walk_binding": FileRef(
+                path=entry["folder"].name + "/binding.json", sha256=binding["sha256"]
+            )
+        }
+    )
+    configure(tmp_path, monkeypatch, [entry])
+    bound = load_runtime().walk_bindings[entry["profile"].profile_id]
+    wrong = selection(entry["snapshot"]) | {"city_id": "moscow"}
+    reference = write(entry["folder"] / "map.json", wrong)
+    binding = write(
+        entry["folder"] / "binding.json", entry["binding"] | {"map_features": reference}
+    )
+    with pytest.raises(ValueError, match="WALK_MAP_PROFILE_CITY_MISMATCH"):
+        load_binding(
+            tmp_path,
+            FileRef(path=entry["folder"].name + "/binding.json", sha256=binding["sha256"]),
+            snapshot=entry["snapshot"],
+            scope=bound.scope,
+        )
