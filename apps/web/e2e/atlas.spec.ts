@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
 test("landing, transport tabs, anchors and browser navigation", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?data=demo");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "Связи территорий.",
   );
@@ -32,7 +32,7 @@ test("landing, transport tabs, anchors and browser navigation", async ({
 test("city selection, states and time never invent fresh values", async ({
   page,
 }) => {
-  await page.goto("/#atlas");
+  await page.goto("/?data=demo#atlas");
   await page
     .locator("#filters")
     .getByRole("button", { name: "Москва", exact: true })
@@ -51,7 +51,7 @@ test("city selection, states and time never invent fresh values", async ({
 });
 test("cancels a pending response after parameters change", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("/#atlas");
+  await page.goto("/?data=demo#atlas");
   await page
     .locator("#filters")
     .getByRole("button", { name: "Москва", exact: true })
@@ -65,7 +65,7 @@ test("cancels a pending response after parameters change", async ({ page }) => {
 test("chat suggestion and scenario use the same results as the map", async ({
   page,
 }) => {
-  await page.goto("/#atlas");
+  await page.goto("/?data=demo#atlas");
   await page
     .locator("#filters")
     .getByRole("button", { name: "Москва", exact: true })
@@ -90,7 +90,7 @@ test("chat suggestion and scenario use the same results as the map", async ({
 test("free question is safe text and does not pretend to call AI", async ({
   page,
 }) => {
-  await page.goto("/#atlas");
+  await page.goto("/?data=demo#atlas");
   await page.getByRole("button", { name: "Агент", exact: true }).click();
   const unsafeMessage = String.fromCharCode(60) + "img src=x onerror=alert(1)>";
   await page.getByLabel("Вопрос агенту").fill(unsafeMessage);
@@ -104,7 +104,7 @@ test("free question is safe text and does not pretend to call AI", async ({
 test("passenger direction and freight scopes are separate", async ({
   page,
 }) => {
-  await page.goto("/#atlas");
+  await page.goto("/?data=demo#atlas");
   await page.locator("#modeTabs button").nth(1).click();
   await expect(page.locator(".ctx")).toContainText("Москва → Калининград");
   await page.getByRole("button", { name: "Поменять направление" }).click();
@@ -131,7 +131,7 @@ test("passenger direction and freight scopes are separate", async ({
 test("all eleven demo states can be selected without crashing", async ({
   page,
 }) => {
-  await page.goto("/#atlas");
+  await page.goto("/?data=demo#atlas");
   await page
     .locator("#filters")
     .getByRole("button", { name: "Москва", exact: true })
@@ -164,7 +164,7 @@ test("mobile panels, range keyboard and absence of overflow", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/#atlas");
+  await page.goto("/?data=demo#atlas");
   await page
     .getByRole("button", { name: "Фильтры", exact: true })
     .first()
@@ -193,7 +193,7 @@ test("scroll motion and reduced motion preserve the content", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("/");
+  await page.goto("/?data=demo");
   await expect(page.locator("#landing")).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, 600));
   await expect
@@ -214,7 +214,7 @@ test("scroll motion and reduced motion preserve the content", async ({
 test("custom selectors support pointer, keyboard and dark theme", async ({
   page,
 }) => {
-  await page.goto("/#atlas");
+  await page.goto("/?data=demo#atlas");
   await page.locator("#modeTabs button").nth(1).click();
   const selector = page.getByRole("combobox", { name: "Территория А" });
   await selector.click();
@@ -243,7 +243,7 @@ test("custom selectors support pointer, keyboard and dark theme", async ({
 test("custom calendar selects a date and closes without hiding the atlas", async ({
   page,
 }) => {
-  await page.goto("/#atlas");
+  await page.goto("/?data=demo#atlas");
   const calendar = page
     .locator("#timedock")
     .getByRole("button", { name: "Выбрать дату" });
@@ -261,7 +261,7 @@ test("custom calendar selects a date and closes without hiding the atlas", async
 test("city map zooms out to Russia and returns without replacing the map", async ({
   page,
 }) => {
-  await page.goto("/#atlas");
+  await page.goto("/?data=demo#atlas");
   await page
     .locator("#filters")
     .getByRole("button", { name: "Москва", exact: true })
@@ -306,7 +306,7 @@ test("city map zooms out to Russia and returns without replacing the map", async
 test("chat cancels old context and refuses a scenario without a current result", async ({
   page,
 }) => {
-  await page.goto("/#atlas");
+  await page.goto("/?data=demo#atlas");
   await page
     .locator("#filters")
     .getByRole("button", { name: "Москва", exact: true })
@@ -333,7 +333,7 @@ test("chat cancels old context and refuses a scenario without a current result",
 test("missing results are hidden on mobile and in intercity cards", async ({
   page,
 }) => {
-  await page.goto("/#atlas");
+  await page.goto("/?data=demo#atlas");
   await page
     .locator("#filters")
     .getByRole("button", { name: "Москва", exact: true })
@@ -360,7 +360,7 @@ test("missing results are hidden on mobile and in intercity cards", async ({
 test("overview map preserves its zoom when closing the card", async ({
   page,
 }) => {
-  await page.goto("/#atlas");
+  await page.goto("/?data=demo#atlas");
   const group = page.locator("#mapRussia svg > g").first();
   await expect(group).toBeVisible();
   await page.getByRole("button", { name: "Приблизить", exact: true }).click();
@@ -370,4 +370,19 @@ test("overview map preserves its zoom when closing the card", async ({
     .getByRole("button", { name: "Закрыть карточку", exact: true })
     .click();
   await expect(group).toHaveAttribute("transform", transform!);
+});
+
+
+test("original demo shared presenters retain desktop and mobile presentation", async ({ page }) => {
+  await page.goto("/?data=demo#atlas");
+  await page.locator("#filters").getByRole("button", { name: "Москва", exact: true }).click();
+  await expect(page.locator(".ctx .bignum")).toContainText("44");
+  await expect(page.locator(".at-filters>.f-scroll")).toBeVisible();
+  await expect(page.getByRole("tablist", { name: "Режим анализа" }).getByRole("tab")).toHaveCount(3);
+  await page.screenshot({ path: "test-results/demo-shared-desktop.png" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator(".m-sheet")).toContainText("Москва");
+  await expect(page.locator(".m-sheet")).toContainText("44 мин");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: "test-results/demo-shared-mobile.png" });
 });
