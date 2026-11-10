@@ -54,10 +54,12 @@ export class EvidenceResolver {
   }
 
   validate(references: Iterable<string>) {
+    if (typeof references === "string") throw invalid();
     for (const id of references) if (!this.leaves.has(id) && !this.groups.has(id)) throw invalid();
   }
 
   expand(references: Iterable<string>) {
+    if (typeof references === "string") throw invalid();
     const leaves = new Set<string>();
     for (const id of references) {
       if (this.leaves.has(id)) leaves.add(id);

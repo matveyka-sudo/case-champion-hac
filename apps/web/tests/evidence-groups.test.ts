@@ -47,6 +47,9 @@ describe("bounded response-owned evidence groups", () => {
         try { resolve(); } catch (error) { expect((error as Error).message).not.toContain(id); }
       }
     }
+    const characters = evidenceResolver({ evidence_refs: [leaf("a"), leaf("b")] });
+    expect(() => characters.validate("ab")).toThrow("EVIDENCE_REFERENCES_INVALID");
+    expect(() => characters.sources("ab")).toThrow("EVIDENCE_REFERENCES_INVALID");
   });
 
   it.each([
