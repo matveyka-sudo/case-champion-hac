@@ -11,6 +11,7 @@ import re
 import unicodedata
 from collections.abc import Callable
 from dataclasses import dataclass
+from itertools import combinations
 
 from a2_contracts.v2.assistant import Explanation, Finding
 from a2_contracts.v2.evidence import EvidenceResolver
@@ -25,6 +26,68 @@ from .narrative import (
     _safety,
     conversational_finding,
 )
+
+_PROSE_RULES = frozenset(
+    {
+        "evidence_mismatch",
+        "placeholder_mismatch",
+        "placeholder_repeated",
+        "placeholder_context",
+        "atom_limit",
+        "paragraph_budget",
+        "qualitative_budget",
+        "literal_number",
+        "written_number",
+        "markup",
+        "control_character",
+        "causal_assertion",
+        "coverage_assertion",
+        "forecast_assertion",
+        "comparative_assertion",
+        "no_route_assertion",
+        "assembled_text_too_long",
+    }
+)
+
+
+class ProseRejected(ValueError):
+    """A fixed rule identifier, never text supplied by the model or a source."""
+
+    def __init__(self, rule: str) -> None:
+        self.rule = rule if rule in _PROSE_RULES else "other"
+        super().__init__(self.rule)
+
+
+@dataclass(frozen=True)
+class ProseLimits:
+    paragraph_max_characters: int
+    qualitative_max_characters: int
+    max_optional_atoms: int = 1
+    max_occurrences_per_placeholder: int = 1
+    final_text_max_characters: int = 1000
+
+
+def prose_limits(saved: AnalysisResult, facts: list[Metric | Score]) -> ProseLimits:
+    """Budget every allowed subset of up to three facts without expanding prose.
+
+    Coverage/comparison depend on at most a pair of states; methodology only on
+    the analysis and mode. A journey atom can describe one linked journey, or
+    the fixed no-unique-journey clause. Safety over all exposed facts is a
+    superset of the warnings for every selected subset.
+    """
+    singles = [[fact] for fact in facts]
+    pairs = [list(pair) for pair in combinations(facts, 2)]
+    state_sets = [[], facts, *singles, *pairs]
+    atom_max = max(
+        [len(_methodology(saved, subset)) for subset in [facts, *singles]]
+        + [len(_coverage(subset)) for subset in state_sets]
+        + [len(_comparison(subset)) for subset in state_sets]
+        + [len(_journey(saved, subset)) for subset in [[], *singles]]
+    )
+    values_max = sum(sorted((len(_display(fact)) for fact in facts), reverse=True)[:3])
+    # One separating space is inserted before the complete server safety text.
+    budget = 1000 - atom_max - values_max - len(_safety(saved, facts)) - 1
+    return ProseLimits(650, min(650, budget))
 
 
 def fact_placeholder(fact: Metric | Score) -> str:
@@ -117,23 +180,29 @@ def _locally_limited(prefix: str) -> bool:
 
 def _check_qualitative(text: str) -> None:
     normalized = unicodedata.normalize("NFKC", text).casefold().replace("ё", "е")
-    if (
-        any(char.isnumeric() for char in text + normalized)
-        or _NUMERAL.search(normalized)
-        or re.search(r"\b[ivxlcdm]+\b", normalized)
-        or re.search(
-            r"(?:https?|ftp)://|www\.|[<>{}=+×÷%]|\[\[|\]\]|"
-            r"\b[\w-]+\.(?:[a-z]{2,}|рф)\b|\b[\w.+-]+@",
-            normalized,
-        )
-        or any(unicodedata.category(char) in {"Cc", "Cf"} and char not in "\n\t" for char in text)
+    if any(char.isnumeric() for char in text + normalized):
+        raise ProseRejected("literal_number")
+    if _NUMERAL.search(normalized) or re.search(r"\b[ivxlcdm]+\b", normalized):
+        raise ProseRejected("written_number")
+    if re.search(
+        r"(?:https?|ftp)://|www\.|[<>{}=+×÷%]|\[\[|\]\]|"
+        r"\b[\w-]+\.(?:[a-z]{2,}|рф)\b|\b[\w.+-]+@",
+        normalized,
     ):
-        raise ValueError("Prose must use declared server fact placeholders")
+        raise ProseRejected("markup")
+    if any(unicodedata.category(char) in {"Cc", "Cf"} and char not in "\n\t" for char in text):
+        raise ProseRejected("control_character")
     for clause in re.split(r"[,.!?;\n]+|\s+(?:но|однако|зато|и|а)\s+", normalized):
-        for pattern in (_CAUSAL, _PROMOTION, _FORECAST, _ORDER, _ABSENT):
+        for pattern, rule in (
+            (_CAUSAL, "causal_assertion"),
+            (_PROMOTION, "coverage_assertion"),
+            (_FORECAST, "forecast_assertion"),
+            (_ORDER, "comparative_assertion"),
+            (_ABSENT, "no_route_assertion"),
+        ):
             for match in pattern.finditer(clause):
                 if not _locally_limited(clause[: match.start()]):
-                    raise ValueError("Unsupported causal, comparative or completeness assertion")
+                    raise ProseRejected(rule)
 
 
 def generated_finding(
@@ -145,7 +214,17 @@ def generated_finding(
     *,
     has_proposal: bool,
     resolver: EvidenceResolver | None = None,
+    limits: ProseLimits | None = None,
 ) -> Finding:
+    limits = limits or prose_limits(
+        saved,
+        [
+            *(m for m in saved.metrics if m.metric_id in metric_ids),
+            *(s for s in saved.scores if s.score_id in score_ids),
+        ],
+    )
+    if len(paragraph) > limits.paragraph_max_characters:
+        raise ProseRejected("paragraph_budget")
     canonical = conversational_finding(
         "help", saved, metric_ids, score_ids, has_proposal=has_proposal, resolver=resolver
     )
@@ -157,23 +236,32 @@ def generated_finding(
     if len(evidence_ids) != len(set(evidence_ids)) or not set(evidence_ids) <= set(
         canonical.evidence_refs
     ):
-        raise ValueError("Paragraph evidence must belong to its selected saved facts")
+        raise ProseRejected("evidence_mismatch")
     replacements = {fact_placeholder(fact): _display(fact) for fact in facts}
     used = {token for token in replacements if token in paragraph}
     if used != set(replacements):
-        raise ValueError("Paragraph requires every selected saved fact placeholder")
+        raise ProseRejected("placeholder_mismatch")
+    if any(paragraph.count(token) != 1 for token in replacements):
+        raise ProseRejected("placeholder_repeated")
     atoms: dict[str, Callable[[], str]] = {
         "[[comparison]]": lambda: _comparison(facts),
         "[[coverage]]": lambda: _coverage(facts),
         "[[methodology]]": lambda: _methodology(saved, facts),
         "[[journey]]": lambda: _journey(saved, facts),
     }
+    if sum(paragraph.count(token) for token in atoms) > 1:
+        raise ProseRejected("atom_limit")
     if re.search(
         r"(?:\bне|\bневерно|\bложно|\bкроме|\bвместо)\s+(?:что\s+)?\[\[|"
         r"\w\[\[|\]\]\w",
         paragraph.casefold(),
     ):
-        raise ValueError("Fact placeholders cannot be negated or embedded in words")
+        raise ProseRejected("placeholder_context")
+    qualitative = paragraph
+    for token in [*replacements, *atoms]:
+        qualitative = qualitative.replace(token, "")
+    if len(qualitative) > limits.qualitative_max_characters:
+        raise ProseRejected("qualitative_budget")
     raw = paragraph
     for token in sorted([*replacements, *atoms], key=len, reverse=True):
         raw = raw.replace(token, " ")
@@ -185,6 +273,8 @@ def generated_finding(
             paragraph = paragraph.replace(token, build())
     # Never rely on model prose to disclose these scope limits.
     paragraph = " ".join(part for part in (paragraph.strip(), _safety(saved, facts)) if part)
+    if len(paragraph) > limits.final_text_max_characters:
+        raise ProseRejected("assembled_text_too_long")
     return Finding.model_validate(canonical.model_dump() | {"text": paragraph})
 
 
