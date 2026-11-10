@@ -25,6 +25,7 @@ class DemoTransportReceipt(ContractModel):
     schema_version: Literal["waydex-demo-closed-transport/1"]
     snapshot_hash: str
     model: Timetable
+    limitations: tuple[str, ...]
 
 
 def verify_demo_model(
@@ -51,9 +52,7 @@ def verify_demo_model(
         or scenario_hash(receipt.model) != scenario_hash(table)
     ):
         raise ValueError("DEMO_TRANSPORT_RECEIPT_IDENTITY_MISMATCH")
-    if DEMO_SOURCE not in snapshot.qa.checks or not DEMO_LIMITATIONS <= set(
-        table.scope.limitations
-    ):
+    if DEMO_SOURCE not in snapshot.qa.checks or not DEMO_LIMITATIONS <= set(receipt.limitations):
         raise ValueError("DEMO_TRANSPORT_EXPLICIT_SYNTHETIC_LABEL_REQUIRED")
     proof = {
         row.evidence_id
