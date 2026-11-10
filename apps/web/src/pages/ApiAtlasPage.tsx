@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -35,7 +36,6 @@ import {
   deltaText,
   statusText,
   modeText,
-  legText,
   trafficText,
   selectionText,
   reasonText,
@@ -46,12 +46,14 @@ import {
   scoreBand,
 } from "../api/adapters/result";
 import { useAnalysisSession } from "../features/analysis/useAnalysisSession";
+import { scenarioJourneys } from "../api/adapters/scenario";
 import { Select } from "../shared/Select";
 import { DatePicker } from "../shared/DatePicker";
 import { Icon, Wordmark } from "../shared/ui";
 import { NavigationLink } from "../shared/NavigationLink";
 import { ApiMap } from "../widgets/ApiMap";
 import { ExplanationFinding } from "../widgets/ExplanationFinding";
+import { JourneyDetails } from "../widgets/JourneyDetails";
 import { useModalFocus } from "../features/accessibility";
 const kinds: Record<AnalysisKind, string> = {
   urban_passenger: "В городе",
@@ -104,6 +106,16 @@ function Sources({ refs }: { refs: Schemas["EvidenceRef"][] }) {
 }
 function Measure({ value }: { value: Schemas["Metric"] | Schemas["Score"] }) {
   const context = [
+    {
+      sample_point: "Точка анализа",
+      territory: "Территория",
+      category: "Категория объектов",
+      freight_site: "Грузовая площадка",
+      freight_node: "Грузовой узел",
+      connection: "Связь",
+      pipeline: "Трубопровод",
+      city_pair: "Между территориями",
+    }[value.subject.kind],
     value.subject.category ? categoryLabels[value.subject.category] : null,
     value.subject.mode ? modeText[value.subject.mode] : null,
   ]
@@ -366,6 +378,19 @@ export function ApiAtlasPage() {
       ].filter((id): id is string => !!id)
     : [];
   const values = scenarioView && scenario ? scenario.after : result;
+  const scenarioPaths = useMemo(
+    () => result && scenario ? scenarioJourneys(result, scenario) : null,
+    [result, scenario],
+  );
+  const visibleJourneys = scenarioView ? scenarioPaths?.journeys || [] : result?.journeys || [];
+  const scenarioGeometryCount = scenarioPaths?.journeys.filter((j) => j.geometry !== null).length || 0;
+  const scenarioMapNotice = !scenarioPaths?.journeys.length
+    ? "Пути сценария не предоставлены. Показаны объекты исходного анализа."
+    : !scenarioGeometryCount
+      ? "Геометрия путей сценария не предоставлена. Показаны объекты исходного анализа; сведения о путях — в карточке."
+      : scenarioGeometryCount < scenarioPaths.journeys.length || scenarioPaths.missingJourneyIds.length
+        ? "Часть геометрии путей сценария не предоставлена. Показаны только полученные линии; объекты — из исходного анализа."
+        : "Показаны пути сценария; объекты — из исходного анализа.";
   const shownMetrics =
       values?.metrics.filter(
         (m) =>
@@ -396,14 +421,14 @@ export function ApiAtlasPage() {
       pipeline: false,
     });
   const selectedJourney =
-    result?.journeys.filter(
+    visibleJourneys.filter(
       (j) =>
         !selection ||
         linkedIds.includes(j.point_id || "") ||
         selection.entity_id === j.destination_object_id ||
         selection.entity_id === j.origin_node_id ||
         selection.entity_id === j.destination_node_id,
-    ) || [];
+    );
   const profileOptions =
     caps?.cargo_profiles
       .filter((p) =>
@@ -915,6 +940,8 @@ export function ApiAtlasPage() {
             onSelect={choose}
             zoomAction={zoom}
             scenarioView={scenarioView}
+            journeys={visibleJourneys}
+            viewId={scenario?.run_id}
           />
           <div className="api-status panelc" role="status">
             <b>
@@ -989,8 +1016,7 @@ export function ApiAtlasPage() {
             )}
           {scenarioView && (
             <div className="api-overlay-note">
-              Показана карта исходного анализа. Геометрия сценария не
-              предоставлена.
+              {scenarioMapNotice}
             </div>
           )}
           {result && !cardHidden && (
@@ -1055,56 +1081,19 @@ export function ApiAtlasPage() {
                       {feature.population_method || "метод неизвестен"}
                     </p>
                   )}
-                {!scenarioView &&
-                  selectedJourney.map((j) => (
-                    <details key={j.journey_id}>
-                      <summary>
-                        Путь · {statusText[j.status]} ·{" "}
-                        {j.geometry_kind === "schematic"
-                          ? "схема"
-                          : j.geometry_kind === "none"
-                            ? "геометрия отсутствует"
-                            : "геометрия источника"}
-                      </summary>
-                      <p>
-                        {result.map_data?.features?.find(
-                          (f) =>
-                            f.entity_id ===
-                            (j.destination_object_id || j.destination_node_id),
-                        )?.name || "Объект назначения"}{" "}
-                        ·{" "}
-                        {j.total_seconds === null
-                          ? j.time_kind === "movement"
-                            ? "Время движения неизвестно"
-                            : "Полное время неизвестно"
-                          : `${j.time_kind === "movement" ? "Движение: " : ""}${(j.total_seconds / 60).toLocaleString("ru", { maximumFractionDigits: 1 })} мин`}
-                      </p>
-                      <p>
-                        Отправление:{" "}
-                        {timestampText(j.departure_at, savedOrigin?.timezone)}
-                        <br />
-                        Прибытие:{" "}
-                        {timestampText(
-                          j.arrival_at,
-                          savedDestination?.timezone,
-                        )}
-                      </p>
-                      <ol>
-                        {j.legs.map((leg, i) => (
-                          <li key={i}>
-                            {legText[leg.kind]} · {modeText[leg.mode]} ·{" "}
-                            {(leg.duration_seconds / 60).toLocaleString("ru", {
-                              maximumFractionDigits: 1,
-                            })}{" "}
-                            мин
-                          </li>
-                        ))}
-                      </ol>
-                      {reasonText(j.reason_code) && (
-                        <small>{reasonText(j.reason_code)}</small>
-                      )}
-                    </details>
-                  ))}
+                {selectedJourney.map((journey) => (
+                  <JourneyDetails
+                    key={journey.journey_id}
+                    journey={journey}
+                    features={result.map_data?.features || []}
+                    originTimezone={savedOrigin?.timezone}
+                    destinationTimezone={savedDestination?.timezone}
+                    scenario={scenarioView}
+                  />
+                ))}
+                {scenarioView && !selectedJourney.length && (
+                  <p className="fhint">Для выбранного объекта путь сценария не предоставлен.</p>
+                )}
                 {scenario && (
                   <div className="sect">
                     <h4>Сравнение до / после</h4>
@@ -1184,7 +1173,7 @@ export function ApiAtlasPage() {
                     {noticeText(t)}
                   </p>
                 ))}
-                <Sources refs={result.evidence_refs} />
+                <Sources refs={scenarioView && scenario ? scenario.evidence_refs : result.evidence_refs} />
                 <button
                   className="iconbtn"
                   onClick={() => {

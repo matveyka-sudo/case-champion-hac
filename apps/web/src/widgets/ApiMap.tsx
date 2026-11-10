@@ -10,6 +10,8 @@ export function ApiMap({
   onSelect,
   zoomAction,
   scenarioView = false,
+  journeys,
+  viewId,
 }: {
   result: AnalysisResult | null;
   scores: Schemas["Score"][];
@@ -17,6 +19,8 @@ export function ApiMap({
   onSelect: (s: Selection) => void;
   zoomAction: { id: number; kind: string };
   scenarioView?: boolean;
+  journeys?: Schemas["JourneyResult"][];
+  viewId?: string;
 }) {
   const host = useRef<HTMLDivElement>(null),
     map = useRef<L.Map | null>(null),
@@ -137,12 +141,13 @@ export function ApiMap({
         .addTo(g);
       bounds.extend(layer.getBounds());
     });
-    if (!scenarioView)
-      result?.journeys.forEach((j) => {
+    const paths = journeys ?? (scenarioView ? [] : result?.journeys || []);
+    paths.forEach((j) => {
         if (!j.geometry) return;
         const tip = document.createElement("span");
         tip.textContent =
-          j.geometry_kind === "schematic" ? "Схема пути" : "Маршрут";
+          (j.geometry_kind === "schematic" ? "Схема пути" : "Маршрут") +
+          (scenarioView ? " сценария" : "");
         const route = L.geoJSON(j.geometry as GeoJsonObject, {
           style: {
             color: "#7a52ff",
@@ -154,16 +159,17 @@ export function ApiMap({
           .addTo(g);
         bounds.extend(route.getBounds());
       });
-    if (result && last.current !== result.analysis_id && bounds.isValid()) {
+    const shownView = `${result?.analysis_id}:${scenarioView ? viewId || "scenario" : "baseline"}`;
+    if (result && last.current !== shownView && bounds.isValid()) {
       m.fitBounds(bounds, {
         paddingTopLeft: [30, 130],
         paddingBottomRight: [window.innerWidth < 768 ? 30 : 360, 130],
         maxZoom: 14,
         animate: false,
       });
-      last.current = result.analysis_id;
+      last.current = shownView;
     }
-  }, [result, scores, selection, onSelect, scenarioView]);
+  }, [result, scores, selection, onSelect, scenarioView, journeys, viewId]);
   useEffect(() => {
     if (lastZoom.current === zoomAction.id || !map.current) return;
     lastZoom.current = zoomAction.id;
