@@ -1,5 +1,48 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Live four-profile acceptance — 2026-11-11 02:07 MSK
+
+Root activated frozen release `187158e3c554887e54fd276da32e1b95a627d382`
+on http://127.0.0.1:5193/. Existing PostgreSQL volume and results are preserved.
+The explicit 128 MiB source / 32 MiB decoded-result policies passed final-image
+offline loading and HTTP admission; these policies do not imply calculation success.
+Receipts: ignored `waydex-full-runtime/candidate-threecity-187158e3c554-20261111-v2/`.
+
+Independent root browser runs, without intercepted API responses:
+
+- Novorossiysk `.3`, walk/school: job `bdb71ae3-90a9-469d-935b-597f550b3627`,
+  analysis `e6ea7388-40d3-42da-a64c-9da3e5ca1128`, 601.315 s, one observed
+  estimate displayed as 84.1/100, 409 points retained, city index unknown.
+  The network segment has geometry; physical approach geometry remains absent.
+- Kaliningrad `.5`, historical November 10 airport query: job
+  `42335ff2-7da0-4233-9b72-8e94d8c41e51`, analysis
+  `28a76bc7-f03c-4e70-ae68-4eb255df91e4`, 13773.627798 s; one numeric point
+  index shown as 0.5/100. This is the certified bounded model, not a city index.
+- Moscow derived PT snapshot, November 11 08:45 local: job
+  `e165c48e-b76e-493b-91e9-f208a50c971f`, analysis
+  `1e8f28ba-bdde-4308-a29d-700d1128e4f0`, 5595.143 s, 47 legs. Saved result
+  reaches React; this release has no PT map features or full route geometry.
+  Scenario proposals incorrectly disappear because equivalent `08:45+03:00`
+  and `05:45Z` requests have different serialized hashes. Repair is RUNNING.
+- Moscow walk full 1401-pair campaign FAILED: job
+  `6fb08617-dac0-4c76-862f-d4adbd486e4e`. 29 checkpoints (464 pairs) persisted;
+  16 additional raw observations were retained before checkpoint 30 failed.
+  Root independently replayed `GEOMETRY_ENDPOINT_MISMATCH`: binary subtraction
+  rejects an exact decimal 0.000001-degree boundary. Repair is RUNNING without
+  increasing tolerance. No final result or full campaign success is claimed.
+
+For each successful analysis, root validated the canonical DTO, repeated GET
+equality and foreign-session 404. Local receipts and actual response bodies:
+`waydex-full-runtime/root-fourprofile-ui-187158e3-20261111/`. Browser session
+file is private; do not print or commit it. All raw datasets remain outside Git.
+
+PR29 CI at187158e3 failed Linux nginx fixture permissions; dependent backend
+PG check was skipped. DevOps938e02c fixes test-only permissions, independently
+verified by root (3 tests, 10 subtests) and merged as8b59d6e. Remote rerun pending.
+Independent review rejected unconditional PT observed scores on proven minima;
+the owner must preserve FULL canonical results and remove false unproven labels.
+Goal remains ACTIVE. No merge into dev and no new paid-provider calls.
+
 ## Transport and rendering checkpoint — 2026-11-11
 
 Root33b70f74706f5cb97fe62fe9d88519111083d0cc now includes reviewed worker

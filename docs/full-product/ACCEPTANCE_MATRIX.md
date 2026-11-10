@@ -9,7 +9,30 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 
 ## Three-city priority — 2026-11-10 continuation
 
-### Current gate update — 2026-11-11, transport and rendering
+### Current gate update — 2026-11-11, actual live browser acceptance
+
+Release187158e3 is LIVE on5193 with four real profiles. Root actual UI → job →
+worker → PostgreSQL → API → React passes for Novorossiysk walk/school,
+Kaliningrad's historical bounded airport model, and Moscow's accepted PT chain.
+Each result independently passes DTO validation, repeat GET and foreign-session
+404. Their respective route totals are601.315,13773.627798 and5595.143 seconds.
+Novorossiysk displays84.1 preliminary/100; Kaliningrad displays0.5/100 for one
+certified-model point. All city indices remain unknown; no full-city claim.
+
+Moscow1401 walk campaign fails after464 committed pairs plus16 retained raw
+observations: exact decimal endpoint tolerance miscompared using binary floats.
+Root reproduced the same checkpoint30 failure offline. Shared geometry comparison
+repair is RUNNING; full campaign result and performance remain unverified.
+Moscow PT proposals also fail to match equivalent offset/UTC timestamps; semantic
+request-binding repair is RUNNING. PT map/observed-score work remains REVIEW /
+CHANGES_REQUIRED because an unconditional score falsely downgraded proven cases.
+
+The128MiB explicit source policy and32MiB decoded transport are integrated and
+resource-tested. Earlier96MiB source blocker is resolved. CI nginx Linux-fixture
+permissions repair938e02c is reviewed/integrated8b59d6e, remote checks pending.
+See SESSION_HANDOFF and ignored root-fourprofile-ui-187158e3-20261111 receipts.
+
+### Previous gate update — 2026-11-11, transport and rendering
 
 - Bounded compressed worker transport INTEGRATED580ca78; root126tests with
   real PG pass, independent malformed-stream/deadline/cancellation review passes.
