@@ -182,6 +182,30 @@ export function ApiMap({
     const m = map.current;
     if (zoomAction.kind === "in") m.zoomIn();
     else if (zoomAction.kind === "out") m.zoomOut();
+    else if (zoomAction.kind === "selection") {
+      const target = result?.map_data?.features?.find((f) => f.entity_kind === selection?.entity_kind &&
+        (f.entity_id === selection.entity_id || f.point_id === selection.entity_id));
+      if (target?.geometry?.type !== "Point") return;
+      const [longitude, latitude] = target.geometry.coordinates;
+      const location: [number, number] = [latitude, longitude];
+      if (m.getZoom() < 12) m.setZoomAround(location, 12, { animate: false });
+      let top = 110, right = window.innerWidth < 768 ? 24 : 360, bottom = 120;
+      const rect = host.current?.getBoundingClientRect();
+      const card = document.getElementById("apiResultCard")?.getBoundingClientRect();
+      const status = host.current?.parentElement?.querySelector(".api-status")?.getBoundingClientRect();
+      const dock = host.current?.parentElement?.querySelector(".api-bottom")?.getBoundingClientRect();
+      if (rect && card && rect.height > 0) {
+        top = Math.max(24, (status?.bottom || rect.top) - rect.top + 12);
+        bottom = Math.max(24, rect.bottom - (dock?.top || rect.bottom) + 12);
+        if (window.innerWidth < 768) {
+          const above = card.top - rect.top - top;
+          const below = rect.bottom - bottom - card.bottom;
+          if (above >= below) bottom = rect.bottom - card.top + 12;
+          else top = card.bottom - rect.top + 12;
+        } else right = Math.max(24, rect.right - card.left + 12);
+      }
+      m.panInside(location, { paddingTopLeft: [24, top], paddingBottomRight: [right, bottom], animate: false });
+    }
     else
       m.fitBounds(
         [
@@ -190,7 +214,7 @@ export function ApiMap({
         ],
         { animate: false },
       );
-  }, [zoomAction]);
+  }, [zoomAction, result, selection]);
   return (
     <>
       <div

@@ -1,0 +1,39 @@
+import type { AnalysisResult, Schemas } from "../types";
+
+export function pointDisplayName(pointId: string, feature?: Schemas["MapFeature"], ordinal?: number) {
+  const name = feature?.name?.trim();
+  if (name && ![pointId, feature?.entity_id, feature?.cell_id].includes(name)) return name;
+  if (feature?.geometry?.type === "Point") {
+    const [longitude, latitude] = feature.geometry.coordinates;
+    return `Точка · ${latitude.toFixed(5)}, ${longitude.toFixed(5)}${feature.geometry_kind === "schematic" ? " (схема)" : ""}`;
+  }
+  return `Точка${ordinal === undefined ? "" : ` ${ordinal}`} · координаты не предоставлены`;
+}
+
+export function calculatedPoints(result: AnalysisResult, scores = result.scores) {
+  const inventory = new Map<string, Schemas["MapFeature"]>();
+  for (const feature of result.map_data?.features || []) {
+    if (feature.entity_kind !== "sample_point") continue;
+    const id = feature.point_id || feature.entity_id;
+    if (!inventory.has(id)) inventory.set(id, feature);
+  }
+  const totals = new Map<string, Schemas["Score"][]>();
+  for (const score of scores) {
+    const id = score.subject.point_id;
+    if (score.subject.kind !== "sample_point" || !id || score.subject.category != null) continue;
+    totals.set(id, [...(totals.get(id) || []), score]);
+  }
+  const points = [...totals].flatMap(([pointId, values]) => {
+    if (values.length !== 1) return [];
+    const score = values[0];
+    if (score.status !== "available" || score.value === null || !Number.isFinite(score.value)) return [];
+    return [{ pointId, score, feature: inventory.get(pointId) }];
+  }).map((point, i) => ({ ...point, name: pointDisplayName(point.pointId, point.feature, i + 1) }));
+  const inventoryCount = inventory.size || null;
+  const denominator = inventoryCount !== null && [...totals.keys()].every((id) => inventory.has(id)) ? inventoryCount : null;
+  const cityId = "city_id" in result.request ? result.request.city_id : null;
+  const territory = scores.filter((score) => score.subject.kind === "territory" && score.subject.category == null &&
+    (!cityId || score.subject.territory_id === cityId));
+  return { points, denominator, inventoryCount, territoryScore: territory.length === 1 ? territory[0] : null };
+}
+export type CalculatedPointOverview = ReturnType<typeof calculatedPoints>;
