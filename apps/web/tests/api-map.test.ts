@@ -89,7 +89,7 @@ describe("map score completeness", () => {
     expect(drawn.layers[0].tooltip).toContain("72.5 · частичная оценка");
   });
   it.each([
-    [0, "#c72d44"], [49.9, "#c72d44"], [50, "#d49520"],
+    [0, "#c72d44"], [0.497, "#c72d44"], [49.9, "#c72d44"], [50, "#d49520"],
     [74.9, "#d49520"], [75, "#0b8a5c"], [100, "#0b8a5c"],
   ] as const)("colors the saved numeric index %s using the approved band", (value, color) => {
     const result = decode("AnalysisResult", structuredClone(resultRaw));

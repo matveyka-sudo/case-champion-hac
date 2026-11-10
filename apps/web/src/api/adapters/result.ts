@@ -83,6 +83,16 @@ export function reasonText(code: string | null | undefined) {
           "Часть населения не охвачена расчётом; полный рейтинг города недоступен.",
         MINIMUM_TIME_UNPROVEN:
           "Показано найденное время пути. Минимальное время не подтверждено.",
+        CANONICAL_ACCESS_MODEL:
+          "Оценка для выбранной точки по модели принятых пеших подходов. Полный рейтинг города не рассчитан.",
+        PARTIAL_APPROACH_MODEL_COVERAGE:
+          "Модель охватывает только часть пеших подходов.",
+        POINT_ONLY_SCOPE: "Рассчитана только выбранная точка.",
+        TERRITORY_INDEX_UNAVAILABLE: "Индекс территории не рассчитан.",
+        CATALOG_DATE_OR_ROSTER_UNPROVEN:
+          "Состав объектов или его актуальность на выбранную дату не подтверждены.",
+        UNCOMPUTED_TERRITORY_POINTS: "Не все точки территории рассчитаны.",
+        UNCOMPUTED_CATEGORY: "Эта категория объектов ещё не рассчитана.",
         NETWORK_ONLY_GEOMETRY:
           "Геометрия источника описывает только уличный участок без подходов.",
         PARTIAL_SCHOOL_CATALOG:
