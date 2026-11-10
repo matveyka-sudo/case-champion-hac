@@ -1083,3 +1083,38 @@ test("API: a saved route remains easy to select when every point index is unknow
   await expect(card.locator("h3")).toHaveText("Калининград");
   await expect(card.locator(".api-measure")).toHaveCount(12);
 });
+
+test("API: generated transport snapshot remains explicitly demo through canonical scenario before and after", async ({ page }) => {
+  const snapshot = "demo-moscow-synthetic-ui-only";
+  const c = structuredClone(capabilities) as Schemas["Capabilities"];
+  c.snapshots![0] = { ...c.snapshots![0], snapshot_id: snapshot, territory_ids: ["city-1"] };
+  const data = structuredClone(urban) as AnalysisResult;
+  data.snapshot_id = snapshot; data.versions.snapshot_id = snapshot;
+  const after = structuredClone(scenario) as Schemas["ScenarioResult"];
+  after.versions.snapshot_id = snapshot;
+  await mockApi(page, { capabilities: c, result: data, scenarioResult: after });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Москва");
+  const notice = page.getByRole("note", { name: "Демонстрационная модель" });
+  await expect(notice).toContainText("Демонстрационная транспортная модель — не оценка фактической доступности Москвы");
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator("#apiResultCard .k")).toHaveText("Демонстрационный анализ");
+  await page.getByRole("button", { name: "Агент", exact: true }).click();
+  await page.getByRole("button", { name: "Проверить сценарий", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Сценарий", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Сценарий", exact: true }).click();
+  await expect(page.locator("#apiResultCard .k")).toHaveText("Демонстрационный сценарий");
+  await expect(notice).toBeVisible();
+  await page.getByRole("button", { name: "База", exact: true }).click();
+  await expect(page.locator("#apiResultCard .k")).toHaveText("Демонстрационный анализ");
+  await expect(notice).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Фильтры", exact: true }).click();
+  await expect(notice).toBeVisible();
+  const bannerBounds = await notice.boundingBox(), filterBounds = await page.locator("#apiFilters").boundingBox();
+  expect(filterBounds!.y).toBeGreaterThanOrEqual(bannerBounds!.y + bannerBounds!.height - 1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await choose(page, "Город", "Калининград");
+  await expect(notice).toHaveCount(0);
+});

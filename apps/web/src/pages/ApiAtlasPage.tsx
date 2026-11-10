@@ -55,6 +55,8 @@ import { journeyLines, segmentGeometryNotice } from "../api/adapters/journeyGeom
 import { urbanReadiness } from "../api/adapters/urbanReadiness";
 import { UrbanReadiness } from "../widgets/UrbanReadiness";
 import { CalculatedJourneys } from "../widgets/CalculatedJourneys";
+import { DemoModelBanner } from "../widgets/DemoModelBanner";
+import { isDemoModelSnapshot } from "../api/adapters/demoModel";
 import { Select } from "../shared/Select";
 import { DatePicker } from "../shared/DatePicker";
 import { Icon, Wordmark } from "../shared/ui";
@@ -185,6 +187,7 @@ export function ApiAtlasPage() {
     [zoom, setZoom] = useState({ kind: "home", id: 0 });
   const session = useAnalysisSession();
   const resultCard = useRef<HTMLElement>(null), resultTitleRef = useRef<HTMLHeadingElement>(null);
+  const demoBanner = useRef<HTMLElement>(null);
   const { result, scenario, dirty, phase } = session;
   const urban = draft.kind.startsWith("urban_"),
     cargo = draft.kind.endsWith("cargo");
@@ -485,6 +488,17 @@ export function ApiAtlasPage() {
       })) || [];
   const snapshots = caps ? eligibleSnapshots(draft, catalog, caps) : [];
   const snapshotId = resolvedSnapshotId(draft, snapshots);
+  const savedDemoModel = isDemoModelSnapshot(result?.snapshot_id);
+  const demoModel = isDemoModelSnapshot(snapshotId) || savedDemoModel;
+  useLayoutEffect(() => {
+    const banner = demoBanner.current;
+    if (!demoModel || !banner) return;
+    const update = () => banner.parentElement?.style.setProperty("--demo-banner-height", `${banner.getBoundingClientRect().height}px`);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(banner);
+    return () => observer.disconnect();
+  }, [demoModel]);
   const publishedScopes = draft.kind === "urban_passenger" ? caps?.urban_passenger_scopes : null;
   const scopeDeparture = (cityId: string) => {
     const city = catalog.find((t) => t.territory_id === cityId && t.level === "city");
@@ -520,7 +534,7 @@ export function ApiAtlasPage() {
       s.completeness === "full",
   );
   return (
-    <div id="atlas" className="atlas api-atlas" aria-label="Атлас Waydex — API">
+    <div id="atlas" className={`atlas api-atlas${demoModel ? " has-demo-model" : ""}`} aria-label="Атлас Waydex — API">
       <header className="at-top">
         <NavigationLink
           className="at-back"
@@ -578,6 +592,7 @@ export function ApiAtlasPage() {
           Агент
         </button>
       </header>
+      <DemoModelBanner selectedSnapshotId={snapshotId} savedSnapshotId={result?.snapshot_id} hasSavedResult={!!result} bannerRef={demoBanner} />
       <div className={`api-body ${chatOpen ? "with-chat" : ""}`}>
         <aside
           id="apiFilters"
@@ -722,7 +737,7 @@ export function ApiAtlasPage() {
                         { value: "", label: "Выберите набор данных" },
                         ...snapshots.map((s) => ({
                           value: s.snapshot_id,
-                          label: snapshotLabel(s, catalog, caps.snapshots || []),
+                          label: `${isDemoModelSnapshot(s.snapshot_id) ? "ДЕМО · " : ""}${snapshotLabel(s, catalog, caps.snapshots || [])}`,
                           disabled: scopeState.published && !scopeState.time.some((scope) => scope.snapshot_id === s.snapshot_id),
                           reason: scopeState.published && !scopeState.time.some((scope) => scope.snapshot_id === s.snapshot_id) ? "Для этого набора и времени городской расчёт не зарегистрирован." : undefined,
                         })),
@@ -1111,7 +1126,7 @@ export function ApiAtlasPage() {
               <div className="ctx-h">
                 <div>
                   <span className="k">
-                    {scenarioView ? "Сценарий" : "Сохранённый анализ"}
+                    {savedDemoModel ? scenarioView ? "Демонстрационный сценарий" : "Демонстрационный анализ" : scenarioView ? "Сценарий" : "Сохранённый анализ"}
                   </span>
                   <h3 ref={resultTitleRef} tabIndex={-1}>
                     {selection?.entity_kind === "sample_point"
