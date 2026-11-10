@@ -1211,3 +1211,86 @@ test("API: explanation transport errors stay visible inside the shared mobile ch
   await expect(page.locator("#chat").getByRole("alert")).toBeVisible();
   expect(mock.posts).toBe(1);
 });
+
+test("API: pre-analysis interface help sends no requests and hands saved questions to the explanation API", async ({ page }) => {
+  const mock = await mockApi(page, { emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
+  await expect(page.getByLabel("Вопрос агенту")).toBeEnabled();
+  await page.getByRole("button", { name: "Как запустить расчёт?", exact: true }).click();
+  await page.getByRole("button", { name: "Отправить", exact: true }).click();
+  const answer = page.locator("#chat .msg.a");
+  await expect(answer).toContainText("Помощь по интерфейсу · локально");
+  await expect(answer).toContainText("Выберите город, передвижение и категории");
+  await expect(answer).not.toContainText(/\d|Объяснение модели|Шаблонное объяснение/);
+  await expect(page.locator("#apiResultCard, #chat .proposal")).toHaveCount(0);
+  expect(mock.requests.filter((request) => request.method !== "GET")).toEqual([]);
+  expect(mock.requests.filter((request) => request.url.endsWith("/explanation"))).toEqual([]);
+  expect(mock.posts).toBe(0);
+  await page.getByRole("button", { name: "Новый диалог", exact: true }).click();
+  await expect(answer).toHaveCount(0);
+  await page.getByRole("button", { name: "Свернуть чат", exact: true }).click();
+  await cityRun(page);
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
+  await page.getByLabel("Вопрос агенту").fill("Объясни сохранённый результат");
+  await page.getByRole("button", { name: "Отправить", exact: true }).click();
+  await expect(answer).toContainText("Подтверждённое время из сохранённого расчёта");
+  await expect(answer).not.toContainText("Помощь по интерфейсу · локально");
+  expect(mock.requests.filter((request) => request.url.endsWith("/explanation"))).toHaveLength(1);
+  expect(mock.posts).toBe(1);
+});
+
+test("API: mobile interface help respects empty scopes and unavailable calculation capabilities", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const caps = scopedCapabilities([]);
+  caps.analyses = caps.analyses.map((analysis) => analysis.analysis_kind === "intercity_passenger"
+    ? { ...analysis, calculation_available: false, reason_code: "RUNTIME_INPUTS_UNAVAILABLE" } : analysis);
+  const mock = await mockApi(page, { capabilities: caps, emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
+  await page.getByLabel("Вопрос агенту").fill("Покажи индекс города 99");
+  await page.getByRole("button", { name: "Отправить", exact: true }).click();
+  const answer = page.locator("#chat .msg.a");
+  await expect(answer).toContainText("Для городского расчёта нет зарегистрированных наборов параметров");
+  await expect(answer).not.toContainText(/\d|Объяснение модели|Шаблонное объяснение/);
+  await page.getByRole("button", { name: "Свернуть чат", exact: true }).click();
+  await page.getByRole("tab").nth(1).click();
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
+  await expect(answer).toHaveCount(0);
+  await page.getByRole("button", { name: "Какие условия сейчас доступны?", exact: true }).click();
+  await page.getByRole("button", { name: "Отправить", exact: true }).click();
+  await expect(answer).toContainText("Расчёт выбранного направления сейчас недоступен");
+  await expect(answer).not.toContainText(/\d|Объяснение модели|Шаблонное объяснение/);
+  await expect(page.locator("#apiResultCard, #chat .proposal")).toHaveCount(0);
+  expect(mock.requests.filter((request) => request.method !== "GET")).toEqual([]);
+  expect(mock.posts).toBe(0);
+});
+
+test("API: mobile empty-state action stays clear of the sheet and map controls", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mock = await mockApi(page, { emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  for (const [mode, intercityCargo] of [[0, false], [1, false], [2, false], [2, true]] as const) {
+    await page.getByRole("tab").nth(mode).click();
+    if (intercityCargo) {
+      await page.getByRole("button", { name: "Фильтры", exact: true }).first().click();
+      await page.getByRole("group", { name: "Режим грузовых связей", exact: true })
+        .getByRole("button", { name: "Между территориями", exact: true }).click();
+      await page.getByRole("button", { name: "Закрыть фильтры", exact: true }).click();
+    }
+    await expect(async () => {
+      const placement = await page.evaluate(() => {
+        const card = document.querySelector(".statecard")!.getBoundingClientRect();
+        const button = document.querySelector(".statecard button")!.getBoundingClientRect();
+        const status = document.querySelector(".ov-tl")!.getBoundingClientRect();
+        const controls = [".m-sheet", ".legend", ".zgroup"].map((selector) => document.querySelector(selector)!.getBoundingClientRect());
+        const target = document.elementFromPoint(button.x + button.width / 2, button.y + button.height / 2);
+        return { clear: controls.every((control) => card.bottom + 8 <= control.top), belowStatus: card.top >= status.bottom + 8,
+          buttonVisible: !!target?.closest(".statecard button"), overflow: document.documentElement.scrollWidth > innerWidth };
+      });
+      expect(placement).toEqual({ clear: true, belowStatus: true, buttonVisible: true, overflow: false });
+    }).toPass();
+  }
+  expect(mock.posts).toBe(0);
+});
