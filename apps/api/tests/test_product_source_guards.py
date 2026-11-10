@@ -9,6 +9,7 @@ from a2_api.adapters.product_inputs import UrbanCargoInputs, candidate_is_static
 from a2_api.adapters.product_runtime import Profile, validate_inputs
 from a2_api.core.registry import ProductRegistry
 from a2_contracts.common import canonical_hash
+from a2_contracts.v2.dataset import AcceptedData
 from a2_contracts.v2.requests import DeliveryCargoProfile
 from a2_engine import (
     CargoContext,
@@ -31,12 +32,42 @@ from test_product_runtime import (
 from test_product_runtime import transport_facts as transport_facts
 
 
-def test_accepted_destination_eligibility_cannot_remove_closest_object(transport_facts):
+@pytest.mark.parametrize("field", ["eligible", "in_service_scope"])
+def test_accepted_destination_eligibility_cannot_remove_closest_object(transport_facts, field):
     snapshot, facts, profile = transport_facts
     facts = facts.model_copy(
-        update={"destinations": (replace(facts.destinations[0], eligible=False),)}
+        update={"destinations": (replace(facts.destinations[0], **{field: False}),)}
     )
-    with pytest.raises(ValueError, match="ELIGIBILITY_CANNOT_BE_OVERRIDDEN"):
+    with pytest.raises(ValueError, match="CANNOT_BE_OVERRIDDEN"):
+        validate_inputs(bind_fingerprints(profile, facts), facts, snapshot, ProductRegistry())
+
+
+def test_unverified_inventory_evidence_cannot_establish_full_absence(transport_facts):
+    snapshot, facts, profile = transport_facts
+    raw = snapshot.model_dump(mode="json")
+    raw["evidence"].append(
+        {**raw["evidence"][0], "evidence_id": "TEST_ONLY-unverified-inventory", "verified": False}
+    )
+    for scope in raw["coverage_by_mode_date_category"]:
+        scope.update(completeness="full", source_refs=["TEST_ONLY-unverified-inventory"])
+    snapshot = AcceptedData.model_validate(raw)
+    facts = facts.model_copy(
+        update={
+            "coverage": tuple(
+                replace(
+                    c,
+                    catalog_complete=True,
+                    search_complete=True,
+                    evidence_refs=("TEST_ONLY-unverified-inventory",),
+                )
+                for c in facts.coverage
+            )
+        }
+    )
+    profile = profile.model_copy(
+        update={"snapshot_hash": canonical_hash(snapshot.model_dump(mode="json"))}
+    )
+    with pytest.raises(ValueError, match="VERIFIED_CANONICAL_EVIDENCE"):
         validate_inputs(bind_fingerprints(profile, facts), facts, snapshot, ProductRegistry())
 
 
