@@ -3,6 +3,7 @@ import L from "leaflet";
 import type { GeoJsonObject } from "geojson";
 import type { AnalysisResult, Schemas, Selection } from "../api/types";
 import { subjectMatches, selectionText } from "../api/adapters/result";
+import { journeyLines, segmentGeometryNotice } from "../api/adapters/journeyGeometry";
 export function ApiMap({
   result,
   scores,
@@ -149,22 +150,30 @@ export function ApiMap({
     });
     const paths = journeys ?? (scenarioView ? [] : result?.journeys || []);
     paths.forEach((j) => {
-        if (!j.geometry) return;
+      const point = features.find((f) => f.entity_kind === "sample_point" && (f.entity_id === j.point_id || f.point_id === j.point_id));
+      const destination = features.find((f) => f.entity_id === j.destination_object_id || f.entity_id === j.destination_node_id);
+      const parentSelection: Selection | undefined = j.point_id
+        ? { entity_kind: "sample_point", entity_id: point?.entity_id || j.point_id }
+        : destination ? { entity_kind: destination.entity_kind, entity_id: destination.entity_id } : undefined;
+      journeyLines(j).forEach((part) => {
         const tip = document.createElement("span");
         tip.textContent =
-          (j.geometry_kind === "schematic" ? "Схема пути" : "Маршрут") +
-          (scenarioView ? " сценария" : "");
-        const route = L.geoJSON(j.geometry as GeoJsonObject, {
+          (part.segment ? "Участок маршрута" : part.schematic ? "Схема пути" : "Маршрут") +
+          (scenarioView ? " сценария" : "") +
+          (part.segment ? ` · ${segmentGeometryNotice}` : "");
+        const route = L.geoJSON(part.geometry as GeoJsonObject, {
           style: {
             color: "#7a52ff",
             weight: 4,
-            dashArray: j.geometry_kind === "schematic" ? "6 8" : undefined,
+            dashArray: part.schematic ? "6 8" : undefined,
           },
         })
           .bindTooltip(tip)
+          .on("click", () => parentSelection && onSelect(parentSelection))
           .addTo(g);
         bounds.extend(route.getBounds());
       });
+    });
     const shownView = `${result?.analysis_id}:${scenarioView ? viewId || "scenario" : "baseline"}`;
     if (result && last.current !== shownView && bounds.isValid()) {
       m.fitBounds(bounds, {

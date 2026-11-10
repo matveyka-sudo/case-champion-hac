@@ -7,8 +7,9 @@ import resultRaw from "./fixtures/api/urban_passenger.json";
 import { scenarioJourneys } from "../src/api/adapters/scenario";
 import { scenarioRouteFixture } from "./fixtures/scenario-routes";
 import { partialWalkGeometryFixture } from "./fixtures/partial-walk-geometry";
+import { legGeometryFixture } from "./fixtures/leg-geometry";
 const drawn = vi.hoisted(() => ({
-  layers: [] as { style?: Record<string, unknown>; marker?: Record<string, unknown>; tooltip: string; geometry?: unknown }[],
+  layers: [] as { style?: Record<string, unknown>; marker?: Record<string, unknown>; tooltip: string; geometry?: unknown; click?: () => void }[],
   pans: [] as unknown[], zooms: [] as unknown[],
   commands: [] as string[],
   clears: 0,
@@ -33,12 +34,12 @@ vi.mock("leaflet", () => ({
       style?: Record<string, unknown>;
       pointToLayer?: (feature: unknown, point: unknown) => unknown;
     }) => {
-      const item = { style: options.style, tooltip: "", geometry: feature.type === "Feature" ? feature.geometry : feature };
+      const item: typeof drawn.layers[number] = { style: options.style, tooltip: "", geometry: feature.type === "Feature" ? feature.geometry : feature };
       drawn.layers.push(item);
       options.pointToLayer?.({}, {});
       const layer = {
         bindTooltip: (tip: HTMLElement) => { item.tooltip = tip.textContent || ""; return layer; },
-        on: () => layer,
+        on: (event: string, handler: () => void) => { if (event === "click") item.click = handler; return layer; },
         addTo: () => layer,
         getBounds: () => ({}),
       };
@@ -124,6 +125,21 @@ describe("scenario map paths", () => {
   });
 });
 describe("partial walk map path", () => {
+  it("draws disjoint leg segments separately, links their parent point, and leaves unknown indices neutral", () => {
+    const result = legGeometryFixture(null), choose = vi.fn();
+    const props = { selection: null, onSelect: choose };
+    const view = render(createElement(ApiMap, { ...props, result, scores: result.scores, zoomAction: { id: 0, kind: "home" } }));
+    const lines = drawn.layers.filter((layer) => (layer.geometry as { type?: string })?.type === "LineString");
+    expect(lines.map((line) => line.geometry)).toEqual([result.journeys[0].legs[1].geometry, result.journeys[0].legs[3].geometry]);
+    expect(lines.every((line) => line.tooltip.includes("геометрия подходов не подтверждена"))).toBe(true);
+    const pointGeometry = result.map_data!.features!.find((feature) => feature.entity_id === result.journeys[0].point_id)!.geometry;
+    expect(drawn.layers.find((layer) => JSON.stringify(layer.geometry) === JSON.stringify(pointGeometry))?.marker?.fillColor).toBe("#8990a7");
+    lines[0].click!();
+    expect(choose).toHaveBeenCalledWith({ entity_kind: "sample_point", entity_id: result.journeys[0].point_id });
+    drawn.layers.length = 0;
+    view.rerender(createElement(ApiMap, { ...props, result: null, scores: [], zoomAction: { id: 1, kind: "home" } }));
+    expect(drawn.layers).toEqual([]);
+  });
   it("draws the supplied actual route even when the exact score operand is not journey-linked", () => {
     const result = partialWalkGeometryFixture();
     render(createElement(ApiMap, {

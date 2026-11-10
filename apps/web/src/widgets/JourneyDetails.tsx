@@ -1,5 +1,6 @@
 import type { Schemas } from "../api/types";
 import { legText, modeText, reasonText, statusText, timestampText } from "../api/adapters/result";
+import { journeyLines, segmentGeometryNotice } from "../api/adapters/journeyGeometry";
 
 export function JourneyDetails({ journey, features, originTimezone, destinationTimezone, scenario = false }: {
   journey: Schemas["JourneyResult"];
@@ -11,15 +12,17 @@ export function JourneyDetails({ journey, features, originTimezone, destinationT
   const destination = features.find((f) =>
     f.entity_id === (journey.destination_object_id || journey.destination_node_id),
   )?.name || "Объект назначения";
+  const segmentGeometry = journeyLines(journey).some((part) => part.segment);
   return (
     <details className="api-journey">
       <summary>
         {scenario ? "Путь сценария" : "Путь"} · {statusText[journey.status]} ·{" "}
         {!journey.geometry || journey.geometry_kind === "none"
-          ? "геометрия отсутствует"
+          ? segmentGeometry ? "геометрия участков" : "геометрия отсутствует"
           : journey.geometry_kind === "schematic" ? "схема" : "геометрия источника"}
         {journey.completeness === "partial" && " · частичные данные"}
       </summary>
+      {segmentGeometry && <p className="fhint">{segmentGeometryNotice}.</p>}
       <p>
         {destination} ·{" "}
         {journey.total_seconds === null
