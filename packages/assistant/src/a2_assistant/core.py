@@ -101,13 +101,13 @@ _URBAN_SCENARIO_NOTE = (
 )
 
 
-def _urban_walk_notes(
+def _urban_passenger_notes(
     saved: AnalysisResult, context: ExplanationRequest | None = None
 ) -> list[str]:
-    if (
-        not isinstance(saved.request, UrbanPassengerRequest)
-        or saved.request.passenger_mode != "walk"
-    ):
+    if not isinstance(saved.request, UrbanPassengerRequest) or saved.request.passenger_mode not in {
+        "walk",
+        "public_transport",
+    }:
         return []
     scores = focused_scores(saved, context)
     metrics = focused_metrics(saved, context)
@@ -323,7 +323,7 @@ def _build_content(
             evidence_refs=list(dict.fromkeys(cited))[:50],
             limitations=[
                 "Объяснение ограничено сохранёнными данными.",
-                *_urban_walk_notes(saved),
+                *_urban_passenger_notes(saved),
                 *(
                     ["Реализуемость сценария требует отдельной проверки."]
                     if selection.template_ids
@@ -414,7 +414,7 @@ def _validate_content(
         if check_text and proposal.rationale not in _PROPOSAL_TEXT:
             raise _ModelAnswerRejected("proposal_invalid")
     # The extra wording is server-owned and applicable only to this saved result.
-    approved_limitations = _LIMITATION_TEXT | frozenset(_urban_walk_notes(saved))
+    approved_limitations = _LIMITATION_TEXT | frozenset(_urban_passenger_notes(saved))
     if check_text and any(text not in approved_limitations for text in content.limitations):
         raise _ModelAnswerRejected("limitation_invalid")
 
@@ -436,7 +436,7 @@ def template_explanation(
 ) -> Explanation:
     scores = focused_scores(saved, context)
     metrics = focused_metrics(saved, context)
-    notes = _urban_walk_notes(saved, context)
+    notes = _urban_passenger_notes(saved, context)
     # A large score inventory must not consume every slot before saved times.
     score_limit = min(len(scores), 10) if metrics else 20
     metric_limit = 20 - min(len(scores), score_limit)
