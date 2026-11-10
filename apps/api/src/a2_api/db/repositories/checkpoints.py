@@ -5,12 +5,14 @@ import hashlib
 import json
 from dataclasses import asdict
 from datetime import datetime, timedelta
+from time import monotonic
 from typing import TYPE_CHECKING, Any, cast
 
 from a2_api.core.batches import MAX_CHECKPOINT_BYTES, BatchCheckpoint, BatchExecution
 from a2_api.core.errors import DomainError
 from a2_api.core.jobs import ClaimedJob, V2JobContext
 from a2_api.core.walk_observations import observation_directory
+from a2_api.core.walk_route_artifacts import resolve_checkpoint
 from a2_api.db.rows import json_text
 
 if TYPE_CHECKING:
@@ -23,13 +25,16 @@ def _conflict(message: str) -> DomainError:
 
 def validate_raw_files(
     checkpoint: BatchCheckpoint, execution: BatchExecution, now: datetime
-) -> None:
-    checkpoint.validate_inventory(execution)
+) -> datetime | None:
+    deadline = monotonic() + 15
+    observations = resolve_checkpoint(checkpoint, execution)
     if now >= execution.valid_until:
         raise ValueError("OD_EXECUTION_EXPIRED")
     folder = observation_directory(legacy=execution.schema_version == "waydex-walk-execution/1")
     planned = {pair.pair_id: pair for _, pairs in execution.batches for pair in pairs}
-    for observation in checkpoint.observations:
+    for observation in observations:
+        if monotonic() >= deadline:
+            raise ValueError("OD_RAW_VALIDATION_DEADLINE_EXCEEDED")
         envelope = observation.envelope
         # Version 1 reuses the deliberately unproven HTTP executor. A later
         # finite-state certificate requires its own explicit manifest version.
@@ -43,6 +48,8 @@ def validate_raw_files(
         raw_responses = {}
         raw_ids = {}
         for raw in observation.raw_observations:
+            if monotonic() >= deadline:
+                raise ValueError("OD_RAW_VALIDATION_DEADLINE_EXCEEDED")
             path = (folder / (raw.sha256 + ".json")).resolve()
             if path.parent != folder:
                 raise ValueError("OD_RAW_OBSERVATION_OUTSIDE_STORE")
@@ -135,6 +142,16 @@ def validate_raw_files(
             or envelope.matched_destination is not None
         ):
             raise ValueError("OD_FAILED_OBSERVATION_CANNOT_ATTEST_ENDPOINTS_OR_MODE")
+    if monotonic() >= deadline:
+        raise ValueError("OD_RAW_VALIDATION_DEADLINE_EXCEEDED")
+    return min(
+        (
+            evidence.retrieved_at + timedelta(seconds=execution.observation_retention_seconds)
+            for observation in observations
+            for evidence in observation.evidence
+        ),
+        default=None,
+    )
 
 
 class CheckpointRepository:
@@ -177,7 +194,7 @@ class CheckpointRepository:
 
     async def _load(
         self, connection: Any, execution: BatchExecution, now: datetime
-    ) -> list[BatchCheckpoint]:
+    ) -> tuple[list[BatchCheckpoint], datetime | None]:
         size = await connection.fetchval(
             "SELECT COALESCE(sum(payload_bytes),0) FROM od_checkpoints WHERE access_scope=$1 AND execution_identity=$2",
             execution.access_scope,
@@ -193,6 +210,8 @@ class CheckpointRepository:
         if len(rows) > len(execution.batches):
             raise _conflict("Stored checkpoint inventory exceeds the execution plan")
         result = []
+        retained_bytes = 0
+        earliest_evidence_expiry = None
         for row in rows:
             if (
                 row["created_at"] + timedelta(seconds=execution.observation_retention_seconds)
@@ -202,9 +221,21 @@ class CheckpointRepository:
             checkpoint = BatchCheckpoint.model_validate_json(row["payload"])
             if checkpoint.content_hash != row["content_hash"]:
                 raise _conflict("Immutable checkpoint hash changed")
-            await asyncio.to_thread(validate_raw_files, checkpoint, execution, now)
+            retained_bytes += checkpoint.retained_route_bytes
+            if (
+                execution.max_route_artifact_bytes is not None
+                and retained_bytes > execution.max_route_artifact_bytes
+            ):
+                raise _conflict("Stored route artifacts exceed their approved byte budget")
+            evidence_expiry = await asyncio.to_thread(
+                validate_raw_files, checkpoint, execution, now
+            )
+            if evidence_expiry is not None and (
+                earliest_evidence_expiry is None or evidence_expiry < earliest_evidence_expiry
+            ):
+                earliest_evidence_expiry = evidence_expiry
             result.append(checkpoint)
-        return result
+        return result, earliest_evidence_expiry
 
     async def begin(self, claim: ClaimedJob) -> list[BatchCheckpoint]:
         execution = self.execution(claim)
@@ -224,7 +255,7 @@ class CheckpointRepository:
                 )
                 if json.loads(row["payload"]) != execution.model_dump(mode="json"):
                     raise _conflict("Immutable execution manifest changed")
-                checkpoints = await self._load(connection, execution, now)
+                checkpoints, _ = await self._load(connection, execution, now)
                 await self._active(connection, claim)
                 done = {c.batch_id for c in checkpoints}
                 missing = [pairs for batch_id, pairs in execution.batches if batch_id not in done]
@@ -299,6 +330,17 @@ class CheckpointRepository:
                 )
                 if stored + size > execution.max_checkpoint_bytes:
                     raise _conflict("Execution checkpoint byte budget exhausted")
+                if execution.max_route_artifact_bytes is not None:
+                    retained = await connection.fetchval(
+                        "SELECT COALESCE(sum((item->>'retained_bytes')::bigint),0) FROM od_checkpoints CROSS JOIN LATERAL jsonb_array_elements(payload->'observations') AS item WHERE access_scope=$1 AND execution_identity=$2",
+                        execution.access_scope,
+                        execution.identity,
+                    )
+                    if (
+                        retained + checkpoint.retained_route_bytes
+                        > execution.max_route_artifact_bytes
+                    ):
+                        raise _conflict("Execution route artifact byte budget exhausted")
                 await connection.execute(
                     "INSERT INTO od_checkpoints(access_scope,execution_identity,batch_id,payload,content_hash,payload_bytes,source_job_id,source_claim_token) VALUES($1,$2,$3,$4::jsonb,$5,$6,$7,$8)",
                     execution.access_scope,
@@ -318,20 +360,22 @@ class CheckpointRepository:
 
     async def _publication_inventory(
         self, connection: Any, claim: ClaimedJob
-    ) -> tuple[BatchExecution, list[BatchCheckpoint], datetime]:
+    ) -> tuple[BatchExecution, list[BatchCheckpoint], datetime, datetime | None]:
         execution = self.execution(claim)
         now = await self._active(connection, claim)
-        checkpoints = await self._load(connection, execution, now)
+        checkpoints, earliest_evidence_expiry = await self._load(connection, execution, now)
         now = await self._active(connection, claim)
         if {checkpoint.batch_id for checkpoint in checkpoints} != {
             batch_id for batch_id, _ in execution.batches
         }:
             raise _conflict("Final publication requires every approved executable OD batch")
-        return execution, checkpoints, now
+        return execution, checkpoints, now, earliest_evidence_expiry
 
     async def publish(self, connection: Any, claim: ClaimedJob, run_id: str) -> None:
         """Revalidate inside the caller's sole run-publication transaction."""
-        execution, checkpoints, now = await self._publication_inventory(connection, claim)
+        execution, _, now, earliest_evidence_expiry = await self._publication_inventory(
+            connection, claim
+        )
         oldest = await connection.fetchval(
             "SELECT min(created_at) FROM od_checkpoints WHERE access_scope=$1 AND execution_identity=$2",
             execution.access_scope,
@@ -340,12 +384,7 @@ class CheckpointRepository:
         expiry = min(
             execution.valid_until,
             oldest + timedelta(seconds=execution.observation_retention_seconds),
-            *(
-                evidence.retrieved_at + timedelta(seconds=execution.observation_retention_seconds)
-                for checkpoint in checkpoints
-                for observation in checkpoint.observations
-                for evidence in observation.evidence
-            ),
+            *((earliest_evidence_expiry,) if earliest_evidence_expiry is not None else ()),
         )
         if isinstance(claim.context, V2JobContext) and claim.context.cache_valid_until is not None:
             expiry = min(expiry, claim.context.cache_valid_until)

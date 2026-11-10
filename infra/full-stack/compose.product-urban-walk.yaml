@@ -1,0 +1,83 @@
+# Operator-bound real pedestrian graph; no generated transport or global pilot fallback.
+x-walk-environment: &walk-environment
+  A2_CODE_VERSION: full-${WAYDEX_REVISION:?}-${WAYDEX_PRODUCT_SHA256:?}-${WAYDEX_WALK_ARTIFACT_SHA256:?}
+  A2_WALK_OBSERVATION_DIR: /observations
+  A2_DEMO_TRANSPORT_ENABLED: "false"
+
+x-graph: &graph
+  type: bind
+  source: ${WAYDEX_GRAPH_DIR:?}
+  target: /data
+  read_only: true
+  bind: {create_host_path: false}
+
+services:
+  graph-check:
+    image: waydex-full-api:${WAYDEX_REVISION:?}
+    command: [/app/.venv/bin/python, infra/full-stack/runtime.py, graph-check]
+    init: true
+    read_only: true
+    tmpfs: ["/tmp:size=64m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    memswap_limit: 512m
+    cpus: 1
+    pids_limit: 64
+    environment:
+      WAYDEX_PARENT_ARTIFACT_PATH: /runtime/${WAYDEX_WALK_ARTIFACT:-artifact.json}
+      WAYDEX_PARENT_SHA256: ${WAYDEX_WALK_ARTIFACT_SHA256:?}
+      WAYDEX_GRAPH_PATH: /data
+      WAYDEX_GRAPH_BINDING_PATH: /graph-binding/${WAYDEX_GRAPH_BINDING_MANIFEST:-binding.json}
+      WAYDEX_GRAPH_BINDING_SHA256: ${WAYDEX_GRAPH_BINDING_SHA256:?}
+    volumes:
+      - *graph
+      - type: bind
+        source: ${WAYDEX_DEPLOYMENT_DIR:?}
+        target: /runtime
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: ${WAYDEX_GRAPH_BINDING_DIR:?}
+        target: /graph-binding
+        read_only: true
+        bind: {create_host_path: false}
+    logging: {driver: json-file, options: {max-size: 10m, max-file: "3"}}
+    restart: "no"
+
+  valhalla:
+    image: ghcr.io/valhalla/valhalla@sha256:4ac3d13d1019f9a130e9e6b6924c16ea55da0fa51e3653039152e33ad4095661
+    command: [valhalla_service, /data/valhalla.json, "1"]
+    init: true
+    read_only: true
+    tmpfs: ["/tmp:size=64m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes: [*graph]
+    depends_on:
+      graph-check: {condition: service_completed_successfully}
+    healthcheck:
+      test: [CMD, python3, -c, "from urllib.request import urlopen; urlopen('http://127.0.0.1:8002/status', timeout=2).read()"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    mem_limit: 1g
+    memswap_limit: 1g
+    cpus: 2
+    pids_limit: 128
+    logging: {driver: json-file, options: {max-size: 10m, max-file: "3"}}
+    restart: unless-stopped
+
+  runtime-check:
+    environment: *walk-environment
+    depends_on:
+      valhalla: {condition: service_healthy}
+
+  migrate:
+    environment: *walk-environment
+
+  api:
+    environment: *walk-environment
+
+  worker:
+    environment: *walk-environment

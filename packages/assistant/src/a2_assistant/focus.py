@@ -86,6 +86,10 @@ def _focused(
             return subject.kind == "freight_node" and subject.node_id == identifier
         return False
 
+    # A city also matches the subjects of its points. Preserve its own total and
+    # unknown coverage before the bounded list is filled by the first point rows.
+    if kind == "territory":
+        return _overview([item for item in items if matches(item)])
     # A selected entity with no saved metric must not silently explain another entity.
     result = []
     for metric in items:

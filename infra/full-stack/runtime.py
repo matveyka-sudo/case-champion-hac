@@ -165,6 +165,20 @@ def verify(args):
     print("Source graph, deployment binding, accepted data and real walk route verified")
 
 
+def supported_executors(runtime):
+    executors = {profile.executor for profile, _ in runtime.profiles.values()}
+    if executors - {"accepted_inputs", "walk_pilot", "walk_batches", "certified_walk_model"}:
+        raise RuntimeError("This deployment has no approved checker for the configured executor")
+    unbound = {
+        key
+        for key, (profile, _) in runtime.profiles.items()
+        if profile.executor == "walk_batches" and runtime.walk_bindings.get(key) is None
+    }
+    if unbound:
+        raise RuntimeError("Every batch walking profile needs its admitted operator binding")
+    return executors
+
+
 def product_check(args):
     from a2_api.adapters.product_runtime import load_runtime, registry
     from a2_api.core.config import RuntimeSettings
@@ -174,9 +188,7 @@ def product_check(args):
         raise RuntimeError("Every configured product profile must have valid accepted inputs")
     if runtime.digest not in (RuntimeSettings().code_version or ""):
         raise RuntimeError("Product manifest digest is missing from the code fingerprint")
-    executors = {profile.executor for profile, _ in runtime.profiles.values()}
-    if executors - {"accepted_inputs", "walk_pilot", "certified_walk_model"}:
-        raise RuntimeError("This deployment has no approved checker for the configured executor")
+    executors = supported_executors(runtime)
     if "walk_pilot" in executors:
         verify(args)
     if "certified_walk_model" in executors:

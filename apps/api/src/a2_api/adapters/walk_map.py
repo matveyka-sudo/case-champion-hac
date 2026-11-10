@@ -2,7 +2,7 @@
 
 import hashlib
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict
 
 from a2_contracts.common import canonical_hash
@@ -74,7 +74,7 @@ def _features(
                     type="Point", coordinates=(destination.location.lon, destination.location.lat)
                 ),
                 geometry_kind="actual",
-                source_refs=destination.source_refs,
+                source_refs=sorted(set(destination.source_refs)),
             )
         )
     return features
@@ -85,6 +85,8 @@ def attach_walk_map(
     snapshot: AcceptedData,
     calculated: WalkAnalysisResult,
     destination_names: Mapping[str, str],
+    *,
+    map_features: Sequence[MapFeature] = (),
 ) -> AnalysisResult:
     """Preserve numerical results and attach no inferred approach or city polygons."""
     request = result.request
@@ -220,6 +222,45 @@ def attach_walk_map(
                 raise ValueError("WALK_MAP_EXISTING_GEOMETRY_DIFFERS")
             legs[index] = legs[index].model_copy(update={"geometry": geometry})
             journeys[identifier] = journey.model_copy(update={"legs": legs})
+    features = {
+        (feature.entity_kind, feature.entity_id): feature
+        for feature in _features(snapshot, request, destination_names)
+    }
+    for source_feature in map_features:
+        key = source_feature.entity_kind, source_feature.entity_id
+        if (
+            source_feature.entity_kind not in {"cell", "territory"}
+            or source_feature.geometry_kind != "actual"
+        ):
+            raise ValueError("WALK_MAP_SOURCE_GEOMETRY_SCOPE_MISMATCH")
+        previous = features.get(key)
+        if previous is not None:
+            if (
+                previous.cell_id,
+                previous.population,
+                previous.population_year,
+                previous.population_method,
+            ) != (
+                source_feature.cell_id,
+                source_feature.population,
+                source_feature.population_year,
+                source_feature.population_method,
+            ):
+                raise ValueError("WALK_MAP_SOURCE_POPULATION_MISMATCH")
+            features[key] = previous.model_copy(
+                update={
+                    "geometry": source_feature.geometry,
+                    "geometry_kind": "actual",
+                    "reason_code": source_feature.reason_code,
+                    "source_refs": sorted(
+                        set(previous.source_refs) | set(source_feature.source_refs)
+                    ),
+                }
+            )
+        elif source_feature.entity_kind == "territory":
+            features[key] = source_feature
+        else:
+            raise ValueError("WALK_MAP_SOURCE_UNKNOWN_CELL")
     payload = result.model_dump(mode="json")
     payload.update(
         journeys=[journeys[row.journey_id].model_dump(mode="json") for row in result.journeys],
@@ -227,7 +268,7 @@ def attach_walk_map(
             status="available",
             completeness="partial",
             reason_code="PARTIAL_WALK_MAP",
-            features=_features(snapshot, request, destination_names),
+            features=list(features.values()),
         ).model_dump(mode="json"),
     )
     validated = AnalysisResult.model_validate(payload)

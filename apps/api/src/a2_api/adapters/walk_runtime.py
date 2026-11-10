@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from a2_contracts.common import canonical_hash
 from a2_contracts.v2.base import Category, ContractModel, Identifier
 from a2_contracts.v2.dataset import AcceptedData
+from a2_contracts.v2.map_data import MapFeature
 from a2_contracts.v2.results import EvidenceRef
 from a2_data_pipeline.bundle import BundleData, BundleManifest
 from a2_data_pipeline.contract_v2 import to_accepted_data_v2
@@ -36,6 +37,7 @@ from a2_api.core.walk_observations import observation_directory
 
 if TYPE_CHECKING:
     from a2_api.adapters.walk_batches import Approval
+    from a2_api.adapters.walk_input_inventory import WalkInputInventory
 
 
 class WalkBinding(ContractModel):
@@ -43,6 +45,7 @@ class WalkBinding(ContractModel):
     artifact: FileRef
     approval: FileRef
     route_executor: Literal["valhalla_http_observation/1"]
+    map_features: FileRef | None = Field(default=None, exclude_if=lambda value: value is None)
 
 
 class CorrelationInput(ContractModel):
@@ -103,6 +106,8 @@ class BoundWalkBinding:
     destination_names: Mapping[str, str]
     graph_limitations: tuple[str, ...] = ()
     derivation_snapshot_id: str | None = None
+    map_features: tuple[MapFeature, ...] = ()
+    inventory: WalkInputInventory | None = None
 
     @property
     def binding_sha256(self) -> str:
@@ -115,11 +120,24 @@ def executor_fingerprint() -> str:
         "a2_api.adapters.walk_runtime",
         "a2_api.adapters.walk_graph_source",
         "a2_api.adapters.walk_batches",
+        "a2_api.adapters.walk_observed",
+        "a2_api.adapters.walk_map",
+        "a2_api.adapters.walk_map_sources",
+        "a2_api.adapters.result_evidence",
+        "a2_api.adapters.walk_input_inventory",
+        "a2_api.core.batches",
+        "a2_api.core.walk_route_artifacts",
+        "a2_api.workers.checkpoint_channel",
+        "a2_api.adapters.product_projection",
+        "a2_engine.urban.walk.observed",
         "a2_api.adapters.walk_pilot",
         "a2_engine.urban.walk.inputs",
         "a2_engine.urban.walk.analysis",
         "a2_engine.urban.valhalla.requests",
         "a2_engine.urban.valhalla.responses",
+        "a2_engine.urban.valhalla.codec",
+        "a2_engine.urban.valhalla.models",
+        "a2_engine.urban.valhalla._grisu2",
         "a2_data_pipeline.contract_v2",
         "a2_data_pipeline.walk_projection",
     )
@@ -397,6 +415,34 @@ def load_binding(
         for category in categories
     ):
         raise ValueError("WALK_APPROVED_CORRELATIONS_OR_CONNECTORS_UNAVAILABLE")
+    map_features: tuple[MapFeature, ...] = ()
+    if binding.map_features is not None:
+        from a2_api.adapters.walk_map_sources import (
+            WalkMapSourceSelection,
+            validate_walk_map_features,
+        )
+
+        _, document = _read(path.parent, binding.map_features, remaining, 2 * 1024 * 1024)
+        selection = WalkMapSourceSelection.model_validate(document)
+        if selection.city_id != scope.city_id:
+            raise ValueError("WALK_MAP_PROFILE_CITY_MISMATCH")
+        map_features = validate_walk_map_features(
+            selection.model_dump(mode="json"), snapshot=snapshot, bundle=bundle
+        )
+    from a2_api.adapters.walk_input_inventory import capture_walk_inventory
+
+    fingerprint = executor_fingerprint()
+    inventory = capture_walk_inventory(
+        binding_root=root.resolve(),
+        binding_ref=reference,
+        binding=binding,
+        approval_root=approval_path.parent,
+        approval=approval,
+        runtime=runtime,
+        bundle=bundle,
+        graph=graph,
+        executor_fingerprint=fingerprint,
+    )
     return BoundWalkBinding(
         root.resolve(),
         reference,
@@ -405,7 +451,7 @@ def load_binding(
         approval,
         binding.approval.sha256,
         runtime,
-        executor_fingerprint(),
+        fingerprint,
         resolved,
         MappingProxyType(
             {
@@ -418,4 +464,6 @@ def load_binding(
         ),
         derivation.limitations if derivation is not None else (),
         derivation.source_snapshot_id if derivation is not None else None,
+        map_features,
+        inventory,
     )

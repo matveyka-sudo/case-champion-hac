@@ -430,6 +430,10 @@ def calculate(
         from a2_api.adapters.demo_map import attach_demo_result
 
         result = attach_demo_result(result, snapshot)
+    if isinstance(inputs, UrbanInputs) and inputs.timetable is not None:
+        from a2_api.adapters.result_evidence import compact_result_evidence
+
+        result = compact_result_evidence(result)
     return finish_analysis(
         claim,
         result,

@@ -9,6 +9,89 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 
 ## Three-city priority — 2026-11-10 continuation
 
+### Current gate update — 2026-11-11 00:33 MSK
+
+- Shared prototype web d07d584 is LIVE on5193; root GET-only landing/atlas
+  inspection passed without desktop overflow. API remains f448ed15: new backend
+  deliveries and broader profiles are not yet live. Full UI replay is still due.
+- Root actual PostgreSQL artifact/checkpoint suite39PASS; evidence compaction
+  5PASS; scoped explanation bridge25PASS. Ordinary Python suite1213PASS/276SKIP
+  predates the latest deliveries; skips do not prove real database behavior.
+-1401-pair Moscow candidate v2 ce508816 is immutable/inactive. Preserve all2361
+  points and unknown population. No city index/minimum proof has been gained.
+- Real GTFS November11 public-slot scenario has independently checked source
+  events and deterministic5595.143->5235.143s route totals; +1320s adverse query
+  remains visible. It is not yet backend/UI E2E. Backend pair-budget and ML1
+  missing physical boundary corrections are RUNNING before integration.
+- Novorossiysk private-router overlay2cc5951 is integrated and source-checked,
+  but not activated. Three-city API catalog and each real E2E are still due.
+- Alice natural paragraph delivery is RUNNING; integrated server-grounded
+  question modes alone do not satisfy the requested free-form assistant.
+
+### Verified gate update — 2026-11-11
+
+- Shared prototype presenters c3bd03f and bounded source disclosure 1487be3
+  are integrated locally. Root 170 frontend tests, build/lint and the additional
+  source pagination test passed. Final browser acceptance and deployment remain.
+- Root actual UI request created/saved job94f0dfa2 / analysis93bd5f9f with
+  1029.051s real Moscow route, but the UI timed out during preflight. Same-session
+  job/result GETs succeeded; all three canonical scores remain null. Full UI
+  E2E is FAILED until admission latency and recovery are fixed and replayed.
+- Manual recovery fix3bec3b6 preserves request identity after ambiguous errors;
+  backend source recheck/compact1401 batching remains in progress.
+- Full ML1 suite: 1145 passed after root6cc1f43 fixed public export ordering;
+  old mathematical signatures/fixtures are preserved. Source inventory47passed.
+- The restored external ZIP is real GTFS plus Rasp bindings. It is excluded
+  from Git and documented in README; it does not replace graph artifacts or
+  supply an intercity API key. No broader data-ready claim follows from restore.
+
+### Current continuation: real Moscow and incumbent frontend authority
+
+The user has revoked generated Moscow transport for the active application.
+Historical demo artifacts/tests are retained but are not real-data acceptance.
+The authoritative presentation **and user workflows** are the existing demo UI
+and Desktop/waydex-prototype. The backend must support these workflows; a second,
+reduced API interface is not an accepted replacement. Shared presenters are under
+review, not yet visually accepted. Their controllers must retain source identity,
+session isolation and saved-result semantics without importing demo calculations.
+
+Current live stand: http://127.0.0.1:5193/; API/worker f448ed15, web 8f8ba849.
+The private pinned Moscow Valhalla remains active; duplicate host 8029 is stopped.
+Runtime manifest 214b12470343e91444c08f7d58bc5120f5c1b109474ad9a31383d8bbeaf0b2a1
+admits real Moscow .4, walk/static/adult clinics, one GP109 pair, all 2361 sample
+points and 284 accepted adult clinics. Generated transport is disabled. This is
+not yet a full Moscow route campaign. The newer shared UI is not deployed yet.
+
+| Current fact | Evidence / boundary |
+|---|---|
+| Moscow accepted source | .4, canonical cafbb99610762025de352f1dec983698ea3c58b9d14b58cd3bb4dd0c0fde8ee7; 3466 passenger destinations |
+| Real medical source packet | 2361 points, 2931 cells, 284 accepted adult clinics, 349 quarantined; 1836 confirmed point approaches and 240 confirmed clinic approaches |
+| Population | Included 13275683.671; excluded-cell positive population 2275.772 remains excluded and visible, not redistributed |
+| Actual native capture | 2070 locations, 65 bounded locate calls, 1747 valid bindings, 323 unresolved; 1401 candidate pairs currently supported, 435 unresolved |
+| Native capture integrity | Root independently rehashed all 211 files / 10781967 bytes; manifest ac95047d0ebcc7d02324dabc901ddb4a6f30b01ffbb82d45585742ad13dc71da |
+| Candidate selection | One geographic candidate per source-confirmed point; neither nearest-by-time nor minimum proof |
+| Preliminary number | Engine 01033a9 uses existing decay formula for an observed route; canonical category/point/city minima remain unknown. Separate observed_route_accessibility, partial/nonranking, explicit precision limits |
+| Root verification | 87 engine walk tests passed. First mapper/runtime run: 18 passed, 1 skipped, 1 failed on duplicate source references in a Moscow school map feature; fix under review |
+| Remaining batch work | Compact immutable observation references, resumable 1401-pair campaign, deployment and root real browser replay |
+
+The previous source-version table and deployment observations below are
+historical. Novorossiysk corrected source is .3; Moscow .3 and Novorossiysk .2
+are no longer the latest accepted parents. Their older route observations must
+not be relabelled as corrected-source E2E runs.
+
+Independent nonurban inventory review found real freight locations (Kaliningrad
+250 sites/3 ports; Novorossiysk 86 sites/2 ports and 4 pipeline terminals), not
+operational cargo chains or pipeline volume/capacity observations. Moscow's 2222
+freight sites have no accepted freight infrastructure nodes. Generic handlers
+exist, but these sources do not establish usable complete cargo inputs.
+Corrected-parent C894 contains 3730 dated runs/275 services/54 stops; it is one
+urban route, with physical stop connectors still unresolved. Real transit and
+scenario wiring are active work, not complete coverage claims.
+
+PRODUCT_FUNCTIONAL_READY remains partial; REAL_DATA_COVERAGE_READY is
+scope-dependent/partial; NUMERICAL_INDEX_READY is partial (separate historical
+certified Kaliningrad point model, not Moscow city); NATIONWIDE_COVERAGE_READY=no.
+
 Moscow, Kaliningrad and Novorossiysk are mandatory parallel pilot profiles.
 Kaliningrad is the reference for proof and batch acceptance, not a restriction
 of the product scope. One shared urban engine and executor must serve all three.

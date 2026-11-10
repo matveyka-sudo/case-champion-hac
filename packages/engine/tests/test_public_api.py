@@ -448,7 +448,11 @@ CANONICAL_MODULES = {
         "WalkAnalysisResult",
     ),
     "a2_engine.urban.walk.inputs": ("prepare_walk_inputs",),
-    "a2_engine.urban.walk.analysis": ("plan_walk_routes", "analyze_walk_responses"),
+    "a2_engine.urban.walk.analysis": (
+        "plan_walk_routes",
+        "analyze_walk_responses",
+        "analyze_normalized_walk_routes",
+    ),
     "a2_engine.urban.districts.models": (
         "UrbanOriginalCell",
         "UrbanDistrict",
@@ -790,6 +794,21 @@ for _module, _names in SCENARIO_EXPORT_MODULES.items():
     NEW_PUBLIC_NAMES.update(_names)
 
 
+NEW_PUBLIC_NAMES.add("analyze_normalized_walk_routes")
+
+
+def test_normalized_walk_reducer_is_an_append_only_public_addition() -> None:
+    assert a2_engine.__all__[-1] == "analyze_normalized_walk_routes"
+    signature = str(inspect.signature(a2_engine.analyze_normalized_walk_routes))
+    signature = re.sub(r"\ba2_engine(?:\.[a-z_]+)+\.([A-Z][A-Za-z0-9_]*)", r"\1", signature)
+    assert signature == (
+        "(plan: WalkRoutePlan, normalized_routes: collections.abc.Sequence[WalkRouteResult], "
+        "*, selected_categories: collections.abc.Mapping[str, str], config: UrbanConfig, "
+        "rules: UrbanJourneyRules, thresholds: collections.abc.Sequence[UrbanThreshold] = ()) "
+        "-> WalkAnalysisResult"
+    )
+
+
 def test_public_names_signatures_and_defaults_are_unchanged() -> None:
     assert tuple(a2_engine.__all__[: len(PUBLIC_SIGNATURES)]) == tuple(PUBLIC_SIGNATURES)
     assert set(a2_engine.__all__) == set(PUBLIC_SIGNATURES) | NEW_PUBLIC_NAMES
@@ -1036,7 +1055,7 @@ for module in json.loads(sys.argv[1]):
 for legacy,name,canonical in json.loads(sys.argv[2]):
     assert getattr(importlib.import_module(legacy),name) is getattr(importlib.import_module(canonical),name)
 import a2_engine
-assert len(a2_engine.__all__)==268
+assert len(a2_engine.__all__)==269
 """
     for order in (modules, list(reversed(modules)), modules[::2] + modules[1::2]):
         subprocess.run(

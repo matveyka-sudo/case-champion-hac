@@ -340,7 +340,19 @@ async def test_three_cities_share_dispatch_checkpoint_resume_and_methodology(
         result = product.calculate(claim, channel)
         assert routed[before:] and set(routed[before:]) == {entry["profile"].city_id + ".test"}
         assert result.status == "partial" and result.journeys
-        assert all(s.value is None and not s.ranking_eligible for s in result.scores)
+        assert all(not s.ranking_eligible for s in result.scores)
+        assert all(
+            s.value is None
+            for s in result.scores
+            if s.name in {"category_index", "point_index", "territory_index"}
+        )
+        assert any(
+            s.name == "observed_route_accessibility"
+            and s.value is not None
+            and s.completeness == "partial"
+            and s.reason_code == "MINIMUM_NOT_PROVEN"
+            for s in result.scores
+        )
         area = next(
             t.area_km2
             for t in entry["snapshot"].territories
@@ -422,6 +434,29 @@ def test_binding_rejects_cross_scope_and_same_id_source_mutations(tmp_path, monk
         reference = bound.reference
     with pytest.raises(ValueError, match="WALK_|CONNECTOR_"):
         walk_runtime.load_binding(bound.root, reference, snapshot=snapshot, scope=scope)
+
+
+def test_validated_binding_rechecks_pinned_bytes_without_reparsing_sources(tmp_path, monkeypatch):
+    from a2_api.core.errors import DomainError
+
+    entry = city_profile(tmp_path, SNAPSHOTS[0])
+    configure(tmp_path, monkeypatch, [entry])
+    bound = next(iter(load_runtime().walk_bindings.values()))
+    assert bound.inventory is not None
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("semantic source projection must not repeat within this job")
+
+    monkeypatch.setattr(walk_runtime, "load_binding", forbidden)
+    monkeypatch.setattr(walk_runtime, "load_bundle", forbidden)
+    approval, digest, runtime = walk_batches.load_approval(bound=bound, snapshot=entry["snapshot"])
+    assert approval is bound.approval and runtime is bound.runtime
+    assert digest == bound.approval_sha256
+    path = entry["folder"] / "artifact.json"
+    original = path.read_bytes()
+    path.write_bytes(b"x" + original[1:])
+    with pytest.raises(DomainError, match="WALK_BATCH_APPROVAL_OR_BINDING_UNAVAILABLE"):
+        walk_batches.load_approval(bound=bound, snapshot=entry["snapshot"])
 
 
 @pytest.mark.asyncio
