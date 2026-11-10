@@ -107,3 +107,26 @@ codes, never exception text, paths, URLs or source bodies. Failure of one profil
 cannot borrow another city's readiness. Public readiness/progress DTOs are a
 separate contract change; internal completed work is never a percentage claim of
 catalog, population, minimum-time or index completeness.
+
+For a derived OSM build, `source_sha256/source_bytes/source_filename` continue
+describing the actual build input. The complete optional graph group
+`upstream_source`, `derivation: FileRef`, `tool_installation: FileRef` binds the
+original producer PBF separately. Partial groups fail. The backend verifies the
+registered and copied original dataset manifest, extraction/tool/package chain,
+reference reports and restriction-scope binary, fileinfo and full endpoint
+inventory. A later accepted snapshot must be an exact endpoint-coordinate subset
+of the preserved extraction inventory; its original snapshot label is retained
+as `BoundWalkBinding.derivation_snapshot_id`. Scope is still partial and
+`DERIVED_GRAPH_OUTSIDE_PATHS_INCOMPLETE` is retained in the result. Original-PBF
+builds keep their strict producer/build checksum equality.
+
+API admission hashes these bounded provenance files. Full original/derived PBF
+and tile byte verification remains the independent deployment check under the
+existing immutable-deployment attestation. The backend does not read a gigabyte
+of PBF/tiles for each HTTP preflight, run external extraction commands, or turn
+closed-reference reports into global routing-minimum evidence.
+
+Bound walking results use the reviewed `attach_walk_map` helper: all canonical
+city points/cells and selected destinations remain visible, and verified network
+geometry attaches only to the matching movement leg. Approach geometry and full
+Journey geometry remain absent unless independently established.
