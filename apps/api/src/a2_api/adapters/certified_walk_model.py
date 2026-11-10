@@ -5,7 +5,8 @@ import hashlib
 import json
 import os
 from dataclasses import dataclass
-from datetime import date
+from datetime import UTC, date, timedelta
+from fractions import Fraction
 from pathlib import Path
 from typing import Any, Literal
 from zoneinfo import ZoneInfo
@@ -13,11 +14,15 @@ from zoneinfo import ZoneInfo
 from a2_contracts.common import canonical_hash
 from a2_contracts.v2.base import ContractModel, Identifier
 from a2_contracts.v2.dataset import AcceptedData
+from a2_contracts.v2.journeys import JourneyResult, Leg, LineGeometry
 from a2_contracts.v2.map_data import AnalysisMapData, MapFeature, PointGeometry
 from a2_contracts.v2.requests import AnalysisRequest, UrbanPassengerRequest
 from a2_contracts.v2.results import AnalysisResult, EvidenceRef, PopulationBasis, SubjectRef
 from a2_engine import load_urban_config
+from a2_engine.urban.walk import geometry as geometry_engine
 from a2_engine.urban.walk import physical_certificate, source_bound, turn_certificate
+from a2_engine.urban.walk.canonical_point import CanonicalWalkPointResult
+from a2_engine.urban.walk.geometry import CertifiedWalkGeometry
 from a2_engine.urban.walk.physical_certificate import (
     DesignatedAccessReceipt,
     DesignatedAccessResult,
@@ -25,7 +30,7 @@ from a2_engine.urban.walk.physical_certificate import (
 from pydantic import Field
 
 from a2_api.adapters.product_projection import Projection, known
-from a2_api.adapters.product_runtime import FileRef, unavailable
+from a2_api.adapters.product_runtime import MAX_DOCUMENT_BYTES, FileRef, unavailable
 from a2_api.core.config import RuntimeSettings
 from a2_api.core.jobs import ClaimedJob, V2JobContext
 from a2_api.core.registry import ProductRegistry
@@ -33,6 +38,13 @@ from a2_api.core.registry import ProductRegistry
 MAX_METADATA_BYTES = 1024 * 1024
 MAX_NATIVE_FILE_BYTES = 96 * 1024 * 1024
 MAX_NATIVE_TOTAL_BYTES = 128 * 1024 * 1024
+MAX_GEOMETRY_TOTAL_BYTES = 16 * 1024 * 1024
+
+
+class GeometrySupplement(ContractModel):
+    schema_version: Literal["waydex-certified-walk-geometry-binding/1"]
+    receipt: FileRef
+    original_snapshot: FileRef
 
 
 class ProofBinding(ContractModel):
@@ -49,6 +61,14 @@ class ProofBinding(ContractModel):
     policy: FileRef
     official_sources: FileRef
     evidence: list[EvidenceRef] = Field(default_factory=list, max_length=64)
+    geometry: FileRef | None = Field(default=None, exclude_if=lambda value: value is None)
+
+
+@dataclass(frozen=True)
+class GeometryMetadata:
+    supplement: GeometrySupplement
+    root: Path
+    receipt: dict[str, Any]
 
 
 @dataclass(frozen=True)
@@ -63,6 +83,7 @@ class CertifiedRuntime:
     official_json: str
     graph_fingerprint: str
     profile_fingerprint: str
+    geometry: GeometryMetadata | None = None
 
 
 def _text(path: Path, expected: str, limit: int = MAX_METADATA_BYTES) -> str:
@@ -96,6 +117,73 @@ def _file_digest(path: Path, budget: list[int]) -> str:
         raise ValueError("CERTIFIED_NATIVE_FILE_CHANGED_DURING_READ")
     budget[0] -= read
     return digest.hexdigest()
+
+
+def _geometry_metadata(
+    root: Path, reference: FileRef, binding: ProofBinding, native: dict[str, Any]
+) -> GeometryMetadata:
+    supplement_path, content = _reference(root, reference)
+    supplement = GeometrySupplement.model_validate_json(content)
+    receipt_path, receipt_json = _reference(supplement_path.parent, supplement.receipt)
+    receipt = json.loads(receipt_json)
+    files = receipt["files_sha256"]
+    if (
+        receipt["schema"] != "waydex-certified-walk-geometry/1"
+        or receipt["geometry_only"] is not True
+        or receipt["promotes_minimum_or_coverage"] is not False
+        or len(files) != 32
+        or receipt["source_files_sha256"] != native["files_sha256"]
+        or receipt["native_receipt_sha256"] != binding.native_receipt.sha256
+        or receipt["physical_receipt_sha256"] != binding.physical_access.sha256
+        or receipt["source_scope_id"] != native["closed_turn_certificate"]["source_scope_id"]
+        or receipt["source_build_manifest_sha256"] != native["files_sha256"]["build-manifest.json"]
+        or receipt["candidate_sha256"] != native["files_sha256"]["turn-candidate.json"]
+        or files["native-receipt.json"] != binding.native_receipt.sha256
+        or files["physical-receipt.json"] != binding.physical_access.sha256
+        or files["proof-binding.json"] != receipt["proof_binding_sha256"]
+        or files["model-receipt.json"] != receipt["model_receipt_sha256"]
+    ):
+        raise ValueError("CERTIFIED_GEOMETRY_SOURCE_BINDING_CHANGED")
+    budget = [MAX_GEOMETRY_TOTAL_BYTES]
+    archive = receipt_path.parent.resolve()
+    for name, expected in files.items():
+        path = (archive / name).resolve()
+        if (
+            Path(name).is_absolute()
+            or not path.is_relative_to(archive)
+            or len(expected) != 64
+            or _file_digest(path, budget) != expected
+        ):
+            raise ValueError("CERTIFIED_GEOMETRY_ARCHIVE_CHANGED")
+    if (
+        geometry_engine.__file__ is None
+        or hashlib.sha256(Path(geometry_engine.__file__).read_bytes()).hexdigest()
+        != files["geometry.py"]
+    ):
+        raise ValueError("CERTIFIED_GEOMETRY_VERIFIER_CHANGED")
+    original = ProofBinding.model_validate_json(
+        _text(archive / "proof-binding.json", receipt["proof_binding_sha256"])
+    )
+    if original.geometry is not None or original.model_dump(
+        mode="json", exclude={"geometry"}
+    ) != binding.model_dump(mode="json", exclude={"geometry"}):
+        raise ValueError("CERTIFIED_GEOMETRY_ORIGINAL_BINDING_CORE_CHANGED")
+    snapshot_path = (supplement_path.parent / supplement.original_snapshot.path).resolve()
+    if _file_digest(snapshot_path, budget) != supplement.original_snapshot.sha256:
+        raise ValueError("CERTIFIED_GEOMETRY_ORIGINAL_SNAPSHOT_BYTES_CHANGED")
+    snapshot = AcceptedData.model_validate_json(
+        _text(snapshot_path, supplement.original_snapshot.sha256, MAX_DOCUMENT_BYTES)
+    )
+    # File SHA f616... and API canonical e3ac... are distinct. ML1's separate
+    # ASCII canonical7c57... remains checked by its existing compatibility gate.
+    if (
+        snapshot.snapshot_id != original.snapshot_id
+        or snapshot.snapshot_id != receipt["snapshot_id"]
+        or canonical_hash(snapshot.model_dump(mode="json")) != original.snapshot_hash
+        or receipt["snapshot_hash"] != original.snapshot_hash
+    ):
+        raise ValueError("CERTIFIED_GEOMETRY_ORIGINAL_SNAPSHOT_SEMANTICS_CHANGED")
+    return GeometryMetadata(supplement, archive, receipt)
 
 
 def load_binding(config_hash: str) -> CertifiedRuntime:
@@ -178,6 +266,19 @@ def load_binding(config_hash: str) -> CertifiedRuntime:
                 "verifiers": verifier_hashes,
             }
         )
+        geometry = None
+        if binding.geometry is not None:
+            geometry = _geometry_metadata(path.parent, binding.geometry, binding, native)
+            graph = canonical_hash(
+                {
+                    "model_graph": graph,
+                    "geometry_supplement": binding.geometry.sha256,
+                    "geometry_receipt": geometry.supplement.receipt.sha256,
+                    "geometry_export": geometry.receipt["files_sha256"]["export.jsonl"],
+                    "geometry_plan": geometry.receipt["files_sha256"]["plan.json"],
+                    "geometry_verifier": geometry.receipt["files_sha256"]["geometry.py"],
+                }
+            )
         profile = canonical_hash(
             {
                 "graph": graph,
@@ -199,6 +300,7 @@ def load_binding(config_hash: str) -> CertifiedRuntime:
             official,
             graph,
             profile,
+            geometry,
         )
     except (OSError, ValueError, TypeError, KeyError, AttributeError) as exc:
         raise unavailable("CERTIFIED_WALK_MODEL_INPUTS_UNAVAILABLE") from exc
@@ -233,7 +335,7 @@ async def preflight(request: AnalysisRequest, snapshot: AcceptedData) -> None:
 
 def _verify_native(
     runtime: CertifiedRuntime,
-) -> tuple[DesignatedAccessReceipt, DesignatedAccessResult, str]:
+) -> tuple[DesignatedAccessReceipt, DesignatedAccessResult, str, CertifiedWalkGeometry | None]:
     """Recompute the exact certificate; receipt output flags are never read."""
     native, root = runtime.native, runtime.native_root
     files = native["files_sha256"]
@@ -281,7 +383,153 @@ def _verify_native(
         optimum,
         _text(root / "turn-replay.jsonl", files["turn-replay.jsonl"]),
     )
-    return access, minimum, artifact_json
+    geometry = None
+    if runtime.geometry is not None:
+        meta = runtime.geometry
+        files = meta.receipt["files_sha256"]
+        geometry = geometry_engine.load_certified_walk_geometry(
+            _text(meta.root / "export.jsonl", files["export.jsonl"], MAX_GEOMETRY_TOTAL_BYTES),
+            expected_sha256=files["export.jsonl"],
+            plan_json=_text(meta.root / "plan.json", files["plan.json"]),
+            graph=graph,
+            candidate=minimum.candidate.network_path,
+            access=access,
+        )
+        if (
+            geometry.physical_coordinates is None
+            or geometry.discontinuities
+            or len(geometry.edge_ids) != meta.receipt["edge_count"]
+            or len(geometry.physical_coordinates) != meta.receipt["physical_vertices"]
+            or geometry.candidate_sha256 != meta.receipt["candidate_sha256"]
+            or Fraction(meta.receipt["unchanged_model_total_seconds"]) != minimum.lower_seconds
+        ):
+            raise ValueError("CERTIFIED_GEOMETRY_VERIFIED_MODEL_MISMATCH")
+    return access, minimum, artifact_json, geometry
+
+
+def _append_geometry(
+    out: Projection,
+    runtime: CertifiedRuntime,
+    point: CanonicalWalkPointResult,
+    minimum: DesignatedAccessResult,
+    geometry: CertifiedWalkGeometry,
+) -> None:
+    """Present a microsecond timeline without rounding the methodology operands."""
+    meta = runtime.geometry
+    if (
+        meta is None
+        or geometry.physical_geojson is None
+        or point.destination.physical_node_id is None
+    ):
+        raise ValueError("CERTIFIED_GEOMETRY_PHYSICAL_CHAIN_REQUIRED")
+    if point.minimum_seconds.value is not None and point.minimum_seconds.value != float(
+        minimum.lower_seconds
+    ):
+        raise ValueError("CERTIFIED_GEOMETRY_EXACT_TIME_OPERAND_CHANGED")
+    source_id = "osm-geofabrik-pbf-" + json.loads(runtime.physical_json)["pbf_sha256"]
+    source = next((row for row in out.evidence if row.evidence_id == source_id), None)
+    if source is None:
+        raise ValueError("CERTIFIED_GEOMETRY_SOURCE_EVIDENCE_REQUIRED")
+    geometry_refs = []
+    for kind, digest in (
+        ("receipt", meta.supplement.receipt.sha256),
+        ("export", geometry.geometry_export_sha256),
+        ("plan", meta.receipt["files_sha256"]["plan.json"]),
+    ):
+        identity = "certified-walk-geometry-" + kind + ":" + digest
+        # Preserve the pinned source retrieval metadata. This is a new local
+        # proof section of that source, not a claim of a remote receipt download.
+        out.evidence.append(
+            source.model_copy(
+                update={
+                    "evidence_id": identity,
+                    "section": "Locally preserved certified geometry "
+                    + kind
+                    + " SHA256 "
+                    + digest
+                    + "; URL identifies originating PBF, not this local proof artifact.",
+                }
+            )
+        )
+        geometry_refs.append(identity)
+    refs = sorted(set(point.evidence_refs) | set(geometry_refs))
+    microseconds = round(minimum.lower_seconds * 1_000_000)
+    departure = out.context.normalized_request.departure_at.astimezone(UTC)
+    arrival = departure + timedelta(microseconds=microseconds)
+    timeline_seconds = (arrival - departure).total_seconds()
+    if abs(Fraction(microseconds, 1_000_000) - minimum.lower_seconds) > Fraction(1, 2_000_000):
+        raise ValueError("CERTIFIED_GEOMETRY_TIMELINE_PRECISION_EXCEEDED")
+    identity = (
+        "urban-canonical-route-"
+        + canonical_hash(
+            {
+                "binding": runtime.digest,
+                "geometry": geometry.geometry_export_sha256,
+                "point": point.point.point_id,
+                "destination": point.destination.destination_id,
+                "departure": departure.isoformat(),
+            }
+        )[:24]
+    )
+    out.journeys.append(
+        JourneyResult(
+            journey_id=identity,
+            scope="urban",
+            origin_node_id=point.point.origin_node_id,
+            destination_node_id=point.destination.physical_node_id,
+            requested_departure_at=departure,
+            departure_at=departure,
+            arrival_at=arrival,
+            total_seconds=timeline_seconds,
+            initial_wait_seconds=0,
+            path_seconds=timeline_seconds,
+            total_wait_seconds=0,
+            legs=[
+                Leg(
+                    mode="walk",
+                    kind="walk",
+                    from_node_id=point.point.origin_node_id,
+                    to_node_id=point.destination.physical_node_id,
+                    start_at=departure,
+                    end_at=arrival,
+                    duration_seconds=timeline_seconds,
+                    service_id=None,
+                    evidence_refs=refs,
+                )
+            ],
+            geometry=LineGeometry.model_validate(
+                {**geometry.physical_geojson, "evidence_refs": geometry_refs}
+            ),
+            geometry_kind="actual",
+            status="available",
+            reason_code="CANONICAL_ACCESS_MODEL",
+            snapshot_id=out.context.snapshot_id,
+            completeness="partial",
+            traffic_mode="static",
+            time_kind="complete_chain",
+            reference_id=None,
+            destination_object_id=point.destination.destination_id,
+            point_id=point.point.point_id,
+            evidence_refs=refs,
+        )
+    )
+    out.metric(
+        "urban-model-timeline-" + point.point.point_id,
+        "total_seconds",
+        known(timeline_seconds),
+        SubjectRef(
+            kind="sample_point",
+            territory_id=point.context.city_id,
+            point_id=point.point.point_id,
+            category="airport",
+            mode="walk",
+        ),
+        refs,
+        journey_id=identity,
+        time_kind="complete_chain",
+    )
+    out.limitations.update(geometry.limitations)
+    out.limitations.add("MODEL_TIMELINE_MICROSECOND_PRECISION")
 
 
 def calculate(claim: ClaimedJob) -> AnalysisResult:
@@ -304,7 +552,7 @@ def calculate(claim: ClaimedJob) -> AnalysisResult:
     if not isinstance(snapshot, AcceptedData):
         raise unavailable("CERTIFIED_WALK_MODEL_ACCEPTED_DATA_REQUIRED")
     _scope(runtime, context.normalized_request, snapshot)
-    access, minimum, artifact_json = _verify_native(runtime)
+    access, minimum, artifact_json, geometry = _verify_native(runtime)
     request = context.normalized_request
     assert isinstance(request, UrbanPassengerRequest)
     point = project_canonical_airport_point(
@@ -458,7 +706,10 @@ def calculate(claim: ClaimedJob) -> AnalysisResult:
         ),
     )
     out.limitations.update(point.limitations)
-    out.limitations.add("CERTIFIED_MODEL_DURATION_ONLY_NO_ROUTE_GEOMETRY")
+    if geometry is None:
+        out.limitations.add("CERTIFIED_MODEL_DURATION_ONLY_NO_ROUTE_GEOMETRY")
+    else:
+        _append_geometry(out, runtime, point, minimum, geometry)
     destination = next(
         row
         for row in snapshot.destinations
