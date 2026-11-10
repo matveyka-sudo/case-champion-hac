@@ -4,12 +4,13 @@
     "132397a146ed7a7cde0544bb6252ccda4b3f0d768ece1beafc746591cc3d2dc1": 1,
     "181ce5e439f2b0112f46a3db29c76e5d9e7e497f52ff2fcb1a11db49ccfee502": 1,
     "41fb79b820d140d74365b1ff3d5ebbade33afa8ee1d92d31461d51ab3c645f2a": 1,
+    "5c0acaa58ea2e9e2568cb5462c245ebc4a0cad5a9fbf645ddef9c491acb4c059": 1,
     "5c21352e0f1d9b835e4805e76d0fb6c3ff1c27526fc0ae1e7453c6ae0afa0852": 1,
     "5f9c11e5b06d2ff2379d9bebec0a1010329c21a5ae3bcd2d5b2aa9ea7e80959e": 1,
     "81428db78d8abe0956b765d9ccce18ed26d27d5edc5ff42459e33a2431f69c81": 1,
     "a4d810fc4a23dda3f95f0b6feeb6d3834a9b31cf404cf3d2f783ac98c28b02fa": 1,
-    "a62e2d04827d63903e48645a0b656b6a4274798a435ade15ae6c5f091fdcc082": 1,
     "be7e3bbf03cf3e475c43db71002d0f33608495fd8d419cce7171e83eb493a98a": 1,
+    "bede394e71eec45f939655f528a41e23d46708a4bb66b775742d8d395c9305c5": 1,
     "d3552aba39fc88c226a6df14715d2a70cb55cb21544812be352c178fe6f5f556": 1,
     "f50bfad7e6712b1e5bed4905e416e14d2ad742401554400ab33087edb5512fa4": 1
   },
@@ -19,11 +20,12 @@
     "INSERT INTO runs(run_id,result_kind,payload,result_hash,schema_version,access_scope,private_source_bindings) VALUES($1,$2,$3::jsonb,$4,'2',$5,$6::jsonb)": 1,
     "SELECT * FROM runs WHERE run_id=$1 AND access_scope IS NOT DISTINCT FROM $2": 1,
     "SELECT EXISTS(SELECT 1 FROM private_source_episodes WHERE snapshot_id=$1) OR EXISTS(SELECT 1 FROM jobs WHERE access_scope IS NOT DISTINCT FROM $3 AND (run_id=$2 OR (kind='analysis' AND status='running' AND payload->'context'->>'analysis_id'=$2)) AND payload->'context' ? 'private_source_bindings')": 1,
+    "SELECT b.episode_id AS binding_episode_id,e.payload AS episode_payload,e.content_hash AS episode_hash,e.snapshot_id,e.snapshot_hash,e.observed_at,e.expires_at,e.state,g.payload AS grant_payload,g.content_hash AS grant_hash,g.access_scope,g.valid_from,g.valid_until,g.revoked_at FROM jsonb_to_recordset($1::jsonb) AS b(episode_id text,grant_id text,episode_hash text,grant_hash text) JOIN private_source_episodes e ON e.episode_id=b.episode_id JOIN private_source_grants g ON g.episode_id=e.episode_id AND g.grant_id=b.grant_id WHERE g.access_scope=$2 ORDER BY e.episode_id": 1,
     "SELECT clock_timestamp()": 1,
-    "SELECT e.payload AS episode_payload,e.content_hash AS episode_hash,e.snapshot_id,e.snapshot_hash,e.observed_at,e.expires_at,e.state,g.payload AS grant_payload,g.content_hash AS grant_hash,g.access_scope,g.valid_from,g.valid_until,g.revoked_at,clock_timestamp() AS checked_at FROM private_source_episodes e JOIN private_source_grants g ON g.episode_id=e.episode_id WHERE e.episode_id=$1 AND g.grant_id=$2 AND g.access_scope=$3": 1,
     "SELECT payload,input_hash,cache_key,code_version,bundle_id,kind FROM jobs WHERE access_scope=$2 AND (run_id=$1 OR (kind='analysis' AND status='running' AND payload->'context'->>'analysis_id'=$1)) ORDER BY CASE WHEN status='succeeded' THEN 0 ELSE 1 END,finished_at,job_id LIMIT 1": 1,
     "SELECT private_source_bindings FROM runs WHERE run_id=$1": 1,
-    "UPDATE jobs SET status='succeeded',run_id=$2,finished_at=clock_timestamp() WHERE job_id=$1 AND status='running' AND claim_token=$3 AND access_scope=$4 AND lease_expires_at>clock_timestamp() AND NOT EXISTS(SELECT 1 FROM jsonb_to_recordset($5::jsonb) AS b(episode_id text,grant_id text,episode_hash text,grant_hash text) LEFT JOIN private_source_episodes e ON e.episode_id=b.episode_id LEFT JOIN private_source_grants g ON g.grant_id=b.grant_id AND g.episode_id=e.episode_id WHERE e.episode_id IS NULL OR g.grant_id IS NULL OR e.state<>'active' OR g.revoked_at IS NOT NULL OR e.content_hash<>b.episode_hash OR g.content_hash<>b.grant_hash OR g.access_scope<>$4 OR e.observed_at>clock_timestamp() OR e.expires_at<=clock_timestamp() OR g.valid_from>clock_timestamp() OR g.valid_until<=clock_timestamp()) RETURNING job_id": 1
+    "UPDATE jobs SET status='succeeded',run_id=$2,finished_at=clock_timestamp() WHERE job_id=$1 AND status='running' AND claim_token=$3 AND access_scope=$4 AND lease_expires_at>clock_timestamp() AND NOT EXISTS(SELECT 1 FROM jsonb_to_recordset($5::jsonb) AS b(episode_id text,grant_id text,episode_hash text,grant_hash text) LEFT JOIN private_source_episodes e ON e.episode_id=b.episode_id LEFT JOIN private_source_grants g ON g.grant_id=b.grant_id AND g.episode_id=e.episode_id WHERE e.episode_id IS NULL OR g.grant_id IS NULL OR e.state<>'active' OR g.revoked_at IS NOT NULL OR e.content_hash<>b.episode_hash OR g.content_hash<>b.grant_hash OR g.access_scope<>$4 OR e.observed_at>clock_timestamp() OR e.expires_at<=clock_timestamp() OR g.valid_from>clock_timestamp() OR g.valid_until<=clock_timestamp()) RETURNING job_id": 1,
+    "WITH permission_clock AS MATERIALIZED (SELECT clock_timestamp() AS checked_at) SELECT checked_at FROM permission_clock WHERE NOT EXISTS(SELECT 1 FROM jsonb_to_recordset($1::jsonb) AS b(episode_id text,grant_id text,episode_hash text,grant_hash text) LEFT JOIN private_source_episodes e ON e.episode_id=b.episode_id LEFT JOIN private_source_grants g ON g.grant_id=b.grant_id AND g.episode_id=e.episode_id WHERE e.episode_id IS NULL OR g.grant_id IS NULL OR e.state<>'active' OR g.revoked_at IS NOT NULL OR e.content_hash<>b.episode_hash OR g.content_hash<>b.grant_hash OR g.access_scope<>$2 OR e.observed_at>permission_clock.checked_at OR e.expires_at<=permission_clock.checked_at OR g.valid_from>permission_clock.checked_at OR g.valid_until<=permission_clock.checked_at)": 1
   },
   "approval": "Root-approved0007 private source permission metadata, independent freshness; bounded scoped immutable grants, source-context proofs, final clock_timestamp write fence and fresh post-RR reads. Historical fixtures unchanged.",
   "modules": [

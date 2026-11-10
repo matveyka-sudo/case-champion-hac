@@ -72,20 +72,37 @@ class PrivateSourceRepository:
         *,
         lock: bool = False,
     ) -> datetime | None:
-        """Use a fresh statement/transaction for mutable authorization state."""
-        checked_at = None
+        """Validate the bounded roster, then check every permission at one fresh clock."""
+        if not bindings:
+            return None
+        bindings = validate_bindings(bindings)
+        receipts = json.dumps(
+            [
+                dict(
+                    episode_id=b.source.episode_id,
+                    grant_id=b.grant.grant_id,
+                    episode_hash=b.source.content_hash,
+                    grant_hash=b.grant_hash,
+                )
+                for b in bindings
+            ]
+        )
+        rows = await connection.fetch(
+            "SELECT b.episode_id AS binding_episode_id,e.payload AS episode_payload,e.content_hash AS episode_hash,e.snapshot_id,e.snapshot_hash,"
+            "e.observed_at,e.expires_at,e.state,g.payload AS grant_payload,g.content_hash AS grant_hash,"
+            "g.access_scope,g.valid_from,g.valid_until,g.revoked_at "
+            "FROM jsonb_to_recordset($1::jsonb) AS b(episode_id text,grant_id text,episode_hash text,grant_hash text) "
+            "JOIN private_source_episodes e ON e.episode_id=b.episode_id "
+            "JOIN private_source_grants g ON g.episode_id=e.episode_id AND g.grant_id=b.grant_id "
+            "WHERE g.access_scope=$2 ORDER BY e.episode_id" + (" FOR SHARE OF e,g" if lock else ""),
+            receipts,
+            scope,
+        )
+        if len(rows) != len(bindings):
+            raise unavailable()
+        inventory = {row["binding_episode_id"]: row for row in rows}
         for binding in sorted(bindings, key=lambda item: item.source.episode_id):
-            row = await connection.fetchrow(
-                "SELECT e.payload AS episode_payload,e.content_hash AS episode_hash,e.snapshot_id,e.snapshot_hash,"
-                "e.observed_at,e.expires_at,e.state,g.payload AS grant_payload,g.content_hash AS grant_hash,"
-                "g.access_scope,g.valid_from,g.valid_until,g.revoked_at,clock_timestamp() AS checked_at "
-                "FROM private_source_episodes e JOIN private_source_grants g ON g.episode_id=e.episode_id "
-                "WHERE e.episode_id=$1 AND g.grant_id=$2 AND g.access_scope=$3"
-                + (" FOR SHARE OF e,g" if lock else ""),
-                binding.source.episode_id,
-                binding.grant.grant_id,
-                scope,
-            )
+            row = inventory.get(binding.source.episode_id)
             if row is None:
                 raise unavailable()
             try:
@@ -108,10 +125,29 @@ class PrivateSourceRepository:
                     or row["revoked_at"] is not None
                 ):
                     raise ValueError("PRIVATE_SOURCE_RECORD_DIFFERS")
-                checked_at = row["checked_at"]
-                binding.assert_access(scope, checked_at)
             except (ValueError, TypeError, KeyError):
                 raise unavailable() from None
+        current = await connection.fetchrow(
+            "WITH permission_clock AS MATERIALIZED (SELECT clock_timestamp() AS checked_at) "
+            "SELECT checked_at FROM permission_clock WHERE NOT EXISTS("
+            "SELECT 1 FROM jsonb_to_recordset($1::jsonb) AS b(episode_id text,grant_id text,episode_hash text,grant_hash text) "
+            "LEFT JOIN private_source_episodes e ON e.episode_id=b.episode_id "
+            "LEFT JOIN private_source_grants g ON g.grant_id=b.grant_id AND g.episode_id=e.episode_id "
+            "WHERE e.episode_id IS NULL OR g.grant_id IS NULL OR e.state<>'active' OR g.revoked_at IS NOT NULL "
+            "OR e.content_hash<>b.episode_hash OR g.content_hash<>b.grant_hash OR g.access_scope<>$2 "
+            "OR e.observed_at>permission_clock.checked_at OR e.expires_at<=permission_clock.checked_at "
+            "OR g.valid_from>permission_clock.checked_at OR g.valid_until<=permission_clock.checked_at)",
+            receipts,
+            scope,
+        )
+        if current is None:
+            raise unavailable()
+        checked_at: datetime = current["checked_at"]
+        try:
+            for binding in bindings:
+                binding.assert_access(scope, checked_at)
+        except ValueError:
+            raise unavailable() from None
         return checked_at
 
     @staticmethod

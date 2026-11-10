@@ -110,7 +110,14 @@ def test_binding_cannot_be_broadened_or_detached_from_source(attack):
 
 
 async def admitted(
-    pool, *, lifetime=None, publish=False, proposals=False, external_model_use=False, claim_job=True
+    pool,
+    *,
+    lifetime=None,
+    publish=False,
+    proposals=False,
+    external_model_use=False,
+    claim_job=True,
+    binding_count=1,
 ):
     from a2_api.adapters.product_scenarios import propose
 
@@ -124,7 +131,22 @@ async def admitted(
         external_model_use=external_model_use,
     )
     await PrivateSourceRepository(pool).register(binding.source, binding.grant)
-    context = frozen(context, binding)
+    bindings = [binding]
+    if binding_count == 2:
+        other = permission(context, now)
+        source = other.source.model_copy(
+            update={"episode_id": "rasp:" + "c" * 64, "manifest_sha256": "c" * 64}
+        )
+        grant = other.grant.model_copy(
+            update={"grant_id": "TEST_ONLY-grant-2", "episode_id": source.episode_id}
+        )
+        other = PrivateSourceBinding(source=source, grant=grant, grant_hash=grant.content_hash)
+        await PrivateSourceRepository(pool).register(other.source, other.grant)
+        bindings.append(other)
+    context = V2JobContext.model_validate(
+        context.model_dump(mode="json")
+        | {"private_source_bindings": [row.model_dump(mode="json") for row in bindings]}
+    )
     repository = JobRepository(pool)
     await repository.enqueue(
         "analysis",
@@ -465,3 +487,77 @@ async def test_source_expiry_terminates_spawned_worker_before_publication(
     with pytest.raises(ProcessLookupError):
         os.kill(int(pid_file.read_text()), 0)
     assert await pool.fetchval("SELECT count(*) FROM runs") == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("mutation", ["keep", "revoke", "expire"])
+async def test_two_bindings_cannot_keep_first_permission_valid_from_an_earlier_query(
+    database, mutation
+):
+    pool, _, _ = database
+    repository, claim, baseline, binding, _ = await admitted(
+        pool,
+        publish=True,
+        binding_count=2,
+        lifetime=timedelta(seconds=1) if mutation == "expire" else None,
+    )
+    ready, release = asyncio.Event(), asyncio.Event()
+
+    class Connection:
+        def __init__(self, actual):
+            self.actual = actual
+
+        def __getattr__(self, name):
+            return getattr(self.actual, name)
+
+        async def after(self, sql, result):
+            if " AS episode_payload" in sql and not ready.is_set():
+                ready.set()
+                await release.wait()
+            return result
+
+        async def fetchrow(self, sql, *args):
+            return await self.after(sql, await self.actual.fetchrow(sql, *args))
+
+        async def fetch(self, sql, *args):
+            return await self.after(sql, await self.actual.fetch(sql, *args))
+
+    class Acquisition:
+        async def __aenter__(self):
+            self.acquired = pool.acquire()
+            return Connection(await self.acquired.__aenter__())
+
+        async def __aexit__(self, *args):
+            return await self.acquired.__aexit__(*args)
+
+    class PausingPool:
+        def acquire(self):
+            return Acquisition()
+
+    repository.pool = PausingPool()
+    reading = asyncio.create_task(
+        repository.get_run(baseline.analysis_id, claim.context.access_scope)
+    )
+    await asyncio.wait_for(ready.wait(), 3)
+    if mutation == "revoke":
+        await pool.execute(
+            "UPDATE private_source_grants SET revoked_at=clock_timestamp() WHERE grant_id=$1",
+            binding.grant.grant_id,
+        )
+    elif mutation == "expire":
+        await asyncio.sleep(
+            max(
+                0,
+                (
+                    binding.valid_until - await pool.fetchval("SELECT clock_timestamp()")
+                ).total_seconds(),
+            )
+            + 0.02
+        )
+    release.set()
+    if mutation == "keep":
+        assert (await reading).metrics == baseline.metrics
+        return
+    with pytest.raises(DomainError) as denied:
+        await reading
+    assert denied.value.status_code == 410
