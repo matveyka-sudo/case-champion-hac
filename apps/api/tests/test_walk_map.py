@@ -264,3 +264,18 @@ def test_changed_snapshot_population_is_not_silently_projected(configured):
     )
     with pytest.raises(ValueError, match="SOURCE_SCOPE"):
         attach_walk_map(before, changed, calculated, names)
+
+
+def test_duplicate_canonical_destination_references_are_deduplicated(configured):
+    before, snapshot, calculated, names = calculate(configured)
+    raw = snapshot.model_dump(mode="json")
+    for destination in raw["destinations"]:
+        destination["source_refs"] = destination["source_refs"] * 2
+    snapshot = AcceptedData.model_validate(raw)
+    from a2_api.adapters.walk_map import _features
+
+    features = _features(snapshot, before.request, names)
+    assert all(len(feature.source_refs) == len(set(feature.source_refs)) for feature in features)
+    assert len([feature for feature in features if feature.entity_kind == "sample_point"]) == len(
+        snapshot.sample_points
+    )

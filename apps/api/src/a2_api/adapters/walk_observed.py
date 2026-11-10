@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from a2_contracts.common import canonical_hash
 from a2_contracts.v2.base import Category
-from a2_contracts.v2.results import Metric, SubjectRef
+from a2_contracts.v2.results import SubjectRef
 from a2_engine import MetricResult, WalkAnalysisResult, load_urban_config, load_urban_journey_rules
 from a2_engine.urban.walk.observed import ObservedRouteAssessment, assess_observed_walk_route
 from pydantic import TypeAdapter
@@ -35,11 +35,6 @@ def project_observed_walk(out: Projection, calculated: WalkAnalysisResult) -> No
             )
             assessments[assessed.point_id, category].append(assessed)
     journeys = {journey.journey_id: journey for journey in out.journeys}
-    existing_times: dict[tuple[str | None, str | None], Metric] = {
-        (metric.subject.point_id, metric.subject.category): metric
-        for metric in out.metrics
-        if metric.name == "minimum_journey_seconds" and metric.subject.mode == "walk"
-    }
     if not any(metric.metric_id == "urban-h" for metric in out.metrics):
         raise ValueError("OBSERVED_PROJECTION_REQUIRES_CANONICAL_AREA_H")
     for point in inputs.points:
@@ -70,8 +65,7 @@ def project_observed_walk(out: Projection, calculated: WalkAnalysisResult) -> No
             )
             journey_id = None
             if chosen is not None:
-                raw = existing_times.get((point.point_id, category))
-                journey = journeys.get(raw.journey_id) if raw and raw.journey_id else None
+                journey = journeys.get(chosen.request_id + ":" + category)
                 if journey is None or journey.destination_object_id != chosen.destination_id:
                     raise ValueError("OBSERVED_PROJECTION_EXACT_JOURNEY_UNAVAILABLE")
                 journey_id = journey.journey_id

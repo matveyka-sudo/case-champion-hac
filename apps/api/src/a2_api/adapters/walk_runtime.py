@@ -116,6 +116,8 @@ def executor_fingerprint() -> str:
         "a2_api.adapters.walk_graph_source",
         "a2_api.adapters.walk_batches",
         "a2_api.adapters.walk_observed",
+        "a2_api.adapters.walk_map",
+        "a2_api.adapters.product_projection",
         "a2_engine.urban.walk.observed",
         "a2_api.adapters.walk_pilot",
         "a2_engine.urban.walk.inputs",
