@@ -12,7 +12,6 @@ import csv
 import hashlib
 import io
 import json
-import os
 import tempfile
 import zipfile
 from collections import Counter, defaultdict
@@ -30,7 +29,7 @@ from .bundle import BundleData, TimetableRef
 from .contract_v2 import to_accepted_data_v2
 from .gtfs import ROUTE_TYPES, _date, _seconds, service_dates
 from .paths import data_dir
-from .runtime_inputs import _hash, _path
+from .runtime_inputs import _hash, _path, _publish_directory
 from .store import load_bundle
 
 RULES = "bounded-gtfs-inputs-v1"
@@ -180,6 +179,11 @@ def normalize_gtfs(
             for sid in {t["service_id"] for t in trips.values()}
         }
         trips = {tid: t for tid, t in trips.items() if dates[t["service_id"]]}
+        frequency_trips = {row["trip_id"] for row in _records(archive, "frequencies.txt")}
+        if trips.keys() & frequency_trips:
+            # stop_times are offsets for these templates, not dated executions.
+            # exact_times=1 also needs explicit expansion and distinct run IDs.
+            raise ValueError("FREQUENCY_BASED_GTFS_TRIPS_UNSUPPORTED")
         if sum(len(dates[t["service_id"]]) for t in trips.values()) > max_runs:
             raise ValueError("GTFS_RUN_LIMIT_EXCEEDED")
         chains: dict[str, list[dict[str, str]]] = defaultdict(list)
@@ -389,23 +393,18 @@ def publish_normalized_inputs(inputs: NormalizedGtfs, target: Path) -> dict[str,
         },
     }
     payloads["manifest.json"] = (json.dumps(manifest, sort_keys=True, indent=2) + "\n").encode()
-    if target.exists():
-        if any((target / name).read_bytes() != payload for name, payload in payloads.items()):
+
+    def verify_existing(path: Path) -> None:
+        if any((path / name).read_bytes() != payload for name, payload in payloads.items()):
             raise FileExistsError("NORMALIZED_INPUTS_IMMUTABLE")
-        return manifest
+
     target.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".gtfs-inputs-", dir=target.parent) as temporary:
         staging = Path(temporary) / "payload"
         staging.mkdir()
         for name, payload in payloads.items():
             (staging / name).write_bytes(payload)
-        target.mkdir()
-        try:
-            os.rename(staging, target)
-        except BaseException:
-            if target.is_dir() and not any(target.iterdir()):
-                target.rmdir()
-            raise
+        _publish_directory(staging, target, verify_existing)
     return manifest
 
 

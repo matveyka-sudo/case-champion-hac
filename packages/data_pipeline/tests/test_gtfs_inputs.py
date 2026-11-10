@@ -15,7 +15,9 @@ from a2_data_pipeline.gtfs_inputs import _clock, normalize_gtfs, publish_normali
 from synthetic_bundle import EVIDENCE, QA, collections, evidence, manifest
 
 
-def fixture(tmp_path: Path, *, bad_stop: bool = False) -> tuple[BundleData, TimetableRef, Path]:
+def fixture(
+    tmp_path: Path, *, bad_stop: bool = False, frequency: str | None = None
+) -> tuple[BundleData, TimetableRef, Path]:
     tables = {
         "agency.txt": [["agency_id", "agency_timezone"], ["a", "Europe/Moscow"]],
         "routes.txt": [["route_id", "agency_id", "route_type"], ["r", "a", "3"]],
@@ -42,6 +44,11 @@ def fixture(tmp_path: Path, *, bad_stop: bool = False) -> tuple[BundleData, Time
             ["t", "25:05:00", "25:05:00", "s2", "2"],
         ],
     }
+    if frequency is not None:
+        tables["frequencies.txt"] = [
+            ["trip_id", "start_time", "end_time", "headway_secs", "exact_times"],
+            ["t", "06:00:00", "07:00:00", "600", frequency],
+        ]
     if bad_stop:
         tables["trips.txt"].append(["r", "c", "bad"])
         tables["stop_times.txt"].extend(
@@ -172,6 +179,17 @@ def test_unverified_or_unbounded_inputs_are_rejected(tmp_path: Path, case: str) 
 
 def test_gtfs_noon_minus_twelve_elapsed_hours_on_dst_change() -> None:
     assert _clock(date(2026, 10, 25), 0, "Europe/Berlin") == datetime(2026, 10, 24, 23, tzinfo=UTC)
+
+
+@pytest.mark.parametrize("exact_times", ["0", "1", ""])
+def test_frequency_templates_are_never_promoted_to_dated_executions(
+    tmp_path: Path, exact_times: str
+) -> None:
+    bundle, ref, path = fixture(tmp_path, frequency=exact_times)
+    with pytest.raises(ValueError, match="FREQUENCY_BASED_GTFS_TRIPS_UNSUPPORTED"):
+        normalize_gtfs(
+            bundle, ref, path, route_ids=("r",), start=date(2026, 11, 10), end=date(2026, 11, 10)
+        )
 
 
 def test_published_inputs_preserve_typed_events_and_refuse_overwrite(tmp_path: Path) -> None:

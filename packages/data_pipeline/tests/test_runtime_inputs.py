@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import multiprocessing
 from pathlib import Path
 from typing import Any
 
@@ -138,3 +139,90 @@ def test_binding_rows_checked_independently_of_file_hash(tmp_path: Path) -> None
     with pytest.raises(ValueError, match="ROW_COUNT"):
         restore_handoff(handoff, root=root)
     assert not (root / "processed").exists()
+
+
+def _killed_before_directory_rename(root: Path, handoff: Path, ready: Any) -> None:
+    from a2_data_pipeline import runtime_inputs as runtime
+
+    original = runtime.os.rename
+
+    def pause(source: Any, target: Any) -> None:
+        ready.set()  # the kernel lock is held; the complete staging directory exists
+        multiprocessing.Event().wait(30)
+        original(source, target)
+
+    runtime.os.rename = pause
+    runtime.restore_handoff(handoff, root=root)
+
+
+def _concurrent_directory_restore(root: Path, handoff: Path, barrier: Any) -> None:
+    from a2_data_pipeline import runtime_inputs as runtime
+
+    original = runtime._publish_directory
+
+    def synchronize(staging: Any, target: Any, verify: Any) -> None:
+        barrier.wait(timeout=10)  # both processes have complete, verified staging directories
+        original(staging, target, verify)
+
+    runtime._publish_directory = synchronize
+    runtime.restore_handoff(handoff, root=root)
+
+
+def test_sigkill_before_publication_leaves_no_final_reservation_and_retry_succeeds(
+    tmp_path: Path,
+) -> None:
+    root, handoff = inputs(tmp_path)
+    context = multiprocessing.get_context("spawn")
+    ready = context.Event()
+    process = context.Process(target=_killed_before_directory_rename, args=(root, handoff, ready))
+    process.start()
+    try:
+        assert ready.wait(timeout=10)
+        assert not (root / "processed/yandex_rasp/bindings").exists()
+        process.kill()
+        process.join(timeout=5)
+        assert not process.is_alive()
+        assert {r["state"] for r in restore_handoff(handoff, root=root)} == {"verified"}
+    finally:
+        if process.is_alive():
+            process.kill()
+            process.join(timeout=5)
+
+
+def test_restore_recovers_an_empty_legacy_reservation(tmp_path: Path) -> None:
+    root, handoff = inputs(tmp_path)
+    (root / "processed/yandex_rasp/bindings").mkdir(parents=True)
+    assert {r["state"] for r in restore_handoff(handoff, root=root)} == {"verified"}
+
+
+def test_existing_unverified_directory_content_is_never_replaced(tmp_path: Path) -> None:
+    root, handoff = inputs(tmp_path)
+    target = root / "processed/yandex_rasp/bindings"
+    target.mkdir(parents=True)
+    (target / "existing.txt").write_bytes(b"preserve")
+    with pytest.raises(FileNotFoundError):
+        restore_handoff(handoff, root=root)
+    assert (target / "existing.txt").read_bytes() == b"preserve"
+    assert list(target.iterdir()) == [target / "existing.txt"]
+
+
+def test_concurrent_directory_restores_both_reuse_the_same_verified_result(tmp_path: Path) -> None:
+    root, handoff = inputs(tmp_path)
+    context = multiprocessing.get_context("spawn")
+    barrier = context.Barrier(2)
+    processes = [
+        context.Process(target=_concurrent_directory_restore, args=(root, handoff, barrier))
+        for _ in range(2)
+    ]
+    for process in processes:
+        process.start()
+    try:
+        for process in processes:
+            process.join(timeout=15)
+        assert [process.exitcode for process in processes] == [0, 0]
+        assert {r["state"] for r in inspect_artifacts(root)} == {"verified"}
+    finally:
+        for process in processes:
+            if process.is_alive():
+                process.kill()
+                process.join(timeout=5)

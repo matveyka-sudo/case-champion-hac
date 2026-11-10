@@ -8,12 +8,15 @@ of an archive, a terminal or a frequency table does not establish routability.
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
 import os
 import shutil
 import tempfile
 from collections import Counter
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
 from typing import Any, Literal
 
@@ -61,6 +64,46 @@ def _path(root: Path, relative: str) -> Path:
 def _hash(path: Path) -> str:
     with path.open("rb") as stream:
         return hashlib.file_digest(stream, "sha256").hexdigest()
+
+
+def _empty_directory(path: Path) -> bool:
+    return not path.is_symlink() and path.is_dir() and not any(path.iterdir())
+
+
+@contextmanager
+def _publication_lock(target: Path) -> Iterator[None]:
+    """A persistent sibling lock; the kernel releases ownership after SIGKILL.
+
+    The file is deliberately retained: removing it would let another publisher
+    lock a different inode while an earlier waiter still holds the old inode.
+    """
+    target.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = target.with_name(f".{target.name}.publish.lock")
+    descriptor = os.open(lock_path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(descriptor, fcntl.LOCK_UN)
+    finally:
+        os.close(descriptor)
+
+
+def _publish_directory(
+    staging: Path, target: Path, verify_existing: Callable[[Path], object]
+) -> None:
+    """Publish a complete directory under the cooperative publication lock.
+
+    No reservation is created at the final path. Empty directories left by the
+    previous publisher version are recovered; existing content is only verified
+    and reused. All cooperating writers use this same persistent sibling lock.
+    """
+    with _publication_lock(target):
+        if os.path.lexists(target) and not _empty_directory(target):
+            verify_existing(target)
+            return
+        os.rename(staging, target)
 
 
 def artifact_manifest(root: Path | None = None) -> ArtifactManifest:
@@ -139,11 +182,15 @@ def restore_handoff(handoff: Path, *, root: Path | None = None) -> list[dict[str
     for item in manifest.artifacts:
         _verify(item, _path(handoff, item.handoff_path), root)
         target = _path(root, item.target_path)
-        if target.exists():
+        if target.exists() and not (
+            item.kind == "internal_rasp_bindings" and _empty_directory(target)
+        ):
             _verify(item, target, root)
     for item in manifest.artifacts:
         source, target = _path(handoff, item.handoff_path), _path(root, item.target_path)
-        if target.exists():
+        if target.exists() and not (
+            item.kind == "internal_rasp_bindings" and _empty_directory(target)
+        ):
             continue
         target.parent.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(prefix=".artifact-", dir=target.parent) as temporary:
@@ -156,15 +203,12 @@ def restore_handoff(handoff: Path, *, root: Path | None = None) -> list[dict[str
                     shutil.copyfile(source / name, staging / name)
             _verify(item, staging, root)
             if item.kind == "gtfs":
-                os.link(staging, target)  # exclusive, atomic; never replaces an existing file
-            else:
-                target.mkdir()  # exclusive reservation; never overwrites a prior directory
                 try:
-                    os.rename(staging, target)  # atomically replaces our empty reservation
-                except BaseException:
-                    if target.is_dir() and not any(target.iterdir()):
-                        target.rmdir()
-                    raise
+                    os.link(staging, target)  # exclusive, atomic; never replaces an existing file
+                except FileExistsError:
+                    _verify(item, target, root)  # a concurrent identical publisher may have won
+            else:
+                _publish_directory(staging, target, lambda path: _verify(item, path, root))
     return inspect_artifacts(root)
 
 
