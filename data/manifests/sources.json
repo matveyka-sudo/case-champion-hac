@@ -1,6 +1,6 @@
 {
   "registry_version": 1,
-  "updated_at": "2026-11-08",
+  "updated_at": "2026-11-10",
   "entries": [
     {
       "source_id": "tochno_connectivity",
@@ -816,6 +816,28 @@
       "geography": "РФ (заявлено)",
       "license": {"name": null, "url": null, "status": "unknown"},
       "status": "registered"
+    },
+    {
+      "source_id": "klgd_school_sites",
+      "a2_ref": null,
+      "title": "Калининград — адреса корпусов школ из перечня учредителя",
+      "publisher": "Администрация ГО «Город Калининград»",
+      "source_url": "https://www.klgd.ru/activity/education/institutions/schools/index.php?SHOWALL_1=1",
+      "role": "calculation",
+      "analysis_kinds": ["urban_passenger"],
+      "provides": "Проверенные факты о муниципальной организации и точном адресе физического корпуса",
+      "limitations": "Принят только корпус 2 гимназии №40. Перечень не доказывает полноту категории: федеральные/региональные учреждения вне списка, карта и адресные строки расходятся",
+      "access_method": "file",
+      "geography": "Городской округ «Город Калининград»",
+      "license": {
+        "name": "Общедоступная официальная информация ОМСУ: используются только факты (ст. 1259 ГК РФ, 8-ФЗ)",
+        "url": "https://www.klgd.ru/",
+        "status": "permitted",
+        "attribution": "Администрация ГО «Город Калининград», klgd.ru"
+      },
+      "status": "accepted",
+      "datasets": ["klgd_school_sites.20261110"],
+      "notes": "Отдельный source_id сохраняет обе версии источников при экспорте v2 source_versions, который хранит одно значение на source_id"
     }
   ]
 }
