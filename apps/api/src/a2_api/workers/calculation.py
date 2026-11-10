@@ -9,7 +9,7 @@ import os
 import threading
 from multiprocessing.connection import Connection
 from multiprocessing.process import BaseProcess
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from a2_contracts.api import ErrorDetail
 from a2_contracts.results import ProfileResult
@@ -23,12 +23,18 @@ from a2_api.core.errors import DomainError
 from a2_api.core.jobs import CalculationOutput, ClaimedJob, V2JobContext
 from a2_api.db.rows import RunResult
 from a2_api.workers.checkpoint_channel import CHECKPOINT_PREFIX, MAX_RESUME_BYTES, CheckpointChannel
+from a2_api.workers.result_transport import (
+    DEFAULT_RESULT_BYTES,
+    decode_result,
+    encode_result,
+    validate_decoded_limit,
+)
 
 if TYPE_CHECKING:
     from a2_api.db.repositories.checkpoints import CheckpointRepository
 
 logger = logging.getLogger("a2_api.workers.calculation")
-MAX_RESULT_BYTES = 16 * 1024 * 1024
+MAX_RESULT_BYTES = DEFAULT_RESULT_BYTES
 MAX_DEMO_SCENARIO_BYTES = 32 * 1024 * 1024
 _DEMO_LABELS = frozenset({"DEMO_SYNTHETIC_TRANSPORT_MODEL", "NOT_A_REAL_CITY_RANKING"})
 HandlerOutput = RunResult | CalculationOutput
@@ -85,7 +91,13 @@ def _validate_extended_result(claim: ClaimedJob, result: HandlerOutput) -> None:
         raise ValueError("Extended DEMO transport requires its exact labelled scenario result")
 
 
-def _child(send: Connection, handler_path: str, claim_json: str, parent_pid: int) -> None:
+def _child(
+    send: Connection,
+    handler_path: str,
+    claim_json: str,
+    parent_pid: int,
+    decoded_result_bytes: int = DEFAULT_RESULT_BYTES,
+) -> None:
     """Handler path is trusted startup configuration, never a request parameter."""
     stop = threading.Event()
 
@@ -131,8 +143,12 @@ def _child(send: Connection, handler_path: str, claim_json: str, parent_pid: int
             allow_nan=False,
             separators=(",", ":"),
         ).encode()
-        if len(output) > _result_byte_limit(claim):
-            raise ValueError("Calculation output exceeds configured transport limit")
+        wire_limit = _result_byte_limit(claim)
+        output = encode_result(
+            output,
+            decoded_limit=max(validate_decoded_limit(decoded_result_bytes), wire_limit),
+            wire_limit=wire_limit,
+        )
     except DomainError as exc:
         output = json.dumps(
             {
@@ -172,14 +188,25 @@ def _stop(process: BaseProcess) -> None:
     process.close()
 
 
-async def calculate(claim: ClaimedJob, handler: str, timeout_seconds: float) -> HandlerOutput:
-    return await _calculate(claim, handler, timeout_seconds, None)
+async def calculate(
+    claim: ClaimedJob,
+    handler: str,
+    timeout_seconds: float,
+    *,
+    decoded_result_bytes: int = DEFAULT_RESULT_BYTES,
+) -> HandlerOutput:
+    return await _calculate(claim, handler, timeout_seconds, None, decoded_result_bytes)
 
 
 async def calculate_batches(
-    claim: ClaimedJob, handler: str, timeout_seconds: float, checkpoints: "CheckpointRepository"
+    claim: ClaimedJob,
+    handler: str,
+    timeout_seconds: float,
+    checkpoints: "CheckpointRepository",
+    *,
+    decoded_result_bytes: int = DEFAULT_RESULT_BYTES,
 ) -> HandlerOutput:
-    return await _calculate(claim, handler, timeout_seconds, checkpoints)
+    return await _calculate(claim, handler, timeout_seconds, checkpoints, decoded_result_bytes)
 
 
 async def _calculate(
@@ -187,10 +214,12 @@ async def _calculate(
     handler: str,
     timeout_seconds: float,
     checkpoints: "CheckpointRepository | None",
+    decoded_result_bytes: int = DEFAULT_RESULT_BYTES,
 ) -> HandlerOutput:
     loop = asyncio.get_running_loop()
     deadline = loop.time() + timeout_seconds
     result_byte_limit = _result_byte_limit(claim)
+    decoded_byte_limit = max(validate_decoded_limit(decoded_result_bytes), result_byte_limit)
     completed = []
     execution = None
     if checkpoints is not None:
@@ -203,7 +232,9 @@ async def _calculate(
     context = multiprocessing.get_context("spawn")
     receive, send = context.Pipe(duplex=True)
     process = context.Process(
-        target=_child, args=(send, handler, claim.model_dump_json(), os.getpid()), daemon=True
+        target=_child,
+        args=(send, handler, claim.model_dump_json(), os.getpid(), decoded_byte_limit),
+        daemon=True,
     )
     process.start()
     send.close()
@@ -270,7 +301,22 @@ async def _calculate(
                 asyncio.to_thread(receive.send_bytes, acknowledgment),
                 timeout=max(0.001, deadline - loop.time()),
             )
-        output = json.loads(data)
+
+        def decoded_output() -> dict[str, Any]:
+            value = json.loads(
+                decode_result(data, decoded_limit=decoded_byte_limit, wire_limit=result_byte_limit)
+            )
+            if not isinstance(value, dict):
+                raise ValueError("Calculation result envelope must be an object")
+            return value
+
+        try:
+            output = await asyncio.wait_for(
+                asyncio.to_thread(decoded_output),
+                timeout=max(0.001, deadline - loop.time()),
+            )
+        except TimeoutError as exc:
+            raise DomainError(503, "job_timeout", "Calculation exceeded hard timeout") from exc
         if "error" in output:
             error = ErrorDetail.model_validate(output["error"] | {"trace_id": claim.job.trace_id})
             raise DomainError(
@@ -301,7 +347,16 @@ async def _calculate(
             await asyncio.wait_for(
                 checkpoints.finalize(claim), timeout=max(0.001, deadline - loop.time())
             )
-        result = model.model_validate(output["result"])
+        try:
+            result = cast(
+                HandlerOutput,
+                await asyncio.wait_for(
+                    asyncio.to_thread(model.model_validate, output["result"]),
+                    timeout=max(0.001, deadline - loop.time()),
+                ),
+            )
+        except TimeoutError as exc:
+            raise DomainError(503, "job_timeout", "Calculation exceeded hard timeout") from exc
         _validate_extended_result(claim, result)
         return result
     finally:

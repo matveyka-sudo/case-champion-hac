@@ -12,6 +12,7 @@ from a2_api.db.repositories.checkpoints import CheckpointRepository
 from a2_api.db.repositories.jobs import JobRepository
 from a2_api.db.repositories.private_sources import PrivateSourceRepository
 from a2_api.workers.calculation import HandlerOutput, calculate, calculate_batches
+from a2_api.workers.result_transport import DEFAULT_RESULT_BYTES, validate_decoded_limit
 
 logger = logging.getLogger("a2_api.workers.runner")
 
@@ -24,6 +25,7 @@ class Worker:
         handler: str,
         code_version: str,
         timeout_seconds: float = 600,
+        decoded_result_bytes: int = DEFAULT_RESULT_BYTES,
     ) -> None:
         if not 0 < timeout_seconds <= 600:
             raise ValueError("Job hard timeout must be positive and <=600 seconds")
@@ -33,6 +35,7 @@ class Worker:
         self.handler = handler
         self.timeout_seconds = timeout_seconds
         self.code_version = code_version
+        self.decoded_result_bytes = validate_decoded_limit(decoded_result_bytes)
 
     async def run_once(self) -> bool:
         lease_lost = asyncio.Event()
@@ -158,6 +161,14 @@ class Worker:
             and claim.context.batch_execution is not None
         ):
             return await calculate_batches(
-                claim, handler, timeout_seconds, CheckpointRepository(self.repository)
+                claim,
+                handler,
+                timeout_seconds,
+                CheckpointRepository(self.repository),
+                decoded_result_bytes=self.decoded_result_bytes,
+            )
+        if self.decoded_result_bytes != DEFAULT_RESULT_BYTES:
+            return await calculate(
+                claim, handler, timeout_seconds, decoded_result_bytes=self.decoded_result_bytes
             )
         return await calculate(claim, handler, timeout_seconds)

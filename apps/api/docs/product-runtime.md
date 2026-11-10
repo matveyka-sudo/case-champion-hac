@@ -121,10 +121,13 @@ scope and an exceeded approved route-pair budget fail preflight with a typed
 reason. A missing physical point/school connector remains unknown; an accepted
 stop-to-stop timetable route does not establish that connector or a city index.
 
-The spawned worker, 600-second maximum, 16 MiB final result limit, claim/lease
+The spawned worker, 600-second maximum, 16 MiB final result wire limit, claim/lease
 fencing and sole atomic publication transaction remain unchanged. This adapter
 does not implement resumable checkpoints, schedule scenarios or run paid providers.
 The resumable design remains in `phase2-batches.md` pending its separate stage.
+The decoded JSON budget defaults to 16 MiB; reviewed deployments can explicitly
+set `A2_WORKER_RESULT_DECODED_MIB=32` for bounded lossless result frames, as described
+in the API README. This setting is operator configuration, never a request field.
 
 Verification includes TEST_ONLY public-engine numeric controls for all four
 analysis kinds and pipeline utilization, real canonical DTO validation, immutable

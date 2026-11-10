@@ -1,0 +1,14 @@
+{
+  "modules": [
+    "workers/result_transport.py",
+    "workers/calculation.py",
+    "workers/runner.py",
+    "core/config.py"
+  ],
+  "signatures": {
+    "a2_api.workers.calculation:calculate": "(claim: a2_api.core.jobs.ClaimedJob, handler: str, timeout_seconds: float, *, decoded_result_bytes: int = 16777216) -> a2_contracts.results.ProfileResult | a2_contracts.scenarios.Comparison | a2_contracts.v2.results.AnalysisResult | a2_contracts.v2.scenarios.ScenarioResult | a2_api.core.jobs.CalculationOutput",
+    "a2_api.workers.runner:Worker": "(repository: a2_api.db.repositories.jobs.JobRepository, *, handler: str, code_version: str, timeout_seconds: float = 600, decoded_result_bytes: int = 16777216) -> None",
+    "a2_api.workers.runner:Worker.__init__": "(self, repository: a2_api.db.repositories.jobs.JobRepository, *, handler: str, code_version: str, timeout_seconds: float = 600, decoded_result_bytes: int = 16777216) -> None",
+    "a2_api.core.config:RuntimeSettings": "(*, contract_version: Literal['2', 'legacy'] = '2', registry_hook: str | None = None, assistant_hook: str | None = None, secure_cookies: bool = False, database_url: str | None = None, database_schema: Annotated[str, _PydanticGeneralMetadata(pattern='^[a-z][a-z0-9_]{0,62}$')] = 'a2_backend', catalog_path: pathlib.Path | None = None, code_version: str | None = None, preflight_hook: str | None = None, calculation_handler: str | None = None, job_timeout_seconds: Annotated[float, Gt(gt=0), Le(le=600)] = 600, worker_poll_seconds: Annotated[float, Gt(gt=0), Le(le=60)] = 0.5, worker_result_decoded_mib: Annotated[int, Ge(ge=16), Le(le=32)] = 16) -> None"
+  }
+}
