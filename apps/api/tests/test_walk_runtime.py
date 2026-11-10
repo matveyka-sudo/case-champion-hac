@@ -32,8 +32,8 @@ from test_walk_pilot import transport
 
 SNAPSHOTS = (
     "kaliningrad-urban-2026-11-10.2",
-    "moscow-urban-2026-11-10.3",
-    "novorossiysk-urban-2026-11-10.2",
+    "moscow-urban-2026-11-10.4",
+    "novorossiysk-urban-2026-11-10.3",
 )
 
 
@@ -318,6 +318,10 @@ async def test_three_cities_share_dispatch_checkpoint_resume_and_methodology(
     configure(tmp_path, monkeypatch, entries)
     runtime = load_runtime()
     assert len(runtime.walk_bindings) == len(runtime.profiles) == 3
+    for bound in runtime.walk_bindings.values():
+        assert bound.destination_names
+        with pytest.raises(TypeError):
+            bound.destination_names["TEST_ONLY-invented"] = "Invented name"
     identities = set()
     caches = set()
     previous_checkpoint = None
@@ -618,3 +622,57 @@ print(json.dumps({'profiles':len(runtime.profiles),'failures':runtime.profile_fa
     assert measured["peak_rss_bytes"] > 0
     (tmp_path / "startup-profile.json").write_text(json.dumps(measured, indent=2) + "\n")
     print("Measured three-city source verification: " + json.dumps(measured, sort_keys=True))
+
+
+def test_registered_app_and_admitted_preflight_peak_is_measured(tmp_path, monkeypatch):
+    entries = [city_profile(tmp_path, identity) for identity in SNAPSHOTS]
+    configure(tmp_path, monkeypatch, entries)
+    script = """
+import asyncio,json,os,resource,sys,time
+from a2_api.api.bootstrap import build_app
+from a2_api.core.config import RuntimeSettings
+from a2_api.adapters.product_runtime import load_runtime
+from a2_api.adapters.walk_batches import load_approval
+from a2_contracts.v2.requests import UrbanPassengerRequest
+def peak():
+ value=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+ return int(value if sys.platform=='darwin' else value*1024)
+started=time.monotonic()
+app=build_app(RuntimeSettings(_env_file=None,database_url=None,assistant_hook=None,
+ registry_hook='a2_api.adapters.product:registry',preflight_hook='a2_api.adapters.product:preflight',
+ calculation_handler='a2_api.adapters.product:calculate',code_version=os.environ['A2_CODE_VERSION']))
+registered=time.monotonic()-started
+service=app.state.services
+request=service.registry.normalize(UrbanPassengerRequest(schema_version='2',analysis_kind='urban_passenger',
+ city_id='moscow',snapshot_id='moscow-urban-2026-11-10.4',departure_at='2026-11-10T09:00:00Z',
+ passenger_mode='walk',traffic_mode='static',categories=['school'],priorities={'school':'medium'}))
+snapshot=service.registry.resolve_snapshot(request)
+started=time.monotonic()
+plan=asyncio.run(service.preflight(request,snapshot))
+preflight=time.monotonic()-started
+app_peak=peak()
+runtime=load_runtime()
+bound=runtime.walk_bindings['TEST_ONLY-moscow']
+started=time.monotonic()
+load_approval(bound=bound,snapshot=runtime.snapshots[bound.scope.snapshot_id])
+print(json.dumps({'registered_snapshots':len(service.registry.snapshots),'planned_pairs':len(plan.pairs),
+ 'app_registration_seconds':registered,'admitted_preflight_seconds':preflight,
+ 'retained_app_preflight_peak_rss_bytes':app_peak,
+ 'one_moscow_chunk_source_revalidation_seconds':time.monotonic()-started,
+ 'retained_app_runtime_and_revalidation_peak_rss_bytes':peak(),'database_lifespan_started':False,
+ 'provider_calls':0,'native_replays':0}))
+"""
+    process = subprocess.run(
+        [sys.executable, "-c", script],
+        env=os.environ.copy(),
+        cwd=Path(__file__).parents[3],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=90,
+    )
+    measured = json.loads(process.stdout)
+    assert measured["registered_snapshots"] == 3 and measured["planned_pairs"] == 1
+    assert measured["retained_app_preflight_peak_rss_bytes"] > 0
+    (tmp_path / "registered-app-profile.json").write_text(json.dumps(measured, indent=2) + "\n")
+    print("Measured retained application/preflight: " + json.dumps(measured, sort_keys=True))

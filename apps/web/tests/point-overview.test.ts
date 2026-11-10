@@ -29,6 +29,23 @@ describe("calculated point overview", () => {
     result.scores.push({ ...result.scores[0], score_id: "another-category", value: 90, status: "available", subject: { ...result.scores[0].subject, category: "school" } });
     expect(calculatedPoints(result).points).toEqual([]);
   });
+  it("requires the exact requested area total and never relabels the city or another area's score", () => {
+    const result = pointOverviewFixture(1, { 0: 0 });
+    if ("city_id" in result.request) result.request.area_id = "synthetic-area";
+    const city = result.scores.find((score) => score.name === "territory_index")!;
+    city.value = 85; city.status = "available";
+    result.scores.push({ ...city, score_id: "other-area-total", subject: { ...city.subject, territory_id: "other-area" } });
+    expect(calculatedPoints(result).territoryScore).toBeNull();
+    const area: typeof city = { ...city, score_id: "requested-area-total", value: null, status: "unknown",
+      subject: { ...city.subject, territory_id: "synthetic-area" } };
+    result.scores.push(area);
+    expect(calculatedPoints(result).territoryScore).toBe(area);
+    expect(calculatedPoints(result).territoryScore?.value).toBeNull();
+    area.value = 0; area.status = "available";
+    expect(calculatedPoints(result).territoryScore?.value).toBe(0);
+    result.scores.push({ ...area, score_id: "duplicate-area-total" });
+    expect(calculatedPoints(result).territoryScore).toBeNull();
+  });
   it("does not invent an inventory denominator or coordinates from cells alone", () => {
     const result = pointOverviewFixture(2, { 1: .497 });
     result.map_data!.features = result.map_data!.features!.filter((f) => f.entity_kind === "cell");

@@ -52,6 +52,8 @@ import { useAnalysisSession } from "../features/analysis/useAnalysisSession";
 import { scenarioJourneys } from "../api/adapters/scenario";
 import { scopeAllowsArea, scopeContainsTime, urbanScopeAvailability, type UrbanSelection } from "../api/adapters/urbanScopes";
 import { journeyLines, segmentGeometryNotice } from "../api/adapters/journeyGeometry";
+import { urbanReadiness } from "../api/adapters/urbanReadiness";
+import { UrbanReadiness } from "../widgets/UrbanReadiness";
 import { Select } from "../shared/Select";
 import { DatePicker } from "../shared/DatePicker";
 import { Icon, Wordmark } from "../shared/ui";
@@ -494,6 +496,7 @@ export function ApiAtlasPage() {
     categories: Object.keys(draft.cats).flatMap((id) => categoryIds[id as keyof typeof categoryIds] || []),
   };
   const scopeState = urbanScopeAvailability(scopeSelection, publishedScopes);
+  const readiness = caps && draft.kind === "urban_passenger" ? urbanReadiness(draft, catalog, caps, result, dirty) : null;
   const scopeBlocked = scopeState.published && !!scopeState.problem;
   const categoryReason = (category: Schemas["UrbanPassengerRequest"]["categories"][number]) => {
     if (!scopeState.published) return undefined;
@@ -745,6 +748,7 @@ export function ApiAtlasPage() {
               {scopeState.published && (
                 <UrbanScopeHelp key={draft.cityId} state={scopeState} selection={scopeSelection} draft={draft} caps={caps} catalog={catalog} onApply={change} />
               )}
+              {readiness && <UrbanReadiness value={readiness} />}
               {!cargo &&
                 (urban
                   ? field(

@@ -215,5 +215,210 @@ class OperatorGraphBinding(unittest.TestCase):
                 runtime.graph_check(self.graph, self.parent)
 
 
+class DerivedOperatorGraphBinding(OperatorGraphBinding):
+    """TEST_ONLY source lineage and endpoint controls over a reviewed extract."""
+
+    def setUp(self):
+        super().setUp()
+        self.snapshot.update(
+            sample_points=[
+                {
+                    "point_id": "p",
+                    "territory_id": "TEST_ONLY_city",
+                    "access_node_id": "a",
+                    "location": {"lon": 0.0, "lat": 0.0},
+                }
+            ],
+            destinations=[
+                {
+                    "destination_id": "d",
+                    "territory_id": "TEST_ONLY_city",
+                    "access_node_id": "b",
+                    "location": {"lon": 0.5, "lat": 0.5},
+                }
+            ],
+            access_nodes=[
+                {"node_id": "a", "location": {"lon": 0.0, "lat": 0.1}},
+                {"node_id": "b", "location": {"lon": 0.5, "lat": 0.4}},
+            ],
+        )
+        original = self.graph / "source.osm.pbf"
+        original.rename(self.graph / "upstream.osm.pbf")
+        self.source["raw_path"] = "TEST_ONLY_osm/upstream.osm.pbf"
+        self.manifest["upstream_source"] = {
+            "path": "upstream.osm.pbf",
+            "sha256": self.source["checksum"]["value"],
+            "bytes": 16,
+        }
+        derived = self.write("graph/source.osm.pbf", b"TEST_ONLY derived PBF")
+        self.manifest.update(
+            source_sha256=derived["sha256"], source_bytes=21, outside_paths_complete=False
+        )
+        package = self.write(
+            "graph/tool-packages/osmium-tool_1.16.0-1build1_TEST_ONLY.deb", b"TEST_ONLY package"
+        )
+        self.installed = {
+            "schema": "waydex-standard-tool-install/1",
+            "exit_code": 0,
+            "oom_killed": False,
+            "limit_reason": None,
+            "version": "osmium version 1.16.0\n",
+            "image_id": "sha256:" + "d" * 64,
+            "command": ["docker", "run", self.image],
+            "packages": [
+                {"path": Path(package["path"]).name, "sha256": package["sha256"], "bytes": 17}
+            ],
+        }
+        binary = "4740189c5cf26b399f5bc707fdea0df75cd9b7cd60dc3f9918b0a794c8bd3350"
+        self.write("graph/tool-binary-sha256.txt", (binary + "  /usr/bin/osmium\n").encode())
+        way_refs = self.write("graph/way-refs-check.txt", b"Nodes in ways missing: 0\n")
+        restriction_refs = self.write(
+            "graph/restriction-refs-check.txt",
+            b"Nodes in ways missing: 0\nNodes in relations missing: 0\nWays in relations missing: 0\nRelations in relations missing: 0\n",
+        )
+        scope = self.write("graph/restriction-scope.osm.pbf", b"TEST_ONLY restriction subset")
+        bbox = [-1, -1, 1, 1]
+        self.fileinfo = {
+            "header": {"boxes": [bbox]},
+            "data": {"objects_ordered": True},
+            "file": {"size": 21},
+        }
+        info = self.write("graph/extract-fileinfo.json", self.fileinfo)
+        self.endpoint_inventory = {
+            "bbox": bbox,
+            "outside_count": 0,
+            "snapshot_id": "TEST_ONLY_snapshot",
+            "endpoints": [
+                {"kind": "point", "id": "p", "lon": 0.0, "lat": 0.0},
+                {"kind": "destination", "id": "d", "lon": 0.5, "lat": 0.5},
+                {"kind": "access", "id": "a", "lon": 0.0, "lat": 0.1},
+                {"kind": "access", "id": "b", "lon": 0.5, "lat": 0.4},
+            ],
+        }
+        endpoints = self.write("graph/endpoint-inventory.json", self.endpoint_inventory)
+        self.derivation = {
+            "schema": "waydex-source-bound-osm-extract/1",
+            "upstream_source_filename": "upstream.osm.pbf",
+            "upstream_source_sha256": self.source["checksum"]["value"],
+            "upstream_source_bytes": 16,
+            "derived_input_filename": "source.osm.pbf",
+            "derived_input_sha256": derived["sha256"],
+            "derived_input_bytes": 21,
+            "exit_code": 0,
+            "container_exit_code": 0,
+            "oom_killed": False,
+            "limit_reason": None,
+            "way_references_verified": True,
+            "restriction_member_references_verified": True,
+            "outside_paths_complete": False,
+            "minimum_proven": False,
+            "strategy": "smart",
+            "strategy_options": ["types=multipolygon,restriction"],
+            "tool_version": "1.16.0",
+            "tool_binary_sha256": binary,
+            "tool_image_id": self.installed["image_id"],
+            "bbox": bbox,
+            "endpoint_snapshot_id": "TEST_ONLY_snapshot",
+            "endpoint_inventory_sha256": endpoints["sha256"],
+            "way_refs_report_sha256": way_refs["sha256"],
+            "restriction_refs_report_sha256": restriction_refs["sha256"],
+            "restriction_scope_sha256": scope["sha256"],
+            "fileinfo_sha256": info["sha256"],
+        }
+        self.publish()
+
+    def publish(self):
+        if hasattr(self, "derivation"):
+            source = self.write("graph/source-manifest.json", self.source)
+            self.derivation["source_manifest_sha256"] = source["sha256"]
+            self.manifest["derivation"] = self.write("graph/extract-receipt.json", self.derivation)
+            self.manifest["derivation"]["path"] = "extract-receipt.json"
+            self.manifest["tool_installation"] = self.write(
+                "graph/tool-install-receipt.json", self.installed
+            )
+            self.manifest["tool_installation"]["path"] = "tool-install-receipt.json"
+        super().publish()
+
+    def test_swapped_original_and_derived_identity_is_rejected(self):
+        self.manifest["upstream_source"]["sha256"], self.manifest["source_sha256"] = (
+            self.manifest["source_sha256"],
+            self.manifest["upstream_source"]["sha256"],
+        )
+        self.publish()
+        with self.assertRaisesRegex(ValueError, "separate binding"):
+            self.verify()
+
+    def test_missing_derivation_receipt_field_is_rejected(self):
+        del self.derivation["upstream_source_sha256"]
+        self.publish()
+        with self.assertRaises((ValueError, KeyError)):
+            self.verify()
+
+    def test_derived_input_without_derivation_cannot_use_original_branch(self):
+        self.publish()
+        del self.manifest["derivation"]
+        OperatorGraphBinding.publish(self)
+        with self.assertRaisesRegex(ValueError, "explicit derivation"):
+            self.verify()
+
+    def test_wrong_standard_binary_is_rejected(self):
+        self.derivation["tool_binary_sha256"] = "0" * 64
+        self.publish()
+        with self.assertRaisesRegex(ValueError, "tool identity"):
+            self.verify()
+
+    def test_wrong_standard_image_is_rejected(self):
+        self.derivation["tool_image_id"] = "sha256:" + "0" * 64
+        self.publish()
+        with self.assertRaisesRegex(ValueError, "tool identity"):
+            self.verify()
+
+    def test_missing_tool_package_is_rejected(self):
+        (self.graph / "tool-packages/osmium-tool_1.16.0-1build1_TEST_ONLY.deb").unlink()
+        with self.assertRaises(ValueError):
+            self.verify()
+
+    def test_missing_restriction_member_report_is_rejected(self):
+        bad = self.write(
+            "graph/restriction-refs-check.txt",
+            b"Nodes in ways missing: 0\nNodes in relations missing: 0\nWays in relations missing: 1\nRelations in relations missing: 0\n",
+        )
+        self.derivation["restriction_refs_report_sha256"] = bad["sha256"]
+        self.publish()
+        with self.assertRaisesRegex(ValueError, "missing references"):
+            self.verify()
+
+    def test_missing_restriction_binary_is_rejected(self):
+        (self.graph / "restriction-scope.osm.pbf").unlink()
+        with self.assertRaises(ValueError):
+            self.verify()
+
+    def test_outside_current_endpoint_is_rejected(self):
+        self.snapshot["sample_points"][0]["location"]["lon"] = 2
+        self.publish()
+        with self.assertRaisesRegex(ValueError, "outside"):
+            self.verify()
+
+    def test_changed_inside_endpoint_is_rejected(self):
+        self.snapshot["sample_points"][0]["location"]["lon"] = 0.2
+        self.publish()
+        with self.assertRaisesRegex(ValueError, "outside"):
+            self.verify()
+
+    def test_canonical_access_node_cannot_disappear(self):
+        self.snapshot["access_nodes"].pop()
+        self.publish()
+        with self.assertRaisesRegex(ValueError, "access node"):
+            self.verify()
+
+    def test_reviewed_endpoint_context_is_preserved_for_corrected_snapshot(self):
+        self.snapshot["snapshot_id"] = "TEST_ONLY_corrected_snapshot"
+        self.parent["bundle_id"] = self.snapshot["snapshot_id"]
+        self.parent["build"]["snapshot_id"] = self.snapshot["snapshot_id"]
+        self.publish()
+        self.verify()
+        self.assertEqual(self.derivation["endpoint_snapshot_id"], "TEST_ONLY_snapshot")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -5,10 +5,12 @@ from __future__ import annotations
 import hashlib
 import importlib
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Any, Literal
 
 from a2_contracts.common import canonical_hash
 from a2_contracts.v2.base import Category, ContractModel, Identifier
@@ -98,6 +100,9 @@ class BoundWalkBinding:
     runtime: walk_pilot.Runtime
     executor_fingerprint: str
     resolved_pairs: frozenset[tuple[str, str]]
+    destination_names: Mapping[str, str]
+    graph_limitations: tuple[str, ...] = ()
+    derivation_snapshot_id: str | None = None
 
     @property
     def binding_sha256(self) -> str:
@@ -108,6 +113,7 @@ def executor_fingerprint() -> str:
     """Fixed server implementation, never a caller-supplied attestation."""
     modules = (
         "a2_api.adapters.walk_runtime",
+        "a2_api.adapters.walk_graph_source",
         "a2_api.adapters.walk_batches",
         "a2_api.adapters.walk_pilot",
         "a2_engine.urban.walk.inputs",
@@ -139,12 +145,15 @@ def validate_approval_sources(
     *,
     root: Path,
     budget: list[int] | None = None,
+    graph_out: dict[str, Any] | None = None,
 ) -> BundleData:
     """Keep legacy and per-profile approvals on one graph/provenance validator."""
     binding = approval.routing_binding
     _, graph = _read(root, binding.graph_manifest, budget or [MAX_RUNTIME_BYTES], 8 * 1024 * 1024)
     if not isinstance(graph, dict):
         raise ValueError("WALK_GRAPH_MANIFEST_REQUIRED")
+    if graph_out is not None:
+        graph_out.update(graph)
     tiles = graph.get("files", [])
     if (
         not isinstance(tiles, list)
@@ -298,8 +307,9 @@ def load_binding(
         observation_directory(),
         artifact.status_expectation.model_dump(exclude_none=True),
     )
+    graph: dict[str, Any] = {}
     bundle = validate_approval_sources(
-        approval, runtime, root=approval_path.parent, budget=remaining
+        approval, runtime, root=approval_path.parent, budget=remaining, graph_out=graph
     )
     # This public pure projection is the same source rule used by ML2's producer.
     # Request data can neither manufacture connector times nor promote unknowns.
@@ -310,7 +320,6 @@ def load_binding(
     ]
     if (
         len(sources) != 1
-        or sources[0].checksum.value != approval.routing_binding.source_pbf_sha256
         or snapshot.source_versions.get(sources[0].source_id) != sources[0].dataset_id
         or bundle.manifest.graph_version != runtime.build.source_graph_version
         or canonical_hash(
@@ -318,6 +327,23 @@ def load_binding(
         )
         != scope.snapshot_hash
     ):
+        raise ValueError("WALK_GRAPH_OR_CANONICAL_SNAPSHOT_DIFFERS_FROM_IMMUTABLE_SOURCE")
+    from a2_api.adapters.walk_graph_source import MARKERS, verify_derived_graph
+
+    derivation = None
+    if MARKERS & graph.keys():
+        derivation = verify_derived_graph(
+            graph,
+            (approval_path.parent / approval.routing_binding.graph_manifest.path).resolve().parent,
+            snapshot=snapshot,
+            city_id=scope.city_id,
+            source_id=sources[0].source_id,
+            dataset_id=sources[0].dataset_id,
+            original_sha256=sources[0].checksum.value,
+            original_bytes=sources[0].checksum.size_bytes,
+            budget=remaining,
+        )
+    elif sources[0].checksum.value != approval.routing_binding.source_pbf_sha256:
         raise ValueError("WALK_GRAPH_OR_CANONICAL_SNAPSHOT_DIFFERS_FROM_IMMUTABLE_SOURCE")
     from a2_data_pipeline.walk_projection import project_walk_connectors
 
@@ -381,4 +407,15 @@ def load_binding(
         runtime,
         executor_fingerprint(),
         resolved,
+        MappingProxyType(
+            {
+                row.destination_id: row.name
+                for row in bundle.destinations
+                if row.status == "accepted"
+                and row.destination_id in destinations
+                and row.name is not None
+            }
+        ),
+        derivation.limitations if derivation is not None else (),
+        derivation.source_snapshot_id if derivation is not None else None,
     )

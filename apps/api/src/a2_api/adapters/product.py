@@ -60,10 +60,17 @@ from a2_api.core.config import RuntimeSettings
 from a2_api.core.errors import DomainError
 from a2_api.core.jobs import CalculationOutput, ClaimedJob, V2JobContext
 from a2_api.core.registry import ProductRegistry
+from a2_api.core.runtime_admission import run_heavy
 from a2_api.workers.checkpoint_channel import CheckpointChannel
 
 
 async def preflight(request: AnalysisRequest, snapshot: AcceptedData) -> BatchPlan | None:
+    # One reservation covers every validation stage. The owning thread waits for
+    # the inner async adapter and its executor to finish even if HTTP times out.
+    return await run_heavy(lambda: asyncio.run(_preflight(request, snapshot)))
+
+
+async def _preflight(request: AnalysisRequest, snapshot: AcceptedData) -> BatchPlan | None:
     runtime = await asyncio.to_thread(load_runtime)
     if runtime.digest not in (RuntimeSettings().code_version or ""):
         raise DomainError(409, "incompatible_versions", "Product runtime code identity differs")
@@ -418,9 +425,14 @@ def calculate(
         raise unavailable("RUNTIME_TRANSPORT_INPUTS_REQUIRED")
     from a2_api.adapters.product_scenario_runtime import finish_analysis
 
+    result = out.finish()
+    if profile.demo_transport is not None:
+        from a2_api.adapters.demo_map import attach_demo_result
+
+        result = attach_demo_result(result, snapshot)
     return finish_analysis(
         claim,
-        out.finish(),
+        result,
         inputs,
         profile_id=profile.profile_id,
         documents=runtime.scenario_documents.get(profile.profile_id, ()),

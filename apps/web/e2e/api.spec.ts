@@ -1002,3 +1002,57 @@ test("API: disjoint movement segments retain partial-route labels and clear on c
   await expect(page.getByRole("status")).not.toContainText("Калининград");
   expect(mock.posts).toBe(1);
 });
+
+test("API: readiness separates registered inputs from matching point zero and unknown city completeness", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const mock = await mockApi(page, { capabilities: scopedCapabilities(), result: legGeometryFixture(0), emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Калининград");
+  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  const readiness = page.getByLabel("Готовность выбранных условий");
+  await expect(readiness).toContainText("Подходящий набор опубликован");
+  await expect(readiness).toContainText("Параметры запуска зарегистрированы");
+  await expect(readiness).toContainText("Полнота данных о населении не подтверждена");
+  await expect(readiness).toContainText("Полнота каталога не подтверждена");
+  await expect(readiness).toContainText("Для этих условий результат ещё не получен");
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(readiness).toContainText("Рассчитано точек: 1 из 3");
+  await expect(readiness.locator('b[data-score-band="low"]')).toHaveText("0 из 100");
+  await expect(readiness.locator('b[data-score-band="unknown"]')).toHaveText("Нет данных");
+  await page.getByRole("slider", { name: "Время отправления, шаг 15 минут" }).fill("35");
+  await expect(page.getByRole("status")).toContainText("прежний результат");
+  await expect(readiness).toContainText("Для этих условий результат ещё не получен");
+  await expect(readiness).not.toContainText("Рассчитано точек");
+  await expect(readiness.locator("b[data-score-band]")).toHaveCount(0);
+  await choose(page, "Город", "Москва");
+  await expect(readiness).toContainText("Готовность · Москва");
+  await expect(readiness).toContainText("Для выбранных условий запуск не зарегистрирован");
+  await expect(readiness).not.toContainText("Рассчитано точек");
+  await expect(readiness.locator("b[data-score-band]")).toHaveCount(0);
+  expect(mock.posts).toBe(1);
+});
+
+test("API: selected area never inherits the city index or its population completeness", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const areaId = "synthetic-area";
+  const c = scopedCapabilities([{ ...airportScope(), whole_city: false, area_ids: [areaId] }]);
+  c.areas = [{ area_id: areaId, city_id: "city-2", name: "Синтетический район" }];
+  const data = legGeometryFixture(0);
+  const city = data.scores.find((score) => score.name === "territory_index")!;
+  city.value = 85; city.status = "available";
+  city.aggregation_basis = { unit: "persons", population: 1000, coverage: 1, year: 2025, population_method: "synthetic", unknown_positive_weight: false };
+  const mock = await mockApi(page, { capabilities: c, result: data, emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Калининград");
+  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  const readiness = page.getByLabel("Готовность выбранных условий");
+  await expect(readiness).toContainText("Индекс выбранной территории");
+  await expect(readiness).toContainText("Не предоставлен.");
+  await expect(readiness).not.toContainText("85 из 100");
+  await expect(readiness).toContainText("Полнота данных о населении не подтверждена");
+  await expect(page.getByLabel("Обзор рассчитанных точек")).toContainText("Индекс выбранной территории: не предоставлен");
+  expect(mock.request).toMatchObject({ city_id: "city-2", area_id: areaId });
+});

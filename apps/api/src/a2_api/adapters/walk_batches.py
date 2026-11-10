@@ -360,4 +360,10 @@ def calculate(
     output.limitations.update({"APPROVED_PARTIAL_OD_EXECUTION", "MINIMUM_TIME_UNPROVEN"})
     if bound is not None:
         output.limitations.add("WALK_CONNECTOR_TIME_0_1_SECOND_PRECISION")
-    return output.finish()
+        output.limitations.update(bound.graph_limitations)
+    result = output.finish()
+    if bound is not None:
+        from a2_api.adapters.walk_map import attach_walk_map
+
+        return attach_walk_map(result, snapshot, calculated, bound.destination_names)
+    return result
