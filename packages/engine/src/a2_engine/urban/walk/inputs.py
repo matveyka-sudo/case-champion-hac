@@ -225,6 +225,8 @@ def prepare_walk_inputs(
             limitations.add("CONNECTOR_UNCONFIRMED")
         if ep.correlation is None:
             limitations.add("VALHALLA_CORRELATION_UNAVAILABLE")
+        elif ep.correlation.coordinate_precision_digits is not None:
+            limitations.add("ENDPOINT_SERIALIZATION_PRECISION_6")
     if excluded != 0:
         limitations.add("INCOMPLETE_POPULATION_COVERAGE")
     return WalkInputs(
