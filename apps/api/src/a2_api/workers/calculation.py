@@ -38,6 +38,68 @@ MAX_RESULT_BYTES = DEFAULT_RESULT_BYTES
 MAX_DEMO_SCENARIO_BYTES = 32 * 1024 * 1024
 _DEMO_LABELS = frozenset({"DEMO_SYNTHETIC_TRANSPORT_MODEL", "NOT_A_REAL_CITY_RANKING"})
 HandlerOutput = RunResult | CalculationOutput
+_DIAGNOSTIC_MAX_FRAMES = 12
+_DIAGNOSTIC_MAX_LABEL = 64
+_DIAGNOSTIC_MAX_ID = 128
+
+
+def _diagnostic_label(value: str) -> str:
+    return "".join(
+        character if character.isascii() and (character.isalnum() or character in "._<>-") else "_"
+        for character in value[:_DIAGNOSTIC_MAX_LABEL]
+    )
+
+
+def _diagnostic_identifier(value: str) -> str | None:
+    if len(value) > _DIAGNOSTIC_MAX_ID or any(
+        not character.isascii() or not (character.isalnum() or character in "._:-")
+        for character in value
+    ):
+        return None
+    return value
+
+
+def _log_unexpected_child_failure(
+    error: BaseException, job_id: str | None, trace_id: str | None
+) -> None:
+    """Record code locations only; never format the exception or inspect locals."""
+    frames: list[dict[str, str | int]] = []
+    current = error.__traceback__
+    while current is not None and len(frames) < _DIAGNOSTIC_MAX_FRAMES:
+        code = current.tb_frame.f_code
+        basename = code.co_filename.replace("\\", "/").rsplit("/", 1)[-1]
+        frames.append(
+            {
+                "filename": _diagnostic_label(basename),
+                "function": _diagnostic_label(code.co_name),
+                "line": current.tb_lineno,
+            }
+        )
+        current = current.tb_next
+    # A structured formatter may serialize LogRecord.pathname too. Supply a
+    # basename explicitly instead of letting logging capture the host path.
+    record = logger.makeRecord(
+        logger.name,
+        logging.ERROR,
+        "calculation.py",
+        0,
+        json.dumps(
+            {
+                "event": "calculation_child_unexpected_exception",
+                "job_id": job_id,
+                "trace_id": trace_id,
+                "exception_class": _diagnostic_label(type(error).__name__),
+                "stack": frames,
+                "stack_truncated": current is not None,
+            },
+            separators=(",", ":"),
+        ),
+        (),
+        None,
+        func="_log_unexpected_child_failure",
+    )
+    if logger.isEnabledFor(logging.ERROR):
+        logger.handle(record)
 
 
 def _result_byte_limit(claim: ClaimedJob) -> int:
@@ -108,10 +170,15 @@ def _child(
             stop.wait(0.05)
 
     threading.Thread(target=watch_parent, daemon=True).start()
+    diagnostic_job_id = None
+    diagnostic_trace_id = None
     try:
         module, name = handler_path.split(":", 1)
         handler = getattr(importlib.import_module(module), name)
         claim = ClaimedJob.model_validate_json(claim_json)
+        # Freeze identities before the trusted handler can mutate its model.
+        diagnostic_job_id = _diagnostic_identifier(claim.job.job_id)
+        diagnostic_trace_id = _diagnostic_identifier(claim.job.trace_id)
         execution = (
             claim.context.batch_execution if isinstance(claim.context, V2JobContext) else None
         )
@@ -160,7 +227,12 @@ def _child(
                 }
             }
         ).encode()
-    except BaseException:
+    except BaseException as exc:
+        try:
+            _log_unexpected_child_failure(exc, diagnostic_job_id, diagnostic_trace_id)
+        except BaseException:
+            # Diagnostics must never replace the established public error path.
+            pass
         output = json.dumps(
             {
                 "error": {
