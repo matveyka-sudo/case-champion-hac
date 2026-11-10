@@ -43,6 +43,14 @@ export const selectionText: Record<Selection["entity_kind"], string> = {
   access_node: "Узел доступа",
   territory: "Территория",
 };
+export function measureLabel(name: string) {
+  const labels: Record<string, string> = {
+    urban_h_seconds: "Опорное время города",
+    best_observed_journey_seconds: "Время найденного пути",
+    urban_accessibility_index: "Индекс доступности",
+  };
+  return labels[name] || name;
+}
 export function reasonText(code: string | null | undefined) {
   if (!code) return "";
   return (
@@ -66,6 +74,25 @@ export function reasonText(code: string | null | undefined) {
           "Дата находится за пределами подтверждённого покрытия.",
         PROVIDER_COVERAGE_NOT_COMPLETE:
           "Данные источника покрывают сообщение не полностью.",
+        ENDPOINT_SERIALIZATION_PRECISION_6:
+          "Координаты привязки округлены источником.",
+        GEOMETRY_UNAVAILABLE: "Полная геометрия пути недоступна.",
+        INCOMPLETE_COVERAGE:
+          "Область расчёта покрыта данными не полностью.",
+        INCOMPLETE_POPULATION_COVERAGE:
+          "Часть населения не охвачена расчётом; полный рейтинг города недоступен.",
+        MINIMUM_TIME_UNPROVEN:
+          "Показано найденное время пути. Минимальное время не подтверждено.",
+        NETWORK_ONLY_GEOMETRY:
+          "Геометрия источника описывает только уличный участок без подходов.",
+        PARTIAL_SCHOOL_CATALOG:
+          "Полнота каталога школ не подтверждена.",
+        PILOT_SAMPLE_ONLY:
+          "Пилотный расчёт охватывает одну точку и часть школ, а не весь город.",
+        TAU_UNAVAILABLE:
+          "Порог времени для подсчёта доступных объектов не рассчитан.",
+        WALKING_SPEED_MODEL_5_KMH:
+          "Для пешего маршрута принята модельная скорость 5 км/ч.",
       } as Record<string, string>
     )[code.toUpperCase()] || ""
   );

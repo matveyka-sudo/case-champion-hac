@@ -24,6 +24,7 @@ import {
 } from "../api/adapters/request";
 import {
   measureText,
+  measureLabel,
   safeSource,
   subjectMatches,
   timestampText,
@@ -109,7 +110,7 @@ function Measure({ value }: { value: Schemas["Metric"] | Schemas["Score"] }) {
   return (
     <div className="api-measure">
       <span>
-        {value.name}
+        {measureLabel(value.name)}
         {context && <small>{context}</small>}
       </span>
       <b>{measureText(value)}</b>
@@ -1254,7 +1255,7 @@ export function ApiAtlasPage() {
                                 });
                             }}
                           >
-                            {value.name}: {measureText(value)}
+                            {measureLabel(value.name)}: {measureText(value)}
                           </button>
                         ) : (
                           <span key={id}>Метрика недоступна</span>
