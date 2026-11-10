@@ -176,6 +176,9 @@ class PopulationCell(Model):
     status: Literal["sampled", "excluded"]
     exclusion_reason: Literal["NO_BUILDING", "WATER_ONLY"] | None
     evidence_ids: Annotated[list[Identifier], Field(min_length=1)]
+    # raster coverage, kept apart from the sum; absent in bundles before 2026-11-10
+    raster_pixels_total: Annotated[int, Field(ge=0)] | None = None
+    raster_pixels_valid: Annotated[int, Field(ge=0)] | None = None
 
     @model_validator(mode="after")
     def consistent(self) -> Self:
@@ -191,6 +194,13 @@ class PopulationCell(Model):
             raise ValueError("population requires method and year")
         if (self.status == "excluded") != (self.exclusion_reason is not None):
             raise ValueError("exclusion_reason is set exactly for excluded cells")
+        if (self.raster_pixels_total is None) != (self.raster_pixels_valid is None):
+            raise ValueError("raster coverage needs both pixel counts")
+        if self.raster_pixels_total is not None and self.raster_pixels_valid is not None:
+            if self.raster_pixels_valid > self.raster_pixels_total:
+                raise ValueError("more valid pixels than pixels")
+            if self.raster_pixels_valid < self.raster_pixels_total and self.population is not None:
+                raise ValueError("a cell with nodata pixels has unknown population, not a sum")
         if self.population is not None:
             shared = sum(share.population or 0.0 for share in self.district_shares)
             if shared > self.population * (1 + 1e-9) + 1e-9:

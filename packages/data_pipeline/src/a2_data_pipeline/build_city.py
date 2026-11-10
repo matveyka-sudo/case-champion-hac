@@ -695,6 +695,7 @@ def _cells(
     for (ix, iy), cell in sorted(grid.cells.items()):
         cell_id = f"{config.grid_id}-e{ix}-n{iy}"
         clipped_union += cell.clipped.area
+        covered = cell.pixels_valid == cell.pixels_total  # nodata or off-raster: unknown
         shares = []
         for ref, geom in district_geoms.items():
             overlap = shapely.intersection(cell.clipped, geom).area
@@ -705,11 +706,15 @@ def _cells(
                     territory_id=district_ids[ref],
                     area_share=min(1.0, overlap / cell.clipped.area),
                     # floor keeps the sum of shares <= the rounded cell total
-                    population=math.floor(cell.district_population.get(ref, 0.0) * 1000) / 1000,
+                    population=math.floor(cell.district_population.get(ref, 0.0) * 1000) / 1000
+                    if covered
+                    else None,
                 )
             )
-        population = round(cell.population, 3)
-        status: Literal["estimated", "zero"] = "zero" if population == 0 else "estimated"
+        population = round(cell.population, 3) if covered else None
+        status: Literal["estimated", "zero", "unknown"] = (
+            "unknown" if population is None else "zero" if population == 0 else "estimated"
+        )
         cells.append(
             PopulationCell(
                 cell_id=cell_id,
@@ -725,6 +730,8 @@ def _cells(
                 population_method=POPULATION_METHOD,
                 population_year=POPULATION_YEAR,
                 district_shares=shares,
+                raster_pixels_total=cell.pixels_total,
+                raster_pixels_valid=cell.pixels_valid,
                 status="excluded" if cell.point is None else "sampled",
                 exclusion_reason=cell.exclusion_reason,  # type: ignore[arg-type]
                 evidence_ids=[ghsl_evidence],
@@ -757,7 +764,8 @@ def _cells(
         points_ok,
         "Every sample point lies in its own clipped cell",
     )
-    total_cells = sum(cell.population or 0.0 for cell in cells)
+    # conservation over the valid pixels of every cell, unknown cells included
+    total_cells = sum(cell.population for cell in grid.cells.values())
     _check(
         checks,
         "population_conserved",
@@ -765,6 +773,16 @@ def _cells(
         "All GHSL population inside the city is assigned to exactly one cell",
         cells_sum=round(total_cells, 1),
         raster_sum=round(grid.population_total, 1),
+    )
+    unknown_cells = [c.cell_id for c in cells if c.population_status == "unknown"]
+    _check(
+        checks,
+        "population_raster_covered",
+        not unknown_cells and grid.pixels_invalid == 0,
+        "Every pixel inside the city is valid GHSL data; a cell with nodata is unknown, not zero",
+        severity="warn",
+        invalid_pixels=grid.pixels_invalid,
+        unknown_cells=unknown_cells,
     )
     district_sum = sum(share.population or 0 for cell in cells for share in cell.district_shares)
     _check(

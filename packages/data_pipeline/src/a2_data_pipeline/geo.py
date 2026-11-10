@@ -114,8 +114,10 @@ class CellResult:
     iy: int
     clipped: shapely.Geometry  # UTM
     land_area_km2: float
-    population: float = 0.0
+    population: float = 0.0  # sum of the valid pixels only
     district_population: dict[str, float] = field(default_factory=dict)
+    pixels_total: int = 0  # pixel centroids in the cell, valid or not
+    pixels_valid: int = 0
     point: shapely.Geometry | None = None  # UTM
     placement: str | None = None
     building_ref: str | None = None
@@ -133,6 +135,7 @@ class GridResult:
     population_total: float
     population_outside_cells: float
     pixel_count: int
+    pixels_invalid: int = 0  # nodata or outside the raster: their cells are unknown
 
 
 def build_grid(layers: OsmLayers, utm_epsg: int, spacing_m: int = 1000) -> GridResult:
@@ -215,7 +218,13 @@ def _place_point(
 
 
 def assign_population(grid: GridResult, ghsl_zip: Path, tif_name: str) -> None:
-    """Assign GHSL pixels to cells by pixel centroid; no redistribution of excluded cells."""
+    """Assign GHSL pixels to cells by pixel centroid; no redistribution of excluded cells.
+
+    Coverage is kept apart from the sum: every pixel centroid inside the city counts
+    for its cell (``pixels_total``), only valid pixels add population
+    (``pixels_valid``). A pixel that is nodata or lies outside the raster (the window
+    is read boundless, filled with nodata) makes its cell unknown, not zero.
+    """
 
     to_ghsl = Transformer.from_crs(grid.crs, GHSL_CRS, always_xy=True)
     minx, miny, maxx, maxy = grid.city_utm.bounds
@@ -233,9 +242,10 @@ def assign_population(grid: GridResult, ghsl_zip: Path, tif_name: str) -> None:
             .round_offsets()
             .round_lengths()
         )
-        values = src.read(1, window=window).astype("float64")
-        transform = src.window_transform(window)
         nodata = src.nodata
+        fill = nodata if nodata is not None else GHSL_NODATA_BELOW - 1
+        values = src.read(1, window=window, boundless=True, fill_value=fill).astype("float64")
+        transform = src.window_transform(window)
     rows, cols = np.nonzero(np.ones_like(values, dtype=bool))
     px = transform.c + (cols + 0.5) * transform.a
     py = transform.f + (rows + 0.5) * transform.e
@@ -244,12 +254,12 @@ def assign_population(grid: GridResult, ghsl_zip: Path, tif_name: str) -> None:
     if nodata is not None:
         valid &= vals != nodata
     to_utm = Transformer.from_crs(GHSL_CRS, grid.crs, always_xy=True)
-    ux, uy = to_utm.transform(px[valid], py[valid])
-    vals = vals[valid]
+    ux, uy = to_utm.transform(px, py)
     inside = shapely.contains_xy(grid.city_utm, ux, uy)
-    ux, uy, vals = ux[inside], uy[inside], vals[inside]
-    grid.pixel_count = int(inside.sum())
-    grid.population_total = float(vals.sum())
+    ux, uy, vals, valid = ux[inside], uy[inside], vals[inside], valid[inside]
+    grid.pixel_count = int(valid.sum())
+    grid.pixels_invalid = int((~valid).sum())
+    grid.population_total = float(vals[valid].sum())
     ix = np.floor(ux / grid.spacing_m).astype(int)
     iy = np.floor(uy / grid.spacing_m).astype(int)
     district_masks = [
@@ -259,8 +269,13 @@ def assign_population(grid: GridResult, ghsl_zip: Path, tif_name: str) -> None:
     for k in range(len(vals)):
         cell = grid.cells.get((int(ix[k]), int(iy[k])))
         if cell is None:
-            outside += float(vals[k])
+            if valid[k]:
+                outside += float(vals[k])
             continue
+        cell.pixels_total += 1
+        if not valid[k]:
+            continue
+        cell.pixels_valid += 1
         cell.population += float(vals[k])
         for ref, mask in district_masks:
             if mask[k]:
