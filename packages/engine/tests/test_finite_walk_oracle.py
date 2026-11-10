@@ -221,6 +221,119 @@ def test_same_physical_endpoint_admits_zero_stay_path(graph: FiniteWalkGraph) ->
     assert result.initial_connector_id is None and result.final_connector_id is None
 
 
+@pytest.fixture
+def physical_stay_graph() -> FiniteWalkGraph:
+    return FiniteWalkGraph(
+        "synthetic-stay-scope",
+        "physical:same",
+        "physical:same",
+        ("s",),
+        (),
+        (FiniteWalkConnector("initial", "physical:same", "s", Fraction(1)),),
+        (FiniteWalkConnector("final", "physical:same", "s", Fraction(1)),),
+    )
+
+
+def test_solver_zero_stay_round_trips_through_candidate_verifier(
+    physical_stay_graph: FiniteWalkGraph,
+) -> None:
+    retained = inventory(physical_stay_graph)
+    result = solve_finite_walk_graph(physical_stay_graph, retained)
+    assert result.total_seconds == 0
+    assert (
+        verify_finite_walk_candidate(
+            physical_stay_graph,
+            retained,
+            initial_connector_id=result.initial_connector_id,
+            arc_ids=result.arc_ids,
+            final_connector_id=result.final_connector_id,
+            reported_total_seconds=Fraction(0),
+        )
+        == result
+    )
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"initial_connector_id": "initial"},
+        {"final_connector_id": "final"},
+        {"reported_total_seconds": Fraction(1)},
+        {"arc_ids": ("zero-loop",)},
+    ],
+)
+def test_empty_stay_rejects_one_connector_nonzero_time_or_network_arcs(
+    physical_stay_graph: FiniteWalkGraph, changes: dict[str, Any]
+) -> None:
+    graph = replace(
+        physical_stay_graph,
+        arcs=(FiniteWalkArc("zero-loop", "s", "s", Fraction(0), Fraction(0)),),
+    )
+    arguments: dict[str, Any] = {
+        "initial_connector_id": None,
+        "arc_ids": (),
+        "final_connector_id": None,
+        "reported_total_seconds": Fraction(0),
+    }
+    with pytest.raises(ValueError, match="INVALID_EMPTY_PHYSICAL_STAY_CANDIDATE"):
+        verify_finite_walk_candidate(graph, inventory(graph), **(arguments | changes))
+
+
+@pytest.mark.parametrize("initial_id,final_id", [(None, None), (None, "final"), ("initial", None)])
+def test_distinct_physical_endpoints_never_accept_omitted_connectors(
+    physical_stay_graph: FiniteWalkGraph, initial_id: str | None, final_id: str | None
+) -> None:
+    graph = replace(
+        physical_stay_graph,
+        destination_physical_node_id="physical:different",
+        final_connectors=(
+            replace(physical_stay_graph.final_connectors[0], physical_node_id="physical:different"),
+        ),
+    )
+    with pytest.raises(ValueError, match="INVALID_EMPTY_PHYSICAL_STAY_CANDIDATE"):
+        verify_finite_walk_candidate(
+            graph,
+            inventory(graph),
+            initial_connector_id=initial_id,
+            arc_ids=(),
+            final_connector_id=final_id,
+            reported_total_seconds=Fraction(0),
+        )
+
+
+@pytest.mark.parametrize(
+    "reported,reason",
+    [(Fraction(0), "ELAPSED_TOTAL_MISMATCH"), (Fraction(2), "IS_NOT_ELAPSED_MINIMUM")],
+)
+def test_positive_connector_detour_is_not_the_zero_physical_stay(
+    physical_stay_graph: FiniteWalkGraph, reported: Fraction, reason: str
+) -> None:
+    with pytest.raises(ValueError, match=reason):
+        verify_finite_walk_candidate(
+            physical_stay_graph,
+            inventory(physical_stay_graph),
+            initial_connector_id="initial",
+            arc_ids=(),
+            final_connector_id="final",
+            reported_total_seconds=reported,
+        )
+
+
+def test_empty_physical_stay_still_requires_verified_input_inventory(
+    physical_stay_graph: FiniteWalkGraph,
+) -> None:
+    retained = inventory(physical_stay_graph)
+    with pytest.raises(ValueError, match="INVENTORY_MISMATCH"):
+        verify_finite_walk_candidate(
+            replace(physical_stay_graph, final_connectors=()),
+            retained,
+            initial_connector_id=None,
+            arc_ids=(),
+            final_connector_id=None,
+            reported_total_seconds=Fraction(0),
+        )
+
+
 def test_zero_cycles_and_distinct_tied_paths(graph: FiniteWalkGraph) -> None:
     graph = replace(
         graph,

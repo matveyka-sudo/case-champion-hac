@@ -240,19 +240,31 @@ def verify_finite_walk_candidate(
     graph: FiniteWalkGraph,
     inventory: FiniteWalkInventory,
     *,
-    initial_connector_id: str,
+    initial_connector_id: str | None,
     arc_ids: tuple[str, ...],
-    final_connector_id: str,
+    final_connector_id: str | None,
     reported_total_seconds: Fraction,
 ) -> FiniteWalkMinimum:
     """Check a candidate's directed continuity, physical total, and elapsed optimum.
 
     A tied path is valid. Generalized cost, distance, connector omissions, and
     connector double counting cannot substitute for this exact elapsed total.
+    The empty physical stay uses both connector IDs None, no arcs, and zero
+    reported seconds, and is valid only for identical physical endpoint IDs.
     The returned reference result is still conditional on the supplied inventory.
     """
     _seconds(reported_total_seconds)
     result = solve_finite_walk_graph(graph, inventory)
+    if initial_connector_id is None or final_connector_id is None:
+        if (
+            initial_connector_id is None
+            and final_connector_id is None
+            and graph.origin_physical_node_id == graph.destination_physical_node_id
+            and not arc_ids
+            and reported_total_seconds == 0
+        ):
+            return result
+        raise ValueError("INVALID_EMPTY_PHYSICAL_STAY_CANDIDATE")
     initials = {c.connector_id: c for c in graph.initial_connectors}
     finals = {c.connector_id: c for c in graph.final_connectors}
     arcs = {a.arc_id: a for a in graph.arcs}
