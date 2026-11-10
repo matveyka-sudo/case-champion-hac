@@ -5,6 +5,7 @@ import math
 from dataclasses import replace
 from decimal import localcontext
 from pathlib import Path
+from typing import Any
 
 import pytest
 from a2_engine import normalize_walk_response
@@ -33,7 +34,9 @@ from test_walk_integration import encode_shape
         (5e-324, 0.000001, True),
     ],
 )
-def test_raw_decimal_boundary_never_quantizes_away_an_excess(actual, expected, matches):
+def test_raw_decimal_boundary_never_quantizes_away_an_excess(
+    actual: float, expected: float, matches: bool
+) -> None:
     assert polyline6_coordinate_matches(actual, expected) is matches
     # Correctness is independent of unrelated users of the Decimal context.
     with localcontext() as context:
@@ -42,13 +45,13 @@ def test_raw_decimal_boundary_never_quantizes_away_an_excess(actual, expected, m
 
 
 @pytest.mark.parametrize("bad", [math.nan, math.inf, -math.inf, True, "55.817587"])
-def test_nonfinite_or_nonnumeric_endpoint_is_rejected(bad):
+def test_nonfinite_or_nonnumeric_endpoint_is_rejected(bad: Any) -> None:
     for actual, expected in ((bad, 55.817586), (55.817586, bad)):
         with pytest.raises(ValueError, match="MUST_BE_FINITE"):
             polyline6_coordinate_matches(actual, expected)
 
 
-def actual_boundary():
+def actual_boundary() -> tuple[WalkRouteRequest, WalkResponseEnvelope]:
     fixture = json.loads(
         (Path(__file__).parent / "fixtures/actual_moscow_polyline6_boundary.json").read_text()
     )
@@ -58,21 +61,24 @@ def actual_boundary():
     )
 
 
-def test_actual_saved_moscow_response_keeps_route_geometry_and_no_minimum_claim():
+def test_actual_saved_moscow_response_keeps_route_geometry_and_no_minimum_claim() -> None:
     request, envelope = actual_boundary()
     normalized = normalize_walk_response(request, envelope)
     assert normalized.state == "reachable"
+    assert normalized.network_geometry is not None
     assert normalized.network_geometry.coordinates[0] == (37.73133, 55.817587)
     assert request.origin.correlated_location.lat == 55.817586
     assert normalized.minimum_proven is False
     assert normalized.reason_code == "MINIMUM_TIME_UNPROVEN"
 
 
-def test_actual_response_two_microdegree_shift_still_fails():
+def test_actual_response_two_microdegree_shift_still_fails() -> None:
     request, envelope = actual_boundary()
     valid = normalize_walk_response(request, envelope)
+    assert valid.network_geometry is not None
     coordinates = list(valid.network_geometry.coordinates)
     coordinates[0] = (coordinates[0][0], 55.817588)
+    assert envelope.response_json is not None
     body = json.loads(envelope.response_json)
     body["trip"]["legs"][0]["shape"] = encode_shape(coordinates)
     invalid = replace(envelope, response_json=json.dumps(body))
