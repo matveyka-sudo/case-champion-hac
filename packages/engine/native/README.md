@@ -110,3 +110,70 @@ ball nodes, 1927 states and 5640 complete turn pairs. Native actor extraction
 additive optimum by `37/2097152` seconds; that clock is outside this exact-sum claim.
 The complete physical alternative weights/coverage remain unbound, so physical
 minimum and category index remain unavailable.
+
+## Geometry for an already certified path
+
+`export_certified_geometry.cc` reads the exact directed traversal sequence from
+the preserved certificate. It never invokes a router, Loki search or HTTP. Build
+against the same pinned builder/library with `-ffp-contract=off`; this preserves
+the operation-by-operation binary64 projection replay in the Python checker.
+The existing proof binary and receipts must remain unchanged.
+
+`urban.walk.geometry.make_certified_geometry_plan` cross-binds the original native
+receipt, candidate file, query, complete source binding and selected endpoint
+bits. `load_certified_walk_geometry` checks an attested native export against that
+plan, the complete verified graph and the certified candidate. Every row carries
+its ordinal, directed edge ID, traversal fraction, source node IDs, OSM way ID,
+actual `DirectedEdge.forward()` flag, raw shape bits and raw node coordinate bits.
+The flag read by the pinned native exporter is the direction authority.
+
+The installed `encoded.h` defaults to `ENCODE_PRECISION=1e6` and
+`DECODE_PRECISION=1e-6`; `Shape7Decoder` is the codec name, not a promise of seven
+coordinate decimals. `NodeInfo::latlng` reconstructs a separate seventh digit.
+Both representations are preserved. The node-lattice check is a necessary sanity
+check only: a decimal half-microdegree can have either adjacent sixth-digit
+representation because original and reconstructed doubles differ. For example,
+the actual airport node longitude `20.5290215` has shape longitude
+`20.529021` even though re-encoding the reconstructed double chooses
+`20.529021999999998`. This check never moves a vertex and is not a standalone
+direction or connectivity proof. The compiler manifest preserves the exact
+headers and their hashes; their source equations are in `encoded.h:8-20,36-39,
+197-198` and `nodeinfo.h:69-72`.
+
+First/last clipping uses the recorded Loki projection bits and the actual stored
+shape segment. It does not multiply the percentage by shape length: Loki 3.5.1's
+percentage uses the integer edge length. Native `projector_t` scans the raw storage
+order with strict `<` comparison. The checker repeats that arithmetic using the
+attested native libm operands, including first-segment tie resolution at
+self-crossings. Shapes are reversed only by the directed edge flag. The network
+LineString is available only when all adjacent directed shape endpoints are
+bit-equal; otherwise components remain separate and the exact gap positions are
+reported. No gap receives a fabricated connecting line.
+
+Full model geometry additionally requires the previously reviewed physical
+receipt. It uses only the selected alternatives' existing physical-to-canonical
+and canonical-to-native straight-link geometries, reversing both destination
+links, and requires exact joins. These links retain their canonical-access model
+limitation. Geometry does not establish a new minimum, entrance roster, category
+coverage, or index. The ordinary airport actor path has 92 edges and cannot be
+used for the certified 97-edge path.
+
+```sh
+PYTHONPATH=packages/engine/src python packages/engine/examples/export_certified_walk_geometry.py \
+  --model-dir /path/to/certified-walk-model-v1 \
+  --graph-dir /path/to/clean-graph \
+  --assets-dir /path/to/isolated-geometry-build \
+  --output-dir /path/to/isolated-geometry-build \
+  --run-id unique-reviewed-run \
+  --model-receipt /path/to/airport-physical-final-20261110-v4/receipt.json \
+  --model-receipt-sha256 e9bbfca53148acbb6997bbefe39bcc045a080086874fb1766e84c65d79040373
+```
+
+The executor verifies all original certificate files and the graph before and
+after the read, disallows alternative GraphReader sources, and creates an
+exclusive run directory. Native binary/source, exact headers, checker, plan and
+original receipt copies are retained with hashes; failed partial runs remain
+preserved. The supplement receipt binds the current proof-binding (including
+target snapshot compatibility), original native/model/physical receipts, all
+source tile hashes and exact sequence. Source authority is established by the
+reviewed native execution and deployment registry, not self-selected hashes.
