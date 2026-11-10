@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef } from "react";
 import type { Selection } from "../api/types";
 import type { CalculatedPointOverview } from "../api/adapters/pointOverview";
 import { measureText, scoreBand } from "../api/adapters/result";
@@ -9,7 +9,7 @@ export function CalculatedPoints({ overview, selection, areaSelected, onSelect }
   areaSelected: boolean;
   onSelect: (selection: Selection) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const details = useRef<HTMLDetailsElement>(null);
   const { territoryScore } = overview;
   const count = `${overview.points.length}${overview.denominator === null ? "" : ` из ${overview.denominator}`}`;
   return (
@@ -18,12 +18,12 @@ export function CalculatedPoints({ overview, selection, areaSelected, onSelect }
         {areaSelected ? "Индекс выбранной территории" : "Индекс города"}: {territoryScore ? measureText(territoryScore) : "не предоставлен"}
         {territoryScore?.completeness === "partial" && " · частичная оценка"}
       </p>
-      <details open={open} onToggle={(event) => setOpen(event.currentTarget.open)}>
+      <details ref={details}>
         <summary>Рассчитанные точки ({count})</summary>
         <p className="fhint">Общие численные индексы отдельных точек не заменяют индекс города. Неизвестные показатели остаются в общем результате.</p>
         {overview.denominator === null && <p className="fhint">{overview.inventoryCount === null
           ? "Общее число точек для этого списка не предоставлено."
-          : "Часть рассчитанных точек отсутствует в переданной карте; соотношение не определено."}</p>}
+          : "Переданная карта содержит не все точки из результата. Соотношение не определено."}</p>}
         {overview.points.length ? (
           <ul>
             {overview.points.map((point) => (
@@ -34,8 +34,8 @@ export function CalculatedPoints({ overview, selection, areaSelected, onSelect }
                   aria-pressed={selection?.entity_kind === "sample_point" && selection.entity_id === point.pointId}
                   aria-controls="apiResultCard"
                   onClick={() => {
+                    if (details.current) details.current.open = false;
                     onSelect({ entity_kind: "sample_point", entity_id: point.pointId });
-                    setOpen(false);
                   }}
                 >
                   <span>{point.name}{point.score.completeness === "partial" && <small>Частичная оценка</small>}</span>

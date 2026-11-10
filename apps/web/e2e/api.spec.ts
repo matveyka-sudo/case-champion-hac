@@ -829,6 +829,7 @@ for (const mobile of [false, true]) test(`API: calculated point overview reveals
   else await point.click();
   await expect(card.locator("h3")).toHaveText("Точка · 54.71500, 20.51500");
   await expect(card.locator("h3")).toBeFocused();
+  await expect(overview.locator("details")).toHaveJSProperty("open", false);
   await expect(card.locator(".api-measure")).toHaveCount(3);
   await expect(card).toContainText("Индекс точки");
   await expect(card).toContainText("229,6 мин");
@@ -841,5 +842,28 @@ for (const mobile of [false, true]) test(`API: calculated point overview reveals
   await page.getByRole("button", { name: "Все показатели", exact: true }).click();
   await expect(card.locator(".api-measure")).toHaveCount(650);
   await expect(card.locator("h3")).toHaveText("Калининград");
+  await expect(overview.locator("details")).toHaveJSProperty("open", false);
+  expect(mock.posts).toBe(1);
+});
+
+test("API: partial point inventory never presents the one known point as complete coverage", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const data = pointOverviewFixture();
+  data.map_data!.features = data.map_data!.features!.filter((f) => f.entity_kind === "sample_point" && f.entity_id === "synthetic-point-215");
+  const mock = await mockApi(page, { result: data, emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Калининград");
+  await choose(page, "Передвижение", "Пешком");
+  for (const name of ["Взрослые поликлиники", "Школы", "ТЦ"]) await page.getByRole("checkbox", { name, exact: true }).uncheck();
+  await page.getByRole("checkbox", { name: "Аэропорты", exact: true }).check();
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  const overview = page.getByLabel("Обзор рассчитанных точек");
+  await expect(overview.locator("summary")).toHaveText("Рассчитанные точки (1)");
+  await overview.locator("summary").click();
+  await expect(overview).toContainText("Переданная карта содержит не все точки из результата. Соотношение не определено.");
+  await expect(overview).not.toContainText("1 из 1");
+  await expect(overview).toContainText("Индекс города: Нет данных");
+  await expect(overview.getByRole("button", { name: /Точка · 54.71500, 20.51500/ })).toContainText("0,5 из 100");
   expect(mock.posts).toBe(1);
 });

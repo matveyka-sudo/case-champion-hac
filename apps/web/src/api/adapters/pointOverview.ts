@@ -30,7 +30,7 @@ export function calculatedPoints(result: AnalysisResult, scores = result.scores)
     return [{ pointId, score, feature: inventory.get(pointId) }];
   }).map((point, i) => ({ ...point, name: pointDisplayName(point.pointId, point.feature, i + 1) }));
   const inventoryCount = inventory.size || null;
-  const denominator = inventoryCount !== null && points.every((p) => inventory.has(p.pointId)) ? inventoryCount : null;
+  const denominator = inventoryCount !== null && [...totals.keys()].every((id) => inventory.has(id)) ? inventoryCount : null;
   const cityId = "city_id" in result.request ? result.request.city_id : null;
   const territory = scores.filter((score) => score.subject.kind === "territory" && score.subject.category == null &&
     (!cityId || score.subject.territory_id === cityId));
