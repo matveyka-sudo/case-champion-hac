@@ -1,5 +1,66 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Latest continuation — 18:28 MSK (supersedes all older sections)
+
+Goal remains ACTIVE. Root candidate HEAD before this note is
+`8fc49fe5607f3077c22771c8a9debb50ee4f6e02`. User asked which problems remain;
+answered honestly: city completeness, numerical UI E2E, map selection, missing
+certified route geometry, non-walk transport inputs and scenario integration.
+
+New integrated/independently checked deliveries:
+- Batch b069beb+09108af+2151884: reviewer accepted all three expiry/cache/provider
+  budget fixes and final SQL-clock race. Root63 PG/checkpoint/HTTP/module tests PASS
+  in42.48s. No real production batches activated.
+- ML1 63992f2: explicit .3→.5 canonical point model projection. Reviewer16 controls
+  and actual date/category cases PASS. Root combined scenario/projection114PASS.
+- BACKEND e4d83a2 certified_walk_model: full native+turn+physical recomputation,
+  scoped category/point0.4971801994143471, citynull,215otherpointsunknown, no route
+  geometry/journeys. Root actual adapter5testsPASS11.86s; independent final review
+  still RUNNING. Product hooks released to SCENARIOS after this commit.
+- External actual runtime: `/Users/kirito/waydex-full-runtime/certified-walk-model-v1`;
+  product manifest SHA753efeeeff293196e56208faa8d082c401922167924ff505a51fb768220aa546;
+  proof-binding SHAd52715d0617d53895db04f22695c055667c6c1a3abd250c13c0f5eb200cd0cd2.
+  Relative native/physical/metadata refs preserved; five settings in runtime-settings.json.
+- FRONTEND through aebe756: root83unit/build and20browser tests PASS40.9s. Final
+  screenshot visually inspected with accessible color legend. Canonical urban
+  scores MUST keep calculation_kind=None (aggregate kind forbidden by contract).
+  Map now chooses unique category-free same-subject total, preserving null total
+  over a known category; point scores cannot color the whole territory. Actual
+  e4 production-shaped category+point0.497/unit map case covered. Live5191 remains old.
+- DEVOPS8c8cee5: restored proof/graph allowlist bundle, certified overlay, checker;
+  root19infra tests PASS. Agent preparing clean archived8fc49fe build for isolated
+ 5192/waydex-full-index-1110; wait final reviewer/root approval before first job.
+  Existing5190/5191 preserved. Record actual worker cgroup memory.peak/OOM; approved
+  bounded2GiB override if needed. Root host proof replay previously peaked831799296B.
+- ML2 6418fb3+b31dc90: non-walk blocker matrix integrated. Real3730 Moscow runs
+  source-matched, but no endpoint chains.341 real cargo source-only features and
+  four pipeline locations do not establish transport coverage. No invented vehicle
+  or active non-walk profile; parameterized external builder requires reviewed facts.
+
+SCENARIOS through340ad27 integrated for testing, NOT ACCEPTED. Root114 combined
+focused controls PASS; owner broad1003 passed with two stale migration expectations
+subsequently fixed by ec5fcc0. Reviewer found a new P1: remove point after-journeys,
+change its raw time metric subject.kind to territory (or unit away from seconds),
+mark raw deltas unknown, and full point scores could survive without chain proof.
+Owner is fixing immutable task classification/scope/dependency checks with exact
+pure and PG regressions, separate from uncommitted runtime hook work. This blocks
+scenario acceptance, not numerical profile (no scenario documents enabled there).
+Next runtime integration: Profile.scenarios bounded16 FileRefs, normalized request
+and input hashes, source-valid templates, worker-only proposals; read-only bounded
+baseline repository load, close before engine. Shared product/runtime/bootstrap
+edits must stay with one owner after BACKEND handoff.
+
+Agents: BACKEND completed e4 assembly; FRONTEND completed aebe; ML2 completed b31;
+DEVOPS preparing archive/build; SCENARIOS fixing P1 then runtime module; reviewer
+reviewing e4+8c. ML1 errored403 during remote compaction AFTER clean639 commit and
+successful handoff; work preserved, no need restart/recreate engine implementation.
+
+Pending root tests at checkpoint: engine pytest session67177 and ML2 pytest92674.
+Contracts+assistant517PASS0.65s. An attempted combined engine+ML2 pytest collection
+hit duplicate test_freight module names; rerun separately as CI does, not a code bug.
+Final full API/PG/static/CI, real5192 UI→PG numerical result, scenario runtime/E2E,
+clean restore and Draft PR remain open. No dev merge or paid/Rasp calls.
+
 ## Latest checkpoint — index display and source proof (17:55 MSK)
 
 This section supersedes the older checkpoint below. Full objective remains ACTIVE;
