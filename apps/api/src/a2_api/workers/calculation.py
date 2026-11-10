@@ -14,8 +14,9 @@ from typing import TYPE_CHECKING
 from a2_contracts.api import ErrorDetail
 from a2_contracts.results import ProfileResult
 from a2_contracts.scenarios import Comparison
+from a2_contracts.v2.requests import UrbanPassengerRequest
 from a2_contracts.v2.results import AnalysisResult
-from a2_contracts.v2.scenarios import ScenarioResult
+from a2_contracts.v2.scenarios import ScenarioResult, ScenarioRunRequest
 
 from a2_api.core.batches import MAX_CHECKPOINT_BYTES, BatchCheckpoint
 from a2_api.core.errors import DomainError
@@ -28,7 +29,60 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("a2_api.workers.calculation")
 MAX_RESULT_BYTES = 16 * 1024 * 1024
+MAX_DEMO_SCENARIO_BYTES = 32 * 1024 * 1024
+_DEMO_LABELS = frozenset({"DEMO_SYNTHETIC_TRANSPORT_MODEL", "NOT_A_REAL_CITY_RANKING"})
 HandlerOutput = RunResult | CalculationOutput
+
+
+def _result_byte_limit(claim: ClaimedJob) -> int:
+    """Only a server-frozen, admitted DEMO scenario receives the larger IPC bound."""
+    context = claim.context
+    if (
+        os.environ.get("A2_DEMO_TRANSPORT_ENABLED", "").strip().lower() != "true"
+        or claim.kind != "scenario"
+        or not isinstance(context, V2JobContext)
+        or not context.snapshot_id.startswith("demo-moscow-")
+        or not isinstance(context.normalized_request, UrbanPassengerRequest)
+        or context.normalized_request.city_id != "moscow"
+        or not isinstance(claim.request, ScenarioRunRequest)
+    ):
+        return MAX_RESULT_BYTES
+    proposal, scope = context.scenario_proposal, context.scenario_endpoint_scope
+    if (
+        proposal is None
+        or scope is None
+        or scope.snapshot_id != context.snapshot_id
+        or scope.snapshot_hash != context.snapshot_hash
+        or scope.city_id != "moscow"
+        or not scope.point_origins
+        or not scope.destination_nodes
+        or not _DEMO_LABELS <= set(proposal.assumptions)
+        or not _DEMO_LABELS <= set(proposal.limitations)
+        or proposal.versions != context.versions
+        or proposal.baseline_analysis_id != context.analysis_id
+        or claim.request.scenario_id != proposal.scenario_id
+        or claim.request.baseline_analysis_id != context.analysis_id
+    ):
+        return MAX_RESULT_BYTES
+    return MAX_DEMO_SCENARIO_BYTES
+
+
+def _validate_extended_result(claim: ClaimedJob, result: HandlerOutput) -> None:
+    if _result_byte_limit(claim) == MAX_RESULT_BYTES:
+        return
+    assert isinstance(claim.context, V2JobContext)
+    proposal = claim.context.scenario_proposal
+    assert proposal is not None
+    if (
+        not isinstance(result, ScenarioResult)
+        or result.versions != claim.context.versions
+        or result.scenario_id != proposal.scenario_id
+        or result.baseline_analysis_id != claim.context.analysis_id
+        or result.baseline_result_hash != proposal.baseline_result_hash
+        or not _DEMO_LABELS <= set(result.assumptions)
+        or not _DEMO_LABELS <= set(result.limitations)
+    ):
+        raise ValueError("Extended DEMO transport requires its exact labelled scenario result")
 
 
 def _child(send: Connection, handler_path: str, claim_json: str, parent_pid: int) -> None:
@@ -58,6 +112,7 @@ def _child(send: Connection, handler_path: str, claim_json: str, parent_pid: int
             result, (ProfileResult, Comparison, AnalysisResult, ScenarioResult, CalculationOutput)
         ):
             raise TypeError("Handler must return a canonical run result")
+        _validate_extended_result(claim, result)
         output = json.dumps(
             {
                 "result_kind": (
@@ -76,7 +131,7 @@ def _child(send: Connection, handler_path: str, claim_json: str, parent_pid: int
             allow_nan=False,
             separators=(",", ":"),
         ).encode()
-        if len(output) > MAX_RESULT_BYTES:
+        if len(output) > _result_byte_limit(claim):
             raise ValueError("Calculation output exceeds configured transport limit")
     except DomainError as exc:
         output = json.dumps(
@@ -135,6 +190,7 @@ async def _calculate(
 ) -> HandlerOutput:
     loop = asyncio.get_running_loop()
     deadline = loop.time() + timeout_seconds
+    result_byte_limit = _result_byte_limit(claim)
     completed = []
     execution = None
     if checkpoints is not None:
@@ -179,7 +235,7 @@ async def _calculate(
                 await asyncio.sleep(0.02)
             try:
                 data = await asyncio.wait_for(
-                    asyncio.to_thread(receive.recv_bytes, MAX_RESULT_BYTES),
+                    asyncio.to_thread(receive.recv_bytes, result_byte_limit),
                     timeout=max(0.001, deadline - loop.time()),
                 )
             except TimeoutError as exc:
@@ -245,7 +301,9 @@ async def _calculate(
             await asyncio.wait_for(
                 checkpoints.finalize(claim), timeout=max(0.001, deadline - loop.time())
             )
-        return model.model_validate(output["result"])
+        result = model.model_validate(output["result"])
+        _validate_extended_result(claim, result)
+        return result
     finally:
         await asyncio.shield(asyncio.to_thread(_stop, process))
         receive.close()
