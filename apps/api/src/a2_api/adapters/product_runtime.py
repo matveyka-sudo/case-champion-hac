@@ -35,6 +35,7 @@ from a2_api.adapters.product_inputs import (
     PipelineInputs,
     UrbanCargoInputs,
     UrbanInputs,
+    candidate_is_static,
 )
 from a2_api.core.errors import DomainError
 from a2_api.core.registry import ProductRegistry
@@ -243,6 +244,8 @@ def validate_inputs(
                 raise ValueError("RUNTIME_POINT_SEMANTICS_DIFFER_FROM_ACCEPTED_SNAPSHOT")
         for destination in inputs.destinations:
             original_destination = destinations[destination.destination_id]
+            if destination.eligible is not True:
+                raise ValueError("ACCEPTED_DESTINATION_ELIGIBILITY_CANNOT_BE_OVERRIDDEN")
             if (
                 destination.object_identity,
                 destination.categories,
@@ -323,6 +326,8 @@ def validate_inputs(
             not profile.static_observations or profile.traffic_modes != ["static"]
         ):
             raise ValueError("STATIC_OBSERVATION_VALIDITY_PROOF_REQUIRED")
+        if any(not candidate_is_static(candidate) for candidate in inputs.candidates):
+            raise ValueError("SCHEDULED_CANDIDATES_REQUIRE_DATED_TIMETABLE_RECOMPUTATION")
         if "public_transport" in profile.passenger_modes and inputs.timetable is None:
             raise ValueError("DATED_TIMETABLE_REQUIRED_FOR_PUBLIC_TRANSPORT")
     elif isinstance(inputs, IntercityInputs):
@@ -342,13 +347,62 @@ def validate_inputs(
             inputs.coverage.direction != profile.direction
         ):
             raise ValueError("RUNTIME_CARGO_PROFILE_OR_DIRECTION_MISMATCH")
-        accepted_ids = {site.site_id for site in snapshot.freight_sites}
+        accepted_ids = {
+            site.site_id for site in snapshot.freight_sites if site.territory_id == profile.city_id
+        }
         if not set(inputs.coverage.expected_site_ids) <= accepted_ids:
             raise ValueError("RUNTIME_CARGO_SITE_OUTSIDE_SNAPSHOT")
-        nodes = {node.freight_node_id: node for node in snapshot.freight_nodes}
+        if inputs.coverage.roster_complete and (
+            set(inputs.coverage.expected_site_ids) != accepted_ids
+            or {site.site_id for site in inputs.sites} != accepted_ids
+        ):
+            raise ValueError("OMITTED_ACCEPTED_SITE_CANNOT_CLAIM_COMPLETE_ROSTER")
+        if {site.site_id for site in inputs.sites} - set(inputs.coverage.expected_site_ids):
+            raise ValueError("RUNTIME_CARGO_SITE_OUTSIDE_DECLARED_ROSTER")
+        territory = next(t for t in snapshot.territories if t.territory_id == profile.city_id)
+        if inputs.area_km2 != territory.area_km2:
+            raise ValueError("RUNTIME_CARGO_ADMINISTRATIVE_AREA_MISMATCH")
+        nodes = {
+            node.freight_node_id: node
+            for node in snapshot.freight_nodes
+            if node.territory_id == profile.city_id
+        }
         for node in inputs.nodes:
             if node.node_id not in nodes or node.canonical_kind != nodes[node.node_id].kind:
                 raise ValueError("RUNTIME_FREIGHT_NODE_SEMANTICS_MISMATCH")
+        canonical_kinds = {
+            "port": "port",
+            "rail_freight_station": "rail_terminal",
+            "terminal": "logistics_terminal",
+            "logistics_center": "logistics_terminal",
+        }
+        for kind in inputs.coverage.complete_node_types:
+            expected_nodes = {
+                node.freight_node_id
+                for node in nodes.values()
+                if node.kind == canonical_kinds.get(kind)
+            }
+            supplied_nodes = {node.node_id for node in inputs.nodes if node.analysis_type == kind}
+            if supplied_nodes != expected_nodes:
+                raise ValueError("OMITTED_ACCEPTED_NODE_CANNOT_CLAIM_COMPLETE_NODE_TYPE")
+        zone = ZoneInfo(snapshot.timezone)
+        first_day = profile.valid_from.astimezone(zone).date()
+        last_day = (profile.valid_to - timedelta(microseconds=1)).astimezone(zone).date()
+        if inputs.coverage.roster_complete or inputs.coverage.complete_node_types:
+            full_sources = [
+                scope
+                for scope in snapshot.coverage_by_mode_date_category
+                if profile.city_id in scope.territory_ids
+                and "road" in scope.modes
+                and not scope.categories
+                and scope.completeness == "full"
+                and scope.valid_period.start is not None
+                and scope.valid_period.end is not None
+                and scope.valid_period.start <= first_day <= last_day <= scope.valid_period.end
+                and set(scope.source_refs) <= set(inputs.coverage.evidence_refs)
+            ]
+            if not full_sources:
+                raise ValueError("PARTIAL_CARGO_SOURCE_CANNOT_CLAIM_COMPLETE_INVENTORY")
         if any(route.requested_at != inputs.routes[0].requested_at for route in inputs.routes):
             raise ValueError("MIXED_STATIC_ROUTE_OBSERVATIONS")
     elif isinstance(inputs, (DeliveryInputs, PipelineInputs)):
