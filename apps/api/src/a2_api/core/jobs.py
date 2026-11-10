@@ -7,9 +7,12 @@ from a2_contracts.common import ContractModel, Identifier, ProfileId, Version, c
 from a2_contracts.scenarios import ScenarioRequest
 from a2_contracts.v2.base import Timestamp, VersionRefs
 from a2_contracts.v2.requests import AnalysisRequest as V2AnalysisRequest
+from a2_contracts.v2.requests import UrbanPassengerRequest
 from a2_contracts.v2.results import AnalysisResult
 from a2_contracts.v2.scenarios import ScenarioProposal, ScenarioRunRequest
 from pydantic import Field, model_validator
+
+from a2_api.core.scenario_scope import ScenarioEndpointScope
 
 JobKind = Literal["analysis", "scenario"]
 JobRequest = AnalysisRequest | ScenarioRequest | V2AnalysisRequest | ScenarioRunRequest
@@ -37,6 +40,9 @@ class V2JobContext(ContractModel):
     access_scope: Identifier
     scenario_proposal: ScenarioProposal | None = None
     cache_valid_until: Timestamp | None = None
+    scenario_endpoint_scope: ScenarioEndpointScope | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     @property
     def bundle_id(self) -> str:
@@ -61,6 +67,15 @@ class V2JobContext(ContractModel):
             or self.scenario_proposal.versions != self.versions
         ):
             raise ValueError("Scenario proposal must bind the baseline identity and versions")
+        endpoint_scope = self.scenario_endpoint_scope
+        if endpoint_scope is not None and (
+            self.scenario_proposal is None
+            or not isinstance(request, UrbanPassengerRequest)
+            or endpoint_scope.snapshot_id != self.snapshot_id
+            or endpoint_scope.snapshot_hash != self.snapshot_hash
+            or endpoint_scope.city_id != request.city_id
+        ):
+            raise ValueError("Scenario endpoint scope differs from its immutable baseline context")
         return self
 
 
