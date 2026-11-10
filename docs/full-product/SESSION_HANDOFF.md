@@ -1,5 +1,134 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Real route and integration checkpoint — 2026-11-11 01:00 MSK
+
+Goal ACTIVE. Root integrated source is cbfa33c6465b3b2fe25598eade3f605c165d3dfc.
+New commits: sparse-scenario boundary c34844b, exact native coordinate serializer
+4675f4c, bounded transit/scenario semantics4dc1ac4, full serializer dependency
+fingerprints6adb4cd, local frontend help/mobile9e61c84, separate chat errors70f38e1.
+
+Root ran the actual first16 Moscow routes on the pinned private Valhalla. The
+files-only checkpoint was retained but canonical validation initially failed for
+2 of16 mixed exact/truncated coordinate echoes. No SQL result was published.
+The correction reproduces the pinned Grisu2 writer, not a geographic tolerance.
+Root independently executed the native binary network-disabled over100708
+binary64 values, all bit-equal, and replayed the original16 raw responses:
+16reachable, all minima unknown. Both failed run and later offline proof remain
+in ignored runtime/root-first16-20261111-v1 and
+ml1-route-echo-boundary-351-20261111-v1. No reroutes were used for this proof.
+
+Root checks after relevant changes:46 API Chromium cases PASS1.2m, frontend
+build PASS;1161 engine tests PASS8.27s before the final serializer delivery;
+102 serializer/evidence tests PASS1.84s after it;118 timetable/scenario/contracts
+and real PostgreSQL publication tests PASS9.33s. Independent reviewer ran104
+offline checks without additional actionable defects in its explicitly scoped
+review. Its review did not cover live routing or the later representation work.
+GitHub54cebe6 exposed two global/chat error collisions;70f38e1 fixes their
+product cause, and the full root46browser suite passes. Fresh CI is required;
+older green jobs do not cover the final local revision.
+
+New immutable three-city runtime3609e204f36efb92d23c56129b6b202b9b378f61522e852070ee1cc427e71e70
+is inactive. It retains original full catalogs: Moscow2361points/2931cells,
+Kaliningrad216/286, Novorossiysk409/968. Approved requests are Moscow1401candidate
+walk pairs to adult clinics, Kaliningrad's unchanged historical Nov10 certified
+airport scope, and one Nov11 Novorossiysk school17 pair. Image
+sha256:a5413e9bc4c6f002d3871b9c94c7dc78dd49e513d55be731487c0d30828f9ff2
+is frozen from cbfa33c. A2_CODE_VERSION includes full git revision, manifest,
+certified-proof and executor identities. Exact-image admission/HTTP latency and
+a new first16 bounded operator run precede promotion. Live5193 remains unchanged
+API f448ed15/shared web d07d584 until those checks pass.
+
+Real full-catalog GTFS scenario now computes5595.143->5235.143 seconds but its
+minimum delta remains unknown. A genuine size blocker was measured:
+175781577-byte analysis envelope and267776847-byte scenario envelope, chiefly
+millions of repeated evidence links. Do not raise the16MiB ceiling or drop points.
+Approved next contract: optional leaf-only content-hashed evidence_groups,
+lossless expanded leaf sets, all original definitions retained, legacy empty
+serialization/hash unchanged. BACKEND owns contracts/API packing; FRONTEND owns
+browser resolution; alice_evidence_groups owns assistant/tools/explanations.
+This work is not merged or activated and does not block the independent walk
+three-city release. Full product/city/national readiness remains unproven.
+
+## Verified integration update — 2026-11-11 00:33 MSK
+
+Goal remains ACTIVE. This section supersedes older deployment/checkpoint claims.
+Root independently integrated compact checkpoints1451ab2, evidence compaction
+ac45d17, private Novorossiysk overlay2cc5951, frontend guidance2f9320d, and
+saved-result explanation modes3480e36/8d2efdf. No merge into dev or active
+runtime promotion occurred for these deliveries.
+
+Root verification: actual PostgreSQL checkpoint/artifact suite39PASS37.94s;
+reference-preserving evidence compaction5PASS1.90s; saved-result freeform bridge
+25PASS0.62s. Earlier root ordinary backend/contracts/assistant suite completed
+1213PASS/276SKIP348.68s before these last deliveries. Skipped PostgreSQL tests
+are not treated as database acceptance. Root API browser migration42PASS and
+frontend176unitPASS are synthetic interface regressions, not real E2E.
+
+Shared prototype web d07d584 is now LIVE at http://127.0.0.1:5193/; image
+sha256:b61fc14eb3f95602b86776f75c03e9edfb6ced34cccd900373ceeeb4d99a0617.
+Root independently opened the landing and atlas in isolated Chromium on5193:
+expected shared presenters, Moscow selection and no desktop horizontal overflow.
+This was GET-only inspection; the earlier real UI admission timeout remains
+unresolved until a new API image passes an actual UI replay. API/worker remain
+f448ed15, old single-pair manifest214b1247; newer code is not live yet.
+
+Candidate Moscow1401v2 manifest ce508816bc544c6aa4be2934ab2c0df02b819de41247faf9db9b561cb792c6da
+is immutable and inactive. It retains2361points/2931cells/284clinics,1401approved
+candidate pairs; max eligibility is not a nearest-time/minimum proof. A fresh
+API image and bounded real16-pair resource check precede wider activation.
+
+Real November11 transit packet633fec6fe315dcc271a96221a1b7895d6063d0e2a2383121561b33269c292a65
+under ignored runtime/ml2/moscow-transit-public-nov11-v2 is independently verified:
+root matched50 selected trip events directly to restored source GTFS ZIP;
+ML1 checked all300 bounded runs and public scenario baseline5595.143s ->5235.143s.
+Whole-run hypothetical advancement360s also causes a verified adverse query
++1320s. No minimum, city index, passenger demand or operational feasibility
+is inferred. Full retained-catalog runtime exposed missing-boundary handling
+in scenario recomputation and excessive nominal pair budgeting: separate ML1
+and backend owners are fixing these with negative regressions before deployment.
+
+Active engineering threads have verified danger-full-access/approval never.
+Settings persisted in ~/.codex-pro/config.toml, prior config backed up; new
+BACKEND/FRONTEND/DEVOPS/Alice threads preserve old worktrees and WIP. A new
+ML1 transit thread has the same actual policy. Full access does not authorize
+merging dev, destructive database changes or removing the500RUB Alice ledger.
+
+## Verified continuation — 2026-11-11
+
+Goal remains ACTIVE; the sections below are historical checkpoints. Local
+integration now includes shared prototype presenters c3bd03f, lazy/paginated
+source disclosure 1487be3, and manual lost-response recovery 3bec3b6. Root
+verified 170 frontend tests plus the source disclosure regression, build and
+lint; the final browser changes are still with FRONTEND. These changes are not
+yet on the live web image. Root inspected the shared desktop view through a
+temporary 5198 proxy to the real 5193 backend, without API interception.
+
+Root's actual Calculate click exposed a real acceptance failure: the initial
+HTTP request exceeded the browser's 15-second deadline; retries returned
+RUNTIME_INPUTS_BUSY while the original preflight continued. PostgreSQL job
+94f0dfa2-8024-4348-be33-b09f4c586f66 subsequently succeeded, with saved analysis
+93bd5f9f-7989-4613-a72d-f3a0362cd180 and real journey 1029.051 seconds. Root
+independently fetched both through the same isolated browser session (HTTP200).
+The UI did not receive/display this result: this is NOT a successful full UI
+E2E. Evidence is in the ignored runtime directory under
+root-shared-ui-real-replay-20261111.json and real-preflight-timeout-20261111-v1/.
+No jobs remained queued/running, no provider/LLM replay was needed for the GETs.
+BACKEND is removing repeated source parsing; FRONTEND now retains the original
+submission key for recoverable manual retries, pending final browser validation.
+
+Root full engine suite found an append-order regression in new export
+analyze_normalized_walk_routes. Fixed in 6cc1f43 without changing historical
+signature fixtures or mathematics: 1145 engine tests PASS, Ruff PASS. Reviewed
+source-inventory helper dc3cec0 preserves original Kaliningrad graph authority;
+47 inventory tests PASS. Compact batch/artifact delivery remains under review.
+
+External ML2 ZIP restoration is implemented (ad67488/f33c4a5): place
+ml2-handoff-2026-11-10.zip in the checkout root, install dependencies, run
+.venv/bin/python scripts/restore-ml2-handoff.py. Archive and extracted data stay
+ignored. The ZIP contains Moscow GTFS and Rasp node bindings, not graph tiles,
+PBFs, database state, API keys or dated intercity schedules. README and the
+existing graph RESTORE.md distinguish these requirements.
+
 ## Latest correction: keep the prototype frontend and implement its backend
 
 Goal remains ACTIVE. The user explicitly requires the existing demo/prototype

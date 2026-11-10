@@ -56,6 +56,49 @@ describe("saved analysis session boundaries", () => {
     expect(result.current.phase).toBe("failed");
     expect(g.analyze.mock.calls[0][1]).not.toBe(g.analyze.mock.calls[1][1]);
   });
+  it("recovers an accepted job after a lost POST response using the same manual-retry key", async () => {
+    const g = gateway();
+    const jobs = new Set<string>();
+    let lost = true;
+    g.analyze.mockImplementation(async (_request, key) => {
+      jobs.add(key);
+      if (lost) { lost = false; throw new ApiError(0, "network_error", "Lost POST response", [], null, true); }
+      return base;
+    });
+    const { result } = renderHook(() => useAnalysisSession(g));
+    await act(() => result.current.run(base.request));
+    expect(result.current.phase).toBe("failed");
+    const samePayload = Object.fromEntries(Object.entries(base.request).reverse()) as typeof base.request;
+    await act(() => result.current.run(samePayload));
+    expect(g.analyze.mock.calls[0][1]).toBe(g.analyze.mock.calls[1][1]);
+    expect(jobs.size).toBe(1);
+    expect(result.current.result).toEqual(base);
+    await act(() => result.current.run(base.request));
+    expect(g.analyze.mock.calls[2][1]).not.toBe(g.analyze.mock.calls[1][1]);
+  });
+  it("never reuses a pending submission key for changed payloads or a user revision", async () => {
+    const g = gateway();
+    g.analyze.mockRejectedValue(new ApiError(503, "RUNTIME_INPUTS_BUSY", "Busy", [], null, true));
+    const { result } = renderHook(() => useAnalysisSession(g));
+    await act(() => result.current.run(base.request));
+    const changedRequest = { ...base.request, departure_at: "2026-11-09T09:00:00+03:00" };
+    await act(() => result.current.run(changedRequest));
+    expect(g.analyze.mock.calls[0][1]).not.toBe(g.analyze.mock.calls[1][1]);
+    act(() => result.current.changed());
+    await act(() => result.current.run(changedRequest));
+    expect(g.analyze.mock.calls[2][1]).not.toBe(g.analyze.mock.calls[1][1]);
+  });
+  it("clears a pending key after a confirmed terminal job failure even if its error is retryable", async () => {
+    const g = gateway();
+    g.analyze.mockImplementation(async (_request, _key, _signal, onJob) => {
+      onJob({ job_id: "terminal-job", request_id: "r", status: "failed", created_at: "2026-11-10T00:00:00Z", started_at: null, finished_at: "2026-11-10T00:00:01Z", analysis_id: null, scenario_run_id: null, error: null });
+      throw new ApiError(503, "worker_unavailable", "Terminal failure", [], null, true);
+    });
+    const { result } = renderHook(() => useAnalysisSession(g));
+    await act(() => result.current.run(base.request));
+    await act(() => result.current.run(base.request));
+    expect(g.analyze.mock.calls[0][1]).not.toBe(g.analyze.mock.calls[1][1]);
+  });
   it("clears a completed city context and prevents old analysis actions after reset", async () => {
     const g = gateway();
     g.explain = vi.fn();
@@ -171,6 +214,46 @@ describe("saved analysis session boundaries", () => {
     expect(result.current.result).toEqual(base);
     expect(result.current.dirty).toBe(false);
     expect(result.current.chatBusy).toBe(false);
+    expect(result.current.messages).toEqual([]);
+  });
+  it("keeps explanation failures separate from analysis failures when asking or clearing the chat", async () => {
+    const g = gateway();
+    const explanationError = new ApiError(503, "assistant_unavailable", "Explanation unavailable");
+    const analysisError = new ApiError(503, "engine_unavailable", "Analysis unavailable");
+    g.explain = vi.fn().mockRejectedValue(explanationError);
+    const { result } = renderHook(() => useAnalysisSession(g));
+    await act(() => result.current.run(base.request));
+    await act(() => result.current.explain("Почему?", null));
+    expect(result.current.explanationError).toBe(explanationError);
+    expect(result.current.error).toBeNull();
+    expect(result.current.phase).toBe("done");
+    expect(result.current.result).toEqual(base);
+    act(() => result.current.clearExplanation());
+    expect(result.current.explanationError).toBeNull();
+    g.analyze.mockRejectedValueOnce(analysisError);
+    await act(() => result.current.run(base.request));
+    expect(result.current.error).toBe(analysisError);
+    expect(result.current.explanationError).toBeNull();
+    await act(() => result.current.explain("Почему?", null));
+    expect(result.current.error).toBe(analysisError);
+    expect(result.current.explanationError).toBe(explanationError);
+    act(() => result.current.clearExplanation());
+    expect(result.current.error).toBe(analysisError);
+    expect(result.current.explanationError).toBeNull();
+    act(() => result.current.reset());
+    expect(result.current.error).toBeNull();
+    expect(result.current.explanationError).toBeNull();
+  });
+  it("reports an explanation hash mismatch only in the chat while retaining the saved analysis", async () => {
+    const g = gateway();
+    g.explain = vi.fn().mockResolvedValue({ analysis_id: base.analysis_id, analysis_result_hash: "another-result" });
+    const { result } = renderHook(() => useAnalysisSession(g));
+    await act(() => result.current.run(base.request));
+    await act(() => result.current.explain("Почему?", null));
+    expect(result.current.explanationError).toMatchObject({ code: "analysis_mismatch" });
+    expect(result.current.error).toBeNull();
+    expect(result.current.phase).toBe("done");
+    expect(result.current.result).toEqual(base);
     expect(result.current.messages).toEqual([]);
   });
   it("formats destination time independently of browser time zone and preserves null connection deltas", () => {

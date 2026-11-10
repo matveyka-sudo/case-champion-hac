@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from a2_assistant import AccessScope
 from a2_assistant.core import template_explanation
 from a2_contracts.v2.assistant import Explanation, ExplanationRequest
+from a2_contracts.v2.evidence import require_result_evidence
 from a2_contracts.v2.results import Metric, Score
 
 from a2_api.core.errors import DomainError
@@ -24,6 +25,7 @@ async def explain(
     body: ExplanationRequest | None = None,
 ) -> Explanation:
     result = await service.analysis(analysis_id, scope)
+    require_result_evidence(result)
     context = body or ExplanationRequest()
     if context.selection is not None:
         kind, identifier = context.selection.entity_kind, context.selection.entity_id

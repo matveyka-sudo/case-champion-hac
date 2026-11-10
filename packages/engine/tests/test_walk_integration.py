@@ -879,9 +879,12 @@ def test_serialization_uncertainty_does_not_accept_real_resnap(canonical: dict[s
         (55.6916808, 55.69168),
         (-37.7196439, -37.719643),
         (-55.6916808, -55.69168),
-        (1.000001, None),
-        (-1.000001, None),
-        (-47.204542, None),
+        (1.000001, 1.000001),
+        (-1.000001, -1.000001),
+        (-47.204542, -47.204541),
+        (146.048254, 146.048253),
+        (37.63487, 37.63487),
+        (55.648559, 55.648559),
         (0.000000125, 0.000000125),
         (-0.000000125, -0.000000125),
         (0.00000001, 0.0),
@@ -892,7 +895,7 @@ def test_serialization_uncertainty_does_not_accept_real_resnap(canonical: dict[s
 def test_pinned_route_writer_decimal_truncation_and_signed_zero(
     source: float, expected: float | None
 ) -> None:
-    # Pinned writer expectations; ambiguous six-place boundary inputs fail closed.
+    # Pinned native writer expectations, including Grisu2 decimal boundaries.
     actual = _valhalla351_route_echo(source)
     assert actual == expected
     if expected == 0:
@@ -964,12 +967,76 @@ def test_gp109_echo_requires_exact_versioned_evidence_and_keeps_minimum_unknown(
     with pytest.raises(ValueError, match="SERIALIZATION_EVIDENCE_REQUIRED"):
         replace(request.destination, coordinate_precision_digits=5)
     boundary = correlation(request.destination, -47.204542, 55.6916808)
-    # Native Grisu2 can serialize this exact six-place source below its decimal
-    # boundary. Do not invent either new mixed-coordinate echo as a fallback.
+    # Native Grisu2 serializes this exact six-place source below its decimal
+    # boundary. Only that exact mixed-coordinate echo is newly supported.
     assert not boundary.matches_response_location(WalkCoordinate(-47.204542, 55.69168))
-    assert not boundary.matches_response_location(WalkCoordinate(-47.204541, 55.69168))
+    assert boundary.matches_response_location(WalkCoordinate(-47.204541, 55.69168))
+    assert not boundary.matches_response_location(WalkCoordinate(-47.20454, 55.69168))
     assert boundary.matches_response_location(boundary.source_location)
     assert boundary.matches_response_location(boundary.correlated_location)
+
+
+@pytest.mark.parametrize(
+    ("source", "native_echo"),
+    [
+        ((37.63487, 55.8346888), (37.63487, 55.834688)),
+        ((37.8295916, 55.648559), (37.829591, 55.648559)),
+        ((-47.204542, 55.6916808), (-47.204541, 55.69168)),
+        ((146.048254, -55.6916808), (146.048253, -55.69168)),
+    ],
+)
+def test_native_boundary_echo_keeps_exact_evidence_and_endpoint_guards(
+    canonical: dict[str, Any],
+    source: tuple[float, float],
+    native_echo: tuple[float, float],
+) -> None:
+    request = plan(synthetic_inputs(canonical)).requests[0]
+    origin = replace(
+        request.origin,
+        source_location=WalkCoordinate(*source),
+        correlated_location=WalkCoordinate(*(round(value, 6) for value in source)),
+        coordinate_precision_digits=6,
+        serialization_evidence_refs=("synthetic-pinned-locate", ROUTE_ECHO_TRUNC6_EVIDENCE_REF),
+    )
+    payload = request.payload()
+    payload["locations"][0].update(origin.source_location.location())
+    request = replace(
+        request,
+        origin=origin,
+        payload_json=json.dumps(payload, sort_keys=True, separators=(",", ":")),
+    )
+    envelope = response(request)
+    body = json.loads(envelope.response_json or "{}")
+    body["trip"]["locations"][0] = WalkCoordinate(*native_echo).location()
+    envelope = replace(envelope, response_json=json.dumps(body))
+    normalized = normalize_walk_response(request, envelope)
+    assert normalized.state == "reachable" and not normalized.minimum_proven
+    assert normalized.reason_code == "MINIMUM_TIME_UNPROVEN"
+    assert request.origin.source_location == WalkCoordinate(*source)
+    assert request.payload()["locations"][0]["lon"] == source[0]
+    for axis in ("lon", "lat"):
+        for offset in (-0.000001, 0.000001):
+            wrong = WalkCoordinate(*native_echo).location()
+            wrong[axis] = round(wrong[axis] + offset, 6)
+            location = WalkCoordinate(wrong["lon"], wrong["lat"])
+            if location in (origin.source_location, origin.correlated_location):
+                continue  # Existing exact source/locate acceptance is unchanged.
+            bad = json.loads(envelope.response_json or "{}")
+            bad["trip"]["locations"][0] = wrong
+            with pytest.raises(ValueError, match="RESPONSE_ENDPOINT_MISMATCH"):
+                normalize_walk_response(request, replace(envelope, response_json=json.dumps(bad)))
+    for marker in (
+        "synthetic-pinned-locate",
+        "valhalla-3.5.1-route-echo-trunc5-v1",
+        "valhalla-3.5.2-route-echo-trunc6-v1",
+    ):
+        unapproved = replace(request, origin=replace(origin, serialization_evidence_refs=(marker,)))
+        with pytest.raises(ValueError, match="RESPONSE_ENDPOINT_MISMATCH"):
+            normalize_walk_response(unapproved, envelope)
+    with pytest.raises(ValueError, match="ACTUAL_ENDPOINT_MISMATCH"):
+        normalize_walk_response(
+            request, replace(envelope, matched_origin=WalkCoordinate(*native_echo))
+        )
 
 
 def test_missing_route_for_positive_population_never_renormalizes_known_points(

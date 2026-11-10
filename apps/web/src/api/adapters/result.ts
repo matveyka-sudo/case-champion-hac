@@ -327,3 +327,9 @@ export function noticeText(value: string) {
       : value)
   );
 }
+
+export function errorText(error: { message: string; code?: string }) {
+  if (error.code?.toUpperCase() === "RUNTIME_INPUTS_BUSY") return "Сервер подготавливает данные. Повторите расчёт чуть позже.";
+  if (error.message === "Выберите один из доступных наборов данных") return "Для выбранных условий данные пока не определены однозначно. Измените условия или повторите расчёт позже.";
+  return error.message;
+}

@@ -198,9 +198,18 @@ This differs from `/locate`'s `fixed_t` rounded projection.
 
 The validator uses decimal source digits, not binary multiplication by1e6.
 Negative truncation is toward zero and tiny signed zero is preserved. The native
-scientific-notation decade near1e-7 is handled separately. Noninteger inputs
-already at six decimal places receive no new echo alternative: Grisu2 can choose
-a longer decimal across that boundary. Their previous exact/locate acceptance
-remains available. This conservative subset avoids a radius or rounding tolerance.
-An offline pinned-writer oracle covered40644 values;29615 supported values agreed
-bit-for-bit, and11029 boundary inputs were excluded from the new alternative.
+scientific-notation decade near1e-7 is handled separately. For noninteger source
+inputs already at six or fewer decimal places, `_grisu2.py` reproduces the pinned
+writer's integer arithmetic and digit rounding before decimal truncation. Its two
+cached powers cover only coordinate magnitudes from1e-6 through180; other bins
+fail closed. This handles unchanged and truncated axes in the same echoed pair,
+including native boundary effects such as-47.204542 becoming-47.204541. It does
+not accept arbitrary combinations of source, locate and truncated components.
+
+An offline pinned-writer oracle compared100708 binary64 inputs bit-for-bit with
+zero mismatches: the prior40644 samples,60000 seeded decimal-boundary/adjacent-float
+samples, and64 actual first16 Moscow request scalars. The preserved first16 replay
+changed from14 accepted/two rejected to16 accepted, all with minimum unknown.
+Version/evidence gates, physical endpoints, half-quantum correlation checks,
+geometry checks and minimum-proof restrictions remain unchanged. No geographic
+tolerance or routing call is introduced.

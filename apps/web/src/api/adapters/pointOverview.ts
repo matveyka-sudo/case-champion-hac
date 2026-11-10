@@ -53,5 +53,5 @@ export function routeEstimatePoints(result: AnalysisResult, scores = result.scor
     const feature = inventory.get(pointId);
     return [{ pointId, score: presentation.score, feature, name: pointDisplayName(pointId, feature) }];
   });
-  return { ...canonical, points, denominator: canonical.inventoryCount !== null && [...tasks].every((id) => inventory.has(id)) ? canonical.inventoryCount : null };
+  return { ...canonical, points, denominator: canonical.denominator !== null && [...tasks].every((id) => inventory.has(id)) ? canonical.denominator : null };
 }

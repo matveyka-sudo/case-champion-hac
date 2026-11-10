@@ -9,6 +9,42 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 
 ## Three-city priority — 2026-11-10 continuation
 
+### Current gate update — 2026-11-11 00:33 MSK
+
+- Shared prototype web d07d584 is LIVE on5193; root GET-only landing/atlas
+  inspection passed without desktop overflow. API remains f448ed15: new backend
+  deliveries and broader profiles are not yet live. Full UI replay is still due.
+- Root actual PostgreSQL artifact/checkpoint suite39PASS; evidence compaction
+  5PASS; scoped explanation bridge25PASS. Ordinary Python suite1213PASS/276SKIP
+  predates the latest deliveries; skips do not prove real database behavior.
+-1401-pair Moscow candidate v2 ce508816 is immutable/inactive. Preserve all2361
+  points and unknown population. No city index/minimum proof has been gained.
+- Real GTFS November11 public-slot scenario has independently checked source
+  events and deterministic5595.143->5235.143s route totals; +1320s adverse query
+  remains visible. It is not yet backend/UI E2E. Backend pair-budget and ML1
+  missing physical boundary corrections are RUNNING before integration.
+- Novorossiysk private-router overlay2cc5951 is integrated and source-checked,
+  but not activated. Three-city API catalog and each real E2E are still due.
+- Alice natural paragraph delivery is RUNNING; integrated server-grounded
+  question modes alone do not satisfy the requested free-form assistant.
+
+### Verified gate update — 2026-11-11
+
+- Shared prototype presenters c3bd03f and bounded source disclosure 1487be3
+  are integrated locally. Root 170 frontend tests, build/lint and the additional
+  source pagination test passed. Final browser acceptance and deployment remain.
+- Root actual UI request created/saved job94f0dfa2 / analysis93bd5f9f with
+  1029.051s real Moscow route, but the UI timed out during preflight. Same-session
+  job/result GETs succeeded; all three canonical scores remain null. Full UI
+  E2E is FAILED until admission latency and recovery are fixed and replayed.
+- Manual recovery fix3bec3b6 preserves request identity after ambiguous errors;
+  backend source recheck/compact1401 batching remains in progress.
+- Full ML1 suite: 1145 passed after root6cc1f43 fixed public export ordering;
+  old mathematical signatures/fixtures are preserved. Source inventory47passed.
+- The restored external ZIP is real GTFS plus Rasp bindings. It is excluded
+  from Git and documented in README; it does not replace graph artifacts or
+  supply an intercity API key. No broader data-ready claim follows from restore.
+
 ### Current continuation: real Moscow and incumbent frontend authority
 
 The user has revoked generated Moscow transport for the active application.

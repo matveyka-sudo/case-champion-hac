@@ -7,6 +7,11 @@ import type {
   Schemas,
   Selection,
 } from "../../api/types";
+function canonicalRequest(request: AnalysisRequest) {
+  const sort = (value: unknown): unknown => Array.isArray(value) ? value.map(sort) : value && typeof value === "object"
+    ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, child]) => [key, sort(child)])) : value;
+  return JSON.stringify(sort(request));
+}
 export interface ChatMessage {
   question: string;
   answer: Schemas["Explanation"];
@@ -20,6 +25,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     >(null),
     [phase, setPhase] = useState("idle"),
     [error, setError] = useState<Error | null>(null),
+    [explanationError, setExplanationError] = useState<Error | null>(null),
     [warning, setWarning] = useState(""),
     [messages, setMessages] = useState<ChatMessage[]>([]),
     [chatBusy, setChatBusy] = useState(false),
@@ -29,7 +35,8 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     chat = useRef<AbortController | null>(null),
     currentResult = useRef<AnalysisResult | null>(null),
     proposalAbort = useRef<AbortController | null>(null),
-    busy = useRef(false);
+    busy = useRef(false),
+    pendingSubmission = useRef<{ fingerprint: string; key: string } | null>(null);
   useEffect(
     () => () => {
       active.current?.abort();
@@ -40,6 +47,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
   );
   const changed = () => {
     revision.current++;
+    pendingSubmission.current = null;
     active.current?.abort();
     chat.current?.abort();
     proposalAbort.current?.abort();
@@ -52,6 +60,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     setMessages([]);
     setChatBusy(false);
     setError(null);
+    setExplanationError(null);
     setWarning("");
   };
   const reset = () => {
@@ -92,6 +101,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     active.current?.abort();
     chat.current?.abort();
     setChatBusy(false);
+    setExplanationError(null);
     setMessages([]);
     setScenario(null);
     setProposals([]);
@@ -102,16 +112,25 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     const rev = revision.current;
     setPhase("running");
     setError(null);
+    const fingerprint = canonicalRequest(request);
+    if (pendingSubmission.current?.fingerprint !== fingerprint)
+      pendingSubmission.current = { fingerprint, key: crypto.randomUUID() };
+    const submission = pendingSubmission.current;
+    let terminalFailure = false;
     try {
       const value = await gateway.analyze(
         request,
-        crypto.randomUUID(),
+        submission.key,
         controller.signal,
         (j) => {
-          if (rev === revision.current && !controller.signal.aborted) setJob(j);
+          if (rev === revision.current && !controller.signal.aborted) {
+            terminalFailure = j.status === "failed" || j.status === "cancelled";
+            setJob(j);
+          }
         },
       );
       if (rev !== revision.current || controller.signal.aborted) return;
+      pendingSubmission.current = null;
       if (!value) {
         setPhase("cancelled");
         return;
@@ -123,6 +142,8 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
       loadProposals(value);
     } catch (e) {
       if (!controller.signal.aborted && rev === revision.current) {
+        const recoverable = e instanceof ApiError && (e.retryable || e.code === "network_error" || e.code === "RUNTIME_INPUTS_BUSY");
+        if (terminalFailure || !recoverable) pendingSubmission.current = null;
         setError(e instanceof Error ? e : new Error("Ошибка расчёта"));
         setPhase("failed");
       }
@@ -213,6 +234,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
       if (rev !== revision.current) return;
       setJob(value);
       if (value.status === "cancelled") {
+        pendingSubmission.current = null;
         active.current?.abort();
         busy.current = false;
         setPhase("cancelled");
@@ -226,6 +248,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     chat.current?.abort();
     setMessages([]);
     setChatBusy(false);
+    setExplanationError(null);
   };
   const explain = async (question: string, selection: Selection | null) => {
     const base = currentResult.current;
@@ -236,7 +259,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     chat.current = controller;
     const rev = revision.current;
     setChatBusy(true);
-    setError(null);
+    setExplanationError(null);
     try {
       const answer = await gateway.explain(
         base.analysis_id,
@@ -252,7 +275,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
         answer.analysis_id !== base.analysis_id ||
         answer.analysis_result_hash !== base.result_hash
       ) {
-        setError(
+        setExplanationError(
           new ApiError(
             409,
             "analysis_mismatch",
@@ -264,7 +287,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
       setMessages((m) => [...m, { question: q, answer }]);
     } catch (e) {
       if (!controller.signal.aborted && rev === revision.current)
-        setError(e instanceof Error ? e : new Error("Объяснение недоступно"));
+        setExplanationError(e instanceof Error ? e : new Error("Объяснение недоступно"));
     } finally {
       if (chat.current === controller) setChatBusy(false);
     }
@@ -276,6 +299,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     job,
     phase,
     error,
+    explanationError,
     warning,
     messages,
     chatBusy,

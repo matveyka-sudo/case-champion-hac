@@ -13,6 +13,7 @@ import { returnContextFixture } from "../tests/fixtures/return-context";
 import { airportScope, scopedCapabilities } from "../tests/fixtures/urban-scopes";
 import { pointOverviewFixture } from "../tests/fixtures/point-overview";
 import { partialWalkGeometryFixture } from "../tests/fixtures/partial-walk-geometry";
+import { observedRouteFixture } from "../tests/fixtures/observed-route";
 import { legGeometryFixture } from "../tests/fixtures/leg-geometry";
 const fixtures = {
   urban_passenger: urban,
@@ -25,13 +26,37 @@ const blankTile = Buffer.from(
   "base64",
 );
 async function choose(page: Page, label: string, option: string) {
-  await page.getByRole("combobox", { name: label, exact: true }).click();
-  await page.getByRole("option", { name: option, exact: true }).click();
+  const group = page.getByRole("group", { name: label, exact: true });
+  await group.or(page.getByRole("combobox", { name: label, exact: true })).first().waitFor();
+  if (await group.count()) {
+    const original = option === "Общественный транспорт" ? "Общ. транспорт" : option === "Автомобиль" && label === "Передвижение" ? "Авто" : option;
+    await group.getByRole("button", { name: original, exact: true }).click();
+  } else {
+    await page.getByRole("combobox", { name: label, exact: true }).click();
+    await page.getByRole("option", { name: option, exact: true }).click();
+  }
+}
+async function categories(page: Page, selected: string[]) {
+  for (const name of ["Взрослые поликлиники", "Детские поликлиники", "Детсады", "Школы", "Колледжи и вузы", "Ж/д вокзалы", "Автовокзалы", "Аэропорты", "ТЦ"]) {
+    const button = page.locator("#apiFilters").getByRole("button", { name, exact: true });
+    if ((await button.getAttribute("aria-pressed") === "true") !== selected.includes(name)) await button.click();
+  }
+}
+async function airportParameters(page: Page, area?: string) {
+  await choose(page, "Город", "Калининград");
+  await choose(page, "Передвижение", "Пешком");
+  await categories(page, ["Аэропорты"]);
+  if (area) await choose(page, "Район", area);
+}
+async function openSources(page: Page) {
+  const details = page.locator("#apiFilters details").filter({ has: page.locator('summary', { hasText: "Источники и условия данных" }) });
+  if (!(await details.getAttribute("open"))) await details.locator("summary").first().click();
 }
 async function mockApi(
   page: Page,
   options: {
     errorStatus?: number;
+    errorCode?: string;
     running?: boolean;
     emptyProposals?: boolean;
     samplePopulation?: number | null;
@@ -100,12 +125,12 @@ async function mockApi(
         status = options.errorStatus;
         body = {
           error: {
-            code:
+            code: options.errorCode || (
               status === 422
                 ? "invalid_request"
                 : status === 409
                   ? "stored_result_incompatible"
-                  : "engine_unavailable",
+                  : "engine_unavailable"),
             message: "Synthetic service error",
             field_errors:
               status === 422
@@ -251,14 +276,16 @@ for (const population of [1234.5, 0, null]) {
     await mockApi(page, { samplePopulation: population, emptyProposals: true });
     await page.goto("/?data=api#atlas");
     await cityRun(page);
-    await expect(page.getByRole("status")).toContainText("Результат получен");
-    await page.getByRole("button", { name: "Агент", exact: true }).click();
+    await expect(page.locator(".status")).toContainText("Результат получен");
+    await page.getByRole("button", { name: "Агент", exact: true }).first().click();
     await page.getByLabel("Вопрос агенту").fill("Выбрать точку из сохранённой метрики");
     await page.getByRole("button", { name: "Отправить", exact: true }).click();
     await page.getByRole("button", { name: "Synthetic elapsed travel time: 30 мин", exact: true }).click();
-    await expect(page.locator(".api-card")).toContainText(
-      `Население ячейки: ${population === null ? "неизвестно" : population} · 2025 · synthetic-test-only`,
+    await expect(page.locator("#apiResultCard")).toContainText(
+      `Население ячейки: ${population === null ? "неизвестно" : population} · 2025 ·`,
     );
+    await page.getByText("Источник населения", { exact: true }).click();
+    await expect(page.locator(".api-population")).toContainText("synthetic-test-only");
   });
 }
 test("API: complete analysis, actual map features, scoped explanation and separate scenario", async ({
@@ -267,38 +294,38 @@ test("API: complete analysis, actual map features, scoped explanation and separa
   const mock = await mockApi(page);
   await page.goto("/?data=api#atlas");
   await cityRun(page);
-  await expect(page.getByRole("status")).toContainText("Результат получен");
-  await expect(page.locator(".api-card")).toContainText("30 мин");
-  await expect(page.locator(".api-map canvas")).toBeVisible();
-  await page.getByRole("button", { name: "Агент", exact: true }).click();
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  await expect(page.locator("#apiResultCard")).toContainText("30 мин");
+  await expect(page.locator(".at-map canvas")).toBeVisible();
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
   await page.getByLabel("Вопрос агенту").fill("Почему?");
   await page.getByRole("button", { name: "Отправить", exact: true }).click();
-  await expect(page.locator(".api-chat-log")).toContainText(
+  await expect(page.locator(".ch-log")).toContainText(
     "Шаблонное объяснение",
   );
   await page
     .getByRole("button", { name: "Проверить сценарий", exact: true })
     .click();
-  await expect(page.locator(".api-card")).toContainText("Сравнение до / после");
+  await expect(page.locator("#apiResultCard")).toContainText("Сравнение до / после");
   await page.getByRole("button", { name: "Сценарий", exact: true }).click();
-  await expect(page.locator(".api-card")).toContainText("28,3 мин");
+  await expect(page.locator("#apiResultCard")).toContainText("28,3 мин");
   await page.getByRole("button", { name: "База", exact: true }).click();
-  await expect(page.locator(".api-card")).toContainText("30 мин");
+  await expect(page.locator("#apiResultCard")).toContainText("30 мин");
   expect(
     mock.requests.filter((r) => r.url.endsWith("/runs"))[0].key,
   ).toBeTruthy();
-  await expect(page.locator(".api-card")).not.toContainText(urban.analysis_id);
-  await expect(page.locator(".api-card")).not.toContainText(urban.result_hash);
-  await expect(page.locator(".api-card")).not.toContainText(
+  await expect(page.locator("#apiResultCard")).not.toContainText(urban.analysis_id);
+  await expect(page.locator("#apiResultCard")).not.toContainText(urban.result_hash);
+  await expect(page.locator("#apiResultCard")).not.toContainText(
     scenario.overlay_graph_id,
   );
-  await expect(page.locator(".api-card")).not.toContainText(
+  await expect(page.locator("#apiResultCard")).not.toContainText(
     "TURNAROUND_UNVERIFIED",
   );
-  await expect(page.locator(".api-card")).toContainText(
+  await expect(page.locator("#apiResultCard")).toContainText(
     "Оборот транспорта и ресурсы",
   );
-  await expect(page.locator(".api-chat")).not.toContainText(urban.analysis_id);
+  await expect(page.locator(".at-chat")).not.toContainText(urban.analysis_id);
   await expect(page.getByText("Версии расчёта", { exact: true })).toHaveCount(
     0,
   );
@@ -311,7 +338,7 @@ test("API: errors never activate demo data and field errors stay near the filter
   await page.goto("/?data=api#atlas");
   await cityRun(page);
   await expect(page.locator("#apiFilters")).toContainText("City rejected");
-  await expect(page.locator(".api-card")).toHaveCount(0);
+  await expect(page.locator("#apiResultCard")).toHaveCount(0);
   expect(mock.posts).toBe(1);
   await expect(page.locator("body")).not.toContainText("44 мин");
 });
@@ -322,11 +349,11 @@ test("API: explicit cancel stops a durable job, parameter changes do not apply o
   await page.goto("/?data=api#atlas");
   await cityRun(page);
   await page
-    .getByRole("button", { name: "Отменить серверное задание" })
+    .getByRole("button", { name: "Отменить" })
     .click();
-  await expect(page.getByRole("status")).toContainText("Задание отменено");
+  await expect(page.locator(".status")).toContainText("Задание отменено");
   expect(mock.requests.some((r) => r.url.endsWith("/cancel"))).toBe(true);
-  await expect(page.locator(".api-card")).toHaveCount(0);
+  await expect(page.locator("#apiResultCard")).toHaveCount(0);
 });
 test("API: four analysis kinds send canonical requests including independent pipeline", async ({
   page,
@@ -334,13 +361,13 @@ test("API: four analysis kinds send canonical requests including independent pip
   const mock = await mockApi(page, { emptyProposals: true });
   await page.goto("/?data=api#atlas");
   await cityRun(page);
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".status")).toContainText("Результат получен");
   expect(mock.request).toMatchObject({
     analysis_kind: "urban_passenger",
     city_id: "city-1",
   });
   await page
-    .getByRole("button", { name: "Пассажирские связи", exact: true })
+    .getByRole("tab", { name: "Пассажирские связи", exact: true })
     .click();
   await choose(page, "Территория А", "Москва");
   await choose(page, "Территория Б", "Калининград");
@@ -348,43 +375,41 @@ test("API: four analysis kinds send canonical requests including independent pip
     .getByRole("button", { name: "Рассчитать", exact: true })
     .first()
     .click();
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".status")).toContainText("Результат получен");
   expect(mock.request).toMatchObject({
     analysis_kind: "intercity_passenger",
     origin_id: "city-1",
     destination_id: "city-2",
   });
   await page
-    .getByRole("button", { name: "Грузовой доступ", exact: true })
+    .getByRole("tab", { name: "Грузовые связи", exact: true })
     .click();
   await choose(page, "Город", "Калининград");
-  await choose(
-    page,
-    "Профиль груза",
-    "Непродовольственный · Обычный · Контейнер",
-  );
+
   await page
     .getByRole("button", { name: "Рассчитать", exact: true })
     .first()
     .click();
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".status")).toContainText("Результат получен");
   expect(mock.request).toMatchObject({
     analysis_kind: "urban_cargo",
     city_id: "city-2",
   });
   await page
-    .getByRole("button", { name: "Грузовые связи", exact: true })
+    .getByRole("tab", { name: "Грузовые связи", exact: true })
     .click();
+  await choose(page, "Режим грузовых связей", "Между территориями");
   await choose(page, "Территория А", "Москва");
   await choose(page, "Территория Б", "Калининград");
-  await choose(page, "Тип грузового анализа", "Трубопровод · отдельно");
+  await choose(page, "Обработка", "Наливной");
+  await page.getByRole("button", { name: "Трубопровод", exact: true }).click();
   await choose(page, "Продукт трубопровода", "Нефть");
-  await choose(page, "Профиль груза", "Нефть");
+
   await page
     .getByRole("button", { name: "Рассчитать", exact: true })
     .first()
     .click();
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".status")).toContainText("Результат получен");
   expect(mock.request).toMatchObject({
     analysis_kind: "intercity_cargo",
     cargo_modes: ["pipeline"],
@@ -398,11 +423,11 @@ test("API: mobile filters and chat are keyboard accessible without overflow", as
   await page.setViewportSize({ width: 390, height: 844 });
   await mockApi(page, { emptyProposals: true });
   await page.goto("/?data=api#atlas");
-  await page.getByRole("button", { name: "Фильтры", exact: true }).click();
+  await page.getByRole("button", { name: "Фильтры", exact: true }).first().click();
   await cityRun(page);
-  await expect(page.getByRole("status")).toContainText("Результат получен");
-  await page.getByRole("button", { name: "Агент", exact: true }).click();
-  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
+  await expect(page.locator("#chat")).toHaveAttribute("role", "dialog");
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(
@@ -457,14 +482,14 @@ test("API: pending extras keep the index, absent geometry and a failed rerun pre
   });
   await page.goto("/?data=api#atlas");
   await cityRun(page);
-  await expect(page.getByRole("status")).toContainText("Результат получен");
-  await expect(page.locator(".api-card")).toContainText("50 из 100");
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  await expect(page.locator("#apiResultCard")).toContainText("50 из 100");
   await expect(page.locator(".api-map-note")).toContainText(
     "Геометрия недоступна",
   );
   await page.getByText("Дополнительные показатели", { exact: true }).click();
-  await expect(page.locator(".api-card")).toContainText("Вычисляется");
-  await expect(page.locator(".api-card")).not.toContainText("count-job");
+  await expect(page.locator("#apiResultCard")).toContainText("Вычисляется");
+  await expect(page.locator("#apiResultCard")).not.toContainText("count-job");
   fail = true;
   await choose(page, "Передвижение", "Пешком");
   await page
@@ -474,8 +499,8 @@ test("API: pending extras keep the index, absent geometry and a failed rerun pre
   await expect(
     page.getByRole("alert").filter({ hasText: "Engine not ready" }),
   ).toBeVisible();
-  await expect(page.locator(".api-card")).toContainText("50 из 100");
-  await expect(page.getByRole("status")).toContainText("прежний результат");
+  await expect(page.locator("#apiResultCard")).toContainText("50 из 100");
+  await expect(page.locator(".status")).toContainText("прежний результат");
   await expect(page.locator("body")).not.toContainText("44 мин");
 });
 
@@ -483,77 +508,65 @@ test("API: urban choices follow capabilities while intercity retains the nationa
   const extra = { ...territories[0], territory_id: "city-extra", name: "Казань" } as Territory;
   const mock = await mockApi(page, { territories: [...territories, extra] as Territory[], emptyProposals: true });
   await page.goto("/?data=api#atlas");
-  await page.getByRole("combobox", { name: "Город", exact: true }).click();
-  await expect(page.getByRole("option", { name: "Казань", exact: true })).toHaveCount(0);
-  await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Пассажирские связи", exact: true }).click();
+  await expect(page.getByRole("group", { name: "Город", exact: true }).getByRole("button", { name: "Казань" })).toHaveCount(0);
+  await page.getByRole("tab", { name: "Пассажирские связи", exact: true }).click();
   await page.getByRole("combobox", { name: "Территория А", exact: true }).click();
   await expect(page.getByRole("option", { name: "Казань", exact: true })).toBeVisible();
   expect(mock.posts).toBe(0);
 });
 
-test("API: overlapping snapshots require a choice, send its identity and clear stale choices", async ({ page }) => {
+test("API: overlapping snapshots bind only through a unique matching canonical scope", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
   const c = structuredClone(capabilities) as Schemas["Capabilities"];
-  c.snapshots = ["version-A-same-tail", "version-B-same-tail"].map((id) => ({
-    ...c.snapshots![0], snapshot_id: id,
-  }));
-  c.snapshots.push({ ...c.snapshots[0], snapshot_id: "unknown-dates", valid_from: null });
-  c.snapshots.push({ ...c.snapshots[0], snapshot_id: "wrong-geography", territory_ids: ["city-2"] });
+  c.snapshots = ["version-A-same-tail", "version-B-same-tail"].map((snapshot_id) => ({ ...c.snapshots![0], snapshot_id }));
   const mock = await mockApi(page, { capabilities: c, emptyProposals: true });
   await page.goto("/?data=api#atlas");
-  await choose(page, "Город", "Москва");
-  await expect(page.getByRole("combobox", { name: "Набор данных", exact: true })).toContainText("Выберите набор данных");
-  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
-  await expect(page.locator("#apiFilters")).toContainText("Выберите один из доступных наборов");
+  await cityRun(page);
+  await expect(page.locator(".statecard")).toContainText("данные пока не определены однозначно");
   expect(mock.posts).toBe(0);
-  await page.getByRole("combobox", { name: "Набор данных", exact: true }).click();
-  await expect(page.getByRole("option")).toHaveCount(3);
-  await page.getByRole("option").filter({ hasText: "версия A-same-tail" }).click();
-  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.getByRole("combobox", { name: "Набор данных", exact: true })).toHaveCount(0);
+  c.urban_passenger_scopes = [{ ...airportScope(), city_id: "city-1", snapshot_id: "version-A-same-tail", passenger_modes: ["public_transport"], categories: ["adult_polyclinic", "school", "shopping_center"] }];
+  await page.route("**/api/v1/capabilities", (route) => route.fulfill({ json: c }));
+  await page.reload();
+  await cityRun(page);
+  await expect(page.locator(".status")).toContainText("Результат получен");
   expect(mock.request).toMatchObject({ snapshot_id: "version-A-same-tail" });
   await choose(page, "Город", "Калининград");
-  await expect(page.getByRole("combobox", { name: "Набор данных", exact: true })).toContainText("Выберите набор данных");
   await expect(page.locator("#apiResultCard")).toHaveCount(0);
-  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Выберите способ передвижения");
+  await expect(page.getByRole("group", { name: "Передвижение", exact: true }).locator('[aria-pressed="true"]')).toHaveCount(0);
   expect(mock.posts).toBe(1);
 });
 
-test("API: unknown snapshot dates cannot be submitted and sole coverage is visible without another step", async ({ page }) => {
-  await mockApi(page, { emptyProposals: true });
+test("API: unknown snapshot dates cannot be submitted and sole coverage needs no technical selection", async ({ page }) => {
+  const mock = await mockApi(page, { emptyProposals: true });
   await page.goto("/?data=api#atlas");
-  await choose(page, "Город", "Москва");
-  await expect(page.locator(".api-snapshot-hint")).toContainText("выбран автоматически");
-  await expect(page.locator(".api-snapshot-coverage")).toContainText("01.01.1900–31.12.2100");
   await cityRun(page);
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  expect(mock.request).toMatchObject({ snapshot_id: "demo-snapshot" });
   const c = structuredClone(capabilities) as Schemas["Capabilities"];
   c.snapshots![0].valid_to = null;
   await page.route("**/api/v1/capabilities", (route) => route.fulfill({ json: c }));
   await page.reload();
-  await choose(page, "Город", "Москва");
-  await expect(page.locator(".api-snapshot-hint")).toContainText("Нет подтверждённых данных");
-  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
+  await cityRun(page);
+  await expect(page.locator(".statecard")).toContainText("Нет подтверждённого набора данных");
+  expect(mock.posts).toBe(1);
 });
 
-test("API: pipeline profile choices track the chosen product and reset on product changes", async ({ page }) => {
+test("API: original pipeline product controls bind the exact registered product profile", async ({ page }) => {
   const c = structuredClone(capabilities) as Schemas["Capabilities"];
   c.cargo_profiles.push({ kind: "pipeline", product: "gas", profile_id: "pipe-gas" });
   const mock = await mockApi(page, { capabilities: c, emptyProposals: true });
   await page.goto("/?data=api#atlas");
-  await page.getByRole("button", { name: "Грузовые связи", exact: true }).click();
+  await page.getByRole("tab", { name: "Грузовые связи", exact: true }).click();
+  await choose(page, "Режим грузовых связей", "Между территориями");
   await choose(page, "Территория А", "Москва");
   await choose(page, "Территория Б", "Калининград");
-  await choose(page, "Тип грузового анализа", "Трубопровод · отдельно");
+  await choose(page, "Обработка", "Наливной");
+  await page.getByRole("button", { name: "Трубопровод", exact: true }).click();
   await choose(page, "Продукт трубопровода", "Нефть");
-  await page.getByRole("combobox", { name: "Профиль груза", exact: true }).click();
-  await expect(page.getByRole("option", { name: "Газ", exact: true })).toHaveCount(0);
-  await page.getByRole("option", { name: "Нефть", exact: true }).click();
   await choose(page, "Продукт трубопровода", "Газ");
-  await expect(page.getByRole("combobox", { name: "Профиль груза", exact: true })).toContainText("Выберите профиль груза");
-  await choose(page, "Профиль груза", "Газ");
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".status")).toContainText("Результат получен");
   expect(mock.request).toMatchObject({ cargo_profile_id: "pipe-gas", pipeline_product: "gas" });
 });
 
@@ -568,22 +581,22 @@ test("API: selected point and destination scope return times and partial map ass
   } }));
   await page.goto("/?data=api#atlas");
   await cityRun(page);
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".status")).toContainText("Результат получен");
   await expect(page.getByLabel("Условные обозначения карты")).toContainText("частичная оценка");
-  await page.getByRole("button", { name: "Агент", exact: true }).click();
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
   await page.getByLabel("Вопрос агенту").fill("Покажи контекст");
   await page.getByRole("button", { name: "Отправить", exact: true }).click();
   await page.getByRole("button", { name: "Synthetic elapsed travel time: 30 мин", exact: true }).click();
   await page.getByText("Дополнительные показатели", { exact: true }).click();
-  await expect(page.locator(".api-card")).toContainText("18:00");
-  await expect(page.locator(".api-card")).toContainText("20:00");
-  await expect(page.locator(".api-card")).not.toContainText("19:00");
-  await expect(page.locator(".api-card")).toContainText("Частичная оценка");
+  await expect(page.locator("#apiResultCard")).toContainText("18:00");
+  await expect(page.locator("#apiResultCard")).toContainText("20:00");
+  await expect(page.locator("#apiResultCard")).not.toContainText("19:00");
+  await expect(page.locator("#apiResultCard")).toContainText("Частичная оценка");
   await page.getByRole("button", { name: "Synthetic destination time: 30 мин", exact: true }).click();
-  await expect(page.locator(".api-card")).toContainText("18:00");
-  await expect(page.locator(".api-card")).toContainText("19:00");
-  await expect(page.locator(".api-card")).not.toContainText("20:00");
-  await expect(page.locator(".api-card")).toContainText("Выбранная точка → Школа А");
+  await expect(page.locator("#apiResultCard")).toContainText("18:00");
+  await expect(page.locator("#apiResultCard")).toContainText("19:00");
+  await expect(page.locator("#apiResultCard")).not.toContainText("20:00");
+  await expect(page.locator("#apiResultCard")).toContainText("Выбранная точка → Школа А");
 });
 
 test("API: score-only explanations use saved zero and partial labels, and null remains neutral", async ({ page }) => {
@@ -598,18 +611,18 @@ test("API: score-only explanations use saved zero and partial labels, and null r
   } }));
   await page.goto("/?data=api#atlas");
   await cityRun(page);
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".status")).toContainText("Результат получен");
   await expect(page.locator('.api-measure b[data-score-band="low"]')).toHaveText("0 из 100");
-  await page.getByRole("button", { name: "Агент", exact: true }).click();
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
   await page.getByLabel("Вопрос агенту").fill("Объясни индекс");
   await page.getByRole("button", { name: "Отправить", exact: true }).click();
   await expect(page.locator('.api-claim[data-score-band="low"]')).toHaveText("Индекс доступности: 0 из 100 · частичная оценка");
-  await expect(page.locator(".api-chat-log")).not.toContainText("99 из 100");
+  await expect(page.locator(".ch-log")).not.toContainText("99 из 100");
   data.scores[0] = { ...data.scores[0], value: null, status: "unknown" };
   await page.route(`**/analyses/${data.analysis_id}`, (route) => route.fulfill({ json: data }));
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
   await expect(page.locator('.api-measure b[data-score-band="unknown"]')).toHaveText("Нет данных");
-  await expect(page.locator(".api-card")).not.toContainText("0 из 100");
+  await expect(page.locator("#apiResultCard")).not.toContainText("0 из 100");
 });
 
 test("API: landing identifies illustrative examples without labeling API results as demo", async ({ page }) => {
@@ -626,25 +639,25 @@ test("API: scenario displays the changed nonwinner route and worsening, then res
   await mockApi(page, { result: data.baseline, scenarioResult: data.scenario });
   await page.goto("/?data=api#atlas");
   await cityRun(page);
-  await expect(page.getByRole("status")).toContainText("Результат получен");
-  const otherRoute = page.locator(".api-card .api-journey").last();
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  const otherRoute = page.locator("#apiResultCard .api-journey").last();
   await otherRoute.locator("summary").click();
   await expect(otherRoute).toContainText("Другая школа · 40 мин");
-  await page.getByRole("button", { name: "Агент", exact: true }).click();
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
   await page.getByRole("button", { name: "Проверить сценарий", exact: true }).click();
-  await expect(page.locator(".api-card")).toContainText("Сравнение до / после");
+  await expect(page.locator("#apiResultCard")).toContainText("Сравнение до / после");
   await page.getByRole("button", { name: "Сценарий", exact: true }).click();
-  await expect(page.locator(".api-card .api-journey summary")).toHaveText([
+  await expect(page.locator("#apiResultCard .api-journey summary")).toHaveText([
     "Путь сценария · Данные доступны · геометрия источника", "Путь сценария · Данные доступны · геометрия источника",
   ]);
   await otherRoute.locator("summary").click();
   await expect(otherRoute).toContainText("Другая школа · 45 мин");
-  await expect(page.locator(".api-card")).toContainText("Ухудшение · -5 мин");
+  await expect(page.locator("#apiResultCard")).toContainText("Ухудшение · -5 мин");
   await expect(page.locator(".api-overlay-note")).toContainText("Показаны пути сценария");
   await page.getByRole("button", { name: "База", exact: true }).click();
   await otherRoute.locator("summary").click();
   await expect(otherRoute).toContainText("Другая школа · 40 мин");
-  await expect(page.locator(".api-card")).not.toContainText("Другая школа · 45 мин");
+  await expect(page.locator("#apiResultCard")).not.toContainText("Другая школа · 45 мин");
   await expect(page.locator(".api-overlay-note")).toHaveCount(0);
 });
 
@@ -657,13 +670,13 @@ test("API: scenario without route geometry preserves after time and explicitly l
   await mockApi(page, { result: data.baseline, scenarioResult: data.scenario });
   await page.goto("/?data=api#atlas");
   await cityRun(page);
-  await expect(page.getByRole("status")).toContainText("Результат получен");
-  await page.getByRole("button", { name: "Агент", exact: true }).click();
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
   await page.getByRole("button", { name: "Проверить сценарий", exact: true }).click();
-  await expect(page.locator(".api-card")).toContainText("Сравнение до / после");
+  await expect(page.locator("#apiResultCard")).toContainText("Сравнение до / после");
   await page.getByRole("button", { name: "Сценарий", exact: true }).click();
   await expect(page.locator(".api-overlay-note")).toContainText("Геометрия путей сценария не предоставлена");
-  const route = page.locator(".api-card .api-journey").last();
+  const route = page.locator("#apiResultCard .api-journey").last();
   await route.locator("summary").click();
   await expect(route).toContainText("геометрия отсутствует");
   await expect(route).toContainText("Другая школа · 45 мин");
@@ -678,12 +691,12 @@ test("API: scenario connection events retain new and lost labels without invente
   await mockApi(page, { result: data.baseline, scenarioResult: data.scenario });
   await page.goto("/?data=api#atlas");
   await cityRun(page);
-  await expect(page.getByRole("status")).toContainText("Результат получен");
-  await page.getByRole("button", { name: "Агент", exact: true }).click();
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
   await page.getByRole("button", { name: "Проверить сценарий", exact: true }).click();
-  await expect(page.locator(".api-card")).toContainText("Связь появилась · Без численной разности");
-  await expect(page.locator(".api-card")).toContainText("Связь потеряна · Без численной разности");
-  await expect(page.locator(".api-card")).toContainText("Ухудшение · -5 мин");
+  await expect(page.locator("#apiResultCard")).toContainText("Связь появилась · Без численной разности");
+  await expect(page.locator("#apiResultCard")).toContainText("Связь потеряна · Без численной разности");
+  await expect(page.locator("#apiResultCard")).toContainText("Ухудшение · -5 мин");
 });
 
 test("API: partial point index stays numerical and scoped while the city total is unknown", async ({ page }) => {
@@ -694,80 +707,57 @@ test("API: partial point index stays numerical and scoped while the city total i
   const mock = await mockApi(page, { result: data, emptyProposals: true });
   await page.goto("/?data=api#atlas");
   await cityRun(page);
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".status")).toContainText("Результат получен");
   const point = page.locator(".api-measure").filter({ hasText: "Точка анализа" });
   await expect(point.locator('b[data-score-band="medium"]')).toHaveText("72,5 из 100");
   await expect(page.locator(".api-measure").filter({ hasText: "Территория" }).locator('b[data-score-band="unknown"]')).toHaveText("Нет данных");
-  await expect(page.locator(".api-card")).toContainText("Частичная оценка");
-  await expect(page.locator(".api-card")).toContainText("не участвует в полном рейтинге");
+  await expect(page.locator("#apiResultCard")).toContainText("Частичная оценка");
+  await expect(page.locator("#apiResultCard")).toContainText("не участвует в полном рейтинге");
   await page.screenshot({ path: "test-results/api-partial-point-index.png" });
   expect(mock.posts).toBe(1);
 });
 
-test("API: airport-only scope blocks unsupported controls and applies available parameters explicitly", async ({ page }) => {
+test("API: airport-only scope preserves original choices and reports an unavailable action without silently switching", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
-  const result = structuredClone(urban) as AnalysisResult;
-  result.status = "partial";
-  result.metrics[0].name = "minimum_journey_seconds";
-  result.metrics[0].subject.category = "airport";
-  result.metrics[0].subject.mode = "walk";
-  result.scores[0] = { ...result.scores[0], name: "point_index", value: null, status: "unknown", completeness: "partial", ranking_eligible: false, subject: { kind: "sample_point", point_id: "demo-point", mode: "walk" }, reason_code: "MINIMUM_TIME_UNPROVEN" };
-  const mock = await mockApi(page, { capabilities: scopedCapabilities(), result, emptyProposals: true });
+  const mock = await mockApi(page, { capabilities: scopedCapabilities(), result: legGeometryFixture(null), emptyProposals: true });
   await page.goto("/?data=api#atlas");
   await choose(page, "Город", "Калининград");
-  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Общественный транспорт");
-  await expect(page.getByRole("checkbox", { name: "Школы", exact: true })).toBeChecked();
-  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
-  await page.getByRole("combobox", { name: "Передвижение", exact: true }).click();
-  await expect(page.getByRole("option", { name: "Общественный транспорт", exact: true })).toBeDisabled();
-  await expect(page.getByRole("option", { name: "Пешком", exact: true })).toBeEnabled();
-  await page.keyboard.press("Escape");
-  expect(mock.posts).toBe(0);
-  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
-  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Пешком");
-  await expect(page.getByRole("checkbox", { name: "Аэропорты", exact: true })).toBeChecked();
-  await expect(page.getByRole("checkbox", { name: "Школы", exact: true })).not.toBeChecked();
-  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeEnabled();
-  expect(mock.posts).toBe(0);
+  await expect(page.getByRole("group", { name: "Передвижение", exact: true }).getByRole("button", { name: "Общ. транспорт" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Школы", exact: true })).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".statecard")).toContainText("способ передвижения недоступен");
+  expect(mock.posts).toBe(0);
+  await airportParameters(page);
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.locator(".status")).toContainText("Результат получен");
   expect(mock.request).toMatchObject({ city_id: "city-2", snapshot_id: "demo-snapshot", passenger_mode: "walk", categories: ["airport"] });
-  await expect(page.locator('.api-measure b[data-score-band="unknown"]')).toHaveText("Нет данных");
-  await expect(page.locator(".api-card")).toContainText("Полное время до объекта");
-  await expect(page.locator(".api-card")).not.toContainText("minimum_journey_seconds");
+  await expect(page.locator("#apiResultCard")).not.toContainText("minimum_journey_seconds");
 });
 
-test("API: categories from separate scopes cannot be combined", async ({ page }) => {
+test("API: categories from separate scopes cannot be combined while all original choices remain selectable", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
   const mock = await mockApi(page, { capabilities: scopedCapabilities([airportScope(), { ...airportScope(), scope_id: "school-walk", categories: ["school"] }]) });
   await page.goto("/?data=api#atlas");
-  await choose(page, "Город", "Калининград");
-  await choose(page, "Передвижение", "Пешком");
-  for (const name of ["Взрослые поликлиники", "Школы", "ТЦ"]) await page.getByRole("checkbox", { name, exact: true }).uncheck();
-  await page.getByRole("checkbox", { name: "Аэропорты", exact: true }).check();
-  await expect(page.getByRole("checkbox", { name: "Школы", exact: true })).toBeDisabled();
-  await expect(page.locator("#apiFilters")).toContainText("Нет общего набора расчёта");
-  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeEnabled();
+  await airportParameters(page);
+  await page.getByRole("button", { name: "Школы", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Школы", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.locator(".statecard")).toContainText("Нет одного набора расчёта");
   expect(mock.posts).toBe(0);
 });
 
 test("API: scope end is exclusive and does not silently reset selected time or mode", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
-  const scope = { ...airportScope(), valid_from: "2026-11-10T06:30:00Z", valid_to: "2026-11-10T07:00:00Z" };
-  const mock = await mockApi(page, { capabilities: scopedCapabilities([scope]) });
+  const mock = await mockApi(page, { capabilities: scopedCapabilities([{ ...airportScope(), valid_from: "2026-11-10T06:30:00Z", valid_to: "2026-11-10T07:00:00Z" }]) });
   await page.goto("/?data=api#atlas");
-  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeEnabled();
+  await airportParameters(page);
   const time = page.getByRole("slider", { name: "Время отправления, шаг 15 минут" });
-  await time.focus();
-  await time.press("ArrowRight");
-  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeEnabled();
-  await time.press("ArrowRight");
+  await time.fill("36");
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
   await expect(time).toHaveValue("36");
-  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
-  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Пешком");
-  await expect(page.getByRole("checkbox", { name: "Аэропорты", exact: true })).toBeChecked();
-  await expect(page.locator("#apiFilters")).toContainText("Для этой даты и времени нет доступного набора расчёта");
+  await expect(page.getByRole("group", { name: "Передвижение", exact: true }).getByRole("button", { name: "Пешком" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Аэропорты", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".statecard")).toContainText("Для этой даты и времени нет доступного набора расчёта");
   expect(mock.posts).toBe(0);
 });
 
@@ -781,12 +771,11 @@ for (const detail of [null, undefined]) test(`API: ${detail === null ? "null" : 
   await expect(page.getByLabel("Доступность городского расчёта")).toHaveCount(0);
 });
 
-test("API: an explicitly empty scope list disables launch with a reason", async ({ page }) => {
+test("API: an explicitly empty scope list reports unavailable launch while preserving original controls", async ({ page }) => {
   const mock = await mockApi(page, { capabilities: scopedCapabilities([]) });
   await page.goto("/?data=api#atlas");
-  await expect(page.getByLabel("Доступность городского расчёта")).toContainText("нет зарегистрированных наборов параметров");
-  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Использовать доступные параметры", exact: true })).toHaveCount(0);
+  await cityRun(page);
+  await expect(page.locator(".statecard")).toContainText("нет зарегистрированных наборов параметров");
   expect(mock.posts).toBe(0);
 });
 
@@ -794,12 +783,9 @@ test("API: overlapping scopes cannot be resolved by arbitrarily choosing one", a
   await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
   const mock = await mockApi(page, { capabilities: scopedCapabilities([airportScope(), { ...airportScope(), scope_id: "overlap-airport" }]) });
   await page.goto("/?data=api#atlas");
-  await choose(page, "Город", "Калининград");
-  await choose(page, "Передвижение", "Пешком");
-  for (const name of ["Взрослые поликлиники", "Школы", "ТЦ"]) await page.getByRole("checkbox", { name, exact: true }).uncheck();
-  await page.getByRole("checkbox", { name: "Аэропорты", exact: true }).check();
-  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
-  await expect(page.getByLabel("Доступность городского расчёта")).toContainText("подходят несколько наборов");
+  await airportParameters(page);
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.locator(".statecard")).toContainText("подходят несколько наборов");
   expect(mock.posts).toBe(0);
 });
 
@@ -809,13 +795,13 @@ for (const mobile of [false, true]) test(`API: calculated point overview reveals
   const data = pointOverviewFixture();
   const mock = await mockApi(page, { result: data, emptyProposals: true });
   await page.goto("/?data=api#atlas");
-  if (mobile) await page.getByRole("button", { name: "Фильтры", exact: true }).click();
+  if (mobile) await page.getByRole("button", { name: "Фильтры", exact: true }).first().click();
   await choose(page, "Город", "Калининград");
   await choose(page, "Передвижение", "Пешком");
-  for (const name of ["Взрослые поликлиники", "Школы", "ТЦ"]) await page.getByRole("checkbox", { name, exact: true }).uncheck();
-  await page.getByRole("checkbox", { name: "Аэропорты", exact: true }).check();
+  await categories(page, ["Аэропорты"]);
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  if ((page.viewportSize()?.width || 1440) < 768) await page.getByText("Результат и рассчитанные точки", { exact: true }).click();
   const card = page.locator("#apiResultCard");
   const overview = page.getByLabel("Обзор рассчитанных точек");
   await expect(overview).toContainText("Индекс города: Нет данных");
@@ -861,10 +847,9 @@ test("API: partial point inventory never presents the one known point as complet
   await page.goto("/?data=api#atlas");
   await choose(page, "Город", "Калининград");
   await choose(page, "Передвижение", "Пешком");
-  for (const name of ["Взрослые поликлиники", "Школы", "ТЦ"]) await page.getByRole("checkbox", { name, exact: true }).uncheck();
-  await page.getByRole("checkbox", { name: "Аэропорты", exact: true }).check();
+  await categories(page, ["Аэропорты"]);
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".status")).toContainText("Результат получен");
   const overview = page.getByLabel("Обзор рассчитанных точек");
   await expect(overview.locator("summary")).toHaveText("Рассчитанные точки (1)");
   await overview.locator("summary").click();
@@ -883,10 +868,10 @@ test("API: calculated point reveals its partial walk route with a separate round
   await page.goto("/?data=api#atlas");
   await choose(page, "Город", "Калининград");
   await choose(page, "Передвижение", "Пешком");
-  for (const name of ["Взрослые поликлиники", "Школы", "ТЦ"]) await page.getByRole("checkbox", { name, exact: true }).uncheck();
-  await page.getByRole("checkbox", { name: "Аэропорты", exact: true }).check();
+  await categories(page, ["Аэропорты"]);
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  if ((page.viewportSize()?.width || 1440) < 768) await page.getByText("Результат и рассчитанные точки", { exact: true }).click();
   const card = page.locator("#apiResultCard");
   const overview = page.getByLabel("Обзор рассчитанных точек");
   await expect(overview.locator("summary")).toHaveText("Рассчитанные точки (1 из 3)");
@@ -921,34 +906,36 @@ test("API: city inspection clears the completed city's route and requires fresh 
   const mock = await mockApi(page, { capabilities: c, territories: [...territories, third] as Territory[], result: partialWalkGeometryFixture(), emptyProposals: true });
   await page.goto("/?data=api#atlas");
   await choose(page, "Город", "Калининград");
-  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  await airportParameters(page, "Синтетический район К");
   await expect(page.getByRole("combobox", { name: "Район", exact: true })).toContainText("Синтетический район К");
   const date = await page.locator("#apiDate").textContent();
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".status")).toContainText("Результат получен");
   await expect(page.locator("#apiResultCard .api-journey")).toHaveCount(1);
   await choose(page, "Город", "Москва");
   await expect(page.locator("#apiResultCard")).toHaveCount(0);
   await expect(page.locator(".api-journey")).toHaveCount(0);
-  await expect(page.getByRole("status")).not.toContainText("Калининград");
-  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Выберите способ передвижения");
-  await expect(page.getByRole("combobox", { name: "Набор данных", exact: true })).toContainText("Выберите набор данных");
+  await expect(page.locator(".status")).not.toContainText("Калининград");
+  await expect(page.getByRole("group", { name: "Передвижение", exact: true }).locator('[aria-pressed="true"]')).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Набор данных", exact: true })).toHaveCount(0);
   await expect(page.getByRole("combobox", { name: "Район", exact: true })).toContainText("Весь город");
   await expect(page.locator("#apiDate")).toHaveText(date || "");
   await expect(page.getByRole("slider", { name: "Время отправления, шаг 15 минут" })).toHaveValue("34");
-  await expect(page.locator(".tz")).toHaveText("Europe/Moscow");
-  await expect(page.getByLabel("Доступность городского расчёта")).toContainText("Для выбранного города нет зарегистрированного расчёта.");
+  await expect(page.locator(".tz:visible")).toHaveText("Europe/Moscow");
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.locator(".statecard")).toContainText("Для выбранного города нет зарегистрированного расчёта.");
   await expect(page.getByRole("button", { name: "Использовать доступные параметры", exact: true })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeEnabled();
   await choose(page, "Город", "Новороссийск");
-  await expect(page.getByLabel("Доступность городского расчёта")).toContainText("нет зарегистрированного расчёта");
-  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.locator(".statecard")).toContainText("нет зарегистрированного расчёта");
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeEnabled();
   await choose(page, "Город", "Калининград");
   await expect(page.locator("#apiResultCard")).toHaveCount(0);
-  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Выберите способ передвижения");
-  await expect(page.getByRole("combobox", { name: "Набор данных", exact: true })).toContainText("Выберите набор данных");
+  await expect(page.getByRole("group", { name: "Передвижение", exact: true }).locator('[aria-pressed="true"]')).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Набор данных", exact: true })).toHaveCount(0);
   await expect(page.getByRole("combobox", { name: "Район", exact: true })).toContainText("Весь город");
-  await expect(page.locator(".tz")).toHaveText("Europe/Kaliningrad");
+  await expect(page.locator(".tz:visible")).toHaveText("Europe/Kaliningrad");
   expect(mock.posts).toBe(1);
 });
 
@@ -958,21 +945,17 @@ test("API: changing city during a job discards its local context without borrowi
   const mock = await mockApi(page, { capabilities: c, running: true, emptyProposals: true });
   await page.goto("/?data=api#atlas");
   await choose(page, "Город", "Калининград");
-  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  await airportParameters(page);
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
-  await expect(page.getByRole("button", { name: "Отменить серверное задание", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Отменить", exact: true })).toBeVisible();
   await choose(page, "Город", "Москва");
-  await expect(page.getByRole("button", { name: "Отменить серверное задание", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Отменить", exact: true })).toHaveCount(0);
   await expect(page.locator("#apiResultCard")).toHaveCount(0);
-  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Выберите способ передвижения");
-  await expect(page.locator(".api-scope-preview").first()).toContainText("Период");
-  await page.getByRole("combobox", { name: "Доступный набор параметров", exact: true }).click();
-  await expect(page.getByRole("option").filter({ hasText: "Москва" })).toHaveCount(1);
-  await expect(page.getByRole("option").filter({ hasText: "Калининград" })).toHaveCount(0);
-  await page.keyboard.press("Escape");
+  await expect(page.getByRole("group", { name: "Передвижение", exact: true }).locator('[aria-pressed="true"]')).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Доступный набор параметров", exact: true })).toHaveCount(0);
   await choose(page, "Город", "Калининград");
-  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Выберите способ передвижения");
-  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
+  await expect(page.getByRole("group", { name: "Передвижение", exact: true }).locator('[aria-pressed="true"]')).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeEnabled();
   expect(mock.posts).toBe(1);
   expect(mock.requests.some((request) => request.url.endsWith("/cancel"))).toBe(false);
 });
@@ -983,9 +966,9 @@ test("API: disjoint movement segments retain partial-route labels and clear on c
   const mock = await mockApi(page, { capabilities: scopedCapabilities(), result: legGeometryFixture(), emptyProposals: true });
   await page.goto("/?data=api#atlas");
   await choose(page, "Город", "Калининград");
-  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  await airportParameters(page);
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".status")).toContainText("Результат получен");
   const note = page.locator(".api-map-note");
   await expect(note).toContainText("Показан участок маршрута; геометрия подходов не подтверждена");
   const overview = page.getByLabel("Обзор рассчитанных точек");
@@ -1003,7 +986,7 @@ test("API: disjoint movement segments retain partial-route labels and clear on c
   await choose(page, "Город", "Москва");
   await expect(card).toHaveCount(0);
   await expect(note).toHaveCount(0);
-  await expect(page.getByRole("status")).not.toContainText("Калининград");
+  await expect(page.locator(".status")).not.toContainText("Калининград");
   expect(mock.posts).toBe(1);
 });
 
@@ -1012,7 +995,8 @@ test("API: readiness separates registered inputs from matching point zero and un
   const mock = await mockApi(page, { capabilities: scopedCapabilities(), result: legGeometryFixture(0), emptyProposals: true });
   await page.goto("/?data=api#atlas");
   await choose(page, "Город", "Калининград");
-  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  await airportParameters(page);
+  await openSources(page);
   const readiness = page.getByLabel("Готовность выбранных условий");
   await expect(readiness).toContainText("Подходящий набор опубликован");
   await expect(readiness).toContainText("Параметры запуска зарегистрированы");
@@ -1020,12 +1004,12 @@ test("API: readiness separates registered inputs from matching point zero and un
   await expect(readiness).toContainText("Полнота каталога не подтверждена");
   await expect(readiness).toContainText("Для этих условий результат ещё не получен");
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".status")).toContainText("Результат получен");
   await expect(readiness).toContainText("Рассчитано точек: 1 из 3");
   await expect(readiness.locator('b[data-score-band="low"]')).toHaveText("0 из 100");
   await expect(readiness.locator('b[data-score-band="unknown"]')).toHaveText("Нет данных");
   await page.getByRole("slider", { name: "Время отправления, шаг 15 минут" }).fill("35");
-  await expect(page.getByRole("status")).toContainText("прежний результат");
+  await expect(page.locator(".status")).toContainText("прежний результат");
   await expect(readiness).toContainText("Для этих условий результат ещё не получен");
   await expect(readiness).not.toContainText("Рассчитано точек");
   await expect(readiness.locator("b[data-score-band]")).toHaveCount(0);
@@ -1049,9 +1033,10 @@ test("API: selected area never inherits the city index or its population complet
   const mock = await mockApi(page, { capabilities: c, result: data, emptyProposals: true });
   await page.goto("/?data=api#atlas");
   await choose(page, "Город", "Калининград");
-  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  await airportParameters(page, "Синтетический район");
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  await openSources(page);
   const readiness = page.getByLabel("Готовность выбранных условий");
   await expect(readiness).toContainText("Индекс выбранной территории");
   await expect(readiness).toContainText("Не предоставлен.");
@@ -1066,9 +1051,9 @@ test("API: a saved route remains easy to select when every point index is unknow
   await mockApi(page, { capabilities: scopedCapabilities(), result: legGeometryFixture(null), emptyProposals: true });
   await page.goto("/?data=api#atlas");
   await choose(page, "Город", "Калининград");
-  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  await airportParameters(page);
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".status")).toContainText("Результат получен");
   await expect(page.getByLabel("Обзор рассчитанных точек")).toContainText("Рассчитанные точки (0 из 3)");
   const routes = page.getByLabel("Обзор рассчитанных маршрутов");
   await routes.locator("summary").click();
@@ -1102,7 +1087,7 @@ test("API: generated transport snapshot remains explicitly demo through canonica
   const notice = page.getByRole("note", { name: "Демонстрационная модель" });
   await expect(notice).toContainText("Демонстрационная транспортная модель — не оценка фактической доступности Москвы");
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
-  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator(".status")).toContainText("Результат получен");
   await expect(page.locator("#apiResultCard .k")).toHaveText("Демонстрационный анализ");
   await page.getByRole("button", { name: "Свернуть фильтры", exact: true }).click();
   await expect(page.getByRole("button", { name: "Развернуть фильтры", exact: true })).toBeVisible();
@@ -1110,7 +1095,7 @@ test("API: generated transport snapshot remains explicitly demo through canonica
   await expect(page.getByRole("button", { name: "Центр Москвы", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Все точки", exact: true }).click();
   await page.getByRole("button", { name: "Центр Москвы", exact: true }).click();
-  await page.getByRole("button", { name: "Агент", exact: true }).click();
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
   await page.getByRole("button", { name: "Проверить сценарий", exact: true }).click();
   await expect(page.getByRole("button", { name: "Сценарий", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Сценарий", exact: true }).click();
@@ -1120,10 +1105,14 @@ test("API: generated transport snapshot remains explicitly demo through canonica
   await expect(page.locator("#apiResultCard .k")).toHaveText("Демонстрационный анализ");
   await expect(notice).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("button", { name: "Фильтры", exact: true }).click();
+  await page.getByRole("button", { name: "Фильтры", exact: true }).first().click();
   await expect(notice).toBeVisible();
-  const bannerBounds = await notice.boundingBox(), filterBounds = await page.locator("#apiFilters").boundingBox();
-  expect(filterBounds!.y).toBeGreaterThanOrEqual(bannerBounds!.y + bannerBounds!.height - 1);
+  await expect(page.locator("#apiFilters [role=note]")).toContainText("Демонстрационная транспортная модель");
+  await page.locator("#apiFilters").getByRole("button", { name: "Закрыть фильтры", exact: true }).click();
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
+  await expect(page.locator("#chat [role=note]")).toContainText("Демонстрационная транспортная модель");
+  await page.getByRole("button", { name: "Свернуть чат", exact: true }).click();
+  await page.getByRole("button", { name: "Фильтры", exact: true }).first().click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await choose(page, "Город", "Калининград");
   await expect(notice).toHaveCount(0);
@@ -1134,8 +1123,8 @@ test("API: synthetic saved proposal shows its exact two-minute shift before the 
   const mock = await mockApi(page, { scenarioProposal: { fixed_parameters: { ...proposal.fixed_parameters, shift_seconds: 120 } } });
   await page.goto("/?data=api#atlas");
   await cityRun(page);
-  await page.getByRole("button", { name: "Агент", exact: true }).click();
-  const card = page.locator(".api-chat .proposal");
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
+  const card = page.locator(".at-chat .proposal");
   await expect(card).toContainText("Согласовать пересадку");
   await expect(card).toContainText("Сдвиг отправления: +2 мин");
   await expect(card.getByRole("button", { name: "Проверить сценарий", exact: true })).toBeEnabled();
@@ -1143,4 +1132,170 @@ test("API: synthetic saved proposal shows its exact two-minute shift before the 
   await card.getByRole("button", { name: "Проверить сценарий", exact: true }).click();
   await expect(page.getByRole("button", { name: "Сценарий", exact: true })).toBeVisible();
   expect(mock.requests.filter((request) => request.url.endsWith("/runs"))).toHaveLength(1);
+});
+
+
+test("API: shared card and map distinguish an observed zero estimate from unknown canonical totals", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const data = observedRouteFixture();
+  const mock = await mockApi(page, { capabilities: scopedCapabilities(), result: data, emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await airportParameters(page);
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  await expect(page.locator(".legend h3")).toContainText("Предварительная оценка по найденному маршруту");
+  const overview = page.getByLabel("Обзор рассчитанных точек");
+  await expect(overview.first()).toContainText("Рассчитанные точки (0 из 3)");
+  const estimates = overview.filter({ hasText: "Точки с предварительной оценкой" });
+  await estimates.locator("summary").click();
+  await estimates.getByRole("button", { name: /Точка · 54.50200, 20.30200/ }).click();
+  const card = page.locator("#apiResultCard");
+  await expect(card.locator('.idxpill[data-score-band="low"]')).toHaveText("0 из 100");
+  await expect(card).toContainText("Предварительная оценка по найденному маршруту");
+  await expect(card).toContainText("минимум не подтверждён");
+  await expect(card.getByText("Общий индекс", { exact: true }).locator("..").locator("..")).toContainText("Нет данных");
+  await expect(card.locator('.api-measure b[data-score-band="unknown"]')).toHaveCount(2);
+  await page.screenshot({ path: "test-results/api-shared-observed-desktop.png" });
+  expect(mock.posts).toBe(1);
+});
+
+
+test("API: a unique real-source Moscow default uses the original controls without automatic submission", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const c = structuredClone(capabilities) as Schemas["Capabilities"];
+  c.snapshots![0].territory_ids.push("moscow");
+  c.urban_passenger_scopes = [{ ...airportScope(), city_id: "moscow", categories: ["adult_polyclinic"] }];
+  const cities = (territories as Territory[]).map((city) => city.territory_id === "city-1" ? { ...city, territory_id: "moscow" } : city);
+  const mock = await mockApi(page, { capabilities: c, territories: cities });
+  await page.goto("/?data=api#atlas");
+  await expect(page.getByRole("group", { name: "Город", exact: true }).getByRole("button", { name: "Москва", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("group", { name: "Передвижение", exact: true }).getByRole("button", { name: "Пешком", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".cat-tog[aria-pressed=true]")).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Взрослые поликлиники", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("tab")).toHaveCount(3);
+  await expect(page.getByRole("combobox", { name: "Набор данных", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Использовать доступные параметры", exact: true })).toHaveCount(0);
+  expect(mock.posts).toBe(0);
+  await choose(page, "Передвижение", "Общ. транспорт");
+  await expect(page.getByRole("group", { name: "Передвижение", exact: true }).getByRole("button", { name: "Общ. транспорт", exact: true })).toHaveAttribute("aria-pressed", "true");
+  expect(mock.posts).toBe(0);
+  await page.screenshot({ path: "test-results/api-shared-initial-source-desktop.png" });
+});
+
+test("API: preparation errors are human and manual retry retains the pending submission identity", async ({ page }) => {
+  const mock = await mockApi(page, { errorStatus: 503, errorCode: "RUNTIME_INPUTS_BUSY", emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await cityRun(page);
+  await expect(page.getByRole("alert")).toContainText("Сервер подготавливает данные. Повторите расчёт чуть позже.");
+  await expect(page.locator('#chat [role="alert"]')).toHaveCount(0);
+  await expect(page.locator("body")).not.toContainText("RUNTIME_INPUTS_BUSY");
+  await page.getByRole("button", { name: "Повторить", exact: true }).click();
+  await expect.poll(() => mock.posts).toBe(2);
+  const posts = mock.requests.filter((request) => request.method === "POST" && request.url.endsWith("/analyses"));
+  expect(posts[0].key).toBeTruthy();
+  expect(posts[0].key).toBe(posts[1].key);
+});
+
+
+test("API: explanation transport errors stay visible inside the shared mobile chat", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mock = await mockApi(page, { emptyProposals: true });
+  await page.route("**/explanation", (route) => route.fulfill({ status: 503, json: { error: { code: "assistant_unavailable", message: "Объяснение временно недоступно", field_errors: [], request_id: "synthetic-chat-error", retryable: false } } }));
+  await page.goto("/?data=api#atlas");
+  await page.getByRole("button", { name: "Фильтры", exact: true }).first().click();
+  await cityRun(page);
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
+  await page.getByLabel("Вопрос агенту").fill("Почему?");
+  await page.getByRole("button", { name: "Отправить", exact: true }).click();
+  await expect(page.locator("#chat").getByRole("alert")).toHaveText("Объяснение временно недоступно");
+  await expect(page.locator("#chat").getByRole("alert")).toBeVisible();
+  await expect(page.locator('.statecard[role="alert"]')).toHaveCount(0);
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  await page.getByRole("button", { name: "Новый диалог", exact: true }).click();
+  await expect(page.locator('#chat [role="alert"]')).toHaveCount(0);
+  expect(mock.posts).toBe(1);
+});
+
+test("API: pre-analysis interface help sends no requests and hands saved questions to the explanation API", async ({ page }) => {
+  const mock = await mockApi(page, { emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
+  await expect(page.getByLabel("Вопрос агенту")).toBeEnabled();
+  await page.getByRole("button", { name: "Как запустить расчёт?", exact: true }).click();
+  await page.getByRole("button", { name: "Отправить", exact: true }).click();
+  const answer = page.locator("#chat .msg.a");
+  await expect(answer).toContainText("Помощь по интерфейсу · локально");
+  await expect(answer).toContainText("Выберите город, передвижение и категории");
+  await expect(answer).not.toContainText(/\d|Объяснение модели|Шаблонное объяснение/);
+  await expect(page.locator("#apiResultCard, #chat .proposal")).toHaveCount(0);
+  expect(mock.requests.filter((request) => request.method !== "GET")).toEqual([]);
+  expect(mock.requests.filter((request) => request.url.endsWith("/explanation"))).toEqual([]);
+  expect(mock.posts).toBe(0);
+  await page.getByRole("button", { name: "Новый диалог", exact: true }).click();
+  await expect(answer).toHaveCount(0);
+  await page.getByRole("button", { name: "Свернуть чат", exact: true }).click();
+  await cityRun(page);
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
+  await page.getByLabel("Вопрос агенту").fill("Объясни сохранённый результат");
+  await page.getByRole("button", { name: "Отправить", exact: true }).click();
+  await expect(answer).toContainText("Подтверждённое время из сохранённого расчёта");
+  await expect(answer).not.toContainText("Помощь по интерфейсу · локально");
+  expect(mock.requests.filter((request) => request.url.endsWith("/explanation"))).toHaveLength(1);
+  expect(mock.posts).toBe(1);
+});
+
+test("API: mobile interface help respects empty scopes and unavailable calculation capabilities", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const caps = scopedCapabilities([]);
+  caps.analyses = caps.analyses.map((analysis) => analysis.analysis_kind === "intercity_passenger"
+    ? { ...analysis, calculation_available: false, reason_code: "RUNTIME_INPUTS_UNAVAILABLE" } : analysis);
+  const mock = await mockApi(page, { capabilities: caps, emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
+  await page.getByLabel("Вопрос агенту").fill("Покажи индекс города 99");
+  await page.getByRole("button", { name: "Отправить", exact: true }).click();
+  const answer = page.locator("#chat .msg.a");
+  await expect(answer).toContainText("Для городского расчёта нет зарегистрированных наборов параметров");
+  await expect(answer).not.toContainText(/\d|Объяснение модели|Шаблонное объяснение/);
+  await page.getByRole("button", { name: "Свернуть чат", exact: true }).click();
+  await page.getByRole("tab").nth(1).click();
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
+  await expect(answer).toHaveCount(0);
+  await page.getByRole("button", { name: "Какие условия сейчас доступны?", exact: true }).click();
+  await page.getByRole("button", { name: "Отправить", exact: true }).click();
+  await expect(answer).toContainText("Расчёт выбранного направления сейчас недоступен");
+  await expect(answer).not.toContainText(/\d|Объяснение модели|Шаблонное объяснение/);
+  await expect(page.locator("#apiResultCard, #chat .proposal")).toHaveCount(0);
+  expect(mock.requests.filter((request) => request.method !== "GET")).toEqual([]);
+  expect(mock.posts).toBe(0);
+});
+
+test("API: mobile empty-state action stays clear of the sheet and map controls", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mock = await mockApi(page, { emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  for (const [mode, intercityCargo] of [[0, false], [1, false], [2, false], [2, true]] as const) {
+    await page.getByRole("tab").nth(mode).click();
+    if (intercityCargo) {
+      await page.getByRole("button", { name: "Фильтры", exact: true }).first().click();
+      await page.getByRole("group", { name: "Режим грузовых связей", exact: true })
+        .getByRole("button", { name: "Между территориями", exact: true }).click();
+      await page.getByRole("button", { name: "Закрыть фильтры", exact: true }).click();
+    }
+    await expect(async () => {
+      const placement = await page.evaluate(() => {
+        const card = document.querySelector(".statecard")!.getBoundingClientRect();
+        const button = document.querySelector(".statecard button")!.getBoundingClientRect();
+        const status = document.querySelector(".ov-tl")!.getBoundingClientRect();
+        const controls = [".m-sheet", ".legend", ".zgroup"].map((selector) => document.querySelector(selector)!.getBoundingClientRect());
+        const target = document.elementFromPoint(button.x + button.width / 2, button.y + button.height / 2);
+        return { clear: controls.every((control) => card.bottom + 8 <= control.top), belowStatus: card.top >= status.bottom + 8,
+          buttonVisible: !!target?.closest(".statecard button"), overflow: document.documentElement.scrollWidth > innerWidth };
+      });
+      expect(placement).toEqual({ clear: true, belowStatus: true, buttonVisible: true, overflow: false });
+    }).toPass();
+  }
+  expect(mock.posts).toBe(0);
 });
