@@ -1194,3 +1194,20 @@ test("API: preparation errors are human and manual retry retains the pending sub
   expect(posts[0].key).toBeTruthy();
   expect(posts[0].key).toBe(posts[1].key);
 });
+
+
+test("API: explanation transport errors stay visible inside the shared mobile chat", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mock = await mockApi(page, { emptyProposals: true });
+  await page.route("**/explanation", (route) => route.fulfill({ status: 503, json: { error: { code: "assistant_unavailable", message: "Объяснение временно недоступно", field_errors: [], request_id: "synthetic-chat-error", retryable: false } } }));
+  await page.goto("/?data=api#atlas");
+  await page.getByRole("button", { name: "Фильтры", exact: true }).first().click();
+  await cityRun(page);
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
+  await page.getByLabel("Вопрос агенту").fill("Почему?");
+  await page.getByRole("button", { name: "Отправить", exact: true }).click();
+  await expect(page.locator("#chat").getByRole("alert")).toHaveText("Объяснение временно недоступно");
+  await expect(page.locator("#chat").getByRole("alert")).toBeVisible();
+  expect(mock.posts).toBe(1);
+});
