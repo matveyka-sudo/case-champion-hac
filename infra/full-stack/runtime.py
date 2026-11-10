@@ -9,7 +9,7 @@ import json
 import os
 import sys
 import time
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from types import SimpleNamespace
 from urllib.request import Request, urlopen
 
@@ -29,8 +29,33 @@ def load(path, expected):
     return json.loads(content)
 
 
+def directory_sources(graph, configuration):
+    """GraphReader prefers an archive and may fetch missing tiles remotely."""
+    reader = configuration.get("mjolnir", {})
+    if (
+        not isinstance(reader, dict)
+        or reader.get("tile_dir") != "/data/tiles"
+        or reader.get("tile_url") not in (None, "")
+    ):
+        raise ValueError("Directory graph requires /data/tiles and no remote tile URL")
+    extract = reader.get("tile_extract")
+    if extract is not None and extract != "":
+        if not isinstance(extract, str):
+            raise ValueError("Configured tile archive must be a path or absent")
+        try:
+            relative = PurePosixPath(extract).relative_to("/data")
+        except ValueError as exc:
+            raise ValueError("Configured tile archive is outside the verified graph") from exc
+        if ".." in relative.parts:
+            raise ValueError("Configured tile archive is outside the verified graph")
+        archive = graph.joinpath(*relative.parts)
+        if archive.exists() or archive.is_symlink():
+            raise ValueError("Unverified tile archive would override the checked directory graph")
+
+
 def graph_check(graph, parent):
     graph = Path(graph).resolve(strict=True)
+    directory_sources(graph, real.read(graph / "valhalla.json"))
     manifest_path = graph / "valhalla-build-manifest.json"
     digest = real.sha(manifest_path)
     if parent["build"]["graph_version"] != "valhalla-351-tiles-" + digest:

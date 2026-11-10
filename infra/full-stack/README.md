@@ -55,7 +55,10 @@ python3 "$release/infra/full-stack/runtime.py" prepare \
 
 Record the printed digest as `WAYDEX_ARTIFACT_SHA256`. `prepare` checks the
 parent checksum and graph identity, every source/config/profile/tile checksum,
-the complete tile inventory, binary version and pinned image. It exclusively
+the complete tile inventory, binary version and pinned image. Directory mode
+requires `mjolnir.tile_dir=/data/tiles`, no remote tile URL and an absent
+configured tile archive; an unlisted `tiles.tar` cannot override verified tiles.
+It exclusively
 creates a read-only derivative outside the graph. Its only behavioral change is
 `endpoint_url=http://valhalla:8002`, plus explicit parent and graph binding
 metadata. Historical evidence URLs, dates and observations remain intact. This
