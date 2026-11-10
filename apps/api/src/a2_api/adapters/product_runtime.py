@@ -24,6 +24,7 @@ from a2_contracts.v2.requests import (
     UrbanPassengerRequest,
 )
 from a2_contracts.v2.results import EvidenceRef
+from a2_engine import scenario_hash
 from pydantic import Field
 
 from a2_api.adapters.product_inputs import (
@@ -138,7 +139,7 @@ def input_fingerprints(
     This hash is not a claim about a deployed routing tile store. Live executors
     must additionally verify their own physical build, as walk_pilot does.
     """
-    graph = canonical_hash(INPUT_ADAPTER.dump_python(inputs, mode="json"))
+    graph = scenario_hash(INPUT_ADAPTER.dump_python(inputs, mode="python"))
     costing = canonical_hash(
         {
             "config_hash": registry.config_hash,
