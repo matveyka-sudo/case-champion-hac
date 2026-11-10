@@ -12,6 +12,9 @@ Scenario Engine выполняет immutable изменения расписан
 Загрузки внешних расписаний, сетки, построения реальных OD-матриц, HTTP и LLM здесь нет.
 
 Независимые находки, измерения и границы проверки: [AUDIT.md](AUDIT.md).
+Независимый точный oracle конечного пешего state graph и условия реального
+доказательства minimum elapsed time: [FINITE_WALK_MINIMUM.md](FINITE_WALK_MINIMUM.md).
+Это reference/test support; он не подтверждает реальный minimum или available индекс.
 Завершение критических oracle/stress-проверок: **922 tests passed**,
 **READY WITH EXTERNAL DEPENDENCIES**; установка пакета, DTO supplements,
 accepted data/executor и совместный E2E остаются условиями интеграции.
@@ -35,7 +38,7 @@ a2_engine/
     validation.py              # общая проверка точек для analysis и tau
     analysis/                  # models.py, validation.py, calculation.py
     valhalla/                  # models.py, requests.py, responses.py, codec.py
-    walk/                      # models.py, inputs.py, analysis.py
+    walk/                      # models.py, inputs.py, analysis.py, finite_oracle.py (reference)
     car/                       # models.py, analysis.py, traffic.py
     transit/                   # models.py, journeys.py, search.py, last_return.py
     tau/                       # models.py, calendar.py, calculation.py
