@@ -71,6 +71,17 @@ def test_unverified_inventory_evidence_cannot_establish_full_absence(transport_f
         validate_inputs(bind_fingerprints(profile, facts), facts, snapshot, ProductRegistry())
 
 
+def test_verified_catalogue_is_not_an_exhaustive_static_search_receipt(transport_facts):
+    snapshot, facts, profile = transport_facts
+    assert not facts.candidates
+    assert all(e.verified for e in snapshot.evidence)
+    facts = facts.model_copy(
+        update={"coverage": tuple(replace(c, search_complete=True) for c in facts.coverage)}
+    )
+    with pytest.raises(ValueError, match="SERVER_VERIFIED_RECEIPT"):
+        validate_inputs(bind_fingerprints(profile, facts), facts, snapshot, ProductRegistry())
+
+
 def test_static_flag_cannot_retime_scheduled_public_transport(transport_facts):
     snapshot, facts, profile = transport_facts
     at = facts.context.requested_departure_at
