@@ -22,6 +22,7 @@ from pydantic import ValidationError
 from test_product_scenario_publication import queued_case
 from test_product_scenarios import make_case, run, with_claim
 from test_v2_storage import proposal
+from test_v2_storage import result as fixture_result
 from test_walk_observed import setup
 from test_worker_transport import Capture
 
@@ -120,6 +121,32 @@ def test_group_budget_does_not_discard_edges_or_facts(monkeypatch):
     original = large_analysis()
     monkeypatch.setattr(evidence_groups, "MAX_EVIDENCE_GROUPS", 0)
     assert pack_analysis_evidence(original) is original
+
+
+def test_grouping_eligibility_is_independent_of_prior_reference_packing():
+    payload = fixture_result().model_dump(mode="json")
+    a, b = "A" * 128, "B" * 128
+    common = [f"catalogue-definition-identity-{index:03}" for index in range(40)]
+    edges = [[a, b] + [f"unique-{index}-{leaf:02}" for leaf in range(31)] for index in range(3)] + [
+        [a] + common,
+        common.copy(),
+    ]
+    prototype = payload["evidence_refs"][0]
+    payload["evidence_refs"].extend(
+        prototype | {"evidence_id": identity}
+        for identity in sorted({ref for edge in edges for ref in edge})
+    )
+    metric = payload["metrics"][0]
+    payload["metrics"].extend(
+        metric | {"metric_id": f"TEST_ONLY-idempotence-{index}", "source_refs": edge}
+        for index, edge in enumerate(edges)
+    )
+    original = AnalysisResult.model_validate(payload)
+    once = pack_analysis_evidence(original)
+    twice = pack_analysis_evidence(once)
+    assert len(once.evidence_groups) == 1
+    assert twice == once and twice.result_hash == once.result_hash
+    assert leaf_facts(twice) == leaf_facts(original)
 
 
 def test_invalid_original_or_model_copy_group_is_rejected_before_packing():

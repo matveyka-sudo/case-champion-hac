@@ -62,7 +62,7 @@ def _factor_edges(
     occurrences: dict[str, list[int]] = defaultdict(list)
     # Short map/leg edges may cite one record from an otherwise shared catalogue.
     # They must not split the catalogue into singleton equivalence classes.
-    for index, refs in enumerate(refs for refs in edges if len(refs) >= 32):
+    for index, refs in enumerate(refs for refs in edges if len(resolver.expand(refs)) >= 32):
         for identity in set(refs):
             if identity in resolver.leaf_ids:
                 occurrences[identity].append(index)
