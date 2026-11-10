@@ -7,6 +7,7 @@ from a2_engine.freight.urban_analysis import analyze_urban_cargo
 from a2_engine.intercity.analysis.calculation import analyze_intercity_passenger
 from a2_engine.intercity.analysis.identity import normalize_physical_services
 from a2_engine.pipeline.analysis import analyze_pipeline_connections
+from a2_engine.routing.timetable import check_limit
 from a2_engine.scenario.models import (
     ScenarioComputation,
     ScenarioInputs,
@@ -16,6 +17,7 @@ from a2_engine.scenario.models import (
 from a2_engine.shared.results import MetricResult
 from a2_engine.urban.analysis.calculation import analyze_urban_candidates
 from a2_engine.urban.districts.calculation import analyze_urban_districts
+from a2_engine.urban.transit.journeys import check_urban_inputs
 from a2_engine.urban.transit.last_return import search_urban_last_return
 from a2_engine.urban.transit.models import UrbanTransitNetwork
 from a2_engine.urban.transit.search import search_urban_transit
@@ -110,6 +112,9 @@ def recompute(inputs: ScenarioInputs, fixed_hash: str) -> ScenarioComputation:
         searches = []
         candidates = list(job.fixed_candidates)
         computed_searches: dict[tuple[str, str, str], list[bool]] = {}
+        checked_points: set[str] = set()
+        checked_destinations: set[str] = set()
+        missing_boundary = False
         for point in job.points:
             for passenger_mode in job.modes:
                 for category_name, _ in job.selected_categories:
@@ -122,6 +127,30 @@ def recompute(inputs: ScenarioInputs, fixed_hash: str) -> ScenarioComputation:
                             category_name not in destination.categories
                             or not destination.in_service_scope
                         ):
+                            continue
+                        if (
+                            point.origin_node_id not in urban_table.scope.node_ids
+                            or (destination.physical_node_id or destination.access_node_id)
+                            not in urban_table.scope.node_ids
+                        ):
+                            # Missing data does not excuse malformed inputs. Each
+                            # endpoint needs validation only once across skipped pairs.
+                            if (
+                                point.point_id not in checked_points
+                                or destination.destination_id not in checked_destinations
+                            ):
+                                check_urban_inputs(network, point, destination, job.rules)
+                                check_limit(job.resource_limit)
+                                if not (
+                                    urban_table.scope.start_at
+                                    <= job.context.requested_departure_at
+                                    <= urban_table.scope.end_at
+                                ):
+                                    raise ValueError("DEPARTURE_OUTSIDE_TIMETABLE_SCOPE")
+                                checked_points.add(point.point_id)
+                                checked_destinations.add(destination.destination_id)
+                            computed_searches[key].append(False)
+                            missing_boundary = True
                             continue
                         search_result = search_urban_transit(
                             network,
@@ -177,6 +206,13 @@ def recompute(inputs: ScenarioInputs, fixed_hash: str) -> ScenarioComputation:
             rules=job.rules,
             thresholds=job.thresholds,
         )
+        if missing_boundary:
+            analysis = replace(
+                analysis,
+                limitations=tuple(
+                    sorted(set(analysis.limitations) | {"PHYSICAL_BOUNDARY_CONNECTOR_UNAVAILABLE"})
+                ),
+            )
         districts = (
             analyze_urban_districts(
                 analysis,
