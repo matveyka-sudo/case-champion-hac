@@ -36,11 +36,22 @@ class NumericClaim(ContractModel):
     unit: Identifier
 
 
+class ScoreClaim(ContractModel):
+    score_id: Identifier
+    value: Annotated[float, Field(strict=True, ge=0, le=100)] | None
+
+
 class Finding(ContractModel):
     text: Text
-    metric_ids: list[Identifier] = Field(min_length=1, max_length=20)
+    metric_ids: list[Identifier] = Field(max_length=20)
     evidence_refs: list[Identifier] = Field(max_length=50)
     claims: list[NumericClaim] = Field(max_length=20)
+    score_ids: list[Identifier] = Field(
+        default_factory=list, max_length=20, exclude_if=lambda value: not value
+    )
+    score_claims: list[ScoreClaim] = Field(
+        default_factory=list, max_length=20, exclude_if=lambda value: not value
+    )
 
     @model_validator(mode="after")
     def referenced_claims(self) -> Self:
@@ -49,6 +60,13 @@ class Finding(ContractModel):
             raise ValueError("Claims require unique referenced metric identities")
         if len(set(self.metric_ids)) != len(self.metric_ids):
             raise ValueError("Duplicate metric reference")
+        if not self.metric_ids and not self.score_ids:
+            raise ValueError("Finding requires saved metric or score references")
+        score_ids = [claim.score_id for claim in self.score_claims]
+        if len(set(score_ids)) != len(score_ids) or not set(score_ids) <= set(self.score_ids):
+            raise ValueError("Score claims require unique referenced score identities")
+        if len(set(self.score_ids)) != len(self.score_ids):
+            raise ValueError("Duplicate score reference")
         return self
 
 
