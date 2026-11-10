@@ -11,6 +11,13 @@ import { partialWalkGeometryFixture } from "./fixtures/partial-walk-geometry";
 afterEach(cleanup);
 
 describe("saved result clarity", () => {
+  it("explains accepted scenario assumptions and the canonical proven-category reason without inferring proof", () => {
+    const codes = ["SAME_EXACT_STOP_TRANSFER_180S_IS_CONSUMER_MODEL", "WHOLE_EXECUTION_HYPOTHETICAL_SHIFT_MINUS360", "RESOURCE_FEASIBILITY_UNVERIFIED", "NO_OBSERVED_PASSENGER_DEMAND", "GLOBAL_MINIMUM_AND_CITY_INDEX_UNPROVEN", "INFRASTRUCTURE_AND_CALENDAR_UNVERIFIED"];
+    for (const code of codes) expect(reasonText(code)).not.toBe("");
+    expect(noticeTexts([...codes, codes[0], "FUTURE_ASSUMPTION_ONE", "FUTURE_ASSUMPTION_TWO"])).toHaveLength(codes.length + 1);
+    expect(reasonText("USE_PROVEN_CATEGORY_INDEX")).toContain("подтверждённый индекс категории");
+    expect(reasonText("USE_UNREVIEWED_CATEGORY_INDEX")).toBe("");
+  });
   it("explains the live walk limitations and combines only identical presentation text", () => {
     const codes = ["APPROVED_PARTIAL_OD_EXECUTION", "CONNECTOR_UNCONFIRMED", "COORDINATE_QUANTIZATION_UNCERTAINTY", "NOT_A_CITY_RANKING", "OBSERVED_ROUTE_ESTIMATE", "PHYSICAL_CORRELATION_OFFSET_UNMEASURED", "REPORTED_DURATION_NOT_CERTIFIED_UPPER_BOUND", "SINGLE_FOUND_OBJECT_NOT_CATEGORY_MINIMUM", "VALHALLA_CORRELATION_UNAVAILABLE", "WALK_CONNECTOR_TIME_0_1_SECOND_PRECISION"];
     for (const code of codes) expect(reasonText(code)).not.toBe("");
