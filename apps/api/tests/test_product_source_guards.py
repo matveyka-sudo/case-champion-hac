@@ -71,6 +71,17 @@ def test_unverified_inventory_evidence_cannot_establish_full_absence(transport_f
         validate_inputs(bind_fingerprints(profile, facts), facts, snapshot, ProductRegistry())
 
 
+def test_verified_catalogue_is_not_an_exhaustive_static_search_receipt(transport_facts):
+    snapshot, facts, profile = transport_facts
+    assert not facts.candidates
+    assert all(e.verified for e in snapshot.evidence)
+    facts = facts.model_copy(
+        update={"coverage": tuple(replace(c, search_complete=True) for c in facts.coverage)}
+    )
+    with pytest.raises(ValueError, match="SERVER_VERIFIED_RECEIPT"):
+        validate_inputs(bind_fingerprints(profile, facts), facts, snapshot, ProductRegistry())
+
+
 def test_static_flag_cannot_retime_scheduled_public_transport(transport_facts):
     snapshot, facts, profile = transport_facts
     at = facts.context.requested_departure_at
@@ -147,6 +158,48 @@ def test_departure_after_sole_dated_bus_does_not_create_another_run(
         True,
         refs,
     )
+    canonical_bus = snapshot.scheduled_services[0].model_copy(
+        update={
+            "service_id": "TEST_ONLY-canonical-bus",
+            "trip_id": bus.trip_id,
+            "mode": "public_transport",
+            "timezone": "UTC",
+            "service_dates": [at.date()],
+            "source_refs": list(refs),
+            "stop_times": [
+                snapshot.scheduled_services[0]
+                .stop_times[0]
+                .model_copy(
+                    update={
+                        "node_id": p.access_node_id,
+                        "sequence": 0,
+                        "arrival_seconds": 300,
+                        "departure_seconds": 300,
+                        "pickup": True,
+                        "dropoff": True,
+                    }
+                ),
+                snapshot.scheduled_services[0]
+                .stop_times[1]
+                .model_copy(
+                    update={
+                        "node_id": d.access_node_id,
+                        "sequence": 1,
+                        "arrival_seconds": 600,
+                        "departure_seconds": 600,
+                        "pickup": True,
+                        "dropoff": True,
+                    }
+                ),
+            ],
+        }
+    )
+    snapshot = AcceptedData.model_validate(
+        {
+            **snapshot.model_dump(mode="json"),
+            "scheduled_services": [canonical_bus.model_dump(mode="json")],
+        }
+    )
     scope = replace(
         seed.scope,
         snapshot_id=snapshot.snapshot_id,
@@ -179,6 +232,7 @@ def test_departure_after_sole_dated_bus_does_not_create_another_run(
     facts = facts.model_copy(
         update={
             "timetable": table,
+            "timetable_service_clock": "local_service_midnight_v1",
             "coverage": tuple(
                 replace(c, scope=replace(c.scope, passenger_mode="public_transport"))
                 for c in facts.coverage
@@ -186,7 +240,13 @@ def test_departure_after_sole_dated_bus_does_not_create_another_run(
         }
     )
     profile = bind_fingerprints(
-        profile.model_copy(update={"passenger_modes": ["public_transport"]}), facts
+        profile.model_copy(
+            update={
+                "passenger_modes": ["public_transport"],
+                "snapshot_hash": canonical_hash(snapshot.model_dump(mode="json")),
+            }
+        ),
+        facts,
     )
     configure(tmp_path, monkeypatch, (snapshot, facts, profile))
     first = product.calculate(

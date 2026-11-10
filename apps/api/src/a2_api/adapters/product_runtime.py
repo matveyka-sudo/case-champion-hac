@@ -24,6 +24,7 @@ from a2_contracts.v2.requests import (
     UrbanPassengerRequest,
 )
 from a2_contracts.v2.results import EvidenceRef
+from a2_engine import scenario_hash
 from pydantic import Field
 
 from a2_api.adapters.product_inputs import (
@@ -37,6 +38,7 @@ from a2_api.adapters.product_inputs import (
     UrbanInputs,
     candidate_is_static,
 )
+from a2_api.adapters.timetable_source import verify_timetable_source
 from a2_api.core.errors import DomainError
 from a2_api.core.registry import ProductRegistry
 
@@ -138,7 +140,7 @@ def input_fingerprints(
     This hash is not a claim about a deployed routing tile store. Live executors
     must additionally verify their own physical build, as walk_pilot does.
     """
-    graph = canonical_hash(INPUT_ADAPTER.dump_python(inputs, mode="json"))
+    graph = scenario_hash(INPUT_ADAPTER.dump_python(inputs, mode="python"))
     costing = canonical_hash(
         {
             "config_hash": registry.config_hash,
@@ -227,6 +229,12 @@ def validate_inputs(
             if not proof or not proof <= verified_evidence:
                 raise ValueError("FULL_SCOPE_REQUIRES_VERIFIED_CANONICAL_EVIDENCE")
     if isinstance(inputs, UrbanInputs):
+        if inputs.timetable is not None:
+            verify_timetable_source(snapshot, inputs.timetable, inputs.timetable_service_clock)
+        if any(coverage.search_complete for coverage in inputs.coverage):
+            raise ValueError(
+                "EXTERNALLY_ASSERTED_URBAN_SEARCH_COMPLETENESS_REQUIRES_SERVER_VERIFIED_RECEIPT"
+            )
         if (
             inputs.context.city_id != profile.city_id
             or inputs.context.traffic_mode not in profile.traffic_modes
@@ -357,6 +365,12 @@ def validate_inputs(
         if "public_transport" in profile.passenger_modes and inputs.timetable is None:
             raise ValueError("DATED_TIMETABLE_REQUIRED_FOR_PUBLIC_TRANSPORT")
     elif isinstance(inputs, IntercityInputs):
+        verify_timetable_source(
+            snapshot,
+            inputs.timetable,
+            inputs.timetable_service_clock,
+            {binding.transport_type: binding.mode for binding in inputs.transport_modes},
+        )
         scope = inputs.scope.comparison_scope
         if (scope.origin_territory_id, scope.destination_territory_id) != (
             profile.origin_id,
