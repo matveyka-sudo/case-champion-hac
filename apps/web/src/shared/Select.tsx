@@ -5,6 +5,7 @@ export interface SelectOption {
   value: string;
   label: string;
   disabled?: boolean;
+  reason?: string;
 }
 export function Select({
   label,
@@ -123,12 +124,16 @@ export function Select({
             data-value={o.value}
             aria-selected={o.value === value}
             disabled={o.disabled}
+            aria-label={o.label}
+            aria-description={o.reason}
+            title={o.reason}
+            className={o.reason ? "wx-option-unavailable" : undefined}
             onFocus={() => {
               active.current = o.value;
             }}
             onClick={() => select(o.value)}
           >
-            <span>{o.label}</span>
+            <span>{o.label}{o.reason && <small className="wx-option-reason">{o.reason}</small>}</span>
             {o.value === value && <Icon name="check" />}
           </button>
         ))}

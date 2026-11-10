@@ -7,6 +7,8 @@ import type {
   Territory,
 } from "../types";
 import { decode } from "../validation";
+import { urbanScopeAvailability } from "./urbanScopes";
+export const passengerModes = { pt: "public_transport", walk: "walk", car: "private_car" } as const;
 export const categoryIds = {
   c01: "adult_polyclinic",
   c02: "child_polyclinic",
@@ -195,7 +197,7 @@ export function toRequest(
   )
     throw new DraftError("areaId", "Район не принадлежит выбранному городу");
   const departure = departureAt(d.date, d.slot, origin.timezone);
-  let snapshotId: string | undefined;
+  let snapshotId: string | undefined = d.snapshotId || undefined;
   if (caps.snapshots !== undefined) {
     const eligible = eligibleSnapshots(d, territories, caps);
     snapshotId = resolvedSnapshotId(d, eligible);
@@ -246,16 +248,18 @@ export function toRequest(
         { 1: "low", 2: "medium", 3: "high" } as const
       )[weight as 1 | 2 | 3];
     }
-    return decode("UrbanPassengerRequest", {
+    const request = decode("UrbanPassengerRequest", {
       ...base,
       ...city,
       analysis_kind: d.kind,
-      passenger_mode: (
-        { pt: "public_transport", walk: "walk", car: "private_car" } as const
-      )[d.travel],
+      passenger_mode: passengerModes[d.travel],
       categories: Object.keys(priorities),
       priorities,
     });
+    const scope = urbanScopeAvailability({ cityId: request.city_id, snapshotId: snapshotId || "", departureAt: request.departure_at,
+      areaId: request.area_id || "", mode: request.passenger_mode, traffic: request.traffic_mode, categories: request.categories }, caps.urban_passenger_scopes);
+    if (scope.problem) throw new DraftError(scope.problem.field, scope.problem.message);
+    return request;
   }
   if (d.kind === "intercity_passenger") {
     const modes: Record<string, string> = {

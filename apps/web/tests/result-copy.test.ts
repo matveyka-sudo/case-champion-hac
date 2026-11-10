@@ -6,7 +6,19 @@ describe("partial walk result explanations", () => {
     expect(measureLabel("urban_h_seconds")).toBe("Опорное время города");
     expect(measureLabel("best_observed_journey_seconds")).toBe("Время найденного пути");
     expect(measureLabel("urban_accessibility_index")).toBe("Индекс доступности");
+    expect(measureLabel("category_index")).toBe("Индекс категории");
+    expect(measureLabel("point_index")).toBe("Индекс точки");
+    expect(measureLabel("minimum_journey_seconds")).toBe("Полное время до объекта");
     expect(measureLabel("Время ожидания")).toBe("Время ожидания");
+  });
+
+  it("localizes the other known product metric names while preserving unknown names", () => {
+    const names = ["territory_index", "accessible_object_count", "private_car_path_seconds", "private_car_index", "path_seconds", "initial_wait_seconds", "total_seconds", "path_index", "waiting_index", "passenger_index", "unique_physical_departures", "minimum_truck_access_seconds", "cargo_site_index", "cargo_access_index", "complete_delivery_seconds", "movement_seconds", "known_movement_seconds", "delivery_index", "pipeline_connection_confirmed", "pipeline_utilization_percent"];
+    for (const name of names) {
+      expect(measureLabel(name)).not.toBe(name);
+      expect(measureLabel(name)).toMatch(/[А-Яа-я]/);
+    }
+    expect(measureLabel("future_unreviewed_metric")).toBe("future_unreviewed_metric");
   });
 
   it("explains each known pilot limitation instead of repeating a generic notice", () => {

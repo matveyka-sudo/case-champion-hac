@@ -146,6 +146,12 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+.wx-select-popup > button.wx-option-unavailable:disabled{opacity:1;color:var(--text-3)}
+.wx-option-reason{display:block;margin-top:3px;font-size:12px;font-weight:400;line-height:1.4;color:var(--text-2)}
+.api-choice-reason{display:block;margin-top:4px;font-size:12px;line-height:1.4;color:var(--text-2)}
+.api-scope-help{margin:14px 0;padding:12px 0;border-block:1px solid var(--line)}
+.api-scope-help .iconbtn{width:100%;white-space:normal}
+.api-scope-preview{overflow-wrap:anywhere}
 .wx-select-popup .lucide {
   width: 16px;
   height: 16px;
