@@ -207,6 +207,16 @@ def test_exported_artifacts_match_baseline_and_approved_contract_extensions(tmp_
     assert set(scopes_extension["added"]).isdisjoint(expected)
     expected.update(scopes_extension["replaced"])
     expected.update(scopes_extension["added"])
+    leg_extension = json.loads(
+        (ROOT / "packages/contracts/tests/fixtures/leg_geometry_schema_extension.json").read_text()
+    )
+    assert leg_extension["added"] == {}
+    assert set(leg_extension["replaced"]) == {"manifest.json", "openapi.json"} | {
+        f"v2.{model}.{mode}.schema.json"
+        for model in ("Leg", "JourneyResult", "AnalysisResult", "ScenarioResult")
+        for mode in ("serialization", "validation")
+    }
+    expected.update(leg_extension["replaced"])
     assert actual == expected
 
 
