@@ -539,6 +539,8 @@ class AnalysisResult(ContractModel):
             evidence_links(journey.evidence_refs)
             for leg in journey.legs:
                 evidence_links(leg.evidence_refs)
+                if leg.geometry is not None:
+                    evidence_links(leg.geometry.evidence_refs)
             if journey.geometry:
                 evidence_links(journey.geometry.evidence_refs)
             if journey.reference_id is not None:
