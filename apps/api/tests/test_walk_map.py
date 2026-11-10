@@ -279,3 +279,33 @@ def test_duplicate_canonical_destination_references_are_deduplicated(configured)
     assert len([feature for feature in features if feature.entity_kind == "sample_point"]) == len(
         snapshot.sample_points
     )
+
+
+@pytest.mark.parametrize("axis", [0, 1])
+@pytest.mark.parametrize("direction", [-1, 1])
+@pytest.mark.parametrize("excess", [False, True])
+def test_network_geometry_endpoint_keeps_exact_decimal_microdegree_limit(
+    configured, axis, direction, excess
+):
+    from decimal import Decimal
+
+    snapshot, calculated, before, names = calculate(configured)
+    route = calculated.routes[0]
+    coordinates = list(route.network_geometry.coordinates)
+    pinned = route.request.origin.correlated_location
+    expected = pinned.lon if axis == 0 else pinned.lat
+    difference = Decimal("0.0000010000001" if excess else "0.000001") * direction
+    endpoint = list(coordinates[0])
+    endpoint[axis] = float(Decimal(str(expected)) + difference)
+    coordinates[0] = tuple(endpoint)
+    geometry = replace(route.network_geometry, coordinates=tuple(coordinates))
+    changed = replace(
+        calculated, routes=(replace(route, network_geometry=geometry), *calculated.routes[1:])
+    )
+    if excess:
+        with pytest.raises(ValueError, match="WALK_MAP_GEOMETRY_ENDPOINT_MISMATCH"):
+            attach_walk_map(before, snapshot, changed, names)
+    else:
+        mapped = attach_walk_map(before, snapshot, changed, names)
+        assert mapped.journeys[0].legs[1].geometry.coordinates == list(geometry.coordinates)
+        assert mapped.metrics == before.metrics and mapped.scores == before.scores

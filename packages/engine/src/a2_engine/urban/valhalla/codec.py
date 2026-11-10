@@ -11,6 +11,28 @@ from a2_engine.urban.valhalla._grisu2 import coordinate_boundary_echo
 ROUTE_ECHO_TRUNC6_EVIDENCE_REF = "valhalla-3.5.1-route-echo-trunc6-v1"
 
 
+def polyline6_coordinate_matches(actual: float, expected: float) -> bool:
+    """Compare raw decimal coordinates within one polyline6 unit exactly.
+
+    Integer ratios avoid both binary subtraction error and ambient Decimal
+    context rounding. Neither coordinate is quantized before comparison.
+    """
+    if any(
+        isinstance(value, bool) or not isinstance(value, (int, float))
+        for value in (actual, expected)
+    ):
+        raise ValueError("POLYLINE6_COORDINATE_MUST_BE_FINITE")
+    observed, pinned = Decimal(str(actual)), Decimal(str(expected))
+    if not observed.is_finite() or not pinned.is_finite():
+        raise ValueError("POLYLINE6_COORDINATE_MUST_BE_FINITE")
+    observed_num, observed_den = observed.as_integer_ratio()
+    pinned_num, pinned_den = pinned.as_integer_ratio()
+    return (
+        abs(observed_num * pinned_den - pinned_num * observed_den) * 1_000_000
+        <= observed_den * pinned_den
+    )
+
+
 def _valhalla351_route_echo(value: float) -> float | None:
     """Return a supported pinned six-place echo, without resnapping.
 
