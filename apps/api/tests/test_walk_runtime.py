@@ -340,7 +340,19 @@ async def test_three_cities_share_dispatch_checkpoint_resume_and_methodology(
         result = product.calculate(claim, channel)
         assert routed[before:] and set(routed[before:]) == {entry["profile"].city_id + ".test"}
         assert result.status == "partial" and result.journeys
-        assert all(s.value is None and not s.ranking_eligible for s in result.scores)
+        assert all(not s.ranking_eligible for s in result.scores)
+        assert all(
+            s.value is None
+            for s in result.scores
+            if s.name in {"category_index", "point_index", "territory_index"}
+        )
+        assert any(
+            s.name == "observed_route_accessibility"
+            and s.value is not None
+            and s.completeness == "partial"
+            and s.reason_code == "MINIMUM_NOT_PROVEN"
+            for s in result.scores
+        )
         area = next(
             t.area_km2
             for t in entry["snapshot"].territories

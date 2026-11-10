@@ -357,6 +357,10 @@ def calculate(
             evidence[row.evidence_id] = row
     output = Projection(context, list(evidence.values()))
     project_urban(output, calculated.analysis)
+    if bound is not None:
+        from a2_api.adapters.walk_observed import project_observed_walk
+
+        project_observed_walk(output, calculated)
     output.limitations.update({"APPROVED_PARTIAL_OD_EXECUTION", "MINIMUM_TIME_UNPROVEN"})
     if bound is not None:
         output.limitations.add("WALK_CONNECTOR_TIME_0_1_SECOND_PRECISION")
