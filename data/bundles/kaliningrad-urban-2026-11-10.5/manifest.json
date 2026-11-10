@@ -1,0 +1,877 @@
+{
+  "format": "a2-ml2-bundle",
+  "schema_version": 2,
+  "bundle_id": "kaliningrad-urban-2026-11-10.5",
+  "created_at": "2026-11-10T14:43:18.143847Z",
+  "parser_version": "ml2-urban-0.2.0",
+  "acceptance_state": "accepted",
+  "accepted_by": "ML2 independent official-airport-source review",
+  "accepted_at": "2026-11-10T14:43:18.143847Z",
+  "synthetic": false,
+  "geographic_scope": [
+    "kaliningrad"
+  ],
+  "valid_from": "2026-11-01",
+  "valid_to": "2026-11-30",
+  "timezone": "Europe/Kaliningrad",
+  "grids": [
+    {
+      "grid_id": "kaliningrad-utm34n-1km-v1",
+      "city_id": "kaliningrad",
+      "crs": "EPSG:32634",
+      "spacing_m": 1000,
+      "origin_x": 0.0,
+      "origin_y": 0.0,
+      "version": 1
+    }
+  ],
+  "graph_version": "osm_geofabrik.kaliningrad-261107:osm-walk-network-v1:main-component",
+  "road_graph_version": "osm_geofabrik.kaliningrad-261107:osm-road-network-v1:main-component",
+  "timetables": [],
+  "source_versions": [
+    {
+      "source_id": "osm_geofabrik",
+      "dataset_id": "osm_geofabrik.kaliningrad-261107",
+      "retrieved_at": "2026-11-08T13:36:59.619413Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "769a6a6ac552b534057f2480b88f1c2d0709636761ab6d08483efe69c1e97b69",
+        "size_bytes": 29330257
+      },
+      "license": {
+        "name": "ODbL-1.0",
+        "url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "status": "permitted",
+        "attribution": "© OpenStreetMap contributors"
+      },
+      "publication_date": "2026-11-07"
+    },
+    {
+      "source_id": "ghsl_pop",
+      "dataset_id": "ghsl_pop.e2025-r2023a-100m-r3c20",
+      "retrieved_at": "2026-11-08T13:39:02.685586Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "1dfddf9e523c01fc23ad19f48339c41f158f9c0305aaf2dc6385d7340f8aa92f",
+        "size_bytes": 43735743
+      },
+      "license": {
+        "name": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "status": "permitted",
+        "attribution": "Schiavina M. et al., GHS-POP R2023A, European Commission JRC"
+      },
+      "publication_date": "2023-04-01"
+    },
+    {
+      "source_id": "ourairports",
+      "dataset_id": "ourairports.airports-20261108",
+      "retrieved_at": "2026-11-08T13:42:04.183446Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "5754df21f25cb08d2def8a80b3eb609ddc52a4217afa8eb48280b6428c06e78f",
+        "size_bytes": 12758284
+      },
+      "license": {
+        "name": "Public Domain",
+        "url": "https://ourairports.com/data/",
+        "status": "permitted",
+        "attribution": null
+      },
+      "publication_date": null
+    },
+    {
+      "source_id": "klgd_education",
+      "dataset_id": "klgd_education.20261108",
+      "retrieved_at": "2026-11-08T15:22:48.707041Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "a6915842ef5df9248a3d31be9d5df037ca20a5614506740dac34711ee852908c",
+        "size_bytes": 141254
+      },
+      "license": {
+        "name": "Общедоступная официальная информация ОМСУ: используются только факты (ст. 1259 ГК РФ, 8-ФЗ)",
+        "url": "https://www.klgd.ru/",
+        "status": "permitted",
+        "attribution": "Администрация ГО «Город Калининград», klgd.ru"
+      },
+      "publication_date": null
+    },
+    {
+      "source_id": "tfoms39_trmo",
+      "dataset_id": "tfoms39_trmo.2026-07",
+      "retrieved_at": "2026-11-08T15:33:37.096254Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "5aff48eec26d6a994d95b4800ac719cca17a03bfa26c513153d5bfea0bc50e8a",
+        "size_bytes": 222900
+      },
+      "license": {
+        "name": "Общедоступная официальная информация государственного учреждения: используются только факты (ст. 1259 ГК РФ)",
+        "url": "https://tfoms39.ru/",
+        "status": "permitted",
+        "attribution": "ТФОМС Калининградской области, tfoms39.ru"
+      },
+      "publication_date": null
+    },
+    {
+      "source_id": "obrnadzor_accreditation",
+      "dataset_id": "obrnadzor_accreditation.20261108",
+      "retrieved_at": "2026-11-08T15:47:36.873635Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "116ecc476619a89de6d2aea2b9eec9802e9f341374bb52cb5cd9bbc862d91bc6",
+        "size_bytes": 352506550
+      },
+      "license": {
+        "name": "Открытые данные федерального органа исполнительной власти: используются только факты (ст. 1259 ГК РФ)",
+        "url": "https://isga.obrnadzor.gov.ru/",
+        "status": "permitted",
+        "attribution": "Рособрнадзор, ИС ГА"
+      },
+      "publication_date": "2026-11-08"
+    },
+    {
+      "source_id": "rosmorport",
+      "dataset_id": "rosmorport.seaports-kaliningrad-20261108",
+      "retrieved_at": "2026-11-08T20:27:58.451074Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "75d5a5e524edb59142f1712c3b88181666ad012dc3b876056bbc13f71536a684",
+        "size_bytes": 1209275
+      },
+      "license": {
+        "name": "Используются только факты: перечень операторов и характеристики порта (ст. 1259 ГК РФ)",
+        "url": "https://www.rosmorport.ru/",
+        "status": "permitted",
+        "attribution": "ФГУП «Росморпорт», rosmorport.ru"
+      },
+      "publication_date": null
+    },
+    {
+      "source_id": "gortrans39",
+      "dataset_id": "gortrans39.routes-20261109",
+      "retrieved_at": "2026-11-09T09:57:23.969008Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "8f09b5d9a9a8f17b8a40d51daaf45ea934b4461f59374fb1ee7dbca8afc67332",
+        "size_bytes": 704988
+      },
+      "license": {
+        "name": "Общедоступная информация муниципального перевозчика: используются только факты (ст. 1259 ГК РФ)",
+        "url": "https://gortrans39.ru/",
+        "status": "permitted",
+        "attribution": "АО «Калининград-ГорТранс», gortrans39.ru"
+      },
+      "publication_date": null
+    },
+    {
+      "source_id": "klgd_school_sites",
+      "dataset_id": "klgd_school_sites.20261110",
+      "retrieved_at": "2026-11-10T11:54:48.089276Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "89808fa312acc81f470a39681c655e1c2f48aa345e6841b1ea2142efaaa54e2f",
+        "size_bytes": 68742
+      },
+      "license": {
+        "name": "Общедоступная официальная информация ОМСУ: используются только факты (ст. 1259 ГК РФ, 8-ФЗ)",
+        "url": "https://www.klgd.ru/",
+        "status": "permitted",
+        "attribution": "Администрация ГО «Город Калининград», klgd.ru"
+      },
+      "publication_date": null
+    },
+    {
+      "source_id": "klgd_school_campuses",
+      "dataset_id": "klgd_school_campuses.20261110",
+      "retrieved_at": "2026-11-10T11:54:48.089276Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "89808fa312acc81f470a39681c655e1c2f48aa345e6841b1ea2142efaaa54e2f",
+        "size_bytes": 68742
+      },
+      "license": {
+        "name": "Общедоступная официальная информация ОМСУ: используются только факты (ст. 1259 ГК РФ, 8-ФЗ)",
+        "url": "https://www.klgd.ru/",
+        "status": "permitted",
+        "attribution": "Администрация ГО «Город Калининград», klgd.ru"
+      },
+      "publication_date": null
+    },
+    {
+      "source_id": "favt_registry",
+      "dataset_id": "favt_registry.20261110",
+      "retrieved_at": "2026-11-10T14:28:33.888783Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "d462c6de77a24dd324cc0450782ea84e86c5fc189c1f67b3b345f88191d802c2",
+        "size_bytes": 190480
+      },
+      "license": {
+        "name": "Factual identifiers and observed roster/operation facts only; source documents not redistributed",
+        "url": "https://favt.gov.ru/public/materials//7/2/3/9/c/7239c479220bfdaaf016834c51e3fb63.pdf",
+        "status": "permitted",
+        "attribution": "favt_registry"
+      },
+      "publication_date": "2026-11-09"
+    },
+    {
+      "source_id": "favt_airport_designation",
+      "dataset_id": "favt_airport_designation.20261110",
+      "retrieved_at": "2026-11-10T14:27:57.262386Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "6db20dbcc4c47bd721b6832b2b4e3c7862e3f4de1a6e55bd5f08edef59c72399",
+        "size_bytes": 156605
+      },
+      "license": {
+        "name": "Factual identifiers and observed roster/operation facts only; source documents not redistributed",
+        "url": "https://old.favt.gov.ru/dejatelnost-ajeroporty-i-ajerodromy-perechen-aeroportov/",
+        "status": "permitted",
+        "attribution": "favt_airport_designation"
+      },
+      "publication_date": null
+    },
+    {
+      "source_id": "khrabrovo_observed_board",
+      "dataset_id": "khrabrovo_observed_board.20261110",
+      "retrieved_at": "2026-11-10T14:32:25.408673Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "1a176f16e84456c84c69cf55b1896c9bfe6ba5c8264687bfc2351dc076560269",
+        "size_bytes": 23194
+      },
+      "license": {
+        "name": "Factual identifiers and observed roster/operation facts only; source documents not redistributed",
+        "url": "https://kgdavia.ru/",
+        "status": "permitted",
+        "attribution": "khrabrovo_observed_board"
+      },
+      "publication_date": null
+    },
+    {
+      "source_id": "klgd_tic_airports",
+      "dataset_id": "klgd_tic_airports.20261110",
+      "retrieved_at": "2026-11-10T14:27:58.343327Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "c064f4a52b4fe1cf0359bef9414bf297d6b5290add2fc31e5c7bd6afb17bef92",
+        "size_bytes": 88427
+      },
+      "license": {
+        "name": "Factual identifiers and observed roster/operation facts only; source documents not redistributed",
+        "url": "https://visit-kaliningrad.ru/info/how-to-get/kak-dobratsya-v-aeroport-iz-aeroporta.php",
+        "status": "permitted",
+        "attribution": "klgd_tic_airports"
+      },
+      "publication_date": null
+    },
+    {
+      "source_id": "klgd_tic_charter",
+      "dataset_id": "klgd_tic_charter.20261110",
+      "retrieved_at": "2026-11-10T14:28:35.118463Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "2b1beb9a5e2d440818d1804ef4a04acdcde90c106fd2a62ba68205385a355997",
+        "size_bytes": 5424488
+      },
+      "license": {
+        "name": "Factual identifiers and observed roster/operation facts only; source documents not redistributed",
+        "url": "https://visit-kaliningrad.ru/upload/medialibrary/339/hsiuial47hdg4gchuvw2e735ydhkqyaw/Ustav-redaktsiya-2026.pdf",
+        "status": "permitted",
+        "attribution": "klgd_tic_charter"
+      },
+      "publication_date": null
+    }
+  ],
+  "files": {
+    "evidence": {
+      "path": "evidence.json",
+      "sha256": "06f6fed00bd8ae3dd95dbde698c9e6b829c73d5dd9f7eb58ffcb72a864a8dc9a",
+      "rows": 3428
+    },
+    "territories": {
+      "path": "territories.json",
+      "sha256": "b78ee130a3024fb4f6066e6e804493f14065e7bf19673c930dce08ee5a5350bd",
+      "rows": 4
+    },
+    "population_cells": {
+      "path": "population_cells.json",
+      "sha256": "ae595419a29e03882f5cf9d63a0682869ecb81a0090addbf023169f4a407fd8e",
+      "rows": 286
+    },
+    "sample_points": {
+      "path": "sample_points.json",
+      "sha256": "44bbb5b3d883201d127c131a5cea78c5bd4c5b08412bfd1b9d3583e929cbfc0f",
+      "rows": 216
+    },
+    "destinations": {
+      "path": "destinations.json",
+      "sha256": "8942d48e2f3ad4b18d4f0935b9b331fef2762d96728cdfd0f21528f94328a24a",
+      "rows": 464
+    },
+    "category_ownership": {
+      "path": "category_ownership.json",
+      "sha256": "7d7da13a1a434f88f62ef66423d18550392e4a511e808f532aa14e69c6a10c72",
+      "rows": 464
+    },
+    "access_nodes": {
+      "path": "access_nodes.json",
+      "sha256": "9e98a1abda1ff2bb9309dd8fd07d1f5ac45473ca760dbacbf25e5d7a929fd4a3",
+      "rows": 934
+    },
+    "freight_nodes": {
+      "path": "freight_nodes.json",
+      "sha256": "ef68db6babc1a68c07d42314df1e04b32dfc33152448c44d936f50865c4df964",
+      "rows": 14
+    },
+    "freight_sites": {
+      "path": "freight_sites.json",
+      "sha256": "50072523b566f8c7d32289eea27dd975885e3ddf3b56b015a33606949b676e33",
+      "rows": 250
+    },
+    "stop_frequencies": {
+      "path": "stop_frequencies.json",
+      "sha256": "645583cf4da446341a4ae6ab1237bfbfa7709f0e0567e67e2d22afe5a1292fcc",
+      "rows": 1947
+    },
+    "walk_connectors": {
+      "path": "walk_connectors.json",
+      "sha256": "b5b681a03cb89e57c2c537c2c4a4c8aa18eb43773d5b37f672a870c4253dce59",
+      "rows": 680
+    },
+    "qa_report": {
+      "path": "qa_report.json",
+      "sha256": "d387f29374f9c074a58cff7a3315483a6cb1563043a1f573bdc8a78640798a1e",
+      "rows": 38
+    }
+  },
+  "coverage": [
+    {
+      "collection": "territories",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "complete",
+      "confirmed_absence": false,
+      "reason": "Городской округ и 3 района(ов) из OSM",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
+    },
+    {
+      "collection": "population_cells",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "complete",
+      "confirmed_absence": false,
+      "reason": "Все ячейки сетки 1 км, пересекающие границу; население GHSL по центроидам пикселей",
+      "evidence_ids": [
+        "ghsl:ghsl_pop.e2025-r2023a-100m-r3c20",
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
+    },
+    {
+      "collection": "sample_points",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "complete",
+      "confirmed_absence": false,
+      "reason": "По одной точке на ячейку со зданием; исключённые ячейки с причиной и населением в QA",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
+    },
+    {
+      "collection": "access_nodes",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": null,
+      "mode": "walk",
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "complete",
+      "confirmed_absence": false,
+      "reason": "Вход на главную связную компоненту пешеходной сети OSM v1 у каждой точки и объекта",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "kaliningrad",
+      "category": "adult_polyclinic",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Городские поликлиники ОМС (ОКФС 13/14) по ТРМО ТФОМС; адреса, которых нет в OSM, не размещены; частные и ведомственные не входят",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107",
+        "tfoms39_trmo:dataset:tfoms39_trmo.2026-07"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "kaliningrad",
+      "category": "child_polyclinic",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Городские поликлиники ОМС (ОКФС 13/14) по ТРМО ТФОМС; адреса, которых нет в OSM, не размещены; частные и ведомственные не входят",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107",
+        "tfoms39_trmo:dataset:tfoms39_trmo.2026-07"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "kaliningrad",
+      "category": "kindergarten",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Муниципальные учреждения подтверждены перечнем учредителя; региональные, федеральные и частные не подтверждены",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107",
+        "klgd_education:dataset:klgd_education.20261108"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "kaliningrad",
+      "category": "school",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Муниципальные учреждения подтверждены перечнем учредителя; региональные, федеральные и частные не подтверждены",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107",
+        "klgd_education:dataset:klgd_education.20261108"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "kaliningrad",
+      "category": "college_university",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Государственные колледжи и вузы по реестру аккредитации Рособрнадзора; корпуса — по названиям в OSM; частные, ведомственные и неаккредитованные не входят",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107",
+        "obrnadzor_accreditation:dataset:obrnadzor_accreditation.20261108"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "kaliningrad",
+      "category": "rail_terminal",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "kaliningrad",
+      "category": "bus_terminal",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "kaliningrad",
+      "category": "shopping_center",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
+    },
+    {
+      "collection": "category_ownership",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Подтверждены реестрами: adult_polyclinic, child_polyclinic, college_university, kindergarten, school",
+      "evidence_ids": [
+        "klgd_education:dataset:klgd_education.20261108",
+        "obrnadzor_accreditation:dataset:obrnadzor_accreditation.20261108",
+        "tfoms39_trmo:dataset:tfoms39_trmo.2026-07"
+      ]
+    },
+    {
+      "collection": "access_nodes",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": null,
+      "mode": "road",
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "complete",
+      "confirmed_absence": false,
+      "reason": "Вход на главную связную компоненту дорожной сети OSM v1 (грузовой подъезд) у каждого грузового узла и площадки",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
+    },
+    {
+      "collection": "freight_nodes",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": "port",
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Портовые территории OSM и объекты со словом «порт» в названии в границе города; морской порт Калининград (рег. № Б-7) по Росморпорту; перечень операторов на странице скрыт в разметке, объекты только по нему в карантине; подписанные объекты в OSM есть у 2 из 16 операторов",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107",
+        "rosmorport:dataset:rosmorport.seaports-kaliningrad-20261108"
+      ]
+    },
+    {
+      "collection": "freight_nodes",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": "pipeline_terminal",
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "unknown",
+      "confirmed_absence": false,
+      "reason": "Терминалы магистральных трубопроводов по правилам OSM не найдены; отсутствие не подтверждено",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
+    },
+    {
+      "collection": "freight_nodes",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": "rail_terminal",
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "unknown",
+      "confirmed_absence": false,
+      "reason": "Ж/д станции OSM в карантине: грузовые операции не подтверждены открытым реестром",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
+    },
+    {
+      "collection": "freight_nodes",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": "logistics_terminal",
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Логистические центры не собраны; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "freight_nodes",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": "airport",
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Грузовые аэропорты не собраны; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "freight_sites",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Промзоны OSM от 0,5 га, склады и производственные здания от 1000 м² вне промзон и узлов (freight-osm-rules-v2); реестра предприятий нет, веса равные",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ]
+    },
+    {
+      "collection": "freight_compatibility",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "unknown",
+      "confirmed_absence": false,
+      "reason": "Совместимость груза, услуги и подъезда не подтверждена открытыми данными операторов; строки не созданы",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107",
+        "rosmorport:dataset:rosmorport.seaports-kaliningrad-20261108"
+      ]
+    },
+    {
+      "collection": "pipeline_connections",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Только межгород; соединения и направления не собраны, терминалы города — в freight_nodes",
+      "evidence_ids": []
+    },
+    {
+      "collection": "stop_frequencies",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": null,
+      "mode": "public_transport",
+      "valid_from": null,
+      "valid_to": null,
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Справка частоты по остановочным таблицам gortrans39: 8 из 23 маршрутов АО «Калининград-ГорТранс», у остальных шаблон вместо расписания; частные перевозчики не входят; рейсы, направления и даты действия не подтверждены",
+      "evidence_ids": [
+        "gortrans39:dataset:gortrans39.routes-20261109"
+      ]
+    },
+    {
+      "collection": "stops",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "trips",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "stop_times",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "calendars",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "transfers",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "reference_edges",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "minimum_transfers",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "traffic_profiles",
+      "city_id": "kaliningrad",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "destinations",
+      "city_id": "kaliningrad",
+      "category": "airport",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-09",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Исходные кандидаты OSM/OurAirports сохранены; полный официальный перечень обслуживающих Калининград пассажирских аэропортов подтверждён только наблюдением 10.11.2026, полнота за эту дату не переносится на другие даты",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107",
+        "ourairports:dataset:ourairports.airports-20261108"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "kaliningrad",
+      "category": "airport",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-10",
+      "valid_to": "2026-11-10",
+      "status": "complete",
+      "confirmed_absence": false,
+      "reason": "Официально обслуживающие Калининград пассажирские аэропорты: Храброво; единственный пассажирский аэропорт области по региональному ТИЦ, городское назначение по Росавиации; только наблюдение10.11.2026, не радиус60км",
+      "evidence_ids": [
+        "favt_airport_designation:20261110:kaliningrad",
+        "favt_registry:20261110:kaliningrad",
+        "khrabrovo_observed_board:20261110:kaliningrad",
+        "klgd_tic_airports:20261110:kaliningrad",
+        "klgd_tic_charter:20261110:kaliningrad",
+        "osm:dataset:osm_geofabrik.kaliningrad-261107",
+        "ourairports:dataset:ourairports.airports-20261108"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "kaliningrad",
+      "category": "airport",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-11",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Исходные кандидаты OSM/OurAirports сохранены; полный официальный перечень обслуживающих Калининград пассажирских аэропортов подтверждён только наблюдением 10.11.2026, полнота за эту дату не переносится на другие даты",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107",
+        "ourairports:dataset:ourairports.airports-20261108"
+      ]
+    }
+  ],
+  "qa_report": "qa_report.json",
+  "limitations": [
+    "Границы — OSM (relation городского округа), не официальный реестр границ МО",
+    "Население — модельная оценка GHSL R2023A эпохи 2025, не перепись",
+    "Поликлиники, детсады, школы, колледжи и вузы приняты только по официальным реестрам; объекты OSM без записи реестра — в карантине",
+    "Ж/д вокзалы, автовокзалы и ТЦ отобраны правилами OSM v1 без сверки со справочником",
+    "Вход на граф — проекция на пешеходную сеть OSM v1, не размеченный вход здания",
+    "Период применимости 01–30.11.2026 заявлен ML2 для снимка OSM от 07.11.2026",
+    "Расписаний (рейсов) нет: остановочные таблицы gortrans39 без trip_id дают только справку частоты, 8 из 23 маршрутов муниципального перевозчика; направления и даты действия не подтверждены",
+    "Грузовые узлы: порт — портовые территории OSM и объекты со словом «порт» в названии в границе города с зарегистрированным морским портом; объекты, найденные только по скрытому в разметке перечню операторов Росморпорта, в карантине; нефтяные терминалы — по названиям OSM; ж/д станции в карантине: грузовые операции не подтверждены",
+    "Узлы за границей города (терминалы порта в соседних муниципалитетах) не включены",
+    "Грузовые площадки — промзоны и склады OSM по правилам freight-osm-rules-v2, равные веса; реестра предприятий и объёмов нет",
+    "Совместимость груза, услуги и подъезда неизвестна; въезд — проекция внутренней точки контура на дорожную сеть OSM v1, не размеченные ворота; ограничения массы не учтены",
+    "Связи точек и объектов с пешеходной сетью проверены геометрией (walk-connector-geometry-v2); пересечение здания, воды, железной дороги или магистрали оставляет связь unknown; секунды — по скорости принятого пешеходного профиля",
+    "School revision .3 verifies only gymnasium40 campus2 ownership and exact roster/address identity; school coverage remains partial, 53 OSM school candidates remain quarantined; founder list/map conflicts and 64 previously unknown approaches remain unresolved",
+    "Revision .4 accepts exactly two campus2 identities by founder address and pinned full-building containment; physical approaches and incomplete school coverage are unchanged",
+    "Revision .5 replaces inherited airport completeness01–30Nov with full only10Nov2026 and partial01–09/11–30Nov; officially city-serving passenger airports, independent of60km cutoff",
+    "New official airport evidence is observed10Nov2026 only; all school identities, physical coordinates, population, grid and approaches remain unchanged; no product-index readiness implied"
+  ]
+}
