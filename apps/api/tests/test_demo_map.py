@@ -62,3 +62,28 @@ def test_actual_product_output_keeps_model_labels_map_and_source_population(
     assert points[0].population == cells[snapshot.sample_points[0].cell_id].population
     with pytest.raises(ValueError, match="SNAPSHOT_MISMATCH"):
         attach_demo_result(result, snapshot.model_copy(update={"snapshot_id": "real-city"}))
+
+
+def test_map_cell_metadata_deduplicates_only_represented_population(
+    transport_facts, demo, monkeypatch
+):
+    # Included-cell population already belongs to the exact sampled point feature.
+    test_actual_product_output_keeps_model_labels_map_and_source_population(
+        transport_facts, demo, monkeypatch
+    )
+    snapshot = demo[0]
+    result = product.calculate(claim_for(snapshot, request_for(snapshot)))
+    represented = {point.cell_id for point in snapshot.sample_points}
+    retained = [feature for feature in result.map_data.features if feature.entity_kind == "cell"]
+    expected = {
+        cell.cell_id: cell for cell in snapshot.population_cells if cell.cell_id not in represented
+    }
+    assert {feature.cell_id for feature in retained} == {
+        cell.cell_id for cell in snapshot.population_cells
+    }
+    assert all(
+        feature.population == expected[feature.cell_id].population
+        for feature in retained
+        if feature.cell_id in expected
+    )
+    assert all(feature.population is None for feature in retained if feature.cell_id in represented)

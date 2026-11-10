@@ -71,9 +71,10 @@ def _child(send: Connection, handler_path: str, claim_json: str, parent_pid: int
                     if isinstance(result, ScenarioResult)
                     else "analysis_output"
                 ),
-                "result": result.model_dump(mode="json"),
+                "result": result.model_dump(mode="json", exclude_defaults=True),
             },
             allow_nan=False,
+            separators=(",", ":"),
         ).encode()
         if len(output) > MAX_RESULT_BYTES:
             raise ValueError("Calculation output exceeds configured transport limit")

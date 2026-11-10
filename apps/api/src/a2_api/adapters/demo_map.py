@@ -35,6 +35,7 @@ def attach_demo_result(result: AnalysisResult, snapshot: AcceptedData) -> Analys
                 source_refs=sorted(set(point.source_refs) | set(cell.source_refs)),
             )
         )
+    represented_cells = {point.cell_id for point in snapshot.sample_points}
     for cell in snapshot.population_cells:
         features.append(
             MapFeature(
@@ -46,9 +47,13 @@ def attach_demo_result(result: AnalysisResult, snapshot: AcceptedData) -> Analys
                 geometry_kind="none",
                 geometry_ref=cell.geometry.geometry_id,
                 reason_code="DEMO_SAMPLED_POPULATION_ONLY",
-                population=cell.population,
-                population_year=cell.population_year,
-                population_method=cell.population_method,
+                population=cell.population if cell.cell_id not in represented_cells else None,
+                population_year=cell.population_year
+                if cell.cell_id not in represented_cells
+                else None,
+                population_method=cell.population_method
+                if cell.cell_id not in represented_cells
+                else None,
                 source_refs=cell.source_refs,
             )
         )
