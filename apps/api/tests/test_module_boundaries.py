@@ -229,6 +229,20 @@ def test_exported_artifacts_match_baseline_and_approved_contract_extensions(tmp_
         for mode in ("serialization", "validation")
     }
     expected.update(leg_extension["replaced"])
+    groups_extension = json.loads(
+        (Path(__file__).parent / "fixtures/evidence_groups_schema_extension.json").read_text()
+    )
+    assert set(groups_extension["replaced"]) == {"manifest.json", "openapi.json"} | {
+        f"v2.{model}.{mode}.schema.json"
+        for model in ("AnalysisResult", "ScenarioProposal", "ScenarioResult")
+        for mode in ("serialization", "validation")
+    }
+    assert set(groups_extension["added"]) == {
+        f"v2.EvidenceGroup.{mode}.schema.json" for mode in ("serialization", "validation")
+    }
+    assert set(groups_extension["added"]).isdisjoint(expected)
+    expected.update(groups_extension["replaced"])
+    expected.update(groups_extension["added"])
     assert actual == expected
 
 

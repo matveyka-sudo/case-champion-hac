@@ -1,0 +1,16 @@
+{
+  "added": {
+    "v2.EvidenceGroup.serialization.schema.json": "a59e8db2a6bc5a77acf0ec69875a9b28f79b230281a08c46f56a523c7bc6fb07",
+    "v2.EvidenceGroup.validation.schema.json": "a59e8db2a6bc5a77acf0ec69875a9b28f79b230281a08c46f56a523c7bc6fb07"
+  },
+  "replaced": {
+    "manifest.json": "189d245f7d16e2466c2e2d7c0a5e9c910e4256538b1a021f6115bd7d0057bbe2",
+    "openapi.json": "ec78db57308595fa4baf3997a39a3baf2fd0604f8b34aaeb662d51ac8a60f496",
+    "v2.AnalysisResult.serialization.schema.json": "202df8c6b3ff9f648062356f619e6ba735e2f5a3b2c298000f33a6a34dd7c062",
+    "v2.AnalysisResult.validation.schema.json": "202df8c6b3ff9f648062356f619e6ba735e2f5a3b2c298000f33a6a34dd7c062",
+    "v2.ScenarioProposal.serialization.schema.json": "f3eaebb2c7c9db342a0f715d7da81e7400589d0f017b8890bb0d610055426d42",
+    "v2.ScenarioProposal.validation.schema.json": "f3eaebb2c7c9db342a0f715d7da81e7400589d0f017b8890bb0d610055426d42",
+    "v2.ScenarioResult.serialization.schema.json": "bda1cc7e1c320b7edb217fd746b81b53c5cc7e094ed0bf4baa421aab912ab25b",
+    "v2.ScenarioResult.validation.schema.json": "bda1cc7e1c320b7edb217fd746b81b53c5cc7e094ed0bf4baa421aab912ab25b"
+  }
+}
