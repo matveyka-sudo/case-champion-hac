@@ -19,6 +19,12 @@ from a2_contracts.v2.base import (
     TrafficMode,
     VersionRefs,
 )
+from a2_contracts.v2.evidence import (
+    EVIDENCE_GROUP_PREFIX,
+    MAX_EVIDENCE_GROUPS,
+    EvidenceGroup,
+    EvidenceResolver,
+)
 from a2_contracts.v2.journeys import CountResult, JourneyResult, LastReturn, ReferenceResult
 from a2_contracts.v2.map_data import AnalysisMapData
 from a2_contracts.v2.requests import AnalysisRequest, IntercityBase
@@ -243,12 +249,28 @@ def _absence_score(score: Score) -> bool:
     )
 
 
-def validate_score_dependencies(metrics: list[Metric], scores: list[Score]) -> None:
+def validate_score_dependencies(
+    metrics: list[Metric], scores: list[Score], *, evidence_resolver: EvidenceResolver | None = None
+) -> None:
     """Shared analysis/scenario invariants, without computing any domain formula."""
     metric_map = {metric.metric_id: metric for metric in metrics}
     score_map = {score.score_id: score for score in scores}
     visiting: set[str] = set()
     visited: set[str] = set()
+
+    def source_subset(metric: Metric, score: Score) -> bool:
+        if evidence_resolver is not None:
+            return evidence_resolver.expand(metric.source_refs) <= evidence_resolver.expand(
+                score.evidence_refs
+            )
+        if any(
+            ref.startswith(EVIDENCE_GROUP_PREFIX)
+            for ref in (*metric.source_refs, *score.evidence_refs)
+        ):
+            # ScenarioValues has no evidence inventory. Its enclosing canonical
+            # ScenarioResult repeats this check with the validated resolver.
+            return True
+        return set(metric.source_refs) <= set(score.evidence_refs)
 
     def visit(identifier: str) -> None:
         if identifier in visiting:
@@ -270,7 +292,7 @@ def validate_score_dependencies(metrics: list[Metric], scores: list[Score]) -> N
                 and metric.unit == "seconds"
                 and metric.journey_id is None
                 and bool(metric.source_refs)
-                and set(metric.source_refs) <= set(score.evidence_refs)
+                and source_subset(metric, score)
                 for metric in metrics
             ):
                 raise ValueError("Confirmed absence requires its scoped complete-chain placeholder")
@@ -448,6 +470,9 @@ class AnalysisResult(ContractModel):
     metrics: list[Metric]
     scores: list[Score]
     evidence_refs: list[EvidenceRef]
+    evidence_groups: list[EvidenceGroup] = Field(
+        default_factory=list, max_length=MAX_EVIDENCE_GROUPS, exclude_if=lambda value: not value
+    )
     limitations: list[Identifier]
     versions: VersionRefs
     journeys: list[JourneyResult]
@@ -480,17 +505,20 @@ class AnalysisResult(ContractModel):
             raise ValueError("Saved methodology reference differs from result")
         metrics = {m.metric_id: m for m in self.metrics}
         scores = {s.score_id: s for s in self.scores}
-        evidence = {e.evidence_id for e in self.evidence_refs}
+        resolver = EvidenceResolver(
+            (e.evidence_id for e in self.evidence_refs), self.evidence_groups
+        )
+        evidence = resolver.reference_ids
         if (
             len(metrics) != len(self.metrics)
             or len(scores) != len(self.scores)
-            or len(evidence) != len(self.evidence_refs)
+            or len(resolver.leaf_ids) != len(self.evidence_refs)
         ):
             raise ValueError("Duplicate metric/score/evidence identity")
         for item in self.metrics:
             if not set(item.source_refs) <= evidence:
                 raise ValueError("Unknown metric evidence reference")
-        validate_score_dependencies(self.metrics, self.scores)
+        validate_score_dependencies(self.metrics, self.scores, evidence_resolver=resolver)
         complete_chain_operands: dict[str, bool] = {}
 
         def has_complete_chain_operand(score: Score) -> bool:

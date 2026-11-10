@@ -11,6 +11,7 @@ from .api import (
 )
 from .base import MethodologyRef, VersionRefs
 from .dataset import AcceptedData, Evidence, GeometryRef, RegistryEvidence
+from .evidence import EvidenceGroup, EvidenceResolver
 from .journeys import CountResult, JourneyResult, LastReturn, Leg, ReferenceResult
 from .requests import (
     AnalysisRequest,
@@ -39,6 +40,8 @@ __all__ = [
     "ErrorEnvelope",
     "Evidence",
     "EvidenceRef",
+    "EvidenceGroup",
+    "EvidenceResolver",
     "GeometryRef",
     "IntercityCargoRequest",
     "IntercityPassengerRequest",
