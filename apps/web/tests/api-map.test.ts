@@ -6,10 +6,12 @@ import { decode } from "../src/api/validation";
 import resultRaw from "./fixtures/api/urban_passenger.json";
 import { scenarioJourneys } from "../src/api/adapters/scenario";
 import { scenarioRouteFixture } from "./fixtures/scenario-routes";
+import { partialWalkGeometryFixture } from "./fixtures/partial-walk-geometry";
 const drawn = vi.hoisted(() => ({
   layers: [] as { style?: Record<string, unknown>; marker?: Record<string, unknown>; tooltip: string; geometry?: unknown }[],
   pans: [] as unknown[], zooms: [] as unknown[],
   commands: [] as string[],
+  clears: 0,
 }));
 vi.mock("leaflet", () => ({
   default: {
@@ -21,7 +23,7 @@ vi.mock("leaflet", () => ({
       return map;
     },
     tileLayer: () => ({ on: () => ({ addTo: vi.fn() }) }),
-    layerGroup: () => ({ addTo: () => ({ clearLayers: vi.fn() }) }),
+    layerGroup: () => ({ addTo: () => ({ clearLayers: () => { drawn.clears++; } }) }),
     latLngBounds: () => ({ extend: vi.fn(), isValid: () => false }),
     circleMarker: (_position: unknown, style: Record<string, unknown>) => {
       drawn.layers.at(-1)!.marker = style;
@@ -49,6 +51,7 @@ beforeEach(() => {
   drawn.pans.length = 0;
   drawn.zooms.length = 0;
   drawn.commands.length = 0;
+  drawn.clears = 0;
   vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
 });
 describe("explicit calculated-point focus", () => {
@@ -118,6 +121,33 @@ describe("scenario map paths", () => {
     }));
     expect(drawn.layers.some((l) => (l.geometry as { type?: string })?.type === "LineString")).toBe(false);
     expect(baseline.journeys.every((j) => j.geometry !== null)).toBe(true);
+  });
+});
+describe("partial walk map path", () => {
+  it("draws the supplied actual route even when the exact score operand is not journey-linked", () => {
+    const result = partialWalkGeometryFixture();
+    render(createElement(ApiMap, {
+      result, scores: result.scores,
+      selection: { entity_kind: "sample_point", entity_id: "synthetic-point-2" },
+      onSelect: vi.fn(), zoomAction: { id: 0, kind: "home" },
+    }));
+    const lines = drawn.layers.filter((layer) => (layer.geometry as { type?: string })?.type === "LineString");
+    expect(lines).toHaveLength(1);
+    expect(lines[0].geometry).toEqual(result.journeys[0].geometry);
+    expect(lines[0].tooltip).toBe("Маршрут");
+    expect(lines[0].style?.dashArray).toBeUndefined();
+  });
+  it("clears the old city route and resets the viewport when its result context is removed", () => {
+    const result = partialWalkGeometryFixture();
+    const props = { selection: null, onSelect: vi.fn() };
+    const view = render(createElement(ApiMap, { ...props, result, scores: result.scores, zoomAction: { id: 0, kind: "home" } }));
+    expect(drawn.layers.some((layer) => (layer.geometry as { type?: string })?.type === "LineString")).toBe(true);
+    const clears = drawn.clears;
+    drawn.layers.length = 0;
+    view.rerender(createElement(ApiMap, { ...props, result: null, scores: [], zoomAction: { id: 1, kind: "home" } }));
+    expect(drawn.clears).toBe(clears + 1);
+    expect(drawn.layers).toEqual([]);
+    expect(drawn.commands.at(-1)).toBe("home");
   });
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });

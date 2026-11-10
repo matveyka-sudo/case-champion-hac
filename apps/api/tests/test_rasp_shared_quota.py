@@ -460,7 +460,7 @@ async def test_guarded_downgrade_preserves_initialized_quota_history(database):
     await initialize(pool, already_used=0)
     with pytest.raises(RuntimeError, match="Rasp quota history"):
         await asyncio.to_thread(migrate, url, schema, "0005_od_checkpoints", True)
-    assert await pool.fetchval("SELECT version_num FROM alembic_version") == "0006_rasp_quota"
+    assert await pool.fetchval("SELECT version_num FROM alembic_version") == "0007_private_sources"
     assert await pool.fetchval("SELECT count(*) FROM rasp_quota_days") == 1
 
 
