@@ -157,9 +157,30 @@ This path supports an original upstream PBF of at most 1 GiB, at most 20,000
 tiles, and at most 5 GiB of PBF plus tiles. These are separate graph verification
 bounds. The existing private archive's 128 MiB file and 512 MiB total bounds
 remain unchanged; restore a larger original PBF separately by its trusted source
-manifest or use a separately approved transport. A city extract requires an
-explicit reviewed derivation and coverage binding; replacing the original PBF
-with an extract fails this verifier. Graph identity establishes the mounted
+manifest or use a separately approved transport. Replacing an original PBF with
+an unbound city extract fails verification. A reviewed extract keeps `source_*`
+as the actual derived build input and adds `upstream_source` (`path`, `sha256`,
+`bytes`), a `derivation` FileRef and a `tool_installation` FileRef to the graph
+manifest. The source manifest continues to identify the original upstream PBF.
+
+The derivation receipt uses `waydex-source-bound-osm-extract/1`: separate
+`upstream_source_*` and `derived_input_*` identities, the original source-manifest
+hash, standard Osmium 1.16.0 image/binary identity, `smart` strategy with
+`types=multipolygon,restriction`, requested bbox, reference-check and endpoint
+inventory hashes. Preserve the tool install receipt, binary checksum record and
+its indexed packages under `tool-packages/`. Preserve `way-refs-check.txt`,
+`restriction-refs-check.txt`, `restriction-scope.osm.pbf`,
+`extract-fileinfo.json` and `endpoint-inventory.json`. Every indexed file is
+hashed; missing way or restriction members reject the packet. Source and derived
+identities cannot be swapped or partially specified.
+
+Current canonical points, destinations and their used passenger access nodes
+must be an exact coordinate subset of the reviewed endpoint inventory and inside
+the requested bbox. A corrected snapshot may remove objects while retaining the
+original extraction context; copied receipts are never silently retagged.
+Reference completion can include members outside the bbox. Both graph and
+derivation retain `outside_paths_complete=false`; the derivation retains
+`minimum_proven=false`. Graph identity establishes the mounted
 inputs and costing model. Minimum-time proof and category completeness have
 their own engine and evidence checks.
 
