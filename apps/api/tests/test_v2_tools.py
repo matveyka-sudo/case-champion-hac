@@ -4,9 +4,9 @@ import json
 from pathlib import Path
 
 import pytest
-from a2_api.analysis_service import AnalysisService
+from a2_api.assistant.tools import SavedTools
 from a2_api.services import DomainError
-from a2_api.tool_services import SavedTools
+from a2_api.services.analyses import AnalysisService
 from a2_assistant import AccessScope
 from a2_assistant.tools import ToolRejected
 from a2_contracts.v2.results import AnalysisResult

@@ -7,11 +7,11 @@ import sys
 from pathlib import Path
 
 import asyncpg
-from a2_api.jobs import V2JobContext
-from a2_api.storage import JobRepository
 from a2_contracts.v2.results import AnalysisResult, Score
 from a2_contracts.v2.scenarios import ScenarioResult, ScenarioRunRequest
-from test_v2_storage import context, proposal, request, result, scenario_result
+from test_v2_storage import JobRepository, context, jobs, proposal, request, result, scenario_result
+
+V2JobContext = jobs.V2JobContext
 
 
 async def main():

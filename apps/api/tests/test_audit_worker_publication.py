@@ -3,9 +3,9 @@
 from unittest.mock import patch
 
 import pytest
-from a2_api.jobs import CalculationOutput
-from a2_api.storage import JobRepository
-from a2_api.worker import Worker
+from a2_api.core.jobs import CalculationOutput
+from a2_api.db.repositories.jobs import JobRepository
+from a2_api.workers.runner import Worker
 from test_v2_storage import context, proposal, request, result
 
 
@@ -50,7 +50,7 @@ async def test_advisory_connection_loss_fences_publication(database, loss_point)
         saved = result()
         return CalculationOutput(analysis=saved, proposals=[proposal(saved)])
 
-    with patch("a2_api.worker.calculate", calculate):
+    with patch("a2_api.workers.runner.calculate", calculate):
         assert await Worker(
             repo, handler="trusted:handler", code_version=context().code_version
         ).run_once()

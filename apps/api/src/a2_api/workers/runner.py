@@ -11,7 +11,7 @@ from a2_api.core.jobs import CalculationOutput, ClaimedJob, V2JobContext
 from a2_api.db.repositories.jobs import JobRepository
 from a2_api.workers.calculation import HandlerOutput, calculate
 
-logger = logging.getLogger("a2_api.worker")
+logger = logging.getLogger("a2_api.workers.runner")
 
 
 class Worker:

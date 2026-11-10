@@ -20,21 +20,21 @@ Copy `.env.example` to a private `.env` in the repository root, fill its Postgre
 ```sh
 docker compose up -d postgres
 .venv/bin/alembic -c apps/api/alembic.ini upgrade head
-.venv/bin/python -m a2_api.budget_cli status
-.venv/bin/python -m a2_api.budget_cli set-limit
-.venv/bin/python -m a2_api.budget_cli status
+.venv/bin/python -m a2_api.assistant.budget_cli status
+.venv/bin/python -m a2_api.assistant.budget_cli set-limit
+.venv/bin/python -m a2_api.assistant.budget_cli status
 ```
 
 Start the API on loopback after migrations:
 
 ```sh
-.venv/bin/uvicorn a2_api.app:create_configured_app --factory --host 127.0.0.1 --port 8033
+.venv/bin/uvicorn a2_api.api.bootstrap:build_app --factory --host 127.0.0.1 --port 8033
 ```
 
 The budget limit is installed only by `set-limit`, never by startup or migrations. The template keeps both live gates off. `ASSISTANT_HOOK` and `ASSISTANT_BUDGET_HOOK` configure the bundled Alice factory and durable ledger; an empty Yandex key/folder leaves the assistant in safe fallback mode. Set `A2_CODE_VERSION` and trusted `A2_CALCULATION_HANDLER=module:function` together only when a calculation adapter is ready, then start the worker separately:
 
 ```sh
-.venv/bin/python -m a2_api.runtime worker
+.venv/bin/python -m a2_api.workers.cli worker
 ```
 
 `ProductRegistry.ready_kinds` must explicitly declare integrated kinds. Optional async `A2_PREFLIGHT_HOOK(request, snapshot)` performs bounded readiness checks, never routing.
@@ -63,9 +63,9 @@ The original user request is used for idempotency; normalized snapshot, methodol
 
 ## Assistant and providers
 
-`a2_assistant.FlashAssistant` supports the fixed read-only tool allowlist through `a2_api.tool_services.SavedTools`. The default explanation is a deterministic template. Optional trusted `ASSISTANT_HOOK(service)` returns a configured `FlashAssistant`. The backend includes a PostgreSQL deployment-wide money and token ledger at migration head `0004_alice_budget`; it never installs a budget or invokes a paid API automatically. Tools expose scoped structured data and accepted document search. `EvidenceRepository` provides Russian PostgreSQL full-text retrieval with source/territory/period filters. The departure tool retains saved journeys and can include a separately labelled, partial provider observation through an explicitly injected `RaspDepartureGateway`; observations never become accepted snapshots automatically.
+`a2_assistant.FlashAssistant` supports the fixed read-only tool allowlist through `a2_api.assistant.tools.SavedTools`. The default explanation is a deterministic template. Optional trusted `ASSISTANT_HOOK(service)` returns a configured `FlashAssistant`. The backend includes a PostgreSQL deployment-wide money and token ledger at migration head `0004_alice_budget`; it never installs a budget or invokes a paid API automatically. Tools expose scoped structured data and accepted document search. `EvidenceRepository` provides Russian PostgreSQL full-text retrieval with source/territory/period filters. The departure tool retains saved journeys and can include a separately labelled, partial provider observation through an explicitly injected `RaspDepartureGateway`; observations never become accepted snapshots automatically.
 
-The backend-owned Alice hook is `ASSISTANT_HOOK=a2_api.alice:build_assistant`; set `ASSISTANT_BUDGET_HOOK=a2_api.budget_hook:build_budget` to use the bundled ledger. It reads existing Yandex settings, uses `SDKTransport` and closes it with the API lifespan. Missing key, `LLM_ENABLED=false`, unset currency authorization, absent hook or unconfigured budget keeps the endpoint on the saved-result template fallback. An operator must explicitly install the monetary and total-token ceilings; RUB prices are versioned public reference prices and do not confirm the billing account currency. The model selects metric IDs and semantic codes; the backend assembles all values, units, evidence and narrative from the saved result. See [Alice integration](docs/alice-integration.md) for CLI commands, offline checks and live rollout gates.
+The backend-owned Alice hook is `ASSISTANT_HOOK=a2_api.assistant.alice:build_assistant`; set `ASSISTANT_BUDGET_HOOK=a2_api.assistant.budget:build_budget` to use the bundled ledger. It reads existing Yandex settings, uses `SDKTransport` and closes it with the API lifespan. Missing key, `LLM_ENABLED=false`, unset currency authorization, absent hook or unconfigured budget keeps the endpoint on the saved-result template fallback. An operator must explicitly install the monetary and total-token ceilings; RUB prices are versioned public reference prices and do not confirm the billing account currency. The model selects metric IDs and semantic codes; the backend assembles all values, units, evidence and narrative from the saved result. See [Alice integration](docs/alice-integration.md) for CLI commands, offline checks and live rollout gates.
 
 The separately injectable `a2_api.providers.rasp.RaspProvider` has bounded paging, retry/quota/rate limits, cache and explicit direct-only/partial coverage. It never supplies a complete multimodal index. Connecting it to ML2 ingestion or an engine adapter is an explicit integration step, not an HTTP side effect.
 
@@ -77,8 +77,8 @@ export PYTHONPATH=packages/contracts/src:apps/api/src:packages/assistant/src
 .venv/bin/ruff check packages/contracts/src packages/contracts/tests apps/api/src apps/api/tests packages/assistant/src packages/assistant/tests
 .venv/bin/ruff format --check packages/contracts/src packages/contracts/tests apps/api/src apps/api/tests packages/assistant/src packages/assistant/tests
 MYPYPATH=$PYTHONPATH .venv/bin/python -m mypy --explicit-package-bases packages/contracts/src/a2_contracts apps/api/src/a2_api packages/assistant/src/a2_assistant
-.venv/bin/python -m a2_api.export --output contracts/generated
-.venv/bin/python -m a2_api.export --output contracts/generated --check
+.venv/bin/python -m a2_api.exports.schemas --output contracts/generated
+.venv/bin/python -m a2_api.exports.schemas --output contracts/generated --check
 ```
 
 Set `A2_TEST_DATABASE_URL` to a dedicated writable PostgreSQL database to run database/process checks; each test creates and drops its own schema. Without it these checks are skipped. All current test geography, times and scores are explicitly synthetic. Tests do not establish readiness of actual city data or paid model capabilities.
@@ -153,8 +153,8 @@ a2_api/
 
 ### Request and transaction flow
 
-`a2_api.app:app` remains the unconfigured canonical v2 ASGI object.
-`a2_api.app:create_configured_app --factory` resolves runtime settings/hooks and
+`a2_api.api.application:create_app --factory` builds an unconfigured canonical v2 ASGI app.
+`a2_api.api.bootstrap:build_app --factory` resolves runtime settings/hooks and
 opens the pool during lifespan. HTTP middleware retains session/CSRF/error policy;
 thematic routers obtain `request.app.state.services`, call application services
 and return canonical DTOs. Router instances hold no shared service instance.
@@ -189,7 +189,7 @@ lock ordering, placeholders, lease fencing, cancellation and immutable hashes ar
 unchanged. There is no sessions table or independent cache table: session hashes
 and versioned cache state remain in the existing jobs/runs/proposals columns.
 
-### DTO ownership and compatibility imports
+### DTO ownership and canonical imports
 
 Public Pydantic request/result/error schemas remain exclusively in
 `packages/contracts/src/a2_contracts/v2/`. Backend configuration models and internal
@@ -198,31 +198,23 @@ copies of canonical AnalysisRequest/AnalysisResult/ScenarioResult/AcceptedData.
 `db/rows.py` maps asyncpg rows into those existing models and checks stored hashes.
 No ORM table models were created.
 
-| Previous path | Canonical implementation | Compatibility |
-| --- | --- | --- |
-| `api_v2.py` | `api/application.py`, `api/v2/*` | factory/error/header imports retained |
-| `app.py` | `api/application.py`, `api/legacy.py`, `api/bootstrap.py` | app, create_app and create_configured_app retained |
-| `analysis_service.py` | `services/analyses.py`, `services/scenarios.py`, `assistant/explanations.py` | AnalysisService and constructor/method signatures retained |
-| `services.py` | `services/__init__.py`, `services/legacy.py`, `core/errors.py` | same import name now a small package facade |
-| `job_services.py` | `services/jobs.py` | QueuedServices/Prepare retained |
-| `storage.py` | `db/repositories/*`, `db/rows.py`, `db/validation.py` | same JobRepository object and row helper imports |
-| `jobs.py` | `core/jobs.py` | same internal model/hash imports |
-| `runtime.py` | `core/config.py`, `db/connection.py`, `api/bootstrap.py`, `workers/cli.py` | CLI and factory imports retained |
-| `worker.py` | `workers/calculation.py`, `workers/runner.py` | calculate + thin Worker adapter retained |
-| `configuration.py`, `product_registry.py` | `core/catalog.py`, `services/catalog.py`, `core/registry.py` | existing types/functions retained |
-| `alice.py` | `assistant/alice.py` | thin factory adapter retains SDKTransport injection |
-| `tool_services.py`, `evidence_search.py` | `assistant/tools.py`, `db/repositories/evidence.py` | SavedTools/EvidenceRepository retained |
-| `deployment_budget.py`, `budget_hook.py`, `budget_cli.py` | `db/repositories/budget.py`, `assistant/budget.py`, `assistant/budget_cli.py` | existing hooks and CLI retained |
-| `export.py`, `run_exports.py` | `exports/schemas.py`, `exports/results.py` | schema CLI and export_run retained |
-| `providers/rasp.py`, `providers/departures.py` | same provider package | provider behavior unchanged |
+| Retired root file | Canonical location |
+| --- | --- |
+| `app.py`, `api_v2.py` | `api/bootstrap.py`, `api/application.py`, `api/legacy.py`, `api/v2/` |
+| `analysis_service.py`, `job_services.py` | `services/analyses.py`, `services/scenarios.py`, `services/jobs.py`, `assistant/explanations.py` |
+| `configuration.py`, `product_registry.py`, `jobs.py`, `env_settings.py` | `core/catalog.py`, `services/catalog.py`, `core/registry.py`, `core/jobs.py`, `core/env_settings.py` |
+| `storage.py`, `evidence_search.py`, `deployment_budget.py` | `db/repositories/`, `db/rows.py`, `db/validation.py` |
+| `runtime.py`, `worker.py` | `core/config.py`, `db/connection.py`, `api/bootstrap.py`, `workers/cli.py`, `workers/runner.py`, `workers/calculation.py` |
+| `alice.py`, `tool_services.py`, `budget_hook.py`, `budget_cli.py` | `assistant/alice.py`, `assistant/tools.py`, `assistant/budget.py`, `assistant/budget_cli.py` |
+| `export.py`, `run_exports.py` | `exports/schemas.py`, `exports/results.py` |
 
-`worker.Worker` is intentionally a thin subclass of canonical `workers.runner.Worker`:
-its calculator delegates through the existing `a2_api.worker.calculate` seam.
-`alice.build_assistant` similarly passes the existing `a2_api.alice.SDKTransport`
-factory to the canonical implementation. Existing monkeypatch consumers continue
-to work; there are no sys.modules substitutions or duplicate implementations.
-Other tested class/function reexports preserve object identity. Old configured
-module:function hooks and calculation-handler imports remain valid.
+Tests patch `a2_api.workers.runner.calculate` and
+`a2_api.assistant.alice.SDKTransport` at their canonical injection points.
+Configuration hooks use `a2_api.assistant.alice:build_assistant` and
+`a2_api.assistant.budget:build_budget`. The existing HTTP contracts, repository
+operations, scope checks, worker publication behavior and exported schemas remain
+unchanged. The [complete path migration map](docs/root-module-migration.md)
+lists every removed root file and its callers.
 
 ### Refactor verification
 
@@ -262,7 +254,7 @@ export PYTHONPATH=.:apps/api/src:packages/contracts/src:packages/assistant/src
 .venv/bin/ruff check apps/api/src apps/api/tests
 .venv/bin/ruff format --check apps/api/src apps/api/tests
 MYPYPATH=packages/contracts/src:apps/api/src:packages/assistant/src .venv/bin/python -m mypy --explicit-package-bases packages/contracts/src/a2_contracts apps/api/src/a2_api packages/assistant/src/a2_assistant
-.venv/bin/python -m a2_api.export --output contracts/generated --check
+.venv/bin/python -m a2_api.exports.schemas --output contracts/generated --check
 ```
 
 Source/PYTHONPATH deployment semantics remain unchanged because manifests still

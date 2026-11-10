@@ -1,8 +1,8 @@
 """A mutated worker DTO cannot publish a scenario that omits deterioration."""
 
 import pytest
-from a2_api.jobs import V2JobContext
-from a2_api.storage import JobRepository
+from a2_api.core.jobs import V2JobContext
+from a2_api.db.repositories.jobs import JobRepository
 from a2_contracts.v2.scenarios import ScenarioDelta, ScenarioRunRequest
 from pydantic import ValidationError
 from test_v2_storage import context, proposal, request, result, scenario_result

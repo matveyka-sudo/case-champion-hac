@@ -4,7 +4,7 @@ The existing endpoint `POST /api/v1/analyses/{analysis_id}/explanation` reads an
 
 ## Configuration
 
-Set `ASSISTANT_HOOK=a2_api.alice:build_assistant` for the API process. The factory reads these environment variables and local `.env` in the process working directory:
+Set `ASSISTANT_HOOK=a2_api.assistant.alice:build_assistant` for the API process. The factory reads these environment variables and local `.env` in the process working directory:
 
 | Variable | Meaning |
 | --- | --- |
@@ -31,7 +31,7 @@ The factory never creates `SDKTransport` until `LLM_ENABLED=true`, `ALICE_BILLIN
 
 `DeploymentBudget.reserve` is called before **each** model attempt, including retries. It receives an opaque reservation ID, model and maximum input/output tokens; `record_usage` receives provider usage after the attempt. With tools disabled, the bundled Alice factory allows one model call and zero retries. If tools are explicitly enabled, the assistant caps one explanation at four model calls, eight tool calls, 2000 output tokens and 90 seconds total. Retries then occur only for 429/5xx and each needs a new reservation. These bounds do not replace a monetary ceiling.
 
-Migration `0004_alice_budget` adds a singleton `assistant_budget` row and unique `assistant_reservations` rows. Neither migration nor application startup creates a budget. The bundled `a2_api.budget_hook:build_budget` shares the API PostgreSQL pool. Each reservation locks the singleton row in a transaction, checks both money and total-token ceilings, and holds the maximum possible cost before a model attempt. Reusing a reservation ID never authorizes a second call. Reservations persist across restarts and are common to all API processes using the deployment schema. There is no daily request-count limit.
+Migration `0004_alice_budget` adds a singleton `assistant_budget` row and unique `assistant_reservations` rows. Neither migration nor application startup creates a budget. The bundled `a2_api.assistant.budget:build_budget` shares the API PostgreSQL pool. Each reservation locks the singleton row in a transaction, checks both money and total-token ceilings, and holds the maximum possible cost before a model attempt. Reusing a reservation ID never authorizes a second call. Reservations persist across restarts and are common to all API processes using the deployment schema. There is no daily request-count limit.
 
 The versioned public RUB tariff for synchronous Alice AI LLM Flash is [published by Yandex AI Studio](https://aistudio.yandex.ru/ru/docs/ai-studio/pricing): input 0.10 ₽, output 0.20 ₽ and cached input 0.025 ₽ per 1000 tokens. The ledger charges **all** input at the ordinary 0.10 ₽ rate; it never assumes a cache discount. Configuration selects a vetted currency/revision entry. Future verified currencies and revisions can be added without a ledger schema change. RUB is the working accounting currency; the organizers' actual billing-account currency has not been checked. Prices may change, so review the revision before live authorization.
 
@@ -46,8 +46,8 @@ ALICE_CURRENCY=RUB
 ALICE_TARIFF_ID=aliceai-llm-flash-sync-rub-2026-11-09
 ALICE_BUDGET_LIMIT=10
 ALICE_TOKEN_LIMIT=50000
-ASSISTANT_HOOK=a2_api.alice:build_assistant
-ASSISTANT_BUDGET_HOOK=a2_api.budget_hook:build_budget
+ASSISTANT_HOOK=a2_api.assistant.alice:build_assistant
+ASSISTANT_BUDGET_HOOK=a2_api.assistant.budget:build_budget
 LLM_ENABLED=false
 ```
 
@@ -55,20 +55,20 @@ From the repository root with backend `PYTHONPATH` and `DATABASE_URL` configured
 
 ```sh
 .venv/bin/alembic -c apps/api/alembic.ini upgrade head
-.venv/bin/python -m a2_api.budget_cli status
-.venv/bin/python -m a2_api.budget_cli set-limit
-.venv/bin/python -m a2_api.budget_cli status
+.venv/bin/python -m a2_api.assistant.budget_cli status
+.venv/bin/python -m a2_api.assistant.budget_cli set-limit
+.venv/bin/python -m a2_api.assistant.budget_cli status
 ```
 
 Before `set-limit`, status is `{"status":"unconfigured"}`. Afterwards it reports currency, tariff, money limit/charged/held/available, total token limit/charged/held/available, reservation count and a blocked flag. No request IDs or credentials appear. To increase a ceiling, raise one or both variables, run `set-limit`, then restart API processes so their settings match the row. Use a disposable test schema for experimentation. No budget is installed automatically.
 
 ## Safe local check
 
-Use a separate writable test database with migrations and a **synthetic** saved analysis. Start the API with `LLM_ENABLED=false` and `ASSISTANT_HOOK=a2_api.alice:build_assistant`. For example, after configuring the backend database and source layout from the README:
+Use a separate writable test database with migrations and a **synthetic** saved analysis. Start the API with `LLM_ENABLED=false` and `ASSISTANT_HOOK=a2_api.assistant.alice:build_assistant`. For example, after configuring the backend database and source layout from the README:
 
 ```sh
-LLM_ENABLED=false ASSISTANT_HOOK=a2_api.alice:build_assistant \
-  .venv/bin/uvicorn a2_api.app:create_configured_app --factory --host 127.0.0.1 --port 8033
+LLM_ENABLED=false ASSISTANT_HOOK=a2_api.assistant.alice:build_assistant \
+  .venv/bin/uvicorn a2_api.api.bootstrap:build_app --factory --host 127.0.0.1 --port 8033
 ```
 
 Retain the same session cookie that created the analysis. Substitute its saved ID below; these requests run in fallback mode and make **no paid model call**:
@@ -99,7 +99,7 @@ No public API endpoint or DTO field changed. Generated OpenAPI and JSON Schema r
 `a2_api.assistant.budget` и `a2_api.assistant.budget_cli`.
 Библиотека `packages/assistant` осталась в прежнем расположении; её обработка ответа Alice AI использует минимальный DTO и серверную сборку ExplanationContent.
 
-Все прежние module:function hooks и команды выше работают через compatibility
-facades. `a2_api.alice.build_assistant` сохраняет точку внедрения SDKTransport;
+Текущие module:function hooks и команды выше используют только канонические
+модули. `a2_api.assistant.alice.build_assistant` сохраняет точку внедрения SDKTransport;
 paid-call gates, восемь read-only tools, budgets/timeouts/fallback и scope
 проверки сохранены. При выключенных tools разрешён один model call без retries. Тарифы и операционные лимиты этим переносом не пересматривались.

@@ -1,7 +1,7 @@
 """Server template identity is independent from the operation enum."""
 
 import pytest
-from a2_api.jobs import V2JobContext
+from a2_api.core.jobs import V2JobContext
 from a2_contracts.api import JobAccepted
 from a2_contracts.v2.scenarios import ScenarioProposal, ScenarioRunOptions
 from test_v2_tools import ScopedSavedService

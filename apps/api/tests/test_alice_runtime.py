@@ -7,9 +7,11 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from a2_api.analysis_service import AnalysisService
-from a2_api.runtime import RuntimeSettings, build_app, open_pool
-from a2_api.worker import Worker
+from a2_api.api.bootstrap import build_app
+from a2_api.core.config import RuntimeSettings
+from a2_api.db.connection import open_pool
+from a2_api.services.analyses import AnalysisService
+from a2_api.workers.runner import Worker
 from a2_assistant import AccessScope, FlashAssistant
 from a2_assistant.transport import ModelFailure, ModelReply
 from a2_contracts.v2.results import AnalysisResult
@@ -101,7 +103,7 @@ def _alice_env(monkeypatch, *, enabled=True, key=True, budget_hook=True):
     "enabled,key,budget_hook", [(False, True, True), (True, False, True), (True, True, False)]
 )
 def test_factory_fails_closed_without_all_live_gates(monkeypatch, enabled, key, budget_hook):
-    from a2_api.alice import build_assistant
+    from a2_api.assistant.alice import build_assistant
 
     _alice_env(monkeypatch, enabled=enabled, key=key, budget_hook=budget_hook)
     assistant = build_assistant(AnalysisService())
@@ -110,7 +112,7 @@ def test_factory_fails_closed_without_all_live_gates(monkeypatch, enabled, key, 
 
 
 def test_factory_requires_billing_currency_confirmation_before_live_transport(monkeypatch):
-    from a2_api import alice
+    from a2_api.assistant import alice
 
     _alice_env(monkeypatch)
     monkeypatch.setenv("A2_ALICE_BILLING_CURRENCY_CONFIRMED", "false")
@@ -121,7 +123,7 @@ def test_factory_requires_billing_currency_confirmation_before_live_transport(mo
 
 
 def test_factory_disables_retries_and_extra_calls_without_tools(monkeypatch):
-    from a2_api import alice
+    from a2_api.assistant import alice
 
     _alice_env(monkeypatch)
     monkeypatch.setattr(alice, "SDKTransport", FakeSDKTransport)
@@ -133,7 +135,7 @@ def test_factory_disables_retries_and_extra_calls_without_tools(monkeypatch):
 
 @pytest.mark.parametrize("missing", ["key", "budget_hook"])
 def test_missing_live_gate_cannot_be_restored_from_local_dotenv(monkeypatch, tmp_path, missing):
-    from a2_api import alice
+    from a2_api.assistant import alice
 
     (tmp_path / ".env").write_text(
         "YANDEX_API_KEY=SYNTHETIC-DOTENV-KEY\n"
@@ -168,7 +170,7 @@ def test_missing_live_gate_cannot_be_restored_from_local_dotenv(monkeypatch, tmp
 
 
 def test_factory_rejects_invalid_configuration_without_leaking_key(monkeypatch):
-    from a2_api.alice import build_assistant
+    from a2_api.assistant.alice import build_assistant
 
     _alice_env(monkeypatch)
     monkeypatch.setenv("YANDEX_BASE_URL", "https://other.example.invalid")
@@ -178,7 +180,7 @@ def test_factory_rejects_invalid_configuration_without_leaking_key(monkeypatch):
 
 
 def test_factory_rejects_non_durable_budget_before_creating_sdk(monkeypatch):
-    from a2_api import alice
+    from a2_api.assistant import alice
 
     _alice_env(monkeypatch)
     monkeypatch.setattr(alice, "SDKTransport", FakeSDKTransport)
@@ -192,7 +194,7 @@ def test_factory_rejects_non_durable_budget_before_creating_sdk(monkeypatch):
 def test_runtime_hook_explains_saved_analysis_and_closes_transport(
     monkeypatch, database_sync_config, caplog
 ):
-    from a2_api import alice
+    from a2_api.assistant import alice
 
     _alice_env(monkeypatch)
     monkeypatch.setattr(alice, "SDKTransport", FakeSDKTransport)
@@ -206,7 +208,7 @@ def test_runtime_hook_explains_saved_analysis_and_closes_transport(
         registry_hook="v2_handlers:registry",
         code_version="demo-code",
         calculation_handler="v2_handlers:success",
-        assistant_hook="a2_api.alice:build_assistant",
+        assistant_hook="a2_api.assistant.alice:build_assistant",
     )
     with caplog.at_level(logging.INFO):
         with TestClient(build_app(config)) as owner, TestClient(build_app(config)) as stranger:
@@ -220,7 +222,7 @@ def test_runtime_hook_explains_saved_analysis_and_closes_transport(
             async def calculate():
                 pool = await open_pool(config)
                 try:
-                    from a2_api.storage import JobRepository
+                    from a2_api.db.repositories.jobs import JobRepository
 
                     await Worker(
                         JobRepository(pool),
@@ -256,7 +258,7 @@ def test_runtime_hook_explains_saved_analysis_and_closes_transport(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("status,expected_calls", [(401, 1), (403, 1), (429, 1), (503, 1)])
 async def test_factory_provider_errors_use_safe_fallback(monkeypatch, status, expected_calls):
-    from a2_api import alice
+    from a2_api.assistant import alice
 
     _alice_env(monkeypatch)
     monkeypatch.setattr(alice, "SDKTransport", FakeSDKTransport)
@@ -293,7 +295,7 @@ async def _no_delay(_seconds):
 
 @pytest.mark.asyncio
 async def test_factory_timeout_falls_back_and_cancellation_propagates(monkeypatch):
-    from a2_api import alice
+    from a2_api.assistant import alice
 
     _alice_env(monkeypatch)
     fixture = (

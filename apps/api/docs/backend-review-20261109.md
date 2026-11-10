@@ -1,5 +1,9 @@
 # Backend independent-review corrections, 2026-11-09
 
+This is a historical audit record. Its schema-export command is summarized
+without the retired module path; exit codes and results are unchanged. Use
+the current commands in [the API README](../README.md) for new checkouts.
+
 Pre-publication audit snapshot (the following no-push/no-commit statements describe the audit stage):
 
 Local isolated checkout: `/Users/kirito/backend-review-isolated-1109`, branch `work/backend`. No branch commits, push, merge, rebase, reset, review publication, discussion resolution or changes to shared checkout. Verification commit-tree objects have one parent, are not branch commits or merge commits. Temporary PostgreSQL 16 container `backend-review-1109-pg` uses its own database/volume/port 55439; tests create UUID schemas. No production database or paid provider traffic.
@@ -51,7 +55,7 @@ Set `PYTHONPATH=.:packages/contracts/src:apps/api/src:packages/assistant/src:pac
 | B | python -m pytest apps/api/tests packages/contracts/tests packages/assistant/tests packages/engine/tests -q -o asyncio_default_fixture_loop_scope=function --tb=short | 0 | 1206 passed, 0 failed, 0 skipped |
 | B | python -m pytest --collect-only -q apps/api/tests packages/engine/tests -o asyncio_default_fixture_loop_scope=function | 0 | 805 collected, no errors |
 | backend/A/B | uv lock --check; uv sync --frozen --all-packages --group dev; uv pip check | 0 each | 57 compatible packages; separate clean frozen environments |
-| backend/A/B | python -m a2_api.export --output contracts/generated --check | 0 | schemas reproducible |
+| backend/A/B | schema-export check (historical CLI) | 0 | schemas reproducible |
 | backend/A/B | ruff check <backend source lists> | 0 | PASS, no autofix |
 | backend/A/B | ruff format --check <backend source lists> | 0 | 102 files formatted |
 | backend/A/B | MYPYPATH=packages/contracts/src:apps/api/src:packages/assistant/src python -m mypy --explicit-package-bases packages/contracts/src/a2_contracts apps/api/src/a2_api packages/assistant/src/a2_assistant | 0 | strict, 43 source files |
@@ -193,7 +197,7 @@ Backend command: `.venv/bin/python -m pytest -q -o asyncio_default_fixture_loop_
 | A | `.venv/bin/ruff check apps/api/src apps/api/tests apps/api/migrations packages/contracts/src packages/contracts/tests packages/assistant/src packages/assistant/tests` | 0 | All checks passed! |
 | A | `.venv/bin/ruff format --check apps/api/src apps/api/tests apps/api/migrations packages/contracts/src packages/contracts/tests packages/assistant/src packages/assistant/tests` | 0 | 110 files already formatted |
 | A | `.venv/bin/python -m mypy --explicit-package-bases packages/contracts/src/a2_contracts apps/api/src/a2_api packages/assistant/src/a2_assistant` | 0 | Success: no issues found in 43 source files |
-| A | `.venv/bin/python -m a2_api.export --output contracts/generated --check` | 0 | Schema exports match canonical models and API |
+| A | `schema-export check (historical CLI)` | 0 | Schema exports match canonical models and API |
 | A | `.venv/bin/python scripts/check_product_config.py` | 0 | Product specification valid: approved methodology v3, Alice Flash, explicit data modes. |
 | A | `.venv/bin/python -m pytest -q apps/api/tests packages/contracts/tests packages/assistant/tests -o asyncio_default_fixture_loop_scope=function --tb=short` | 0 | 722 passed in 22.72s |
 | B | `uvx --from uv==0.12.17 uv lock --check` | 0 | Resolved 158 packages in 11ms |
@@ -203,7 +207,7 @@ Backend command: `.venv/bin/python -m pytest -q -o asyncio_default_fixture_loop_
 | B | `.venv/bin/ruff check apps/api/src apps/api/tests apps/api/migrations packages/contracts/src packages/contracts/tests packages/assistant/src packages/assistant/tests` | 0 | All checks passed! |
 | B | `.venv/bin/ruff format --check apps/api/src apps/api/tests apps/api/migrations packages/contracts/src packages/contracts/tests packages/assistant/src packages/assistant/tests` | 0 | 110 files already formatted |
 | B | `.venv/bin/python -m mypy --explicit-package-bases packages/contracts/src/a2_contracts apps/api/src/a2_api packages/assistant/src/a2_assistant` | 0 | Success: no issues found in 43 source files |
-| B | `.venv/bin/python -m a2_api.export --output contracts/generated --check` | 0 | Schema exports match canonical models and API |
+| B | `schema-export check (historical CLI)` | 0 | Schema exports match canonical models and API |
 | B | `.venv/bin/python scripts/check_product_config.py` | 0 | Product specification valid: approved methodology v3, Alice Flash, explicit data modes. |
 | B | `.venv/bin/python -m pytest --collect-only -q apps/api/tests packages/engine/tests -o asyncio_default_fixture_loop_scope=function` | 0 | 884 tests collected in 0.38s |
 | B | `.venv/bin/python -m pytest -q apps/api/tests packages/contracts/tests packages/assistant/tests packages/engine/tests -o asyncio_default_fixture_loop_scope=function --tb=short` | 0 | 1318 passed in 23.94s |
@@ -316,7 +320,7 @@ Test environment: PYTHONPATH=.:packages/contracts/src:apps/api/src:packages/assi
 | A | `.venv/bin/ruff check apps/api/src apps/api/tests apps/api/migrations packages/contracts/src packages/contracts/tests packages/assistant/src packages/assistant/tests` | 0 | All checks passed! |
 | A | `.venv/bin/ruff format --check apps/api/src apps/api/tests apps/api/migrations packages/contracts/src packages/contracts/tests packages/assistant/src packages/assistant/tests` | 0 | 116 files already formatted |
 | A | `.venv/bin/python -m mypy --explicit-package-bases packages/contracts/src/a2_contracts apps/api/src/a2_api packages/assistant/src/a2_assistant` | 0 | Success: no issues found in 43 source files |
-| A | `.venv/bin/python -m a2_api.export --output contracts/generated --check` | 0 | Schema exports match canonical models and API |
+| A | `schema-export check (historical CLI)` | 0 | Schema exports match canonical models and API |
 | A | `.venv/bin/python scripts/check_product_config.py` | 0 | Product specification valid: approved methodology v3, Alice Flash, explicit data modes. |
 | A | `.venv/bin/python -m pytest -q apps/api/tests packages/contracts/tests packages/assistant/tests -o asyncio_default_fixture_loop_scope=function --tb=short` | 0 | 769 passed in 35.18s |
 | B | `uvx --from uv==0.12.17 uv lock --check` | 0 | Resolved 158 packages in 12ms |
@@ -326,7 +330,7 @@ Test environment: PYTHONPATH=.:packages/contracts/src:apps/api/src:packages/assi
 | B | `.venv/bin/ruff check apps/api/src apps/api/tests apps/api/migrations packages/contracts/src packages/contracts/tests packages/assistant/src packages/assistant/tests` | 0 | All checks passed! |
 | B | `.venv/bin/ruff format --check apps/api/src apps/api/tests apps/api/migrations packages/contracts/src packages/contracts/tests packages/assistant/src packages/assistant/tests` | 0 | 116 files already formatted |
 | B | `.venv/bin/python -m mypy --explicit-package-bases packages/contracts/src/a2_contracts apps/api/src/a2_api packages/assistant/src/a2_assistant` | 0 | Success: no issues found in 43 source files |
-| B | `.venv/bin/python -m a2_api.export --output contracts/generated --check` | 0 | Schema exports match canonical models and API |
+| B | `schema-export check (historical CLI)` | 0 | Schema exports match canonical models and API |
 | B | `.venv/bin/python scripts/check_product_config.py` | 0 | Product specification valid: approved methodology v3, Alice Flash, explicit data modes. |
 | B | `.venv/bin/python -m pytest --collect-only -q apps/api/tests packages/engine/tests -o asyncio_default_fixture_loop_scope=function` | 0 | 915 tests collected in 0.73s |
 | B | `.venv/bin/python -m pytest -q apps/api/tests packages/contracts/tests packages/assistant/tests packages/engine/tests -o asyncio_default_fixture_loop_scope=function --tb=short` | 0 | 1365 passed in 31.95s |

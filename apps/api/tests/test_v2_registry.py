@@ -3,7 +3,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-from a2_api.product_registry import ProductRegistry
+from a2_api.core.registry import ProductRegistry
 from a2_api.services import DomainError
 from a2_contracts.v2.api import TerritoryOption
 from a2_contracts.v2.dataset import AcceptedData

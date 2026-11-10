@@ -1,5 +1,5 @@
 import pytest
-from a2_api.app import create_app
+from a2_api.api.legacy import create_app
 from a2_api.services import DomainError, Services
 from a2_contracts.dataset import Source
 from fastapi.testclient import TestClient

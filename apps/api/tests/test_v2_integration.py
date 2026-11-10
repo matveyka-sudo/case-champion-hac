@@ -2,11 +2,12 @@
 
 import httpx
 import pytest
-from a2_api.analysis_service import AnalysisService
-from a2_api.api_v2 import create_app
-from a2_api.runtime import RuntimeSettings, build_app
-from a2_api.storage import JobRepository
-from a2_api.worker import Worker
+from a2_api.api.application import create_app
+from a2_api.api.bootstrap import build_app
+from a2_api.core.config import RuntimeSettings
+from a2_api.db.repositories.jobs import JobRepository
+from a2_api.services.analyses import AnalysisService
+from a2_api.workers.runner import Worker
 from fastapi.testclient import TestClient
 from test_v2_http import body
 from v2_handlers import registry

@@ -4,9 +4,9 @@ from pathlib import Path
 
 import asyncpg
 import pytest
-from a2_api.jobs import JobContext
+from a2_api.core.jobs import JobContext
+from a2_api.db.repositories.jobs import JobRepository
 from a2_api.services import DomainError
-from a2_api.storage import JobRepository
 from a2_contracts.api import AnalysisRequest, ErrorDetail
 from a2_contracts.results import ProfileResult
 

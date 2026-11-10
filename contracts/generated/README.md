@@ -6,8 +6,8 @@
 
 ```sh
 export PYTHONPATH=packages/contracts/src:apps/api/src:packages/assistant/src
-.venv/bin/python -m a2_api.export --output contracts/generated
-.venv/bin/python -m a2_api.export --output contracts/generated --check
+.venv/bin/python -m a2_api.exports.schemas --output contracts/generated
+.venv/bin/python -m a2_api.exports.schemas --output contracts/generated --check
 ```
 
 Повторный экспорт байт-в-байт идентичен; `--check` не меняет файлы. Python cross-field/context validators обязательны: одна JSON Schema не подтверждает достоверность данных, полноту сети или готовность расчётчика. Основание — `docs/PRODUCT_SPEC.md`, `docs/FORMULAS.md`, `config/product.json`; интеграция и ограничения — `apps/api/docs/handoff-ml1-ml2.md` и `docs/tasks/backend.md`.

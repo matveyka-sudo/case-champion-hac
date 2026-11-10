@@ -1,5 +1,7 @@
 import pytest
-from a2_api.runtime import RuntimeSettings, build_app, open_pool
+from a2_api.api.bootstrap import build_app
+from a2_api.core.config import RuntimeSettings
+from a2_api.db.connection import open_pool
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 from test_storage import request

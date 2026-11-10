@@ -41,7 +41,7 @@ Files: `apps/api/src/a2_api/{app,services,export}.py`, `apps/api/tests/`, `contr
 
 - [x] Write failing API tests for valid requests, malformed JSON/payload, 404/409/503 envelopes, trace ID, and no fixture fallback.
 - [x] Implement `create_app(services=None)` and documented `/api/v1` routes backed by injectable service interfaces. Default unavailable engine/data returns 503, not jobs that cannot execute.
-- [x] Implement deterministic `python -m a2_api.export --output PATH`; publish actual FastAPI OpenAPI plus standalone JSON Schemas for canonical models.
+- [x] Implement deterministic `python -m a2_api.exports.schemas --output PATH`; publish actual FastAPI OpenAPI plus standalone JSON Schemas for canonical models.
 - [x] Export twice to temporary directories; compare bytes, check all documented operations and valid references.
 - [x] Run complete pytest suite, ruff and mypy on implemented modules; record exact results, package import workaround and DEVOPS handoff.
 

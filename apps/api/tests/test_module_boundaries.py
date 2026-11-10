@@ -20,7 +20,67 @@ from a2_api.services.analyses import AnalysisService
 from fastapi.testclient import TestClient
 
 SOURCE = Path(__file__).parents[1] / "src/a2_api"
+ROOT = SOURCE.parents[3]
 BASELINE = json.loads((Path(__file__).parent / "fixtures/refactor_baseline.json").read_text())
+RETIRED_ROOT_MODULES = frozenset(
+    "alice analysis_service api_v2 app budget_cli budget_hook configuration "
+    "deployment_budget env_settings evidence_search export job_services jobs "
+    "product_registry run_exports runtime storage tool_services worker".split()
+)
+
+
+def test_root_package_contains_only_canonical_subpackages():
+    expected = {
+        "__init__.py",
+        "py.typed",
+        "api",
+        "assistant",
+        "core",
+        "db",
+        "exports",
+        "providers",
+        "services",
+        "workers",
+    }
+    assert {path.name for path in SOURCE.iterdir() if path.name != "__pycache__"} == expected
+
+
+def test_retired_root_imports_and_executable_config_do_not_return():
+    tracked = subprocess.check_output(
+        ["git", "ls-files", "--", "*.py"], cwd=ROOT, text=True
+    ).splitlines()
+    for name in tracked:
+        path = ROOT / name
+        if not path.is_file():
+            continue
+        for node in ast.walk(ast.parse(path.read_text())):
+            modules = []
+            if isinstance(node, ast.Import):
+                modules = [alias.name for alias in node.names]
+            elif isinstance(node, ast.ImportFrom):
+                modules = [node.module or ""]
+                if node.module == "a2_api":
+                    assert not RETIRED_ROOT_MODULES.intersection(
+                        alias.name for alias in node.names
+                    ), path
+            assert all(
+                not (
+                    module.startswith("a2_api.") and module.split(".", 2)[1] in RETIRED_ROOT_MODULES
+                )
+                for module in modules
+            ), path
+    old_path = re.compile(r"\ba2_api\.(?:" + "|".join(sorted(RETIRED_ROOT_MODULES)) + r")\b")
+    text_suffixes = {".py", ".md", ".json", ".yml", ".yaml", ".sh", ".toml", ".mjs", ".ts", ".tsx"}
+    tracked_text = subprocess.check_output(["git", "ls-files"], cwd=ROOT, text=True).splitlines()
+    for name in tracked_text:
+        path = ROOT / name
+        if not path.is_file() or not (
+            path.suffix in text_suffixes
+            or path.name in {".env.example", "Dockerfile"}
+            or path.name.endswith(".Dockerfile")
+        ):
+            continue
+        assert old_path.search(path.read_text()) is None, name
 
 
 def normalize_signature(value):
@@ -70,34 +130,33 @@ def test_sql_literals_unchanged_and_confined_to_database_layer():
 
 
 @pytest.mark.parametrize(
-    ("old", "new", "name"),
+    ("module", "name"),
     [
-        ("storage", "db.repositories.jobs", "JobRepository"),
-        ("jobs", "core.jobs", "V2JobContext"),
-        ("analysis_service", "services.analyses", "AnalysisService"),
-        ("job_services", "services.jobs", "QueuedServices"),
-        ("configuration", "core.catalog", "CatalogConfig"),
-        ("configuration", "services.catalog", "CatalogServices"),
-        ("product_registry", "core.registry", "ProductRegistry"),
-        ("runtime", "core.config", "RuntimeSettings"),
-        ("runtime", "db.connection", "open_pool"),
-        ("runtime", "api.bootstrap", "build_app"),
-        ("api_v2", "api.application", "create_app"),
-        ("app", "api.legacy", "create_app"),
-        ("evidence_search", "db.repositories.evidence", "EvidenceRepository"),
-        ("deployment_budget", "db.repositories.budget", "PostgresDeploymentBudget"),
-        ("tool_services", "assistant.tools", "SavedTools"),
-        ("budget_hook", "assistant.budget", "build_budget"),
-        ("budget_cli", "assistant.budget_cli", "run_command"),
-        ("run_exports", "exports.results", "export_run"),
-        ("export", "exports.schemas", "export_schemas"),
-        ("alice", "assistant.alice", "AliceSettings"),
+        ("db.repositories.jobs", "JobRepository"),
+        ("core.jobs", "V2JobContext"),
+        ("services.analyses", "AnalysisService"),
+        ("services.jobs", "QueuedServices"),
+        ("core.catalog", "CatalogConfig"),
+        ("services.catalog", "CatalogServices"),
+        ("core.registry", "ProductRegistry"),
+        ("core.config", "RuntimeSettings"),
+        ("db.connection", "open_pool"),
+        ("api.bootstrap", "build_app"),
+        ("api.application", "create_app"),
+        ("api.legacy", "create_app"),
+        ("db.repositories.evidence", "EvidenceRepository"),
+        ("db.repositories.budget", "PostgresDeploymentBudget"),
+        ("assistant.tools", "SavedTools"),
+        ("assistant.budget", "build_budget"),
+        ("assistant.budget_cli", "run_command"),
+        ("exports.results", "export_run"),
+        ("exports.schemas", "export_schemas"),
+        ("assistant.alice", "AliceSettings"),
     ],
 )
-def test_legacy_reexports_are_canonical_objects(old, new, name):
-    assert getattr(importlib.import_module("a2_api." + old), name) is getattr(
-        importlib.import_module("a2_api." + new), name
-    )
+def test_public_implementations_live_in_canonical_modules(module, name):
+    obj = getattr(importlib.import_module("a2_api." + module), name)
+    assert obj.__module__ == "a2_api." + module
 
 
 def test_request_local_services_and_routers_are_not_shared_between_apps():
@@ -129,15 +188,13 @@ def test_request_local_services_and_routers_are_not_shared_between_apps():
 
 
 @pytest.mark.asyncio
-async def test_legacy_worker_calculator_patch_still_controls_execution(monkeypatch):
-    import a2_api.worker as legacy
-    from a2_api.workers.runner import Worker
+async def test_canonical_worker_calculator_patch_controls_execution(monkeypatch):
+    from a2_api.workers import runner
 
-    assert issubclass(legacy.Worker, Worker)
     injected = AsyncMock(return_value="sentinel")
-    monkeypatch.setattr(legacy, "calculate", injected)
-    runner = legacy.Worker(object(), handler="trusted:handler", code_version="v1")
-    assert await runner._calculate("claim", "trusted:handler", 3) == "sentinel"
+    monkeypatch.setattr(runner, "calculate", injected)
+    worker = runner.Worker(object(), handler="trusted:handler", code_version="v1")
+    assert await worker._calculate("claim", "trusted:handler", 3) == "sentinel"
     injected.assert_awaited_once_with("claim", "trusted:handler", 3)
 
 
@@ -172,14 +229,14 @@ def test_fresh_canonical_import_orders_outside_checkout(tmp_path):
         "a2_api.workers.cli",
         "a2_api.exports.schemas",
         "a2_api.services.analyses",
-        "a2_api.app",
+        "a2_api.api.bootstrap",
     ]
     env = dict(os.environ)
     root = SOURCE.parents[3]
     env["PYTHONPATH"] = os.pathsep.join(
         str(root / p) for p in ("apps/api/src", "packages/contracts/src", "packages/assistant/src")
     )
-    script = 'import importlib,json,sys;[importlib.import_module(n) for n in json.loads(sys.argv[1])];from a2_api.app import app;assert app.openapi()["info"]["version"]=="2.0.0"'
+    script = 'import importlib,json,sys;[importlib.import_module(n) for n in json.loads(sys.argv[1])];from a2_api.api.bootstrap import build_app;assert build_app().openapi()["info"]["version"]=="2.0.0"'
     for order in (modules, list(reversed(modules))):
         subprocess.run(
             [sys.executable, "-c", script, json.dumps(order)],

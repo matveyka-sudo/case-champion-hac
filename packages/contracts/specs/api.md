@@ -1,5 +1,5 @@
 # HTTP API v2
-Контракт v2 реализован в `a2_api.api_v2` по PRODUCT_SPEC 2026-11-08.1. Production factory использует его по умолчанию. Исторический API 0.2.0 доступен только при явном legacy deployment; готовность данных/engine проверяется отдельно.
+Контракт v2 реализован в `a2_api.api.application` по PRODUCT_SPEC 2026-11-08.1. Production factory использует его по умолчанию. Исторический API 0.2.0 доступен только при явном legacy deployment; готовность данных/engine проверяется отдельно.
 POST /api/v1/analyses → 202 {job_id}; GET /api/v1/jobs/{job_id} → queued|running|succeeded|failed|cancelled; GET /api/v1/analyses/{analysis_id} → AnalysisResult.
 POST /api/v1/scenarios/{scenario_id}/runs → 202 {job_id}; GET /api/v1/scenario-runs/{run_id} → ScenarioResult.
 Validation error: code, message, field_errors, request_id; provider error не конвертировать в transport_unavailable. Анализ регистрируется идемпотентно, тяжёлый расчёт в worker. Кеш учитывает дату/время, географию, режим, категории, профиль, версии snapshot и методики. Ключи провайдера на сервере.

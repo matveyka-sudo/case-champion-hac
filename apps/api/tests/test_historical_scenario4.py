@@ -9,11 +9,11 @@ from hashlib import sha256
 from pathlib import Path
 
 import pytest
-from a2_api.analysis_service import AnalysisService
-from a2_api.api_v2 import create_app
-from a2_api.jobs import V2JobContext
+from a2_api.api.application import create_app
+from a2_api.core.jobs import V2JobContext
+from a2_api.db.repositories.jobs import JobRepository
 from a2_api.services import DomainError
-from a2_api.storage import JobRepository
+from a2_api.services.analyses import AnalysisService
 from a2_contracts.v2.scenarios import ScenarioRunRequest
 from httpx import ASGITransport, AsyncClient
 

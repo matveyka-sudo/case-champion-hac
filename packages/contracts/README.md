@@ -13,4 +13,4 @@ All versions are positive JSON integers; string semantic versions from historica
 
 `fixtures/success.json`, `partial.json`, `invalid.json` are wrapper documents with `synthetic=true`, model name and `payload`. Validate the payload, not the wrapper. They are never production calculations and are never automatically loaded by the server. Invalid has the expected field failure recorded.
 
-For integration, commands and engineering decisions read [the handoff](../../apps/api/docs/handoff-ml1-ml2.md). Actual exported schemas live in `contracts/generated/`; use `python -m a2_api.export` to regenerate both validation and serialization forms. Runtime Python validators also enforce cross-field invariants not fully expressible in the structural JSON Schemas.
+For integration, commands and engineering decisions read [the handoff](../../apps/api/docs/handoff-ml1-ml2.md). Actual exported schemas live in `contracts/generated/`; use `python -m a2_api.exports.schemas` to regenerate both validation and serialization forms. Runtime Python validators also enforce cross-field invariants not fully expressible in the structural JSON Schemas.

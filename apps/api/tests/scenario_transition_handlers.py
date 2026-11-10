@@ -2,7 +2,7 @@
 
 import os
 
-from a2_api.jobs import CalculationOutput
+from a2_api.core.jobs import CalculationOutput
 from a2_contracts.v2.results import AnalysisResult
 from a2_contracts.v2.scenarios import ScenarioResult
 from test_v2_storage import proposal, scenario_result

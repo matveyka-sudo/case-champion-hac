@@ -143,3 +143,8 @@ def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
     return create_app(
         service(configure_assistant=False), lifespan=lifespan, secure_cookies=config.secure_cookies
     )
+
+
+def create_configured_app() -> FastAPI:
+    """ASGI factory for Uvicorn and installed-package deployments."""
+    return build_app()
