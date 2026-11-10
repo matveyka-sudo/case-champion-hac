@@ -30,8 +30,9 @@ vi.mock("leaflet", () => ({
     layerGroup: () => ({ addTo: () => ({ clearLayers: () => { drawn.clears++; } }) }),
     latLngBounds: (positions: unknown[]) => { drawn.boundsInputs.push(positions); return { extend: vi.fn(), isValid: () => positions.length > 0 }; },
     circleMarker: (_position: unknown, style: Record<string, unknown>) => {
-      drawn.layers.at(-1)!.marker = style;
-      return {};
+      const item = drawn.layers.at(-1)!;
+      item.marker = style;
+      return { setRadius: (radius: number) => { item.marker!.radius = radius; } };
     },
     geoJSON: (feature: { type: string; geometry?: unknown }, options: {
       style?: Record<string, unknown>;
@@ -45,6 +46,11 @@ vi.mock("leaflet", () => ({
         on: (event: string, handler: () => void) => { if (event === "click") item.click = handler; return layer; },
         addTo: () => layer,
         getBounds: () => ({}),
+        setStyle: (style: Record<string, unknown>) => {
+          item.style = { ...item.style, ...style };
+          if (item.marker) Object.assign(item.marker, style);
+          return layer;
+        },
       };
       return layer;
     },
