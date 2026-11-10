@@ -9,7 +9,12 @@ from math import isclose
 from a2_contracts.common import utc
 from a2_contracts.v2.journeys import JourneyResult
 from a2_contracts.v2.requests import IntercityBase, UrbanPassengerRequest
-from a2_contracts.v2.results import AnalysisResult, Metric, validate_reference_applicability
+from a2_contracts.v2.results import (
+    AnalysisResult,
+    Metric,
+    PopulationBasis,
+    validate_reference_applicability,
+)
 from a2_contracts.v2.scenarios import ScenarioResult
 
 from a2_api.core.errors import DomainError
@@ -85,7 +90,7 @@ def _urban_journey(
 def _urban_score_scope(
     result: ScenarioResult, baseline: AnalysisResult, renamed: dict[str, str]
 ) -> None:
-    """A full point index must use its own preserved point/category time task."""
+    """Numeric indices retain every requested, known operand in their own scope."""
     old_times = [
         row
         for row in baseline.metrics
@@ -121,8 +126,9 @@ def _urban_score_scope(
     scores = {row.score_id: row for row in result.after.scores}
 
     for aggregate in result.after.scores:
-        if aggregate.status != "available" or aggregate.completeness != "full":
+        if aggregate.status != "available":
             continue
+        full = aggregate.completeness == "full"
         if (
             aggregate.subject.kind == "sample_point"
             and aggregate.subject.category is None
@@ -140,12 +146,14 @@ def _urban_score_scope(
                     or child.subject.territory_id != request.city_id
                     or child.subject.mode != request.passenger_mode
                     or child.status != "available"
-                    or child.completeness != "full"
+                    or (full and child.completeness != "full")
                     for child in children
                 )
             ):
                 raise DomainError(
-                    409, "incompatible_versions", "Scenario full point category inventory differs"
+                    409,
+                    "incompatible_versions",
+                    "Scenario numeric point category inventory differs",
                 )
         if aggregate.subject.kind == "territory":
             rows = [
@@ -160,6 +168,13 @@ def _urban_score_scope(
             ]
             if not rows:
                 continue
+            basis = aggregate.aggregation_basis
+            if not isinstance(basis, PopulationBasis) or (
+                basis.population is None or basis.coverage < 1 or basis.unknown_positive_weight
+            ):
+                raise DomainError(
+                    409, "incompatible_versions", "Scenario numeric territory weights unavailable"
+                )
             point_rows: dict[str | None, list[Metric]] = {}
             for row in rows:
                 point_rows.setdefault(row.subject.point_id, []).append(row)
@@ -191,14 +206,26 @@ def _urban_score_scope(
                     or child.subject.mode != request.passenger_mode
                     or child.subject.category != aggregate.subject.category
                     or child.status != "available"
-                    or child.completeness != "full"
+                    or (full and child.completeness != "full")
                     for child in children
                 )
             ):
                 raise DomainError(
-                    409, "incompatible_versions", "Scenario full territory point inventory differs"
+                    409,
+                    "incompatible_versions",
+                    "Scenario numeric territory point inventory differs",
                 )
     old_to_new = {old: new for new, old in renamed.items()}
+    for previous_h in baseline.metrics:
+        if previous_h.name != "urban_h_seconds":
+            continue
+        current_h = metrics.get(old_to_new.get(previous_h.metric_id, previous_h.metric_id))
+        if current_h is None or current_h.model_dump(
+            exclude={"metric_id"}
+        ) != previous_h.model_dump(exclude={"metric_id"}):
+            raise DomainError(
+                409, "incompatible_versions", "Scenario changes immutable urban area scale"
+            )
     leaves: dict[str, list[Metric]] = {}
 
     def operands(identifier: str) -> list[Metric]:
@@ -213,11 +240,12 @@ def _urban_score_scope(
         return leaves[identifier]
 
     for score in result.after.scores:
-        if (
-            score.subject.kind != "sample_point"
-            or score.status != "available"
-            or score.completeness != "full"
-        ):
+        if score.subject.kind != "sample_point" or score.status != "available":
+            continue
+        # Point aggregates have their complete direct category inventory checked
+        # above. Validate each category below; a proven absent category is a
+        # terminal zero and contributes no unknown numerical time operand.
+        if score.subject.category is None:
             continue
         expected = [
             row
@@ -229,13 +257,19 @@ def _urban_score_scope(
         expected_after = [
             metrics.get(old_to_new.get(row.metric_id, row.metric_id)) for row in expected
         ]
-        if score.value == 0 and all(
-            row is not None
-            and row.value is None
-            and row.status == "not_applicable"
-            and row.reason_code == "NO_FEASIBLE_ROUTE"
-            and row.completeness == "full"
-            for row in expected_after
+        if (
+            score.value == 0
+            and score.reason_code == "NO_FEASIBLE_ROUTE"
+            and score.completeness == "full"
+            and not score.components
+            and all(
+                row is not None
+                and row.value is None
+                and row.status == "not_applicable"
+                and row.reason_code == "NO_FEASIBLE_ROUTE"
+                and row.completeness == "full"
+                for row in expected_after
+            )
         ):
             continue
         point_times = [
@@ -243,18 +277,29 @@ def _urban_score_scope(
             for row in operands(score.score_id)
             if row.subject.kind == "sample_point" and row.unit == "seconds"
         ]
-        if not point_times or any(
-            row.subject.point_id != score.subject.point_id
-            or row.subject.territory_id != score.subject.territory_id
-            or row.subject.mode != score.subject.mode
-            or (
-                score.subject.category is not None
-                and row.subject.category != score.subject.category
+        if (
+            not point_times
+            or any(
+                row is None or row.status != "available" or row.value is None
+                for row in expected_after
             )
-            for row in point_times
+            or any(
+                row.subject.point_id != score.subject.point_id
+                or row.subject.territory_id != score.subject.territory_id
+                or row.subject.mode != score.subject.mode
+                or (
+                    score.subject.category is not None
+                    and row.subject.category != score.subject.category
+                )
+                for row in point_times
+            )
         ):
             raise DomainError(
                 409, "incompatible_versions", "Scenario point index uses another time task"
+            )
+        if any(row.status != "available" or row.value is None for row in operands(score.score_id)):
+            raise DomainError(
+                409, "incompatible_versions", "Scenario numeric point index has unknown operand"
             )
 
 

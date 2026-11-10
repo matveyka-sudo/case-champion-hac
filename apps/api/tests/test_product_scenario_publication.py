@@ -317,7 +317,10 @@ async def test_changed_raw_point_task_cannot_publish_full_indices_without_chain(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("level", ["point", "territory"])
-async def test_aggregate_cannot_publish_by_dropping_unknown_requested_operand(database, level):
+@pytest.mark.parametrize("completeness", ["full", "partial"])
+async def test_aggregate_cannot_publish_by_dropping_unknown_requested_operand(
+    database, level, completeness
+):
     from test_product_scenarios import forged_aggregate, incomplete_aggregate_case
 
     pool, _, _ = database
@@ -325,7 +328,9 @@ async def test_aggregate_cannot_publish_by_dropping_unknown_requested_operand(da
         pool, incomplete_aggregate_case(level)
     )
     with pytest.raises(DomainError, match="inventory"):
-        await repository.succeed(claim, forged_aggregate(candidate, level))
+        await repository.succeed(
+            claim, forged_aggregate(candidate, level, completeness=completeness)
+        )
     assert await pool.fetchval("SELECT count(*) FROM runs WHERE result_kind='scenario_v2'") == 0
     await repository.succeed(claim, candidate)
     saved = await repository.get_run(candidate.run_id, claim.context.access_scope)
@@ -336,6 +341,41 @@ async def test_aggregate_cannot_publish_by_dropping_unknown_requested_operand(da
         == ("urban-point-p2" if level == "point" else "urban-territory-public_transport")
     )
     assert target.value is None and target.status == "unknown"
+    assert (
+        await repository.get_run(baseline.analysis_id, claim.context.access_scope)
+    ).result_hash == baseline.result_hash
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("completeness", ["full", "partial"])
+async def test_mixed_known_and_proven_absent_category_can_publish(database, completeness):
+    from test_product_scenarios import incomplete_aggregate_case
+
+    pool, _, _ = database
+    repository, claim, candidate, baseline = await queued_case(
+        pool, incomplete_aggregate_case("point", confirmed_absence=True)
+    )
+    if completeness == "partial":
+        payload = candidate.model_dump(mode="json")
+        changed = set()
+        for score in payload["after"]["scores"]:
+            if score["reason_code"] != "NO_FEASIBLE_ROUTE":
+                score.update(completeness="partial", ranking_eligible=False)
+                changed.add(score["score_id"])
+        for effect in payload["deltas"]:
+            if effect["kind"] == "score" and effect["after_id"] in changed:
+                effect.update(outcome="unknown", delta=None, reason_code="INCOMPARABLE_SCOPE")
+        payload["status"] = "partial"
+        candidate = ScenarioResult.model_validate(payload)
+    await repository.succeed(claim, candidate)
+    saved = await repository.get_run(candidate.run_id, claim.context.access_scope)
+    point = next(score for score in saved.after.scores if score.score_id == "urban-point-p2")
+    assert point.value > 0 and point.completeness == completeness
+    assert all(
+        score.value == 0 and score.components == []
+        for score in saved.after.scores
+        if score.subject.category == "school"
+    )
     assert (
         await repository.get_run(baseline.analysis_id, claim.context.access_scope)
     ).result_hash == baseline.result_hash

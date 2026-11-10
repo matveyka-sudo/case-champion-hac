@@ -1172,7 +1172,7 @@ def test_unknown_positive_population_cannot_be_removed_from_full_city_index_basi
         )
 
 
-def incomplete_aggregate_case(level, *, zero_weight=False):
+def incomplete_aggregate_case(level, *, zero_weight=False, confirmed_absence=False):
     """TEST_ONLY actual engine unknowns for an omitted category/positive point."""
     context, facts, document, original, _ = make_case()
     if level == "point":
@@ -1180,7 +1180,7 @@ def incomplete_aggregate_case(level, *, zero_weight=False):
             replace(row, categories=frozenset({"airport"})) for row in facts.destinations
         )
         coverage = tuple(
-            replace(row, catalog_complete=False, catalog_destination_ids=frozenset())
+            replace(row, catalog_complete=confirmed_absence, catalog_destination_ids=frozenset())
             if row.scope.category == "school"
             else row
             for row in facts.coverage
@@ -1223,7 +1223,7 @@ def incomplete_aggregate_case(level, *, zero_weight=False):
     return context, facts, document, baseline, frozen
 
 
-def forged_aggregate(result, level, attack="omit"):
+def forged_aggregate(result, level, attack="omit", *, completeness="full"):
     payload = result.model_dump(mode="json")
     if level == "point":
         target = next(
@@ -1247,7 +1247,7 @@ def forged_aggregate(result, level, attack="omit"):
     target.update(
         value=80.0,
         status="available",
-        completeness="full",
+        completeness=completeness,
         reason_code=None,
         components=[dict(kind="score", id=known["score_id"])],
     )
@@ -1285,8 +1285,9 @@ def forged_aggregate(result, level, attack="omit"):
         ("territory", "category_as_point"),
     ],
 )
+@pytest.mark.parametrize("completeness", ["full", "partial"])
 def test_full_aggregate_requires_every_requested_category_and_positive_or_unknown_point(
-    level, attack
+    level, attack, completeness
 ):
     from a2_api.db.validation import _validate_scenario_semantics
 
@@ -1303,7 +1304,7 @@ def test_full_aggregate_requires_every_requested_category_and_positive_or_unknow
         endpoint_scope=scope,
         expected_snapshot_hash=scope.snapshot_hash,
     )
-    forged = forged_aggregate(honest, level, attack)
+    forged = forged_aggregate(honest, level, attack, completeness=completeness)
     with pytest.raises(DomainError, match="inventory"):
         _validate_scenario_semantics(
             forged,
@@ -1366,6 +1367,138 @@ def test_full_aggregate_cannot_substitute_a_category_from_another_city():
     payload["status"] = "partial"
     forged = ScenarioResult.model_validate(payload)
     with pytest.raises(DomainError, match="index task identity"):
+        _validate_scenario_semantics(
+            forged,
+            baseline,
+            claim.context.scenario_proposal,
+            endpoint_scope=scope,
+            expected_snapshot_hash=scope.snapshot_hash,
+        )
+
+
+def test_numeric_partial_aggregate_can_keep_partial_known_operands_in_complete_inventory():
+    from a2_api.db.validation import _validate_scenario_semantics
+
+    case = make_case()
+    claim, facts, document, baseline, _ = with_claim(case)
+    scope = trusted_urban_scope(case)
+    result = bridge.calculate(
+        claim, baseline=baseline, inputs=facts, document=document, profile_id=document.profile_id
+    )
+    payload = result.model_dump(mode="json")
+    for score in payload["after"]["scores"]:
+        score.update(completeness="partial", ranking_eligible=False)
+    for effect in payload["deltas"]:
+        if effect["kind"] == "score":
+            effect.update(outcome="unknown", delta=None, reason_code="INCOMPARABLE_SCOPE")
+    payload["status"] = "partial"
+    partial = ScenarioResult.model_validate(payload)
+    _validate_scenario_semantics(
+        partial,
+        baseline,
+        claim.context.scenario_proposal,
+        endpoint_scope=scope,
+        expected_snapshot_hash=scope.snapshot_hash,
+    )
+
+
+@pytest.mark.parametrize("completeness", ["full", "partial"])
+def test_mixed_known_positive_and_proven_absent_category_remain_numeric(completeness):
+    from a2_api.db.validation import _validate_scenario_semantics
+
+    case = incomplete_aggregate_case("point", confirmed_absence=True)
+    claim, facts, document, baseline, _ = with_claim(case)
+    scope = trusted_urban_scope(case)
+    result = bridge.calculate(
+        claim, baseline=baseline, inputs=facts, document=document, profile_id=document.profile_id
+    )
+    payload = result.model_dump(mode="json")
+    for score in payload["after"]["scores"]:
+        if score["subject"]["category"] == "school":
+            assert score["value"] == 0 and score["reason_code"] == "NO_FEASIBLE_ROUTE"
+            assert not score["components"] and score["completeness"] == "full"
+        else:
+            assert score["value"] is not None and score["value"] > 0
+            score.update(completeness=completeness, ranking_eligible=False)
+    if completeness == "partial":
+        zero_ids = {
+            row["score_id"]
+            for row in payload["after"]["scores"]
+            if row["reason_code"] == "NO_FEASIBLE_ROUTE"
+        }
+        for effect in payload["deltas"]:
+            if effect["kind"] == "score" and effect["after_id"] not in zero_ids:
+                effect.update(outcome="unknown", delta=None, reason_code="INCOMPARABLE_SCOPE")
+        payload["status"] = "partial"
+    mixed = ScenarioResult.model_validate(payload)
+    _validate_scenario_semantics(
+        mixed,
+        baseline,
+        claim.context.scenario_proposal,
+        endpoint_scope=scope,
+        expected_snapshot_hash=scope.snapshot_hash,
+    )
+
+
+@pytest.mark.parametrize(
+    "attack", ["unknown_category_time", "unknown_as_absence", "unknown_population", "area_scale"]
+)
+def test_partial_label_cannot_invent_numeric_index_from_unknown_or_altered_immutable_operand(
+    attack,
+):
+    from a2_api.db.validation import _validate_scenario_semantics
+
+    case = (
+        incomplete_aggregate_case("point")
+        if attack in {"unknown_category_time", "unknown_as_absence"}
+        else make_case(unknown_population=attack == "unknown_population")
+    )
+    claim, facts, document, baseline, _ = with_claim(case)
+    scope = trusted_urban_scope(case)
+    result = bridge.calculate(
+        claim, baseline=baseline, inputs=facts, document=document, profile_id=document.profile_id
+    )
+    payload = result.model_dump(mode="json")
+    if attack in {"unknown_category_time", "unknown_as_absence"}:
+        target = next(
+            row
+            for row in payload["after"]["scores"]
+            if row["subject"]["point_id"] == "p2" and row["subject"]["category"] == "school"
+        )
+        assert target["value"] is None
+        target.update(value=80.0, status="available", completeness="partial", reason_code=None)
+        if attack == "unknown_as_absence":
+            target.update(
+                value=0.0, completeness="full", reason_code="NO_FEASIBLE_ROUTE", components=[]
+            )
+        changed = target["score_id"]
+    elif attack == "unknown_population":
+        target = next(
+            row
+            for row in payload["after"]["scores"]
+            if row["score_id"] == "urban-territory-public_transport"
+        )
+        assert target["aggregation_basis"]["unknown_positive_weight"]
+        target.update(value=80.0, status="available", completeness="partial", reason_code=None)
+        changed = target["score_id"]
+    else:
+        target = next(
+            row for row in payload["after"]["metrics"] if row["name"] == "urban_h_seconds"
+        )
+        target.update(value=1.0, status="available", completeness="partial", reason_code=None)
+        changed = target["metric_id"]
+    for effect in payload["deltas"]:
+        if effect["after_id"] == changed:
+            effect.update(outcome="unknown", delta=None, reason_code="INCOMPARABLE_SCOPE")
+    if attack == "area_scale":
+        for score in payload["after"]["scores"]:
+            score.update(completeness="partial", ranking_eligible=False)
+        for effect in payload["deltas"]:
+            if effect["kind"] == "score":
+                effect.update(outcome="unknown", delta=None, reason_code="INCOMPARABLE_SCOPE")
+    payload["status"] = "partial"
+    forged = ScenarioResult.model_validate(payload)
+    with pytest.raises(DomainError, match="time task|weights unavailable|area scale"):
         _validate_scenario_semantics(
             forged,
             baseline,
