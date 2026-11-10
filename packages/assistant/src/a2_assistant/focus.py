@@ -1,15 +1,29 @@
 """Bounded facts selected from saved subjects, never from model-generated IDs."""
 
+from typing import TypeVar
+
 from a2_contracts.v2.assistant import ExplanationRequest
-from a2_contracts.v2.results import AnalysisResult, Metric
+from a2_contracts.v2.results import AnalysisResult, Metric, Score
+
+SavedFact = TypeVar("SavedFact", Metric, Score)
 
 
 def focused_metrics(
     saved: AnalysisResult, context: ExplanationRequest | None = None
 ) -> list[Metric]:
+    return _focused(saved.metrics, saved, context)
+
+
+def focused_scores(saved: AnalysisResult, context: ExplanationRequest | None = None) -> list[Score]:
+    return _focused(saved.scores, saved, context)
+
+
+def _focused(
+    items: list[SavedFact], saved: AnalysisResult, context: ExplanationRequest | None
+) -> list[SavedFact]:
     selection = context.selection if context is not None else None
     if selection is None:
-        return saved.metrics[:20]
+        return items[:20]
     kind, identifier = selection.entity_kind, selection.entity_id
     point_ids = {identifier} if kind == "sample_point" else set()
     for feature in saved.map_data.features:
@@ -27,9 +41,10 @@ def focused_metrics(
         or (kind in {"cell", "sample_point"} and journey.point_id in point_ids)
     }
 
-    def matches(metric: Metric) -> bool:
+    def matches(metric: SavedFact) -> bool:
         subject = metric.subject
-        if metric.journey_id is not None and metric.journey_id in journey_ids:
+        journey_id = getattr(metric, "journey_id", None)
+        if journey_id is not None and journey_id in journey_ids:
             return True
         if kind in {"cell", "sample_point"}:
             return subject.point_id is not None and subject.point_id in point_ids
@@ -47,7 +62,7 @@ def focused_metrics(
 
     # A selected entity with no saved metric must not silently explain another entity.
     result = []
-    for metric in saved.metrics:
+    for metric in items:
         if matches(metric):
             result.append(metric)
             if len(result) == 20:

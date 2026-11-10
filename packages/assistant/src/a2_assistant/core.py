@@ -30,13 +30,14 @@ from a2_contracts.v2.assistant import (
     Finding,
     NumericClaim,
     ScenarioSuggestion,
+    ScoreClaim,
 )
 from a2_contracts.v2.results import AnalysisResult, EvidenceRef
 from a2_contracts.v2.retrieval import EvidenceSearchResult
-from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError, model_validator
 from pydantic_core import ErrorDetails
 
-from .focus import focused_metrics
+from .focus import focused_metrics, focused_scores
 from .tools import AccessScope, ToolBackend, ToolRejected, tool_definitions, validate_tool
 from .transport import FlashConfig, ModelFailure, ModelReply, ModelTransport
 
@@ -58,6 +59,7 @@ _FINDING_TEXT = {
     "Данных для расчёта показателя недостаточно.": "unknown",
     "Показатель неприменим к выбранным условиям.": "not_applicable",
     "Расчёт показателя ещё выполняется.": "pending",
+    "Предварительный индекс сохранён; полнота данных ограничена.": "available",
 }
 _PROPOSAL_TEXT = frozenset(
     {"Проверить согласование пересадки.", "Проверить сохранённый сценарий отдельным расчётом."}
@@ -81,10 +83,17 @@ _FINDING_TEXT["Методика расчёта показателя ещё не 
 
 class _FindingSelection(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
-    metric_id: Annotated[str, Field(min_length=1, max_length=200)]
+    metric_id: Annotated[str, Field(min_length=1, max_length=200)] | None = None
+    score_id: Annotated[str, Field(min_length=1, max_length=200)] | None = None
     explanation_code: Literal[
         "saved_value", "travel_time", "unknown", "not_applicable", "pending", "methodology_pending"
     ]
+
+    @model_validator(mode="after")
+    def one_reference(self) -> "_FindingSelection":
+        if (self.metric_id is None) == (self.score_id is None):
+            raise ValueError("Select exactly one saved metric or score")
+        return self
 
 
 class _ModelSelection(BaseModel):
@@ -122,6 +131,7 @@ class _ModelAnswerRejected(ValueError):
         safe_fields = {
             "findings",
             "metric_id",
+            "score_id",
             "explanation_code",
             "template_ids",
             "analysis_id",
@@ -190,14 +200,43 @@ def _build_content(
     templates: frozenset[str],
     *,
     allowed_metrics: set[str] | None = None,
+    allowed_scores: set[str] | None = None,
 ) -> ExplanationContent:
     metrics = {metric.metric_id: metric for metric in saved.metrics}
+    scores = {score.score_id: score for score in saved.scores}
     evidence = {item.evidence_id for item in saved.evidence_refs}
-    if len({item.metric_id for item in selection.findings}) != len(selection.findings):
+    if len({(item.metric_id, item.score_id) for item in selection.findings}) != len(
+        selection.findings
+    ):
         raise _ModelAnswerRejected("reference_invalid")
     findings: list[Finding] = []
     cited: list[str] = []
     for item in selection.findings:
+        if item.score_id is not None:
+            score = scores.get(item.score_id)
+            if score is None or (
+                allowed_scores is not None and item.score_id not in allowed_scores
+            ):
+                raise _ModelAnswerRejected("reference_invalid")
+            sentence, status = _FINDING_CODES[item.explanation_code]
+            if score.status != status or item.explanation_code == "travel_time":
+                raise _ModelAnswerRejected("narrative_invalid")
+            if score.status == "available" and score.completeness != "full":
+                sentence = "Предварительный индекс сохранён; полнота данных ограничена."
+            refs = [ref for ref in score.evidence_refs if ref in evidence][:50]
+            cited.extend(refs)
+            findings.append(
+                Finding(
+                    text=sentence,
+                    metric_ids=[],
+                    claims=[],
+                    score_ids=[score.score_id],
+                    score_claims=[ScoreClaim(score_id=score.score_id, value=score.value)],
+                    evidence_refs=refs,
+                )
+            )
+            continue
+        assert item.metric_id is not None
         metric = metrics.get(item.metric_id)
         if metric is None or (
             allowed_metrics is not None and item.metric_id not in allowed_metrics
@@ -263,6 +302,7 @@ def _validate_content(
     retrieved_evidence: list[EvidenceRef] | None = None,
 ) -> None:
     metrics = {metric.metric_id: metric for metric in saved.metrics}
+    scores = {score.score_id: score for score in saved.scores}
     evidence = {item.evidence_id for item in saved.evidence_refs}
     if retrieved_evidence is not None:
         if len({item.evidence_id for item in retrieved_evidence}) != len(retrieved_evidence):
@@ -277,6 +317,7 @@ def _validate_content(
     for finding in content.findings:
         if (
             not set(finding.metric_ids) <= metrics.keys()
+            or not set(finding.score_ids) <= scores.keys()
             or not set(finding.evidence_refs) <= evidence
         ):
             raise _ModelAnswerRejected("reference_invalid")
@@ -284,12 +325,31 @@ def _validate_content(
             metric = metrics.get(claim.metric_id)
             if metric is None or claim.value != metric.value or claim.unit != metric.unit:
                 raise _ModelAnswerRejected("claim_mismatch")
+        for score_claim in finding.score_claims:
+            score = scores.get(score_claim.score_id)
+            if score is None or score_claim.value != score.value:
+                raise _ModelAnswerRejected("claim_mismatch")
         if check_text:
             if finding.text not in _FINDING_TEXT:
                 raise _ModelAnswerRejected("narrative_invalid")
             required_status = _FINDING_TEXT[finding.text]
             if required_status is not None and any(
                 metrics[identifier].status != required_status for identifier in finding.metric_ids
+            ):
+                raise _ModelAnswerRejected("narrative_invalid")
+            if required_status is not None and any(
+                scores[identifier].status != required_status for identifier in finding.score_ids
+            ):
+                raise _ModelAnswerRejected("narrative_invalid")
+            if finding.score_ids and finding.text == "Доступное время сохранено в расчёте.":
+                raise _ModelAnswerRejected("narrative_invalid")
+            if (
+                any(
+                    scores[identifier].status == "available"
+                    and scores[identifier].completeness != "full"
+                    for identifier in finding.score_ids
+                )
+                and finding.text != "Предварительный индекс сохранён; полнота данных ограничена."
             ):
                 raise _ModelAnswerRejected("narrative_invalid")
             if finding.text == "Доступное время сохранено в расчёте." and any(
@@ -313,16 +373,35 @@ def template_explanation(
     *,
     context: ExplanationRequest | None = None,
 ) -> Explanation:
-    findings = [
+    score_findings = [
         Finding(
-            text=metric.name[:1000],
-            metric_ids=[metric.metric_id],
-            evidence_refs=metric.source_refs[:50],
-            claims=[NumericClaim(metric_id=metric.metric_id, value=metric.value, unit=metric.unit)],
+            text=(
+                score.name[:1000]
+                if score.completeness == "full"
+                else f"{score.name[:900]} — полнота данных ограничена."
+            ),
+            metric_ids=[],
+            claims=[],
+            score_ids=[score.score_id],
+            score_claims=[ScoreClaim(score_id=score.score_id, value=score.value)],
+            evidence_refs=score.evidence_refs[:50],
         )
-        for metric in focused_metrics(saved, context)
+        for score in focused_scores(saved, context)
     ]
-    # An analysis may have only scores/no metrics; no metric is invented for it.
+    findings = (
+        score_findings
+        + [
+            Finding(
+                text=metric.name[:1000],
+                metric_ids=[metric.metric_id],
+                evidence_refs=metric.source_refs[:50],
+                claims=[
+                    NumericClaim(metric_id=metric.metric_id, value=metric.value, unit=metric.unit)
+                ],
+            )
+            for metric in focused_metrics(saved, context)
+        ]
+    )[:20]
     return Explanation(
         analysis_id=saved.analysis_id,
         analysis_result_hash=saved.result_hash,
@@ -355,6 +434,7 @@ def render_explanation(explanation: Explanation, saved: AnalysisResult) -> str:
         retrieved_evidence=checked.retrieved_evidence,
     )
     metrics = {metric.metric_id: metric for metric in saved.metrics}
+    scores = {score.score_id: score for score in saved.scores}
     lines = []
     for finding in checked.findings:
         parts = [finding.text]
@@ -366,6 +446,10 @@ def render_explanation(explanation: Explanation, saved: AnalysisResult) -> str:
                 number = str(int(metric.value)) if metric.value.is_integer() else repr(metric.value)
                 value = f"{number} {metric.unit}"
             parts.append(f"{metric.name}: {value}")
+        for score_claim in finding.score_claims:
+            score = scores[score_claim.score_id]
+            value = "нет данных" if score.value is None else f"{score.value:g} из 100"
+            parts.append(f"{score.name}: {value}")
         lines.append(" ".join(parts))
     return "\n".join([*lines, *checked.limitations])
 
@@ -417,9 +501,9 @@ class FlashAssistant:
             raise ValueError("Invalid opaque request ID")
         if not self._enabled():
             return template_explanation(saved, request_id, "DISABLED", context=context)
-        if not saved.metrics:
+        if not saved.metrics and not saved.scores:
             return template_explanation(saved, request_id, "NO_METRICS", context=context)
-        if not focused_metrics(saved, context):
+        if not focused_metrics(saved, context) and not focused_scores(saved, context):
             return template_explanation(saved, request_id, "NO_SELECTED_METRICS", context=context)
         started = time.monotonic()
         try:
@@ -458,7 +542,9 @@ class FlashAssistant:
     ) -> Explanation:
         assert self.transport is not None and self.budget is not None
         initial_metrics = focused_metrics(saved, context)
+        initial_scores = focused_scores(saved, context)
         allowed_metrics = {metric.metric_id for metric in initial_metrics}
+        allowed_scores = {score.score_id for score in initial_scores}
         saved_metric_ids = {metric.metric_id for metric in saved.metrics}
         facts = {
             "metrics": [
@@ -467,8 +553,21 @@ class FlashAssistant:
                     "name": metric.name,
                     "status": metric.status,
                     "unit": metric.unit,
+                    "completeness": metric.completeness,
+                    "reason_code": metric.reason_code,
                 }
                 for metric in initial_metrics
+            ],
+            "scores": [
+                {
+                    "score_id": score.score_id,
+                    "name": score.name,
+                    "status": score.status,
+                    "completeness": score.completeness,
+                    "reason_code": score.reason_code,
+                    "ranking_eligible": score.ranking_eligible,
+                }
+                for score in initial_scores
             ],
             "registered_template_ids": sorted(templates),
         }
@@ -491,9 +590,23 @@ class FlashAssistant:
                 ],
                 "template_ids": [],
             }
+        elif initial_scores:
+            score = initial_scores[0]
+            user_payload["response_example"] = {
+                "findings": [
+                    {
+                        "score_id": score.score_id,
+                        "explanation_code": "saved_value"
+                        if score.status == "available"
+                        else score.status,
+                    }
+                ],
+                "template_ids": [],
+            }
         output_instructions = (
             "Return exactly one JSON object, no Markdown, code fences, or text outside JSON. "
-            "Select one to five relevant saved metrics. For each, give only metric_id and explanation_code. "
+            "Select one to five relevant saved metrics or scores. For each, give exactly one of "
+            "metric_id or score_id, and explanation_code. Never identify a score as a metric. "
             "Use saved_value for available metrics, travel_time only for available time metrics, "
             "and otherwise the exact metric status as explanation_code. "
             "Give template_ids only from registered_template_ids, or []. "
@@ -708,7 +821,11 @@ class FlashAssistant:
                     raise _ModelAnswerRejected("response_incomplete")
                 selection = _parse_model_content(reply.content)
                 content = _build_content(
-                    selection, saved, templates, allowed_metrics=allowed_metrics
+                    selection,
+                    saved,
+                    templates,
+                    allowed_metrics=allowed_metrics,
+                    allowed_scores=allowed_scores,
                 )
                 _validate_content(
                     content, saved, templates, retrieved_evidence=list(retrieved.values())
