@@ -1,0 +1,1755 @@
+{
+  "schema_version": "waydex-source-inventory/1",
+  "cities": [
+    {
+      "bundle_id": "kaliningrad-urban-2026-11-10.3",
+      "manifest_sha256": "b174039c6c2d1feb33a46063418e5975afd5bc58095c20e8ff65f73434e25fa1",
+      "sample_points": 216,
+      "destinations": {
+        "adult_polyclinic": 16,
+        "airport": 1,
+        "bus_terminal": 2,
+        "child_polyclinic": 12,
+        "college_university": 26,
+        "kindergarten": 93,
+        "rail_terminal": 2,
+        "school": 77,
+        "shopping_center": 34
+      },
+      "quarantined_destinations": 201,
+      "freight_sites": 250,
+      "accepted_freight_nodes": {
+        "port": 3
+      },
+      "quarantined_freight_nodes": 11,
+      "timetables": [],
+      "stop_frequency_records": 1947,
+      "source_coverage": [
+        {
+          "collection": "territories",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "complete",
+          "confirmed_absence": false,
+          "reason": "Городской округ и 3 района(ов) из OSM",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.kaliningrad-261107"
+          ]
+        },
+        {
+          "collection": "population_cells",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "complete",
+          "confirmed_absence": false,
+          "reason": "Все ячейки сетки 1 км, пересекающие границу; население GHSL по центроидам пикселей",
+          "evidence_ids": [
+            "ghsl:ghsl_pop.e2025-r2023a-100m-r3c20",
+            "osm:dataset:osm_geofabrik.kaliningrad-261107"
+          ]
+        },
+        {
+          "collection": "sample_points",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "complete",
+          "confirmed_absence": false,
+          "reason": "По одной точке на ячейку со зданием; исключённые ячейки с причиной и населением в QA",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.kaliningrad-261107"
+          ]
+        },
+        {
+          "collection": "access_nodes",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": null,
+          "mode": "walk",
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "complete",
+          "confirmed_absence": false,
+          "reason": "Вход на главную связную компоненту пешеходной сети OSM v1 у каждой точки и объекта",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.kaliningrad-261107"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "kaliningrad",
+          "category": "adult_polyclinic",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Городские поликлиники ОМС (ОКФС 13/14) по ТРМО ТФОМС; адреса, которых нет в OSM, не размещены; частные и ведомственные не входят",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.kaliningrad-261107",
+            "tfoms39_trmo:dataset:tfoms39_trmo.2026-07"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "kaliningrad",
+          "category": "child_polyclinic",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Городские поликлиники ОМС (ОКФС 13/14) по ТРМО ТФОМС; адреса, которых нет в OSM, не размещены; частные и ведомственные не входят",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.kaliningrad-261107",
+            "tfoms39_trmo:dataset:tfoms39_trmo.2026-07"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "kaliningrad",
+          "category": "kindergarten",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Муниципальные учреждения подтверждены перечнем учредителя; региональные, федеральные и частные не подтверждены",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.kaliningrad-261107",
+            "klgd_education:dataset:klgd_education.20261108"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "kaliningrad",
+          "category": "school",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Муниципальные учреждения подтверждены перечнем учредителя; региональные, федеральные и частные не подтверждены",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.kaliningrad-261107",
+            "klgd_education:dataset:klgd_education.20261108"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "kaliningrad",
+          "category": "college_university",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Государственные колледжи и вузы по реестру аккредитации Рособрнадзора; корпуса — по названиям в OSM; частные, ведомственные и неаккредитованные не входят",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.kaliningrad-261107",
+            "obrnadzor_accreditation:dataset:obrnadzor_accreditation.20261108"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "kaliningrad",
+          "category": "rail_terminal",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.kaliningrad-261107"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "kaliningrad",
+          "category": "bus_terminal",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.kaliningrad-261107"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "kaliningrad",
+          "category": "airport",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "complete",
+          "confirmed_absence": false,
+          "reason": "Аэродромы с IATA в 60 км, регулярные рейсы подтверждены OurAirports",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.kaliningrad-261107",
+            "ourairports:dataset:ourairports.airports-20261108"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "kaliningrad",
+          "category": "shopping_center",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.kaliningrad-261107"
+          ]
+        },
+        {
+          "collection": "category_ownership",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Подтверждены реестрами: adult_polyclinic, child_polyclinic, college_university, kindergarten, school",
+          "evidence_ids": [
+            "klgd_education:dataset:klgd_education.20261108",
+            "obrnadzor_accreditation:dataset:obrnadzor_accreditation.20261108",
+            "tfoms39_trmo:dataset:tfoms39_trmo.2026-07"
+          ]
+        },
+        {
+          "collection": "access_nodes",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": null,
+          "mode": "road",
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "complete",
+          "confirmed_absence": false,
+          "reason": "Вход на главную связную компоненту дорожной сети OSM v1 (грузовой подъезд) у каждого грузового узла и площадки",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.kaliningrad-261107"
+          ]
+        },
+        {
+          "collection": "freight_nodes",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": "port",
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Портовые территории OSM и объекты со словом «порт» в названии в границе города; морской порт Калининград (рег. № Б-7) по Росморпорту; перечень операторов на странице скрыт в разметке, объекты только по нему в карантине; подписанные объекты в OSM есть у 2 из 16 операторов",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.kaliningrad-261107",
+            "rosmorport:dataset:rosmorport.seaports-kaliningrad-20261108"
+          ]
+        },
+        {
+          "collection": "freight_nodes",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": "pipeline_terminal",
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "unknown",
+          "confirmed_absence": false,
+          "reason": "Терминалы магистральных трубопроводов по правилам OSM не найдены; отсутствие не подтверждено",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.kaliningrad-261107"
+          ]
+        },
+        {
+          "collection": "freight_nodes",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": "rail_terminal",
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "unknown",
+          "confirmed_absence": false,
+          "reason": "Ж/д станции OSM в карантине: грузовые операции не подтверждены открытым реестром",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.kaliningrad-261107"
+          ]
+        },
+        {
+          "collection": "freight_nodes",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": "logistics_terminal",
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Логистические центры не собраны; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "freight_nodes",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": "airport",
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Грузовые аэропорты не собраны; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "freight_sites",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Промзоны OSM от 0,5 га, склады и производственные здания от 1000 м² вне промзон и узлов (freight-osm-rules-v2); реестра предприятий нет, веса равные",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.kaliningrad-261107"
+          ]
+        },
+        {
+          "collection": "freight_compatibility",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "unknown",
+          "confirmed_absence": false,
+          "reason": "Совместимость груза, услуги и подъезда не подтверждена открытыми данными операторов; строки не созданы",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.kaliningrad-261107",
+            "rosmorport:dataset:rosmorport.seaports-kaliningrad-20261108"
+          ]
+        },
+        {
+          "collection": "pipeline_connections",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Только межгород; соединения и направления не собраны, терминалы города — в freight_nodes",
+          "evidence_ids": []
+        },
+        {
+          "collection": "stop_frequencies",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": null,
+          "mode": "public_transport",
+          "valid_from": null,
+          "valid_to": null,
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Справка частоты по остановочным таблицам gortrans39: 8 из 23 маршрутов АО «Калининград-ГорТранс», у остальных шаблон вместо расписания; частные перевозчики не входят; рейсы, направления и даты действия не подтверждены",
+          "evidence_ids": [
+            "gortrans39:dataset:gortrans39.routes-20261109"
+          ]
+        },
+        {
+          "collection": "stops",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "trips",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "stop_times",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "calendars",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "transfers",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "reference_edges",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "minimum_transfers",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "traffic_profiles",
+          "city_id": "kaliningrad",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        }
+      ],
+      "immutable_sources": [
+        {
+          "dataset_id": "osm_geofabrik.kaliningrad-261107",
+          "sha256": "769a6a6ac552b534057f2480b88f1c2d0709636761ab6d08483efe69c1e97b69",
+          "source_url": "https://download.geofabrik.de/russia/kaliningrad-261107.osm.pbf",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "ghsl_pop.e2025-r2023a-100m-r3c20",
+          "sha256": "1dfddf9e523c01fc23ad19f48339c41f158f9c0305aaf2dc6385d7340f8aa92f",
+          "source_url": "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_R2023A/GHS_POP_E2025_GLOBE_R2023A_54009_100/V1-0/tiles/GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0_R3_C20.zip",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "ourairports.airports-20261108",
+          "sha256": "5754df21f25cb08d2def8a80b3eb609ddc52a4217afa8eb48280b6428c06e78f",
+          "source_url": "https://davidmegginson.github.io/ourairports-data/airports.csv",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "klgd_education.20261108",
+          "sha256": "a6915842ef5df9248a3d31be9d5df037ca20a5614506740dac34711ee852908c",
+          "source_url": "https://www.klgd.ru/activity/education/institutions/",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "tfoms39_trmo.2026-07",
+          "sha256": "5aff48eec26d6a994d95b4800ac719cca17a03bfa26c513153d5bfea0bc50e8a",
+          "source_url": "https://tfoms39.ru/upload/iblock/0ff/ngdlejrjod17ygfc107yi1c8oshk5h41/%D0%B8%D1%8E%D0%BB%D1%8C_%D0%A2%D0%A0%D0%9C%D0%9E%202026.xlsx",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "obrnadzor_accreditation.20261108",
+          "sha256": "116ecc476619a89de6d2aea2b9eec9802e9f341374bb52cb5cd9bbc862d91bc6",
+          "source_url": "https://isga.obrnadzor.gov.ru/api/spa/accredreestr/opendata/filezip",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "rosmorport.seaports-kaliningrad-20261108",
+          "sha256": "75d5a5e524edb59142f1712c3b88181666ad012dc3b876056bbc13f71536a684",
+          "source_url": "https://www.rosmorport.ru/filials/spb_seaports/",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "gortrans39.routes-20261109",
+          "sha256": "8f09b5d9a9a8f17b8a40d51daaf45ea934b4461f59374fb1ee7dbca8afc67332",
+          "source_url": "https://gortrans39.ru/routes/",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "klgd_school_sites.20261110",
+          "sha256": "89808fa312acc81f470a39681c655e1c2f48aa345e6841b1ea2142efaaa54e2f",
+          "source_url": "https://www.klgd.ru/activity/education/institutions/schools/index.php?SHOWALL_1=1",
+          "immutable_raw_state": "missing"
+        }
+      ]
+    },
+    {
+      "bundle_id": "novorossiysk-urban-2026-11-10.2",
+      "manifest_sha256": "82fd4ca03dbdfbcd44ab8f28d969b0f998bf58fad4eb787d5add83fffa85638a",
+      "sample_points": 409,
+      "destinations": {
+        "adult_polyclinic": 5,
+        "airport": 1,
+        "bus_terminal": 2,
+        "child_polyclinic": 1,
+        "college_university": 12,
+        "kindergarten": 45,
+        "rail_terminal": 1,
+        "school": 25,
+        "shopping_center": 15
+      },
+      "quarantined_destinations": 99,
+      "freight_sites": 86,
+      "accepted_freight_nodes": {
+        "pipeline_terminal": 4,
+        "port": 2
+      },
+      "quarantined_freight_nodes": 5,
+      "timetables": [],
+      "stop_frequency_records": 0,
+      "source_coverage": [
+        {
+          "collection": "territories",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "complete",
+          "confirmed_absence": false,
+          "reason": "Городской округ и 4 района(ов) из OSM",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.south-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "population_cells",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "complete",
+          "confirmed_absence": false,
+          "reason": "Все ячейки сетки 1 км, пересекающие границу; население GHSL по центроидам пикселей",
+          "evidence_ids": [
+            "ghsl:ghsl_pop.e2025-r2023a-100m-r4c22",
+            "osm:dataset:osm_geofabrik.south-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "sample_points",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "complete",
+          "confirmed_absence": false,
+          "reason": "По одной точке на ячейку со зданием; исключённые ячейки с причиной и населением в QA",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.south-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "access_nodes",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": null,
+          "mode": "walk",
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "complete",
+          "confirmed_absence": false,
+          "reason": "Вход на главную связную компоненту пешеходной сети OSM v1 у каждой точки и объекта",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.south-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "novorossiysk",
+          "category": "adult_polyclinic",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Городские поликлиники по перечню учреждений здравоохранения на сайте администрации (ОПФ ГБУЗ … МЗ КК); головные адреса, не все отделения",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.south-fed-district-261107",
+            "admnvrsk_health:dataset:admnvrsk_health.20261108"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "novorossiysk",
+          "category": "child_polyclinic",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Городские поликлиники по перечню учреждений здравоохранения на сайте администрации (ОПФ ГБУЗ … МЗ КК); головные адреса, не все отделения",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.south-fed-district-261107",
+            "admnvrsk_health:dataset:admnvrsk_health.20261108"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "novorossiysk",
+          "category": "kindergarten",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Муниципальные детсады по перечню учредителя (Управление образования, gorono.ru), адрес учреждения; другие корпуса и частные детсады не подтверждены",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.south-fed-district-261107",
+            "nvr_gorono:dataset:nvr_gorono.dou-20261109"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "novorossiysk",
+          "category": "school",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Государственные и муниципальные школы по реестру аккредитации; только адрес организации, другие корпуса не подтверждены",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.south-fed-district-261107",
+            "obrnadzor_accreditation:dataset:obrnadzor_accreditation.20261108"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "novorossiysk",
+          "category": "college_university",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Государственные колледжи и вузы по реестру аккредитации Рособрнадзора; корпуса — по названиям в OSM; частные, ведомственные и неаккредитованные не входят",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.south-fed-district-261107",
+            "obrnadzor_accreditation:dataset:obrnadzor_accreditation.20261108"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "novorossiysk",
+          "category": "rail_terminal",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.south-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "novorossiysk",
+          "category": "bus_terminal",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.south-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "novorossiysk",
+          "category": "airport",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Аэродромы с IATA в 60 км по OurAirports; регулярность рейсов не проверена по расписаниям (ограничения полётов на юге России)",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.south-fed-district-261107",
+            "ourairports:dataset:ourairports.airports-20261108"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "novorossiysk",
+          "category": "shopping_center",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.south-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "category_ownership",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Подтверждены реестрами: adult_polyclinic, child_polyclinic, college_university, kindergarten, school",
+          "evidence_ids": [
+            "admnvrsk_health:dataset:admnvrsk_health.20261108",
+            "nvr_gorono:dataset:nvr_gorono.dou-20261109",
+            "obrnadzor_accreditation:dataset:obrnadzor_accreditation.20261108"
+          ]
+        },
+        {
+          "collection": "access_nodes",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": null,
+          "mode": "road",
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "complete",
+          "confirmed_absence": false,
+          "reason": "Вход на главную связную компоненту дорожной сети OSM v1 (грузовой подъезд) у каждого грузового узла и площадки",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.south-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "freight_nodes",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": "port",
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Портовые территории OSM и объекты со словом «порт» в названии в границе города; морской порт Новороссийск (рег. № Ч-1) по Росморпорту; перечень операторов на странице скрыт в разметке, объекты только по нему в карантине; подписанные объекты в OSM есть у 2 из 9 операторов",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.south-fed-district-261107",
+            "rosmorport:dataset:rosmorport.seaports-novorossiysk-20261108"
+          ]
+        },
+        {
+          "collection": "freight_nodes",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": "pipeline_terminal",
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Терминалы магистральных трубопроводов по названиям OSM (КТК, Шесхарис, ПНБ); реестра операторов нет",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.south-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "freight_nodes",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": "rail_terminal",
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "unknown",
+          "confirmed_absence": false,
+          "reason": "Ж/д станции OSM в карантине: грузовые операции не подтверждены открытым реестром",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.south-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "freight_nodes",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": "logistics_terminal",
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Логистические центры не собраны; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "freight_nodes",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": "airport",
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Грузовые аэропорты не собраны; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "freight_sites",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Промзоны OSM от 0,5 га, склады и производственные здания от 1000 м² вне промзон и узлов (freight-osm-rules-v2); реестра предприятий нет, веса равные",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.south-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "freight_compatibility",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "unknown",
+          "confirmed_absence": false,
+          "reason": "Совместимость груза, услуги и подъезда не подтверждена открытыми данными операторов; строки не созданы",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.south-fed-district-261107",
+            "rosmorport:dataset:rosmorport.seaports-novorossiysk-20261108"
+          ]
+        },
+        {
+          "collection": "pipeline_connections",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Только межгород; соединения и направления не собраны, терминалы города — в freight_nodes",
+          "evidence_ids": []
+        },
+        {
+          "collection": "stops",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "trips",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "stop_times",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "calendars",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "transfers",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "reference_edges",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "minimum_transfers",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "traffic_profiles",
+          "city_id": "novorossiysk",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        }
+      ],
+      "immutable_sources": [
+        {
+          "dataset_id": "osm_geofabrik.south-fed-district-261107",
+          "sha256": "e867508d9240743dea215f130dcfe441a0a53980558b7d5002db91a6b87a57da",
+          "source_url": "https://download.geofabrik.de/russia/south-fed-district-261107.osm.pbf",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "ghsl_pop.e2025-r2023a-100m-r4c22",
+          "sha256": "ab535d4ecdf555f1a8dc5e2f9fa5c23aaa5bf45a5ea7273510710d3b2f099483",
+          "source_url": "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_R2023A/GHS_POP_E2025_GLOBE_R2023A_54009_100/V1-0/tiles/GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0_R4_C22.zip",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "ourairports.airports-20261108",
+          "sha256": "5754df21f25cb08d2def8a80b3eb609ddc52a4217afa8eb48280b6428c06e78f",
+          "source_url": "https://davidmegginson.github.io/ourairports-data/airports.csv",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "admnvrsk_health.20261108",
+          "sha256": "f0def1ae51224e389a6f11d7b53576bdffcb70f5d85806b868368a08596c0c1e",
+          "source_url": "https://admnvrsk.ru/o-gorode/gostyam-goroda/uchrezhdenija-zdravoohranenija/",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "nvr_gorono.dou-20261109",
+          "sha256": "1c05a455c1636c24a26e9c18e80d73a9ebf29006bcaf3fd4f3e5dd1140e2026a",
+          "source_url": "https://gorono.ru/dou",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "obrnadzor_accreditation.20261108",
+          "sha256": "116ecc476619a89de6d2aea2b9eec9802e9f341374bb52cb5cd9bbc862d91bc6",
+          "source_url": "https://isga.obrnadzor.gov.ru/api/spa/accredreestr/opendata/filezip",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "rosmorport.seaports-novorossiysk-20261108",
+          "sha256": "b66300669b2675eb30b9a60cb9c14672da5c2cf6f5029d84a54f04cb015521b6",
+          "source_url": "https://www.rosmorport.ru/nvr_seaports.html",
+          "immutable_raw_state": "missing"
+        }
+      ]
+    },
+    {
+      "bundle_id": "moscow-urban-2026-11-10.2",
+      "manifest_sha256": "84df02d264702906319b5db9f82235c1f3b221a5dcf27edb9facc6d52d950fa5",
+      "sample_points": 2361,
+      "destinations": {
+        "adult_polyclinic": 284,
+        "airport": 4,
+        "bus_terminal": 18,
+        "child_polyclinic": 232,
+        "college_university": 446,
+        "kindergarten": 742,
+        "rail_terminal": 19,
+        "school": 874,
+        "shopping_center": 852
+      },
+      "quarantined_destinations": 6151,
+      "freight_sites": 2222,
+      "accepted_freight_nodes": {},
+      "quarantined_freight_nodes": 70,
+      "timetables": [
+        {
+          "timetable_id": "mos-ground-transport-gtfs-20261110",
+          "format": "gtfs",
+          "path": "processed/gtfs/mos_ground_transport.gtfs-20261110.gtfs-repair-v1.zip",
+          "sha256": "681afec73b21f8538a675194c95595093dbde03e95cfd72df0b4ef1f4114b2bc",
+          "dataset_ids": [
+            "mos_ground_transport.60663-20260504",
+            "mos_ground_transport.60662-20261005",
+            "mos_ground_transport.60664-20261005",
+            "mos_ground_transport.60665-20261005",
+            "mos_ground_transport.60666-20261005",
+            "mos_ground_transport.60661-20261023"
+          ],
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "unknown_dates": [
+            "2026-11-04"
+          ],
+          "modes": [
+            "bus",
+            "tram",
+            "cable_tram"
+          ],
+          "qa_report": "data/manifests/qa/mos_ground_transport.gtfs-20261110.json",
+          "limitations": [
+            "Только наземный транспорт: метро, МЦД и электричек нет",
+            "Нет calendar_dates: 4 ноября (праздник) — сервис неизвестен",
+            "Наборы из разных релизов: 5,3 млн строк времени по остановкам без рейса отброшены",
+            "У 9 направлений две версии расписания с одинаковыми отправлениями: частоту считать по уникальным отправлениям"
+          ]
+        }
+      ],
+      "stop_frequency_records": 0,
+      "source_coverage": [
+        {
+          "collection": "territories",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "complete",
+          "confirmed_absence": false,
+          "reason": "Городской округ и 12 района(ов) из OSM",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.central-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "population_cells",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "complete",
+          "confirmed_absence": false,
+          "reason": "Все ячейки сетки 1 км, пересекающие границу; население GHSL по центроидам пикселей",
+          "evidence_ids": [
+            "ghsl:ghsl_pop.e2025-r2023a-100m-r3c21",
+            "osm:dataset:osm_geofabrik.central-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "sample_points",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "complete",
+          "confirmed_absence": false,
+          "reason": "По одной точке на ячейку со зданием; исключённые ячейки с причиной и населением в QA",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.central-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "access_nodes",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": "walk",
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "complete",
+          "confirmed_absence": false,
+          "reason": "Вход на главную связную компоненту пешеходной сети OSM v1 у каждой точки и объекта",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.central-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "moscow",
+          "category": "adult_polyclinic",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Поликлиники с прикреплением, подведомственные ДЗМ, по справочнику МГФОМС с координатами фонда; ведомственные и частные не входят",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.central-fed-district-261107",
+            "mgfoms_med_org:dataset:mgfoms_med_org.20261108"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "moscow",
+          "category": "child_polyclinic",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Поликлиники с прикреплением, подведомственные ДЗМ, по справочнику МГФОМС с координатами фонда; ведомственные и частные не входят",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.central-fed-district-261107",
+            "mgfoms_med_org:dataset:mgfoms_med_org.20261108"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "moscow",
+          "category": "kindergarten",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Только дошкольные отделения государственных школ, названные в OSM по номеру школы; отдельные детсады не подтверждены",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.central-fed-district-261107",
+            "obrnadzor_accreditation:dataset:obrnadzor_accreditation.20261108"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "moscow",
+          "category": "school",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Государственные школы по реестру аккредитации: адрес организации и корпуса OSM с номером этой школы в названии (до 5 км); корпуса без номера не подтверждены",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.central-fed-district-261107",
+            "obrnadzor_accreditation:dataset:obrnadzor_accreditation.20261108"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "moscow",
+          "category": "college_university",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Государственные колледжи и вузы по реестру аккредитации Рособрнадзора; корпуса — по названиям в OSM; частные, ведомственные и неаккредитованные не входят",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.central-fed-district-261107",
+            "obrnadzor_accreditation:dataset:obrnadzor_accreditation.20261108"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "moscow",
+          "category": "rail_terminal",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.central-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "moscow",
+          "category": "bus_terminal",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.central-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "moscow",
+          "category": "airport",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "complete",
+          "confirmed_absence": false,
+          "reason": "Аэродромы с IATA в 60 км, регулярные рейсы подтверждены OurAirports",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.central-fed-district-261107",
+            "ourairports:dataset:ourairports.airports-20261108"
+          ]
+        },
+        {
+          "collection": "destinations",
+          "city_id": "moscow",
+          "category": "shopping_center",
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.central-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "category_ownership",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Подтверждены реестрами: adult_polyclinic, child_polyclinic, college_university, kindergarten, school",
+          "evidence_ids": [
+            "mgfoms_med_org:dataset:mgfoms_med_org.20261108",
+            "obrnadzor_accreditation:dataset:obrnadzor_accreditation.20261108"
+          ]
+        },
+        {
+          "collection": "access_nodes",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": "road",
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "complete",
+          "confirmed_absence": false,
+          "reason": "Вход на главную связную компоненту дорожной сети OSM v1 (грузовой подъезд) у каждого грузового узла и площадки",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.central-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "freight_nodes",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": "port",
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "unknown",
+          "confirmed_absence": false,
+          "reason": "Портовые территории OSM без записи о морском порте: в карантине",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.central-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "freight_nodes",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": "pipeline_terminal",
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "unknown",
+          "confirmed_absence": false,
+          "reason": "Терминалы магистральных трубопроводов по правилам OSM не найдены; отсутствие не подтверждено",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.central-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "freight_nodes",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": "rail_terminal",
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "unknown",
+          "confirmed_absence": false,
+          "reason": "Ж/д станции OSM в карантине: грузовые операции не подтверждены открытым реестром",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.central-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "freight_nodes",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": "logistics_terminal",
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Логистические центры не собраны; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "freight_nodes",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": "airport",
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Грузовые аэропорты не собраны; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "freight_sites",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Промзоны OSM от 0,5 га, склады и производственные здания от 1000 м² вне промзон и узлов (freight-osm-rules-v2); реестра предприятий нет, веса равные",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.central-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "freight_compatibility",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "unknown",
+          "confirmed_absence": false,
+          "reason": "Совместимость груза, услуги и подъезда не подтверждена открытыми данными операторов; строки не созданы",
+          "evidence_ids": [
+            "osm:dataset:osm_geofabrik.central-fed-district-261107"
+          ]
+        },
+        {
+          "collection": "pipeline_connections",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Только межгород; соединения и направления не собраны, терминалы города — в freight_nodes",
+          "evidence_ids": []
+        },
+        {
+          "collection": "stops",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "trips",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "stop_times",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "calendars",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "transfers",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "reference_edges",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "minimum_transfers",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "traffic_profiles",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": null,
+          "valid_from": null,
+          "valid_to": null,
+          "status": "not_collected",
+          "confirmed_absence": false,
+          "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+          "evidence_ids": []
+        },
+        {
+          "collection": "stops",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": "public_transport",
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Официальный GTFS наземного транспорта data.mos.ru (gtfs-repair-v1): автобус и трамвай; без метро, МЦД, электричек и исключений календаря",
+          "evidence_ids": [
+            "gtfs:mos-ground-transport-gtfs-20261110"
+          ]
+        },
+        {
+          "collection": "trips",
+          "city_id": "moscow",
+          "category": null,
+          "freight_kind": null,
+          "mode": "public_transport",
+          "valid_from": "2026-11-01",
+          "valid_to": "2026-11-30",
+          "status": "partial",
+          "confirmed_absence": false,
+          "reason": "Официальный GTFS наземного транспорта data.mos.ru (gtfs-repair-v1): автобус и трамвай; без метро, МЦД, электричек и исключений календаря",
+          "evidence_ids": [
+            "gtfs:mos-ground-transport-gtfs-20261110"
+          ]
+        }
+      ],
+      "immutable_sources": [
+        {
+          "dataset_id": "osm_geofabrik.central-fed-district-261107",
+          "sha256": "d28d118c9269138ae33ea6561d4e29e492bd9954e6dd088f80b7a3b1372b77f2",
+          "source_url": "https://download.geofabrik.de/russia/central-fed-district-261107.osm.pbf",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "ghsl_pop.e2025-r2023a-100m-r3c21",
+          "sha256": "31605219ef3125f41f5ed016fe3fe99985d6ea1e1cad601f44b9650eed1413d2",
+          "source_url": "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_R2023A/GHS_POP_E2025_GLOBE_R2023A_54009_100/V1-0/tiles/GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0_R3_C21.zip",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "ourairports.airports-20261108",
+          "sha256": "5754df21f25cb08d2def8a80b3eb609ddc52a4217afa8eb48280b6428c06e78f",
+          "source_url": "https://davidmegginson.github.io/ourairports-data/airports.csv",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "mgfoms_med_org.20261108",
+          "sha256": "18ca95c06f275b9256dbf61481c3dd4d4f6a9c7c49b0fec6aada753a074d17c0",
+          "source_url": "https://www.mgfoms.ru/spravochniki/med-org/",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "obrnadzor_accreditation.20261108",
+          "sha256": "116ecc476619a89de6d2aea2b9eec9802e9f341374bb52cb5cd9bbc862d91bc6",
+          "source_url": "https://isga.obrnadzor.gov.ru/api/spa/accredreestr/opendata/filezip",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "mos_ground_transport.60663-20260504",
+          "sha256": "2f23c19f89addf9f6bbb4fa9d51b8cee5de034d9b84905ea61f9a25005d72d40",
+          "source_url": "https://data.mos.ru/opendata/60663",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "mos_ground_transport.60662-20261005",
+          "sha256": "85f5e1241854b3b1c012ae4ab78d2cf3400020147135b2984970dddf2c012199",
+          "source_url": "https://data.mos.ru/opendata/60662",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "mos_ground_transport.60664-20261005",
+          "sha256": "2e90d587d7d1ccc63717c63f2eb51ba243d507bda34e7b2eeabc23eb2b2de7d4",
+          "source_url": "https://data.mos.ru/opendata/60664",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "mos_ground_transport.60665-20261005",
+          "sha256": "d43604a6aa024838cd4db6e06d9b7e28f8d04932ac92da6cbb7b8592ff9b0fb3",
+          "source_url": "https://data.mos.ru/opendata/60665",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "mos_ground_transport.60666-20261005",
+          "sha256": "c2e462715926986340ee795eeefecff963c3e7ae6fbfa6309de1c469f0a2d069",
+          "source_url": "https://data.mos.ru/opendata/60666",
+          "immutable_raw_state": "missing"
+        },
+        {
+          "dataset_id": "mos_ground_transport.60661-20261023",
+          "sha256": "dfa4230968f16270b751d707a826a23a882685fa6bbaf69a659ccf928e2bebea",
+          "source_url": "https://data.mos.ru/opendata/60661",
+          "immutable_raw_state": "missing"
+        }
+      ]
+    }
+  ],
+  "external_artifacts": [
+    {
+      "artifact_id": "mos-ground-transport-gtfs-20261110",
+      "kind": "gtfs",
+      "sha256": "681afec73b21f8538a675194c95595093dbde03e95cfd72df0b4ef1f4114b2bc",
+      "size_bytes": 34717074,
+      "state": "verified"
+    },
+    {
+      "artifact_id": "rasp-bindings-2026-11-09.1",
+      "kind": "internal_rasp_bindings",
+      "sha256": "bc12decf35208b4c68424c9bd9a9259a0ff521104a5f06c2c68a1bf1611c54b5",
+      "rows": {
+        "node_codes.json": 2415,
+        "bindings.json": 826
+      },
+      "internal_only": true,
+      "state": "verified"
+    }
+  ],
+  "kinds": {
+    "urban_passenger": {
+      "state": "partial",
+      "reasons": [
+        "DESTINATION_COVERAGE_PARTIAL",
+        "WALK_MINIMUM_PROOF_REQUIRED",
+        "POPULATION_WITHOUT_SAMPLE_RETAINED",
+        "STOP_FREQUENCIES_NOT_ROUTABLE"
+      ]
+    },
+    "intercity_passenger": {
+      "state": "unknown",
+      "reasons": [
+        "NODE_AND_PROVIDER_BINDINGS_ARE_NOT_SCHEDULES",
+        "DATED_SERVICES_REQUIRED",
+        "ACCEPTED_REFERENCE_REQUIRED_FOR_INDEX"
+      ]
+    },
+    "urban_cargo": {
+      "state": "partial",
+      "reasons": [
+        "CARGO_COMPATIBILITY_UNKNOWN",
+        "TRUCK_ACCESS_NOT_A_ROUTE_PROOF",
+        "FREIGHT_NODE_CATALOGUE_PARTIAL"
+      ]
+    },
+    "intercity_cargo": {
+      "state": "unknown",
+      "reasons": [
+        "COMPLETE_DELIVERY_CHAINS_NOT_COLLECTED",
+        "CARGO_COMPATIBILITY_UNKNOWN"
+      ]
+    },
+    "pipeline": {
+      "state": "unknown",
+      "reasons": [
+        "TERMINAL_LOCATION_IS_NOT_DIRECTED_CONNECTION",
+        "PRODUCT_ENDPOINT_ROLES_REQUIRED",
+        "COMPARABLE_VOLUME_CAPACITY_NOT_COLLECTED"
+      ]
+    },
+    "scenario": {
+      "state": "unknown",
+      "reasons": [
+        "EDITABLE_DATED_PHYSICAL_SERVICES_REQUIRED",
+        "RESOURCE_AND_TURNAROUND_EVIDENCE_REQUIRED"
+      ]
+    }
+  }
+}
