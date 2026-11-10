@@ -428,9 +428,11 @@ def calculate(
         output.limitations.update(bound.graph_limitations)
     result = output.finish()
     if bound is not None:
+        from a2_api.adapters.result_evidence import compact_result_evidence
         from a2_api.adapters.walk_map import attach_walk_map
 
-        return attach_walk_map(
+        result = attach_walk_map(
             result, snapshot, calculated, bound.destination_names, map_features=bound.map_features
         )
+        return compact_result_evidence(result)
     return result
