@@ -123,3 +123,104 @@ def test_connectors_for_ml1_use_the_profile_speed(tmp_path: Path) -> None:
         }
     )
     assert model.confirmed
+
+
+def fence_file(
+    tmp_path: Path, gate_tags: dict[str, str] | None, fence_tags: dict[str, str]
+) -> Path:
+    """A fence across the point's link (20.0045, 54.0045), optionally with a gate there."""
+
+    def tags(values: dict[str, str]) -> str:
+        return "".join(f'<tag k="{k}" v="{v}"/>' for k, v in values.items())
+
+    gate = (
+        f'<node id="3" lat="54.0045" lon="20.0045" version="1">{tags(gate_tags)}</node>'
+        if gate_tags is not None
+        else ""
+    )
+    refs = '<nd ref="1"/>' + ('<nd ref="3"/>' if gate_tags is not None else "") + '<nd ref="2"/>'
+    path = tmp_path / "fence.osm"
+    path.write_text(
+        '<?xml version="1.0" encoding="UTF-8"?><osm version="0.6">'
+        '<node id="1" lat="54.0048" lon="20.0042" version="1"/>'
+        '<node id="2" lat="54.0042" lon="20.0048" version="1"/>'
+        f"{gate}"
+        f'<way id="10" version="1">{refs}{tags(fence_tags)}</way>'
+        "</osm>",
+        encoding="utf-8",
+    )
+    return path
+
+
+@pytest.mark.parametrize(
+    ("gate", "fence", "traversable", "reasons"),
+    [
+        (None, {"barrier": "fence", "foot": "no"}, None, ["CROSSES_BARRIER"]),  # a closed fence
+        ({"barrier": "gate", "foot": "yes"}, {"barrier": "fence"}, True, []),  # an open gate
+        ({"barrier": "gate"}, {"barrier": "fence"}, None, ["GATE_ACCESS_UNKNOWN"]),  # unknown
+        (
+            {"barrier": "gate", "access": "private"},
+            {"barrier": "fence"},
+            None,
+            ["CROSSES_CLOSED_GATE"],
+        ),
+        ({"barrier": "lift_gate", "access": "yes"}, {"barrier": "wall"}, True, []),
+    ],
+)
+def test_barriers_and_gates(
+    tmp_path: Path,
+    gate: dict[str, str] | None,
+    fence: dict[str, str],
+    traversable: bool | None,
+    reasons: list[str],
+) -> None:
+    data = bundle(tmp_path)
+    barriers = supplements.barrier_layer(fence_file(tmp_path, gate, fence), None, CRS)
+    connectors = supplements.build_connectors(data, layers(), CRS, EVIDENCE, barriers)
+    point = next(c for c in connectors if c.physical_node_id == "physical:point:p-c1")
+    assert (point.traversable, point.reasons) == (traversable, reasons)
+    mall = next(c for c in connectors if c.physical_node_id == "physical:destination:mall-1")
+    assert mall.traversable is True  # the fence is not on the mall's link
+
+
+def test_closed_fence_is_not_confirmed_by_ml1(tmp_path: Path) -> None:
+    data = bundle(tmp_path)
+    barriers = supplements.barrier_layer(
+        fence_file(tmp_path, None, {"barrier": "fence", "foot": "no"}), None, CRS
+    )
+    connectors = supplements.build_connectors(data, layers(), CRS, EVIDENCE, barriers)
+    rows = collections(
+        destinations=[
+            destination("mall-1", "shopping_center", lon=20.006, lat=54.004),
+            destination("far-1", "shopping_center", lon=20.03, lat=54.03),
+        ],
+        walk_connectors=connectors,
+    )
+    publish_bundle(manifest("fenced-v1"), rows, QA, root=tmp_path)
+    out = supplements.walk_connectors(
+        "fenced-v1",
+        walking_speed_kmh=5.0,
+        speed_evidence_refs=["build:test"],
+        profile_version="valhalla-test",
+        root=tmp_path,
+    )
+    point = next(r for r in out if r["physical_node_id"] == "physical:point:p-c1")
+    assert point["traversable"] is None and point["seconds"] is None
+    engine = pytest.importorskip("a2_engine.urban.valhalla.models")
+    model = engine.WalkConnector(
+        **{
+            **point,
+            "physical_location": engine.WalkCoordinate(**point["physical_location"]),
+            "access_location": engine.WalkCoordinate(**point["access_location"]),
+            "evidence_refs": tuple(point["evidence_refs"]),
+        }
+    )
+    assert not model.confirmed
+
+
+def test_gate_access_rules() -> None:
+    assert supplements.gate_access({"barrier": "gate"}) == "unknown"
+    assert supplements.gate_access({"barrier": "gate", "foot": "permissive"}) == "open"
+    assert supplements.gate_access({"barrier": "gate", "access": "yes", "foot": "no"}) == "closed"
+    assert supplements.gate_access({"barrier": "gate", "foot": "yes", "locked": "yes"}) == "closed"
+    assert supplements.gate_access({"barrier": "gate", "access": "private"}) == "closed"

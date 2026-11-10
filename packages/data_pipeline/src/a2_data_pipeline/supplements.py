@@ -1,17 +1,25 @@
 """Bundle supplements: walk connectors and timetable stops, published as a new bundle version.
 
-``walk-connector-geometry-v1`` (ML1 ``WalkConnector``): the straight link from every
+``walk-connector-geometry-v2`` (ML1 ``WalkConnector``): the straight link from every
 sample point and destination to its walk access node is checked against the OSM
-layers of the bundle's own extract (same PBF sha256):
+layers of the bundle's own extract and PBF (same sha256):
 
 - it crosses no building other than the endpoint's own (the building a sample point
   was placed on, the destination's OSM building, any building holding the point);
 - no water area, no surface railway (``rail``, ``light_rail``, ``narrow_gauge``,
   ``monorail``; tunnels and bridges excluded), no motorway or trunk;
+- v2: no linear barrier (``barrier=fence|wall|city_wall|retaining_wall|hedge|
+  guard_rail|jersey_barrier|cable_barrier|ditch``) unless it crosses it at a gate
+  node of that barrier (within 10 m) open to pedestrians: ``foot=yes|designated|
+  permissive`` or ``access=yes|permissive`` without ``foot=no``; a gate with
+  ``foot``/``access`` ``no|private`` or ``locked=yes`` is closed, a gate without
+  access tags is unknown;
 - it is at most 500 m;
 
-then ``traversable=True``. A crossing leaves it unknown (``None``) with reasons: a
-bridge, an underpass or a gate may exist, so nothing is declared impassable.
+then ``traversable=True``: no mapped obstacle on the line, which is the evidence
+the link has. A crossing leaves it unknown (``None``) with reasons: a bridge, an
+underpass or an unmapped gate may exist, so nothing is declared impassable.
+(v1 had no barriers: a fence with ``foot=no`` did not stop the link.)
 Seconds are not invented: ``walk_connectors()`` derives them from the walking speed
 of the accepted pedestrian profile it is given (the Valhalla build's), and without
 one the connector stays unconfirmed.
@@ -57,13 +65,58 @@ from .osm_national import _entities
 from .paths import data_dir, processed_dir, raw_dir
 from .store import BUNDLE_COLLECTIONS, load_bundle, publish_bundle
 
-CONNECTOR_RULES = "walk-connector-geometry-v1"
+CONNECTOR_RULES = "walk-connector-geometry-v2"
 STOP_RULES = "transit-stops-v1"
 MAX_CONNECTOR_M = 500.0
 STOP_ACCESS_M = 150.0
 STOP_SEARCH_M = 10_000.0
 MAJOR_ROADS = {"motorway", "motorway_link", "trunk", "trunk_link"}
 RAILWAYS = ("rail", "light_rail", "narrow_gauge", "monorail")
+LINEAR_BARRIERS = (
+    "fence",
+    "wall",
+    "city_wall",
+    "retaining_wall",
+    "hedge",
+    "guard_rail",
+    "jersey_barrier",
+    "cable_barrier",
+    "ditch",
+)
+GATES = {
+    "gate",
+    "lift_gate",
+    "swing_gate",
+    "sliding_gate",
+    "wicket_gate",
+    "kissing_gate",
+    "turnstile",
+    "full-height_turnstile",
+    "stile",
+    "entrance",
+    "bump_gate",
+    "hampshire_gate",
+}
+GATE_TOLERANCE_M = 10.0
+OPEN_FOOT = {"yes", "designated", "permissive"}
+CLOSED = {"no", "private"}
+
+
+def gate_access(tags: dict[str, str]) -> str:
+    """``open``, ``closed`` or ``unknown`` for a pedestrian at a gate node."""
+
+    foot, access = tags.get("foot"), tags.get("access")
+    if tags.get("locked") == "yes" or foot in CLOSED:
+        return "closed"
+    if foot in OPEN_FOOT:
+        return "open"
+    if access in CLOSED:
+        return "closed"
+    if access in {"yes", "permissive"}:
+        return "open"
+    return "unknown"
+
+
 WGS84 = "EPSG:4326"
 
 
@@ -98,6 +151,83 @@ def railway_lines(pbf: Path, bbox: tuple[float, float, float, float] | None) -> 
                 continue
         lines.append(shapely.LineString(points))
     return lines
+
+
+class BarrierLayer:
+    """Linear barriers with the gate nodes on them (UTM)."""
+
+    def __init__(self, lines: list[Any], gates: list[list[tuple[Any, str]]]) -> None:
+        self.lines = np.array(lines, dtype=object)
+        self.gates = gates
+        self.tree = shapely.STRtree(self.lines)
+
+    def reasons(self, segment: Any) -> list[str]:
+        found: set[str] = set()
+        for index in self.tree.query(segment, predicate="intersects"):
+            crossing = segment.intersection(self.lines[int(index)])
+            points = (
+                [crossing]
+                if crossing.geom_type == "Point"
+                else list(getattr(crossing, "geoms", [crossing]))
+            )
+            for point in points:
+                near = [
+                    (gate.distance(point), state)
+                    for gate, state in self.gates[int(index)]
+                    if gate.distance(point) <= GATE_TOLERANCE_M
+                ]
+                if not near:
+                    found.add("CROSSES_BARRIER")
+                    continue
+                state = min(near, key=lambda item: item[0])[1]
+                if state == "closed":
+                    found.add("CROSSES_CLOSED_GATE")
+                elif state == "unknown":
+                    found.add("GATE_ACCESS_UNKNOWN")
+        return sorted(found)
+
+
+def barrier_layer(pbf: Path, bbox: Any, crs: str) -> BarrierLayer:
+    """Linear barriers of the PBF inside ``bbox`` and their gates: two filtered passes."""
+
+    import osmium
+
+    ways: dict[int, list[int]] = {}
+    for way in _entities(
+        str(pbf),
+        osmium.osm.WAY,
+        osmium.filter.TagFilter(*(("barrier", value) for value in LINEAR_BARRIERS)),
+    ):
+        ways[way.id] = [n.ref for n in way.nodes]
+    needed = {n for nodes in ways.values() for n in nodes}
+    location: dict[int, tuple[float, float]] = {}
+    gate_state: dict[int, str] = {}
+    if needed:
+        for node in _entities(str(pbf), osmium.osm.NODE, osmium.filter.IdFilter(needed)):
+            location[node.id] = (node.location.lon, node.location.lat)
+            tags = {t.k: t.v for t in node.tags}
+            if tags.get("barrier") in GATES:
+                gate_state[node.id] = gate_access(tags)
+    lines: list[Any] = []
+    gates: list[list[tuple[Any, str]]] = []
+    for way_id in sorted(ways):
+        refs = [n for n in ways[way_id] if n in location]
+        if len(refs) < 2:
+            continue
+        points = [location[n] for n in refs]
+        if bbox is not None:
+            west, south, east, north = bbox
+            if not any(west <= x <= east and south <= y <= north for x, y in points):
+                continue
+        lines.append(to_crs(shapely.LineString(points), WGS84, crs))
+        gates.append(
+            [
+                (to_crs(shapely.Point(location[n]), WGS84, crs), gate_state[n])
+                for n in refs
+                if n in gate_state
+            ]
+        )
+    return BarrierLayer(lines, gates)
 
 
 class Layer:
@@ -151,7 +281,11 @@ REASON = {
 
 
 def build_connectors(
-    data: BundleData, layers: dict[str, Layer], crs: str, osm_evidence_id: str
+    data: BundleData,
+    layers: dict[str, Layer],
+    crs: str,
+    osm_evidence_id: str,
+    barriers: BarrierLayer | None = None,
 ) -> list[WalkConnector]:
     nodes = {n.access_node_id: n for n in data.access_nodes}
     ends: list[tuple[str, str, float, float, str, set[str]]] = []
@@ -191,6 +325,8 @@ def build_connectors(
             for name in ("building", "water", "railway", "motorway")
             if layers[name].crossed(segment, skip if name == "building" else set())
         ]
+        if barriers is not None:
+            reasons.extend(barriers.reasons(segment))
         length = round(float(segment.length), 1)
         if length > MAX_CONNECTOR_M:
             reasons.append("LONGER_THAN_500M")
@@ -356,7 +492,8 @@ def derive(  # noqa: C901
     if osm_evidence not in {e.evidence_id for e in data.evidence}:
         raise ValueError(f"{base_id}: no evidence {osm_evidence}")
     layers = obstacle_layers(osm_dir, pbf, config.extract_bbox, crs)
-    connectors = build_connectors(data, layers, crs, osm_evidence)
+    barriers = barrier_layer(pbf, config.extract_bbox, crs)
+    connectors = build_connectors(data, layers, crs, osm_evidence, barriers)
     checks = _connector_checks(connectors)
     collections: dict[str, Any] = {name: getattr(data, name) for name in BUNDLE_COLLECTIONS}
     for name in ("freight_nodes", "freight_sites", "stop_frequencies"):
@@ -541,7 +678,15 @@ def main() -> None:
     print(derive(args.base_id, args.new_id, timetable))
 
 
-__all__ = ["build_connectors", "build_transit_stops", "derive", "railway_lines", "walk_connectors"]
+__all__ = [
+    "barrier_layer",
+    "build_connectors",
+    "build_transit_stops",
+    "derive",
+    "gate_access",
+    "railway_lines",
+    "walk_connectors",
+]
 
 if __name__ == "__main__":
     main()
