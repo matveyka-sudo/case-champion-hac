@@ -31,6 +31,7 @@ RETIRED_ROOT_MODULES = frozenset(
 
 def test_root_package_contains_only_canonical_subpackages():
     expected = {
+        "adapters",
         "__init__.py",
         "py.typed",
         "api",
