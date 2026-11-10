@@ -101,7 +101,7 @@ def to_accepted_data_v2(data: BundleData) -> dict[str, Any]:
             "source_version": versions[item.source_id],
             "url": item.url,
             "retrieved_at": item.fetched_at.isoformat(),
-            "valid_period": _period(None, None),
+            "valid_period": _period(item.valid_from, item.valid_to),
             "license": licenses[item.source_id],
             "content_hash": item.content_hash,
             "verified": item.verification_state == "verified",

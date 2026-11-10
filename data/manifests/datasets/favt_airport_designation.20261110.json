@@ -1,0 +1,35 @@
+{
+  "dataset_id": "favt_airport_designation.20261110",
+  "source_id": "favt_airport_designation",
+  "source_url": "https://old.favt.gov.ru/dejatelnost-ajeroporty-i-ajerodromy-perechen-aeroportov/",
+  "retrieved_at": "2026-11-10T14:27:57.262386Z",
+  "publication_date": null,
+  "valid_from": "2026-11-10",
+  "valid_to": "2026-11-10",
+  "geography": "Калининград: официально обслуживающие город пассажирские аэропорты",
+  "license": {
+    "name": "Factual identifiers and observed roster/operation facts only; source documents not redistributed",
+    "url": "https://old.favt.gov.ru/dejatelnost-ajeroporty-i-ajerodromy-perechen-aeroportov/",
+    "status": "permitted",
+    "attribution": "favt_airport_designation"
+  },
+  "access_method": "manual",
+  "raw_path": "airport-official-20261110/favt-federal-airports-6db20dbcc4c47bd7.html",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "6db20dbcc4c47bd721b6832b2b4e3c7862e3f4de1a6e55bd5f08edef59c72399",
+    "size_bytes": 156605
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "federal-airport-table:row24": "Khrabrovo is the airport of the regional administrative center Kaliningrad"
+  },
+  "coverage": "Observed current official city-serving passenger-airport roster,10Nov2026 only",
+  "limitations": [
+    "No historical or future completeness is inferred from an undated publication",
+    "No raw source documents redistributed in Git; accepted outputs contain factual identifiers/provenance",
+    "No distance cutoff used as completeness proof"
+  ],
+  "status": "accepted",
+  "qa_report": "data/bundles/kaliningrad-urban-2026-11-10.5/qa_report.json"
+}

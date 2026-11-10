@@ -109,6 +109,14 @@ class Evidence(Model):
     fetched_at: datetime
     content_hash: str | None
     verification_state: VerificationState
+    valid_from: date | None = None
+    valid_to: date | None = None
+
+    @model_validator(mode="after")
+    def ordered_validity(self) -> Self:
+        if self.valid_from and self.valid_to and self.valid_to < self.valid_from:
+            raise ValueError("evidence valid_to precedes valid_from")
+        return self
 
 
 class SourceVersion(Model):

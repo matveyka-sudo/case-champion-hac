@@ -1,0 +1,35 @@
+{
+  "dataset_id": "klgd_tic_charter.20261110",
+  "source_id": "klgd_tic_charter",
+  "source_url": "https://visit-kaliningrad.ru/upload/medialibrary/339/hsiuial47hdg4gchuvw2e735ydhkqyaw/Ustav-redaktsiya-2026.pdf",
+  "retrieved_at": "2026-11-10T14:28:35.118463Z",
+  "publication_date": null,
+  "valid_from": "2026-11-10",
+  "valid_to": "2026-11-10",
+  "geography": "Калининград: официально обслуживающие город пассажирские аэропорты",
+  "license": {
+    "name": "Factual identifiers and observed roster/operation facts only; source documents not redistributed",
+    "url": "https://visit-kaliningrad.ru/upload/medialibrary/339/hsiuial47hdg4gchuvw2e735ydhkqyaw/Ustav-redaktsiya-2026.pdf",
+    "status": "permitted",
+    "attribution": "klgd_tic_charter"
+  },
+  "access_method": "manual",
+  "raw_path": "airport-official-20261110/tic-charter-2026-2b1beb9a5e2d4408.pdf",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "2b1beb9a5e2d440818d1804ef4a04acdcde90c106fd2a62ba68205385a355997",
+    "size_bytes": 5424488
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "pdf:page2:section1.5": "Regional Ministry of Culture and Tourism is the TIC founder"
+  },
+  "coverage": "Observed current official city-serving passenger-airport roster,10Nov2026 only",
+  "limitations": [
+    "No historical or future completeness is inferred from an undated publication",
+    "No raw source documents redistributed in Git; accepted outputs contain factual identifiers/provenance",
+    "No distance cutoff used as completeness proof"
+  ],
+  "status": "accepted",
+  "qa_report": "data/bundles/kaliningrad-urban-2026-11-10.5/qa_report.json"
+}
