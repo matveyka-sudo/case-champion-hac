@@ -983,7 +983,8 @@ export function ApiAtlasPage() {
                   </p>
                 )}
                 {feature?.population !== undefined &&
-                  (feature.entity_kind === "cell" || feature.cell_id) && (
+                  (feature.entity_kind === "cell" ||
+                    feature.entity_kind === "sample_point" || feature.cell_id) && (
                     <p>
                       Население ячейки:{" "}
                       {feature.population === null

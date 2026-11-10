@@ -28,6 +28,7 @@ async function mockApi(
     errorStatus?: number;
     running?: boolean;
     emptyProposals?: boolean;
+    samplePopulation?: number | null;
   } = {},
 ) {
   let request: unknown = null,
@@ -50,11 +51,12 @@ async function mockApi(
         entity_kind: "sample_point",
         entity_id: "demo-point",
         territory_id: "city-1",
-        cell_id: "synthetic-cell",
         geometry: { type: "Point", coordinates: [37, 55] },
         geometry_kind: "actual",
         source_refs: ["demo-evidence"],
-        population: null,
+        population: options.samplePopulation ?? null,
+        population_year: 2025,
+        population_method: "synthetic-test-only",
       },
     ],
   };
@@ -229,6 +231,21 @@ async function cityRun(page: Page) {
     .getByRole("button", { name: "Рассчитать", exact: true })
     .first()
     .click();
+}
+for (const population of [1234.5, 0, null]) {
+  test(`API: synthetic sample population ${population} stays visible without a cell feature`, async ({ page }) => {
+    await mockApi(page, { samplePopulation: population, emptyProposals: true });
+    await page.goto("/?data=api#atlas");
+    await cityRun(page);
+    await expect(page.getByRole("status")).toContainText("Результат получен");
+    await page.getByRole("button", { name: "Агент", exact: true }).click();
+    await page.getByLabel("Вопрос агенту").fill("Выбрать точку из сохранённой метрики");
+    await page.getByRole("button", { name: "Отправить", exact: true }).click();
+    await page.getByRole("button", { name: "Synthetic elapsed travel time: 30 мин", exact: true }).click();
+    await expect(page.locator(".api-card")).toContainText(
+      `Население ячейки: ${population === null ? "неизвестно" : population} · 2025 · synthetic-test-only`,
+    );
+  });
 }
 test("API: complete analysis, actual map features, scoped explanation and separate scenario", async ({
   page,
