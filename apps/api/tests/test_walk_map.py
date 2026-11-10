@@ -6,6 +6,7 @@ from dataclasses import replace
 import pytest
 from a2_api.adapters.product_projection import Projection, project_urban
 from a2_api.adapters.walk_map import attach_walk_map
+from a2_api.adapters.walk_observed import project_observed_walk
 from a2_api.core.registry import ProductRegistry
 from a2_contracts.common import canonical_hash
 from a2_contracts.v2.dataset import AcceptedData
@@ -40,7 +41,7 @@ def polyline(coordinates):
     return "".join(encoded)
 
 
-def calculate(configured, *, shape=True, unknown_population=False):
+def calculate(configured, *, shape=True, unknown_population=False, zero_approach=False):
     from a2_api.adapters.walk_pilot import load_runtime
 
     snapshot = configured[2]
@@ -64,6 +65,16 @@ def calculate(configured, *, shape=True, unknown_population=False):
         connectors=runtime.connectors,
         correlations=runtime.correlations,
     )
+    if zero_approach:
+        inputs = replace(
+            inputs,
+            point_endpoints=tuple(
+                replace(endpoint, connector=replace(endpoint.connector, seconds=0.0))
+                if endpoint.entity_id == POINT
+                else endpoint
+                for endpoint in inputs.point_endpoints
+            ),
+        )
     plan = plan_walk_routes(inputs, point_ids=[POINT], categories=["school"])
     request = next(row for row in plan.requests if row.destination_id == SCHOOL)
     body = route_body(request.payload())
@@ -115,7 +126,33 @@ def calculate(configured, *, shape=True, unknown_population=False):
     evidence.append(evidence[-1].model_copy(update={"evidence_id": "TEST_ONLY-response-proof"}))
     output = Projection(context, evidence)
     project_urban(output, calculated.analysis)
+    if zero_approach:
+        project_observed_walk(output, calculated)
     return snapshot, calculated, output.finish(), {SCHOOL: "TEST_ONLY accepted school name"}
+
+
+def test_zero_approach_keeps_unknown_reason_and_map_without_recreating_a_journey(configured):
+    snapshot, calculated, before, names = calculate(configured, zero_approach=True)
+    assert len(calculated.routes) == 1
+    assert calculated.routes[0].state == "reachable"
+    assert calculated.routes[0].network_geometry is not None
+    result = attach_walk_map(before, snapshot, calculated, names)
+    assert not before.journeys and not result.journeys
+    estimate = next(
+        row
+        for row in result.scores
+        if row.name == "observed_route_accessibility" and row.subject.point_id == POINT
+    )
+    assert estimate.value is None and estimate.status == "unknown"
+    assert estimate.reason_code == "NONZERO_APPROACH_ZERO_TIME"
+    assert "NONZERO_APPROACH_ZERO_TIME" in result.limitations
+    assert all(metric.journey_id is None for metric in result.metrics)
+    assert {
+        feature.point_id
+        for feature in result.map_data.features
+        if feature.entity_kind == "sample_point"
+    } == {point.point_id for point in snapshot.sample_points}
+    assert result.metrics == before.metrics and result.scores == before.scores
 
 
 def test_all_canonical_points_and_original_population_remain_visible(configured):

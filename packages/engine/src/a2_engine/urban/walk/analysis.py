@@ -129,8 +129,10 @@ def analyze_normalized_walk_routes(
     )
     results = {(r.request.point_id, r.request.destination_id): r for r in routes}
     point_endpoints = {p.entity_id: p for p in inputs.point_endpoints}
+    input_points = {p.point_id: p for p in inputs.points}
     dest_endpoints = {d.entity_id: d for d in inputs.destination_endpoints}
     candidates = []
+    unusable_approaches: set[tuple[str, str]] = set()
     for route in routes:
         if route.state != "reachable":
             continue
@@ -139,6 +141,16 @@ def analyze_normalized_walk_routes(
         assert origin.connector and destination.connector
         assert origin.connector.seconds is not None and destination.connector.seconds is not None
         assert route.network_seconds is not None
+        if (
+            origin.nonzero_approach_has_zero_time(
+                access_distance_m=input_points[origin.entity_id].access_distance_m
+            )
+            or destination.nonzero_approach_has_zero_time()
+        ):
+            # Keep the immutable network observation, but do not manufacture a
+            # complete physical chain from an approach rounded down to zero.
+            unusable_approaches.add((origin.entity_id, destination.entity_id))
+            continue
         departure = inputs.context.requested_departure_at
         legs = []
         for start_node, end_node, seconds, evidence in (
@@ -215,6 +227,7 @@ def analyze_normalized_walk_routes(
             complete = all(
                 r is not None
                 and r.minimum_proven
+                and (point_id, r.request.destination_id) not in unusable_approaches
                 and r.state in ("reachable", "confirmed_unreachable")
                 for r in relevant
             )

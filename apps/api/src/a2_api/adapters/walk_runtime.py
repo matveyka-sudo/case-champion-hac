@@ -143,6 +143,7 @@ def executor_fingerprint() -> str:
         "a2_engine.urban.walk.observed",
         "a2_api.adapters.walk_pilot",
         "a2_engine.urban.walk.inputs",
+        "a2_engine.urban.walk.models",
         "a2_engine.urban.walk.analysis",
         "a2_engine.urban.valhalla.requests",
         "a2_engine.urban.valhalla.responses",

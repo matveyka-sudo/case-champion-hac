@@ -278,6 +278,109 @@ def test_observed_estimate_never_fills_an_unknown_physical_approach(
     assert result.projection_offset_seconds is None
 
 
+@pytest.mark.parametrize("endpoint_kind", ["origin", "destination", "source_distance"])
+def test_rounded_zero_approach_keeps_routes_and_population_but_not_a_physical_journey(
+    canonical: dict[str, Any], endpoint_kind: str
+) -> None:
+    inputs = synthetic_inputs(canonical)
+    original = analyze(plan(inputs))
+    endpoint = (
+        inputs.destination_endpoints[0]
+        if endpoint_kind == "destination"
+        else inputs.point_endpoints[0]
+    )
+    assert endpoint.connector is not None
+    connector = replace(endpoint.connector, seconds=0.0)
+    if endpoint_kind == "source_distance":
+        # Even equal coordinates do not erase a positive accepted approach distance.
+        endpoint = replace(endpoint, location=endpoint.access_location)
+        connector = replace(connector, physical_location=endpoint.location)
+    endpoint = replace(endpoint, connector=connector)
+    if endpoint_kind == "destination":
+        inputs = replace(inputs, destination_endpoints=(endpoint,))
+    else:
+        points = tuple(
+            replace(point, access_distance_m=0.02)
+            if point.point_id == endpoint.entity_id
+            else point
+            for point in inputs.points
+        )
+        inputs = replace(
+            inputs, points=points, point_endpoints=(endpoint, *inputs.point_endpoints[1:])
+        )
+    planned = plan(inputs)
+    envelopes = [response(request) for request in planned.requests]
+    # These TEST_ONLY envelopes claim search/minimum closure. A physically
+    # unusable approach must still prevent a false proven zero/complete chain.
+    calculated = analyze(planned, envelopes)
+    assert len(calculated.routes) == len(planned.requests) == 2
+    assert all(route.state == "reachable" and route.minimum_proven for route in calculated.routes)
+    assert tuple(point.point for point in calculated.analysis.modes[0].points) == inputs.points
+    assert calculated.analysis.population_coverage == inputs.population_coverage
+    affected = [
+        row
+        for row in calculated.routes
+        if endpoint_kind == "destination" or row.request.point_id == endpoint.entity_id
+    ]
+    assert len(calculated.analysis.journeys) == 2 - len(affected)
+    previous = {row.candidate.journey_id: row for row in original.analysis.journeys}
+    assert all(row == previous[row.candidate.journey_id] for row in calculated.analysis.journeys)
+    for route in affected:
+        point = next(
+            row
+            for row in calculated.analysis.modes[0].points
+            if row.point.point_id == route.request.point_id
+        )
+        assert point.categories[0].best is None
+        assert point.categories[0].index.value is None
+        assert not point.categories[0].minimum_proven
+        assert point.categories[0].coverage is not None
+        assert not point.categories[0].coverage.search_complete
+        observed = assess_observed_walk_route(
+            inputs,
+            route,
+            category="airport",
+            config=load_urban_config(),
+            rules=load_urban_journey_rules(),
+        )
+        assert observed.observed_total_seconds is None
+        assert observed.observed_route_accessibility.value is None
+        assert observed.observed_route_accessibility.reason_code == "NONZERO_APPROACH_ZERO_TIME"
+
+
+def test_true_colocated_zero_approach_remains_a_valid_physical_chain(
+    canonical: dict[str, Any],
+) -> None:
+    inputs = synthetic_inputs(canonical)
+    origin = inputs.point_endpoints[0]
+    assert origin.connector is not None
+    origin = replace(
+        origin,
+        location=origin.access_location,
+        connector=replace(origin.connector, physical_location=origin.access_location, seconds=0.0),
+    )
+    inputs = replace(
+        inputs,
+        points=tuple(
+            replace(point, access_distance_m=0.0) if point.point_id == origin.entity_id else point
+            for point in inputs.points
+        ),
+        point_endpoints=(origin, *inputs.point_endpoints[1:]),
+    )
+    calculated = analyze(plan(inputs))
+    assert len(calculated.routes) == len(calculated.analysis.journeys) == 2
+    route = next(row for row in calculated.routes if row.request.point_id == origin.entity_id)
+    observed = assess_observed_walk_route(
+        inputs,
+        route,
+        category="airport",
+        config=load_urban_config(),
+        rules=load_urban_journey_rules(),
+    )
+    assert observed.observed_total_seconds == 1620 + 120
+    assert observed.observed_route_accessibility.value is not None
+
+
 def test_observed_quantized_endpoint_is_an_uncertain_estimate_not_a_zero_offset(
     canonical: dict[str, Any],
 ) -> None:
