@@ -429,31 +429,84 @@ async def test_private_permission_does_not_bypass_existing_claim_fences(database
 
 
 @pytest.mark.asyncio
-async def test_explanation_is_not_returned_after_permission_revoked_during_generation(database):
+async def test_opted_in_private_result_never_reaches_real_model_attempt_path(database):
+    from a2_api.assistant.tools import SavedTools
     from a2_api.services.analyses import AnalysisService
-    from a2_assistant.core import template_explanation
+    from a2_assistant.core import FlashAssistant, FlashConfig
+    from test_alice_runtime import FakeSDKTransport, SyntheticDurableBudget
+
+    pool, _, _ = database
+    repository, claim, baseline, _, _ = await admitted(pool, publish=True, external_model_use=True)
+
+    class RecordingTransport(FakeSDKTransport):
+        instances = []
+
+    config = FlashConfig(api_key="TEST_ONLY-no-network", folder_id="TEST_ONLY", tools_enabled=False)
+    transport = RecordingTransport(config)
+    budget = SyntheticDurableBudget()
+    service = AnalysisService(repository=repository)
+    service.assistant = FlashAssistant(
+        config, transport=transport, tool_backend=SavedTools(service), deployment_budget=budget
+    )
+    assert service.assistant._enabled()
+    explanation = await service.explain(baseline.analysis_id, claim.context.access_scope, "trace")
+    assert transport.calls == 0 and budget.reservations == []
+    assert explanation.status == "template"
+    assert explanation.reason_code == "PRIVATE_SOURCE_EXTERNAL_MODEL_DISABLED"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("mutation", ["revoke", "expire"])
+async def test_private_template_is_not_returned_after_permission_changes(
+    database, monkeypatch, mutation
+):
+    from a2_api.services.analyses import AnalysisService
 
     pool, _, _ = database
     repository, claim, baseline, binding, _ = await admitted(
-        pool, publish=True, external_model_use=True
+        pool,
+        publish=True,
+        external_model_use=True,
+        lifetime=timedelta(seconds=1) if mutation == "expire" else None,
     )
     ready, release = asyncio.Event(), asyncio.Event()
 
-    class DelayedAssistant:
+    class ForbiddenAssistant:
         async def explain(self, saved, **kwargs):
+            pytest.fail("Private source reached external model orchestration")
+
+    service = AnalysisService(repository=repository, assistant=ForbiddenAssistant())
+    original = service.analysis
+    reads = 0
+
+    async def delayed_delivery(*args, **kwargs):
+        nonlocal reads
+        reads += 1
+        if reads == 2:
             ready.set()
             await release.wait()
-            return template_explanation(saved, "trace", "TEST_ONLY")
+        return await original(*args, **kwargs)
 
-    service = AnalysisService(repository=repository, assistant=DelayedAssistant())
+    monkeypatch.setattr(service, "analysis", delayed_delivery)
     task = asyncio.create_task(
         service.explain(baseline.analysis_id, claim.context.access_scope, "trace")
     )
     await asyncio.wait_for(ready.wait(), 3)
-    await pool.execute(
-        "UPDATE private_source_grants SET revoked_at=clock_timestamp() WHERE grant_id=$1",
-        binding.grant.grant_id,
-    )
+    if mutation == "revoke":
+        await pool.execute(
+            "UPDATE private_source_grants SET revoked_at=clock_timestamp() WHERE grant_id=$1",
+            binding.grant.grant_id,
+        )
+    else:
+        await asyncio.sleep(
+            max(
+                0,
+                (
+                    binding.valid_until - await pool.fetchval("SELECT clock_timestamp()")
+                ).total_seconds(),
+            )
+            + 0.02
+        )
     release.set()
     with pytest.raises(DomainError) as denied:
         await task

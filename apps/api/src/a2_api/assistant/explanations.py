@@ -74,7 +74,9 @@ async def explain(
         await service.analysis(analysis_id, scope)
         return explanation
     bindings = await service._repository().private_source_bindings(analysis_id, scope)
-    if any(not binding.grant.external_model_use for binding in bindings):
+    # A grant opt-in cannot fence budget waits, retries and every model attempt.
+    # Keep all private facts local until that separate egress gate is reviewed.
+    if bindings:
         explanation = template_explanation(
             result, request_id, "PRIVATE_SOURCE_EXTERNAL_MODEL_DISABLED", context=context
         )
