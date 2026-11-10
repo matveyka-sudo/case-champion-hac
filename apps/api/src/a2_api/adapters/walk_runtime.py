@@ -5,9 +5,11 @@ from __future__ import annotations
 import hashlib
 import importlib
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Literal
 
 from a2_contracts.common import canonical_hash
@@ -98,6 +100,7 @@ class BoundWalkBinding:
     runtime: walk_pilot.Runtime
     executor_fingerprint: str
     resolved_pairs: frozenset[tuple[str, str]]
+    destination_names: Mapping[str, str]
 
     @property
     def binding_sha256(self) -> str:
@@ -381,4 +384,13 @@ def load_binding(
         runtime,
         executor_fingerprint(),
         resolved,
+        MappingProxyType(
+            {
+                row.destination_id: row.name
+                for row in bundle.destinations
+                if row.status == "accepted"
+                and row.destination_id in destinations
+                and row.name is not None
+            }
+        ),
     )

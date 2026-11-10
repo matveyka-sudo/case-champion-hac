@@ -54,6 +54,23 @@ routing or native certificate replay. It is a measured startup cost, not a
 production memory guarantee or acceptance of later corrected source revisions.
 The resource regression prints a fresh measurement on each run.
 
+API metadata preflight admits one expensive validation per process. Additional
+requests receive retryable `503 RUNTIME_INPUTS_BUSY` immediately, without joining
+an executor queue. The admitted thread owns capacity across the full adapter
+chain; cancellation or the HTTP timeout does not release it while work continues.
+Scheduling failures and cancellation before execution release capacity without
+executing the abandoned scheduled work. No runtime object cache is introduced.
+
+With corrected Moscow `.4` and Novorossiysk `.3` inputs, the later fresh load
+measured **6.1889 seconds / 892,223,488 bytes peak RSS**. An actual configured ASGI
+app retaining its registry plus admitted Moscow preflight measured
+**10.4301 seconds / 999,227,392 bytes peak RSS**. Retaining app and runtime during
+one additional Moscow source revalidation measured **4.0953 seconds**, peaking at
+**1,092,927,488 bytes**. These macOS Python 3.12 measurements use test deployment
+artifacts over real sources, without database lifespan, provider calls or native
+replay. A 1 GiB deployment has insufficient headroom for the measured path;
+deployment memory limits require separate Linux/cgroup acceptance.
+
 Private `BatchPlan`/`BatchExecution` version `/2` additionally requires the pinned
 binding hash and a server-derived executor implementation fingerprint. These also
 enter deterministic route identities. The frozen execution, normalized request,
@@ -82,7 +99,10 @@ rounds once to 0.1 seconds; `WALK_CONNECTOR_TIME_0_1_SECOND_PRECISION` discloses
 This is separate from exact native/physical certificate operands.
 
 `Runtime.walk_bindings` exposes the verified bindings and derived `resolved_pairs`
-to server code. `Runtime.profile_failures` retains only allowlisted stable failure
+to server code. A binding also exposes read-only `destination_names` from its
+verified producer bundle, limited to accepted canonical city destinations with
+known names. The existing bundle manifest hash binds those display facts.
+`Runtime.profile_failures` retains only allowlisted stable failure
 codes, never exception text, paths, URLs or source bodies. Failure of one profile
 cannot borrow another city's readiness. Public readiness/progress DTOs are a
 separate contract change; internal completed work is never a percentage claim of
