@@ -265,6 +265,8 @@ def test_profile_scope_and_route_budget_refuse_unsupported_requests(
         runtime.select(request_for(snapshot, passenger_mode="public_transport"), snapshot)
     with pytest.raises(DomainError, match="RUNTIME_INPUTS_UNAVAILABLE"):
         runtime.select(request_for(snapshot, departure_at="2027-01-01T00:00:00Z"), snapshot)
+    with pytest.raises(DomainError, match="RUNTIME_INPUTS_UNAVAILABLE"):
+        runtime.select(request_for(snapshot, area_id="TEST_ONLY-known-district"), snapshot)
 
 
 def real_partial_school_inputs():

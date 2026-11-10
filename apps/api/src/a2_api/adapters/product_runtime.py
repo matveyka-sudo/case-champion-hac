@@ -246,6 +246,8 @@ def validate_inputs(
             original_destination = destinations[destination.destination_id]
             if destination.eligible is not True:
                 raise ValueError("ACCEPTED_DESTINATION_ELIGIBILITY_CANNOT_BE_OVERRIDDEN")
+            if destination.in_service_scope is not True:
+                raise ValueError("ACCEPTED_DESTINATION_SERVICE_SCOPE_CANNOT_BE_OVERRIDDEN")
             if (
                 destination.object_identity,
                 destination.categories,

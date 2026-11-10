@@ -31,12 +31,13 @@ from test_product_runtime import (
 from test_product_runtime import transport_facts as transport_facts
 
 
-def test_accepted_destination_eligibility_cannot_remove_closest_object(transport_facts):
+@pytest.mark.parametrize("field", ["eligible", "in_service_scope"])
+def test_accepted_destination_eligibility_cannot_remove_closest_object(transport_facts, field):
     snapshot, facts, profile = transport_facts
     facts = facts.model_copy(
-        update={"destinations": (replace(facts.destinations[0], eligible=False),)}
+        update={"destinations": (replace(facts.destinations[0], **{field: False}),)}
     )
-    with pytest.raises(ValueError, match="ELIGIBILITY_CANNOT_BE_OVERRIDDEN"):
+    with pytest.raises(ValueError, match="CANNOT_BE_OVERRIDDEN"):
         validate_inputs(bind_fingerprints(profile, facts), facts, snapshot, ProductRegistry())
 
 
