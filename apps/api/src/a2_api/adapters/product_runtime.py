@@ -282,6 +282,30 @@ def validate_inputs(
                 )
             else:
                 verify_timetable_source(snapshot, inputs.timetable, inputs.timetable_service_clock)
+            physical_origins = {
+                point.origin_node_id: point.access_node_id for point in inputs.points
+            }
+            physical_destinations = {
+                destination.physical_node_id: destination.access_node_id
+                for destination in inputs.destinations
+                if destination.physical_node_id is not None
+            }
+            physical_nodes = physical_origins.keys() | physical_destinations.keys()
+            if any(
+                event.node_id in physical_nodes
+                for run in inputs.timetable.runs
+                for event in run.events
+            ):
+                raise ValueError("PHYSICAL_ENDPOINT_IS_NOT_A_STOP")
+            for path in inputs.timetable.footpaths:
+                if (
+                    path.from_node_id in physical_origins
+                    and path.to_node_id != physical_origins[path.from_node_id]
+                ) or (
+                    path.to_node_id in physical_destinations
+                    and path.from_node_id != physical_destinations[path.to_node_id]
+                ):
+                    raise ValueError("PHYSICAL_ACCESS_LINK_MISMATCH")
         if any(coverage.search_complete for coverage in inputs.coverage):
             raise ValueError(
                 "EXTERNALLY_ASSERTED_URBAN_SEARCH_COMPLETENESS_REQUIRES_SERVER_VERIFIED_RECEIPT"
@@ -645,7 +669,25 @@ class Runtime:
             destinations = [
                 d for d in inputs.destinations if set(request.categories) & d.categories
             ]
-            if len(inputs.points) * len(destinations) > profile.max_route_pairs:
+            pair_count = len(inputs.points) * len(destinations)
+            if inputs.timetable is not None and request.passenger_mode in {
+                "walk",
+                "public_transport",
+            }:
+                # The full canonical catalogue remains in inputs. Missing physical
+                # boundaries stay unknown; only pairs the worker actually searches
+                # consume the admitted timetable search budget.
+                nodes = inputs.timetable.scope.node_ids
+                origins = sum(point.origin_node_id in nodes for point in inputs.points)
+                targets = sum(
+                    category in destination.categories
+                    for destination in destinations
+                    if destination.in_service_scope
+                    and (destination.physical_node_id or destination.access_node_id) in nodes
+                    for category in request.categories
+                )
+                pair_count = origins * targets
+            if pair_count > profile.max_route_pairs:
                 raise unavailable("APPROVED_ROUTE_PAIR_BUDGET_EXCEEDED")
         if isinstance(inputs, UrbanCargoInputs):
             if not profile.static_observations or any(

@@ -94,6 +94,25 @@ run-specific transfer permissions or continuation closure; their complete flags
 are rejected until an independently verifiable closure receipt is supported.
 Verified catalog evidence alone is never an exhaustive routing certificate.
 
+For dated urban timetables, the admitted route-pair budget counts actual searches:
+origins and destinations must have physical nodes in the timetable scope, and a
+destination selected in two categories consumes two searches. Points and catalog
+objects without those boundaries remain in the input and result as unknown.
+Physical endpoints cannot become timetable stops or connect through another
+access node. Untimetabled inputs retain the existing catalog-pair bound.
+Once all result reference edges exist, dated urban results remove only unused
+evidence definitions and compute a fresh hash before scenario proposals are built.
+The accepted snapshot, all numerical values, uncertainty and reference edges stay
+unchanged.
+
+A known best route without minimum proof keeps its actual timed journey and raw
+value, with `completeness=partial` and `MINIMUM_TIME_UNPROVEN`. Scenarios retain
+both observed values but require an explicit unknown minimum-time effect. This
+exception applies only to `minimum_journey_seconds` with evidence and a matching
+partial after journey; other known partial numerical effects keep their existing
+comparison requirements. Full proven effects retain numeric deltas. No public
+schema field changes are needed.
+
 Each input file is bounded to 32 MiB; all manifest, snapshot and supplemental
 bytes together are bounded to 64 MiB before JSON decoding. Duplicate keys,
 nonfinite numbers, wrong hashes, missing evidence and mismatched identities fail

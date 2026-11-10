@@ -248,7 +248,9 @@ def project_urban(out: Projection, analysis: Any) -> None:
                 raw = out.metric(
                     "urban-time-" + key,
                     "minimum_journey_seconds",
-                    known(
+                    MetricResult(chosen.journey.total_seconds, "available", "MINIMUM_TIME_UNPROVEN")
+                    if chosen is not None and not category.minimum_proven
+                    else known(
                         chosen.journey.total_seconds if chosen else None,
                         "CONFIRMED_UNREACHABLE"
                         if category.minimum_proven

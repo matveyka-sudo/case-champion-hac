@@ -353,7 +353,17 @@ def _canonical_measures(
                 isinstance(value, Score) or isinstance(value, Metric) and value.unit != "seconds",
                 value.value,
                 state,
-                state != "unknown" and _semantic(value) == _semantic(peer),
+                state != "unknown"
+                and (
+                    not isinstance(value, Metric)
+                    or value.name != "minimum_journey_seconds"
+                    or (
+                        value.completeness == "full"
+                        and bool(value.source_refs)
+                        and (value.reason_code is None or _absent(value))
+                    )
+                )
+                and _semantic(value) == _semantic(peer),
                 "canonical-v2",
                 reason_code=value.reason_code,
             )
