@@ -42,5 +42,22 @@ jobs:
         run: node scripts/check_web_layout.mjs
       - name: Validate current product configuration
         run: python3 scripts/check_product_config.py
+      - name: Verify installed API entrypoint
+        env:
+          UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/a2-api-smoke
+        run: |
+          uv sync --frozen --package a2-api --no-default-groups
+          workspace_python="$UV_PROJECT_ENVIRONMENT/bin/python"
+          uv pip check --python "$workspace_python"
+          check_dir=$(mktemp -d)
+          trap 'rm -rf "$check_dir"' EXIT
+          cd "$check_dir"
+          "$workspace_python" -I - <<'PYTHON'
+          from a2_api.app import create_configured_app
+          from a2_api.providers import rasp
+
+          routes = create_configured_app().openapi()["paths"]
+          assert "/health" in routes and "/api/v1/capabilities" in routes
+          PYTHON
       - name: Validate PostgreSQL Compose configuration
         run: docker compose --env-file .env.example config --quiet
