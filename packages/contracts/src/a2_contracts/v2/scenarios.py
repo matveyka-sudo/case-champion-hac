@@ -11,16 +11,19 @@ from pydantic import Field, StrictBool, model_validator
 
 from a2_contracts.common import canonical_hash
 from a2_contracts.v2.base import ContractModel, Count, Identifier, NonNegative, VersionRefs
+from a2_contracts.v2.evidence import MAX_EVIDENCE_GROUPS, EvidenceGroup, EvidenceResolver
 from a2_contracts.v2.journeys import JourneyResult
 from a2_contracts.v2.results import EvidenceRef, Metric, Score, validate_score_dependencies
 
 Feasibility = Literal["verified", "unverified"]
 
 
-def _evidence_ids(evidence: list[EvidenceRef], references: list[Identifier]) -> None:
-    identifiers = {item.evidence_id for item in evidence}
-    if len(identifiers) != len(evidence) or not set(references) <= identifiers:
-        raise ValueError("Duplicate evidence identity or unresolved evidence reference")
+def _evidence_ids(
+    evidence: list[EvidenceRef],
+    references: list[Identifier],
+    groups: list[EvidenceGroup] | None = None,
+) -> None:
+    EvidenceResolver((item.evidence_id for item in evidence), groups or ()).require(references)
 
 
 def _check_feasibility(
@@ -80,6 +83,9 @@ class ScenarioProposal(ContractModel):
     operation_type: Literal["coordinate_transfer", "additional_departure"]
     fixed_parameters: FixedParameters
     evidence_refs: list[EvidenceRef]
+    evidence_groups: list[EvidenceGroup] = Field(
+        default_factory=list, max_length=MAX_EVIDENCE_GROUPS, exclude_if=lambda value: not value
+    )
     assumptions: list[Identifier]
     status: Literal["proposed"]
     feasibility: Feasibility
@@ -98,6 +104,7 @@ class ScenarioProposal(ContractModel):
                 *params.resource_evidence,
                 *params.turnaround_evidence,
             ],
+            self.evidence_groups,
         )
         if self.operation_type == "additional_departure" and (
             not params.demand_evidence or not params.resource_evidence
@@ -137,7 +144,7 @@ class ScenarioValues(ContractModel):
         scores = {s.score_id for s in self.scores}
         if len(scores) != len(self.scores):
             raise ValueError("Duplicate score identity in scenario values")
-        validate_score_dependencies(self.metrics, self.scores)
+        validate_score_dependencies(self.metrics, self.scores, allow_deferred_groups=True)
         return self
 
 
@@ -460,6 +467,9 @@ class ScenarioResult(ContractModel):
     params_hash: Identifier
     operations_hash: Identifier
     evidence_refs: list[EvidenceRef]
+    evidence_groups: list[EvidenceGroup] = Field(
+        default_factory=list, max_length=MAX_EVIDENCE_GROUPS, exclude_if=lambda value: not value
+    )
     turnaround_evidence: list[Identifier]
     resource_evidence: list[Identifier] = Field(default_factory=list)
     assumptions: list[Identifier]
@@ -506,7 +516,12 @@ class ScenarioResult(ContractModel):
                     or metric.journey_id is None
                 ):
                     raise ValueError("Unproven minimum requires a partial evidence-bound journey")
-        _evidence_ids(self.evidence_refs, refs)
+        resolver = EvidenceResolver(
+            (row.evidence_id for row in self.evidence_refs), self.evidence_groups
+        )
+        resolver.require(refs)
+        for values in (self.before, self.after):
+            validate_score_dependencies(values.metrics, values.scores, evidence_resolver=resolver)
         after_journeys = {journey.journey_id: journey for journey in self.after_journeys}
         if len(after_journeys) != len(self.after_journeys):
             raise ValueError("Duplicate after journey identity")
@@ -539,7 +554,7 @@ class ScenarioResult(ContractModel):
             )
             if journey.geometry is not None:
                 journey_refs.extend(journey.geometry.evidence_refs)
-            _evidence_ids(self.evidence_refs, journey_refs)
+            resolver.require(journey_refs)
         if len({s.service_id for s in self.service_changes}) != len(self.service_changes):
             raise ValueError("Duplicate service change")
         if len({d.effect_id for d in self.deltas}) != len(self.deltas):
