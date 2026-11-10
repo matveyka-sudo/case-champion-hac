@@ -9,6 +9,23 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 
 ## Three-city priority — 2026-11-10 continuation
 
+### Verified gate update — 2026-11-11
+
+- Shared prototype presenters c3bd03f and bounded source disclosure 1487be3
+  are integrated locally. Root 170 frontend tests, build/lint and the additional
+  source pagination test passed. Final browser acceptance and deployment remain.
+- Root actual UI request created/saved job94f0dfa2 / analysis93bd5f9f with
+  1029.051s real Moscow route, but the UI timed out during preflight. Same-session
+  job/result GETs succeeded; all three canonical scores remain null. Full UI
+  E2E is FAILED until admission latency and recovery are fixed and replayed.
+- Manual recovery fix3bec3b6 preserves request identity after ambiguous errors;
+  backend source recheck/compact1401 batching remains in progress.
+- Full ML1 suite: 1145 passed after root6cc1f43 fixed public export ordering;
+  old mathematical signatures/fixtures are preserved. Source inventory47passed.
+- The restored external ZIP is real GTFS plus Rasp bindings. It is excluded
+  from Git and documented in README; it does not replace graph artifacts or
+  supply an intercity API key. No broader data-ready claim follows from restore.
+
 ### Current continuation: real Moscow and incumbent frontend authority
 
 The user has revoked generated Moscow transport for the active application.

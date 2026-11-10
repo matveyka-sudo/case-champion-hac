@@ -1,5 +1,41 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Verified continuation — 2026-11-11
+
+Goal remains ACTIVE; the sections below are historical checkpoints. Local
+integration now includes shared prototype presenters c3bd03f, lazy/paginated
+source disclosure 1487be3, and manual lost-response recovery 3bec3b6. Root
+verified 170 frontend tests plus the source disclosure regression, build and
+lint; the final browser changes are still with FRONTEND. These changes are not
+yet on the live web image. Root inspected the shared desktop view through a
+temporary 5198 proxy to the real 5193 backend, without API interception.
+
+Root's actual Calculate click exposed a real acceptance failure: the initial
+HTTP request exceeded the browser's 15-second deadline; retries returned
+RUNTIME_INPUTS_BUSY while the original preflight continued. PostgreSQL job
+94f0dfa2-8024-4348-be33-b09f4c586f66 subsequently succeeded, with saved analysis
+93bd5f9f-7989-4613-a72d-f3a0362cd180 and real journey 1029.051 seconds. Root
+independently fetched both through the same isolated browser session (HTTP200).
+The UI did not receive/display this result: this is NOT a successful full UI
+E2E. Evidence is in the ignored runtime directory under
+root-shared-ui-real-replay-20261111.json and real-preflight-timeout-20261111-v1/.
+No jobs remained queued/running, no provider/LLM replay was needed for the GETs.
+BACKEND is removing repeated source parsing; FRONTEND now retains the original
+submission key for recoverable manual retries, pending final browser validation.
+
+Root full engine suite found an append-order regression in new export
+analyze_normalized_walk_routes. Fixed in 6cc1f43 without changing historical
+signature fixtures or mathematics: 1145 engine tests PASS, Ruff PASS. Reviewed
+source-inventory helper dc3cec0 preserves original Kaliningrad graph authority;
+47 inventory tests PASS. Compact batch/artifact delivery remains under review.
+
+External ML2 ZIP restoration is implemented (ad67488/f33c4a5): place
+ml2-handoff-2026-11-10.zip in the checkout root, install dependencies, run
+.venv/bin/python scripts/restore-ml2-handoff.py. Archive and extracted data stay
+ignored. The ZIP contains Moscow GTFS and Rasp node bindings, not graph tiles,
+PBFs, database state, API keys or dated intercity schedules. README and the
+existing graph RESTORE.md distinguish these requirements.
+
 ## Latest correction: keep the prototype frontend and implement its backend
 
 Goal remains ACTIVE. The user explicitly requires the existing demo/prototype
