@@ -5,6 +5,26 @@ services:
     memswap_limit: 2g
 
   api:
+    command:
+      - /app/.venv/bin/python
+      - -c
+      - |
+        import logging
+        import re
+        import uvicorn
+        class ModelPrivacyFilter(logging.Filter):
+            def filter(self, record):
+                record.msg = re.sub(r"gpt://\S+", "[configured-model]", record.getMessage())
+                record.args = ()
+                return True
+        handler = logging.StreamHandler()
+        handler.addFilter(ModelPrivacyFilter())
+        handler.setFormatter(logging.Formatter("%(levelname)s %(name)s %(message)s"))
+        logger = logging.getLogger("a2_assistant")
+        logger.setLevel(logging.INFO)
+        logger.handlers = [handler]
+        logger.propagate = False
+        uvicorn.run("a2_api.api.bootstrap:build_app", factory=True, host="0.0.0.0", port=8000)
     env_file:
       - path: ${WAYDEX_ASSISTANT_ENV_FILE:?}
         format: raw
