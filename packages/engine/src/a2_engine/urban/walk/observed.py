@@ -174,7 +174,9 @@ def assess_observed_walk_route(
             or connector.access_location != endpoint.access_location
         ):
             raise ValueError("OBSERVED_CONNECTOR_SOURCE_MISMATCH")
-        if connector.seconds == 0 and connector.physical_location != connector.access_location:
+        if endpoint.nonzero_approach_has_zero_time(
+            access_distance_m=point.access_distance_m if endpoint is origin else 0.0
+        ):
             return unknown("NONZERO_APPROACH_ZERO_TIME")
         evidence = references(evidence + connector.evidence_refs)
     assert origin.connector and origin.connector.seconds is not None
