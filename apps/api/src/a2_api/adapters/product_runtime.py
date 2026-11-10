@@ -8,7 +8,7 @@ from dataclasses import dataclass, field, fields, is_dataclass, replace
 from datetime import timedelta
 from math import fsum
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 from zoneinfo import ZoneInfo
 
 from a2_contracts.common import canonical_hash
@@ -44,7 +44,40 @@ from a2_api.core.errors import DomainError
 from a2_api.core.registry import ProductRegistry
 
 MAX_DOCUMENT_BYTES = 32 * 1024 * 1024
-MAX_RUNTIME_BYTES = 64 * 1024 * 1024
+MAX_RUNTIME_BYTES = 96 * 1024 * 1024
+PROFILE_FAILURE_CODES = frozenset(
+    {
+        "RUNTIME_PROFILE_SNAPSHOT_HASH_MISMATCH",
+        "RUNTIME_PROFILE_VALIDITY_REQUIRED",
+        "RUNTIME_SUPPLEMENT_REQUIRED",
+        "RUNTIME_DOCUMENT_HASH_OR_SIZE_MISMATCH",
+        "RUNTIME_CUMULATIVE_BYTE_BUDGET_EXCEEDED",
+        "WALK_BINDING_REQUIRES_BATCH_EXECUTOR",
+        "URBAN_WALK_PROFILE_REQUIRED",
+        "WALK_BATCH_PROFILE_BINDING_MISMATCH",
+        "WALK_EXECUTOR_SOURCE_IDENTITY_REQUIRED",
+        "WALK_REFERENCE_OUTSIDE_ROOT_OR_BYTE_BUDGET",
+        "WALK_GRAPH_MANIFEST_REQUIRED",
+        "ACTUAL_ROUTING_BUILD_MANIFEST_BINDING_MISMATCH",
+        "WALK_BATCH_ACTUAL_BUILD_PROFILE_OR_VALIDITY_MISMATCH",
+        "IMMUTABLE_WALK_SOURCE_BUNDLE_UNAVAILABLE",
+        "ACCEPTED_BUNDLE_MANIFEST_CHANGED",
+        "WALK_PROFILE_SNAPSHOT_CITY_CATEGORY_OR_PAIR_BINDING_MISMATCH",
+        "WALK_APPROVED_ENDPOINT_OUTSIDE_CANONICAL_SCOPE",
+        "WALK_APPROVED_5_KMH_FOOT_MODEL_REQUIRED",
+        "WALK_GRAPH_OR_CANONICAL_SNAPSHOT_DIFFERS_FROM_IMMUTABLE_SOURCE",
+        "WALK_CONNECTOR_DIFFERS_FROM_IMMUTABLE_SOURCE_PROJECTION",
+        "WALK_RUNTIME_EVIDENCE_UNRESOLVED",
+        "WALK_SOURCE_BUNDLE_BYTE_BUDGET_EXCEEDED",
+        "WALK_SOURCE_BUNDLE_FILE_CHANGED",
+        "WALK_APPROVED_CORRELATIONS_OR_CONNECTORS_UNAVAILABLE",
+        "WALK_OBSERVATION_DIRECTORY_REQUIRED",
+        "WALK_OBSERVATION_DIRECTORY_UNAVAILABLE",
+    }
+)
+
+if TYPE_CHECKING:
+    from a2_api.adapters.walk_runtime import BoundWalkBinding
 
 
 class FileRef(ContractModel):
@@ -83,6 +116,7 @@ class Profile(ContractModel):
         "accepted_inputs"
     )
     inputs: FileRef | None = None
+    walk_binding: FileRef | None = Field(default=None, exclude_if=lambda value: value is None)
     scenarios: list[FileRef] = Field(default_factory=list, max_length=16)
     evidence: list[EvidenceRef] = Field(default_factory=list)
     static_observations: bool = False
@@ -546,6 +580,8 @@ class Runtime:
     unavailable_kinds: frozenset[str]
     scenario_documents: dict[str, tuple[ScenarioDocument, ...]] = field(default_factory=dict)
     urban_passenger_scopes: list[UrbanPassengerScope] = field(default_factory=list)
+    walk_bindings: dict[str, "BoundWalkBinding"] = field(default_factory=dict)
+    profile_failures: dict[str, str] = field(default_factory=dict)
 
     def select(
         self, request: AnalysisRequest, snapshot: AcceptedData
@@ -667,6 +703,8 @@ def load_runtime() -> Runtime:
         missing = set()
         seen = set()
         certified_proof = None
+        walk_bindings = {}
+        failures = {}
         for profile in manifest.profiles:
             key = profile.profile_id
             if key in seen:
@@ -679,6 +717,8 @@ def load_runtime() -> Runtime:
                 if profile.valid_from >= profile.valid_to:
                     raise ValueError("RUNTIME_PROFILE_VALIDITY_REQUIRED")
                 inputs = None
+                if profile.walk_binding is not None and profile.executor != "walk_batches":
+                    raise ValueError("WALK_BINDING_REQUIRES_BATCH_EXECUTOR")
                 if profile.executor == "accepted_inputs":
                     if profile.inputs is None:
                         raise ValueError("RUNTIME_SUPPLEMENT_REQUIRED")
@@ -700,7 +740,33 @@ def load_runtime() -> Runtime:
                 elif profile.executor == "walk_batches":
                     from a2_api.adapters import walk_batches
 
-                    approval, _, runtime = walk_batches.load_approval()
+                    if profile.walk_binding is not None:
+                        from a2_api.adapters.walk_runtime import WalkProfileScope, load_binding
+
+                        if profile.analysis_kind != "urban_passenger" or profile.city_id is None:
+                            raise ValueError("URBAN_WALK_PROFILE_REQUIRED")
+                        bound = load_binding(
+                            source.parent,
+                            profile.walk_binding,
+                            snapshot=snapshot,
+                            scope=WalkProfileScope(
+                                profile_id=profile.profile_id,
+                                city_id=profile.city_id,
+                                snapshot_id=profile.snapshot_id,
+                                snapshot_hash=profile.snapshot_hash,
+                                categories=tuple(profile.categories),
+                                graph_fingerprint=profile.graph_fingerprint,
+                                routing_profile_fingerprint=profile.routing_profile_fingerprint,
+                                valid_from=profile.valid_from,
+                                valid_to=profile.valid_to,
+                                max_route_pairs=profile.max_route_pairs,
+                            ),
+                            budget=budget,
+                        )
+                        approval, runtime = bound.approval, bound.runtime
+                        walk_bindings[key] = bound
+                    else:
+                        approval, _, runtime = walk_batches.load_approval()
                     if (
                         profile.city_id != approval.city_id
                         or profile.categories != approval.categories
@@ -733,9 +799,23 @@ def load_runtime() -> Runtime:
                     ):
                         raise ValueError("CERTIFIED_WALK_MODEL_PROFILE_BINDING_MISMATCH")
                 profiles[key] = profile, inputs
-            except (OSError, ValueError, TypeError, KeyError, DomainError):
+            except (OSError, ValueError, TypeError, KeyError, DomainError) as exc:
                 missing.add(profile.analysis_kind)
-        product_runtime = Runtime(digest, manifest, snapshots, profiles, frozenset(missing))
+                reason = str(exc)
+                failures[key] = (
+                    reason
+                    if reason in PROFILE_FAILURE_CODES
+                    else "RUNTIME_PROFILE_INPUTS_UNAVAILABLE"
+                )
+        product_runtime = Runtime(
+            digest,
+            manifest,
+            snapshots,
+            profiles,
+            frozenset(missing),
+            walk_bindings={key: value for key, value in walk_bindings.items() if key in profiles},
+            profile_failures=failures,
+        )
         from a2_api.adapters.product_scenario_runtime import load_profile_documents
 
         for key, (profile, inputs) in profiles.items():

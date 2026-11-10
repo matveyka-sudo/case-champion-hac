@@ -75,7 +75,9 @@ async def preflight(request: AnalysisRequest, snapshot: AcceptedData) -> BatchPl
     elif profile.executor == "walk_batches":
         from a2_api.adapters import walk_batches
 
-        return await walk_batches.preflight(request, snapshot)
+        return await walk_batches.preflight(
+            request, snapshot, bound=runtime.walk_bindings.get(profile.profile_id)
+        )
     elif profile.executor == "certified_walk_model":
         from a2_api.adapters import certified_walk_model
 
@@ -131,7 +133,9 @@ def calculate(
             raise unavailable("FENCED_CHECKPOINT_CHANNEL_REQUIRED")
         from a2_api.adapters import walk_batches
 
-        return walk_batches.calculate(claim, channel)
+        return walk_batches.calculate(
+            claim, channel, bound=runtime.walk_bindings.get(profile.profile_id), snapshot=snapshot
+        )
     if profile.executor == "certified_walk_model":
         from a2_api.adapters import certified_walk_model
 
