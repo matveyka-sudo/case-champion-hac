@@ -108,10 +108,26 @@ def test_all_185_existing_signatures_and_defaults():
         )
 
 
-def test_all_293_exported_artifacts_remain_byte_identical(tmp_path):
+def test_exported_artifacts_match_baseline_and_approved_score_extension(tmp_path):
     export_schemas(tmp_path)
     actual = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in tmp_path.glob("*.json")}
-    assert actual == BASELINE["schemas"]
+    # Preserve the historical relocation baseline. Only this reviewed additive
+    # contract migration may replace its listed artifact hashes or add schemas.
+    extension = json.loads(
+        (Path(__file__).parent / "fixtures/score_explanation_schema_extension.json").read_text()
+    )
+    replaced = {"manifest.json", "openapi.json"} | {
+        f"v2.{model}.{mode}.schema.json"
+        for model in ("Explanation", "ExplanationContent", "Finding")
+        for mode in ("serialization", "validation")
+    }
+    added = {f"v2.ScoreClaim.{mode}.schema.json" for mode in ("serialization", "validation")}
+    assert set(extension["replaced"]) == replaced
+    assert set(extension["added"]) == added
+    assert replaced <= BASELINE["schemas"].keys()
+    assert added.isdisjoint(BASELINE["schemas"])
+    expected = BASELINE["schemas"] | extension["replaced"] | extension["added"]
+    assert actual == expected
 
 
 def test_sql_literals_unchanged_and_confined_to_database_layer():
