@@ -1,0 +1,12 @@
+{
+  "added": {
+    "v2.UrbanPassengerScope.serialization.schema.json": "3c259e8c0b02b90d87adf7096181e07522f2cc5c29de49c124abe22f43bf754f",
+    "v2.UrbanPassengerScope.validation.schema.json": "3c259e8c0b02b90d87adf7096181e07522f2cc5c29de49c124abe22f43bf754f"
+  },
+  "replaced": {
+    "manifest.json": "92bfa31a312e96d8f1ed987ff6b46eb677135661b8c3d2b691c9e370040967e7",
+    "openapi.json": "19fdaf631fd4f8cb0102b94bc5efa282d36c65e470086e011370b1cabb8a4431",
+    "v2.Capabilities.serialization.schema.json": "1970db9f1aaa10a9b90cd0b719c60b8213e297ee30502ca12b80e5ed97b5e0e2",
+    "v2.Capabilities.validation.schema.json": "1970db9f1aaa10a9b90cd0b719c60b8213e297ee30502ca12b80e5ed97b5e0e2"
+  }
+}

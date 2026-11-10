@@ -165,6 +165,18 @@ def test_exported_artifacts_match_baseline_and_approved_contract_extensions(tmp_
         f"v2.ScenarioResult.{mode}.schema.json" for mode in ("serialization", "validation")
     }
     expected.update(scenario_extension["replaced"])
+    scopes_extension = json.loads(
+        (Path(__file__).parent / "fixtures/urban_scopes_schema_extension.json").read_text()
+    )
+    assert set(scopes_extension["replaced"]) == {"manifest.json", "openapi.json"} | {
+        f"v2.Capabilities.{mode}.schema.json" for mode in ("serialization", "validation")
+    }
+    assert set(scopes_extension["added"]) == {
+        f"v2.UrbanPassengerScope.{mode}.schema.json" for mode in ("serialization", "validation")
+    }
+    assert set(scopes_extension["added"]).isdisjoint(expected)
+    expected.update(scopes_extension["replaced"])
+    expected.update(scopes_extension["added"])
     assert actual == expected
 
 
