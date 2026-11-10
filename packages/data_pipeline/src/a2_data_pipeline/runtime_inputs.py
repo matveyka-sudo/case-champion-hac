@@ -27,7 +27,7 @@ from .store import load_bundle
 
 DEFAULT_MANIFEST = "manifests/external/runtime-handoff-2026-11-10.json"
 CURRENT_BUNDLES = (
-    "kaliningrad-urban-2026-11-10.3",
+    "kaliningrad-urban-2026-11-10.4",
     "novorossiysk-urban-2026-11-10.2",
     "moscow-urban-2026-11-10.2",
 )

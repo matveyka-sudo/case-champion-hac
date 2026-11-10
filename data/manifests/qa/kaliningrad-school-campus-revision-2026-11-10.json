@@ -1,0 +1,80 @@
+{
+  "schema": "a2-campus-revision-verification-v1",
+  "base_bundle_id": "kaliningrad-urban-2026-11-10.3",
+  "new_bundle_id": "kaliningrad-urban-2026-11-10.4",
+  "source_dataset_id": "klgd_school_campuses.20261110",
+  "records": [
+    {
+      "destination_id": "kaliningrad-school-way-90805889",
+      "institution": {
+        "institution_id": "4409878",
+        "kind": "school",
+        "name": "МАОУ СОШ № 12",
+        "district": "Московский",
+        "address": "236039, г. Калининград, ул. Б. Хмельницкого, 115 (корпус 1), ул. Багратиона, 107А (корпус 2)",
+        "detail_url": "https://www.klgd.ru/activity/education/institutions/schools/detail.php?ID=4409878"
+      },
+      "campus": 2,
+      "official_address_fragment": "ул. Багратиона, 107А (корпус 2)",
+      "osm_original_name": "МАОУ СОШ №12, корпус 1",
+      "accepted_name": "МАОУ СОШ № 12, корпус 2",
+      "site_osm_ref": "way/90805889",
+      "site_record_sha256": "fdd87a4be88ed5f8f13298581d35a831d5d2faeb5f91d4f830796d9b4f0d39a3",
+      "address_building_osm_ref": "way/90805877",
+      "address_building_record_sha256": "b224a489050b3ded2ddcce1cd78649ce8d6d5778e43207af63d24bdd32b8117c",
+      "exact_osm_address": {
+        "street": "улица Багратиона",
+        "house": "107А"
+      },
+      "whole_building_contained": true,
+      "geometry_buffer_m": 0,
+      "other_accepted_schools_inside_site": [],
+      "raw_roster_sha256": "89808fa312acc81f470a39681c655e1c2f48aa345e6841b1ea2142efaaa54e2f",
+      "pbf_sha256": "769a6a6ac552b534057f2480b88f1c2d0709636761ab6d08483efe69c1e97b69",
+      "evidence_id": "klgd_school_campuses:20261110:4409878:campus2"
+    },
+    {
+      "destination_id": "kaliningrad-school-way-91240747",
+      "institution": {
+        "institution_id": "4409869",
+        "kind": "school",
+        "name": "МАОУ СОШ № 3",
+        "district": "Московский",
+        "address": "236005, г. Калининград, ул. Октябрьская площадь, 28-30 (1 корпус), ул. Березовая, 2 (корпус 2)",
+        "detail_url": "https://www.klgd.ru/activity/education/institutions/schools/detail.php?ID=4409869"
+      },
+      "campus": 2,
+      "official_address_fragment": "ул. Березовая, 2 (корпус 2)",
+      "osm_original_name": "Средняя школа №39",
+      "accepted_name": "МАОУ СОШ № 3, корпус 2",
+      "site_osm_ref": "way/91240747",
+      "site_record_sha256": "352cb0dbf96abe9e58c0125242def05d60a1019714576b4a40ad7aa5f61f532b",
+      "address_building_osm_ref": "way/91240750",
+      "address_building_record_sha256": "585df525e4822575c868ede823edcac2b964e55c549ffccc4e0ba67302a690d5",
+      "exact_osm_address": {
+        "street": "Берёзовая улица",
+        "house": "2"
+      },
+      "whole_building_contained": true,
+      "geometry_buffer_m": 0,
+      "other_accepted_schools_inside_site": [],
+      "raw_roster_sha256": "89808fa312acc81f470a39681c655e1c2f48aa345e6841b1ea2142efaaa54e2f",
+      "pbf_sha256": "769a6a6ac552b534057f2480b88f1c2d0709636761ab6d08483efe69c1e97b69",
+      "evidence_id": "klgd_school_campuses:20261110:4409869:campus2"
+    }
+  ],
+  "unchanged_collection_sha256": {
+    "territories": "b78ee130a3024fb4f6066e6e804493f14065e7bf19673c930dce08ee5a5350bd",
+    "population_cells": "ae595419a29e03882f5cf9d63a0682869ecb81a0090addbf023169f4a407fd8e",
+    "sample_points": "44bbb5b3d883201d127c131a5cea78c5bd4c5b08412bfd1b9d3583e929cbfc0f",
+    "access_nodes": "9e98a1abda1ff2bb9309dd8fd07d1f5ac45473ca760dbacbf25e5d7a929fd4a3",
+    "walk_connectors": "b5b681a03cb89e57c2c537c2c4a4c8aa18eb43773d5b37f672a870c4253dce59",
+    "freight_sites": "50072523b566f8c7d32289eea27dd975885e3ddf3b56b015a33606949b676e33",
+    "freight_nodes": "ef68db6babc1a68c07d42314df1e04b32dfc33152448c44d936f50865c4df964",
+    "stop_frequencies": "645583cf4da446341a4ae6ab1237bfbfa7709f0e0567e67e2d22afe5a1292fcc"
+  },
+  "base_manifest_sha256": "b174039c6c2d1feb33a46063418e5975afd5bc58095c20e8ff65f73434e25fa1",
+  "new_manifest_sha256": "d43a87096cd039485cba522bd7e2cd0cc33046474b931ff68c75a6ff9d212f6a",
+  "canonical_v2_payload_sha256": "60c8e28a8699b919efe007c1b9833fdb8c3f6fc75b636a4f59b6f3caa975f41e",
+  "index_ready": false
+}
