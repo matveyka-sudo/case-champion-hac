@@ -14,6 +14,7 @@ from a2_contracts.v2.requests import (
     UrbanPassengerRequest,
 )
 from a2_contracts.v2.results import AnalysisResult, EvidenceRef, SubjectRef
+from a2_contracts.v2.scenarios import ScenarioResult
 from a2_engine import (
     MetricResult,
     ReferenceComparison,
@@ -57,7 +58,7 @@ from a2_api.adapters.product_runtime import registry as registry
 from a2_api.core.batches import BatchPlan
 from a2_api.core.config import RuntimeSettings
 from a2_api.core.errors import DomainError
-from a2_api.core.jobs import ClaimedJob, V2JobContext
+from a2_api.core.jobs import CalculationOutput, ClaimedJob, V2JobContext
 from a2_api.core.registry import ProductRegistry
 from a2_api.workers.checkpoint_channel import CheckpointChannel
 
@@ -84,10 +85,12 @@ async def preflight(request: AnalysisRequest, snapshot: AcceptedData) -> BatchPl
     return None
 
 
-def calculate(claim: ClaimedJob, channel: CheckpointChannel | None = None) -> AnalysisResult:
-    if claim.kind != "analysis" or not isinstance(claim.context, V2JobContext):
+def calculate(
+    claim: ClaimedJob, channel: CheckpointChannel | None = None
+) -> AnalysisResult | CalculationOutput | ScenarioResult:
+    if claim.kind not in {"analysis", "scenario"} or not isinstance(claim.context, V2JobContext):
         raise DomainError(
-            422, "unsupported_scenario", "Product analysis handler requires an analysis job"
+            422, "unsupported_scenario", "Product handler requires a canonical calculation job"
         )
     context = claim.context
     runtime = load_runtime()
@@ -106,6 +109,19 @@ def calculate(claim: ClaimedJob, channel: CheckpointChannel | None = None) -> An
         raise DomainError(409, "incompatible_versions", "Queued product inputs or runtime changed")
     request = context.normalized_request
     profile, inputs = runtime.select(request, snapshot)
+    if claim.kind == "scenario":
+        if profile.executor != "accepted_inputs" or inputs is None:
+            raise DomainError(
+                422, "unsupported_scenario", "SCENARIO_MUTABLE_TRANSPORT_MODEL_UNAVAILABLE"
+            )
+        from a2_api.adapters.product_scenario_runtime import calculate_saved
+
+        return calculate_saved(
+            claim,
+            inputs,
+            profile_id=profile.profile_id,
+            documents=runtime.scenario_documents.get(profile.profile_id, ()),
+        )
     if profile.executor == "walk_pilot":
         from a2_api.adapters import walk_pilot
 
@@ -396,4 +412,13 @@ def calculate(claim: ClaimedJob, channel: CheckpointChannel | None = None) -> An
         project_pipeline(out, pipeline_analysis)
     else:
         raise unavailable("RUNTIME_TRANSPORT_INPUTS_REQUIRED")
-    return out.finish()
+    from a2_api.adapters.product_scenario_runtime import finish_analysis
+
+    return finish_analysis(
+        claim,
+        out.finish(),
+        inputs,
+        profile_id=profile.profile_id,
+        documents=runtime.scenario_documents.get(profile.profile_id, ()),
+        configured=bool(profile.scenarios),
+    )
