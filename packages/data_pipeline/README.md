@@ -928,3 +928,10 @@ SHA256; примерные масса/габариты не назначены. 
 неполные каталоги и `static_observations=false`: транспортный handler остаётся
 unavailable до принятия настоящих truck observations. Production manifest не
 менялся. Это подготовка реального каталога, не успешный транспортный E2E.
+
+Приватная граница реальных Rasp observations описана в
+[RASP_INGESTION.md](RASP_INGESTION.md). Нормализатор не делает HTTP-запросов;
+требует hash-pinned страницы, предзапросные shared-quota receipts, основание
+временного кэша, отдельные физические идентичности и copyright capture.
+Полнота сети/минимум не выводятся из HTTP200; fixture cache не публикуется.
+Реальные ответы и новые production snapshot этим изменением не создавались.

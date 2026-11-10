@@ -1,0 +1,87 @@
+{
+  "schema_version": "waydex-rasp-official-document-review/1",
+  "review_date": "2026-11-10",
+  "role": "implementation requirements only; no account/use authorization inferred",
+  "sources": [
+    {
+      "observation_id": "terms",
+      "url": "https://yandex.ru/legal/rasp_api/ru/",
+      "resolved_url": "https://yandex.ru/legal/rasp_api/ru/",
+      "retrieved_at": "2026-11-10T15:59:12.254214+00:00",
+      "sha256": "b327ac0ba9a2aa1fc78b38427fc580ecc73787b54f24b191d6e9b54b739d970f",
+      "size_bytes": 152435,
+      "local_artifact": "/Users/kirito/waydex-full-runtime/ml2/rasp-terms-review-2026-11-10/terms-b327ac0ba9a2aa1f.html",
+      "kind": "official public documentation; not a provider data/API call",
+      "rights": "raw retained locally only"
+    },
+    {
+      "observation_id": "search-doc",
+      "url": "https://yandex.ru/dev/rasp/doc/ru/reference/schedule-point-point",
+      "resolved_url": "https://yandex.ru/dev/rasp/doc/ru/reference/schedule-point-point",
+      "retrieved_at": "2026-11-10T15:59:12.361257+00:00",
+      "sha256": "395bfaed0700dd8bcb769af0dd2e094d4d69871b045dafb2f0c9017f20708d83",
+      "size_bytes": 891472,
+      "local_artifact": "/Users/kirito/waydex-full-runtime/ml2/rasp-terms-review-2026-11-10/search-doc-395bfaed0700dd8b.html",
+      "kind": "official public documentation; not a provider data/API call",
+      "rights": "raw retained locally only"
+    },
+    {
+      "observation_id": "copyright-doc",
+      "url": "https://yandex.ru/dev/rasp/doc/ru/reference/query-copyright",
+      "resolved_url": "https://yandex.ru/dev/rasp/doc/ru/reference/query-copyright",
+      "retrieved_at": "2026-11-10T15:59:12.128966+00:00",
+      "sha256": "ec601eb6ab5defa562595deeaf3691adfcad5b2dad583161aee68995b768c7ae",
+      "size_bytes": 240936,
+      "local_artifact": "/Users/kirito/waydex-full-runtime/ml2/rasp-terms-review-2026-11-10/copyright-doc-ec601eb6ab5defa5.html",
+      "kind": "official public documentation; not a provider data/API call",
+      "rights": "raw retained locally only"
+    }
+  ],
+  "requirements": [
+    {
+      "source": "terms",
+      "locator": "2.3.2–2.3.3",
+      "requirement": "Operator must establish authorized service use and project access conditions; a particular account or analytical use is not authorized by this review."
+    },
+    {
+      "source": "terms",
+      "locator": "2.3.5 desktop website paragraph",
+      "requirement": "Provider copyright banner belongs near displayed data; required attribution and service link also belong in help. Renderer/placement acceptance belongs to frontend/backend."
+    },
+    {
+      "source": "terms",
+      "locator": "3.2.4",
+      "requirement": "Only temporary caching within authorized service functionality is the stated exception to saving/processing/modification restrictions. Private immutable cache episodes expire; permanent dataset publication is not authorized by this implementation."
+    },
+    {
+      "source": "terms",
+      "locator": "2.3.4,5.2",
+      "requirement": "Provider restrictions may change. Operator records current authorization and selected cache expiry; no fixed TTL or day-reset timezone is inferred."
+    },
+    {
+      "source": "search-doc",
+      "locator": "Request parameters; pagination; segments/thread.uid and start_date",
+      "requirement": "Bind station/date/offset/limit and UTC dated events to each captured page. Thread UID identifies a thread; a physical execution needs separate reviewed identity. Pagination completeness is not network completeness."
+    },
+    {
+      "source": "copyright-doc",
+      "locator": "Request format; JSON copyright object",
+      "requirement": "GET /v3.0/copyright/ accepts Authorization header and format=json. Every fresh API attempt consumes the same quota as search; reuse only a still-authorized cached copyright capture."
+    }
+  ],
+  "user_daily_limit": 500,
+  "all_retries_and_copyright_attempts_count": true,
+  "provider_api_calls_made": 0,
+  "live_credentials_accessed": false,
+  "real_provider_snapshot_published": false,
+  "internal_envelope_schema": {
+    "path": "data/manifests/schemas/private-rasp-observation-v1.json",
+    "sha256": "b21269981aae23b94b6708099e264fbbf8c2164f7f06e4531190e0c1ff2cf215"
+  },
+  "ownership": {
+    "ML2": "Private response validation/normalization/schema, station identity joins, source QA, expiry checks",
+    "BACKEND": "Durable shared per-attempt quota, operator credential/configuration and raw response capture/export, runtime wall-clock expiry gate",
+    "FRONTEND": "Required unmodified provider attribution/banner presentation with approved safe renderer",
+    "root": "Account/usage authorization and production enablement"
+  }
+}

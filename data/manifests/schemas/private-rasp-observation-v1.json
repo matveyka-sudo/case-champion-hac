@@ -1,0 +1,210 @@
+{
+  "$defs": {
+    "FileReceipt": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "maximum": 2097152,
+          "minimum": 1,
+          "title": "Size Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "size_bytes"
+      ],
+      "title": "FileReceipt",
+      "type": "object"
+    },
+    "PageReceipt": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "maximum": 2097152,
+          "minimum": 1,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "http_status": {
+          "const": 200,
+          "title": "Http Status",
+          "type": "integer"
+        },
+        "requested_date": {
+          "format": "date",
+          "title": "Requested Date",
+          "type": "string"
+        },
+        "offset": {
+          "minimum": 0,
+          "title": "Offset",
+          "type": "integer"
+        },
+        "limit": {
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "fetched_at": {
+          "format": "date-time",
+          "title": "Fetched At",
+          "type": "string"
+        },
+        "reservation_id": {
+          "minLength": 1,
+          "title": "Reservation Id",
+          "type": "string"
+        },
+        "request_fingerprint": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Request Fingerprint",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "size_bytes",
+        "http_status",
+        "requested_date",
+        "offset",
+        "limit",
+        "fetched_at",
+        "reservation_id",
+        "request_fingerprint"
+      ],
+      "title": "PageReceipt",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "waydex-rasp-observation/1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_url": {
+      "enum": [
+        "https://api.rasp.yandex.net/v3.0/search/",
+        "https://api.rasp.yandex-net.ru/v3.0/search/"
+      ],
+      "title": "Source Url",
+      "type": "string"
+    },
+    "origin_node_id": {
+      "title": "Origin Node Id",
+      "type": "string"
+    },
+    "destination_node_id": {
+      "title": "Destination Node Id",
+      "type": "string"
+    },
+    "departure_at": {
+      "format": "date-time",
+      "title": "Departure At",
+      "type": "string"
+    },
+    "window_end_at": {
+      "format": "date-time",
+      "title": "Window End At",
+      "type": "string"
+    },
+    "origin_timezone": {
+      "title": "Origin Timezone",
+      "type": "string"
+    },
+    "transport_type": {
+      "const": "train",
+      "title": "Transport Type",
+      "type": "string"
+    },
+    "result_timezone": {
+      "const": "UTC",
+      "title": "Result Timezone",
+      "type": "string"
+    },
+    "transfers": {
+      "title": "Transfers",
+      "type": "boolean"
+    },
+    "retrieved_at": {
+      "format": "date-time",
+      "title": "Retrieved At",
+      "type": "string"
+    },
+    "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+    },
+    "pages": {
+      "items": {
+        "$ref": "#/$defs/PageReceipt"
+      },
+      "maxItems": 32,
+      "minItems": 1,
+      "title": "Pages",
+      "type": "array"
+    },
+    "usage_authorization": {
+      "$ref": "#/$defs/FileReceipt"
+    },
+    "quota_authorization": {
+      "$ref": "#/$defs/FileReceipt"
+    },
+    "physical_identities": {
+      "$ref": "#/$defs/FileReceipt"
+    },
+    "copyright": {
+      "$ref": "#/$defs/FileReceipt"
+    },
+    "synthetic": {
+      "default": false,
+      "title": "Synthetic",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "schema_version",
+    "source_url",
+    "origin_node_id",
+    "destination_node_id",
+    "departure_at",
+    "window_end_at",
+    "origin_timezone",
+    "transport_type",
+    "result_timezone",
+    "transfers",
+    "retrieved_at",
+    "expires_at",
+    "pages",
+    "usage_authorization",
+    "quota_authorization",
+    "physical_identities",
+    "copyright"
+  ],
+  "title": "ObservationEnvelope",
+  "type": "object"
+}
