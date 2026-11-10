@@ -34,6 +34,9 @@ RASP_QUOTA_EXTENSION = json.loads(
 PRIVATE_SOURCES_EXTENSION = json.loads(
     (Path(__file__).parent / "fixtures/private_sources_extension.json").read_text()
 )
+WALK_RUNTIME_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/walk_runtime_extension.json").read_text()
+)
 
 
 def private_sources_counter(expected, kind):
@@ -133,6 +136,14 @@ def normalize_signature(value):
 
 
 def test_all_185_existing_signatures_and_defaults():
+    assert WALK_RUNTIME_EXTENSION["module"] == "adapters/walk_runtime.py"
+    assert set(WALK_RUNTIME_EXTENSION["signatures"]) == {
+        "a2_api.adapters.walk_runtime:load_binding",
+        "a2_api.adapters.walk_batches:load_approval",
+        "a2_api.adapters.walk_batches:preflight",
+        "a2_api.adapters.walk_batches:calculate",
+        "a2_api.core.walk_observations:observation_directory",
+    }
     assert set(PRIVATE_SOURCES_EXTENSION["signatures"]) == {"a2_api.core.jobs:V2JobContext"}
     assert set(BATCH_EXTENSION["signatures"]) == {
         "a2_api.core.jobs:V2JobContext",
@@ -157,6 +168,7 @@ def test_all_185_existing_signatures_and_defaults():
         | SCENARIO_SCOPE_EXTENSION["signatures"]
         | RASP_QUOTA_EXTENSION["signatures"]
         | PRIVATE_SOURCES_EXTENSION["signatures"]
+        | WALK_RUNTIME_EXTENSION["signatures"]
     ).items():
         module, qualified = path.split(":")
         obj = importlib.import_module(module)

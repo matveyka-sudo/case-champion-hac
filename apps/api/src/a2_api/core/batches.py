@@ -23,7 +23,13 @@ class PlannedPair(ContractModel):
 
 
 class BatchPlan(ContractModel):
-    schema_version: Literal["waydex-walk-execution/1"]
+    schema_version: Literal["waydex-walk-execution/1", "waydex-walk-execution/2"]
+    runtime_binding_hash: str | None = Field(
+        default=None, pattern="^[a-f0-9]{64}$", exclude_if=lambda value: value is None
+    )
+    executor_fingerprint: str | None = Field(
+        default=None, pattern="^[a-f0-9]{64}$", exclude_if=lambda value: value is None
+    )
     snapshot_id: Identifier
     snapshot_hash: str = Field(pattern="^[a-f0-9]{64}$")
     bundle_manifest_hash: str = Field(pattern="^[a-f0-9]{64}$")
@@ -64,6 +70,12 @@ class BatchPlan(ContractModel):
 
     @model_validator(mode="after")
     def bounded_inventory(self) -> Self:
+        bound = self.runtime_binding_hash is not None and self.executor_fingerprint is not None
+        if self.schema_version == "waydex-walk-execution/2":
+            if not bound:
+                raise ValueError("OD_PROFILE_BINDING_AND_EXECUTOR_REQUIRED")
+        elif self.runtime_binding_hash is not None or self.executor_fingerprint is not None:
+            raise ValueError("OD_LEGACY_EXECUTION_CANNOT_CLAIM_PROFILE_BINDING")
         if self.approved_pair_count != len(self.pairs) + self.unresolved_pair_count:
             raise ValueError("APPROVED_PHYSICAL_PAIR_INVENTORY_MISMATCH")
         identities = [pair.pair_id for pair in self.pairs]
