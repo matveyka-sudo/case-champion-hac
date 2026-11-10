@@ -632,3 +632,88 @@ def test_positive_submicrosecond_duration_never_silently_becomes_zero(
         ]
     with pytest.raises(ValueError, match="WALK_DURATION_BELOW_TIMESTAMP_RESOLUTION"):
         analyze(p, envelopes)
+
+
+def test_explicit_six_decimal_serialization_preserves_physical_connectors(
+    canonical: dict[str, Any],
+) -> None:
+    base = synthetic_inputs(canonical)
+    assert base.build is not None
+    endpoints = (*base.point_endpoints, *base.destination_endpoints)
+    connectors = tuple(ep.connector for ep in endpoints if ep.connector)
+    original = {ep.correlation.access_node_id: ep.correlation for ep in endpoints if ep.correlation}
+    correlations = tuple(
+        replace(
+            correlation,
+            correlated_location=WalkCoordinate(
+                round(correlation.source_location.lon, 6),
+                round(correlation.source_location.lat, 6),
+            ),
+            coordinate_precision_digits=6,
+            serialization_evidence_refs=("synthetic-pinned-locate-serializer",),
+        )
+        for correlation in original.values()
+    )
+    inputs = prepare(canonical, build=base.build, connectors=connectors, correlations=correlations)
+    assert "ENDPOINT_SERIALIZATION_PRECISION_6" in inputs.limitations
+    p = plan(inputs)
+    for request in p.requests:
+        assert request.payload()["locations"][0]["lon"] == request.origin.source_location.lon
+        assert "synthetic-pinned-locate-serializer" in request.evidence_refs
+    result = analyze(p)
+    assert all(r.state == "reachable" and not r.minimum_proven for r in result.routes)
+    assert all(r.reason_code == "MINIMUM_TIME_UNPROVEN" for r in result.routes)
+    assert not result.analysis.modes[0].ranking_eligible
+    assert result.analysis.modes[0].index.value is None
+    assert result.analysis.journeys
+    for journey in result.analysis.journeys:
+        assert [leg.duration_seconds for leg in journey.candidate.legs] == [60, 1620, 120]
+        assert journey.total_seconds == 1800
+    with pytest.raises(ValueError, match="SOURCE_MISMATCH"):
+        prepare(canonical, build=replace(base.build, source_graph_version="foreign"))
+    request = p.requests[0]
+    with pytest.raises(ValueError, match="ACTUAL_ENDPOINT_MISMATCH"):
+        normalize_walk_response(
+            request, response(request, matched_origin=request.origin.source_location)
+        )
+    no_route = response(
+        request,
+        response_json=json.dumps({"id": request.request_id, "error_code": 442}),
+        unreachable_evidence_refs=("synthetic-global-no-route-proof",),
+    )
+    assert normalize_walk_response(request, no_route).state == "unknown"
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"coordinate_precision_digits": 6},
+        {"coordinate_precision_digits": 5, "serialization_evidence_refs": ("proof",)},
+        {"coordinate_precision_digits": True, "serialization_evidence_refs": ("proof",)},
+    ],
+)
+def test_coordinate_precision_requires_supported_explicit_evidence(
+    canonical: dict[str, Any], changes: dict[str, Any]
+) -> None:
+    correlation = plan(synthetic_inputs(canonical)).requests[0].origin
+    with pytest.raises(ValueError, match="SERIALIZATION_EVIDENCE_REQUIRED"):
+        replace(correlation, **changes)
+
+
+def test_serialization_uncertainty_does_not_accept_real_resnap(canonical: dict[str, Any]) -> None:
+    correlation = plan(synthetic_inputs(canonical)).requests[0].origin
+    source = WalkCoordinate(20.4955871, 54.7087877)
+    rendered = WalkCoordinate(20.495587, 54.708788)
+    with pytest.raises(ValueError, match="REVISED_ACCESS_CONNECTOR_REQUIRED"):
+        replace(correlation, source_location=source, correlated_location=rendered)
+    precise = replace(
+        correlation,
+        source_location=source,
+        correlated_location=rendered,
+        coordinate_precision_digits=6,
+        serialization_evidence_refs=("synthetic-pinned-serializer",),
+    )
+    assert precise.correlated_location == rendered and precise.source_location == source
+    for shifted in (WalkCoordinate(20.495588, 54.708788), WalkCoordinate(20.4955871, 54.708788)):
+        with pytest.raises(ValueError, match="REVISED_ACCESS_CONNECTOR_REQUIRED"):
+            replace(precise, correlated_location=shifted)

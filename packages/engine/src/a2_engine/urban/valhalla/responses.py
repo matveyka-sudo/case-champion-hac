@@ -63,6 +63,8 @@ def normalize_walk_response(
                 body["error_code"] == 442
                 and envelope.search_complete
                 and envelope.unreachable_evidence_refs
+                and request.origin.coordinate_precision_digits is None
+                and request.destination.coordinate_precision_digits is None
             ):
                 return WalkRouteResult(
                     request,
@@ -96,7 +98,7 @@ def normalize_walk_response(
         if len(locations) != 2:
             return unknown("INVALID_RESPONSE_LOCATIONS")
         for row, correlation in zip(locations, (request.origin, request.destination), strict=True):
-            if WalkCoordinate(row["lon"], row["lat"]) != correlation.correlated_location:
+            if not correlation.matches_response_location(WalkCoordinate(row["lon"], row["lat"])):
                 raise ValueError("RESPONSE_ENDPOINT_MISMATCH")
         # Locations in /route echo inputs. Actual matching is separately attested by
         # correlation artifacts + executor IDs above; the echo is not that evidence.
@@ -147,7 +149,12 @@ def normalize_walk_response(
                 expected = correlation.correlated_location
                 if abs(point[0] - expected.lon) > 1e-6 or abs(point[1] - expected.lat) > 1e-6:
                     raise ValueError("GEOMETRY_ENDPOINT_MISMATCH")
-        minimum = envelope.search_complete and bool(envelope.minimum_time_evidence_refs)
+        minimum = (
+            envelope.search_complete
+            and bool(envelope.minimum_time_evidence_refs)
+            and request.origin.coordinate_precision_digits is None
+            and request.destination.coordinate_precision_digits is None
+        )
         return WalkRouteResult(
             request,
             "reachable",

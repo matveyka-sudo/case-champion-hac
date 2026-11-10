@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from a2_engine import (
+    ValhallaCorrelation,
     analyze_car_responses,
     assemble_urban_od_week,
     calculate_urban_tau,
@@ -21,7 +22,20 @@ from a2_engine import (
 
 def stable(x: Any) -> Any:
     if dataclasses.is_dataclass(x):
-        return {f.name: stable(getattr(x, f.name)) for f in dataclasses.fields(x)}
+        # Historical exact-correlation controls predate the two optional fields.
+        # Retain the original result and request identities when neither is used.
+        additions = (
+            {"coordinate_precision_digits", "serialization_evidence_refs"}
+            if isinstance(x, ValhallaCorrelation)
+            and x.coordinate_precision_digits is None
+            and not x.serialization_evidence_refs
+            else set()
+        )
+        return {
+            f.name: stable(getattr(x, f.name))
+            for f in dataclasses.fields(x)
+            if f.name not in additions
+        }
     if isinstance(x, Mapping):
         return {k: stable(v) for k, v in x.items()}
     if isinstance(x, (tuple, list)):
