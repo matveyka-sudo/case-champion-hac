@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <limits>
 #include <sstream>
 #include <vector>
 
@@ -62,11 +63,12 @@ int main(int argc, char** argv) {
     if (locations.size() != 2) throw std::runtime_error("two locations required");
     auto correlations = loki::Search(locations, reader, cost);
     std::map<uint64_t, uint64_t> starts;
+    std::map<uint64_t, std::vector<uint64_t>> incoming, inverse_hierarchy;
     std::vector<GraphId> tiles;
     for (auto id : reader.GetTileSet()) tiles.push_back(id);
     std::sort(tiles.begin(), tiles.end());
     uint64_t all_nodes = 0, all_edges = 0, retained_edges = 0, transitions = 0;
-    if (argc == 3) std::cout << "{\"kind\":\"header\",\"schema\":1,\"model\":\"valhalla-3.5.1-binary32-edge-seconds-zero-turn-relaxation\"}\n";
+    if (argc == 3) std::cout << "{\"kind\":\"header\",\"schema\":2,\"model\":\"valhalla-3.5.1-binary32-edge-seconds-minimum-turn-relaxation\"}\n";
     for (auto tile_id : tiles) {
       auto tile = reader.GetGraphTile(tile_id);
       if (!tile) throw std::runtime_error("missing inventoried tile");
@@ -83,6 +85,7 @@ int main(int argc, char** argv) {
             throw std::runtime_error("duplicate edge ownership");
           ++seen_edges;
           auto edge = tile->directededge(edge_id);
+          incoming[edge->endnode().value].push_back(edge_id.value);
           bool keep = retained(edge, cost);
           if (!reader.GetGraphTile(edge->endnode())) throw std::runtime_error("missing edge end tile");
           float seconds = keep ? cost->EdgeCost(edge, tile).secs : 0;
@@ -96,6 +99,7 @@ int main(int argc, char** argv) {
           auto target = tile->transition(node->transition_index() + j)->endnode();
           if (!reader.GetGraphTile(target)) throw std::runtime_error("missing hierarchy tile");
           ++transitions;
+          inverse_hierarchy[target.value].push_back(node_id.value);
           if (argc == 3) std::cout << "{\"kind\":\"transition\",\"from\":" << node_id.value
             << ",\"to\":" << target.value << "}\n";
         }
@@ -104,6 +108,36 @@ int main(int argc, char** argv) {
         throw std::runtime_error("edge ownership is not exhaustive");
       if (argc == 3) std::cout << "{\"kind\":\"tile\",\"id\":" << tile_id.value
         << ",\"nodes\":" << tile->header()->nodecount() << ",\"edges\":" << seen_edges << "}\n";
+    }
+    // A complete immediate-predecessor relaxation: all incoming edges are kept,
+    // even if their access/history would make them inadmissible. Hierarchy arcs
+    // are directed, so gather their actual inverse roster rather than assuming
+    // that transitions happen to be symmetric.
+    if (argc == 3) {
+      for (const auto& entry : starts) {
+        GraphId edge_id(entry.first), node_id(entry.second);
+        auto tile = reader.GetGraphTile(edge_id);
+        auto edge = tile->directededge(edge_id);
+        if (!retained(edge, cost)) continue;
+        auto node = tile->node(node_id);
+        std::vector<uint64_t> predecessors = incoming[node_id.value];
+        for (auto alias : inverse_hierarchy[node_id.value])
+          predecessors.insert(predecessors.end(), incoming[alias].begin(), incoming[alias].end());
+        float minimum = std::numeric_limits<float>::infinity();
+        for (auto predecessor : predecessors) {
+          GraphId predecessor_id(predecessor);
+          auto predecessor_tile = reader.GetGraphTile(predecessor_id);
+          auto predecessor_edge = predecessor_tile->directededge(predecessor_id);
+          EdgeLabel label(kInvalidLabel, predecessor_id, predecessor_edge, Cost{}, 0,
+                          sif::TravelMode::kPedestrian, 0, kInvalidRestriction,
+                          false, false, InternalTurn::kNoTurn);
+          minimum = std::min(minimum, cost->TransitionCost(edge, node, label).secs);
+        }
+        if (predecessors.empty()) minimum = 0;
+        std::cout << "{\"kind\":\"turn_lower\",\"edge\":" << edge_id.value
+          << ",\"seconds_bits\":" << bits(minimum) << ",\"predecessors\":"
+          << predecessors.size() << "}\n";
+      }
     }
     for (size_t endpoint = 0; endpoint < locations.size(); ++endpoint) {
       auto found = correlations.find(locations[endpoint]);

@@ -23,8 +23,14 @@ constraints in the relaxed domain. The pinned pedestrian `Allowed` rejects
 shortcuts: enumerating all non-shortcut edges on all levels preserves its real
 traversals, rather than assuming local-level edges alone are complete.
 
-Every retained edge receives the actual library's `EdgeCost(...).secs`; turns
-receive zero. The exporter records binary32 bits, not a decimal rendering. A
+Every retained edge receives the actual library's `EdgeCost(...).secs`. The first
+schema used zero turn lower bounds. Schema 2 computes each outgoing edge's minimum
+`TransitionCost.secs` over every incoming edge ending at that node, including every
+actual inverse hierarchy transition. Inadmissible predecessors remain included,
+so the minimum is no greater than any admissible turn. The checker independently
+reconstructs the predecessor counts from the complete edge/transition inventory.
+Initial fragments and zero-length terminal fragments do not invent a turn.
+The exporter records binary32 bits, not a decimal rendering. A
 native `loki::Search` provides binary64 projection and split-edge percentages;
 both its normal and filtered retry candidates are retained. Partial traversal
 weights execute the library's multiplication with the same binary32 fraction
@@ -50,21 +56,32 @@ helper rejects dated requests, non-foot profiles and access/oneway overrides.
 Physical connectors must be added once at each end. Physical access-to-native
 projection offsets must be explicitly known, and the physical alternative roster
 must be independently complete. The checker defaults both obligations to unknown.
-An incomplete physical roster supplies no global physical lower bound. Unknown
+Scalar connector/offset weights can describe the selected candidate's feasible
+upper bound. They cannot shift a minimum over multiple alternatives: route A may
+have network time 1 and access time 100, while B has network time 2 and access 0.
+This helper always leaves the physical lower bound null and physical minimum false;
+it requires a future solver with separately weighted physical alternatives before
+any promotion. A complete-roster flag cannot discharge that obligation. Unknown
 offsets supply no feasible physical upper bound. Six-decimal `/locate` output is
 never promoted to an exact match. A full category/territory index also needs its
 own complete destination/population inputs; this module cannot establish those.
 
 The executor `examples/audit_source_bound_walk.py` verifies every original tile
-checksum and the exact tile-file roster, pins source-file hashes, records the
-exporter source, binary, request, artifact, graph manifest and output hashes,
-executes export and replay, then writes a receipt with `index: null`.
+checksum and exact tile-file roster, config/profile hashes and tile-directory
+binding. Extract archives, remote/compressed/symlink tile sources are rejected.
+Each execution reserves an exclusive `runs/<id>` directory, copies its own binary,
+native/checker/executor source, compiler manifest and inputs, pins the builder image
+ID and library hash, and preserves failed partial runs. Existing run IDs or files
+are never overwritten. The receipt records the Git commit and file hashes with
+`index: null`. Earlier prototype outputs written in place are not immutable
+execution receipts; use a fresh run from this executor for review.
 
 ```sh
 PYTHONPATH=packages/engine/src python packages/engine/examples/audit_source_bound_walk.py \
   --graph-dir /path/to/clean-graph \
   --output-dir /path/to/source-bound-walk \
-  --artifact /path/to/walk-pilot-artifact.json
+  --artifact /path/to/walk-pilot-artifact.json \
+  --run-id unique-review-id
 ```
 
 The expected source files under the output directory's `source/` come from the

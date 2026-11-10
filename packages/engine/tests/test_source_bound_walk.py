@@ -9,6 +9,7 @@ from typing import Any
 
 import pytest
 from a2_engine.urban.walk.source_bound import (
+    NativeWalkCandidate,
     binary_fraction,
     check_native_walk_bounds,
     load_native_walk_export,
@@ -135,7 +136,7 @@ def test_positive_turn_gap_does_not_certify_minimum_or_round_towards_equality() 
     )
     assert result.network_lower_seconds == Fraction(5, 2)
     assert result.network_upper_seconds == Fraction(11, 4)
-    assert result.physical_lower_seconds == Fraction(2953, 100)
+    assert result.physical_lower_seconds is None
     assert result.physical_upper_seconds == Fraction(2978, 100)
     assert not result.network_minimum_proven and not result.physical_minimum_proven
 
@@ -156,6 +157,7 @@ def test_network_equality_cannot_bypass_physical_offsets_or_entrance_roster() ->
     assert result.reasons == (
         "PHYSICAL_CORRELATION_OFFSET_UNCONFIRMED",
         "PHYSICAL_ENDPOINT_ALTERNATIVES_UNCONFIRMED",
+        "PHYSICAL_ENDPOINT_WEIGHTS_NOT_BOUND",
     )
     complete = check_native_walk_bounds(
         candidate,
@@ -166,8 +168,10 @@ def test_network_equality_cannot_bypass_physical_offsets_or_entrance_roster() ->
         destination_offset_seconds=Fraction(2),
         physical_endpoint_inventory_complete=True,
     )
-    assert complete.physical_minimum_proven
-    assert complete.physical_lower_seconds == complete.physical_upper_seconds == Fraction(65, 2)
+    assert not complete.physical_minimum_proven
+    assert complete.physical_lower_seconds is None
+    assert complete.physical_upper_seconds == Fraction(65, 2)
+    assert complete.reasons == ("PHYSICAL_ENDPOINT_WEIGHTS_NOT_BOUND",)
 
 
 def test_incomplete_replay_wrong_fraction_and_optimistic_upper_are_rejected() -> None:
@@ -282,3 +286,115 @@ def test_exact_native_search_matches_independent_simple_path_enumeration() -> No
             load_native_walk_export(text, expected_sha256=digest)
         )
         assert candidate.lower_seconds == min(totals), seed
+
+
+def minimum_turn_records() -> list[dict[str, Any]]:
+    rows = records()
+    rows[0] = {
+        "kind": "header",
+        "schema": 2,
+        "model": "valhalla-3.5.1-binary32-edge-seconds-minimum-turn-relaxation",
+    }
+    rows[-1:-1] = [
+        {
+            "kind": "edge",
+            "id": 13,
+            "from": 3,
+            "to": 1,
+            "retained": True,
+            "seconds_bits": bits(10),
+            "length": 10,
+        },
+        *[
+            {"kind": "turn_lower", "edge": edge, "seconds_bits": bits(weight), "predecessors": 1}
+            for edge, weight in ((11, 5), (12, 0.25), (13, 0))
+        ],
+    ]
+    for row in rows:
+        if row["kind"] in ("footer", "tile"):
+            row["edges"] = 3
+        if row["kind"] == "footer":
+            row["retained_edges"] = 3
+    return rows
+
+
+def test_minimum_turn_tightening_and_initial_partial_exemption() -> None:
+    text, digest = content(minimum_turn_records())
+    candidate = solve_native_walk_relaxation(load_native_walk_export(text, expected_sha256=digest))
+    assert candidate.lower_seconds == Fraction(11, 4)
+    assert candidate.lower_turn_seconds == (Fraction(), Fraction(1, 4))
+    _, replay = candidate_replay(0.25)
+    result = check_native_walk_bounds(
+        candidate,
+        replay,
+        origin_connector_seconds=Fraction(),
+        destination_connector_seconds=Fraction(),
+    )
+    assert result.network_minimum_proven and not result.physical_minimum_proven
+
+
+@pytest.mark.parametrize("endpoint", [0, 1])
+def test_node_snapped_endpoints_do_not_invent_turns(endpoint: int) -> None:
+    rows = minimum_turn_records()
+    rows[6 + endpoint]["percent_bits"] = bits(1 - endpoint, double=True)
+    rows[6 + endpoint]["partial_seconds_bits"] = bits(0)
+    text, digest = content(rows)
+    candidate = solve_native_walk_relaxation(load_native_walk_export(text, expected_sha256=digest))
+    assert candidate.lower_turn_seconds == (Fraction(), Fraction())
+    assert candidate.lower_seconds == (Fraction(3, 2) if endpoint == 0 else Fraction(1))
+
+
+def test_omitted_minimum_turn_roster_or_excessive_lower_weight_is_rejected() -> None:
+    rows = minimum_turn_records()
+    rows.pop(-2)
+    text, digest = content(rows)
+    with pytest.raises(ValueError, match="MINIMUM_TURN_INVENTORY_INCOMPLETE"):
+        load_native_walk_export(text, expected_sha256=digest)
+    rows = minimum_turn_records()
+    next(row for row in rows if row["kind"] == "turn_lower" and row["edge"] == 12)[
+        "seconds_bits"
+    ] = bits(0.5)
+    text, digest = content(rows)
+    candidate = solve_native_walk_relaxation(load_native_walk_export(text, expected_sha256=digest))
+    _, replay = candidate_replay(0.25)
+    with pytest.raises(ValueError, match="MINIMUM_TURN_EXCEEDS_FEASIBLE_TURN"):
+        check_native_walk_bounds(
+            candidate,
+            replay,
+            origin_connector_seconds=Fraction(),
+            destination_connector_seconds=Fraction(),
+        )
+
+
+def test_candidate_specific_access_cannot_shift_a_global_network_minimum() -> None:
+    # Alternative A is network-minimal (1s) but has 100s access; B would take
+    # network 2s + access 0s. A complete roster does not prove common offsets.
+    candidate = NativeWalkCandidate(
+        0, 0, ((11, bits(1)),), Fraction(1), (Fraction(1),), (Fraction(),)
+    )
+    replay = "\n".join(
+        json.dumps(row)
+        for row in [
+            {
+                "kind": "replay",
+                "id": 11,
+                "fraction_bits": bits(1),
+                "edge_seconds_bits": bits(1),
+                "turn_seconds_bits": bits(0),
+            },
+            {"kind": "replay_footer", "feasible": True, "edges": 1},
+        ]
+    )
+    result = check_native_walk_bounds(
+        candidate,
+        replay,
+        origin_connector_seconds=Fraction(),
+        destination_connector_seconds=Fraction(),
+        origin_offset_seconds=Fraction(100),
+        destination_offset_seconds=Fraction(),
+        physical_endpoint_inventory_complete=True,
+    )
+    assert result.network_minimum_proven
+    assert result.physical_upper_seconds == 101
+    assert result.physical_lower_seconds is None and not result.physical_minimum_proven
+    assert result.reasons == ("PHYSICAL_ENDPOINT_WEIGHTS_NOT_BOUND",)

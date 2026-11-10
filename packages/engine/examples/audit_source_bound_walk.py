@@ -1,13 +1,13 @@
-"""Execute the pinned native graph inventory and replay against real local tiles.
-
-Outputs live outside the repository. The receipt deliberately keeps index null:
-source-bound network bounds cannot replace physical access or destination coverage.
-"""
+"""Execute a pinned native graph audit into an exclusive, preserved run directory."""
 
 import argparse
 import hashlib
 import json
+import re
+import shutil
 import subprocess
+import uuid
+from collections.abc import Callable
 from dataclasses import asdict
 from fractions import Fraction
 from pathlib import Path
@@ -31,20 +31,61 @@ def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--graph-dir", type=Path, required=True)
-    parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--artifact", type=Path, required=True)
-    parser.add_argument("--builder-image", default="waydex-walk-proof-builder:3.5.1")
-    args = parser.parse_args()
-    output: Path = args.output_dir.resolve()
-    graph_dir: Path = args.graph_dir.resolve()
-    output.mkdir(parents=True, exist_ok=True)
-    artifact: dict[str, Any] = json.loads(args.artifact.read_text())
-    manifest = json.loads((graph_dir / "valhalla-build-manifest.json").read_text())
+def write_new(path: Path, text: str) -> None:
+    with path.open("x") as stream:
+        stream.write(text)
+
+
+def copy_new(source: Path, target: Path) -> None:
+    with source.open("rb") as input_stream, target.open("xb") as output_stream:
+        shutil.copyfileobj(input_stream, output_stream)
+    target.chmod(source.stat().st_mode)
+
+
+def reserve_run_directory(root: Path, run_id: str | None = None) -> Path:
+    identifier = run_id or uuid.uuid4().hex
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", identifier):
+        raise ValueError("SIMPLE_RUN_ID_REQUIRED")
+    runs = root / "runs"
+    runs.mkdir(parents=True, exist_ok=True)
+    output = runs / identifier
+    output.mkdir(exist_ok=False)
+    return output
+
+
+def validate_graph_inputs(graph_dir: Path, artifact: dict[str, Any]) -> dict[str, Any]:
+    """Reject redirected/extract/remote sources before invoking any subprocess."""
+    if any(path.is_symlink() for path in (graph_dir / "tiles").rglob("*")) or any(
+        (graph_dir / name).is_symlink()
+        for name in ("valhalla.json", "walking-profile.json", "valhalla-build-manifest.json")
+    ):
+        raise ValueError("SYMLINK_TILE_SOURCE_FORBIDDEN")
+    manifest: dict[str, Any] = json.loads((graph_dir / "valhalla-build-manifest.json").read_text())
     if manifest["image_id"] != PINNED_IMAGE:
         raise ValueError("UNPINNED_VALHALLA_IMAGE")
+    if digest(graph_dir / "valhalla.json") != manifest["config_sha256"]:
+        raise ValueError("VALHALLA_CONFIG_CHANGED")
+    if digest(graph_dir / "walking-profile.json") != manifest["profile_sha256"]:
+        raise ValueError("WALKING_PROFILE_CHANGED")
+    profile = json.loads((graph_dir / "walking-profile.json").read_text())
+    if profile["pedestrian_options"] != json.loads(artifact["build"]["pedestrian_options_json"]):
+        raise ValueError("ARTIFACT_PROFILE_MISMATCH")
+    mjolnir = json.loads((graph_dir / "valhalla.json").read_text())["mjolnir"]
+    if mjolnir.get("tile_dir") != "/data/tiles" or any(
+        value for key, value in mjolnir.items() if key.startswith("tile_url")
+    ):
+        raise ValueError("ALTERNATIVE_TILE_SOURCE_FORBIDDEN")
+    for key in ("tile_extract", "traffic_extract"):
+        value = mjolnir.get(key)
+        if value:
+            path = Path(value)
+            if not path.is_relative_to("/data") or ".." in path.parts:
+                raise ValueError("ALTERNATIVE_TILE_SOURCE_FORBIDDEN")
+            alternate = graph_dir / path.relative_to("/data")
+            if alternate.exists() or alternate.is_symlink():
+                raise ValueError("UNEXPECTED_ALTERNATIVE_TILE_EXTRACT")
+    if list((graph_dir / "tiles").rglob("*.gph.gz")):
+        raise ValueError("UNEXPECTED_COMPRESSED_TILE_SOURCE")
     if {str(path.relative_to(graph_dir)) for path in (graph_dir / "tiles").rglob("*.gph")} != {
         row["path"] for row in manifest["files"]
     }:
@@ -52,9 +93,48 @@ def main() -> None:
     for row in manifest["files"]:
         if digest(graph_dir / row["path"]) != row["sha256"]:
             raise ValueError("SOURCE_TILE_CHANGED:" + row["path"])
+    return manifest
+
+
+def execute(args: argparse.Namespace, output: Path) -> None:
+    assets: Path = args.output_dir.resolve()
+    graph_dir: Path = args.graph_dir.resolve()
+    package = Path(__file__).parents[1]
+    for source, name in (
+        (assets / "source-bound-walk", "source-bound-walk"),
+        (assets / "compiler-manifest.json", "compiler-manifest.json"),
+        (package / "native/source_bound_walk.cc", "source_bound_walk.cc"),
+        (Path(__file__), "audit_source_bound_walk.py"),
+        (package / "src/a2_engine/urban/walk/source_bound.py", "source_bound.py"),
+        (args.artifact, "artifact.json"),
+        (graph_dir / "valhalla.json", "valhalla.json"),
+        (graph_dir / "walking-profile.json", "walking-profile.json"),
+        (graph_dir / "valhalla-build-manifest.json", "build-manifest.json"),
+    ):
+        copy_new(source, output / name)
+    artifact: dict[str, Any] = json.loads((output / "artifact.json").read_text())
+    manifest = validate_graph_inputs(graph_dir, artifact)
+    if digest(output / "valhalla.json") != manifest["config_sha256"]:
+        raise ValueError("CONFIG_SNAPSHOT_CHANGED")
+    if digest(output / "walking-profile.json") != manifest["profile_sha256"] or (
+        digest(output / "build-manifest.json") != digest(graph_dir / "valhalla-build-manifest.json")
+    ):
+        raise ValueError("GRAPH_MANIFEST_PROFILE_SNAPSHOT_CHANGED")
+    (output / "source").mkdir()
     for name, expected in SOURCE_HASHES.items():
+        copy_new(assets / "source" / name, output / "source" / name)
         if digest(output / "source" / name) != expected:
             raise ValueError("SOURCE_INVENTORY_CHANGED:" + name)
+    compiler = json.loads((output / "compiler-manifest.json").read_text())
+    if compiler["source_sha256"] != digest(output / "source_bound_walk.cc") or compiler[
+        "binary_sha256"
+    ] != digest(output / "source-bound-walk"):
+        raise ValueError("COMPILER_SOURCE_BINARY_BINDING_CHANGED")
+    builder_id = subprocess.check_output(
+        ["docker", "image", "inspect", "--format", "{{.Id}}", args.builder_image], text=True
+    ).strip()
+    if builder_id != compiler["builder_image_id"]:
+        raise ValueError("COMPILER_BUILDER_IMAGE_CHANGED")
     library_hashes = [
         subprocess.check_output(
             [
@@ -72,7 +152,7 @@ def main() -> None:
             ],
             text=True,
         ).split()[0]
-        for image in (args.builder_image, "ghcr.io/valhalla/valhalla@" + PINNED_IMAGE)
+        for image in (builder_id, "ghcr.io/valhalla/valhalla@" + PINNED_IMAGE)
     ]
     if library_hashes[0] != library_hashes[1]:
         raise ValueError("BUILDER_VALHALLA_LIBRARY_CHANGED")
@@ -84,11 +164,13 @@ def main() -> None:
             for row in artifact["correlations"]
         ],
     }
-    (output / "request.json").write_text(json.dumps(request, separators=(",", ":")))
+    write_new(output / "request.json", json.dumps(request, separators=(",", ":")))
     base = [
         "docker",
         "run",
         "--rm",
+        "--pull",
+        "never",
         "--network",
         "none",
         "--entrypoint",
@@ -96,13 +178,16 @@ def main() -> None:
         "--mount",
         f"type=bind,source={graph_dir},target=/data,readonly",
         "--mount",
-        f"type=bind,source={output},target=/proof",
-        args.builder_image,
-        "/data/valhalla.json",
+        f"type=bind,source={output},target=/proof,readonly",
+        builder_id,
+        "/proof/valhalla.json",
         "/proof/request.json",
     ]
-    with (output / "export.jsonl").open("w") as stream:
-        subprocess.run(base, stdout=stream, check=True)
+    with (
+        (output / "export.jsonl").open("x") as stream,
+        (output / "export.stderr").open("x") as errors,
+    ):
+        subprocess.run(base, stdout=stream, stderr=errors, check=True)
     export = (output / "export.jsonl").read_text()
     graph = load_native_walk_export(export, expected_sha256=digest(output / "export.jsonl"))
     expected_tiles = set()
@@ -112,10 +197,11 @@ def main() -> None:
     if graph.tile_ids != expected_tiles:
         raise ValueError("NATIVE_TILE_INVENTORY_DIFFERS_FROM_SOURCE")
     candidate = solve_native_walk_relaxation(graph)
-    (output / "candidate.json").write_text(candidate.replay_json())
+    write_new(output / "candidate.json", candidate.replay_json())
     replay_run = subprocess.run(base + ["/proof/candidate.json"], capture_output=True, text=True)
-    (output / "replay.jsonl").write_text(replay_run.stdout)
-    (output / "replay.stderr").write_text(replay_run.stderr)
+    write_new(output / "replay.jsonl", replay_run.stdout)
+    write_new(output / "replay.stderr", replay_run.stderr)
+    validate_graph_inputs(graph_dir, artifact)
     connectors = artifact["connectors"]
     result = check_native_walk_bounds(
         candidate,
@@ -124,16 +210,15 @@ def main() -> None:
         destination_connector_seconds=Fraction(str(connectors[1]["seconds"])),
     )
     receipt = {
+        "git_commit": subprocess.check_output(
+            ["git", "-C", str(package.parents[1]), "rev-parse", "HEAD"], text=True
+        ).strip(),
         "model": "exact additive binary32 Valhalla3.5.1 edge/transition weights; static time=0",
-        "scope": "all pinned tiles, all hierarchy levels, complete native Loki result incl filtered retry edges",
+        "scope": "all pinned tiles/levels; native Loki endpoint set incl filtered retry edges",
         "runtime_base_image": PINNED_IMAGE,
+        "builder_image_id": builder_id,
         "runtime_library_sha256": library_hashes[0],
-        "exporter_source_sha256": digest(Path(__file__).parents[1] / "native/source_bound_walk.cc"),
-        "binary_sha256": digest(output / "source-bound-walk"),
-        "build_manifest_sha256": digest(graph_dir / "valhalla-build-manifest.json"),
-        "artifact_sha256": digest(args.artifact),
-        "request_sha256": digest(output / "request.json"),
-        "export_sha256": graph.content_sha256,
+        "files_sha256": {path.name: digest(path) for path in output.iterdir() if path.is_file()},
         "source_inventory": SOURCE_HASHES,
         "nodes": len(graph.nodes),
         "edges": len(graph.edges),
@@ -141,7 +226,6 @@ def main() -> None:
         "endpoints": len(graph.endpoints),
         "native_endpoint_inventory": [asdict(endpoint) for endpoint in graph.endpoints],
         "native_replay_exit_code": replay_run.returncode,
-        "native_replay_stderr": replay_run.stderr,
         "result": asdict(result),
         "network_lower_seconds_approx": float(result.network_lower_seconds),
         "network_upper_seconds_approx": (
@@ -151,14 +235,14 @@ def main() -> None:
         ),
         "index": None,
         "limitations": [
-            "Loki's finite search is not an exhaustive physical entrance inventory.",
-            "Physical access-to-projection offsets remain unconfirmed.",
-            "HTTP millisecond summaries and accumulated floats are not the exact additive objective.",
-            "No complete destination catalog or population territory score follows from this proof.",
+            "Loki finite search is not an exhaustive physical entrance inventory.",
+            "Physical endpoint weights and projection offsets remain unbound.",
+            "HTTP summaries/accumulated floats are not this exact additive objective.",
+            "No complete destination/population scope follows from this audit.",
         ],
     }
-    (output / "receipt.json").write_text(
-        json.dumps(receipt, ensure_ascii=False, indent=2, default=str)
+    write_new(
+        output / "receipt.json", json.dumps(receipt, ensure_ascii=False, indent=2, default=str)
     )
     print(
         json.dumps(
@@ -166,6 +250,31 @@ def main() -> None:
             default=str,
         )
     )
+
+
+def run_audit(
+    args: argparse.Namespace, executor: Callable[[argparse.Namespace, Path], None] = execute
+) -> Path:
+    output = reserve_run_directory(args.output_dir.resolve(), args.run_id)
+    try:
+        executor(args, output)
+    except Exception as error:
+        write_new(
+            output / "failure.json",
+            json.dumps({"error_type": type(error).__name__, "error": str(error)}),
+        )
+        raise
+    return output
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--graph-dir", type=Path, required=True)
+    parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--artifact", type=Path, required=True)
+    parser.add_argument("--builder-image", default="waydex-walk-proof-builder:3.5.1")
+    parser.add_argument("--run-id")
+    run_audit(parser.parse_args())
 
 
 if __name__ == "__main__":

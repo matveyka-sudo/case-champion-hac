@@ -11,7 +11,7 @@ import hashlib
 import json
 import math
 import struct
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from fractions import Fraction
 from heapq import heappop, heappush
 from typing import Any
@@ -37,6 +37,7 @@ class NativeEdge:
     end: int
     seconds: Fraction
     retained: bool
+    minimum_turn_seconds: Fraction = Fraction()
 
 
 @dataclass(frozen=True)
@@ -68,6 +69,7 @@ class NativeWalkCandidate:
     traversals: tuple[tuple[int, int], ...]
     lower_seconds: Fraction
     edge_seconds: tuple[Fraction, ...]
+    lower_turn_seconds: tuple[Fraction, ...]
 
     def replay_json(self) -> str:
         return json.dumps(
@@ -103,22 +105,22 @@ def load_native_walk_export(content: str, *, expected_sha256: str) -> NativeWalk
     if digest != expected_sha256:
         raise ValueError("NATIVE_EXPORT_CONTENT_CHANGED")
     rows: list[dict[str, Any]] = [json.loads(line) for line in content.splitlines()]
-    if (
-        not rows
-        or rows[0]
-        != {
-            "kind": "header",
-            "schema": 1,
-            "model": "valhalla-3.5.1-binary32-edge-seconds-zero-turn-relaxation",
-        }
-        or rows[-1].get("kind") != "footer"
-    ):
+    headers = [
+        {"kind": "header", "schema": schema, "model": model}
+        for schema, model in (
+            (1, "valhalla-3.5.1-binary32-edge-seconds-zero-turn-relaxation"),
+            (2, "valhalla-3.5.1-binary32-edge-seconds-minimum-turn-relaxation"),
+        )
+    ]
+    if not rows or rows[0] not in headers or rows[-1].get("kind") != "footer":
         raise ValueError("INCOMPLETE_NATIVE_EXPORT")
     nodes: set[int] = set()
     edges: dict[int, NativeEdge] = {}
     transitions: set[tuple[int, int]] = set()
     endpoints: dict[tuple[int, int], NativeEndpoint] = {}
     tiles: dict[int, tuple[int, int]] = {}
+    lower_turns: dict[int, Fraction] = {}
+    predecessor_counts: dict[int, int] = {}
     for row in rows[1:-1]:
         kind = row["kind"]
         if kind == "node":
@@ -166,6 +168,11 @@ def load_native_walk_export(content: str, *, expected_sha256: str) -> NativeWalk
             if row["id"] in tiles:
                 raise ValueError("DUPLICATE_NATIVE_TILE")
             tiles[row["id"]] = (row["nodes"], row["edges"])
+        elif kind == "turn_lower":
+            if row["edge"] in lower_turns or row["predecessors"] < 0:
+                raise ValueError("INVALID_MINIMUM_TURN_ROSTER")
+            lower_turns[row["edge"]] = binary_fraction(row["seconds_bits"])
+            predecessor_counts[row["edge"]] = row["predecessors"]
         else:
             raise ValueError("UNSUPPORTED_NATIVE_RECORD")
     footer = rows[-1]
@@ -196,6 +203,30 @@ def load_native_walk_export(content: str, *, expected_sha256: str) -> NativeWalk
             raise ValueError("NATIVE_ENDPOINT_INVENTORY_INCOMPLETE")
     if any(e.edge_id not in edges for e in endpoints.values()):
         raise ValueError("UNKNOWN_ENDPOINT_EDGE")
+    if rows[0]["schema"] == 2:
+        if lower_turns.keys() != {e.edge_id for e in edges.values() if e.retained}:
+            raise ValueError("MINIMUM_TURN_INVENTORY_INCOMPLETE")
+        incoming_counts: dict[int, int] = {}
+        inverse_hierarchy: dict[int, list[int]] = {}
+        for edge in edges.values():
+            incoming_counts[edge.end] = incoming_counts.get(edge.end, 0) + 1
+        for start, end in transitions:
+            inverse_hierarchy.setdefault(end, []).append(start)
+        for edge in edges.values():
+            if edge.retained:
+                expected_count = incoming_counts.get(edge.start, 0) + sum(
+                    incoming_counts.get(alias, 0) for alias in inverse_hierarchy.get(edge.start, [])
+                )
+                if predecessor_counts[edge.edge_id] != expected_count:
+                    raise ValueError("MINIMUM_TURN_PREDECESSOR_ROSTER_INCOMPLETE")
+                if not expected_count and lower_turns[edge.edge_id] != 0:
+                    raise ValueError("MINIMUM_TURN_WITHOUT_PREDECESSOR")
+        edges = {
+            key: replace(edge, minimum_turn_seconds=lower_turns.get(key, Fraction()))
+            for key, edge in edges.items()
+        }
+    elif lower_turns:
+        raise ValueError("UNEXPECTED_MINIMUM_TURN_INVENTORY")
     for match in endpoints.values():
         edge = edges[match.edge_id]
         if edge.retained:
@@ -218,10 +249,31 @@ def load_native_walk_export(content: str, *, expected_sha256: str) -> NativeWalk
 def solve_native_walk_relaxation(graph: NativeWalkExport) -> NativeWalkCandidate:
     """All inventoried edges/zero-time hierarchy transitions; exact predecessors."""
     edges = {edge.edge_id: edge for edge in graph.edges}
+    # A node-snapped origin traverses none of its correlated incoming edge.
+    # Waiving turns on this whole hierarchy-equivalent node set is safe even
+    # when a relaxed path revisits the node later.
+    zero_origin_nodes = {
+        edges[e.edge_id].end
+        for e in graph.endpoints
+        if e.endpoint == 0 and e.percent == 1 and edges[e.edge_id].retained
+    }
+    changed = True
+    while changed:
+        changed = False
+        for start, end in graph.transitions:
+            if start in zero_origin_nodes and end not in zero_origin_nodes:
+                zero_origin_nodes.add(end)
+                changed = True
+
+    def lower_turn(edge: NativeEdge) -> Fraction:
+        return Fraction() if edge.start in zero_origin_nodes else edge.minimum_turn_seconds
+
     outgoing: dict[int, list[tuple[int, int | None, Fraction]]] = {}
     for edge in graph.edges:
         if edge.retained:
-            outgoing.setdefault(edge.start, []).append((edge.end, edge.edge_id, edge.seconds))
+            outgoing.setdefault(edge.start, []).append(
+                (edge.end, edge.edge_id, edge.seconds + lower_turn(edge))
+            )
     for start, end in graph.transitions:
         outgoing.setdefault(start, []).append((end, None, Fraction()))
     origins = [e for e in graph.endpoints if e.endpoint == 0 and edges[e.edge_id].retained]
@@ -268,11 +320,18 @@ def solve_native_walk_relaxation(graph: NativeWalkExport) -> NativeWalkCandidate
             origin.index,
             final.index,
             tuple(traversals),
-            distances[edges[final.edge_id].start] + final.partial_seconds,
+            distances[edges[final.edge_id].start]
+            + final.partial_seconds
+            + (lower_turn(edges[final.edge_id]) if final.percent > 0 else Fraction()),
             (
                 origin.partial_seconds,
                 *(edges[edge_id].seconds for edge_id, _ in reversed(middle)),
                 final.partial_seconds,
+            ),
+            (
+                Fraction(),
+                *(lower_turn(edges[edge_id]) for edge_id, _ in reversed(middle)),
+                lower_turn(edges[final.edge_id]) if final.percent > 0 else Fraction(),
             ),
         )
         if best is None or candidate.lower_seconds < best.lower_seconds:
@@ -287,7 +346,12 @@ def solve_native_walk_relaxation(graph: NativeWalkExport) -> NativeWalkCandidate
                     _float_bits(edges[origin.edge_id].seconds * binary_fraction(fraction_bits))
                 )
                 candidate = NativeWalkCandidate(
-                    origin.index, final.index, ((origin.edge_id, fraction_bits),), weight, (weight,)
+                    origin.index,
+                    final.index,
+                    ((origin.edge_id, fraction_bits),),
+                    weight,
+                    (weight,),
+                    (Fraction(),),
                 )
                 if best is None or candidate.lower_seconds < best.lower_seconds:
                     best = candidate
@@ -306,11 +370,13 @@ def check_native_walk_bounds(
     destination_offset_seconds: Fraction | None = None,
     physical_endpoint_inventory_complete: bool = False,
 ) -> NativeWalkBounds:
-    """Physical minimum requires exact equality, known offsets and complete access.
+    """Check network bounds and, optionally, one physical candidate's upper bound.
 
-    Completeness is an external source obligation and defaults to false. Positive
-    connector weights occur exactly once on each side. Unknown offsets are zero
-    only in the relaxation, because a nonnegative unknown has that lower bound.
+    Scalar connector/offset weights describe only the selected candidate. They
+    cannot shift a minimum over multiple endpoint alternatives. This API therefore
+    never certifies a physical lower bound or minimum, even with a complete-roster
+    attestation. A future physical solver must put every alternative's own weights
+    into the shortest-path graph. Positive candidate weights occur once per side.
     """
     for value in (
         origin_connector_seconds,
@@ -337,11 +403,18 @@ def check_native_walk_bounds(
             for row, expected in zip(rows[:-1], candidate.traversals, strict=True)
         ):
             raise ValueError("NATIVE_REPLAY_CANDIDATE_MISMATCH")
-        if sum(candidate.edge_seconds, Fraction()) != candidate.lower_seconds or any(
+        if sum(
+            candidate.edge_seconds + candidate.lower_turn_seconds, Fraction()
+        ) != candidate.lower_seconds or any(
             binary_fraction(row["edge_seconds_bits"]) != expected
             for row, expected in zip(rows[:-1], candidate.edge_seconds, strict=True)
         ):
             raise ValueError("NATIVE_REPLAY_EDGE_WEIGHT_MISMATCH")
+        if any(
+            binary_fraction(row["turn_seconds_bits"]) < lower
+            for row, lower in zip(rows[:-1], candidate.lower_turn_seconds, strict=True)
+        ):
+            raise ValueError("MINIMUM_TURN_EXCEEDS_FEASIBLE_TURN")
         upper = sum(
             (
                 binary_fraction(row["edge_seconds_bits"])
@@ -356,7 +429,6 @@ def check_native_walk_bounds(
         reasons.append("FEASIBLE_NATIVE_REPLAY_UNAVAILABLE")
     connectors = origin_connector_seconds + destination_connector_seconds
     offsets = (origin_offset_seconds or Fraction()) + (destination_offset_seconds or Fraction())
-    lower = connectors + offsets + candidate.lower_seconds
     physical_upper = (
         connectors + offsets + upper
         if upper is not None
@@ -368,16 +440,17 @@ def check_native_walk_bounds(
         reasons.append("PHYSICAL_CORRELATION_OFFSET_UNCONFIRMED")
     if not physical_endpoint_inventory_complete:
         reasons.append("PHYSICAL_ENDPOINT_ALTERNATIVES_UNCONFIRMED")
+    reasons.append("PHYSICAL_ENDPOINT_WEIGHTS_NOT_BOUND")
     minimum = upper == candidate.lower_seconds
     if not minimum:
         reasons.append("ELAPSED_MINIMUM_UNPROVEN")
     return NativeWalkBounds(
         candidate.lower_seconds,
         upper,
-        lower if physical_endpoint_inventory_complete else None,
+        None,
         physical_upper,
         minimum,
-        minimum and physical_upper == lower and physical_endpoint_inventory_complete,
+        False,
         tuple(sorted(reasons)),
         candidate,
     )

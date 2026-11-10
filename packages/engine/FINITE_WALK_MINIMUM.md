@@ -180,12 +180,24 @@ directed edges and six native endpoint alternatives. Its zero-turn relaxed lower
 bound was exactly `2082035309/4194304` seconds (about 496.395900011), while native
 replay of that candidate took `2245613165/4194304` seconds (about 535.395900011).
 The 39-second gap includes actual elapsed transition costs and proves no minimum.
+The subsequent complete minimum-turn relaxation changed the candidate and tightened
+the network interval to exactly `2157902905/4194304` through `2183068729/4194304`
+seconds (about 514.484144449 through 520.484144449), a six-second gap. The lower
+bound minimizes actual elapsed turn costs over every inventoried immediate
+predecessor, including hierarchy aliases; it does not prune restrictions or history.
 These are bounds in the declared native endpoint domain. Physical lower and upper
 bounds remain null because physical entrance completeness and access-to-native
 projection offsets are unconfirmed. The category index remains null.
 
 The executor records immutable tile/source/library/binary/request/export hashes
 in an external receipt; changing a source tile or its roster aborts execution.
+Config/profile hashes and actual directory-only source binding are now checked
+before execution; unexpected extracts, remote/compressed/symlink sources fail.
+Audit outputs use exclusive per-run directories with copied/pinned executable and
+source inputs. The earlier prototype's shared output files were overwritten during
+iteration and must not be presented as immutable receipts. Physical lower bounds
+and minimum flags remain unavailable even if a complete roster is asserted: scalar
+access weights cannot be added to a minimum over alternatives with different costs.
 Raw pilot artifacts live under
 `/Users/kirito/waydex-phase2-runtime/source-bound-walk/`, outside Git. The existing
 HTTP adapter still preserves its observed/best-known result independently and
