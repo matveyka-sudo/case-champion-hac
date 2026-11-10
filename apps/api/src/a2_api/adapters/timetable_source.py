@@ -47,6 +47,19 @@ def verify_timetable_source(
     scope = table.scope
     if scope.footpaths_complete or scope.transfers_complete or scope.continuations_complete:
         raise ValueError("EXHAUSTIVE_CONNECTOR_TRANSFER_CONTINUATION_RECEIPT_REQUIRED")
+    return verify_canonical_timetable(snapshot, table, clock, mode_bindings)
+
+
+def verify_canonical_timetable(
+    snapshot: AcceptedData,
+    table: Timetable,
+    clock: ServiceClock | None,
+    mode_bindings: dict[str, str] | None = None,
+) -> TimetableSourceReceipt:
+    """Verify exact dated canonical services; establishes no graph closure itself."""
+    if clock is None:
+        raise ValueError("EXPLICIT_TIMETABLE_SERVICE_CLOCK_BINDING_REQUIRED")
+    scope = table.scope
     if (scope.snapshot_id, scope.graph_version, scope.calendar_version) != (
         snapshot.snapshot_id,
         snapshot.provenance.graph_version,
