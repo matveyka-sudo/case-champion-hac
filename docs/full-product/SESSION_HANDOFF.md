@@ -1,5 +1,69 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Latest checkpoint — index display and source proof (17:55 MSK)
+
+This section supersedes the older checkpoint below. Full objective remains ACTIVE;
+no dev merge, paid provider call or full-product/nationwide readiness is claimed.
+Root branch is `integration/full-product-20261110`, HEAD before this note
+`3c6da54f842f5d71dc2696b16373c86d7a1720e8`. Six Sol6.1/ultra slots remain available;
+no session restart is required. Latest user priority: numerical indices and colors.
+
+- FRONTEND `2c264fd`, `c30d0cd`, `d66ee83`, `b1f6fd0` integrated. Thresholds:
+  <50 red, [50,75) amber, >=75 green; zero numeric, null neutral, partial dotted
+  map boundary and explicit point/territory label. Saved Alice score references
+  and scenario after-journey inventory display integrated. Root independently ran
+  72 unit tests, build, lint and OpenAPI freshness check: PASS. Native Node24 browser
+  runner import failure was fixed by b1f6fd0. Actual browser suite ran 13 PASS then
+  rejected an invalid synthetic last-return fixture (empty source_refs); owner is
+  correcting fixture without weakening validation. Remaining six browser tests
+  were not run. Chromium needs approved unsandboxed launch on macOS; MCP works for
+  root, other agent profile is locked. These UI fixtures are not real-data E2E.
+- ML2 `0897c1c`, `c317980`, `3b8c26f` integrated and reviewed. Immutable .5:
+  79 accepted/51 quarantined schools, unchanged 216 points, geometry/population/
+  connectors. Official city-serving airport catalogue full ONLY 2026-11-10, partial
+  other November days. Root 271 ML2 tests PASS (14.61s). .3→.5 compatibility receipt
+  SHA794149d884066093bc61f985d899fd895b83b33f3ed0b13cc489a14118b670d0.
+- ML1 `14c2bd6`, `5701b75` integrated; root 1029 engine tests PASS (7.04s).
+  Independent reviewer rechecked all native/physical hashes, 351562 turn pairs,
+  97-edge network optimum, four physical binding alternatives, eight segment
+  lengths and pinned 68777-way canonical access policy. Airport model total
+  13773.627798430474s, H1800, existing category formula0.4971801994143471.
+  This is a canonical-access MODEL partial-point proof, not all physical entrances
+  or city completeness. Ordinary Valhalla actor route uses DIFFERENT 92-edge path;
+  do not attach its polyline to certified97-edge duration. Geometry stays null.
+  Final receipts under external `source-bound-walk/builds/closed-turn-v3-0b4724e549/
+  runs/airport-{network,physical}-final-20261110-v4/`. Numerical production
+  projection/runtime/persistence/UI replay remain pending ML1+BACKEND delivery.
+- BACKEND source guards through4d3e4e9 and private scope428af78 integrated; root24
+  source guard/timetable/runtime tests PASS. Batchb069beb integrated for testing,
+  root58 checkpoint/HTTP/migration/module tests PASS with isolated real PG (28.93s),
+  but acceptance is CHANGES_REQUIRED. Reviewer found approval/retention expiry can
+  pass between separate finalize and succeed, and cache reuse can outlive retained
+  observations. BACKEND is fixing final publication under the same transaction and
+  cache expiry bounds. No production batch enabled. Afterwards BACKEND resumes
+  distinct certified_walk_model executor, recomputing the proof in the child.
+- SCENARIOS owns new bridge/projection and trusted scope wiring in services/scenarios,
+  db/validation, db/scenario_journeys, repositories/runs+scenarios. Root c1d3a93
+  after_journeys extension is CHANGES_REQUIRED until these deliveries land. Root
+  e3ef00d scope factory is integrated. Agent fixes through0c0cc8c remain unmerged:
+  source-bound origins/category/leg modes, valid closest-object changes, missing
+  chain proof. Its latest real PG roundtrip/forgery tests12PASS; full wiring commit
+  and root review pending. Scenario runtime hook registration remains outstanding.
+- DEVOPS preparing separate5192/waydex-full-index-1110 clean deployment with fresh
+  volumes and external proof restoration. Preserve5190/5191 unchanged. Await final
+  certified executor/manifest and source SHA before building. Root reserves this
+  handoff and ACCEPTANCE_MATRIX; DEVOPS owns infra and other build instructions.
+
+Live5191 still fee4112d: root personally repeated school547.404s partial/null UI job
+`a153ec33-7b5e-4251-b177-9582c153f3dd`, stored analysis
+`068ac102-9fe3-4ff3-b018-d85dcf19fa7d`, hash
+`07a075bcce1b27745898d9567c3ed1ae7acb95741218f7b2d70424a53e3b6759`.
+Do not claim new frontend or airport index deployed there. Private test PG env:
+`/Users/kirito/waydex-full-runtime/backend-tests.env`, never print secrets; every
+test creates disposable schemas. Final broad tests/real numerical browser E2E,
+scenario hooks/E2E, available profile runtime integrations, clean restore and PR
+remain required. Continue autonomous work after this checkpoint.
+
 ## Current execution checkpoint (supersedes the historical restart sections below)
 
 The full objective remains ACTIVE. The runtime now grants seven total slots;
