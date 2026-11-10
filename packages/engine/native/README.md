@@ -81,7 +81,8 @@ PYTHONPATH=packages/engine/src python packages/engine/examples/audit_source_boun
   --graph-dir /path/to/clean-graph \
   --output-dir /path/to/source-bound-walk \
   --artifact /path/to/walk-pilot-artifact.json \
-  --run-id unique-review-id
+  --run-id unique-review-id \
+  --exact-turns
 ```
 
 The expected source files under the output directory's `source/` come from the
@@ -90,3 +91,22 @@ The expected source files under the output directory's `source/` come from the
 [search.cc](https://github.com/valhalla/valhalla/blob/3.5.1/src/loki/search.cc).
 The checker verifies an executor receipt; arbitrary caller-supplied hashes do not
 establish source authority. There is no production `WalkResponseEnvelope` adapter.
+
+With `--exact-turns`, a feasible native incumbent authorizes an exact zero-turn
+closed ball at `d <= U`. The checker independently constructs every immediate
+last-edge/outgoing-edge pair at the same node or after one directed hierarchy
+hop. The native pair mode validates actual adjacency and returns exact turn
+weights with a source-scope/plan header. All terminal fragments are absorbing
+alternatives even when their full edge ends outside the ball; direct same-edge
+paths and zero source fragments are handled separately. Exact edge-state search
+retains zero-cost, positive-fraction history and zero cycles. A final successful
+native replay is required before a scoped network minimum is reported. A failed,
+modified or foreign-source/profile incumbent cannot authorize the cut.
+
+The executed pilot's network optimum was `1088850011/2097152` seconds, with 794
+ball nodes, 1927 states and 5640 complete turn pairs. Native actor extraction
+(`observed_route.cc`) confirmed the same positive-fraction edge path as the
+519.204-second HTTP route. Native floating accumulation differs from the exact
+additive optimum by `37/2097152` seconds; that clock is outside this exact-sum claim.
+The complete physical alternative weights/coverage remain unbound, so physical
+minimum and category index remain unavailable.
