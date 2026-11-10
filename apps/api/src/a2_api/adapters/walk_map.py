@@ -74,7 +74,7 @@ def _features(
                     type="Point", coordinates=(destination.location.lon, destination.location.lat)
                 ),
                 geometry_kind="actual",
-                source_refs=destination.source_refs,
+                source_refs=sorted(set(destination.source_refs)),
             )
         )
     return features
