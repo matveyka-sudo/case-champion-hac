@@ -1,0 +1,40 @@
+import { createElement } from "react";
+import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { CalculatedJourneys } from "../src/widgets/CalculatedJourneys";
+import { legGeometryFixture } from "./fixtures/leg-geometry";
+afterEach(cleanup);
+describe("saved calculated journey selection", () => {
+  it("reveals a route with unknown indices and selects its parent point without inventing a ranking", async () => {
+    const result = legGeometryFixture(null), onSelect = vi.fn(), user = userEvent.setup();
+    const view = render(createElement(CalculatedJourneys, { result, onSelect }));
+    expect(onSelect).not.toHaveBeenCalled();
+    await user.click(screen.getByText("Рассчитанные маршруты (1)"));
+    const detail = view.container.querySelector("details")!;
+    expect(detail.open).toBe(true);
+    const choice = screen.getByRole("button", { name: /Синтетический аэропорт/ });
+    expect(choice.textContent).toContain("10 мин · полное время");
+    expect(choice.textContent).toContain("Частичные данные");
+    await user.click(choice);
+    expect(onSelect).toHaveBeenCalledWith({ entity_kind: "sample_point", entity_id: result.journeys[0].point_id });
+    expect(detail.open).toBe(false);
+    expect(result.scores.every((score) => score.value === null)).toBe(true);
+  });
+  it("omits unknown, unlinked and movement-only journeys and never exposes technical destination names", () => {
+    const result = legGeometryFixture(null), route = result.journeys[0];
+    const destination = result.map_data!.features!.find((feature) => feature.entity_id === route.destination_object_id)!;
+    destination.name = destination.entity_id;
+    const view = render(createElement(CalculatedJourneys, { result, onSelect: vi.fn() }));
+    expect(screen.getByText("Объект назначения")).toBeTruthy();
+    route.status = "unknown";
+    view.rerender(createElement(CalculatedJourneys, { result: structuredClone(result), onSelect: vi.fn() }));
+    expect(view.container.textContent).toBe("");
+    route.status = "available"; route.point_id = null;
+    view.rerender(createElement(CalculatedJourneys, { result: structuredClone(result), onSelect: vi.fn() }));
+    expect(view.container.textContent).toBe("");
+    route.point_id = "synthetic-point-2"; route.time_kind = "movement";
+    view.rerender(createElement(CalculatedJourneys, { result: structuredClone(result), onSelect: vi.fn() }));
+    expect(view.container.textContent).toBe("");
+  });
+});

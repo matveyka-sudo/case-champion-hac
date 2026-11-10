@@ -54,6 +54,7 @@ import { scopeAllowsArea, scopeContainsTime, urbanScopeAvailability, type UrbanS
 import { journeyLines, segmentGeometryNotice } from "../api/adapters/journeyGeometry";
 import { urbanReadiness } from "../api/adapters/urbanReadiness";
 import { UrbanReadiness } from "../widgets/UrbanReadiness";
+import { CalculatedJourneys } from "../widgets/CalculatedJourneys";
 import { Select } from "../shared/Select";
 import { DatePicker } from "../shared/DatePicker";
 import { Icon, Wordmark } from "../shared/ui";
@@ -1139,6 +1140,7 @@ export function ApiAtlasPage() {
                   </button>
                 )}
                 {pointOverview && <CalculatedPoints overview={pointOverview} selection={selection} areaSelected={!!("area_id" in result.request && result.request.area_id)} onSelect={chooseCalculatedPoint} />}
+                {!scenarioView && <CalculatedJourneys key={result.analysis_id} result={result} onSelect={chooseCalculatedPoint} />}
                 {!shownMetrics.length && !shownScores.length && (
                   <p>
                     Для выбранного объекта нет показателей в ответе сервера.
