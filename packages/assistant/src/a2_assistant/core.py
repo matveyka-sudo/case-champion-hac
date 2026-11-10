@@ -388,6 +388,11 @@ def template_explanation(
     *,
     context: ExplanationRequest | None = None,
 ) -> Explanation:
+    scores = focused_scores(saved, context)
+    metrics = focused_metrics(saved, context)
+    # A large score inventory must not consume every slot before saved times.
+    score_limit = min(len(scores), 10) if metrics else 20
+    metric_limit = 20 - min(len(scores), score_limit)
     score_findings = [
         Finding(
             text=_template_score_text(score),
@@ -397,7 +402,7 @@ def template_explanation(
             score_claims=[ScoreClaim(score_id=score.score_id, value=score.value)],
             evidence_refs=score.evidence_refs[:50],
         )
-        for score in focused_scores(saved, context)
+        for score in scores[:score_limit]
     ]
     findings = (
         score_findings
@@ -410,7 +415,7 @@ def template_explanation(
                     NumericClaim(metric_id=metric.metric_id, value=metric.value, unit=metric.unit)
                 ],
             )
-            for metric in focused_metrics(saved, context)
+            for metric in metrics[:metric_limit]
         ]
     )[:20]
     return Explanation(
@@ -426,7 +431,9 @@ def template_explanation(
             :50
         ],
         limitations=[
-            *(text[:1000] for text in saved.limitations[:19]),
+            *(text[:1000] for text in saved.limitations[:18]),
+            "Объяснение показывает выбранные сохранённые показатели; "
+            "остальные доступны в результате анализа.",
             "Шаблонное объяснение сохранённого результата; численные данные взяты из расчёта.",
         ],
     )

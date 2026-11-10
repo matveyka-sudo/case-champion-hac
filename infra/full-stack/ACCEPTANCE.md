@@ -1,5 +1,9 @@
 # Local acceptance, 10 November 2026
 
+The later certified point release on 5192 is recorded in
+[CERTIFIED_ACCEPTANCE.md](CERTIFIED_ACCEPTANCE.md). The checks below preserve
+the earlier walking pilot and generic dispatcher acceptance history.
+
 The checked release was exported with `git archive` from
 `f2f135a5aef55330d4babc56025daabb4ba2c283` (implementation `d27425a` plus the
 Valhalla tmpfs correction). The final image build used that clean committed

@@ -13,13 +13,15 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 |---|---|---|---|
 | Dynamic dispatcher, all four kinds and pipeline | BACKEND / work/full-backend | INTEGRATED | Corrections through4d3e4e9 reviewed: cargo roster/area, dated candidate and canonical timetable source binding, verified completeness evidence; root24 focused tests PASS. Real profiles beyond pilot remain separate acceptance gates |
 | Map/form/snapshot correctness | FRONTEND / work/full-frontend | INTEGRATED | Throughd340170: scoped numeric indices, approved colors, zero/null, partial map, snapshot/product guards, selected returns, published scenario paths. Root20 API browser tests PASS39.0s; synthetic UI evidence only |
-| Actual graph minimum bounds | ML1 / work/full-ml1 | INTEGRATED | 14c2bd6+5701b75 reviewed. Exact network and designated canonical-access model minima reproduced independently; root1029 tests PASS. Full physical entrance completeness remains unproved; limited point projection still RUNNING |
+| Actual graph minimum bounds | ML1 / work/full-ml1 | INTEGRATED | Through63992f2 reviewed. Exact network and designated canonical-access model minima reproduced independently; root1045 engine tests PASS. e4d83a2 performs full proof recomputation; actual numeric point E2E below. Full physical entrance completeness and city index remain unproved |
 | External data restoration and normalized inputs | ML2 / work/full-ml2 | INTEGRATED | Through3b8c26f, immutable .5:79 accepted/51 quarantined schools,216 unchanged points; airport official roster full onlyNov10. Explicit .3→.5 physical compatibility, root271 ML2 tests PASS |
-| Isolated API-mode stack | DEVOPS / work/full-devops | INTEGRATED | Clean fee4112d stack on 5191; root performed real browser request, job polling and saved result retrieval. Archive/remote source guards and explicit infrastructure/package CI checks integrated |
+| Isolated API-mode stack | DEVOPS / work/full-devops | INTEGRATED | Clean8fc49fe stack on5192, root real numerical browser E2E. df33d0a documents 189-file private restoration, restart and dump/restore. External archive hosting still unavailable; no claim of public one-command retrieval |
 | Independent reliability review | reviewer / read-only baseline | RUNNING | Reproducible defects with tests, then review delivered commits |
 | Selection-aware grounded Alice | root / integration branch | INTEGRATED | a220985+140da8c+ef826f7+c30d0cd reviewed; saved metric/score facts, bounded context, null/zero and partial preserved. Actual browser saved score-only explanation test PASS; no new paid calls |
-| Bounded resumable OD executor | BACKEND / work/full-backend | CHANGES_REQUIRED | b069beb integrated for testing, root58 realPG/HTTP/migration/module controls PASS. Reviewer reproduced final-publication expiry gap, stale cache reuse and unreserved preflight/status calls; owner fixes pending acceptance. No production batch enabled |
-| Saved baseline scenario integration | SCENARIOS / work/full-scenarios | RUNNING | Engine bridge and trusted endpoint scope/publication wiring in owner worktree; actual PG new/lost/worsening controls underway. Canonical after_journeys+frontend integrated; runtime hooks and root acceptance still pending |
+| Bounded resumable OD executor | BACKEND / work/full-backend | INTEGRATED | Through2151884, independent review accepted expiry/cache/provider budget fixes including SQL-clock race; root63 PG/HTTP/module tests PASS42.48s. No production batch enabled; real matrix performance remains unverified |
+| Saved baseline scenario integration | SCENARIOS / work/full-scenarios | CHANGES_REQUIRED | Through681bc848 point-task classification protected; root80 focused tests PASS. Reviewer found selected unknown category can be omitted from a full aggregate. Owner correcting operand inventory; runtime hooks still pending |
+| Runtime scope availability in form | root + FRONTEND + SCENARIOS | RUNNING | cdf1bad+91d7824 add typed scopes and pure date-bound projection; 11 scope/421 contract/41 module-scope checks PASS. Runtime/UI hooks pending; no feature-completion claim |
+| Shared Rasp quota and source ingestion | BACKEND + ML2 | RUNNING | Central account/day hard cap500 including retries and copyright; private expiring observations. No real calls, missing key and verified remaining account allowance; no synthetic accepted snapshot |
 
 Six child threads were simultaneously active after runtime reconfiguration;
 all were requested as gpt-6.1-sol / ultra. Runtime supplies seven slots including
@@ -28,6 +30,30 @@ earlier probe is not retroactively counted as a success. Completed DEVOPS work
 freed a slot for the independent scenario adapter implementation.
 
 ## Independently repeated integration evidence
+
+On the clean8fc49fe release at5192, root personally submitted through React:
+Kaliningrad / airports / walk / static / 2026-11-10 08:30 Europe/Kaliningrad.
+Job `46c9aba0-cdd2-499d-8ac0-48df59f7b453` ran from15:43:06.223747Z to
+15:43:20.815285Z and produced analysis `5bf81f85-5787-495b-bee0-8bbc8d4e04a0`,
+hash `b28fa99fab0123d0c0cfb46dfcdd55e21cb68258a7940dadd5bc76d3c40baefe`.
+The root selected original point `kaliningrad-utm34n-1km-v1-e468-n6069-p`
+on the actual map: category/point scores displayed0.5/100 in red,229.6 minutes,
+population661.234 and explicit partial/nonranking conditions. The API retained
+exact0.4971801994143471 and13773.627798430474 seconds; city score remainednull,
+215 other points unknown. A fresh same-session GET after service restart matched
+the saved hash. Actual artifacts outside Git: `root-certified-analysis.json` and
+`root-certified-ui.png` under `/Users/kirito/waydex-full-runtime`.
+
+The same real UI's Alice fallback returned HTTP200/template/DISABLED and the saved
+hash without external provider calls. It exposed a separate usability defect:
+the first20 unknown scores hid the two numeric scores and city total. Root fix
+b7aa963 adds a bounded representative overview and retains unknown totals.99
+assistant tests and an offline replay of the actual saved result pass, including
+renderer validation and no mutation. Independent review/new-image UI replay pending.
+
+GitHub recheck: dev remains91ed5262b62c16afa3ca619f8140c43917cf8325;
+PR26 dd46659 and PR27 297accd remain OPEN/DRAFT/CLEAN, five checks each SUCCESS.
+Those remote checks do not cover this unpublished integration branch.
 
 At `fee4112d`, the coordinator used the actual browser UI on port 5191 to request
 Kaliningrad / school / walk / static, 2026-11-10 08:30 Europe/Kaliningrad.
