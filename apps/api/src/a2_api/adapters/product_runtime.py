@@ -78,7 +78,9 @@ class Profile(ContractModel):
     snapshot_hash: str = Field(pattern="^[a-f0-9]{64}$")
     graph_fingerprint: str = Field(pattern="^[a-f0-9]{64}$")
     routing_profile_fingerprint: str = Field(pattern="^[a-f0-9]{64}$")
-    executor: Literal["accepted_inputs", "walk_pilot", "walk_batches"] = "accepted_inputs"
+    executor: Literal["accepted_inputs", "walk_pilot", "walk_batches", "certified_walk_model"] = (
+        "accepted_inputs"
+    )
     inputs: FileRef | None = None
     evidence: list[EvidenceRef] = Field(default_factory=list)
     static_observations: bool = False
@@ -660,6 +662,7 @@ def load_runtime() -> Runtime:
         profiles = {}
         missing = set()
         seen = set()
+        certified_proof = None
         for profile in manifest.profiles:
             key = profile.profile_id
             if key in seen:
@@ -690,7 +693,7 @@ def load_runtime() -> Runtime:
                         or walk_pilot.load_runtime().bundle_id != profile.snapshot_id
                     ):
                         raise ValueError("WALK_PILOT_SNAPSHOT_MISMATCH")
-                else:
+                elif profile.executor == "walk_batches":
                     from a2_api.adapters import walk_batches
 
                     approval, _, runtime = walk_batches.load_approval()
@@ -705,6 +708,26 @@ def load_runtime() -> Runtime:
                         or profile.routing_profile_fingerprint != runtime.build.profile_hash
                     ):
                         raise ValueError("WALK_BATCH_PROFILE_BINDING_MISMATCH")
+                else:
+                    from a2_api.adapters import certified_walk_model
+
+                    if certified_proof is None:
+                        certified_proof = certified_walk_model.load_binding(base.config_hash)
+                    proof = certified_proof
+                    binding = proof.binding
+                    if (
+                        profile.analysis_kind != "urban_passenger"
+                        or profile.city_id != binding.city_id
+                        or profile.categories != ["airport"]
+                        or profile.passenger_modes != ["walk"]
+                        or profile.traffic_modes != ["static"]
+                        or profile.snapshot_id != binding.snapshot_id
+                        or profile.snapshot_hash != binding.snapshot_hash
+                        or profile.graph_fingerprint != proof.graph_fingerprint
+                        or profile.routing_profile_fingerprint != proof.profile_fingerprint
+                        or profile.max_route_pairs != 1
+                    ):
+                        raise ValueError("CERTIFIED_WALK_MODEL_PROFILE_BINDING_MISMATCH")
                 profiles[key] = profile, inputs
             except (OSError, ValueError, TypeError, KeyError, DomainError):
                 missing.add(profile.analysis_kind)
