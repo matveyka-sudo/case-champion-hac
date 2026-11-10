@@ -192,6 +192,17 @@ def _journey(saved: AnalysisResult, facts: list[Metric | Score]) -> str:
     )
 
 
+def _proven_observed_auxiliary(fact: Metric | Score) -> bool:
+    return (
+        isinstance(fact, Score)
+        and fact.name == "observed_route_accessibility"
+        and fact.status == "not_applicable"
+        and fact.value is None
+        and fact.completeness == "full"
+        and fact.reason_code == "USE_PROVEN_CATEGORY_INDEX"
+    )
+
+
 def _safety(saved: AnalysisResult, facts: list[Metric | Score]) -> str:
     notes = []
     if (
@@ -199,14 +210,25 @@ def _safety(saved: AnalysisResult, facts: list[Metric | Score]) -> str:
         or "DEMO_SYNTHETIC_TRANSPORT_MODEL" in saved.limitations
     ):
         notes.append("Это синтетическая демонстрационная модель, не рейтинг реального города.")
-    if any(f.name == "observed_route_accessibility" for f in facts):
+    observed = [f for f in facts if f.name == "observed_route_accessibility"]
+    if any(f.status == "available" and f.value is not None for f in observed):
         notes.append(
             "Это оценка одного найденного маршрута: минимум не доказан, "
             "она не заменяет индекс категории."
         )
+    if any(f.value is None and not _proven_observed_auxiliary(f) for f in observed):
+        notes.append(
+            "По недоступной предварительной оценке нельзя подтвердить минимальное время "
+            "или отсутствие маршрута: минимум не доказан, она не заменяет индекс категории."
+        )
+    if any(_proven_observed_auxiliary(f) for f in observed):
+        notes.append(
+            "Предварительная оценка найденного маршрута здесь неприменима; "
+            "используйте сохранённый индекс категории."
+        )
     if any(f.completeness != "full" for f in facts):
         notes.append("Полнота данных ограничена; вывод остаётся предварительным.")
-    if any(f.value is None for f in facts):
+    if any(f.value is None and not _proven_observed_auxiliary(f) for f in facts):
         notes.append("Неизвестное значение не означает ноль.")
     if any(isinstance(f, Score) and not f.ranking_eligible for f in facts):
         notes.append("Этот показатель не допущен к рейтингу территорий.")

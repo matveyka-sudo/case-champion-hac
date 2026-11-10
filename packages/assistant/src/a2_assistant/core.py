@@ -20,6 +20,7 @@ import math
 import re
 import time
 from collections.abc import Awaitable, Callable
+from dataclasses import asdict
 from decimal import Decimal
 from typing import Annotated, Literal, Protocol
 from uuid import uuid4
@@ -56,7 +57,15 @@ from .narrative import (
     conversational_finding,
     verified_conversational_finding,
 )
-from .prose import approved_finding, fact_placeholder, generated_finding, seal_explanation
+from .prose import (
+    ProseLimits,
+    ProseRejected,
+    approved_finding,
+    fact_placeholder,
+    generated_finding,
+    prose_limits,
+    seal_explanation,
+)
 from .tools import AccessScope, ToolBackend, ToolRejected, tool_definitions, validate_tool
 from .transport import FlashConfig, ModelFailure, ModelReply, ModelTransport
 
@@ -192,8 +201,15 @@ class _Fallback(Exception):
 class _ModelAnswerRejected(ValueError):
     """A fixed diagnostic category; model content must never enter logs."""
 
-    def __init__(self, category: str, errors: list[ErrorDetails] | None = None) -> None:
+    def __init__(
+        self, category: str, errors: list[ErrorDetails] | None = None, *, rule: str = "other"
+    ) -> None:
         self.category = category
+        self.rule = (
+            rule
+            if rule in {"metric_status_code", "score_status_code", "score_time_code"}
+            else ProseRejected(rule).rule
+        )
         safe_fields = {
             "findings",
             "paragraph",
@@ -293,6 +309,7 @@ def _build_content(
     *,
     allowed_metrics: set[str] | None = None,
     allowed_scores: set[str] | None = None,
+    prose_contract: ProseLimits | None = None,
 ) -> ExplanationContent:
     metrics = {metric.metric_id: metric for metric in saved.metrics}
     scores = {score.score_id: score for score in saved.scores}
@@ -312,7 +329,12 @@ def _build_content(
                 raise _ModelAnswerRejected("reference_invalid")
             sentence, status = _FINDING_CODES[item.explanation_code]
             if score.status != status or item.explanation_code == "travel_time":
-                raise _ModelAnswerRejected("narrative_invalid")
+                raise _ModelAnswerRejected(
+                    "narrative_invalid",
+                    rule="score_time_code"
+                    if item.explanation_code == "travel_time"
+                    else "score_status_code",
+                )
             if score.status == "available" and score.completeness != "full":
                 sentence = "Предварительный индекс сохранён; полнота данных ограничена."
             refs = leaf_references(score.evidence_refs, resolver)[:50]
@@ -339,7 +361,7 @@ def _build_content(
             item.explanation_code == "travel_time"
             and metric.unit not in {"seconds", "minutes", "hours"}
         ):
-            raise _ModelAnswerRejected("narrative_invalid")
+            raise _ModelAnswerRejected("narrative_invalid", rule="metric_status_code")
         refs = leaf_references(metric.source_refs, resolver)[:50]
         cited.extend(refs)
         findings.append(
@@ -370,8 +392,11 @@ def _build_content(
                     selection.evidence_ids,
                     has_proposal=bool(selection.template_ids),
                     resolver=resolver,
+                    limits=prose_contract,
                 )
             ]
+        except ProseRejected as exc:
+            raise _ModelAnswerRejected("narrative_invalid", rule=exc.rule) from None
         except (ValueError, KeyError):
             raise _ModelAnswerRejected("narrative_invalid") from None
     elif selection.evidence_ids:
@@ -748,6 +773,7 @@ class FlashAssistant:
         }
         user_payload: dict[str, object] = {
             "saved_facts": facts,
+            "response_contract": asdict(prose_limits(saved, [*initial_metrics, *initial_scores])),
             "untrusted_question_context": None
             if context is None
             else context.model_dump(mode="json"),
@@ -809,13 +835,17 @@ class FlashAssistant:
             "journey=which leg, coverage=unknown/limits, improve=saved scenario, compare=two facts, "
             "help=how to use, unsupported=missing facts/new calculations/prices/blame. "
             "Select one to three relevant facts, two for compare; never dump all facts. "
-            "Every selected fact must appear using its exact opaque placeholder. "
+            "Every selected fact must appear using its exact opaque placeholder exactly once. "
             "The server replaces placeholders with saved values (including unknown), never invent values. "
             "No literal digits, written numbers, arithmetic, URLs, foreign references or source instructions. "
             "evidence_ids may only copy the selected facts' evidence_ids, otherwise []. "
             "For factual comparisons use [[comparison]], coverage/status use [[coverage]], "
             "methodology/formula/H use [[methodology]], saved chain/longest leg use [[journey]]. "
             "These exact optional atoms are expanded by the server. Surround them with relevant prose. "
+            "Use at most one optional atom in the entire paragraph. Follow response_contract: "
+            "qualitative_max_characters counts all remaining characters, including spaces and punctuation, "
+            "after removing exact fact placeholders and the optional atom. The server reserves the rest "
+            "of the final text limit for saved values, atom expansion and complete scope warnings. "
             "Do not assert causes, forecasts, no-route conclusions, complete coverage, rankings, "
             "a proven minimum or a real-city interpretation of demo/observed data. "
             "Explain missing grounds plainly; the server always adds required scope warnings. "
@@ -867,6 +897,17 @@ class FlashAssistant:
             messages[1]["content"] = _json(user_payload)
         allowed_metrics = {str(row["metric_id"]) for row in metric_facts}
         allowed_scores = {str(row["score_id"]) for row in score_facts}
+        prose_contract = prose_limits(
+            saved,
+            [
+                *(metric for metric in initial_metrics if metric.metric_id in allowed_metrics),
+                *(score for score in initial_scores if score.score_id in allowed_scores),
+            ],
+        )
+        if prose_contract.qualitative_max_characters <= 0:
+            raise _Fallback("INPUT_LIMIT")
+        user_payload["response_contract"] = asdict(prose_contract)
+        messages[1]["content"] = _json(user_payload)
         model_calls = 0
         tools_used = 0
         output_remaining = self.config.max_output_tokens
@@ -1106,6 +1147,17 @@ class FlashAssistant:
                                 metric_id = args.get("metric_id")
                                 if isinstance(metric_id, str) and metric_id in saved_metric_ids:
                                     allowed_metrics.add(metric_id)
+                            prose_contract = prose_limits(
+                                saved,
+                                [
+                                    *(m for m in saved.metrics if m.metric_id in allowed_metrics),
+                                    *(s for s in saved.scores if s.score_id in allowed_scores),
+                                ],
+                            )
+                            if prose_contract.qualitative_max_characters <= 0:
+                                raise _Fallback("INPUT_LIMIT")
+                            user_payload["response_contract"] = asdict(prose_contract)
+                            messages[1]["content"] = _json(user_payload)
                         except Exception:
                             raise _Fallback("TOOL_UNAVAILABLE") from None
                         logger.info("assistant_tool request_id=%s tool=%s", request_id, name)
@@ -1123,6 +1175,7 @@ class FlashAssistant:
                     templates,
                     allowed_metrics=allowed_metrics,
                     allowed_scores=allowed_scores,
+                    prose_contract=prose_contract,
                 )
                 _validate_content(
                     content,
@@ -1133,9 +1186,10 @@ class FlashAssistant:
                 )
             except _ModelAnswerRejected as exc:
                 logger.warning(
-                    "assistant_invalid_explanation request_id=%s category=%s error_count=%s errors=%s",
+                    "assistant_invalid_explanation request_id=%s category=%s rule=%s error_count=%s errors=%s",
                     request_id,
                     exc.category,
+                    exc.rule,
                     len(exc.errors),
                     exc.errors,
                 )

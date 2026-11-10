@@ -8,6 +8,16 @@ server substitutes exact saved values and builds typed claims and citations;
 the model never supplies those values. The earlier eight server-owned answer
 modes remain compatible when the model returns only an intent/ID selection.
 
+The internal `response_contract` also supplies a qualitative character budget.
+It counts spaces and punctuation after removing declared fact placeholders and
+the optional atom. Each selected fact placeholder occurs exactly once; at most
+one optional atom is allowed. The server reserves room for up to three saved
+value displays, the longest applicable atom expansion, a separator and every
+required scope warning. It enforces both that budget and the raw 650-character
+paragraph limit, then checks the final 1000-character public finding limit.
+Facts and warnings are never truncated to fit. Tool lookups refresh the budget
+for the exposed references before another model attempt.
+
 Examples include “Почему такая оценка?”, “Откуда берётся H?”, “Какой участок
 дольше?”, “Почему вместо числа нет данных?” and “Сравни эти две сохранённые точки”.
 The optional `[[comparison]]`, `[[journey]]`, `[[methodology]]` and `[[coverage]]`
@@ -28,6 +38,12 @@ evade it, and valid wording can be rejected. This is bounded natural generation,
 not acceptance of unrestricted factual prose. Unsupported prices, causes,
 forecasts and new numerical calculations need additional evidence or a separate
 authorized calculation. No second verifier or model call was added.
+
+Validation warnings contain only a fixed category/rule and sanitized schema
+locations, never the paragraph or prompt. Rules distinguish status-code errors,
+literal/written numbers, placeholder/evidence mismatches, atom/character budgets
+and unsupported qualitative assertions. A category alone cannot establish the
+exact rejected phrase when the raw model reply was not captured.
 
 Generated prose carries a private in-process provenance witness binding the
 whole public output to the selected saved facts, linked journeys, request,
