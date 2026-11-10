@@ -91,7 +91,7 @@ def demo(transport_facts):
             True,
             True,
             (proof,),
-            tuple(sorted(DEMO_LIMITATIONS)),
+            (),
         ),
         runs,
         (TimetableFootpath("TEST_ONLY-path", first, last, 30, True, (proof,)),),
@@ -101,6 +101,7 @@ def demo(transport_facts):
         schema_version="waydex-demo-closed-transport/1",
         snapshot_hash=canonical_hash(snapshot.model_dump(mode="json")),
         model=table,
+        limitations=tuple(sorted(DEMO_LIMITATIONS)),
     )
     return snapshot, table, receipt
 
@@ -109,6 +110,8 @@ def test_explicit_exact_demo_receipt_does_not_change_production_guard(demo, monk
     snapshot, table, receipt = demo
     monkeypatch.setenv("A2_DEMO_TRANSPORT_ENABLED", "true")
     assert verify_demo_model(snapshot, table, CLOCK, receipt) == receipt
+    assert table.scope.limitations == ()
+    assert set(receipt.limitations) == DEMO_LIMITATIONS
     assert DemoTransportReceipt.model_validate_json(receipt.model_dump_json()) == receipt
     with pytest.raises(ValueError, match="EXHAUSTIVE_CONNECTOR"):
         verify_timetable_source(snapshot, table, CLOCK)
@@ -136,6 +139,7 @@ def test_demo_disabled_by_default(demo, monkeypatch, flag):
         "label",
         "proof",
         "calendar",
+        "receipt_labels",
     ],
 )
 def test_demo_receipt_never_accepts_mutated_or_unlabelled_inventory(demo, monkeypatch, attack):
@@ -173,5 +177,22 @@ def test_demo_receipt_never_accepts_mutated_or_unlabelled_inventory(demo, monkey
     elif attack == "calendar":
         table = replace(table, runs=())
         receipt = receipt.model_copy(update={"model": table})
+    elif attack == "receipt_labels":
+        receipt = receipt.model_copy(update={"limitations": ()})
     with pytest.raises(ValueError):
         verify_demo_model(snapshot, table, clock, receipt)
+
+
+def test_demo_verifier_preserves_actual_algorithm_limitations(demo, monkeypatch):
+    snapshot, table, receipt = demo
+    monkeypatch.setenv("A2_DEMO_TRANSPORT_ENABLED", "true")
+    table = replace(
+        table, scope=replace(table.scope, limitations=("TEST_ONLY_INCOMPLETE_PATH_SEARCH",))
+    )
+    receipt = receipt.model_copy(update={"model": table})
+    original = receipt.model_dump_json()
+    assert verify_demo_model(snapshot, table, CLOCK, receipt).model.scope.limitations == (
+        "TEST_ONLY_INCOMPLETE_PATH_SEARCH",
+    )
+    assert receipt.model_dump_json() == original
+    assert table.scope.limitations == ("TEST_ONLY_INCOMPLETE_PATH_SEARCH",)
