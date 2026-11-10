@@ -162,7 +162,7 @@ routing attestations. They also verify that one missing route at a positive-popu
 point blocks the territory score rather than renormalizing onto known points, and
 that successful JSON with missing actual endpoint evidence remains unknown. Existing
 six-decimal tests verify that best-known time survives while minimum/index stay unknown.
-No real graph minimum or real available accessibility index was independently executed.
+No real physical total-trip minimum or real available accessibility index was independently executed.
 
 ## Executed source-bound relaxation
 
@@ -202,3 +202,42 @@ Raw pilot artifacts live under
 `/Users/kirito/waydex-phase2-runtime/source-bound-walk/`, outside Git. The existing
 HTTP adapter still preserves its observed/best-known result independently and
 does not accept this relaxation receipt as a production minimum attestation.
+
+## Executed closed-ball immediate-turn certificate
+
+`urban/walk/turn_certificate.py` implements the bounded next step. A currently
+replayed feasible incumbent `U` is bound to the same export, request, config,
+profile, library and binary hashes. Exact zero-turn distances start from **every**
+origin fragment, and include directed hierarchy transitions. The closed ball uses
+`d(v) <= U`, with no floating tolerance. Every admissible improving route has each
+full-edge endpoint in that ball, because nonnegative turn times imply
+`d(v) <= actual prefix <= U`.
+
+States are the last positive-fraction traversed edges; zero seconds do not erase
+an incoming edge. Every actual immediate outgoing pair is retained at the same
+node or after one directed hierarchy hop, matching the pinned expansion domain.
+The native helper evaluates every requested turn using `TransitionCost.secs`;
+the checker requires exact pair IDs, source scope and plan hashes. It includes
+terminal fragments even if their full edge ends outside the ball, handles direct
+same-edge source-to-terminal paths separately, and gives zero source fragments
+no invented predecessor. Full history, access and distance constraints remain
+relaxed until the final native feasibility replay.
+
+The real pilot used 794 closed-ball nodes, 1927 incoming-edge states and 5640
+turn pairs. Its relaxed optimum and independent native feasible replay both
+equalled exactly `1088850011/2097152` seconds (about 519.2041449546814). This proves
+the **scoped network minimum for the exact additive binary32-weight model**.
+It does not prove the physical total-trip minimum or an accessibility index.
+Physical lower/upper bounds remain null and the physical minimum flag remains false.
+
+A separate native actor trace confirmed the same 22 positive-fraction directed
+edge IDs as the certified optimum. The actor's accumulated clock was
+519.2041625976562 seconds, `37/2097152` seconds above the exact additive sum, and
+its JSON summary was 519.204 seconds. The guarantee deliberately distinguishes
+these three numerical representations. It does not replace the product's
+observed 547.404-second physical best-known result with a proven category score.
+
+Run the exclusive executor with `--exact-turns` to reproduce the complete
+source-bound export, incumbent, closed-ball pair roster, exact search and final
+replay. Each run copies both checker modules and its native source/binary/compiler
+manifest, and retains every request/response and digest under a fresh run ID.
