@@ -1,5 +1,49 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Verified integration update — 2026-11-11 00:33 MSK
+
+Goal remains ACTIVE. This section supersedes older deployment/checkpoint claims.
+Root independently integrated compact checkpoints1451ab2, evidence compaction
+ac45d17, private Novorossiysk overlay2cc5951, frontend guidance2f9320d, and
+saved-result explanation modes3480e36/8d2efdf. No merge into dev or active
+runtime promotion occurred for these deliveries.
+
+Root verification: actual PostgreSQL checkpoint/artifact suite39PASS37.94s;
+reference-preserving evidence compaction5PASS1.90s; saved-result freeform bridge
+25PASS0.62s. Earlier root ordinary backend/contracts/assistant suite completed
+1213PASS/276SKIP348.68s before these last deliveries. Skipped PostgreSQL tests
+are not treated as database acceptance. Root API browser migration42PASS and
+frontend176unitPASS are synthetic interface regressions, not real E2E.
+
+Shared prototype web d07d584 is now LIVE at http://127.0.0.1:5193/; image
+sha256:b61fc14eb3f95602b86776f75c03e9edfb6ced34cccd900373ceeeb4d99a0617.
+Root independently opened the landing and atlas in isolated Chromium on5193:
+expected shared presenters, Moscow selection and no desktop horizontal overflow.
+This was GET-only inspection; the earlier real UI admission timeout remains
+unresolved until a new API image passes an actual UI replay. API/worker remain
+f448ed15, old single-pair manifest214b1247; newer code is not live yet.
+
+Candidate Moscow1401v2 manifest ce508816bc544c6aa4be2934ab2c0df02b819de41247faf9db9b561cb792c6da
+is immutable and inactive. It retains2361points/2931cells/284clinics,1401approved
+candidate pairs; max eligibility is not a nearest-time/minimum proof. A fresh
+API image and bounded real16-pair resource check precede wider activation.
+
+Real November11 transit packet633fec6fe315dcc271a96221a1b7895d6063d0e2a2383121561b33269c292a65
+under ignored runtime/ml2/moscow-transit-public-nov11-v2 is independently verified:
+root matched50 selected trip events directly to restored source GTFS ZIP;
+ML1 checked all300 bounded runs and public scenario baseline5595.143s ->5235.143s.
+Whole-run hypothetical advancement360s also causes a verified adverse query
++1320s. No minimum, city index, passenger demand or operational feasibility
+is inferred. Full retained-catalog runtime exposed missing-boundary handling
+in scenario recomputation and excessive nominal pair budgeting: separate ML1
+and backend owners are fixing these with negative regressions before deployment.
+
+Active engineering threads have verified danger-full-access/approval never.
+Settings persisted in ~/.codex-pro/config.toml, prior config backed up; new
+BACKEND/FRONTEND/DEVOPS/Alice threads preserve old worktrees and WIP. A new
+ML1 transit thread has the same actual policy. Full access does not authorize
+merging dev, destructive database changes or removing the500RUB Alice ledger.
+
 ## Verified continuation — 2026-11-11
 
 Goal remains ACTIVE; the sections below are historical checkpoints. Local

@@ -9,6 +9,25 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 
 ## Three-city priority — 2026-11-10 continuation
 
+### Current gate update — 2026-11-11 00:33 MSK
+
+- Shared prototype web d07d584 is LIVE on5193; root GET-only landing/atlas
+  inspection passed without desktop overflow. API remains f448ed15: new backend
+  deliveries and broader profiles are not yet live. Full UI replay is still due.
+- Root actual PostgreSQL artifact/checkpoint suite39PASS; evidence compaction
+  5PASS; scoped explanation bridge25PASS. Ordinary Python suite1213PASS/276SKIP
+  predates the latest deliveries; skips do not prove real database behavior.
+-1401-pair Moscow candidate v2 ce508816 is immutable/inactive. Preserve all2361
+  points and unknown population. No city index/minimum proof has been gained.
+- Real GTFS November11 public-slot scenario has independently checked source
+  events and deterministic5595.143->5235.143s route totals; +1320s adverse query
+  remains visible. It is not yet backend/UI E2E. Backend pair-budget and ML1
+  missing physical boundary corrections are RUNNING before integration.
+- Novorossiysk private-router overlay2cc5951 is integrated and source-checked,
+  but not activated. Three-city API catalog and each real E2E are still due.
+- Alice natural paragraph delivery is RUNNING; integrated server-grounded
+  question modes alone do not satisfy the requested free-form assistant.
+
 ### Verified gate update — 2026-11-11
 
 - Shared prototype presenters c3bd03f and bounded source disclosure 1487be3
