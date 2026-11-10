@@ -21,7 +21,7 @@ from a2_contracts.v2.base import (
 )
 from a2_contracts.v2.journeys import CountResult, JourneyResult, LastReturn, ReferenceResult
 from a2_contracts.v2.map_data import AnalysisMapData
-from a2_contracts.v2.requests import AnalysisRequest
+from a2_contracts.v2.requests import AnalysisRequest, IntercityBase
 
 
 class EvidenceRef(ContractModel):
@@ -333,6 +333,45 @@ def validate_score_context(
                 check_weight(component)
 
 
+def validate_reference_applicability(
+    reference: ReferenceResult,
+    request: AnalysisRequest,
+    journeys: list[JourneyResult],
+) -> None:
+    """Prove a directed reference scope without equating territory and node IDs.
+
+    Fixed boundary sets define the entire evaluated task. Otherwise only
+    journeys reached through the evaluated score operands can establish scope;
+    an unrelated journey elsewhere in the result is not evidence.
+    """
+    boundary = reference.boundary_node_sets
+    if isinstance(request, IntercityBase) and request.origin_node_ids is not None:
+        if set(boundary.origin_node_ids) != set(request.origin_node_ids) or set(
+            boundary.destination_node_ids
+        ) != set(request.destination_node_ids or []):
+            raise ValueError("Reference boundary sets differ from the directed request")
+        if any(
+            journey.origin_node_id not in boundary.origin_node_ids
+            or journey.destination_node_id not in boundary.destination_node_ids
+            for journey in journeys
+        ):
+            raise ValueError("Evaluated journey differs from the fixed directed task")
+        return
+    if not journeys:
+        raise ValueError("Full index reference requires a verifiable evaluated journey")
+    for journey in journeys:
+        singleton_scope = set(boundary.origin_node_ids) == {journey.origin_node_id} and set(
+            boundary.destination_node_ids
+        ) == {journey.destination_node_id}
+        linked_scope = (
+            journey.reference_id == reference.reference_id
+            and journey.origin_node_id in boundary.origin_node_ids
+            and journey.destination_node_id in boundary.destination_node_ids
+        )
+        if not singleton_scope and not linked_scope:
+            raise ValueError("Reference is not applicable to the evaluated journey")
+
+
 class AnalysisResult(ContractModel):
     schema_version: Literal["2"]
     analysis_id: Identifier
@@ -454,6 +493,23 @@ class AnalysisResult(ContractModel):
         # A reference affects an index, not the independently observed raw time.
         # Legacy score chains carry their reference through Metric -> Journey;
         # reference_ids also expresses a direct denominator dependency explicitly.
+        evaluated_journeys: dict[str, list[JourneyResult]] = {}
+
+        def operand_journeys(score: Score) -> list[JourneyResult]:
+            if score.score_id in evaluated_journeys:
+                return evaluated_journeys[score.score_id]
+            linked: dict[str, JourneyResult] = {}
+            for component in score.components:
+                if component.kind == "score":
+                    for journey in operand_journeys(scores[component.id]):
+                        linked[journey.journey_id] = journey
+                else:
+                    journey_id = metrics[component.id].journey_id
+                    if journey_id is not None:
+                        linked[journey_id] = journeys[journey_id]
+            evaluated_journeys[score.score_id] = list(linked.values())
+            return evaluated_journeys[score.score_id]
+
         def check_required_dependencies(score: Score) -> None:
             full = score.status == "available" and score.completeness == "full"
             required_references = set(score.reference_ids)
@@ -467,7 +523,14 @@ class AnalysisResult(ContractModel):
                     and metric.journey_id is None
                     and (
                         kind == "initial_wait"
-                        or (kind == "reference_ratio" and not score.reference_ids)
+                        or (
+                            kind == "reference_ratio"
+                            and (
+                                not score.reference_ids
+                                or not isinstance(self.request, IntercityBase)
+                                or self.request.origin_node_ids is None
+                            )
+                        )
                     )
                 ):
                     raise ValueError("Full path/wait index requires its journey operand")
@@ -486,6 +549,10 @@ class AnalysisResult(ContractModel):
                 reference = references[identifier]
                 if full and (reference.status != "available" or reference.completeness != "full"):
                     raise ValueError("Full index requires its complete available reference")
+                if full:
+                    validate_reference_applicability(
+                        reference, self.request, operand_journeys(score)
+                    )
 
         validate_score_context(self.metrics, self.scores, self.analysis_kind)
         for score in self.scores:

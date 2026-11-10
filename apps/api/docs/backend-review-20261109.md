@@ -254,3 +254,108 @@ No confirmed blocker remains in the reproduced BACKEND cases; local changes are 
 - `packages/contracts/tests/test_scenario_effect_coverage.py`
 - `packages/contracts/tests/test_scenario_review_minutes.py`
 - `packages/contracts/tests/test_v2_scenarios.py`
+
+# Fourth independent review: scope applicability and historical reuse
+
+Current work remains uncommitted in work/backend. No commit, push, merge/rebase, reset or review discussion change was performed. The working tree was clean at the initial fetch, so all earlier committed tests were retained. Actual historical code and separate worker processes were used for the new reproductions; the earlier report was not treated as proof.
+
+## External history changed during verification
+
+PR8 was merged externally into dev while this task was running. GitHub read-only metadata confirms closed/merged at2026-11-09T09:22:29Z, merge3446f7e250d72971c1a8c2f75bf43bf1fa8d0f87. The assistant did not perform this merge. Initialdevc783435 was refreshed; final A/B below use the newdev3446f7e. Future publication workflow needs separate user authorization because PR8 is already closed. Local fixes remain valid follow-up work, not a claim to have updated that PR.
+
+## Exact inputs and verified trees
+
+- `backend_head`: `be98b68da156a32561e0a12bb125e4681aacae8f`
+- `dev`: `3446f7e250d72971c1a8c2f75bf43bf1fa8d0f87`
+- `ml1`: `f4c8ae476c431ef18501d7aa4e11bd7f1cbea783`
+- `ml2`: `26a4f5a283f054560123dab87a05806fc253bc9e`
+- `backend_tree`: `574a6ae908e7324121753c403f16c3aed49d9f12`
+- `A`: `723556ce10901fb4af0bde089878cc5beb67baa5`
+- `B`: `32b15b900676c65d7778afa3cb78acd6f6c3467f`
+- `base_a`: `be98b68da156a32561e0a12bb125e4681aacae8f`
+- `base_b`: `4d388babdc20285b3894a92fbb90e62707eeb9c6`
+
+A: private index/write-tree of local backend, then `git merge-tree --write-tree --merge-base=<base_a> origin/dev <backend_tree>`. B: `git merge-tree --write-tree --merge-base=<base_b> <A-tree> origin/work/ml1`. Both exit0, no conflicts or commit objects. The base of A is now be98b68 because dev externally merged it. Engine in B exactly matches published ML1; frontend/infra in A exactly match dev. No directory overlay. Report/task/handoff edits after these snapshots are documentation only; runtime/tests/schema bytes match the verified snapshot.
+
+## P1 causes and fixes
+
+1. Full Reference validation previously checked existence/completeness but not applicability. Added reusable validate_reference_applicability in canonical contracts, using exact directed fixed boundary sets or proof from evaluated operand Journeys. Evaluated Journeys also must belong to fixed scope. No comparison of city IDs to node IDs, no formula computation, no new field. Missing proof blocks full, not honest partial/raw/urban H values.
+2. Publication used baseline context but stored read only parsed ScenarioResult. Extracted one _validate_scenario_semantics(result,baseline,command), reused at publication and read/cache. Scope is checked before parsing. Read validates stored hashes, immutable baseline/proposal, the before snapshot, versions, identities, fixed operation and all required operand/fullness/scope rules. Public reads use repeatable-read snapshots; reuse/publication hold FOR SHARE on validated rows until transaction completion. replay/get_job/get_run_parameters/expired-cache idempotency/terminal cancel also validate successful reused results. Errors are safe409 stored_result_incompatible; another session sees404.
+
+Two related defects were independently reproduced while completing the shared validator: it rejected a correct explicit Reference on a nested aggregate because it inspected only direct Metric children; it allowed an aggregate to erase its own declared partial Reference because frozen declarations were retained only for reference_ratio. Cached recursive operand traversal and retaining all same-task declared references fixed both. The same common validator is used, not separate publication/read rule sets.
+
+Integrity and publication-race checks were also required to keep semantics bound to actual persisted inputs: raw payload/result_hash and proposal/content_hash are verified; succeed validates canonical saved instead of a mutable original while awaiting I/O. No immutable record is rewritten or rehashed on read.
+
+## Independent RED -> GREEN evidence
+
+| Reproduction | RED before protection | GREEN / proof |
+| --- | --- | --- |
+| Full Reference scope | Final31newcases against archived actualbe98b68:16failed,15passed,exit1. Eight bypasses each failed DTO+spawned oracle: foreign,reverse,superset,narrower,unbound,foreignunfixed,unlinkedmultinode,fixedforeignjourney. Bad workers actuallysucceeded,publishedrun,API200,cachesucceeded; controls passed. | Same31newcases plus41prior dependency cases:72passed. Negative calculations fail before publication,API404,retryqueued,baselineunchanged; correct fixed/journey/city-vs-node controls publish. |
+| Historical scenario | Pinned git archive2c193054, originalDTO and originalJobRepository.succeed in a subprocess actually publish the row. Current originalbe98 code returned HTTP200/cacheSucceeded for invalid oldfull-after/partial-reference, while two correct oldurban/partial controls passed. DefinitiveRED1failed,2passed,exit1. | Invalid historical read/cache/replay/job/input/cancel/idempotency paths give409; no new succeeded job; other session404; correct oldcontrols200/cacheSucceeded. |
+| Canonical publication DTO race |2failed,9deselected,exit1: checked mutable original differed from canonical bytes being stored. | Both race directions pass: bad saved payload cannot be rescued by mutating original; valid saved payload is not rejected by later original mutation. |
+| Proposal integrity and terminal cancel |3failed,2passed,8deselected,exit1: changed proposal content_hash, removed assumption and terminalcancel bypass. | Shared proposal integrity checker and successful cancel reuse validation pass; no stored scenario rewrite. |
+| Nested explicit Reference |1failed positive control,1passed foreign negative,exit1. Serializer warning in an initial test builder was corrected using ComponentRef before final run; no assertion weakened. | Correct nested Reference publishes/reads/caches; foreign Reference rejects. |
+| Erasing aggregate Reference | Initial test setup used an available helper with partial input and failed before the boundary; this was fixed and is not counted as RED proof. Definitive validbaseline+validDTO RED1 DIDNOTRAISE,2passed,exit1. | Required frozen aggregate declaration retained, final nested suite3passed. |
+
+Historical/race/integrity suite13passed, parent nested3passed; combined16passed. Historical tests include8 owner and8 other-scope concurrent reads, baseline payload/hash and proposal tampering, unchanged payload/hash checks, and actual old publication. No database fixture inserts a fabricated historical run in place of the required old Repository.succeed.
+
+Definitive logs in /tmp/backend-pr8-round4: reference-original-final-red.log, reference-green.log, historical-red.log, canonical-race-red.log, proposal-integrity-red.log, nested-reference-red.log, aggregate-retention-red.log, backend-first.log, backend-final.log and per-tree check logs/results.json. The old-writer helper initially resolved a current test helper during setup; it was corrected to run inside the old archive and assert old Repository origin/absence of calculation_kind before definitive RED. No setup failure is labelled proof of the requested defect. Deselections above were focused test selections, not skipped acceptance cases; final suites below contain no skips.
+
+## Final verification, real PostgreSQL
+
+Backend local: `.venv/bin/python -m pytest -q -o asyncio_default_fixture_loop_scope=function --tb=short` => exit0, **769passed,0failed,0skipped**,30.18s. Earlier full pass764 preceded five additional nested/integrity regressions; final count covers them all. Existing process/worker/migration/guarded-downgrade/cache/idempotency/session/security/scenario/assistant/provider and gzip-memory cases remain enabled. Dedicated PostgreSQL container/database on127.0.0.1:55439 only, UUID schemas. No paid or live provider/model call.
+
+Test environment: PYTHONPATH=.:packages/contracts/src:apps/api/src:packages/assistant/src:packages/engine/src, matching backend MYPYPATH; A2_TEST_DATABASE_URL targets the dedicated disposable database. Test-only A2_TEST_HISTORICAL_REPOSITORY points to the isolated Git checkout containing pinned2c193054; it does not load the dirty working files into the old runtime. Each A/B has its own frozen environment. Tests run sequentially.
+
+| Tree | Command | Exit | Actual result |
+| --- | --- | --- | --- |
+| A | `uvx --from uv==0.12.17 uv lock --check` | 0 | Resolved 158 packages in 12ms |
+| A | `uvx --from uv==0.12.17 uv sync --frozen --all-packages --group dev` | 0 |  + websockets==17.4 |
+| A | `uvx --from uv==0.12.17 uv pip check` | 0 | All installed packages are compatible |
+| A | `.venv/bin/python -c import a2_api,a2_contracts,a2_assistant,greenlet; print("source imports OK")` | 0 | source imports OK |
+| A | `.venv/bin/ruff check apps/api/src apps/api/tests apps/api/migrations packages/contracts/src packages/contracts/tests packages/assistant/src packages/assistant/tests` | 0 | All checks passed! |
+| A | `.venv/bin/ruff format --check apps/api/src apps/api/tests apps/api/migrations packages/contracts/src packages/contracts/tests packages/assistant/src packages/assistant/tests` | 0 | 116 files already formatted |
+| A | `.venv/bin/python -m mypy --explicit-package-bases packages/contracts/src/a2_contracts apps/api/src/a2_api packages/assistant/src/a2_assistant` | 0 | Success: no issues found in 43 source files |
+| A | `.venv/bin/python -m a2_api.export --output contracts/generated --check` | 0 | Schema exports match canonical models and API |
+| A | `.venv/bin/python scripts/check_product_config.py` | 0 | Product specification valid: approved methodology v3, Alice Flash, explicit data modes. |
+| A | `.venv/bin/python -m pytest -q apps/api/tests packages/contracts/tests packages/assistant/tests -o asyncio_default_fixture_loop_scope=function --tb=short` | 0 | 769 passed in 35.18s |
+| B | `uvx --from uv==0.12.17 uv lock --check` | 0 | Resolved 158 packages in 12ms |
+| B | `uvx --from uv==0.12.17 uv sync --frozen --all-packages --group dev` | 0 |  + websockets==17.4 |
+| B | `uvx --from uv==0.12.17 uv pip check` | 0 | All installed packages are compatible |
+| B | `.venv/bin/python -c import a2_api,a2_contracts,a2_assistant,greenlet; print("source imports OK")` | 0 | source imports OK |
+| B | `.venv/bin/ruff check apps/api/src apps/api/tests apps/api/migrations packages/contracts/src packages/contracts/tests packages/assistant/src packages/assistant/tests` | 0 | All checks passed! |
+| B | `.venv/bin/ruff format --check apps/api/src apps/api/tests apps/api/migrations packages/contracts/src packages/contracts/tests packages/assistant/src packages/assistant/tests` | 0 | 116 files already formatted |
+| B | `.venv/bin/python -m mypy --explicit-package-bases packages/contracts/src/a2_contracts apps/api/src/a2_api packages/assistant/src/a2_assistant` | 0 | Success: no issues found in 43 source files |
+| B | `.venv/bin/python -m a2_api.export --output contracts/generated --check` | 0 | Schema exports match canonical models and API |
+| B | `.venv/bin/python scripts/check_product_config.py` | 0 | Product specification valid: approved methodology v3, Alice Flash, explicit data modes. |
+| B | `.venv/bin/python -m pytest --collect-only -q apps/api/tests packages/engine/tests -o asyncio_default_fixture_loop_scope=function` | 0 | 915 tests collected in 0.73s |
+| B | `.venv/bin/python -m pytest -q apps/api/tests packages/contracts/tests packages/assistant/tests packages/engine/tests -o asyncio_default_fixture_loop_scope=function --tb=short` | 0 | 1365 passed in 31.95s |
+
+A:769passed,0failed,0skipped. B:1365passed,0failed,0skipped onML1f4c8ae4. Joint API+engine collection:915tests,exit0. Ruff/format116files, strictmypy43sourcefiles, exact schema export, frozen lock/sync/pip, config and source imports pass. All commands above exit0. Full backend local checks also pass. `git diff --check` pass. No final test failure or skip is hidden.
+
+## Contract consequences and limits
+
+OpenAPI/JSON Schema and generated/manifest.json have zero diff against be98b68; the byte-reproducible export remains current. No new required field, enum, request or endpoint. Full indexes now require verifiable directed Reference applicability. Historical scenarios are held to the same semantics as newly published ones; unsafe rows receive existing safe409 instead of silently being served. Correct verified historical urban/partial records remain readable; immutable payload/hash are unchanged by validation.
+
+ML1 must declare directed node boundaries or evaluated Journey provenance. FRONTEND must handle existing stored_result_incompatible also on polling/replay/cancel and request recalculation, not loop on succeeded. Bare installed a2_api import without source paths remains the external DevOps packaging limitation from prior verification. ML1/ML2 walk-only vs walk+road graph-fingerprint mismatch remains outside this change; no engine/data/infra/dependency ownership was crossed. CI tests executing historical publication require the pinned Git commit to be available (or test-only source-repository env), not a shallow history missing2c193054. No runtime dependency on old Git code.
+
+Ready for independent repeat review of local changes. The previously reproduced P1 cases now reject publication/reuse; no claim is made of complete production-city integration, live Alice or browser E2E. PR8 is externally merged, so any subsequent publication needs a separately agreed follow-up workflow. No commit/push/merge/review publication performed here.
+
+## Complete fourth-cycle modified/new file inventory
+
+- `apps/api/docs/backend-review-20261109.md`
+- `apps/api/docs/frontend-integration-handoff.md`
+- `apps/api/docs/handoff-ml1-ml2.md`
+- `apps/api/src/a2_api/storage.py`
+- `apps/api/tests/historical_scenario_writer4.py`
+- `apps/api/tests/refscope4_handlers.py`
+- `apps/api/tests/test_historical_scenario4.py`
+- `apps/api/tests/test_refscope4_publication.py`
+- `apps/api/tests/test_scenario_frozen_reference.py`
+- `apps/api/tests/test_scenario_nested_reference4.py`
+- `apps/api/tests/test_v2_tools.py`
+- `docs/tasks/backend.md`
+- `packages/contracts/src/a2_contracts/v2/results.py`
+- `packages/contracts/tests/test_missing_required_operands.py`
+- `packages/contracts/tests/test_refscope4_applicability.py`
+- `packages/contracts/tests/test_required_result_dependencies.py`

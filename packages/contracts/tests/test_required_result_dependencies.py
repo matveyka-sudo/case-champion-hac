@@ -104,6 +104,7 @@ def test_independent_raw_metric_needs_no_full_reference():
 
 def test_explicit_reference_dependency_cannot_bypass_completeness_or_identity():
     raw = complete_result()
+    raw["request"].update(origin_node_ids=["demo-a"], destination_node_ids=["demo-b"])
     raw["metrics"][0]["journey_id"] = None
     raw["scores"][0]["reference_ids"] = ["reference"]
     assert AnalysisResult.model_validate(raw).scores[0].reference_ids == ["reference"]

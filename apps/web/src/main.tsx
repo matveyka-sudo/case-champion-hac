@@ -1,13 +1,12 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './shared/styles/tokens.css';
-import './shared/styles/base.css';
-import { App } from './app/App';
-const root = document.getElementById('root');
-if (!root) throw new Error('Root element is missing');
-ReactDOM.createRoot(root).render(
-  <React.StrictMode>
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "leaflet/dist/leaflet.css";
+import "./styles/prototype.css";
+import "./styles/integration.css";
+import App from "./App";
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
     <App />
-  </React.StrictMode>,
+  </StrictMode>,
 );

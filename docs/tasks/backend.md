@@ -41,7 +41,7 @@ DTO четырёх видов анализа, отдельные Metric и Score
 - [x] ProductRegistry с принятыми ID, версиями, датами, cargo profiles и отдельной readiness каждого вида; dynamic traffic не подменяется static.
 - [x] Production HTTP: analyses/jobs/cancel/results/capabilities/territories/explanation/saved scenarios/scenario runs; scope сессии и единый request_id.
 - [x] V2 durable queue/worker/proposals: PostgreSQL, heartbeat/lease, fenced publication, cancellation, scoped cache и миграция 0002; legacy изолирован.
-- [x] Flash adapter и восемь read-only tools, grounded numeric claims, template fallback и bounded calls/tokens/retries. Live выключен без внешнего durable deployment budget.
+- [x] Flash adapter и восемь read-only tools, grounded numeric claims, template fallback и bounded calls/tokens/retries. PostgreSQL DeploymentBudget резервирует общий денежный и независимый токенный лимит; бюджет устанавливается оператором явно. Live остаётся выключенным до отдельной авторизации и проверки платёжной валюты.
 - [x] Ограниченный адаптер Яндекс Расписаний с explicit partial/direct-only coverage, paging/quota/rate/retry/cache; реальные источники автоматически не подключаются.
 - [x] Воспроизводимый экспорт OpenAPI/JSON Schema, Ruff/format, strict mypy и полная регрессия с PostgreSQL.
 
@@ -171,3 +171,48 @@ Publication preparation: user authorized a separate commit and ordinary push to 
 Completed locally on2c19305: typed mandatory intercity operands (urban H remains independent of Reference), complete typed territorial weights regardless of ranking flag, full passenger aggregate path dependency, cargo aggregate chain traversal, immutable scenario reference retention including journey/reference rebinding and legacy partial-score upgrade, and compressed-response rejection before decoder allocation. Added independent RED/GREEN contract, spawned worker/publication/API/cache and bounded-memory regressions. Canonical DTO adds only optional Score.calculation_kind; full old intercity results without semantics get safe409, no payload/hash rewrite.
 
 Final PostgreSQL backend/A:722 passed,0skipped; B withcurrentML1f4c8ae4:1318 passed,0skipped; jointcollection884. Ruff/format110files,strictmypy43files,frozen/schema/config/sourceimports pass. Intermediate failures and exact commands/SHA/trees/fullfileinventory are preserved in apps/api/docs/backend-review-20261109.md. Bare installed imports and ML1/ML2 graphfingerprint remain external owner dependencies. No commit,push,merge or GitHubreview publication was authorized or performed for this follow-up.
+
+## Fourth independent review (local follow-up)
+
+Fixed Reference applicability (exact directed fixed boundary sets or evaluated-Journey proof) and historical ScenarioResult reuse with one semantic validator shared by publication/read/cache. Scope precedes parsing; hashes and immutable baseline/proposal are checked; correct oldurban/partial results remain supported, invalid oldscenarios give409 without payload/hash writes. Reuse through replay/job/input/idempotency/cancel and concurrent reads is covered. Publication validates canonical saved DTO. No DTO/schema fields or formulas changed.
+
+Actual archivedbe98 RED16fail/15pass forscope; actual old2c Repository.succeed publishes historicalRED (HTTP200/cacheSucceeded). Final local/A769pass,B1365pass,0skips; Ruff/format116files,mypy43files,frozen/export/config/sourceimports pass. Exact commands, failed setup distinctions, intermediate RED and full inventory are in apps/api/docs/backend-review-20261109.md. During verification PR8 was externally merged into dev3446f7e; A/B use that newdev and ML1f4c8ae4. No commit,push,merge or review publication performed; follow-up publication needs separate authorization.
+
+## Структурное разделение backend в fix-fullstack
+
+По прямому поручению пользователя, основной PyCharm checkout, исходный
+5311617a7634e04eec6936cc103986e3f39ec3b8. Старые services.py/flat modules заменены
+каноническими api/v2 routers, services, core, db/repositories, workers, assistant
+и exports. Полная карта старых/новых путей и SQL — apps/api/README.md.
+
+SQL: jobs/cache/lease/atomic publication — db/repositories/jobs.py; immutable
+reads — runs.py; proposal SQL — scenarios.py; evidence/FTS — evidence.py;
+Alice ledger — budget.py. Pool lifecycle — db/connection.py; row DTO/hash/scope
+mapping — db/rows.py; pure publication guards — db/validation.py. Raw asyncpg
+сохранён, ORM нет. Repositories используют один pool; наследуемые операции
+сохраняют self dispatch и connection публикации, не открывая новую транзакцию.
+
+app.py остаётся ASGI/factory entrypoint. Middleware/error/cookie/CSRF policy —
+api/application.py; legacy HTTP изолирован в api/legacy.py. Старые create_app,
+runtime CLI и budget/export hooks сохранены. Для worker.calculate и Alice
+SDKTransport оставлены явные тонкие compatibility adapters без sys.modules hacks.
+Канонические Pydantic v2 остаются packages/contracts, internal models/config — core.
+
+Исходно200 passed/148 skipped без БД; после frozen установки всех workspace
+packages (локально отсутствовал уже объявленный greenlet) исходные сохранённые
+исходники проверены read-only на disposable PostgreSQL17.11:348 passed.
+Реализация и правки выполнялись только в основной папке. После рефакторинга:
+**826 passed,0 skipped** API/contracts/assistant, включая28 новых guards.
+Все293 schema artifacts побайтно идентичны исходным. Зафиксированы185 прежних
+signatures/defaults,47 SQL literals и57 SQL parameter/transaction fingerprints.
+Ruff/format117 files и strict mypy93 files clean. TCP Uvicorn+PostgreSQL, worker
+--once и budget status PASS; миграции0001–0004, downgrade/upgrade, concurrency,
+lease loss/cancel/publication, evidence и budget проверены существующим suite.
+Frontend неизменён:36 tests/build/API freshness и21 E2E PASS; tracked frontend/
+по-прежнему отсутствует. Только проверенные ignored node_modules/dist/test-results
+и пустой старый каталог frontend удалены по прямому разрешению пользователя.
+
+a2-dev.bundle сохранён. Manifests/lock, migrations, contracts/generated, engine,
+ML2, React и business/security/SQL semantics не менялись. Полная упаковка,
+реальные accepted adapters, production provider/Alice и общий live E2E остаются
+следующим этапам. Merge/rebase/reset/force-push не выполнялись.

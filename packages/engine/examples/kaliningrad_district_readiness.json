@@ -1,0 +1,47 @@
+{
+  "snapshot_id": "kaliningrad-urban-2026-11-08.4",
+  "ml2_commit": "e631929c01792ced9f0a9305ddfce5b312305fa4",
+  "cells": 286,
+  "points": 216,
+  "districts": 3,
+  "accepted_objects": 262,
+  "h_seconds": 1800.0,
+  "city_population": "485776.410",
+  "allocated_population": "485776.273",
+  "residual_population": "0.137",
+  "excluded_population": "277.772",
+  "documented_residual_cells": 133,
+  "district_populations": [
+    {
+      "district_id": "kaliningrad-relation-331411",
+      "name": "Центральный район",
+      "population": "138478.673",
+      "excluded_population": "193.203",
+      "reasons": [
+        "EXCLUDED_DISTRICT_POPULATION"
+      ]
+    },
+    {
+      "district_id": "kaliningrad-relation-331412",
+      "name": "Ленинградский район",
+      "population": "193507.398",
+      "excluded_population": "63.411",
+      "reasons": [
+        "EXCLUDED_DISTRICT_POPULATION"
+      ]
+    },
+    {
+      "district_id": "kaliningrad-relation-331413",
+      "name": "Московский район",
+      "population": "153790.202",
+      "excluded_population": "21.140",
+      "reasons": [
+        "EXCLUDED_DISTRICT_POPULATION"
+      ]
+    }
+  ],
+  "city_index_status": "unknown",
+  "gap_status": "unknown",
+  "ranking_complete": false,
+  "network_run": false
+}
