@@ -1,0 +1,34 @@
+{
+  "dataset_id": "mos_ground_transport.60661-20261023",
+  "source_id": "mos_ground_transport",
+  "source_url": "https://data.mos.ru/opendata/60661",
+  "retrieved_at": "2026-11-09T20:47:02Z",
+  "publication_date": "2026-10-23",
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Москва: наземный городской пассажирский транспорт",
+  "license": {
+    "name": "Открытые данные Правительства Москвы (data.mos.ru), Методические рекомендации по публикации открытых данных v3.0; лицензия в паспорте не указана — общедоступная информация (149-ФЗ, ст. 7), источник указывается",
+    "url": "https://data.mos.ru/",
+    "status": "permitted",
+    "attribution": "Департамент транспорта и развития дорожно-транспортной инфраструктуры города Москвы, data.mos.ru"
+  },
+  "access_method": "manual",
+  "raw_path": "mos_ground_transport/60661-20261023.zip",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "dfa4230968f16270b751d707a826a23a882685fa6bbaf69a659ccf928e2bebea",
+    "size_bytes": 144495574
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "data-60661-23-10-2026.json": "GTFS stop_times.txt (набор «Маршруты и остановки наземного городского пассажирского транспорта (Расписание рейсов)», JSON)"
+  },
+  "coverage": "Выгрузка набора 60661 от 23.10.2026, скачана вручную в браузере",
+  "limitations": [
+    "Наборы обновляются по отдельности: версии таблиц нужно брать из одного релиза",
+    "Лицензия в паспорте не указана; используется как общедоступная информация с указанием источника — решение ML2"
+  ],
+  "status": "accepted",
+  "qa_report": "data/manifests/qa/mos_ground_transport.gtfs-20261110.json"
+}

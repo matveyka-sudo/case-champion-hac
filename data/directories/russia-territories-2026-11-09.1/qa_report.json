@@ -1,0 +1,154 @@
+{
+  "directory_id": "russia-territories-2026-11-09.1",
+  "result": "pass",
+  "checks": [
+    {
+      "check_id": "territory_ids_unique",
+      "status": "pass",
+      "detail": "Territory ids are unique"
+    },
+    {
+      "check_id": "cities_have_regions",
+      "status": "pass",
+      "detail": "Every city has a parent subject of the directory"
+    },
+    {
+      "check_id": "capitals_are_cities",
+      "status": "pass",
+      "detail": "Every listed capital is a city of the directory"
+    },
+    {
+      "check_id": "regions_have_capitals",
+      "status": "warn",
+      "detail": "Every subject has a capital among the cities (regional results go through capitals)",
+      "missing": [
+        "Донецкая Народная Республика",
+        "Запорожская область",
+        "Луганская Народная Республика",
+        "Республика Крым",
+        "Севастополь",
+        "Херсонская область"
+      ]
+    },
+    {
+      "check_id": "subjects_have_zones",
+      "status": "pass",
+      "detail": "Every federal subject has a time zone",
+      "missing": []
+    },
+    {
+      "check_id": "city_count_plausible",
+      "status": "pass",
+      "detail": "About 1 100 cities (Rosstat: 1 117 on 01.01.2021)",
+      "cities": 1121
+    },
+    {
+      "check_id": "dropped_cities",
+      "status": "warn",
+      "detail": "No city of the source is left out",
+      "dropped": {
+        "no_subject": [
+          "Инкерман",
+          "Канаш",
+          "Луганск",
+          "Люберцы",
+          "Ожск",
+          "Хаджи-Тархан"
+        ],
+        "ambiguous_subject": [],
+        "no_coordinates": [],
+        "no_zone": []
+      }
+    },
+    {
+      "check_id": "disputed_marked",
+      "status": "pass",
+      "detail": "The six disputed subjects are present and marked",
+      "found": [
+        "Донецкая Народная Республика",
+        "Запорожская область",
+        "Луганская Народная Республика",
+        "Республика Крым",
+        "Севастополь",
+        "Херсонская область"
+      ]
+    },
+    {
+      "check_id": "pilot_cities_present",
+      "status": "pass",
+      "detail": "The pilot cities keep their urban bundle ids"
+    }
+  ],
+  "summary": {
+    "rules": "ru-territories-rules-v1",
+    "subjects_zone_from_offset": [
+      "Адыгея",
+      "Алтайский край",
+      "Астраханская область",
+      "Волгоградская область",
+      "Донецкая Народная Республика",
+      "Камчатский край",
+      "Карелия",
+      "Кировская область",
+      "Красноярский край",
+      "Луганская Народная Республика",
+      "Пермский край",
+      "Самарская область",
+      "Тыва",
+      "Удмуртия",
+      "Хакасия"
+    ],
+    "subjects_without_zone": [],
+    "subjects": 89,
+    "regions": 89,
+    "cities_in_source": 1127,
+    "cities": 1121,
+    "dropped_cities": {
+      "no_subject": [
+        "Инкерман",
+        "Канаш",
+        "Луганск",
+        "Люберцы",
+        "Ожск",
+        "Хаджи-Тархан"
+      ],
+      "ambiguous_subject": [],
+      "no_coordinates": [],
+      "no_zone": []
+    },
+    "ambiguous_subject_ties": [],
+    "subject_from_any_statement": [
+      "Дедовск",
+      "Добрянка",
+      "Заринск",
+      "Каргополь",
+      "Кусково",
+      "Луховицы",
+      "Михайловка",
+      "Нижний Тагил",
+      "Пыталово",
+      "Рузаевка",
+      "Суджа"
+    ],
+    "capitals_missing": [
+      "Донецкая Народная Республика",
+      "Запорожская область",
+      "Луганская Народная Республика",
+      "Республика Крым",
+      "Севастополь",
+      "Херсонская область"
+    ],
+    "disputed": [
+      "Донецкая Народная Республика",
+      "Запорожская область",
+      "Луганская Народная Республика",
+      "Республика Крым",
+      "Севастополь",
+      "Херсонская область"
+    ],
+    "multi_zone_subjects": [
+      "Якутия"
+    ],
+    "cities_without_population": 3
+  }
+}

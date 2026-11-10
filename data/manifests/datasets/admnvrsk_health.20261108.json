@@ -1,0 +1,36 @@
+{
+  "dataset_id": "admnvrsk_health.20261108",
+  "source_id": "admnvrsk_health",
+  "source_url": "https://admnvrsk.ru/o-gorode/gostyam-goroda/uchrezhdenija-zdravoohranenija/",
+  "retrieved_at": "2026-11-08T19:24:00.513972Z",
+  "publication_date": null,
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Новороссийск",
+  "license": {
+    "name": "Общедоступная официальная информация ОМСУ: используются только факты (ст. 1259 ГК РФ, 8-ФЗ)",
+    "url": "https://admnvrsk.ru/",
+    "status": "permitted",
+    "attribution": "Администрация МО г. Новороссийск, admnvrsk.ru"
+  },
+  "access_method": "file",
+  "raw_path": "admnvrsk_health/uchrezhdenija-zdravoohranenija-20261108.html",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "f0def1ae51224e389a6f11d7b53576bdffcb70f5d85806b868368a08596c0c1e",
+    "size_bytes": 175256
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "td1": "наименование",
+    "td2": "адрес и контакты (контакты не используются)",
+    "td3": "профиль"
+  },
+  "coverage": "Таблица учреждений здравоохранения на странице администрации на дату загрузки",
+  "limitations": [
+    "Головные адреса, не все отделения",
+    "Собственность — по ОПФ в наименовании"
+  ],
+  "status": "accepted",
+  "qa_report": "data/bundles/novorossiysk-urban-2026-11-08.1/qa_report.json"
+}

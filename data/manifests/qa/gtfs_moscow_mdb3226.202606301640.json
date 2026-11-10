@@ -1,0 +1,114 @@
+{
+  "dataset_id": "gtfs_moscow_mdb3226.202606301640",
+  "source_url": "https://files.mobilitydatabase.org/mdb-3226/mdb-3226-202606301640/mdb-3226-202606301640.zip",
+  "raw_sha256": "dec3ec0ccc2efb7f1327ee6f26a0636a4a271494490e6debedcb2c1ccc579e76",
+  "source_file_dates": {
+    "agency.txt": "2025-05-27",
+    "calendar.txt": "2025-05-27",
+    "routes.txt": "2025-05-27",
+    "stop_times.txt": "2025-05-27",
+    "stops.txt": "2025-05-27",
+    "trips.txt": "2025-05-27"
+  },
+  "repair_version": "gtfs-repair-v1",
+  "output": {
+    "path": "data/processed/gtfs/gtfs_moscow_mdb3226.202606301640.gtfs-repair-v1.zip",
+    "sha256": "2d2ab8e49b2d17283ed5417a375d9f4c76798475498274a7a05134b78e66da71"
+  },
+  "input_rows": {
+    "agency": 5,
+    "calendar": 2100,
+    "routes": 877,
+    "stops": 17896,
+    "trips": 224851,
+    "stop_times": 6227078
+  },
+  "output_rows": {
+    "agency": 5,
+    "calendar": 2100,
+    "routes": 877,
+    "stops": 17896,
+    "trips": 224851,
+    "stop_times": 6047373
+  },
+  "losses": {
+    "stop_time_unknown_stop": 1860,
+    "stop_time_unknown_trip": 177845
+  },
+  "dropped_columns": {
+    "agency.txt": [
+      "global_id",
+      "<empty>"
+    ],
+    "calendar.txt": [
+      "global_id",
+      "<empty>"
+    ],
+    "routes.txt": [
+      "global_id",
+      "route_desc",
+      "route_union",
+      "<empty>"
+    ],
+    "stops.txt": [
+      "global_id",
+      "StationName",
+      "Street",
+      "Direction",
+      "Pavilion",
+      "OperatingOrgName",
+      "geoData",
+      "geodata_center",
+      "<empty>"
+    ],
+    "trips.txt": [
+      "global_id",
+      "block_id",
+      "volume_id",
+      "trip_type",
+      "<empty>"
+    ],
+    "stop_times.txt": [
+      "global_id",
+      "stop_times_id",
+      "shape_dist_traveled",
+      "pickup_type",
+      "stop_headsign",
+      "trip_type",
+      "stop_interval",
+      "<empty>"
+    ]
+  },
+  "unused": {
+    "routes": 3,
+    "stops": 5211,
+    "services": 12
+  },
+  "modes": {
+    "bus": 838,
+    "cable_tram": 1,
+    "tram": 35
+  },
+  "window": {
+    "from": "2026-11-01",
+    "to": "2026-11-30",
+    "services_running": 1176,
+    "trips_running": 117844,
+    "routes_running": 485,
+    "modes_running": {
+      "bus": 449,
+      "cable_tram": 1,
+      "tram": 35
+    }
+  },
+  "service_end_years": {
+    "2025": 578,
+    "2026": 334,
+    "2030": 1176
+  },
+  "unrepaired": {
+    "agencies_without_url": 4,
+    "calendar_dates": "absent: holidays and other exceptions are unknown",
+    "shapes": "absent"
+  }
+}

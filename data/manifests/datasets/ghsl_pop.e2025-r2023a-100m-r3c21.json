@@ -1,0 +1,34 @@
+{
+  "dataset_id": "ghsl_pop.e2025-r2023a-100m-r3c21",
+  "source_id": "ghsl_pop",
+  "source_url": "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_R2023A/GHS_POP_E2025_GLOBE_R2023A_54009_100/V1-0/tiles/GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0_R3_C21.zip",
+  "retrieved_at": "2026-11-08T20:43:58.174941Z",
+  "publication_date": "2023-04-01",
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Тайл R3 C21 сетки GHSL (Mollweide ESRI:54009), включает Москву",
+  "license": {
+    "name": "CC-BY-4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "status": "permitted",
+    "attribution": "Schiavina M. et al., GHS-POP R2023A, European Commission JRC"
+  },
+  "access_method": "file",
+  "raw_path": "ghsl_pop/GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0_R3_C21.zip",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "31605219ef3125f41f5ed016fe3fe99985d6ea1e1cad601f44b9650eed1413d2",
+    "size_bytes": 25487186
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "band1": "persons per 100 m pixel, epoch 2025"
+  },
+  "coverage": "Население эпохи 2025, пиксели 100 м",
+  "limitations": [
+    "Модельная оценка R2023A, эпоха 2025 — проекция, не перепись",
+    "Постоянное население, не дневное"
+  ],
+  "status": "accepted",
+  "qa_report": "data/bundles/moscow-urban-2026-11-09.1/qa_report.json"
+}

@@ -1,0 +1,33 @@
+{
+  "dataset_id": "osm_geofabrik.russia-261108",
+  "source_id": "osm_geofabrik",
+  "source_url": "https://download.geofabrik.de/russia-261108.osm.pbf",
+  "retrieved_at": "2026-11-09T16:08:58Z",
+  "publication_date": "2026-11-08",
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Россия (выгрузка Geofabrik russia)",
+  "license": {
+    "name": "ODbL-1.0",
+    "url": "https://opendatacommons.org/licenses/odbl/1-0/",
+    "status": "permitted",
+    "attribution": "© OpenStreetMap contributors"
+  },
+  "access_method": "file",
+  "raw_path": "osm_geofabrik/russia-261108.osm.pbf",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "97f03c8b7a83514519616ccf46514e51317130ac350db3acfefe4e55da4cf014",
+    "size_bytes": 4200427934
+  },
+  "upstream_checksum": "md5:76abc3b364ce28f476563202a4e9ff77",
+  "schema_mapping": {},
+  "coverage": "Все объекты OSM в полигоне выгрузки на дату выгрузки",
+  "limitations": [
+    "Теги неоднородны",
+    "Не содержит расписаний и формы собственности",
+    "Полигон выгрузки Geofabrik может не совпадать с границей РФ"
+  ],
+  "status": "accepted",
+  "qa_report": "data/directories/russia-seaports-2026-11-09.1/qa_report.json"
+}

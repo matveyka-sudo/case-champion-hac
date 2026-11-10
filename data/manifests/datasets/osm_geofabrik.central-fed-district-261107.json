@@ -1,0 +1,32 @@
+{
+  "dataset_id": "osm_geofabrik.central-fed-district-261107",
+  "source_id": "osm_geofabrik",
+  "source_url": "https://download.geofabrik.de/russia/central-fed-district-261107.osm.pbf",
+  "retrieved_at": "2026-11-08T20:44:13.056842Z",
+  "publication_date": "2026-11-07",
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Центральный федеральный округ (выгрузка Geofabrik russia/central-fed-district)",
+  "license": {
+    "name": "ODbL-1.0",
+    "url": "https://opendatacommons.org/licenses/odbl/1-0/",
+    "status": "permitted",
+    "attribution": "© OpenStreetMap contributors"
+  },
+  "access_method": "file",
+  "raw_path": "osm_geofabrik/central-fed-district-261107.osm.pbf",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "d28d118c9269138ae33ea6561d4e29e492bd9954e6dd088f80b7a3b1372b77f2",
+    "size_bytes": 884829631
+  },
+  "upstream_checksum": "md5:38cb5afd0d799b4429217e4c20b1e970",
+  "schema_mapping": {},
+  "coverage": "Все объекты OSM в полигоне выгрузки на дату выгрузки",
+  "limitations": [
+    "Теги неоднородны",
+    "Не содержит расписаний и формы собственности"
+  ],
+  "status": "accepted",
+  "qa_report": "data/bundles/moscow-urban-2026-11-09.1/qa_report.json"
+}

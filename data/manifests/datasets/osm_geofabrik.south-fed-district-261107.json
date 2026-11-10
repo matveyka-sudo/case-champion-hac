@@ -1,0 +1,32 @@
+{
+  "dataset_id": "osm_geofabrik.south-fed-district-261107",
+  "source_id": "osm_geofabrik",
+  "source_url": "https://download.geofabrik.de/russia/south-fed-district-261107.osm.pbf",
+  "retrieved_at": "2026-11-08T19:17:34.676135Z",
+  "publication_date": "2026-11-07",
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Южный федеральный округ (выгрузка Geofabrik russia/south-fed-district)",
+  "license": {
+    "name": "ODbL-1.0",
+    "url": "https://opendatacommons.org/licenses/odbl/1-0/",
+    "status": "permitted",
+    "attribution": "© OpenStreetMap contributors"
+  },
+  "access_method": "file",
+  "raw_path": "osm_geofabrik/south-fed-district-261107.osm.pbf",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "e867508d9240743dea215f130dcfe441a0a53980558b7d5002db91a6b87a57da",
+    "size_bytes": 317285835
+  },
+  "upstream_checksum": "md5:02a91a0fdbfd1d1ad655d19f181cd7ef",
+  "schema_mapping": {},
+  "coverage": "Все объекты OSM в полигоне выгрузки на дату выгрузки",
+  "limitations": [
+    "Теги неоднородны",
+    "Не содержит расписаний и формы собственности"
+  ],
+  "status": "accepted",
+  "qa_report": "data/bundles/novorossiysk-urban-2026-11-08.1/qa_report.json"
+}
