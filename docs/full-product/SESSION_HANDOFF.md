@@ -1,5 +1,46 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Latest continuation — reviewed quota integration and full backend verification
+
+Supersedes older task statuses below. Goal ACTIVE. Integration candidate before
+this note is54ce057d54c5b33c1fa2a5cff907cb026e3b0747. No push or dev merge.
+
+- Integrated3090cef+1e138ec after root source review and independent reviewer
+  acceptance. Shared PostgreSQL account/day quota includes every retry/copyright
+  wire attempt; no default fresh allowance, no uncertain refunds. Decoded/raw
+  credential echoes and duplicate JSON keys rejected before capture/DTO/cache.
+  Reviewer26 independent attacks +48 provider regressions PASS. Root185 focused
+  provider/PG/migration tests PASS28.59s. No actual provider calls or initialized
+  production quota. Migration0006 creates tables only.
+- Root full API/contracts/assistant suite on merged54ce057:1237PASS172.31s with
+  real disposable PostgreSQL schemas. Mypy100sources, Ruff, formatting196files,
+  schema export freshness, web layout/API freshness and product config all PASS.
+  No pending root test sessions at this checkpoint. New geometry/UI changes will
+  still need their own checks and integrated replay.
+- BACKEND implementing approved optional ProofBinding.geometry FileRef to typed
+  geometry-supplement.json (schema waydex-certified-walk-geometry-binding/1,
+  receipt and original_snapshot FileRefs). Original proof binding remains copied
+  unchanged and core equality excludes the optional field. Reuse live verified
+  graph/access/minimum; no second native graph parse. Exact time/index operand
+  stays unchanged and unlinked; separate partial total_seconds metric binds a
+  single walking Journey with microsecond-rounded timeline and explicit precision
+  limitation. No public DTO/formula/tolerance edits approved.
+- DEVOPS found and root independently confirmed hash convention correction:
+  snapshot raw file SHA f616122d81a297917d49fa64bec39a9876c20ef385469a3f4a7cbdf9b271b82d;
+  API canonical e3ac08680e52b9938d4f816690aefd6d15054ccf308cbc780918b4c8d61e4930
+  matches old proof binding and geometry receipt. ML1 compatibility7c57ada uses
+  ensure_ascii=True and is separate. Do not confuse these authorities. Preserve
+  original manifest753efeee in new archive provenance. Geometry staging verified
+  33files/2730733B; old189-file archive and5190/5191/5192 unchanged.
+- FRONTEND implementing explicit calculated-point overview, distinct numeric
+  point totals (zero included), denominator from actual sample inventory, citynull
+  visible, no automatic selection/draft changes. Await delivery and root browser
+  review. DEVOPS preparing fixture-only Chromium CI to close missing browser job;
+  final5193 clean build waits integrated geometry/UI source SHA.
+- SCENARIOS has new read-only design task: carry private Rasp cache validity and
+  authorization through frozen-job admission/execution/publication/result reuse.
+  No implementation approved yet; no provider activation or invented timetable.
+
 ## Latest continuation — scope UI, scenarios, geometry and private ingestion
 
 Supersedes older status below. Goal ACTIVE. Root clean candidate before this note
