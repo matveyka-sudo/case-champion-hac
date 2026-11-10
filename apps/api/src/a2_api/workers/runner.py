@@ -10,6 +10,7 @@ from a2_api.core.errors import DomainError
 from a2_api.core.jobs import CalculationOutput, ClaimedJob, V2JobContext
 from a2_api.db.repositories.checkpoints import CheckpointRepository
 from a2_api.db.repositories.jobs import JobRepository
+from a2_api.db.repositories.private_sources import PrivateSourceRepository
 from a2_api.workers.calculation import HandlerOutput, calculate, calculate_batches
 
 logger = logging.getLogger("a2_api.workers.runner")
@@ -50,7 +51,21 @@ class Worker:
                     raise DomainError(
                         409, "incompatible_versions", "Queued job requires another code version"
                     )
-                result = await self._calculate_with_lease(claim, lease_lost)
+                remaining = await PrivateSourceRepository(self.repository.pool).remaining(
+                    claim.context
+                )
+                if remaining is None:
+                    result = await self._calculate_with_lease(claim, lease_lost)
+                else:
+                    try:
+                        async with asyncio.timeout(remaining):
+                            result = await self._calculate_with_lease(claim, lease_lost)
+                    except TimeoutError:
+                        raise DomainError(
+                            410,
+                            "data_unavailable",
+                            "Private source permission expired during calculation",
+                        ) from None
                 if isinstance(result, CalculationOutput):
                     await self.repository.succeed(
                         claim, result.analysis, proposals=result.proposals

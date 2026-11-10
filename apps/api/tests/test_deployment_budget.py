@@ -242,7 +242,7 @@ async def test_guarded_downgrade_preserves_configured_ledger(database):
     assert await reserve(ledger(pool), "saved")
     with pytest.raises(RuntimeError, match="budget"):
         await asyncio.to_thread(migrate, url, schema, "0003_evidence_search", True)
-    assert await pool.fetchval("SELECT version_num FROM alembic_version") == "0006_rasp_quota"
+    assert await pool.fetchval("SELECT version_num FROM alembic_version") == "0007_private_sources"
     assert (await ledger(pool).status()).held_amount == Decimal("0.3")
 
 

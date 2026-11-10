@@ -31,6 +31,23 @@ SCENARIO_SCOPE_EXTENSION = json.loads(
 RASP_QUOTA_EXTENSION = json.loads(
     (Path(__file__).parent / "fixtures/rasp_quota_extension.json").read_text()
 )
+PRIVATE_SOURCES_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/private_sources_extension.json").read_text()
+)
+
+
+def private_sources_counter(expected, kind):
+    assert set(PRIVATE_SOURCES_EXTENSION["modules"]) == {
+        "db/repositories/private_sources.py",
+        "db/repositories/jobs.py",
+        "db/repositories/runs.py",
+        "db/repositories/scenarios.py",
+    }
+    removed = collections.Counter(PRIVATE_SOURCES_EXTENSION["removed_" + kind])
+    assert removed <= expected
+    expected.subtract(removed)
+    expected.update(PRIVATE_SOURCES_EXTENSION["added_" + kind])
+    return +expected
 
 
 def scenario_scope_counter(expected, kind):
@@ -116,6 +133,7 @@ def normalize_signature(value):
 
 
 def test_all_185_existing_signatures_and_defaults():
+    assert set(PRIVATE_SOURCES_EXTENSION["signatures"]) == {"a2_api.core.jobs:V2JobContext"}
     assert set(BATCH_EXTENSION["signatures"]) == {
         "a2_api.core.jobs:V2JobContext",
         "a2_api.services.analyses:AnalysisService",
@@ -138,6 +156,7 @@ def test_all_185_existing_signatures_and_defaults():
         | BATCH_EXTENSION["signatures"]
         | SCENARIO_SCOPE_EXTENSION["signatures"]
         | RASP_QUOTA_EXTENSION["signatures"]
+        | PRIVATE_SOURCES_EXTENSION["signatures"]
     ).items():
         module, qualified = path.split(":")
         obj = importlib.import_module(module)
@@ -211,10 +230,13 @@ def test_sql_literals_unchanged_and_confined_to_database_layer():
             "db/repositories/scenarios.py"
         }
     assert RASP_QUOTA_EXTENSION["module"] == "db/repositories/rasp_quota.py"
-    assert collections.Counter(strings) == scenario_scope_counter(
-        collections.Counter(BASELINE["sql_literals"])
-        + collections.Counter(BATCH_EXTENSION["sql_literals"])
-        + collections.Counter(RASP_QUOTA_EXTENSION["sql_literals"]),
+    assert collections.Counter(strings) == private_sources_counter(
+        scenario_scope_counter(
+            collections.Counter(BASELINE["sql_literals"])
+            + collections.Counter(BATCH_EXTENSION["sql_literals"])
+            + collections.Counter(RASP_QUOTA_EXTENSION["sql_literals"]),
+            "sql_literals",
+        ),
         "sql_literals",
     )
 
@@ -354,9 +376,12 @@ def test_sql_parameter_binding_and_transaction_options_unchanged():
                 hashes.append(
                     hashlib.sha256(ast.dump(node, include_attributes=False).encode()).hexdigest()
                 )
-    assert collections.Counter(hashes) == scenario_scope_counter(
-        collections.Counter(BASELINE["sql_call_hashes"])
-        + collections.Counter(BATCH_EXTENSION["sql_call_hashes"])
-        + collections.Counter(RASP_QUOTA_EXTENSION["sql_call_hashes"]),
+    assert collections.Counter(hashes) == private_sources_counter(
+        scenario_scope_counter(
+            collections.Counter(BASELINE["sql_call_hashes"])
+            + collections.Counter(BATCH_EXTENSION["sql_call_hashes"])
+            + collections.Counter(RASP_QUOTA_EXTENSION["sql_call_hashes"]),
+            "sql_call_hashes",
+        ),
         "sql_call_hashes",
     )
