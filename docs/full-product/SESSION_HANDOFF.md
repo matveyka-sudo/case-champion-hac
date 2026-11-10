@@ -1,5 +1,59 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Full campaign and real scenario checkpoint — 2026-11-11 02:30 MSK
+
+Live5193 now runs frozen `d085256ae668e4ed97c626bccc43bfd2febe9d37`.
+API image5a2534e2738990a2e3f617a434a54d9bd64c688d58b62955d08d254f2db55b5a,
+web4582c5f6c981095c184b5adeac22c4ac3b846f433281afc36265dcacf35ce346.
+The original165-file runtime and graph closure are reused byte-for-byte.
+Activation succeeded in61.55s, volume preserved. Candidate receipts are in
+`waydex-full-runtime/candidate-threecity-code-d085256ae668-20261111-v3/`.
+
+Moscow's fresh UI job `d1c0b9ce-dfdd-4267-8fb8-b9b3dc4023bf` retained ALL1401
+observations in88 PostgreSQL checkpoints, then FAILED during ML1 reduction.
+The previously corrected coordinate boundary no longer blocks the campaign.
+Exact new cause: point `moscow-utm37n-1km-v1-e377-n6125-p` has a positive0.02m
+accepted approach whose source rounds its duration to0.0s. Strict ML1 raises
+`ACCESS_CONNECTOR_REQUIRED`. BACKEND owns a narrow unknown-state correction;
+do not weaken the guard or invent an epsilon. All2361 points/population must
+remain. Preserve the failed job and its immutable raw observations; no final
+Moscow walking result or full-city index has been published.
+The real UI recovered two15s admission aborts with the same idempotency key:
+one PostgreSQL job only. This is a measured latency gap under load.
+
+The timezone correction now passes actual live React → scenario → PostgreSQL:
+baseline analysis `85f5259d-bdb1-4120-849a-0d409293df39`, proposal
+`3d5e6bd5-384d-57bf-a260-3602f933325d`, scenario job
+`beb49e52-6ec2-4f58-a882-b29d663f330a`; run
+`pending:scenario:0d8584335daa98ad6eadf9b7863f363c2438d71a95065b16cad95f3d79abc16e`.
+UI shows93.3→87.3minutes for the selected route; exact5595.143→5235.143seconds.
+Canonical minimum delta remains unknown, affected population null, feasibility
+unverified. Root checked ScenarioResult, exact saved-before values, unchanged
+baseline bytes, repeat GET equality and foreign-session404. Response17,943,282B.
+Receipts/actual files: `root-fourprofile-ui-187158e3-20261111/`, scenario-d085 names.
+
+One authorized live Alice probe charged0.3434RUB and returned safe template
+fallback `INVALID_EXPLANATION`; exact raw cause remains unproven. Ledger now
+charged1.1257RUB/500, held3.2RUB unchanged. No second paid probe. An independent
+offline paragraph-expansion defect was fixed, along with safe diagnostic rules
+and proof-aware wording. Root274assistant tests pass; new code is not live yet.
+
+Current integration afterd085 includes PT accepted-map metadata and correctly
+scoped nonranking estimates (556bf30), sanitized worker diagnostics, and Alice
+fixes (d1c4488). Root219 combined scenario/PG/map/geometry tests pass, including
+proof transitions;274assistant tests pass. Root1189engine tests pass. Test-only
+typing correction2ac4e58 fixes d085's CI test annotations without runtime changes.
+Await the second Moscow incident fix before the next immutable deployment.
+
+ML2 finished a new immutable local expansion audit, not a routing run:
+K154strictly correlated points/136destinations, N303/86;20944/26058 metadata
+pairs respectively.127 ambiguous/displaced endpoints remain unknown. Two
+explicit adult-clinic pairs per city are prepared for backend review; no new
+minimum proof. Packet `ml2/city-walk-expansion-audit-20261111-v1/HANDOFF.md`,
+manifest6ae702c3e9456ad85c456b32a364b2f4b60f459117ab505511af672c56431e10.
+BACKEND scenario_timezone owns new approval candidates. K additionally needs
+a separate graph router; the active generic Valhalla contains Moscow's graph.
+
 ## Live four-profile acceptance — 2026-11-11 02:07 MSK
 
 Root activated frozen release `187158e3c554887e54fd276da32e1b95a627d382`

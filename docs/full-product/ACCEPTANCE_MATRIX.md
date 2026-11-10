@@ -9,7 +9,25 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 
 ## Three-city priority — 2026-11-10 continuation
 
-### Current gate update — 2026-11-11, actual live browser acceptance
+### Current gate update — 2026-11-11, full campaign / scenario
+
+- Live release d085256 preserves the immutable four-profile input closure.
+- Moscow walk1401: all88 checkpoints/1401 observations persisted, but final
+  reduction FAILED on a positive0.02m approach rounded by source to0.0s.
+  Unknown-state correction is RUNNING; no published full campaign result.
+- Real Moscow PT scenario UI/PG PASS:5595.143→5235.143s, saved baseline unchanged,
+  canonical minimum delta unknown, affected population null, feasibility unverified.
+  Root independently validated DTO/repeated GET/foreign404 and UI before/after.
+- Live Alice probe returned template fallback, costing0.3434RUB; natural live
+  explanation still not accepted. Offline paragraph budgets/proof wording repaired,
+  root274testsPASS; deployment/live validation pending and no further paid calls.
+- PT map+observed-score/proof-transition implementation integrated556bf30;
+  root219combinedPG/scenario/map testsPASS. It is not yet on live5193.
+- ML2 K/N expansion metadata prepared:154/136 and303/86 eligible endpoints,
+  two explicit clinic pairs/city awaiting fresh approval/deployment. These are
+  not routed pairs or full/minimum-proven accessibility. K router is still absent.
+
+### Previous gate update — 2026-11-11, actual live browser acceptance
 
 Release187158e3 is LIVE on5193 with four real profiles. Root actual UI → job →
 worker → PostgreSQL → API → React passes for Novorossiysk walk/school,
