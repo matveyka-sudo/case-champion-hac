@@ -6,39 +6,90 @@
   "successful_nonwalk_transport_e2e": false,
   "source_only_map_catalog_available": true,
   "backend_version": {
-    "head": "ec5fcc066deb3a44458ad338c87fade135a6b04e",
+    "source_state": "working_tree_captures_with_base_head",
+    "base_head": "ec5fcc066deb3a44458ad338c87fade135a6b04e",
+    "source_repository": "/Users/kirito/waydex-full-backend",
     "owning_files": {
       "apps/api/src/a2_api/adapters/product_inputs.py": {
         "path": "/Users/kirito/waydex-full-backend/apps/api/src/a2_api/adapters/product_inputs.py",
         "sha256": "0838b3f15f2a8626cc8409daf23776cfe9db647645a6ffe7afb4d165c34c9935",
-        "size_bytes": 3686
+        "size_bytes": 3686,
+        "capture_kind": "working_tree_file_hash",
+        "matches_base_head_blob": true,
+        "base_head_blob_sha256": "0838b3f15f2a8626cc8409daf23776cfe9db647645a6ffe7afb4d165c34c9935",
+        "base_head_blob_size_bytes": 3686,
+        "reproducible_from_base_head": true
       },
       "apps/api/src/a2_api/adapters/product_runtime.py": {
         "path": "/Users/kirito/waydex-full-backend/apps/api/src/a2_api/adapters/product_runtime.py",
         "sha256": "ff1239eaa1fa11e4023dfdd27c80c4fca351392cf22fb6825519f02654fbfa6c",
-        "size_bytes": 35648
+        "size_bytes": 35648,
+        "capture_kind": "working_tree_file_hash",
+        "matches_base_head_blob": false,
+        "base_head_blob_sha256": "737f3eb08a0b9286992c7520627c428e673775c4ec79833fd3b6cea54fbe250c",
+        "base_head_blob_size_bytes": 34531,
+        "reproducible_from_base_head": false
       },
       "apps/api/src/a2_api/adapters/timetable_source.py": {
         "path": "/Users/kirito/waydex-full-backend/apps/api/src/a2_api/adapters/timetable_source.py",
         "sha256": "9957cd18322c52e1e1fb5a3f591f9529b80dddcd04376cab510eac158b3c0101",
-        "size_bytes": 6048
+        "size_bytes": 6048,
+        "capture_kind": "working_tree_file_hash",
+        "matches_base_head_blob": true,
+        "base_head_blob_sha256": "9957cd18322c52e1e1fb5a3f591f9529b80dddcd04376cab510eac158b3c0101",
+        "base_head_blob_size_bytes": 6048,
+        "reproducible_from_base_head": true
       },
       "apps/api/src/a2_api/adapters/product.py": {
         "path": "/Users/kirito/waydex-full-backend/apps/api/src/a2_api/adapters/product.py",
         "sha256": "6a90ba90a1a85c3ef98c4dc434446a4a1c3c3d7aaa4af63c8700e60badda3e53",
-        "size_bytes": 16689
+        "size_bytes": 16689,
+        "capture_kind": "working_tree_file_hash",
+        "matches_base_head_blob": false,
+        "base_head_blob_sha256": "ecae313c66c083d8b148755e60f8356cfaae4e98c4439f6b6767bef6a59f6e79",
+        "base_head_blob_size_bytes": 16352,
+        "reproducible_from_base_head": false
       },
       "packages/engine/src/a2_engine/freight/models.py": {
         "path": "/Users/kirito/waydex-full-backend/packages/engine/src/a2_engine/freight/models.py",
         "sha256": "a35969b25574013636704db720f9a4cd3aea3c9533b0ab61c1c94d47788552ec",
-        "size_bytes": 6173
+        "size_bytes": 6173,
+        "capture_kind": "working_tree_file_hash",
+        "matches_base_head_blob": true,
+        "base_head_blob_sha256": "a35969b25574013636704db720f9a4cd3aea3c9533b0ab61c1c94d47788552ec",
+        "base_head_blob_size_bytes": 6173,
+        "reproducible_from_base_head": true
       },
       "packages/engine/src/a2_engine/freight/truck.py": {
         "path": "/Users/kirito/waydex-full-backend/packages/engine/src/a2_engine/freight/truck.py",
         "sha256": "9f0adf89ef566d1c2c980071432657be6642cc01777cc38a83550da7084dada6",
-        "size_bytes": 3709
+        "size_bytes": 3709,
+        "capture_kind": "working_tree_file_hash",
+        "matches_base_head_blob": true,
+        "base_head_blob_sha256": "9f0adf89ef566d1c2c980071432657be6642cc01777cc38a83550da7084dada6",
+        "base_head_blob_size_bytes": 3709,
+        "reproducible_from_base_head": true
       }
-    }
+    },
+    "base_head_identifies_entire_captured_source": false,
+    "working_tree_files_differing_from_base_head": [
+      "apps/api/src/a2_api/adapters/product_runtime.py",
+      "apps/api/src/a2_api/adapters/product.py"
+    ],
+    "files_matching_committed_base_head": [
+      "apps/api/src/a2_api/adapters/product_inputs.py",
+      "apps/api/src/a2_api/adapters/timetable_source.py",
+      "packages/engine/src/a2_engine/freight/models.py",
+      "packages/engine/src/a2_engine/freight/truck.py"
+    ],
+    "mismatching_working_tree_bytes_archived_by_this_review": false,
+    "limitations": [
+      "All six hashes were read from the owning working tree. The base HEAD is contextual; it does not identify the entire source state used by this audit.",
+      "product.py and product_runtime.py contained uncommitted certified-executor work. Their recorded hashes are preserved as working-tree captures and cannot be reproduced from the stated base HEAD.",
+      "The timetable source verifier and freight models/truck files match their committed base-HEAD blobs. Data/source facts and artifact hashes are unchanged."
+    ],
+    "source_verification_command_template": "git -C /Users/kirito/waydex-full-backend show ec5fcc066deb3a44458ad338c87fade135a6b04e:RELATIVE_PATH | shasum -a 256",
+    "source_verification_expected_value": "Compare the command output to each file base_head_blob_sha256; matches_base_head_blob states whether that committed blob also equals the recorded working-tree capture sha256."
   },
   "inventory_scope": {
     "current_accepted_snapshots": [
