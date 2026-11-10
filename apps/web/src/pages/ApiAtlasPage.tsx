@@ -31,6 +31,7 @@ import {
 } from "../api/adapters/request";
 import {
   measureText,
+  errorText,
   measureLabel,
   subjectMatches,
   timestampText,
@@ -165,8 +166,18 @@ export function ApiAtlasPage() {
   const draftTouched = useRef(false);
   const resultCard = useRef<HTMLElement>(null), resultTitleRef = useRef<HTMLHeadingElement>(null);
   const demoBanner = useRef<HTMLElement>(null);
+  const mapArea = useRef<HTMLElement>(null), mobileSheet = useRef<HTMLDivElement>(null);
   const chatInput = useRef<HTMLTextAreaElement>(null);
   const { result, scenario, dirty, phase } = session;
+  useLayoutEffect(() => {
+    const sheet = mobileSheet.current, area = mapArea.current;
+    if (!sheet || !area) return;
+    const update = () => area.style.setProperty("--sheet-h", `${sheet.offsetHeight || 196}px`);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(sheet);
+    return () => observer.disconnect();
+  }, []);
   const urban = draft.kind.startsWith("urban_"),
     cargo = draft.kind.endsWith("cargo");
   useEffect(() => {
@@ -291,6 +302,9 @@ export function ApiAtlasPage() {
   const start = () => {
     if (!caps) return;
     try {
+      if (draft.kind === "urban_passenger" && draft.cityId && caps.urban_passenger_scopes != null &&
+        !caps.urban_passenger_scopes.some((scope) => scope.city_id === draft.cityId))
+        throw new DraftError("cityId", caps.urban_passenger_scopes.length ? "Для выбранного города нет зарегистрированного расчёта." : "Для городского расчёта нет зарегистрированных наборов параметров.");
       const profiles = matchingCargoProfiles(caps.cargo_profiles, cargoProfile);
       const profileId = cargo && !draft.pipeline ? profiles.length === 1 ? profiles[0].profile_id : "" : draft.profileId;
       if (cargo && !draft.pipeline && !profileId) throw new DraftError("profileId", "Для выбранного профиля груза нет однозначно подтверждённых данных. Выбранные параметры сохранены.");
@@ -428,7 +442,7 @@ export function ApiAtlasPage() {
       ) || [];
   const ready = caps?.analyses.find((a) => a.analysis_kind === draft.kind);
   const running = phase === "running";
-  const requestTitle = result ? resultTitle(result, catalog) : "Россия";
+  const requestTitle = result ? resultTitle(result, catalog) : origin?.name || "Россия";
   const toggleMode = (kind: AnalysisKind) =>
     change({
       kind,
@@ -626,7 +640,7 @@ export function ApiAtlasPage() {
                 <div className="ctx-actions"><button className="iconbtn" onClick={() => { setChatOpen(true); if (window.innerWidth < 1520) setFiltersCollapsed(true); }}><Icon name="sparkles" />Спросить агента</button></div>
               </div>
             </ResultCardFrame>;
-  const moscowView = result?.request.analysis_kind === "urban_passenger" && result.request.city_id === "moscow";
+  const moscowView = savedDemoModel || (result ? result.request.analysis_kind === "urban_passenger" && result.request.city_id === "moscow" : urban && draft.cityId === "moscow");
   const timeDock = (compact: boolean) => <TimeDockView date={draft.date} slot={draft.slot} timezoneLabel={origin?.timezone || "Выберите территорию"}
     min="1900-01-01" max="2100-12-31" dateInputId={compact ? "apiMobileDate" : "apiDate"} timeInputId={compact ? "apiMobileTime" : "apiTime"} mobile={compact}
     onDateChange={(date) => change({ date })} onSlotChange={(slot) => change({ slot })} run={start} disabled={!caps || running} highlighted={dirty} />;
@@ -782,7 +796,7 @@ export function ApiAtlasPage() {
             </>
           )}
         </FiltersPanelView>
-        <MapViewport className={`${result && !cardHidden && !mobile ? "has-card" : ""} ${chatOpen && !mobile ? "chat-open" : ""} ${dirty ? "dimmed" : ""}`}><MapCanvas>
+        <MapViewport mapRef={mapArea} className={`${result && !cardHidden && !mobile ? "has-card" : ""} ${chatOpen && !mobile ? "chat-open" : ""} ${dirty ? "dimmed" : ""}`}><MapCanvas>
           <ApiMap
             result={result}
             scores={values?.scores || []}
@@ -791,7 +805,7 @@ export function ApiAtlasPage() {
             zoomAction={zoom}
             scenarioView={scenarioView}
             journeys={visibleJourneys}
-            viewId={scenario?.run_id}
+            cityId={urban ? draft.cityId : undefined} viewId={scenario?.run_id}
             category={mapMetric === "overall" ? null : categoryIds[mapMetric as keyof typeof categoryIds]} layers={layers}
           /></MapCanvas>
           <MapOverlay position="tl"><AtlasStatus kind={uiError ? "err" : running ? "run" : dirty || result?.status === "partial" ? "stale" : result ? "ok" : "nd"}
@@ -799,8 +813,8 @@ export function ApiAtlasPage() {
             subtitle={<>{result ? `${requestTitle} · ${timestampText(result.request.departure_at, savedOrigin?.timezone)} · ${trafficText[result.traffic_mode]} · ${statusText[result.status]}` : "Выберите город, передвижение и категории"}
               {running && ` · ${session.job ? statusText[session.job.status] || "Получаю результат" : "Отправляю запрос"}`}</>}
             actions={session.job && ["queued", "running"].includes(session.job.status) && <button className="iconbtn" onClick={() => void session.cancel()}>Отменить</button>} /></MapOverlay>
-          {uiError && <StateCard icon="cloud-off" title={uiError instanceof ApiError && uiError.code === "stored_result_incompatible" ? "Сохранённый результат несовместим — требуется новый расчёт" : "Новый результат не получен"}
-            description={uiError.message} actions={<button className="iconbtn primary" onClick={start}>Повторить</button>} />}
+          {uiError && <StateCard role="alert" icon="cloud-off" title={uiError instanceof ApiError && uiError.code === "stored_result_incompatible" ? "Сохранённый результат несовместим — требуется новый расчёт" : "Новый результат не получен"}
+            description={errorText(uiError)} actions={<button className="iconbtn primary" onClick={start}>Повторить</button>} />}
           {!result && !uiError && <StateCard icon={running ? "loader-circle" : "circle-dashed"} loading={running}
             title={running ? "Расчёт выполняется" : "Расчёт ещё не выполнялся"} description={running ? "Прежний результат сохранён. Карту можно двигать — ответ появится сам." : "Выберите город, способ передвижения и категории, затем нажмите «Рассчитать». До расчёта карта не окрашивается."}
             actions={<button className="iconbtn primary" disabled={!caps} onClick={start}>Рассчитать</button>} />}
@@ -839,7 +853,7 @@ export function ApiAtlasPage() {
             <MapControls items={[["in", "plus", "Приблизить"], ["out", "minus", "Отдалить"], ["home", "globe", moscowView ? "Центр Москвы" : "Показать Россию"],
               ...(moscowView ? [["all_points", "locate-fixed", "Все точки"]] : [])]} onAction={(kind) => setZoom((z) => ({ kind, id: z.id + 1 }))} />
           </MapOverlay>
-          <AtlasMobileSheet title={requestTitle} description={selection ? `${feature?.name || "Выбранная точка"}${headlineScore ? ` · ${measureLabel(headlineScore.name)} ${measureText(headlineScore)}` : ""}` : result ? `${pointOverview?.inventoryCount ?? ""} точек · выберите точку на карте` : "Для выбранных условий результата нет"}
+          <AtlasMobileSheet sheetRef={mobileSheet} title={requestTitle} description={selection ? `${feature?.name || "Выбранная точка"}${headlineScore ? ` · ${measureLabel(headlineScore.name)} ${measureText(headlineScore)}` : ""}` : result ? `${pointOverview?.inventoryCount ?? ""} точек · выберите точку на карте` : "Для выбранных условий результата нет"}
             tag={savedDemoModel ? <span className="badge-s">ДЕМО</span> : undefined} timeDock={timeDock(true)}
             onFilters={() => { setFiltersOpen(true); setChatOpen(false); }} onChat={() => { setChatOpen(true); setFiltersOpen(false); }}>
             {mobile && result && <details className="more"><summary>Результат и рассчитанные точки</summary>{!cardHidden ? renderResultCard() : <button className="iconbtn" onClick={() => setCardHidden(false)}>Показать результат</button>}</details>}

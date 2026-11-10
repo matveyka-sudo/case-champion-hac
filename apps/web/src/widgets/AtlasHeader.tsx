@@ -33,7 +33,7 @@ export function AtlasHeader({ mode, title, theme, onModeChange, onThemeChange, o
         title={["Авто: по времени на шкале", "Светлая", "Тёмная"][index]} onClick={() => onThemeChange(value)}><Icon name={["sun-moon", "sun", "moon"][index]} /></button>)}</div>
     {controls}
     <button ref={filtersButtonRef} className="iconbtn m-only" aria-label="Фильтры" onClick={onFilters}><Icon name="sliders-horizontal" /></button>
-    <button ref={chatButtonRef} className="iconbtn" id="chatToggle" aria-pressed={chatOpen} aria-expanded={chatOpen} aria-controls="chat" onClick={onChat}>
+    <button ref={chatButtonRef} className="iconbtn" id="chatToggle" aria-label="Агент" aria-pressed={chatOpen} aria-expanded={chatOpen} aria-controls="chat" onClick={onChat}>
       <Icon name="sparkles" /><span className="d-only">Агент</span>
     </button>
   </header>;

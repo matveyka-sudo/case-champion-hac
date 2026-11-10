@@ -20,6 +20,7 @@ export function ApiMap({
   scenarioView = false,
   journeys,
   viewId,
+  cityId,
   category = null,
   layers: visibleLayers = { index: true, objects: true, pop: false },
 }: {
@@ -31,6 +32,7 @@ export function ApiMap({
   scenarioView?: boolean;
   journeys?: Schemas["JourneyResult"][];
   viewId?: string;
+  cityId?: string;
   category?: Category | null;
   layers?: { index: boolean; objects: boolean; pop: boolean };
 }) {
@@ -39,7 +41,8 @@ export function ApiMap({
     layers = useRef<L.LayerGroup | null>(null),
     last = useRef(""),
     lastAnalysis = useRef(""),
-    lastZoom = useRef(zoomAction.id);
+    lastZoom = useRef(zoomAction.id),
+    lastCity = useRef("");
   const [tileError, setTileError] = useState(false);
   useEffect(() => {
     if (!host.current) return;
@@ -70,6 +73,11 @@ export function ApiMap({
       layers.current = null;
     };
   }, []);
+  useEffect(() => {
+    if (result || cityId === lastCity.current || !map.current) return;
+    lastCity.current = cityId || "";
+    if (cityId === "moscow") showDemoCenter(map.current);
+  }, [cityId, result]);
   useEffect(() => {
     const m = map.current,
       g = layers.current;
@@ -225,7 +233,7 @@ export function ApiMap({
       const bounds = L.latLngBounds(positions);
       if (bounds.isValid()) m.fitBounds(bounds, { padding: [30, 30], maxZoom: 14, animate: false });
     }
-    else if (zoomAction.kind === "home" && moscowCamera(result)) showDemoCenter(m);
+    else if (zoomAction.kind === "home" && (moscowCamera(result) || (!result && cityId === "moscow"))) showDemoCenter(m);
     else if (zoomAction.kind === "selection") {
       const target = result?.map_data?.features?.find((f) => f.entity_kind === selection?.entity_kind &&
         (f.entity_id === selection.entity_id || f.point_id === selection.entity_id));
@@ -258,7 +266,7 @@ export function ApiMap({
         ],
         { animate: false },
       );
-  }, [zoomAction, result, selection]);
+  }, [zoomAction, result, selection, cityId]);
   return (
     <>
       <div
