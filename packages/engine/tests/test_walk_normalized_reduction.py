@@ -2,9 +2,13 @@
 
 import json
 from dataclasses import replace
+from typing import TypedDict
 
 import pytest
 from a2_engine import (
+    UrbanConfig,
+    UrbanJourneyRules,
+    WalkRoutePlan,
     analyze_normalized_walk_routes,
     analyze_walk_responses,
     load_urban_config,
@@ -14,9 +18,15 @@ from a2_engine import (
 from test_walk_integration import FIXTURE, plan, response, synthetic_inputs
 
 
-def inputs():
+class ReductionOptions(TypedDict):
+    selected_categories: dict[str, str]
+    config: UrbanConfig
+    rules: UrbanJourneyRules
+
+
+def inputs() -> tuple[WalkRoutePlan, ReductionOptions]:
     route_plan = plan(synthetic_inputs(json.loads(FIXTURE.read_text())))
-    kwargs = {
+    kwargs: ReductionOptions = {
         "selected_categories": {"airport": "high"},
         "config": load_urban_config(),
         "rules": load_urban_journey_rules(),
@@ -25,7 +35,7 @@ def inputs():
 
 
 @pytest.mark.parametrize("case", ["complete", "missing", "empty", "timeout", "unreachable"])
-def test_chunked_normalization_matches_envelope_entry_point_exactly(case):
+def test_chunked_normalization_matches_envelope_entry_point_exactly(case: str) -> None:
     route_plan, kwargs = inputs()
     envelopes = [response(request) for request in route_plan.requests]
     if case == "missing":
@@ -55,7 +65,7 @@ def test_chunked_normalization_matches_envelope_entry_point_exactly(case):
 @pytest.mark.parametrize(
     "attack", ["duplicate", "foreign", "same_id_changed_request", "categories"]
 )
-def test_normalized_routes_remain_bound_to_the_exact_request_plan(attack):
+def test_normalized_routes_remain_bound_to_the_exact_request_plan(attack: str) -> None:
     route_plan, kwargs = inputs()
     request = route_plan.requests[0]
     route = normalize_walk_response(request, response(request))
