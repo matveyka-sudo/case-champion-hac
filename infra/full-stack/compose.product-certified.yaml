@@ -6,6 +6,8 @@ x-certified-environment: &certified-environment
   WAYDEX_RUNTIME_BUNDLE_PATH: /runtime
   WAYDEX_RUNTIME_BUNDLE_SHA256: ${WAYDEX_BUNDLE_MANIFEST_SHA256:?}
   WAYDEX_GRAPH_PATH: /data
+  WAYDEX_GRAPH_BINDING_PATH: ${WAYDEX_GRAPH_BINDING_PATH:-}
+  WAYDEX_GRAPH_BINDING_SHA256: ${WAYDEX_GRAPH_BINDING_SHA256:-}
 
 x-graph-volume: &graph-volume
   type: bind

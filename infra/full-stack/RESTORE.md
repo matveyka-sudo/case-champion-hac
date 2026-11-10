@@ -117,6 +117,52 @@ executables retain execution permission. The completion record appears only
 after every declared file verifies. Failed partial directories remain available
 for diagnosis and cannot pass the startup bundle check.
 
+## Bind another city's physical graph
+
+The original Kaliningrad verifier keeps its existing source, image and serializer
+pins. Another source requires both operator settings
+`WAYDEX_GRAPH_BINDING_PATH` and `WAYDEX_GRAPH_BINDING_SHA256`. They refer to a
+read-only file in the restored packet, for example
+`/runtime/graph-source-binding.json`. The walk graph checker mounts that packet
+at `/runtime` and the graph at `/data`. A missing half of this configuration or a
+failed new binding is an error; it never falls back to the original graph.
+
+The binding has this shape; replace every checksum with its approved value:
+
+```json
+{
+  "schema_version": "waydex-graph-source-binding/1",
+  "city_id": "novorossiysk",
+  "snapshot": {
+    "path": "accepted-data.json",
+    "sha256": "RAW_ACCEPTED_DATA_FILE_SHA256",
+    "snapshot_id": "APPROVED_SNAPSHOT_ID",
+    "content_hash": "API_CANONICAL_SNAPSHOT_SHA256"
+  },
+  "source_manifest": {"path": "graph/source-manifest.json", "sha256": "SOURCE_MANIFEST_SHA256"},
+  "graph_manifest": {"path": "graph/valhalla-build-manifest.json", "sha256": "GRAPH_MANIFEST_SHA256"}
+}
+```
+
+The new graph manifest additionally records `source_filename`, `source_bytes`,
+`source_manifest_sha256` and `source_graph_version`, alongside the original
+source/configuration/profile/image/tile records. The verifier checks the exact
+source dataset against the canonical snapshot's source version and the parent
+artifact's snapshot, graph and pedestrian profile. It streams the original PBF,
+checks every tile hash/size and rejects extra tiles, links, archive precedence
+and remote tile URLs. Binary version and configuration generator remain pinned
+to Valhalla 3.5.1. Public API requests cannot select these files or hashes.
+
+This path supports an original upstream PBF of at most 1 GiB, at most 20,000
+tiles, and at most 5 GiB of PBF plus tiles. These are separate graph verification
+bounds. The existing private archive's 128 MiB file and 512 MiB total bounds
+remain unchanged; restore a larger original PBF separately by its trusted source
+manifest or use a separately approved transport. A city extract requires an
+explicit reviewed derivation and coverage binding; replacing the original PBF
+with an extract fails this verifier. Graph identity establishes the mounted
+inputs and costing model. Minimum-time proof and category completeness have
+their own engine and evidence checks.
+
 ## Start the certified stack
 
 Copy `.env.certified.example` to a private file outside the release and restored

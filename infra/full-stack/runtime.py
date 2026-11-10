@@ -55,6 +55,19 @@ def directory_sources(graph, configuration):
 
 def graph_check(graph, parent):
     graph = Path(graph).resolve(strict=True)
+    binding_path = os.environ.get("WAYDEX_GRAPH_BINDING_PATH", "")
+    binding_sha = os.environ.get("WAYDEX_GRAPH_BINDING_SHA256", "")
+    if binding_path or binding_sha:
+        if not binding_path or not binding_sha:
+            raise ValueError("Both operator graph binding path and SHA256 are required")
+        binding_spec = importlib.util.spec_from_file_location(
+            "waydex_graph_binding", Path(__file__).with_name("graph_binding.py")
+        )
+        binding = importlib.util.module_from_spec(binding_spec)
+        binding_spec.loader.exec_module(binding)
+        return binding.verify(
+            graph, parent, binding_path, binding_sha, real.IMAGE, real.CONFIG_SHA, directory_sources
+        )
     directory_sources(graph, real.read(graph / "valhalla.json"))
     manifest_path = graph / "valhalla-build-manifest.json"
     digest = real.sha(manifest_path)

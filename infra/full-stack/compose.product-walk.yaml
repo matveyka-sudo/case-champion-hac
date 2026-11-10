@@ -19,7 +19,14 @@ services:
       WAYDEX_PARENT_ARTIFACT_PATH: /input/parent-artifact.json
       WAYDEX_PARENT_SHA256: ${WAYDEX_PARENT_SHA256:?}
       WAYDEX_GRAPH_PATH: /data
+      WAYDEX_GRAPH_BINDING_PATH: ${WAYDEX_GRAPH_BINDING_PATH:-}
+      WAYDEX_GRAPH_BINDING_SHA256: ${WAYDEX_GRAPH_BINDING_SHA256:-}
     volumes:
+      - type: bind
+        source: ${WAYDEX_DEPLOYMENT_DIR:?}
+        target: /runtime
+        read_only: true
+        bind: {create_host_path: false}
       - type: bind
         source: ${WAYDEX_GRAPH_DIR:?}
         target: /data
@@ -64,6 +71,8 @@ services:
       WAYDEX_PARENT_ARTIFACT_PATH: /input/parent-artifact.json
       WAYDEX_PARENT_SHA256: ${WAYDEX_PARENT_SHA256:?}
       WAYDEX_GRAPH_PATH: /data
+      WAYDEX_GRAPH_BINDING_PATH: ${WAYDEX_GRAPH_BINDING_PATH:-}
+      WAYDEX_GRAPH_BINDING_SHA256: ${WAYDEX_GRAPH_BINDING_SHA256:-}
     volumes:
       - type: bind
         source: ${WAYDEX_GRAPH_DIR:?}

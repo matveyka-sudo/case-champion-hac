@@ -14,5 +14,6 @@ COPY data/directories/ data/directories/
 COPY infra/real-e2e/runtime.py infra/real-e2e/runtime.py
 COPY infra/full-stack/runtime.py infra/full-stack/runtime.py
 COPY infra/full-stack/bundle.py infra/full-stack/bundle.py
+COPY infra/full-stack/graph_binding.py infra/full-stack/graph_binding.py
 USER 10001:10001
 CMD ["/app/.venv/bin/python", "-m", "uvicorn", "a2_api.api.bootstrap:build_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
