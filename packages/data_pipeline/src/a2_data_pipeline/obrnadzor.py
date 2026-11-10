@@ -178,7 +178,16 @@ def read_orgs(raw_zip: Path, region_name: str, address_hint: str) -> list[EduOrg
 
 def ownership(full_name: str) -> str:
     name = full_name.lower()
-    if "некоммерческ" in name or "частн" in name or "с ограниченной ответственностью" in name:
+    # Check negated legal forms before the positive state/federal/municipal
+    # stems: «негосударственное» contains «государственн». Legal abbreviations
+    # are whole prefix tokens, not ordinary words or quoted institution names.
+    if (
+        re.search(r"\bне[\s‐‑–—-]*государственн", name)
+        or re.search(r"^\W*(?:ноу|чоу|чпоу|нчоу|ано|анпо|анпоо|аноо|аноово)\b", name)
+        or "некоммерческ" in name
+        or "частн" in name
+        or "с ограниченной ответственностью" in name
+    ):
         return "private"
     if "муниципальн" in name:
         return "municipal"
