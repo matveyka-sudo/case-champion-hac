@@ -108,6 +108,22 @@ def source_inputs_hash(inputs: EngineInputs) -> str:
     return scenario_hash(inputs.model_dump(mode="python"))
 
 
+def document_matches_request(document: ScenarioDocument, request: AnalysisRequest) -> bool:
+    """Match typed request scope while retaining the document's original hash.
+
+    Offset spellings of the same aware instant have equal request semantics.
+    The signed document still binds its own exact serialized request; legacy
+    internal documents without a request retain their exact-hash comparison.
+    """
+    bound_request = document.normalized_request
+    if bound_request is None:
+        return document.request_hash == canonical_hash(request.model_dump(mode="json"))
+    return (
+        document.request_hash == canonical_hash(bound_request.model_dump(mode="json"))
+        and bound_request == request
+    )
+
+
 def validate_source(
     document: ScenarioDocument, context: V2JobContext, inputs: EngineInputs, *, profile_id: str
 ) -> None:
@@ -122,8 +138,7 @@ def validate_source(
         document.profile_id != profile_id
         or document.snapshot_id != context.snapshot_id
         or document.snapshot_hash != context.snapshot_hash
-        or document.request_hash
-        != canonical_hash(context.normalized_request.model_dump(mode="json"))
+        or not document_matches_request(document, context.normalized_request)
         or document.source_inputs_hash != source_inputs_hash(inputs)
     ):
         raise ValueError("SCENARIO_SOURCE_BINDING_MISMATCH")
