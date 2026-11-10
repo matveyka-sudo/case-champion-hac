@@ -8,7 +8,10 @@ repeated before rendering, so mutable Explanation objects cannot forge a claim.
 from typing import Literal, get_args
 
 from a2_contracts.v2.assistant import Finding, NumericClaim, ScoreClaim
+from a2_contracts.v2.evidence import EvidenceResolver, require_result_evidence
 from a2_contracts.v2.results import AnalysisResult, Metric, Score
+
+from .evidence import leaf_references
 
 AnswerMode = Literal[
     "explain", "methodology", "journey", "coverage", "improve", "compare", "help", "unsupported"
@@ -217,7 +220,9 @@ def conversational_finding(
     score_ids: list[str],
     *,
     has_proposal: bool,
+    resolver: EvidenceResolver | None = None,
 ) -> Finding:
+    resolver = resolver or require_result_evidence(saved)
     metrics = {m.metric_id: m for m in saved.metrics}
     scores = {s.score_id: s for s in saved.scores}
     selected_metrics = [metrics[identifier] for identifier in metric_ids]
@@ -263,9 +268,16 @@ def conversational_finding(
     text = " ".join(part for part in (text, _safety(saved, facts)) if part)
     refs = list(
         dict.fromkeys(
-            ref
-            for fact in facts
-            for ref in (fact.source_refs if isinstance(fact, Metric) else fact.evidence_refs)
+            leaf_references(
+                (
+                    ref
+                    for fact in facts
+                    for ref in (
+                        fact.source_refs if isinstance(fact, Metric) else fact.evidence_refs
+                    )
+                ),
+                resolver,
+            )
         )
     )[:50]
     return Finding(
@@ -282,7 +294,11 @@ def conversational_finding(
 
 
 def verified_conversational_finding(
-    finding: Finding, saved: AnalysisResult, *, has_proposal: bool
+    finding: Finding,
+    saved: AnalysisResult,
+    *,
+    has_proposal: bool,
+    resolver: EvidenceResolver | None = None,
 ) -> bool:
     # The common legacy path must not repeatedly scan a large saved city result.
     if not finding.text.startswith(
@@ -322,7 +338,12 @@ def verified_conversational_finding(
         return False
     return any(
         conversational_finding(
-            mode, saved, finding.metric_ids, finding.score_ids, has_proposal=has_proposal
+            mode,
+            saved,
+            finding.metric_ids,
+            finding.score_ids,
+            has_proposal=has_proposal,
+            resolver=resolver,
         )
         == finding
         for mode in ANSWER_MODES
