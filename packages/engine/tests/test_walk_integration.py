@@ -717,3 +717,41 @@ def test_serialization_uncertainty_does_not_accept_real_resnap(canonical: dict[s
     for shifted in (WalkCoordinate(20.495588, 54.708788), WalkCoordinate(20.4955871, 54.708788)):
         with pytest.raises(ValueError, match="REVISED_ACCESS_CONNECTOR_REQUIRED"):
             replace(precise, correlated_location=shifted)
+
+
+def test_missing_route_for_positive_population_never_renormalizes_known_points(
+    canonical: dict[str, Any],
+) -> None:
+    # SYNTHETIC coverage and weights isolate route uncertainty from real excluded residents.
+    inputs = synthetic_inputs(canonical)
+    inputs = replace(
+        inputs,
+        points=tuple(
+            replace(p, population=100, population_year=2026, population_method="synthetic")
+            for p in inputs.points
+        ),
+        population_coverage=replace(
+            inputs.population_coverage, complete=True, excluded_population=0
+        ),
+    )
+    p = plan(inputs)
+    assert len(p.requests) == 2
+    result = analyze(p, [response(p.requests[0])])
+    territory = result.analysis.modes[0]
+    assert sorted(point.index.status for point in territory.points) == ["available", "unknown"]
+    assert territory.index.value is None and territory.index.status == "unknown"
+    assert not territory.ranking_eligible and territory.completeness == "partial"
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [{"matched_origin": None}, {"matched_destination": None}, {"endpoint_evidence_refs": ()}],
+)
+def test_successful_route_with_missing_actual_endpoint_remains_unknown(
+    canonical: dict[str, Any], changes: dict[str, Any]
+) -> None:
+    p = plan(synthetic_inputs(canonical))
+    result = analyze(p, [response(r, **changes) for r in p.requests])
+    assert all(r.state == "unknown" and not r.minimum_proven for r in result.routes)
+    assert all(r.reason_code == "ACTUAL_ENDPOINTS_UNCONFIRMED" for r in result.routes)
+    assert all(point.index.value is None for point in result.analysis.modes[0].points)
