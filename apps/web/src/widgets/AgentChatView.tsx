@@ -1,13 +1,14 @@
 import { Fragment, type ReactNode, type RefObject } from "react";
 import { Icon } from "../shared/ui";
 export function AgentChatView({ open, onClose, onNewDialog, subtitle, contextLabel, contextRows, messages, hasMessages,
-  error, suggestions, onSuggestion, draft, onDraftChange, onSend, disabled, busy, note, logRef, inputRef, maxLength }: {
+  error, suggestions, onSuggestion, draft, onDraftChange, onSend, disabled, busy, note, logRef, inputRef, maxLength, notice }: {
   open: boolean; onClose: () => void; onNewDialog: () => void; subtitle: string; contextLabel: ReactNode;
   contextRows: { label: string; value: ReactNode }[]; messages: ReactNode; hasMessages: boolean; error?: ReactNode;
   suggestions: string[]; onSuggestion: (question: string) => void; draft: string; onDraftChange: (value: string) => void;
   onSend: () => void; disabled: boolean; busy: boolean; note: string;
   logRef?: RefObject<HTMLDivElement | null>; inputRef?: RefObject<HTMLTextAreaElement | null>;
   maxLength?: number;
+  notice?: ReactNode;
 }) {
   const send = () => { if (!disabled && !busy && draft.trim() && (maxLength === undefined || draft.length <= maxLength)) onSend(); };
   return <aside className={`at-chat ${open ? "m-open" : "is-closed"}`} id="chat" aria-label="Агент Waydex" inert={!open}>
@@ -21,6 +22,7 @@ export function AgentChatView({ open, onClose, onNewDialog, subtitle, contextLab
         <dl>{contextRows.map((row, index) => <Fragment key={index}><dt>{row.label}</dt><dd>{row.value}</dd></Fragment>)}</dl>
       </details>
       <div className="ch-log" ref={logRef} aria-live="polite">
+        {notice && <div className="stmsg unk" role="note"><strong>{notice}</strong></div>}
         {!hasMessages && <div className="ch-empty"><h3>Спросите о выбранной области</h3><p>Агент видит контекст выше: режим, территорию, условия и текущий результат. Он объясняет причину и предлагает сценарий, который можно проверить отдельно.</p></div>}
         {messages}{error}
       </div>

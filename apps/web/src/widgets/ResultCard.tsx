@@ -1,4 +1,4 @@
-import React, { type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { useAtlas, currentStatus } from "../features/state";
 import {
   fixtures,
@@ -8,31 +8,17 @@ import {
   type CatId,
 } from "../mocks/model";
 import { Icon, Demo, Notice } from "../shared/ui";
-import { css, f1, f0, roundPop } from "../shared/format";
+import { f1, f0, roundPop } from "../shared/format";
 import { mapColor } from "../shared/mapColor";
+import { ResultCardFrame, ResultCardHeader, ResultPrimary, RouteBreakdown, ResultFigure, ResultCategoryTable } from "./ResultCardView";
 export function ResultCard({ analyze }: { analyze: () => void }) {
   const { state: s, dispatch } = useAtlas(),
     p = s.applied,
     st = currentStatus(s);
   const active = s.applied;
   const close = () => dispatch({ type: "ui", patch: { cardHidden: true } });
-  const head = (label: ReactNode, title: ReactNode) => (
-    <div className="ctx-h">
-      <div style={{ minWidth: 0 }}>
-        <span className="k">{label}</span>
-        <h3>{title}</h3>
-      </div>
-      <button className="ctx-x" aria-label="Закрыть карточку" onClick={close}>
-        <Icon name="x" />
-      </button>
-    </div>
-  );
-  const kv = (title: string, value: ReactNode, wide = false) => (
-    <div className="kv" style={wide ? { gridColumn: "1/-1" } : undefined}>
-      <span>{title}</span>
-      <b>{value}</b>
-    </div>
-  );
+  const head = (label: ReactNode, title: ReactNode) => <ResultCardHeader label={label} title={title} onClose={close} />;
+  const kv = (title: string, value: ReactNode, wide = false) => <ResultFigure title={title} value={value} wide={wide} />;
   const ask = (
     <div className="ctx-actions">
       <button
@@ -300,76 +286,10 @@ export function ResultCard({ analyze }: { analyze: () => void }) {
                   </Notice>
                 ) : (
                   <>
-                    <div className="bigrow">
-                      <span className="bignum tnum">
-                        {T}
-                        <small>мин</small>
-                      </span>
-                      {pending ? (
-                        <span className="badge-s nd">
-                          индекс ещё не рассчитан
-                        </span>
-                      ) : (
-                        <span
-                          className="idxpill tnum"
-                          title="Индекс категории, демо"
-                        >
-                          <i style={css({ "--c": mapColor(I) })} />
-                          {f1(I)}
-                        </span>
-                      )}
-                      <span className="bigcap">
-                        {p.travel === "pt"
-                          ? "Общ. транспорт"
-                          : p.travel === "walk"
-                            ? "Пешком"
-                            : "Автомобиль"}
-                        {scn ? " · сценарий" : ""}
-                      </span>
-                    </div>
-                    <div
-                      className="mbar"
-                      role="img"
-                      aria-label={legs
-                        .map((l) => `${l[2]} ${l[1]} мин`)
-                        .join(", ")}
-                    >
-                      {legs.map(([kind, m, label], i) => (
-                        <span
-                          key={i}
-                          className={`s ${kind}`}
-                          style={css({ "--m": m })}
-                          title={`${label} · ${m} мин`}
-                        >
-                          {m >= 4 ? m : ""}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="mlist tnum">
-                      {legs.map(([kind, m, label], i) => (
-                        <React.Fragment key={i}>
-                          <i
-                            className={`k mbar-${kind}`}
-                            style={{
-                              background: (
-                                {
-                                  walk: "#8C93BD",
-                                  wait: "#B4A4FF",
-                                  ride: "#2F5BFF",
-                                  ride2: "#7A52FF",
-                                  xfer: "#5D6390",
-                                  hot: "#7A52FF",
-                                } as Record<string, string>
-                              )[kind],
-                            }}
-                          />
-                          <span className={kind === "hot" ? "hot" : ""}>
-                            {label}
-                          </span>
-                          <b className={kind === "hot" ? "hot" : ""}>{m} мин</b>
-                        </React.Fragment>
-                      ))}
-                    </div>
+                    <ResultPrimary time={T} pending={pending ? <span className="badge-s nd">индекс ещё не рассчитан</span> : undefined}
+                      score={!pending ? { value: f1(I), color: mapColor(I), title: "Индекс категории, демо" } : undefined}
+                      caption={<>{p.travel === "pt" ? "Общ. транспорт" : p.travel === "walk" ? "Пешком" : "Автомобиль"}{scn ? " · сценарий" : ""}</>} />
+                    <RouteBreakdown segments={legs.map(([kind, minutes, label]) => ({ kind, minutes, label }))} />
                     <div className="kvs tnum">
                       {kv("Пересадки", transfers)}
                       {kv(
@@ -384,55 +304,11 @@ export function ResultCard({ analyze }: { analyze: () => void }) {
                   <h4>Категории и приоритеты</h4>
                   {ids.length ? (
                     <>
-                      <table className="ctable tnum">
-                        <tbody>
-                          {ids.map((id) => {
-                            const v = c.values[p.travel][id];
-                            return (
-                              <tr key={id}>
-                                <td>
-                                  {categoryById[id].short}
-                                  <span className="p">
-                                    {["Н", "С", "В"][(p.cats[id] || 1) - 1]}
-                                  </span>
-                                </td>
-                                <td
-                                  style={{
-                                    textAlign: "right",
-                                    color: "var(--text-3)",
-                                  }}
-                                >
-                                  {scn ? v.scenarioTime : v.time} мин
-                                </td>
-                                <td>
-                                  {pending
-                                    ? "—"
-                                    : f1(scn ? v.scenarioScore : v.score)}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                          <tr>
-                            <td>
-                              <b>Общий индекс</b>
-                            </td>
-                            <td />
-                            <td>
-                              {pending
-                                ? "—"
-                                : f1(
-                                    cellScore(
-                                      c,
-                                      "overall",
-                                      p.travel,
-                                      p.cats,
-                                      scn,
-                                    ),
-                                  )}
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
+                      <ResultCategoryTable rows={ids.map((id) => { const value = c.values[p.travel][id]; return {
+                        id, label: categoryById[id].short, priority: ["Н", "С", "В"][(p.cats[id] || 1) - 1],
+                        time: `${scn ? value.scenarioTime : value.time} мин`, value: pending ? "—" : f1(scn ? value.scenarioScore : value.score),
+                      }; })} overall={pending ? "—" : f1(cellScore(c, "overall", p.travel, p.cats, scn))} />
+
                       <p className="fhint">
                         Общий — взвешенное среднее выбранных категорий (веса
                         1/2/3). Способы передвижения не усредняются.
@@ -845,12 +721,5 @@ export function ResultCard({ analyze }: { analyze: () => void }) {
       </>
     );
   }
-  return (
-    <section
-      className={`ctx panelc ${s.chatOpen && !s.collapsed && window.innerWidth < 1600 ? "compact" : ""}`}
-      aria-label="Выбранный объект"
-    >
-      {content}
-    </section>
-  );
+  return <ResultCardFrame compact={s.chatOpen && !s.collapsed && window.innerWidth < 1600}>{content}</ResultCardFrame>;
 }

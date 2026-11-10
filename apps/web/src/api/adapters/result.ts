@@ -57,6 +57,8 @@ export function measureLabel(name: string) {
     point_index: "Индекс точки",
     territory_index: "Индекс территории",
     minimum_journey_seconds: "Полное время до объекта",
+    best_observed_time: "Полное время найденного маршрута",
+    observed_route_accessibility: "Предварительная оценка по найденному маршруту",
     accessible_object_count: "Число доступных объектов",
     private_car_path_seconds: "Время пути на автомобиле",
     private_car_index: "Индекс автомобильной связи",
@@ -111,6 +113,8 @@ export function reasonText(code: string | null | undefined) {
           "Часть населения не охвачена расчётом; полный рейтинг города недоступен.",
         MINIMUM_TIME_UNPROVEN:
           "Показано найденное время пути. Минимальное время не подтверждено.",
+        MINIMUM_NOT_PROVEN:
+          "Показан найденный маршрут. Минимальное время не подтверждено; оценка предварительная.",
         CANONICAL_ACCESS_MODEL:
           "Оценка для выбранной точки по модели принятых пеших подходов. Полный рейтинг города не рассчитан.",
         MODEL_TIMELINE_MICROSECOND_PRECISION:

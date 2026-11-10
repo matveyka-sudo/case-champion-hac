@@ -5,6 +5,7 @@ import { Icon } from "../shared/ui";
 
 import { Seg } from "./SegmentedControl";
 import { FiltersPanelView } from "./FiltersPanelView";
+import { ChoiceChips, TerritoryPair, CargoProfileChoices } from "./FilterControlViews";
 import { CategoryChoices } from "./CategoryChoices";
 export { Seg } from "./SegmentedControl";
 const cityItems = [
@@ -23,26 +24,7 @@ export function FiltersPanel({ run }: { run: () => void }) {
       {hint && <p className="fhint">{hint}</p>}
     </div>
   );
-  const chips = (
-    items: string[][],
-    values: Record<string, boolean>,
-    onChange: (v: string) => void,
-  ) => (
-    <div className="chipset">
-      {items.map(([v, n, i]) => (
-        <button
-          key={v}
-          type="button"
-          className="fchip"
-          aria-pressed={values[v]}
-          onClick={() => onChange(v)}
-        >
-          {i && <Icon name={i} />}
-          {n}
-        </button>
-      ))}
-    </div>
-  );
+  const chips = (items: string[][], values: Record<string, boolean>, onChange: (v: string) => void) => <ChoiceChips items={items} values={values} onChange={onChange} />;
   const pair = (kind: "pax" | "cargo") => {
     const a = kind === "pax" ? p.paxA : p.cargoA,
       b = kind === "pax" ? p.paxB : p.cargoB;
@@ -59,42 +41,13 @@ export function FiltersPanel({ run }: { run: () => void }) {
           : { cargoA: nextA, cargoB: nextB },
       );
     };
-    return (
-      <div className="pair">
-        {(["A", "B"] as const).map((side, i) => (
-          <div className="fsel" key={side}>
-            <span className="k">{i ? "Б" : "А"}</span>
-            <Select
-              label={`Территория ${i ? "Б" : "А"}`}
-              value={i ? b : a}
-              onChange={(v) => change(side, v)}
-              options={Object.entries(fixtures.places).map(([value, v]) => ({
-                value,
-                label: kind === "pax" && p.paxScale === "subj" ? v.subj : v.n,
-              }))}
-            />
-          </div>
-        ))}
-        <button
-          className="swap"
-          aria-label="Поменять направление"
-          onClick={() =>
-            set(
-              kind === "pax" ? { paxA: b, paxB: a } : { cargoA: b, cargoB: a },
-            )
-          }
-        >
-          <Icon name="arrow-up-down" />
-        </button>
-      </div>
-    );
+    return <TerritoryPair origin={a} destination={b} options={Object.entries(fixtures.places).map(([value, place]) => ({ value, label: kind === "pax" && p.paxScale === "subj" ? place.subj : place.n }))}
+      onChange={change} onSwap={() => set(kind === "pax" ? { paxA: b, paxB: a } : { cargoA: b, cargoB: a })} />;
   };
   const toggle = (key: "paxModes" | "cargoModes", v: string) =>
     set({ [key]: { ...p[key], [v]: !p[key][v] } });
-  const setProfile = (key: "group" | "handling", v: string) =>
-    set({ profile: { ...p.profile, [key]: v } });
   return (
-    <FiltersPanelView collapsed={s.collapsed} mobileOpen={s.mobileFilters}
+    <FiltersPanelView collapsed={s.collapsed} mobileOpen={s.mobileFilters} mobile={window.innerWidth < 768}
       onClose={() => dispatch({ type: "ui", patch: { mobileFilters: false } })}
       onToggle={() => dispatch({ type: "ui", patch: { collapsed: !s.collapsed, ...(s.collapsed && window.innerWidth < 1360 ? { chatOpen: false } : {}) } })}
       onExpand={() => dispatch({ type: "ui", patch: { collapsed: false } })}
@@ -357,62 +310,7 @@ export function FiltersPanel({ run }: { run: () => void }) {
                 )}
               </>
             )}
-            <div className="fgroup">
-              <p className="flabel">
-                Профиль груза <small>демо</small>
-              </p>
-              <p className="fhint" style={{ margin: "0 0 6px" }}>
-                Товарная группа
-              </p>
-              <Seg
-                name="Товарная группа"
-                items={[
-                  ["food", "Продовольствие"],
-                  ["nonfood", "Непрод."],
-                ]}
-                value={p.profile.group}
-                onChange={(v) => setProfile("group", v)}
-              />
-              <p className="fhint" style={{ margin: "12px 0 6px" }}>
-                Обработка
-              </p>
-              <Seg
-                stack
-                name="Обработка"
-                items={[
-                  ["container", "Контейнер"],
-                  ["general", "Генеральный"],
-                  ["bulk", "Навалочный"],
-                  ["liquid", "Наливной"],
-                ]}
-                value={p.profile.handling}
-                onChange={(v) => setProfile("handling", v)}
-              />
-              <p className="fhint" style={{ margin: "12px 0 6px" }}>
-                Ограничения
-              </p>
-              {chips(
-                [
-                  ["temp", "Температурный режим"],
-                  ["urgent", "Срочный"],
-                ],
-                p.profile.limits,
-                (v) =>
-                  set({
-                    profile: {
-                      ...p.profile,
-                      limits: {
-                        ...p.profile.limits,
-                        [v]: !p.profile.limits[v],
-                      },
-                    },
-                  }),
-              )}
-              <p className="fhint">
-                Демонстрационные условия. В API-режиме выбирается готовый
-                профиль с заданными срочностью, температурой и обработкой.
-              </p>
-            </div>
+            <CargoProfileChoices demo value={p.profile} onChange={(profile) => set({ profile })} />
             {p.cargoScale === "inter" ? (
               field(
                 "Продукт трубопровода",
