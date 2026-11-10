@@ -17,11 +17,11 @@ async def run_command(command: str, pool: asyncpg.Pool) -> dict[str, object]:
         settings = load_budget_settings()
         await configure_budget(
             pool,
-            limit_amount=settings.a2_alice_budget_limit,
-            token_limit=settings.a2_alice_token_limit,
+            limit_amount=settings.alice_budget_limit,
+            token_limit=settings.alice_token_limit,
             model_uri=settings.model_uri,
-            currency=settings.a2_alice_currency,
-            tariff_id=settings.a2_alice_tariff_id,
+            currency=settings.alice_currency,
+            tariff_id=settings.alice_tariff_id,
         )
     elif command != "status":
         raise ValueError("Unsupported budget command")
@@ -45,7 +45,7 @@ async def run_command(command: str, pool: asyncpg.Pool) -> dict[str, object]:
 
 
 async def _execute(command: str) -> dict[str, object]:
-    pool = await open_pool(RuntimeSettings(_env_file=".env"))  # type: ignore[call-arg]
+    pool = await open_pool(RuntimeSettings())
     try:
         return await run_command(command, pool)
     finally:

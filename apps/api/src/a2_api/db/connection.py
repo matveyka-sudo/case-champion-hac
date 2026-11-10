@@ -7,7 +7,7 @@ from a2_api.core.config import RuntimeSettings
 
 async def open_pool(settings: RuntimeSettings) -> asyncpg.Pool:
     if settings.database_url is None:
-        raise ValueError("A2_DATABASE_URL is required")
+        raise ValueError("DATABASE_URL is required")
     url = settings.database_url.replace("postgresql+asyncpg://", "postgresql://", 1)
     pool = await asyncpg.create_pool(
         url,

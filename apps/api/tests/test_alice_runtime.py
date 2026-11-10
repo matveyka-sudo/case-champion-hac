@@ -64,24 +64,13 @@ class FakeSDKTransport:
         return ModelReply(
             content=json.dumps(
                 {
-                    "analysis_id": facts["analysis_id"],
                     "findings": [
                         {
-                            "text": "Показатель сохранён в расчёте.",
-                            "metric_ids": [metric["metric_id"]],
-                            "evidence_refs": [],
-                            "claims": [
-                                {
-                                    "metric_id": metric["metric_id"],
-                                    "value": metric["value"],
-                                    "unit": metric["unit"],
-                                }
-                            ],
+                            "metric_id": metric["metric_id"],
+                            "explanation_code": "saved_value",
                         }
                     ],
-                    "proposals": [],
-                    "evidence_refs": [],
-                    "limitations": [],
+                    "template_ids": [],
                 }
             ),
             finish_reason="stop",
@@ -131,6 +120,17 @@ def test_factory_requires_billing_currency_confirmation_before_live_transport(mo
     assert FakeSDKTransport.instances == []
 
 
+def test_factory_disables_retries_and_extra_calls_without_tools(monkeypatch):
+    from a2_api import alice
+
+    _alice_env(monkeypatch)
+    monkeypatch.setattr(alice, "SDKTransport", FakeSDKTransport)
+    agent = alice.build_assistant(AnalysisService())
+    assert agent.config.tools_enabled is False
+    assert agent.config.max_model_calls == 1
+    assert agent.config.max_retries == 0
+
+
 @pytest.mark.parametrize("missing", ["key", "budget_hook"])
 def test_missing_live_gate_cannot_be_restored_from_local_dotenv(monkeypatch, tmp_path, missing):
     from a2_api import alice
@@ -150,8 +150,8 @@ def test_missing_live_gate_cannot_be_restored_from_local_dotenv(monkeypatch, tmp
     # Prove the fixture is testing a real pydantic-settings dotenv fallback.
     dotenv_settings = alice.AliceSettings()
     assert dotenv_settings.yandex_api_key.get_secret_value() == "SYNTHETIC-DOTENV-KEY"
-    assert dotenv_settings.a2_assistant_budget_hook == ("test_alice_runtime:synthetic_budget_hook")
-    assert dotenv_settings.a2_assistant_tools_enabled is True
+    assert dotenv_settings.assistant_budget_hook == ("test_alice_runtime:synthetic_budget_hook")
+    assert dotenv_settings.assistant_tools_enabled is True
 
     _alice_env(monkeypatch, key=missing != "key", budget_hook=missing != "budget_hook")
     settings = alice.AliceSettings()
@@ -159,8 +159,8 @@ def test_missing_live_gate_cannot_be_restored_from_local_dotenv(monkeypatch, tmp
         assert settings.yandex_api_key is not None
         assert settings.yandex_api_key.get_secret_value() == ""
     else:
-        assert settings.a2_assistant_budget_hook == ""
-    assert settings.a2_assistant_tools_enabled is False
+        assert settings.assistant_budget_hook == ""
+    assert settings.assistant_tools_enabled is False
     monkeypatch.setattr(alice, "SDKTransport", FakeSDKTransport)
     FakeSDKTransport.instances = []
     assert alice.build_assistant(AnalysisService()).transport is None
@@ -254,7 +254,7 @@ def test_runtime_hook_explains_saved_analysis_and_closes_transport(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("status,expected_calls", [(401, 1), (403, 1), (429, 3), (503, 3)])
+@pytest.mark.parametrize("status,expected_calls", [(401, 1), (403, 1), (429, 1), (503, 1)])
 async def test_factory_provider_errors_use_safe_fallback(monkeypatch, status, expected_calls):
     from a2_api import alice
 
