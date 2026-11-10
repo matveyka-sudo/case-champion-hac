@@ -1,0 +1,154 @@
+{
+  "schema": "a2-physical-school-approach-review-v1",
+  "review_date": "2026-11-10",
+  "acceptance_state": "research_only",
+  "bundle_id": "kaliningrad-urban-2026-11-10.3",
+  "bundle_manifest_sha256": "b174039c6c2d1feb33a46063418e5975afd5bc58095c20e8ff65f73434e25fa1",
+  "pbf_sha256": "769a6a6ac552b534057f2480b88f1c2d0709636761ab6d08483efe69c1e97b69",
+  "source_manifest": "data/manifests/research/physical-approach-observations-2026-11-10.json",
+  "prior_audit": "data/manifests/qa/kaliningrad-school-audit-2026-11-10.json",
+  "prior_source_review": "data/manifests/qa/kaliningrad-school-source-review-2026-11-10.json",
+  "summary": {
+    "prior_unknown_approaches": 64,
+    "current_quarantined_schools": 53,
+    "confirmed_new_approaches": 0,
+    "school_catalog_complete": false,
+    "full_population_scope_confirmed": false,
+    "excluded_population_cells_retained": 70,
+    "excluded_population_persons_retained": 277.772,
+    "distance_threshold_or_gate_tolerance_changed": false
+  },
+  "candidates": [
+    {
+      "destination_id": "kaliningrad-school-klgd_education-4409887",
+      "institution": "Municipal lyceum18, campus2, Kosmonavta Leonova6",
+      "physical_coordinates": [
+        20.4825405,
+        54.7220766
+      ],
+      "existing_access_node_id": "walk:way:96828858:125.7",
+      "original_approach_state": "unknown",
+      "original_reasons": [
+        "CROSSES_BARRIER"
+      ],
+      "pbf_findings": {
+        "holding_building": "way/101080958",
+        "crossed_fence": "way/161400568",
+        "gate": "node/1733753702",
+        "gate_coordinates": [
+          20.4823329,
+          54.7218057
+        ],
+        "gate_foot_permission": "yes",
+        "gate_distance_from_original_crossing_m": 29.307,
+        "mapped_footway_through_gate": "way/161400559",
+        "footway_to_sidewalk_join_node": "node/4177650601",
+        "sidewalk": "way/96828858",
+        "mapped_building_entrance_verified": false
+      },
+      "official_source_findings": [
+        {
+          "source_ref": "lyceum18-access",
+          "page": null,
+          "fact": "The current school page describes assisted access and a portable stair climber, but the inspected page provides no campus2 entrance map establishing the route to the source building."
+        }
+      ],
+      "decision": "Retain unknown. A real open gate and mapped footway do not establish the missing building-to-footway segment.",
+      "minimum_next_verification": [
+        "Campus2-specific official entrance plan or dated source-backed identification of the doorway on way101080958.",
+        "Continuous physical route from that doorway through mapped gate1733753702 to sidewalk96828858, including access conditions and geometry uncertainty."
+      ]
+    },
+    {
+      "destination_ids": [
+        "kaliningrad-school-klgd_education-4418379",
+        "kaliningrad-school-klgd_education-4418380"
+      ],
+      "institution": "Municipal gymnasium32, Ivanikova6 campus",
+      "physical_coordinates": [
+        [
+          20.5079374,
+          54.7171437
+        ],
+        [
+          20.5075945,
+          54.7171366
+        ]
+      ],
+      "original_approach_states": [
+        "unknown",
+        "unknown"
+      ],
+      "original_reasons": [
+        "CROSSES_BARRIER"
+      ],
+      "pbf_findings": {
+        "building": "way/89826307",
+        "building_exact_address": "Podpolkovnika Ivanikova6",
+        "fence": "way/89826313",
+        "explicit_foot_yes_gate": {
+          "node_id": "node/2935040512",
+          "coordinates": [
+            20.5071331,
+            54.7166059
+          ],
+          "side_of_building": "south",
+          "distance_from_original_crossings_m": [
+            103.012,
+            110.626
+          ]
+        },
+        "unverified_north_gate_candidate": {
+          "node_id": "node/2158838012",
+          "coordinates": [
+            20.5070015,
+            54.7175122
+          ],
+          "access_tags": "none"
+        },
+        "highway_shared_node_with_either_gate_in_inspected_local_pbf": false,
+        "named_lyudnikova_street_anchor_way_ids": ["way/223248715", "way/707244379"]
+      },
+      "official_source_findings": [
+        {
+          "source_ref": "gymnasium32-entry-plan",
+          "page": 1,
+          "fact": "The linked situational plan depicts a separate pedestrian wicket-to-main-entrance route and sliding-gate-to-secondary-ramp route.",
+          "campus_assignment": "Inferred from the official school page link and the companion instructions naming Ivanikova6, supported by the H-shaped source building footprint and street anchor.",
+          "source_geometry": "Schematic raster; no georeferenced doorway or wicket coordinates or accuracy bound supplied.",
+          "supports_pedestrian_route_existence": true,
+          "accepted_coordinate_join": false
+        },
+        {
+          "source_ref": "gymnasium32-stepfree-access",
+          "page": 1,
+          "fact": "For assisted visitors the school names an approach from Lyudnikova Street, a sliding gate opened following a call, an assistance button at the main door and a ramp at the secondary entrance."
+        }
+      ],
+      "join_uncertainties": [
+        "The schematic has not been georeferenced and its doors/gates are not assigned accepted OSM coordinates.",
+        "The southern foot=yes gate2935040512 cannot be substituted for the official assisted sliding gate.",
+        "Northern gate2158838012 is a location candidate only; its identity as the plan gate and pedestrian opening conditions remain unverified.",
+        "The assisted sliding-gate opening rule does not prove unconditional current traversability and gives no opening duration.",
+        "The vehicle/assisted-gate phone requirement must not be treated as proof that the separate pedestrian wicket route is closed. Its permission and exact coordinate join are still unverified."
+      ],
+      "decision": "Retain both original unknown connectors; preserve all other accepted and quarantined entities.",
+      "minimum_next_verification": [
+        "Identify both official doorway positions and the intended gate against the source building/fence with explicit geometric error bounds.",
+        "Obtain unconditional pedestrian permission or model the verified assisted-entry precondition with unknown duration.",
+        "Verify the complete gate-to-building route and public-network connection; do not bridge the fence by widening gate tolerance."
+      ]
+    }
+  ],
+  "topology_check_limitations": [
+    "The supplemental exact-node check examined tagged entrances and highway joins on the audit-listed own way footprints. Relation-only footprints were not promoted from an empty join result.",
+    "No source observation proves a complete entrance inventory, school roster or bounded positive-population denominator."
+  ],
+  "promotion": {
+    "bundle_published": false,
+    "connectors_changed": 0,
+    "quarantine_changed": 0,
+    "index_ready": false,
+    "required_approval_before_future_bundle_promotion": true
+  }
+}
