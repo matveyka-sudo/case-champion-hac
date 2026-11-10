@@ -69,7 +69,7 @@ def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
 
     from a2_api.api.application import create_app
     from a2_api.core.registry import ProductRegistry
-    from a2_api.services.analyses import AnalysisService, Preflight
+    from a2_api.services.analyses import DEFAULT_TEMPLATES, AnalysisService, Preflight
 
     config = settings if settings is not None else RuntimeSettings()
     if config.contract_version == "legacy":
@@ -103,6 +103,7 @@ def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
             code_version=config.code_version,
             engine_enabled=bool(config.calculation_handler),
             preflight=preflight,
+            registered_template_ids=getattr(registry, "scenario_template_ids", DEFAULT_TEMPLATES),
         )
         if config.assistant_hook and configure_assistant:
             factory = cast(
