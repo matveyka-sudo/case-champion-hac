@@ -8,6 +8,7 @@ import scenario from "../tests/fixtures/api/scenario.json" with { type: "json" }
 import pax from "../tests/fixtures/api/intercity_passenger.json" with { type: "json" };
 import cargo from "../tests/fixtures/api/urban_cargo.json" with { type: "json" };
 import interCargo from "../tests/fixtures/api/intercity_cargo.json" with { type: "json" };
+import { scenarioRouteFixture } from "../tests/fixtures/scenario-routes";
 const fixtures = {
   urban_passenger: urban,
   intercity_passenger: pax,
@@ -32,6 +33,7 @@ async function mockApi(
     capabilities?: Schemas["Capabilities"];
     territories?: Territory[];
     result?: Partial<AnalysisResult>;
+    scenarioResult?: Partial<Schemas["ScenarioResult"]>;
   } = {},
 ) {
   let request: unknown = null,
@@ -179,6 +181,7 @@ async function mockApi(
     } else if (path.includes("/scenario-runs/"))
       body = {
         ...scenario,
+        ...options.scenarioResult,
         baseline_analysis_id: result.analysis_id,
         baseline_result_hash: result.result_hash,
       };
@@ -633,4 +636,87 @@ test("API: landing identifies illustrative examples without labeling API results
   await expect(page.locator(".lp-footer")).not.toContainText("Данные — демонстрационные");
   await page.goto("/?data=demo");
   await expect(page.locator(".lp-footer")).toContainText("Данные — демонстрационные");
+});
+
+test("API: scenario displays the changed nonwinner route and worsening, then restores baseline", async ({ page }) => {
+  const data = scenarioRouteFixture();
+  await mockApi(page, { result: data.baseline, scenarioResult: data.scenario });
+  await page.goto("/?data=api#atlas");
+  await cityRun(page);
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  const otherRoute = page.locator(".api-card .api-journey").last();
+  await otherRoute.locator("summary").click();
+  await expect(otherRoute).toContainText("Другая школа · 40 мин");
+  await page.getByRole("button", { name: "Агент", exact: true }).click();
+  await page.getByRole("button", { name: "Проверить сценарий", exact: true }).click();
+  await expect(page.locator(".api-card")).toContainText("Сравнение до / после");
+  await page.getByRole("button", { name: "Сценарий", exact: true }).click();
+  await expect(page.locator(".api-card .api-journey summary")).toHaveText([
+    "Путь сценария · Данные доступны · геометрия источника", "Путь сценария · Данные доступны · геометрия источника",
+  ]);
+  await otherRoute.locator("summary").click();
+  await expect(otherRoute).toContainText("Другая школа · 45 мин");
+  await expect(page.locator(".api-card")).toContainText("Ухудшение · -5 мин");
+  await expect(page.locator(".api-overlay-note")).toContainText("Показаны пути сценария");
+  await page.getByRole("button", { name: "База", exact: true }).click();
+  await otherRoute.locator("summary").click();
+  await expect(otherRoute).toContainText("Другая школа · 40 мин");
+  await expect(page.locator(".api-card")).not.toContainText("Другая школа · 45 мин");
+  await expect(page.locator(".api-overlay-note")).toHaveCount(0);
+});
+
+test("API: scenario without route geometry preserves after time and explicitly labels missing geometry", async ({ page }) => {
+  const data = scenarioRouteFixture();
+  data.baseline.journeys[0].geometry = null;
+  data.baseline.journeys[0].geometry_kind = "none";
+  data.scenario.after_journeys![0].geometry = null;
+  data.scenario.after_journeys![0].geometry_kind = "none";
+  await mockApi(page, { result: data.baseline, scenarioResult: data.scenario });
+  await page.goto("/?data=api#atlas");
+  await cityRun(page);
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await page.getByRole("button", { name: "Агент", exact: true }).click();
+  await page.getByRole("button", { name: "Проверить сценарий", exact: true }).click();
+  await expect(page.locator(".api-card")).toContainText("Сравнение до / после");
+  await page.getByRole("button", { name: "Сценарий", exact: true }).click();
+  await expect(page.locator(".api-overlay-note")).toContainText("Геометрия путей сценария не предоставлена");
+  const route = page.locator(".api-card .api-journey").last();
+  await route.locator("summary").click();
+  await expect(route).toContainText("геометрия отсутствует");
+  await expect(route).toContainText("Другая школа · 45 мин");
+  await expect(route).toContainText("Движение · Общественный транспорт · 45 мин");
+});
+
+test("API: scenario connection events retain new and lost labels without invented numeric savings", async ({ page }) => {
+  const data = scenarioRouteFixture();
+  data.scenario.deltas.push(...(["new_connection", "lost_connection"] as const).map((outcome) => ({
+    ...data.scenario.deltas[0], effect_id: outcome, outcome, delta: null,
+  })));
+  await mockApi(page, { result: data.baseline, scenarioResult: data.scenario });
+  await page.goto("/?data=api#atlas");
+  await cityRun(page);
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await page.getByRole("button", { name: "Агент", exact: true }).click();
+  await page.getByRole("button", { name: "Проверить сценарий", exact: true }).click();
+  await expect(page.locator(".api-card")).toContainText("Связь появилась · Без численной разности");
+  await expect(page.locator(".api-card")).toContainText("Связь потеряна · Без численной разности");
+  await expect(page.locator(".api-card")).toContainText("Ухудшение · -5 мин");
+});
+
+test("API: partial point index stays numerical and scoped while the city total is unknown", async ({ page }) => {
+  const data = structuredClone(urban) as AnalysisResult;
+  data.status = "partial";
+  data.scores[0] = { ...data.scores[0], name: "urban_accessibility_index", value: 72.5, completeness: "partial", ranking_eligible: false };
+  data.scores.unshift({ ...data.scores[0], score_id: "city-total", value: null, status: "unknown", subject: { kind: "territory", territory_id: "city-1" } });
+  const mock = await mockApi(page, { result: data, emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await cityRun(page);
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  const point = page.locator(".api-measure").filter({ hasText: "Точка анализа" });
+  await expect(point.locator('b[data-score-band="medium"]')).toHaveText("72,5 из 100");
+  await expect(page.locator(".api-measure").filter({ hasText: "Территория" }).locator('b[data-score-band="unknown"]')).toHaveText("Нет данных");
+  await expect(page.locator(".api-card")).toContainText("Частичная оценка");
+  await expect(page.locator(".api-card")).toContainText("не участвует в полном рейтинге");
+  await page.screenshot({ path: "test-results/api-partial-point-index.png" });
+  expect(mock.posts).toBe(1);
 });
