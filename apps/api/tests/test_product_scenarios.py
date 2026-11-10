@@ -247,6 +247,94 @@ def test_unknown_positive_population_never_reports_exact_affected_count():
     assert any(row.outcome == "unknown" and row.delta is None for row in result.deltas)
 
 
+def partial_timetable_case():
+    context, facts, document, baseline, _ = make_case()
+    table = replace(
+        facts.timetable,
+        scope=replace(
+            facts.timetable.scope,
+            schedule_complete=False,
+            calendar_complete=False,
+            footpaths_complete=False,
+            transfers_complete=False,
+            continuations_complete=False,
+        ),
+    )
+    coverage = tuple(
+        replace(row, catalog_complete=False, search_complete=False) for row in facts.coverage
+    )
+    facts = facts.model_copy(update={"timetable": table, "coverage": coverage})
+    source = replace(
+        document.inputs,
+        timetables=(replace(document.inputs.timetables[0], timetable=table),),
+        urban=(replace(document.inputs.urban[0], coverage=coverage),),
+    )
+    frozen = create_scenario_baseline(source)
+    document = document.model_copy(
+        update={
+            "inputs": source,
+            "source_inputs_hash": source_inputs_hash(facts),
+            "plans": (
+                document.plans[0].model_copy(
+                    update={
+                        "operation": replace(
+                            document.plans[0].operation, baseline_id=frozen.baseline_id
+                        )
+                    }
+                ),
+            ),
+        }
+    )
+    from a2_api.adapters.product_projection import Projection
+
+    output = Projection(context, baseline.evidence_refs)
+    project_urban(output, frozen.before.urban[0].analysis)
+    baseline = output.finish()
+    return context, facts, document, baseline, frozen
+
+
+def test_partial_timetable_keeps_known_route_times_without_proven_minimum_saving():
+    result, _ = run(partial_timetable_case())
+    times = {
+        row.metric_id: row for row in result.before.metrics if row.name == "minimum_journey_seconds"
+    }
+    assert any(row.value is not None for row in times.values())
+    assert all(row.completeness == "partial" for row in times.values())
+    assert all(
+        row.delta is None and row.outcome == "unknown"
+        for row in result.deltas
+        if row.before_id in times
+    )
+    assert all(score.value is None and not score.ranking_eligible for score in result.after.scores)
+
+
+@pytest.mark.asyncio
+async def test_partial_minimum_pg_publication_roundtrip_keeps_raw_times_and_unknown_effect(
+    database,
+):
+    from test_product_scenario_publication import queued_case
+
+    pool, _, _ = database
+    repository, claim, candidate, baseline = await queued_case(pool, partial_timetable_case())
+    await repository.succeed(claim, candidate)
+    saved = await repository.get_run(candidate.run_id, claim.context.access_scope)
+    assert saved == candidate
+    assert saved.before.metrics == baseline.metrics
+    assert saved.after_journeys and all(
+        journey.completeness == "partial" for journey in saved.after_journeys
+    )
+    assert all(
+        delta.delta is None and delta.outcome == "unknown"
+        for delta in saved.deltas
+        if delta.before_id
+        in {
+            metric.metric_id
+            for metric in saved.before.metrics
+            if metric.name == "minimum_journey_seconds"
+        }
+    )
+
+
 def test_document_json_roundtrip_preserves_source_binding():
     context, facts, document, _, _ = make_case()
     parsed = ScenarioDocument.model_validate_json(document.model_dump_json())

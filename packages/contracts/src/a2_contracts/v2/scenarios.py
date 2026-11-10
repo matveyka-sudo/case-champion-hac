@@ -244,6 +244,15 @@ def _numeric_change(old: Metric | Score, new: Metric | Score) -> bool:
     )
 
 
+def _unproven_minimum(value: Metric | Score) -> bool:
+    return (
+        isinstance(value, Metric)
+        and value.name == "minimum_journey_seconds"
+        and value.status == "available"
+        and value.reason_code == "MINIMUM_TIME_UNPROVEN"
+    )
+
+
 def _check_effect_coverage(
     before: ScenarioValues, after: ScenarioValues, effects: list[ScenarioDelta]
 ) -> set[str]:
@@ -359,6 +368,14 @@ def _check_effect_coverage(
         for old_id, new_id in pairs.items():
             old, new = old_values[old_id], new_values[new_id]
             task_effect = covered.get((old_id, new_id))
+            if _unproven_minimum(old) or _unproven_minimum(new):
+                if (
+                    task_effect is None
+                    or task_effect.outcome != "unknown"
+                    or task_effect.delta is not None
+                ):
+                    raise ValueError("Unproven minimum requires an explicit unknown effect")
+                continue
             if _is_time_or_index(old) or _is_time_or_index(new):
                 changed_state = (
                     old.status != new.status
@@ -482,10 +499,30 @@ class ScenarioResult(ContractModel):
         for values in (self.before, self.after):
             refs.extend(ref for metric in values.metrics for ref in metric.source_refs)
             refs.extend(ref for score in values.scores for ref in score.evidence_refs)
+            for metric in values.metrics:
+                if _unproven_minimum(metric) and (
+                    metric.completeness != "partial"
+                    or not metric.source_refs
+                    or metric.journey_id is None
+                ):
+                    raise ValueError("Unproven minimum requires a partial evidence-bound journey")
         _evidence_ids(self.evidence_refs, refs)
         after_journeys = {journey.journey_id: journey for journey in self.after_journeys}
         if len(after_journeys) != len(self.after_journeys):
             raise ValueError("Duplicate after journey identity")
+        for metric in self.after.metrics:
+            if _unproven_minimum(metric):
+                journey = after_journeys.get(metric.journey_id or "")
+                if (
+                    journey is None
+                    or journey.status != "available"
+                    or journey.completeness != "partial"
+                    or journey.scope != "urban"
+                    or journey.point_id != metric.subject.point_id
+                    or journey.time_kind != metric.time_kind
+                    or journey.total_seconds != metric.value
+                ):
+                    raise ValueError("Unproven after minimum requires its matching partial journey")
         used_journeys = {metric.journey_id for metric in self.after.metrics}
         if not after_journeys.keys() <= used_journeys:
             raise ValueError("After journey must support a saved after metric")
