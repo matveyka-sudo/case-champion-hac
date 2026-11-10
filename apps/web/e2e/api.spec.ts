@@ -15,6 +15,7 @@ import { pointOverviewFixture } from "../tests/fixtures/point-overview";
 import { partialWalkGeometryFixture } from "../tests/fixtures/partial-walk-geometry";
 import { observedRouteFixture } from "../tests/fixtures/observed-route";
 import { legGeometryFixture } from "../tests/fixtures/leg-geometry";
+import { groupedEvidenceFixture } from "../tests/fixtures/evidence-groups";
 const fixtures = {
   urban_passenger: urban,
   intercity_passenger: pax,
@@ -330,6 +331,50 @@ test("API: complete analysis, actual map features, scoped explanation and separa
     0,
   );
   await page.screenshot({ path: "test-results/api-desktop.png" });
+});
+test("API: grouped saved citations resolve lazily to the owning baseline and scenario sources", async ({ page }) => {
+  const baseline = groupedEvidenceFixture(urban as AnalysisResult, "Synthetic baseline group source");
+  const after = groupedEvidenceFixture(scenario as Schemas["ScenarioResult"], "Synthetic scenario group source");
+  baseline.evidence_refs.push({ ...baseline.evidence_refs[0], evidence_id: "uncited-synthetic-leaf", section: "Synthetic unselected source" });
+  const proposed = groupedEvidenceFixture(proposal as Schemas["ScenarioProposal"]);
+  await mockApi(page, { result: baseline, scenarioResult: after, scenarioProposal: proposed });
+  await page.route("**/explanation", (route) => route.fulfill({ json: {
+    analysis_id: baseline.analysis_id, analysis_result_hash: baseline.result_hash,
+    request_id: "synthetic-grouped-explanation", status: "template", model_id: null, reason_code: "DISABLED",
+    findings: [{ text: "Синтетическое объяснение сохранённого времени.", metric_ids: [baseline.metrics[0].metric_id], claims: [], evidence_refs: [] }],
+    evidence_refs: [baseline.evidence_groups![0].group_id], proposals: [], limitations: [], retrieved_evidence: [],
+  } }));
+  await page.goto("/?data=api#atlas");
+  await cityRun(page);
+  const card = page.locator("#apiResultCard"), sources = card.locator("details.src");
+  await expect(card).toContainText("30 мин");
+  await expect(sources.locator("p")).toHaveCount(0);
+  await sources.locator("summary").click();
+  await expect(sources).toContainText("Synthetic baseline group source");
+  await expect(sources).toContainText("Synthetic unselected source");
+  await sources.locator("summary").click();
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
+  await page.getByLabel("Вопрос агенту").fill("Почему?");
+  await page.getByRole("button", { name: "Отправить", exact: true }).click();
+  const answerSources = page.locator(".ch-log details.src");
+  await expect(answerSources.locator("p")).toHaveCount(0);
+  await answerSources.locator("summary").click();
+  await expect(answerSources).toContainText("Synthetic baseline group source");
+  await expect(answerSources).not.toContainText("Synthetic unselected source");
+  await page.getByRole("button", { name: "Synthetic elapsed travel time: 30 мин", exact: true }).click();
+  await sources.locator("summary").click();
+  await expect(sources).toContainText("Synthetic baseline group source");
+  await expect(sources).not.toContainText("Synthetic unselected source");
+  await page.getByRole("button", { name: "Проверить сценарий", exact: true }).click();
+  await expect(card).toContainText("Сравнение до / после");
+  await page.getByRole("button", { name: "Сценарий", exact: true }).click();
+  await expect(card).toContainText("28,3 мин");
+  await expect(sources).toContainText("Synthetic scenario group source");
+  await expect(sources).not.toContainText("Synthetic baseline group source");
+  await page.getByRole("button", { name: "База", exact: true }).click();
+  await expect(sources).toContainText("Synthetic baseline group source");
+  await expect(sources).not.toContainText("Synthetic scenario group source");
+  await expect(page.locator("body")).not.toContainText("evidence-group:");
 });
 test("API: errors never activate demo data and field errors stay near the filter", async ({
   page,

@@ -14,7 +14,7 @@ def leaf_references(refs: Iterable[str], resolver: EvidenceResolver) -> list[str
     return list(
         dict.fromkeys(
             leaf
-            for identity in identities
+            for identity in dict.fromkeys(identities)
             for leaf in (
                 (identity,)
                 if identity in resolver.leaf_ids

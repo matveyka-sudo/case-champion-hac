@@ -77,6 +77,7 @@ import { matchingCargoProfiles } from "../api/adapters/cargoBinding";
 import { ChoiceChips, TerritoryPair, CargoProfileChoices } from "../widgets/FilterControlViews";
 import { boundSnapshotId, initialSourceDraft } from "../api/adapters/sourceBinding";
 import { AgentChatView } from "../widgets/AgentChatView";
+import { evidenceResolver, explanationSources, journeyEvidenceReferences } from "../api/adapters/evidenceGroups";
 import { MapViewport, MapCanvas, MapOverlay, MapControls, AtlasLegend, AtlasMobileSheet, AtlasStatus, StateCard } from "../widgets/AtlasMapView";
 const phaseLabels: Record<string, string> = {
   idle: "Выберите условия и запустите анализ",
@@ -546,6 +547,30 @@ export function ApiAtlasPage() {
       s.status === "available" &&
       s.completeness === "full",
   );
+  const selectedSources = () => {
+    const context = scenarioView && scenario ? scenario : result;
+    if (!context) return [];
+    function* references() {
+      for (const metric of shownMetrics) yield* metric.source_refs;
+      for (const score of shownScores) yield* score.evidence_refs;
+      if (scenarioView && scenario) {
+        yield* scenario.turnaround_evidence;
+        yield* scenario.resource_evidence || [];
+        for (const journey of scenario.after_journeys || [])
+          if (selectedJourney.some((selected) => selected.journey_id === journey.journey_id)) yield* journeyEvidenceReferences(journey);
+      } else if (result) {
+        if (feature) yield* feature.source_refs;
+        for (const journey of selectedJourney) {
+          yield* journeyEvidenceReferences(journey);
+          const reference = result.references.find((item) => item.reference_id === journey.reference_id);
+          if (reference) yield* reference.calibration_evidence;
+        }
+        for (const count of result.counts) if (shownMetrics.some((metric) => metric.metric_id === count.metric_id)) yield* count.evidence_refs;
+        for (const lastReturn of shownReturns) yield* lastReturn.evidence_refs;
+      }
+    }
+    return evidenceResolver(context).sources(references());
+  };
   const renderResultCard = () => result && <ResultCardFrame id="apiResultCard" sectionRef={resultCard} compact={chatOpen && !filtersCollapsed && window.innerWidth < 1600}>
               <ResultCardHeader label={savedDemoModel ? scenarioView ? "Демонстрационный сценарий" : "Демонстрационный анализ" : scenarioView ? "Сценарий" : "Сохранённый анализ"}
                 title={selection?.entity_kind === "sample_point" ? pointOverview?.points.find((point) => point.pointId === selection.entity_id)?.name || pointDisplayName(selection.entity_id, feature)
@@ -659,7 +684,8 @@ export function ApiAtlasPage() {
                     {noticeText(t)}
                   </p>
                 ))}
-                <Sources refs={scenarioView && scenario ? scenario.evidence_refs : result.evidence_refs} />
+                <Sources refs={scenarioView && scenario ? scenario.evidence_refs : result.evidence_refs}
+                  resolveSources={selection && (scenarioView && scenario ? scenario.evidence_groups?.length : result.evidence_groups?.length) ? selectedSources : undefined} />
                 <div className="ctx-actions"><button className="iconbtn" onClick={() => { setChatOpen(true); if (window.innerWidth < 1520) setFiltersCollapsed(true); }}><Icon name="sparkles" />Спросить агента</button></div>
               </div>
             </ResultCardFrame>;
@@ -915,7 +941,7 @@ export function ApiAtlasPage() {
                   {m.answer.limitations.map((t, j) => (
                     <p key={j}>{noticeText(t)}</p>
                   ))}
-                  <Sources refs={m.answer.retrieved_evidence || []} />
+                  <Sources refs={m.answer.retrieved_evidence || []} resolveSources={result?.evidence_groups?.length ? () => explanationSources(result, m.answer) : undefined} />
                 </div>
               </div>
             ))}

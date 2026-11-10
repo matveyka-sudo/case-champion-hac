@@ -86,7 +86,7 @@ class EvidenceResolver:
         identities = tuple(refs)
         self.require(identities)
         leaves: set[str] = set()
-        for identity in identities:
+        for identity in dict.fromkeys(identities):
             group = self.groups.get(identity)
             if group is None:
                 leaves.add(identity)
