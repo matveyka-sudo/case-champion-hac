@@ -5,11 +5,14 @@ from dataclasses import replace
 import pytest
 from a2_api.adapters import product
 from a2_api.adapters.product_projection import Projection, project_urban
+from a2_api.adapters.product_scenario_inputs import source_inputs_hash
 from a2_api.adapters.urban_map import accepted_urban_map
 from a2_api.core.errors import DomainError
 from a2_api.db.validation import _validate_scenario_semantics
+from a2_contracts.common import canonical_hash
 from a2_contracts.v2.dataset import AcceptedData
-from a2_engine import MetricResult, category_index
+from a2_contracts.v2.results import AnalysisResult
+from a2_engine import MetricResult, category_index, create_scenario_baseline
 from test_product_runtime import claim_for, configure, request_for
 from test_product_runtime import transport_facts as transport_facts
 from test_product_scenario_publication import queued_case
@@ -22,6 +25,145 @@ from test_product_scenarios import (
 )
 
 OBSERVED = "observed_route_accessibility"
+
+
+def test_proven_pt_minima_keep_complete_result_without_observed_estimate_labels():
+    baseline = make_case()[3]
+    assert baseline.status == "available"
+    assert not any(score.name == OBSERVED for score in baseline.scores)
+    assert not {
+        "OBSERVED_ROUTE_ESTIMATE",
+        "MINIMUM_NOT_PROVEN",
+        "NOT_A_CITY_RANKING",
+    } & set(baseline.limitations)
+    candidate, _ = run(make_case())
+    assert not any(score.name == OBSERVED for score in candidate.after.scores)
+    assert "HYPOTHETICAL_SCENARIO_ROUTE_ESTIMATE" not in candidate.limitations
+
+
+def test_proven_minima_with_unknown_population_keep_population_unknown_without_estimates():
+    baseline = make_case(unknown_population=True)[3]
+    assert baseline.status == "partial"
+    assert not any(score.name == OBSERVED for score in baseline.scores)
+    territory = next(score for score in baseline.scores if score.name == "territory_index")
+    assert territory.value is None and territory.aggregation_basis.unknown_positive_weight
+
+
+def resource_limited_case(limit, *, loss=False):
+    context, facts, document, original, _ = make_case(loss=loss)
+    facts = facts.model_copy(update={"resource_limit": limit})
+    inputs = replace(
+        document.inputs,
+        urban=tuple(replace(job, resource_limit=limit) for job in document.inputs.urban),
+    )
+    frozen = create_scenario_baseline(inputs)
+    output = Projection(context, original.evidence_refs)
+    project_urban(output, frozen.before.urban[0].analysis)
+    baseline = output.finish()
+    plan = document.plans[0].model_copy(
+        update={"operation": replace(document.plans[0].operation, baseline_id=frozen.baseline_id)}
+    )
+    document = document.model_copy(
+        update={"inputs": inputs, "source_inputs_hash": source_inputs_hash(facts), "plans": (plan,)}
+    )
+    return context, facts, document, baseline, frozen
+
+
+@pytest.mark.parametrize("limit", [1, 2])
+def test_scenario_retires_existing_estimate_slots_after_proven_loss(limit):
+    case = resource_limited_case(limit, loss=True)
+    baseline = case[3]
+    saved_bytes = baseline.model_dump_json()
+    previous = {score.score_id: score for score in baseline.scores if score.name == OBSERVED}
+    assert previous
+    assert any(score.value is not None for score in previous.values()) == (limit == 2)
+    candidate, _ = run(case)
+    claim = with_claim(case)[0]
+    scope = trusted_urban_scope(case)
+    _validate_scenario_semantics(
+        candidate,
+        baseline,
+        claim.context.scenario_proposal,
+        endpoint_scope=scope,
+        expected_snapshot_hash=scope.snapshot_hash,
+    )
+    current = {score.score_id: score for score in candidate.after.scores if score.name == OBSERVED}
+    assert current.keys() == previous.keys()
+    assert all(
+        score.value is None
+        and score.status == "not_applicable"
+        and score.completeness == "full"
+        and score.reason_code == "USE_PROVEN_CATEGORY_INDEX"
+        and not score.ranking_eligible
+        for score in current.values()
+    )
+    assert all(
+        score.value == 0 and score.completeness == "full"
+        for score in candidate.after.scores
+        if score.name != OBSERVED
+    )
+    assert all(
+        score.reason_code == "NO_FEASIBLE_ROUTE" and not score.components
+        for score in candidate.after.scores
+        if score.name == "category_index"
+    )
+    assert all(
+        effect.delta is None and effect.outcome == "unknown"
+        for effect in candidate.deltas
+        if effect.kind == "score" and effect.after_id in current
+    )
+    assert (
+        candidate.before.metrics == baseline.metrics and candidate.before.scores == baseline.scores
+    )
+    assert baseline.model_dump_json() == saved_bytes
+
+
+def test_scenario_does_not_add_estimates_when_a_proven_category_becomes_unproven():
+    case = resource_limited_case(4)
+    baseline = case[3]
+    previous = {score.score_id for score in baseline.scores if score.name == OBSERVED}
+    assert not any(
+        score.name == OBSERVED and score.subject.point_id == "p1" for score in baseline.scores
+    )
+    candidate, _ = run(case)
+    assert {
+        score.score_id for score in candidate.after.scores if score.name == OBSERVED
+    } == previous
+    p1 = [score for score in candidate.after.scores if score.subject.point_id == "p1"]
+    assert p1 and all(score.value is None for score in p1)
+    raw = next(
+        metric
+        for metric in candidate.after.metrics
+        if metric.subject.point_id == "p1" and metric.name == "minimum_journey_seconds"
+    )
+    assert raw.value == 1500 and raw.completeness == "partial"
+    assert raw.reason_code == "MINIMUM_TIME_UNPROVEN" and raw.journey_id is not None
+    claim = with_claim(case)[0]
+    scope = trusted_urban_scope(case)
+    _validate_scenario_semantics(
+        candidate,
+        baseline,
+        claim.context.scenario_proposal,
+        endpoint_scope=scope,
+        expected_snapshot_hash=scope.snapshot_hash,
+    )
+
+
+def test_saved_partial_baseline_without_estimate_slots_keeps_its_strict_roster():
+    context, facts, document, baseline, frozen = partial_timetable_case()
+    payload = baseline.model_dump(mode="json")
+    payload["scores"] = [score for score in payload["scores"] if score["name"] != OBSERVED]
+    baseline = AnalysisResult.model_validate(payload)
+    baseline = baseline.model_copy(
+        update={
+            "result_hash": canonical_hash(baseline.model_dump(mode="json", exclude={"result_hash"}))
+        }
+    )
+    saved_bytes = baseline.model_dump_json()
+    candidate, _ = run((context, facts, document, baseline, frozen))
+    assert not any(score.name == OBSERVED for score in candidate.after.scores)
+    assert candidate.before.scores == baseline.scores
+    assert baseline.model_dump_json() == saved_bytes
 
 
 def test_generic_accepted_input_map_keeps_original_locations_population_and_missing_shapes(
@@ -122,9 +264,28 @@ def test_unavailable_h_does_not_receive_an_estimated_score():
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("limit,loss", [(2, True), (4, False)])
+async def test_proof_transition_pg_roundtrip_keeps_saved_roster_and_before(database, limit, loss):
+    pool, _, _ = database
+    repository, claim, candidate, baseline = await queued_case(
+        pool, resource_limited_case(limit, loss=loss)
+    )
+    saved_bytes = baseline.model_dump_json()
+    expected_ids = {score.score_id for score in baseline.scores}
+    assert {score.score_id for score in candidate.after.scores} == expected_ids
+    await repository.succeed(claim, candidate)
+    stored = await repository.get_run(candidate.run_id, claim.context.access_scope)
+    assert stored.before.metrics == baseline.metrics and stored.before.scores == baseline.scores
+    assert stored.after == candidate.after
+    assert (
+        await repository.get_run(baseline.analysis_id, claim.context.access_scope)
+    ).model_dump_json() == saved_bytes
+
+
+@pytest.mark.asyncio
 async def test_estimate_pg_roundtrip_preserves_exact_before_context_and_saved_proposal(database):
     pool, _, _ = database
-    case = make_case(unknown_population=True)
+    case = partial_timetable_case(unknown_population=True)
     repository, claim, candidate, baseline = await queued_case(pool, case)
     baseline_bytes = baseline.model_dump_json()
     proposal_bytes = claim.context.scenario_proposal.model_dump_json()

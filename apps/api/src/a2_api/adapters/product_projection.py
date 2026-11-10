@@ -164,7 +164,9 @@ def known(value: float | None, reason: str = "DATA_UNAVAILABLE") -> MetricResult
     )
 
 
-def project_urban(out: Projection, analysis: Any) -> None:
+def project_urban(
+    out: Projection, analysis: Any, *, observed_score_ids: frozenset[str] | None = None
+) -> None:
     request = out.context.normalized_request
     assert isinstance(request, UrbanPassengerRequest)
     territory = SubjectRef(
@@ -302,32 +304,44 @@ def project_urban(out: Projection, analysis: Any) -> None:
                         metrics=() if confirmed_absence else (raw, h),
                     )
                 )
-                if mode.passenger_mode == "public_transport":
-                    observed = category_index(
-                        chosen.journey.total_seconds if chosen is not None else None,
-                        analysis.h_seconds.value,
-                    )
-                    out.score(
-                        "observed-urban-accessibility-" + key,
-                        "observed_route_accessibility",
-                        MetricResult(
-                            observed.value,
-                            observed.status,
+                observed_id = "observed-urban-accessibility-" + key
+                # Analyses add estimates only for unproven minima. A scenario
+                # keeps its saved presentation roster across proof transitions.
+                if mode.passenger_mode == "public_transport" and (
+                    not category.minimum_proven
+                    if observed_score_ids is None
+                    else observed_id in observed_score_ids
+                ):
+                    if category.minimum_proven:
+                        observed = MetricResult(None, "not_applicable", "USE_PROVEN_CATEGORY_INDEX")
+                    else:
+                        estimate = category_index(
+                            chosen.journey.total_seconds if chosen is not None else None,
+                            analysis.h_seconds.value,
+                        )
+                        observed = MetricResult(
+                            estimate.value,
+                            estimate.status,
                             "MINIMUM_NOT_PROVEN"
-                            if observed.value is not None
+                            if estimate.value is not None
                             else "OBSERVED_ROUTE_UNAVAILABLE"
                             if chosen is None
-                            else observed.reason_code,
-                        ),
+                            else estimate.reason_code,
+                        )
+                    out.score(
+                        observed_id,
+                        "observed_route_accessibility",
+                        observed,
                         s,
                         sorted(set(category.evidence_refs) | set(analysis.area.source_refs)),
                         metrics=(raw, h),
-                        full=False,
+                        full=category.minimum_proven,
                         ranking=False,
                     )
-                    out.limitations.update(
-                        {"OBSERVED_ROUTE_ESTIMATE", "MINIMUM_NOT_PROVEN", "NOT_A_CITY_RANKING"}
-                    )
+                    if not category.minimum_proven:
+                        out.limitations.update(
+                            {"OBSERVED_ROUTE_ESTIMATE", "MINIMUM_NOT_PROVEN", "NOT_A_CITY_RANKING"}
+                        )
                 out.limitations.update(category.limitations)
             point_score = out.score(
                 "urban-point-" + p.point_id,

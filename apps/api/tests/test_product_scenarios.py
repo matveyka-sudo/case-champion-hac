@@ -247,8 +247,8 @@ def test_unknown_positive_population_never_reports_exact_affected_count():
     assert any(row.outcome == "unknown" and row.delta is None for row in result.deltas)
 
 
-def partial_timetable_case():
-    context, facts, document, baseline, _ = make_case()
+def partial_timetable_case(*, unknown_population=False):
+    context, facts, document, baseline, _ = make_case(unknown_population=unknown_population)
     table = replace(
         facts.timetable,
         scope=replace(
