@@ -4,10 +4,10 @@
   "engine": "work/ml2 after merging origin/dev 6148489 (a2_engine of ML1)",
   "contracts": "a2_contracts.v2 of the same tree",
   "script": "ml/ml1_readiness.py",
-  "note": "No routing: without a Valhalla build every pair is blocked (VALHALLA_BUILD_UNAVAILABLE). Connectors are passed with a readiness-only walking speed of 5.0 km/h (not accepted): connectors_confirmed counts endpoints ML1 treats as confirmed once the accepted profile gives the real speed",
+  "note": "No routing: without a Valhalla build every pair is blocked (VALHALLA_BUILD_UNAVAILABLE). Bundles 2026-11-10.2 (walk-connector-geometry-v2, barriers and gates). Connectors are passed with a readiness-only walking speed of 5.0 km/h (not accepted): connectors_confirmed counts endpoints ML1 treats as confirmed once the accepted profile gives the real speed",
   "results": [
     {
-      "bundle": "kaliningrad-urban-2026-11-10.1",
+      "bundle": "kaliningrad-urban-2026-11-10.2",
       "load_accepted_data": "ok",
       "prepare_walk_inputs": "ok",
       "points": 216,
@@ -29,7 +29,7 @@
         "VALHALLA_BUILD_UNAVAILABLE",
         "VALHALLA_CORRELATION_UNAVAILABLE"
       ],
-      "connectors_confirmed": 431,
+      "connectors_confirmed": 350,
       "endpoints": 478,
       "plan_walk_routes": "ok",
       "route_requests": 0,
@@ -43,7 +43,7 @@
       "allocated_population": "485776.273"
     },
     {
-      "bundle": "novorossiysk-urban-2026-11-10.1",
+      "bundle": "novorossiysk-urban-2026-11-10.2",
       "load_accepted_data": "ok",
       "prepare_walk_inputs": "ok",
       "points": 409,
@@ -65,7 +65,7 @@
         "VALHALLA_BUILD_UNAVAILABLE",
         "VALHALLA_CORRELATION_UNAVAILABLE"
       ],
-      "connectors_confirmed": 464,
+      "connectors_confirmed": 455,
       "endpoints": 516,
       "plan_walk_routes": "ok",
       "route_requests": 0,
@@ -79,7 +79,7 @@
       "allocated_population": "316189.104"
     },
     {
-      "bundle": "moscow-urban-2026-11-10.1",
+      "bundle": "moscow-urban-2026-11-10.2",
       "load_accepted_data": "ok",
       "prepare_walk_inputs": "ok",
       "points": 2361,
@@ -101,7 +101,7 @@
         "VALHALLA_BUILD_UNAVAILABLE",
         "VALHALLA_CORRELATION_UNAVAILABLE"
       ],
-      "connectors_confirmed": 5408,
+      "connectors_confirmed": 4163,
       "endpoints": 5832,
       "plan_walk_routes": "ok",
       "route_requests": 0,
