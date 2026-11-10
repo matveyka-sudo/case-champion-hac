@@ -90,6 +90,8 @@ name = "a2-data-pipeline"
 version = "0.1.0"
 source = { editable = "packages/data_pipeline" }
 dependencies = [
+    { name = "a2-contracts" },
+    { name = "a2-engine" },
     { name = "beautifulsoup4" },
     { name = "httpx" },
     { name = "lxml" },
@@ -106,6 +108,8 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "a2-contracts", editable = "packages/contracts" },
+    { name = "a2-engine", editable = "packages/engine" },
     { name = "beautifulsoup4", specifier = ">=4,<5" },
     { name = "httpx" },
     { name = "lxml" },
