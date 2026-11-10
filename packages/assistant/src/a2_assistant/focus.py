@@ -8,6 +8,32 @@ from a2_contracts.v2.results import AnalysisResult, Metric, Score
 SavedFact = TypeVar("SavedFact", Metric, Score)
 
 
+def _overview(items: list[SavedFact]) -> list[SavedFact]:
+    """Bounded representatives, including unavailable totals and late known facts.
+
+    Neither input order nor a long unknown prefix may hide every computed value.
+    Keep at most 80 references while scanning; no numeric aggregation is done.
+    """
+    groups: list[list[SavedFact]] = [[], [], [], []]
+    for item in items:
+        total = (
+            item.subject.kind in {"territory", "city_pair", "pipeline"}
+            and item.subject.category is None
+        ) or getattr(item, "calculation_kind", None) == "aggregate"
+        known = item.status == "available" and item.value is not None
+        group_index = (0 if total else 2) + int(not known)
+        if len(groups[group_index]) < 20:
+            groups[group_index].append(item)
+    result = []
+    for position in range(20):
+        for group in groups:
+            if position < len(group):
+                result.append(group[position])
+                if len(result) == 20:
+                    return result
+    return result
+
+
 def focused_metrics(
     saved: AnalysisResult, context: ExplanationRequest | None = None
 ) -> list[Metric]:
@@ -23,7 +49,7 @@ def _focused(
 ) -> list[SavedFact]:
     selection = context.selection if context is not None else None
     if selection is None:
-        return items[:20]
+        return _overview(items)
     kind, identifier = selection.entity_kind, selection.entity_id
     point_ids = {identifier} if kind == "sample_point" else set()
     for feature in saved.map_data.features:
