@@ -227,6 +227,10 @@ def validate_inputs(
             if not proof or not proof <= verified_evidence:
                 raise ValueError("FULL_SCOPE_REQUIRES_VERIFIED_CANONICAL_EVIDENCE")
     if isinstance(inputs, UrbanInputs):
+        if any(coverage.search_complete for coverage in inputs.coverage):
+            raise ValueError(
+                "EXTERNALLY_ASSERTED_URBAN_SEARCH_COMPLETENESS_REQUIRES_SERVER_VERIFIED_RECEIPT"
+            )
         if (
             inputs.context.city_id != profile.city_id
             or inputs.context.traffic_mode not in profile.traffic_modes
