@@ -5,6 +5,14 @@ database-backed worker, migrations, PostGIS and the pinned real Valhalla graph.
 It uses its own Compose project and volumes. The older `infra/waydex` deployment,
 its `waydex_postgres_data` volume and other running containers are unaffected.
 
+Nginx compresses saved public analysis JSON only for
+`GET /api/v1/analyses/<UUID>` when the client accepts gzip. Session tokens stay
+in headers; chat, authentication and mutation responses remain uncompressed.
+The proxy preserves `Cache-Control: no-store`, cookies and forwarded headers.
+The Docker proxy regression check uses the same pinned Nginx image as the web
+build; run it with `WAYDEX_NGINX_TEST_IMAGE` set to that image and
+`python3 infra/full-stack/test_nginx.py -v`.
+
 The initial runtime supports the reviewed Kaliningrad walk/static/school pilot.
 It returns real observed journeys with partial completeness, unknown scores and
 disabled ranking. Running this stack does not establish city-wide route minima,
