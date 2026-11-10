@@ -12,16 +12,17 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 | Task | Owner / branch | Status | Delivery and independent acceptance |
 |---|---|---|---|
 | Dynamic dispatcher, all four kinds and pipeline | BACKEND / work/full-backend | INTEGRATED | Corrections through4d3e4e9 reviewed: cargo roster/area, dated candidate and canonical timetable source binding, verified completeness evidence; root24 focused tests PASS. Real profiles beyond pilot remain separate acceptance gates |
-| Map/form/snapshot correctness | FRONTEND / work/full-frontend | INTEGRATED | Throughd340170: scoped numeric indices, approved colors, zero/null, partial map, snapshot/product guards, selected returns, published scenario paths. Root20 API browser tests PASS39.0s; synthetic UI evidence only |
+| Map/form/snapshot correctness | FRONTEND / work/full-frontend | INTEGRATED | Through8b074f1: runtime scope constraints, explicit preset, no cross-profile unions, local-time boundaries, human metric labels. Root93 unit/build/API freshness and27 browser cases PASS. Latest live5192 still8fc49fe; new-image scope UI replay pending |
 | Actual graph minimum bounds | ML1 / work/full-ml1 | INTEGRATED | Through63992f2 reviewed. Exact network and designated canonical-access model minima reproduced independently; root1045 engine tests PASS. e4d83a2 performs full proof recomputation; actual numeric point E2E below. Full physical entrance completeness and city index remain unproved |
 | External data restoration and normalized inputs | ML2 / work/full-ml2 | INTEGRATED | Through3b8c26f, immutable .5:79 accepted/51 quarantined schools,216 unchanged points; airport official roster full onlyNov10. Explicit .3→.5 physical compatibility, root271 ML2 tests PASS |
 | Isolated API-mode stack | DEVOPS / work/full-devops | INTEGRATED | Clean8fc49fe stack on5192, root real numerical browser E2E. df33d0a documents 189-file private restoration, restart and dump/restore. External archive hosting still unavailable; no claim of public one-command retrieval |
 | Independent reliability review | reviewer / read-only baseline | RUNNING | Reproducible defects with tests, then review delivered commits |
 | Selection-aware grounded Alice | root / integration branch | INTEGRATED | a220985+140da8c+ef826f7+c30d0cd reviewed; saved metric/score facts, bounded context, null/zero and partial preserved. Actual browser saved score-only explanation test PASS; no new paid calls |
 | Bounded resumable OD executor | BACKEND / work/full-backend | INTEGRATED | Through2151884, independent review accepted expiry/cache/provider budget fixes including SQL-clock race; root63 PG/HTTP/module tests PASS42.48s. No production batch enabled; real matrix performance remains unverified |
-| Saved baseline scenario integration | SCENARIOS / work/full-scenarios | CHANGES_REQUIRED | Through681bc848 point-task classification protected; root80 focused tests PASS. Reviewer found selected unknown category can be omitted from a full aggregate. Owner correcting operand inventory; runtime hooks still pending |
-| Runtime scope availability in form | root + FRONTEND + SCENARIOS | RUNNING | cdf1bad+91d7824 add typed scopes and pure date-bound projection; 11 scope/421 contract/41 module-scope checks PASS. Runtime/UI hooks pending; no feature-completion claim |
+| Saved baseline scenario integration | SCENARIOS / work/full-scenarios | INTEGRATED | bf7849d runtime+readonly frozen baseline and a616822 full/partial unknown operand guards independently accepted. Root123 scenario/runtime/publication tests PASS8.36s, including actual HTTP+spawned worker+PG on explicit TEST_ONLY inputs; no real scenario dataset enabled |
+| Runtime scope availability in form | root + FRONTEND + SCENARIOS | INTEGRATED | cdf1bad+91d7824+bf7849d+8b074f1, independent helper/runtime review. Root actual installed manifest emits exactly walk/airport/static/Nov10 local-day scope and empty scenario template inventory;27 browser cases PASS. Clean final-image replay pending |
 | Shared Rasp quota and source ingestion | BACKEND + ML2 | RUNNING | Central account/day hard cap500 including retries and copyright; private expiring observations. No real calls, missing key and verified remaining account allowance; no synthetic accepted snapshot |
+| Certified route geometry | ML1 → BACKEND → DEVOPS | RUNNING | a3c549c integrated/independently accepted. Root verifies32 files, recomputes full native minimum and97-edge/392-vertex geometry with exact joins. Backend Journey/timeline projection and portable supplement bundle pending; no promotion of physical coverage |
 
 Six child threads were simultaneously active after runtime reconfiguration;
 all were requested as gpt-6.1-sol / ultra. Runtime supplies seven slots including
@@ -54,6 +55,29 @@ renderer validation and no mutation. Independent review/new-image UI replay pend
 GitHub recheck: dev remains91ed5262b62c16afa3ca619f8140c43917cf8325;
 PR26 dd46659 and PR27 297accd remain OPEN/DRAFT/CLEAN, five checks each SUCCESS.
 Those remote checks do not cover this unpublished integration branch.
+
+On the same actual5192 deployment, root opened an isolated browser context and
+queried the saved root analysis/job IDs: both returned404/unknown_id without
+result data. Actual intercity passenger, urban cargo, intercity cargo and separate
+pipeline forms disabled launch and explained unavailable computation. These are
+real unavailability/isolation checks, not successful transport analyses.
+
+Geometrya3c549c adds a separate immutable supplement; all earlier proof bytes stay
+unchanged. Root rehashed32 receipt files and independently recomputed the full
+native minimum before geometry verification:97 directed edges,392 physical model
+vertices, no gaps, exact original time.12.749s wall/901496832B macOS peak RSS.
+External record:`root-certified-geometry-replay.json`; final geometry receipt
+SHA89dcd9238cf1289e243030611303bb2a964b819a978e51aba9bf83a2045a4eab.
+Shape encoding is six decimal places; canonical-access model limitations remain.
+Independent reviewer separately verified source copies/hashes/geometry replay;
+root1071 engine tests PASS5.93s. This is not yet the deployed Journey/map adapter.
+
+ML2 private Rasp preparation1c750fa+9a06234 integrated after permission/time fixes:
+new private files0600/directories0700, unsafe reuse rejected, future capture time
+rejected. Root315 ML2 tests PASS14.44s; independent reviewer reproduced fixes.
+No actual schedule response was fetched or accepted. BACKEND3090cef quota remains
+CHANGES_REQUIRED pending decoded JSON credential-echo protection; no production
+quota migration/initialization or provider call is authorized by these tests.
 
 At `fee4112d`, the coordinator used the actual browser UI on port 5191 to request
 Kaliningrad / school / walk / static, 2026-11-10 08:30 Europe/Kaliningrad.
