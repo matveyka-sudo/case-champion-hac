@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import type { GeoJsonObject } from "geojson";
 import type { AnalysisResult, Schemas, Selection } from "../api/types";
-import { subjectMatches, selectionText } from "../api/adapters/result";
+import { selectionText } from "../api/adapters/result";
 import { journeyLines, segmentGeometryNotice } from "../api/adapters/journeyGeometry";
 import { isDemoModelSnapshot } from "../api/adapters/demoModel";
 import { pointScorePresentation, observedScoreLabel } from "../api/adapters/scorePresentation";
@@ -11,6 +11,12 @@ const moscowCamera = (result: AnalysisResult | null) => isDemoModelSnapshot(resu
 
 // City presentation camera; accepted source points and calculation scope are unchanged.
 const showDemoCenter = (map: L.Map) => map.setView([55.75, 37.62], 10, { animate: false });
+type FeatureLayer = { layer: L.GeoJSON; style: L.PathOptions; markers: L.CircleMarker[] };
+const featureKey = (kind: string, id: string) => `${kind}:${id}`;
+function selectLayer(item: FeatureLayer, selected: boolean) {
+  item.layer.setStyle(selected ? { ...item.style, color: "#2f5bff", weight: 3 } : item.style);
+  for (const marker of item.markers) marker.setRadius(selected ? 10 : 7);
+}
 export function ApiMap({
   result,
   scores,
@@ -42,8 +48,45 @@ export function ApiMap({
     last = useRef(""),
     lastAnalysis = useRef(""),
     lastZoom = useRef(zoomAction.id),
-    lastCity = useRef("");
+    lastCity = useRef(""),
+    featureLayers = useRef(new Map<string, FeatureLayer[]>()),
+    selectedLayers = useRef<FeatureLayer[]>([]);
   const [tileError, setTileError] = useState(false);
+  const inventory = useMemo(() => {
+    const features = result?.map_data?.features || [];
+    const children = new Map<string, string[]>(), byId = new Map<string, { feature: Schemas["MapFeature"]; index: number }>();
+    const points = new Map<string, Schemas["MapFeature"]>(), bySubject = new Map<string, number[]>();
+    let maxPopulation = 1;
+    features.forEach((feature, index) => {
+      if (!byId.has(feature.entity_id)) byId.set(feature.entity_id, { feature, index });
+      if (feature.cell_id) {
+        const ids = children.get(feature.cell_id) || [];
+        ids.push(feature.entity_id);
+        children.set(feature.cell_id, ids);
+      }
+      if (feature.entity_kind === "sample_point")
+        for (const id of [feature.entity_id, feature.point_id]) if (id && !points.has(id)) points.set(id, feature);
+      if (feature.population != null) maxPopulation = Math.max(maxPopulation, feature.population);
+    });
+    scores.forEach((score, index) => {
+      const subject = score.subject;
+      for (const id of new Set([subject.point_id, subject.site_id, subject.node_id, subject.territory_id, subject.destination_id, subject.origin_id])) {
+        if (!id) continue;
+        const indices = bySubject.get(id) || [];
+        indices.push(index);
+        bySubject.set(id, indices);
+      }
+    });
+    const items = features.map((feature) => {
+      const indices = new Set<number>();
+      for (const id of [feature.entity_id, feature.point_id, ...(children.get(feature.entity_id) || [])])
+        if (id) for (const index of bySubject.get(id) || []) indices.add(index);
+      // Preserve the wire score order, including ambiguous-candidate behavior.
+      const candidates = [...indices].sort((a, b) => a - b).map((index) => scores[index]);
+      return { feature, candidates };
+    });
+    return { features, items, points, byId, maxPopulation };
+  }, [result, scores]);
   useEffect(() => {
     if (!host.current) return;
     const m = L.map(host.current, {
@@ -83,32 +126,19 @@ export function ApiMap({
       g = layers.current;
     if (!m || !g) return;
     g.clearLayers();
+    featureLayers.current.clear();
+    selectedLayers.current = [];
     const bounds = L.latLngBounds([]);
-    const features = result?.map_data?.features || [];
-    const maxPopulation = Math.max(1, ...features.flatMap((feature) => feature.population == null ? [] : [feature.population]));
-    features.forEach((f) => {
+    inventory.items.forEach(({ feature: f, candidates: linkedScores }) => {
       if (!f.geometry) return;
       const indexEntity = ["sample_point", "cell", "territory"].includes(f.entity_kind);
       if (indexEntity ? !visibleLayers.index && !visibleLayers.pop : !visibleLayers.objects) return;
-      const ids = [
-        f.entity_id,
-        f.point_id,
-        ...features
-          .filter((p) => p.cell_id === f.entity_id)
-          .map((p) => p.entity_id),
-      ].filter((id): id is string => !!id);
       const totalKind = f.entity_kind === "territory" ? "territory"
         : f.entity_kind === "sample_point" || f.entity_kind === "cell" ? "sample_point" : null;
-      const candidates = scores.filter(
+      const candidates = linkedScores.filter(
         (s) =>
           !(totalKind === "territory" && s.subject.kind === "sample_point") &&
-          !(totalKind === "sample_point" && s.subject.kind === "territory") &&
-          ids.some((id) =>
-            subjectMatches(s.subject, {
-              entity_kind: f.entity_kind,
-              entity_id: id,
-            }),
-          ),
+          !(totalKind === "sample_point" && s.subject.kind === "territory"),
       );
       const totals = candidates.filter((s) =>
         s.calculation_kind === "aggregate" ||
@@ -122,7 +152,7 @@ export function ApiMap({
       const value = score?.status === "available" ? score.value : null;
       const partial = score?.completeness === "partial";
       const dashArray = partial ? "1 4" : f.geometry_kind === "schematic" ? "5 5" : undefined;
-      const color = visibleLayers.pop && indexEntity ? f.population == null ? "#8990a7" : `hsl(250 45% ${90 - 55 * f.population / maxPopulation}%)` :
+      const color = visibleLayers.pop && indexEntity ? f.population == null ? "#8990a7" : `hsl(250 45% ${90 - 55 * f.population / inventory.maxPopulation}%)` :
         value == null
           ? "#8990a7"
           : value < 50
@@ -130,9 +160,12 @@ export function ApiMap({
             : value < 75
               ? "#d49520"
               : "#0b8a5c";
-      const selected =
-        selection?.entity_id === f.entity_id &&
-        selection.entity_kind === f.entity_kind;
+      const style: L.PathOptions = {
+        color: partial ? "#59647e" : "white", weight: partial ? 2 : 1,
+        fillColor: color, fillOpacity: partial ? 0.3 : 0.62, dashArray,
+        lineCap: partial ? "round" : "butt",
+      };
+      const markers: L.CircleMarker[] = [];
       const layer = L.geoJSON(
         {
           type: "Feature",
@@ -140,26 +173,25 @@ export function ApiMap({
           geometry: f.geometry,
         } as GeoJsonObject,
         {
-          style: {
-            color: selected ? "#2f5bff" : partial ? "#59647e" : "white",
-            weight: selected ? 3 : partial ? 2 : 1,
-            fillColor: color,
-            fillOpacity: partial ? 0.3 : 0.62,
-            dashArray,
-            lineCap: partial ? "round" : "butt",
-          },
-          pointToLayer: (_, latlng) =>
-            L.circleMarker(latlng, {
-              radius: selected ? 10 : 7,
-              color: selected ? "#2f5bff" : partial ? "#59647e" : "#fff",
+          style,
+          pointToLayer: (_, latlng) => {
+            const marker = L.circleMarker(latlng, {
+              radius: 7,
+              color: partial ? "#59647e" : "#fff",
               weight: 2,
               fillColor: color,
               fillOpacity: partial ? 0.45 : 0.9,
               dashArray,
               lineCap: partial ? "round" : "butt",
-            }),
+            });
+            markers.push(marker);
+            return marker;
+          },
         },
       );
+      const key = featureKey(f.entity_kind, f.entity_id), entries = featureLayers.current.get(key) || [];
+      entries.push({ layer, style, markers });
+      featureLayers.current.set(key, entries);
       const tip = document.createElement("span");
       tip.textContent =
         (f.name || selectionText[f.entity_kind]) +
@@ -178,8 +210,9 @@ export function ApiMap({
     });
     const paths = journeys ?? (scenarioView ? [] : result?.journeys || []);
     paths.forEach((j) => {
-      const point = features.find((f) => f.entity_kind === "sample_point" && (f.entity_id === j.point_id || f.point_id === j.point_id));
-      const destination = features.find((f) => f.entity_id === j.destination_object_id || f.entity_id === j.destination_node_id);
+      const point = j.point_id ? inventory.points.get(j.point_id) : undefined;
+      const destinations = [j.destination_object_id, j.destination_node_id].flatMap((id) => id && inventory.byId.has(id) ? [inventory.byId.get(id)!] : []);
+      const destination = destinations.sort((a, b) => a.index - b.index)[0]?.feature;
       const parentSelection: Selection | undefined = j.point_id
         ? { entity_kind: "sample_point", entity_id: point?.entity_id || j.point_id }
         : destination ? { entity_kind: destination.entity_kind, entity_id: destination.entity_id } : undefined;
@@ -219,7 +252,13 @@ export function ApiMap({
         lastAnalysis.current = result.analysis_id;
       }
     }
-  }, [result, scores, selection, onSelect, scenarioView, journeys, viewId, category, visibleLayers.index, visibleLayers.objects, visibleLayers.pop]);
+  }, [result, inventory, onSelect, scenarioView, journeys, viewId, category, visibleLayers.index, visibleLayers.objects, visibleLayers.pop]);
+  useEffect(() => {
+    for (const item of selectedLayers.current) selectLayer(item, false);
+    const next = selection ? featureLayers.current.get(featureKey(selection.entity_kind, selection.entity_id)) || [] : [];
+    for (const item of next) selectLayer(item, true);
+    selectedLayers.current = next;
+  }, [selection, result, inventory, onSelect, scenarioView, journeys, viewId, category, visibleLayers.index, visibleLayers.objects, visibleLayers.pop]);
   useEffect(() => {
     if (lastZoom.current === zoomAction.id || !map.current) return;
     lastZoom.current = zoomAction.id;
