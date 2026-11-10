@@ -20,13 +20,19 @@ class CheckpointChannel:
         self.completed = [BatchCheckpoint.model_validate(value) for value in payload["checkpoints"]]
         seen = set()
         for checkpoint in self.completed:
-            checkpoint.validate_inventory(execution)
+            if checkpoint.schema_version == "waydex-walk-checkpoint/2":
+                checkpoint.validate_pair_inventory(execution)
+            else:
+                checkpoint.validate_inventory(execution)
             if checkpoint.batch_id in seen:
                 raise ValueError("OD_DUPLICATE_RESUME_BATCH")
             seen.add(checkpoint.batch_id)
 
     def commit(self, checkpoint: BatchCheckpoint) -> None:
-        checkpoint.validate_inventory(self.execution)
+        if checkpoint.schema_version == "waydex-walk-checkpoint/2":
+            checkpoint.validate_pair_inventory(self.execution)
+        else:
+            checkpoint.validate_inventory(self.execution)
         raw = checkpoint.model_dump_json().encode()
         if len(raw) > MAX_CHECKPOINT_BYTES:
             raise ValueError("OD_CHECKPOINT_TRANSPORT_LIMIT")

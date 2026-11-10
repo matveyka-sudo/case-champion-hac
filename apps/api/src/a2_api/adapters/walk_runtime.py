@@ -37,6 +37,7 @@ from a2_api.core.walk_observations import observation_directory
 
 if TYPE_CHECKING:
     from a2_api.adapters.walk_batches import Approval
+    from a2_api.adapters.walk_input_inventory import WalkInputInventory
 
 
 class WalkBinding(ContractModel):
@@ -106,6 +107,7 @@ class BoundWalkBinding:
     graph_limitations: tuple[str, ...] = ()
     derivation_snapshot_id: str | None = None
     map_features: tuple[MapFeature, ...] = ()
+    inventory: WalkInputInventory | None = None
 
     @property
     def binding_sha256(self) -> str:
@@ -121,6 +123,10 @@ def executor_fingerprint() -> str:
         "a2_api.adapters.walk_observed",
         "a2_api.adapters.walk_map",
         "a2_api.adapters.walk_map_sources",
+        "a2_api.adapters.walk_input_inventory",
+        "a2_api.core.batches",
+        "a2_api.core.walk_route_artifacts",
+        "a2_api.workers.checkpoint_channel",
         "a2_api.adapters.product_projection",
         "a2_engine.urban.walk.observed",
         "a2_api.adapters.walk_pilot",
@@ -419,6 +425,20 @@ def load_binding(
         map_features = validate_walk_map_features(
             selection.model_dump(mode="json"), snapshot=snapshot, bundle=bundle
         )
+    from a2_api.adapters.walk_input_inventory import capture_walk_inventory
+
+    fingerprint = executor_fingerprint()
+    inventory = capture_walk_inventory(
+        binding_root=root.resolve(),
+        binding_ref=reference,
+        binding=binding,
+        approval_root=approval_path.parent,
+        approval=approval,
+        runtime=runtime,
+        bundle=bundle,
+        graph=graph,
+        executor_fingerprint=fingerprint,
+    )
     return BoundWalkBinding(
         root.resolve(),
         reference,
@@ -427,7 +447,7 @@ def load_binding(
         approval,
         binding.approval.sha256,
         runtime,
-        executor_fingerprint(),
+        fingerprint,
         resolved,
         MappingProxyType(
             {
@@ -441,4 +461,5 @@ def load_binding(
         derivation.limitations if derivation is not None else (),
         derivation.source_snapshot_id if derivation is not None else None,
         map_features,
+        inventory,
     )
