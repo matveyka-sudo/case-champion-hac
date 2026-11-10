@@ -354,6 +354,49 @@ async def test_atomic_publication_rechecks_approval_after_preliminary_finalize(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("expiry_kind", ["approval", "lease"])
+async def test_final_status_sql_rejects_expiry_after_inventory_validation(
+    database, batch_context, monkeypatch, expiry_kind
+):
+    from batch_handlers import result
+
+    pool, _, _ = database
+    request, context = batch_context
+    if expiry_kind == "approval":
+        execution = context.batch_execution.model_copy(
+            update={"valid_until": datetime.now(UTC) + timedelta(seconds=2)}
+        )
+        context = context.model_copy(update={"batch_execution": execution})
+    repo = JobRepository(pool)
+    progress = CheckpointRepository(repo)
+    claim = await enqueue(repo, (request, context))
+    await progress.begin(claim)
+    await progress.put(claim, timeout_checkpoint(claim.context.batch_execution))
+    if expiry_kind == "lease":
+        deadline = datetime.now(UTC) + timedelta(seconds=2)
+        await pool.execute(
+            "UPDATE jobs SET lease_expires_at=$2 WHERE job_id=$1", claim.job.job_id, deadline
+        )
+    else:
+        deadline = context.batch_execution.valid_until
+    original = CheckpointRepository._publication_inventory
+    validated = []
+
+    async def delayed(self, connection, incoming):
+        inventory = await original(self, connection, incoming)
+        validated.append(True)
+        await asyncio.sleep(max(0, (deadline - datetime.now(UTC)).total_seconds()) + 0.05)
+        return inventory
+
+    monkeypatch.setattr(CheckpointRepository, "_publication_inventory", delayed)
+    with pytest.raises(DomainError, match="final publication claim or validity expired"):
+        await repo.succeed(claim, result(claim))
+    assert validated == [True]
+    assert await pool.fetchval("SELECT count(*) FROM runs") == 0
+    assert (await repo.get_job(claim.job.job_id, scope=context.access_scope)).status == "running"
+
+
+@pytest.mark.asyncio
 async def test_fresh_key_after_checkpoint_retention_cannot_reuse_succeeded_cache(
     database, batch_context
 ):

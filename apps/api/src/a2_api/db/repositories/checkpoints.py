@@ -330,7 +330,7 @@ class CheckpointRepository:
             raise _conflict("Final publication requires every approved executable OD batch")
         return execution, checkpoints, now
 
-    async def publish(self, connection: Any, claim: ClaimedJob) -> None:
+    async def publish(self, connection: Any, claim: ClaimedJob, run_id: str) -> None:
         """Revalidate inside the caller's sole run-publication transaction."""
         execution, checkpoints, now = await self._publication_inventory(connection, claim)
         oldest = await connection.fetchval(
@@ -352,8 +352,15 @@ class CheckpointRepository:
             expiry = min(expiry, claim.context.cache_valid_until)
         if expiry <= now:
             raise _conflict("Checkpoint publication validity expired")
-        await connection.execute(
-            "UPDATE jobs SET cache_valid_until=$2,payload=jsonb_set(payload,'{context,cache_valid_until}',to_jsonb($2::timestamptz)) WHERE job_id=$1",
+        published = await connection.fetchval(
+            "UPDATE jobs SET status='succeeded',run_id=$2,finished_at=clock_timestamp(),cache_valid_until=$3,"
+            "payload=jsonb_set(payload,'{context,cache_valid_until}',to_jsonb($3::timestamptz)) "
+            "WHERE job_id=$1 AND status='running' AND claim_token=$4 "
+            "AND lease_expires_at>clock_timestamp() AND $3::timestamptz>clock_timestamp() RETURNING job_id",
             claim.job.job_id,
+            run_id,
             expiry,
+            claim.claim_token,
         )
+        if published is None:
+            raise _conflict("Checkpoint final publication claim or validity expired")

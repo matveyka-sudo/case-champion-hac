@@ -318,12 +318,13 @@ class JobRepository(ScenariosRepository):
                     ):
                         from a2_api.db.repositories.checkpoints import CheckpointRepository
 
-                        await CheckpointRepository(self).publish(connection, claim)
-                    await connection.execute(
-                        "UPDATE jobs SET status='succeeded',run_id=$2,finished_at=now() WHERE job_id=$1",
-                        claim.job.job_id,
-                        run_id,
-                    )
+                        await CheckpointRepository(self).publish(connection, claim, run_id)
+                    else:
+                        await connection.execute(
+                            "UPDATE jobs SET status='succeeded',run_id=$2,finished_at=now() WHERE job_id=$1",
+                            claim.job.job_id,
+                            run_id,
+                        )
         except asyncpg.UniqueViolationError as exc:
             raise DomainError(
                 409, "incompatible_versions", "Run identity already published"
