@@ -104,6 +104,16 @@ EngineInputs = Annotated[
 INPUT_ADAPTER = TypeAdapter(EngineInputs)
 
 
+def candidate_is_static(candidate: UrbanCandidate) -> bool:
+    """A declared static cost model cannot turn a scheduled ride into a new run."""
+    return candidate.passenger_mode in ("walk", "private_car") and all(
+        leg.kind in ("walk", "ride")
+        and leg.service_id is None
+        and (leg.kind != "ride" or leg.mode == "private_car")
+        for leg in candidate.legs
+    )
+
+
 class InputDocument(ContractModel):
     schema_version: Literal["waydex-engine-inputs/1"]
     inputs: EngineInputs
