@@ -12,6 +12,7 @@ from a2_contracts.v2.map_data import AnalysisMapData, MapFeature, PointGeometry
 from a2_contracts.v2.requests import UrbanPassengerRequest
 from a2_contracts.v2.results import AnalysisResult
 from a2_engine import WalkAnalysisResult
+from a2_engine.urban.valhalla.codec import polyline6_coordinate_matches
 
 
 def _features(
@@ -157,9 +158,10 @@ def attach_walk_map(
             (wire.origin, wire.destination),
             strict=True,
         ):
-            if (
-                abs(coordinate[0] - correlation.correlated_location.lon) > 1e-6
-                or abs(coordinate[1] - correlation.correlated_location.lat) > 1e-6
+            if not polyline6_coordinate_matches(
+                coordinate[0], correlation.correlated_location.lon
+            ) or not polyline6_coordinate_matches(
+                coordinate[1], correlation.correlated_location.lat
             ):
                 raise ValueError("WALK_MAP_GEOMETRY_ENDPOINT_MISMATCH")
         point, destination = points[wire.point_id], destinations[wire.destination_id]

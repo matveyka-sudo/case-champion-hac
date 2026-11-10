@@ -6,7 +6,7 @@ from math import isclose
 
 from a2_engine.shared.results import finite_number
 from a2_engine.urban.models import references
-from a2_engine.urban.valhalla.codec import _polyline6
+from a2_engine.urban.valhalla.codec import _polyline6, polyline6_coordinate_matches
 from a2_engine.urban.valhalla.models import (
     WalkCoordinate,
     WalkResponseEnvelope,
@@ -147,7 +147,10 @@ def normalize_walk_response(
                 strict=True,
             ):
                 expected = correlation.correlated_location
-                if abs(point[0] - expected.lon) > 1e-6 or abs(point[1] - expected.lat) > 1e-6:
+                if not (
+                    polyline6_coordinate_matches(point[0], expected.lon)
+                    and polyline6_coordinate_matches(point[1], expected.lat)
+                ):
                     raise ValueError("GEOMETRY_ENDPOINT_MISMATCH")
         minimum = (
             envelope.search_complete

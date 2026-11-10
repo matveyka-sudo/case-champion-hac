@@ -1,0 +1,136 @@
+{
+  "source_job_id": "6fb08617-dac0-4c76-862f-d4adbd486e4e",
+  "source_revision": "187158e3c554887e54fd276da32e1b95a627d382",
+  "request": {
+    "build": {
+      "build_id": "waydex-moscow-walk-a4e30ae109847b6d9858c3e5abf820bb4e81b1b88616c0ee65b41f4a392ffbaa",
+      "snapshot_id": "moscow-urban-2026-11-10.4",
+      "evidence_refs": [
+        "moscow-valhalla-build-a4e30ae109847b6d9858c3e5abf820bb4e81b1b88616c0ee65b41f4a392ffbaa"
+      ],
+      "graph_version": "valhalla-351-tiles-a4e30ae109847b6d9858c3e5abf820bb4e81b1b88616c0ee65b41f4a392ffbaa",
+      "engine_version": "3.5.1",
+      "profile_version": "waydex-walk-static-5kmh-v1",
+      "source_graph_version": "osm_geofabrik.central-fed-district-261107:osm-walk-network-v1:main-component",
+      "pedestrian_options_json": "{\"shortest\":false,\"type\":\"foot\",\"use_ferry\":0,\"walking_speed\":5}"
+    },
+    "origin": {
+      "build": {
+        "build_id": "waydex-moscow-walk-a4e30ae109847b6d9858c3e5abf820bb4e81b1b88616c0ee65b41f4a392ffbaa",
+        "snapshot_id": "moscow-urban-2026-11-10.4",
+        "evidence_refs": [
+          "moscow-valhalla-build-a4e30ae109847b6d9858c3e5abf820bb4e81b1b88616c0ee65b41f4a392ffbaa"
+        ],
+        "graph_version": "valhalla-351-tiles-a4e30ae109847b6d9858c3e5abf820bb4e81b1b88616c0ee65b41f4a392ffbaa",
+        "engine_version": "3.5.1",
+        "profile_version": "waydex-walk-static-5kmh-v1",
+        "source_graph_version": "osm_geofabrik.central-fed-district-261107:osm-walk-network-v1:main-component",
+        "pedestrian_options_json": "{\"shortest\":false,\"type\":\"foot\",\"use_ferry\":0,\"walking_speed\":5}"
+      },
+      "evidence_refs": [
+        "moscow-locate-cbc930f045be4be6f1136b8f0dcfc529c915bca00aafdf01bafef43b1dfe708d"
+      ],
+      "access_node_id": "walk:way:153236795:71.0",
+      "correlation_id": "ef3c2c8016301ea4167367bf37e2e7d89e25dd29e8f403bb5f44107e75138215",
+      "source_location": {
+        "lat": 55.8175865,
+        "lon": 37.73133
+      },
+      "correlated_location": {
+        "lat": 55.817586,
+        "lon": 37.73133
+      },
+      "coordinate_precision_digits": 6,
+      "serialization_evidence_refs": [
+        "moscow-locate-cbc930f045be4be6f1136b8f0dcfc529c915bca00aafdf01bafef43b1dfe708d",
+        "valhalla-3.5.1-route-echo-trunc6-v1"
+      ]
+    },
+    "point_id": "moscow-utm37n-1km-v1-e420-n6186-p",
+    "path_scope": "network_only",
+    "request_id": "b39d4f168fc550ab3ff98e2fc7d811a9edb2ef3c33f31f8cf865a6d265e3f100",
+    "destination": {
+      "build": {
+        "build_id": "waydex-moscow-walk-a4e30ae109847b6d9858c3e5abf820bb4e81b1b88616c0ee65b41f4a392ffbaa",
+        "snapshot_id": "moscow-urban-2026-11-10.4",
+        "evidence_refs": [
+          "moscow-valhalla-build-a4e30ae109847b6d9858c3e5abf820bb4e81b1b88616c0ee65b41f4a392ffbaa"
+        ],
+        "graph_version": "valhalla-351-tiles-a4e30ae109847b6d9858c3e5abf820bb4e81b1b88616c0ee65b41f4a392ffbaa",
+        "engine_version": "3.5.1",
+        "profile_version": "waydex-walk-static-5kmh-v1",
+        "source_graph_version": "osm_geofabrik.central-fed-district-261107:osm-walk-network-v1:main-component",
+        "pedestrian_options_json": "{\"shortest\":false,\"type\":\"foot\",\"use_ferry\":0,\"walking_speed\":5}"
+      },
+      "evidence_refs": [
+        "moscow-locate-3568e8914edf8d3d39aaacb19a886760c1c6677b81d0c2f26af2d61a45adb3d7"
+      ],
+      "access_node_id": "walk:way:1207327240:90.9",
+      "correlation_id": "45819857083866fa09947a3f543daa8a6a5288680df9fcf472b20db116e3637b",
+      "source_location": {
+        "lat": 55.8148844,
+        "lon": 37.7140659
+      },
+      "correlated_location": {
+        "lat": 55.814884,
+        "lon": 37.714066
+      },
+      "coordinate_precision_digits": 6,
+      "serialization_evidence_refs": [
+        "moscow-locate-3568e8914edf8d3d39aaacb19a886760c1c6677b81d0c2f26af2d61a45adb3d7",
+        "valhalla-3.5.1-route-echo-trunc6-v1"
+      ]
+    },
+    "payload_json": "{\"alternates\":0,\"costing\":\"pedestrian\",\"costing_options\":{\"pedestrian\":{\"shortest\":false,\"type\":\"foot\",\"use_ferry\":0,\"walking_speed\":5}},\"directions_type\":\"maneuvers\",\"format\":\"json\",\"id\":\"b39d4f168fc550ab3ff98e2fc7d811a9edb2ef3c33f31f8cf865a6d265e3f100\",\"locations\":[{\"lat\":55.8175865,\"lon\":37.73133,\"node_snap_tolerance\":0,\"radius\":0,\"search_cutoff\":1,\"search_filter\":{\"exclude_ferry\":true},\"type\":\"break\"},{\"lat\":55.8148844,\"lon\":37.7140659,\"node_snap_tolerance\":0,\"radius\":0,\"search_cutoff\":1,\"search_filter\":{\"exclude_ferry\":true},\"type\":\"break\"}],\"units\":\"kilometers\"}",
+    "evidence_refs": [
+      "moscow-locate-3568e8914edf8d3d39aaacb19a886760c1c6677b81d0c2f26af2d61a45adb3d7",
+      "moscow-locate-cbc930f045be4be6f1136b8f0dcfc529c915bca00aafdf01bafef43b1dfe708d",
+      "moscow-valhalla-build-a4e30ae109847b6d9858c3e5abf820bb4e81b1b88616c0ee65b41f4a392ffbaa",
+      "valhalla-3.5.1-route-echo-trunc6-v1"
+    ],
+    "destination_id": "moscow-adult_polyclinic-mgfoms-d7e8884edec1",
+    "search_parameters_id": "waydex-bound-walk-9da1bd4cff49d864d808e7a9eff64892fced5de285b79083376565e4696202ca:f344812273ac98d0d554dee1aacb9b1134d169b1bd9d05dc0ad27f7ea4af6e43"
+  },
+  "envelope": {
+    "request_id": "b39d4f168fc550ab3ff98e2fc7d811a9edb2ef3c33f31f8cf865a6d265e3f100",
+    "point_id": "moscow-utm37n-1km-v1-e420-n6186-p",
+    "destination_id": "moscow-adult_polyclinic-mgfoms-d7e8884edec1",
+    "build": {
+      "snapshot_id": "moscow-urban-2026-11-10.4",
+      "source_graph_version": "osm_geofabrik.central-fed-district-261107:osm-walk-network-v1:main-component",
+      "build_id": "waydex-moscow-walk-a4e30ae109847b6d9858c3e5abf820bb4e81b1b88616c0ee65b41f4a392ffbaa",
+      "graph_version": "valhalla-351-tiles-a4e30ae109847b6d9858c3e5abf820bb4e81b1b88616c0ee65b41f4a392ffbaa",
+      "engine_version": "3.5.1",
+      "profile_version": "waydex-walk-static-5kmh-v1",
+      "pedestrian_options_json": "{\"shortest\":false,\"type\":\"foot\",\"use_ferry\":0,\"walking_speed\":5}",
+      "evidence_refs": [
+        "moscow-valhalla-build-a4e30ae109847b6d9858c3e5abf820bb4e81b1b88616c0ee65b41f4a392ffbaa"
+      ]
+    },
+    "request_payload_hash": "6636c06ee18f1eb93076d28aa1b6afa292be4bce66700642d53d6e0cd10308ae",
+    "origin_correlation_id": "ef3c2c8016301ea4167367bf37e2e7d89e25dd29e8f403bb5f44107e75138215",
+    "destination_correlation_id": "45819857083866fa09947a3f543daa8a6a5288680df9fcf472b20db116e3637b",
+    "outcome": "response",
+    "response_json": "{\"trip\": {\"locations\": [{\"type\": \"break\", \"lat\": 55.817586, \"lon\": 37.73133, \"original_index\": 0}, {\"type\": \"break\", \"lat\": 55.814884, \"lon\": 37.714065, \"original_index\": 1}], \"legs\": [{\"maneuvers\": [{\"type\": 1, \"instruction\": \"\", \"time\": 14.165, \"length\": 0.019, \"cost\": 14.165, \"begin_shape_index\": 0, \"end_shape_index\": 1, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 10, \"instruction\": \"\", \"time\": 12.24, \"length\": 0.017, \"cost\": 12.24, \"begin_shape_index\": 1, \"end_shape_index\": 2, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 10, \"instruction\": \"\", \"time\": 50.399, \"length\": 0.07, \"cost\": 50.399, \"begin_shape_index\": 2, \"end_shape_index\": 5, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 15, \"instruction\": \"\", \"time\": 37.44, \"length\": 0.052, \"cost\": 37.44, \"begin_shape_index\": 5, \"end_shape_index\": 7, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 10, \"instruction\": \"\", \"time\": 12.959, \"length\": 0.018, \"cost\": 12.959, \"begin_shape_index\": 7, \"end_shape_index\": 8, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 9, \"instruction\": \"\", \"time\": 32.4, \"length\": 0.045, \"cost\": 32.4, \"begin_shape_index\": 8, \"end_shape_index\": 10, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 10, \"instruction\": \"\", \"time\": 155.519, \"length\": 0.216, \"cost\": 155.519, \"begin_shape_index\": 10, \"end_shape_index\": 15, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 15, \"instruction\": \"\", \"time\": 18.0, \"length\": 0.025, \"cost\": 18.0, \"begin_shape_index\": 15, \"end_shape_index\": 16, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 10, \"instruction\": \"\", \"time\": 20.16, \"length\": 0.028, \"cost\": 20.16, \"begin_shape_index\": 16, \"end_shape_index\": 17, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 15, \"instruction\": \"\", \"time\": 20.72, \"length\": 0.026, \"cost\": 20.72, \"begin_shape_index\": 17, \"end_shape_index\": 22, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 10, \"instruction\": \"\", \"time\": 14.24, \"length\": 0.017, \"cost\": 14.24, \"begin_shape_index\": 22, \"end_shape_index\": 25, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 15, \"instruction\": \"\", \"time\": 27.92, \"length\": 0.036, \"cost\": 27.92, \"begin_shape_index\": 25, \"end_shape_index\": 29, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 10, \"instruction\": \"\", \"time\": 78.48, \"length\": 0.109, \"cost\": 78.48, \"begin_shape_index\": 29, \"end_shape_index\": 31, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 15, \"instruction\": \"\", \"time\": 25.919, \"length\": 0.036, \"cost\": 25.919, \"begin_shape_index\": 31, \"end_shape_index\": 33, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 10, \"instruction\": \"\", \"time\": 90.0, \"length\": 0.125, \"cost\": 90.0, \"begin_shape_index\": 33, \"end_shape_index\": 34, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 10, \"instruction\": \"\", \"time\": 33.119, \"length\": 0.046, \"cost\": 33.119, \"begin_shape_index\": 34, \"end_shape_index\": 36, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 15, \"instruction\": \"\", \"time\": 22.32, \"length\": 0.031, \"cost\": 22.32, \"begin_shape_index\": 36, \"end_shape_index\": 37, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 10, \"instruction\": \"\", \"time\": 64.08, \"length\": 0.089, \"cost\": 64.08, \"begin_shape_index\": 37, \"end_shape_index\": 38, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 15, \"instruction\": \"\", \"time\": 161.559, \"length\": 0.223, \"cost\": 161.559, \"begin_shape_index\": 38, \"end_shape_index\": 43, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 10, \"instruction\": \"\", \"time\": 9.359, \"length\": 0.013, \"cost\": 9.359, \"begin_shape_index\": 43, \"end_shape_index\": 44, \"rough\": true, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 15, \"instruction\": \"\", \"time\": 29.359, \"length\": 0.038, \"cost\": 29.359, \"begin_shape_index\": 44, \"end_shape_index\": 46, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 10, \"instruction\": \"\", \"time\": 14.96, \"length\": 0.018, \"cost\": 14.96, \"begin_shape_index\": 46, \"end_shape_index\": 48, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 15, \"instruction\": \"\", \"time\": 19.279, \"length\": 0.024, \"cost\": 19.279, \"begin_shape_index\": 48, \"end_shape_index\": 50, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 10, \"instruction\": \"\", \"time\": 53.279, \"length\": 0.074, \"cost\": 53.279, \"begin_shape_index\": 50, \"end_shape_index\": 52, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 24, \"instruction\": \"\", \"time\": 18.719, \"length\": 0.026, \"cost\": 18.719, \"begin_shape_index\": 52, \"end_shape_index\": 54, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 16, \"instruction\": \"\", \"time\": 130.32, \"length\": 0.181, \"cost\": 130.32, \"begin_shape_index\": 54, \"end_shape_index\": 57, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 15, \"instruction\": \"\", \"time\": 4.319, \"length\": 0.006, \"cost\": 4.319, \"begin_shape_index\": 57, \"end_shape_index\": 58, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 15, \"instruction\": \"\", \"time\": 69.725, \"length\": 0.055, \"cost\": 1269.725, \"begin_shape_index\": 58, \"end_shape_index\": 63, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}, {\"type\": 4, \"instruction\": \"\", \"time\": 0.0, \"length\": 0.0, \"cost\": 0.0, \"begin_shape_index\": 63, \"end_shape_index\": 63, \"travel_mode\": \"pedestrian\", \"travel_type\": \"foot\"}], \"summary\": {\"has_time_restrictions\": false, \"has_toll\": false, \"has_highway\": false, \"has_ferry\": false, \"min_lat\": 55.814859, \"min_lon\": 37.713211, \"max_lat\": 55.817586, \"max_lon\": 37.731564, \"time\": 1240.971, \"length\": 1.663, \"cost\": 2440.971}, \"shape\": \"evymiBc_}}fAjFuM~GtEpAzMVhBpPlg@xDcH|Li\\\\nFvJZxElRnOwF~\\\\qDjSyBfMaXj{AaIbd@fGtR}ErWpBxEb@jA\\\\|@h@nA~AlD_@hBc@tBeArFfE~H^xDnAjBtBzDm@x@{Yt}AzJxLrDfCzHnzByEfMmI`SvKrT}_@jaAlb@v~@dJrPjb@tv@v@rAtFpJ}CvH|BtEtJhRcBjEqBtFpDlGpC|EsUzl@{ChHQ`IbC~LtVpe@zg@naAhAvWjBbAXeCjAoKXi_@a@wBMU\"}], \"summary\": {\"has_time_restrictions\": false, \"has_toll\": false, \"has_highway\": false, \"has_ferry\": false, \"min_lat\": 55.814859, \"min_lon\": 37.713211, \"max_lat\": 55.817586, \"max_lon\": 37.731564, \"time\": 1240.971, \"length\": 1.663, \"cost\": 2440.971}, \"status_message\": \"Found route between points\", \"status\": 0, \"units\": \"kilometers\", \"language\": \"en-US\"}, \"id\": \"b39d4f168fc550ab3ff98e2fc7d811a9edb2ef3c33f31f8cf865a6d265e3f100\"}",
+    "evidence_refs": [
+      "valhalla-observation-f162250af3e21a43524f9227f43cacca7c5b57c96d3aa4f0111a371107a809b9"
+    ],
+    "search_complete": false,
+    "minimum_time_evidence_refs": [],
+    "unreachable_evidence_refs": [],
+    "pure_walk_evidence_refs": [
+      "valhalla-observation-f162250af3e21a43524f9227f43cacca7c5b57c96d3aa4f0111a371107a809b9"
+    ],
+    "matched_origin": {
+      "lon": 37.73133,
+      "lat": 55.817586
+    },
+    "matched_destination": {
+      "lon": 37.714066,
+      "lat": 55.814884
+    },
+    "endpoint_evidence_refs": [
+      "valhalla-observation-d9c7d11216f449c18dfc63760cb0f53f11ac7f9764db3e6730e679395b5cdba2"
+    ]
+  }
+}
