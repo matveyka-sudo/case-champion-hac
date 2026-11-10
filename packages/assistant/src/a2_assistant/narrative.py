@@ -61,6 +61,28 @@ def _methodology(saved: AnalysisResult, facts: list[Metric | Score]) -> str:
 
 def _coverage(facts: list[Metric | Score]) -> str:
     if any(f.reason_code == "NO_FEASIBLE_ROUTE" for f in facts):
+        if not all(
+            f.reason_code == "NO_FEASIBLE_ROUTE"
+            and f.completeness == "full"
+            and f.subject == facts[0].subject
+            and (
+                isinstance(f, Score)
+                and f.status == "available"
+                and f.value == 0
+                and bool(f.evidence_refs)
+                or isinstance(f, Metric)
+                and f.status == "not_applicable"
+                and f.value is None
+                and bool(f.source_refs)
+            )
+            for f in facts
+        ):
+            return (
+                "В выбранных показателях смешаны разные состояния или области. "
+                "Отметка об отсутствии маршрута относится только к её сохранённой области; "
+                "она не подтверждает отсутствие цепочки для остальных показателей. "
+                "Доступные значения и неизвестные данные следует рассматривать отдельно."
+            )
         return (
             "В сохранённой полной области подтверждено отсутствие подходящей цепочки. "
             "Такой ноль является отдельным результатом проверки, а не измеренным временем пути. "
@@ -272,6 +294,7 @@ def verified_conversational_finding(
             "Грузовой доступ",
             "Доставка оценивается",
             "В сохранённой полной области",
+            "В выбранных показателях смешаны",
             "Основа для взвешивания",
             "Число доступных объектов",
             "Минимальное время",

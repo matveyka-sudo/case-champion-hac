@@ -172,6 +172,49 @@ async def test_unknown_and_zero_remain_distinct_in_natural_prose(value):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("other_value", [None, 25.0, 0.0])
+async def test_no_route_does_not_promote_other_selected_unknown_or_available_facts(other_value):
+    raw = score_analysis(value=0.0).model_dump(mode="json")
+    raw["scores"][0]["reason_code"] = "NO_FEASIBLE_ROUTE"
+    other = score_analysis(value=other_value).model_dump(mode="json")["scores"][0]
+    other["score_id"] = "other"
+    other["subject"]["point_id"] = "another-point"
+    raw["scores"].append(other)
+    if other_value is None:
+        raw["status"] = "partial"
+    saved = AnalysisResult.model_validate(raw)
+    result, *_ = await answer(
+        saved,
+        "Маршрутов нет везде или только в одной точке?",
+        "coverage",
+        findings=[
+            {
+                "score_id": s.score_id,
+                "explanation_code": "saved_value" if s.value is not None else "unknown",
+            }
+            for s in saved.scores
+        ],
+    )
+    assert result.status == "generated"
+    text = render_explanation(result, saved)
+    assert "смешаны разные состояния или области" in text
+    assert "В сохранённой полной области подтверждено отсутствие" not in text
+    assert [claim.value for claim in result.findings[0].score_claims] == [0.0, other_value]
+
+
+@pytest.mark.asyncio
+async def test_scoped_confirmed_absence_still_describes_its_own_full_boundary():
+    raw = score_analysis(value=0.0).model_dump(mode="json")
+    raw["scores"][0]["reason_code"] = "NO_FEASIBLE_ROUTE"
+    saved = AnalysisResult.model_validate(raw)
+    result, *_ = await answer(saved, "Что значит этот ноль?", "coverage")
+    assert result.status == "generated"
+    assert "В сохранённой полной области подтверждено отсутствие" in render_explanation(
+        result, saved
+    )
+
+
+@pytest.mark.asyncio
 async def test_natural_observed_estimate_never_becomes_a_proven_minimum_or_real_ranking():
     raw = score_analysis(partial=True).model_dump(mode="json")
     raw["scores"][0].update(name="observed_route_accessibility", reason_code="MINIMUM_NOT_PROVEN")
