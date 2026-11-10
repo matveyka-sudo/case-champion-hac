@@ -11,7 +11,7 @@ export function CategoryChoices({ items, selected, onToggle, onPriority }: {
         <span className="box"><Icon name="check" /></span><span>{item.name}</span>
       </button>
       <div className="prio" role="group" aria-label={`Приоритет: ${item.name}`}>{[1, 2, 3].map((priority, index) =>
-        <button key={priority} aria-pressed={selected[item.id] === priority} aria-label={`${["Низкий", "Средний", "Высокий"][index]} приоритет`}
+        <button key={priority} disabled={item.disabled || !selected[item.id]} aria-pressed={selected[item.id] === priority} aria-label={`${["Низкий", "Средний", "Высокий"][index]} приоритет`}
           onClick={() => onPriority(item.id, priority)}>{["Н", "С", "В"][index]}</button>)}</div>
     </div>)}</div>;
 }

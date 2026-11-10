@@ -1,13 +1,15 @@
 import { Fragment, type ReactNode, type RefObject } from "react";
 import { Icon } from "../shared/ui";
 export function AgentChatView({ open, onClose, onNewDialog, subtitle, contextLabel, contextRows, messages, hasMessages,
-  error, suggestions, onSuggestion, draft, onDraftChange, onSend, disabled, busy, note, logRef, inputRef }: {
+  error, suggestions, onSuggestion, draft, onDraftChange, onSend, disabled, busy, note, logRef, inputRef, maxLength }: {
   open: boolean; onClose: () => void; onNewDialog: () => void; subtitle: string; contextLabel: ReactNode;
   contextRows: { label: string; value: ReactNode }[]; messages: ReactNode; hasMessages: boolean; error?: ReactNode;
   suggestions: string[]; onSuggestion: (question: string) => void; draft: string; onDraftChange: (value: string) => void;
   onSend: () => void; disabled: boolean; busy: boolean; note: string;
   logRef?: RefObject<HTMLDivElement | null>; inputRef?: RefObject<HTMLTextAreaElement | null>;
+  maxLength?: number;
 }) {
+  const send = () => { if (!disabled && !busy && draft.trim() && (maxLength === undefined || draft.length <= maxLength)) onSend(); };
   return <aside className={`at-chat ${open ? "m-open" : "is-closed"}`} id="chat" aria-label="Агент Waydex" inert={!open}>
     <div className="ch-in">
       <div className="ch-head"><span className="ch-ava"><Icon name="sparkles" /></span>
@@ -24,11 +26,11 @@ export function AgentChatView({ open, onClose, onNewDialog, subtitle, contextLab
       </div>
       <div className="ch-foot">
         {!hasMessages && <div className="sugs">{suggestions.map((question) => <button className="sug" key={question} onClick={() => onSuggestion(question)}><Icon name="message-circle-question" />{question}</button>)}</div>}
-        <form className="composer" onSubmit={(event) => { event.preventDefault(); onSend(); }}>
+        <form className="composer" onSubmit={(event) => { event.preventDefault(); send(); }}>
           <label htmlFor="chatInput" className="visually-hidden">Вопрос агенту</label>
-          <textarea ref={inputRef} id="chatInput" rows={1} value={draft} disabled={disabled || busy}
+          <textarea ref={inputRef} id="chatInput" rows={1} value={draft} maxLength={maxLength} disabled={disabled || busy}
             onChange={(event) => { onDraftChange(event.target.value); event.target.style.height = "auto"; event.target.style.height = `${Math.min(120, event.target.scrollHeight)}px`; }}
-            onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); onSend(); } }}
+            onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); send(); } }}
             placeholder="Спросите о выбранной области или связи" />
           <button className="send" type="submit" aria-label="Отправить" disabled={disabled || busy || !draft.trim()}><Icon name="arrow-up" /></button>
         </form><p className="ch-note">{note}</p>

@@ -669,11 +669,13 @@ export function ApiAtlasPage() {
                 (urban
                   ? field(
                       "Передвижение",
-                      <Seg name="Передвижение" value={draft.travel || null}
+                      <><Seg name="Передвижение" value={draft.travel || null}
                         items={([["pt", "Общ. транспорт", "tram-front"], ["walk", "Пешком", "footprints"], ["car", "Авто", "car-front"]] as const).map(([value, label, icon]) => {
                           const disabled = scopeState.published && !scopeState.area.some((scope) => scope.passenger_modes.includes(passengerModes[value]));
                           return [value, label, icon, disabled, disabled ? "Для выбранных города, времени и набора данных этот способ недоступен." : undefined];
-                        })} onChange={(travel) => change({ travel: travel as ApiDraft["travel"] })} />,
+                        })} onChange={(travel) => change({ travel: travel as ApiDraft["travel"] })} />
+                        {!draft.travel && <p className="fhint">Выберите способ передвижения для выбранного города.</p>}
+                        {inline("travel", ["passenger_mode"])}</>,
 
                     )
                   : field(
@@ -1248,7 +1250,7 @@ export function ApiAtlasPage() {
           suggestions={["Объясни выбранную точку и ограничения результата", "Какая часть пути занимает больше всего времени?", "Какие изменения можно проверить?"]}
           onSuggestion={(value) => { setQuestion(value); chatInput.current?.focus(); }} draft={question} onDraftChange={setQuestion}
           onSend={() => { void session.explain(question, selection); setQuestion(""); }} disabled={!result} busy={session.chatBusy}
-          inputRef={chatInput} note="Числа берутся только из сохранённого расчёта. Сценарий запускается отдельно по кнопке." />
+          inputRef={chatInput} maxLength={2000} note="Числа берутся только из сохранённого расчёта. Сценарий запускается отдельно по кнопке." />
     </AtlasShell>
   );
 }

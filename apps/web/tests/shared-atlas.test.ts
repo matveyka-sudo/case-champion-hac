@@ -37,6 +37,8 @@ describe("shared atlas presentation", () => {
     fireEvent.click(screen.getByRole("button", { name: "Поликлиники" }));
     expect(onToggle).toHaveBeenCalledWith("real-category");
     expect(screen.getByRole("button", { name: "Аэропорты" })).toHaveProperty("disabled", true);
+    fireEvent.click(screen.getAllByRole("button", { name: "Высокий приоритет" })[1]);
+    expect(onPriority).not.toHaveBeenCalled();
     fireEvent.click(screen.getAllByRole("button", { name: "Средний приоритет" })[0]);
     expect(onPriority).toHaveBeenCalledWith("real-category", 2);
   });
@@ -58,5 +60,18 @@ describe("shared atlas presentation", () => {
     expect(onSend).not.toHaveBeenCalled();
     fireEvent.keyDown(screen.getByRole("textbox", { name: "Вопрос агенту" }), { key: "Enter" });
     expect(onSend).toHaveBeenCalledOnce();
+  });
+  it("cannot send through Enter while disabled, busy, empty, or beyond the API length limit", () => {
+    const onSend = vi.fn();
+    const props = { open: true, onClose: vi.fn(), onNewDialog: vi.fn(), subtitle: "", contextLabel: "Москва", contextRows: [], messages: null,
+      hasMessages: false, suggestions: [], onSuggestion: vi.fn(), onDraftChange: vi.fn(), onSend, note: "", maxLength: 2000 };
+    const view = render(createElement(AgentChatView, { ...props, draft: "Вопрос", disabled: true, busy: false }));
+    for (const patch of [{ draft: "Вопрос", disabled: true, busy: false }, { draft: "Вопрос", disabled: false, busy: true },
+      { draft: " ", disabled: false, busy: false }, { draft: "я".repeat(2001), disabled: false, busy: false }]) {
+      view.rerender(createElement(AgentChatView, { ...props, ...patch }));
+      fireEvent.keyDown(screen.getByRole("textbox", { name: "Вопрос агенту" }), { key: "Enter" });
+    }
+    expect(onSend).not.toHaveBeenCalled();
+    expect(screen.getByRole("textbox", { name: "Вопрос агенту" }).getAttribute("maxlength")).toBe("2000");
   });
 });
