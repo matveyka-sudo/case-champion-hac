@@ -3,8 +3,9 @@ import type { Selection } from "../api/types";
 import type { CalculatedPointOverview } from "../api/adapters/pointOverview";
 import { measureText, scoreBand } from "../api/adapters/result";
 
-export function CalculatedPoints({ overview, selection, areaSelected, onSelect, estimate = false }: {
+export function CalculatedPoints({ overview, selection, areaSelected, onSelect, estimate = false, showTerritory = !estimate }: {
   estimate?: boolean;
+  showTerritory?: boolean;
   overview: CalculatedPointOverview;
   selection: Selection | null;
   areaSelected: boolean;
@@ -16,10 +17,10 @@ export function CalculatedPoints({ overview, selection, areaSelected, onSelect, 
   const count = `${overview.points.length}${overview.denominator === null ? "" : ` из ${overview.denominator}`}`;
   return (
     <div className="api-calculated-points" aria-label="Обзор рассчитанных точек">
-      <p className="api-point-territory">
+      {showTerritory && <p className="api-point-territory">
         {areaSelected ? "Индекс выбранной территории" : "Индекс города"}: {territoryScore ? measureText(territoryScore) : "не предоставлен"}
         {territoryScore?.completeness === "partial" && " · частичная оценка"}
-      </p>
+      </p>}
       <details ref={details} onToggle={(event) => setExpanded(event.currentTarget.open)}>
         <summary>{estimate ? "Точки с предварительной оценкой" : "Рассчитанные точки"} ({count})</summary>
         <p className="fhint">{estimate ? "Предварительная оценка по найденному маршруту. Минимум не подтверждён; оценка не заменяет общий индекс точки или города." : "Общие численные индексы отдельных точек не заменяют индекс города. Неизвестные показатели остаются в общем результате."}</p>

@@ -41,6 +41,7 @@ import {
   selectionText,
   reasonText,
   noticeText,
+  noticeTexts,
   lastReturnsForSelection,
   scoreBand,
 } from "../api/adapters/result";
@@ -477,6 +478,10 @@ export function ApiAtlasPage() {
   const exactHeadlineCategories = headlineCategoryScores.filter((score) => score.name !== "observed_route_accessibility");
   const headlineCanonicalScore = headlinePointScores.length === 1 ? headlinePointScores[0] : !headlinePointScores.length && exactHeadlineCategories.length === 1 ? exactHeadlineCategories[0] : undefined;
   const headlineScore = result ? pointScorePresentation(result, shownScores, headlineCanonicalScore).score : undefined;
+  const territoryHeadline = !selection && pointOverview?.territoryScore?.status === "available" && pointOverview.territoryScore.value !== null ? pointOverview.territoryScore : null;
+  const headlineDestination = selection?.entity_kind === "sample_point" && selectedJourney.length === 1
+    ? result?.map_data?.features?.find((item) => item.entity_id === (selectedJourney[0].destination_object_id || selectedJourney[0].destination_node_id))?.name?.trim() || undefined
+    : undefined;
   const categoryRows = result?.request.analysis_kind === "urban_passenger" && selection ? result.request.categories.map((category) => {
     const candidates = shownScores.filter((score) => score.subject.kind === "sample_point" && score.subject.category === category);
     const exact = candidates.filter((score) => score.name === "category_index");
@@ -587,14 +592,15 @@ export function ApiAtlasPage() {
                 )}
                 <ResultHeadline score={selection?.entity_kind === "sample_point"
                   ? headlineScore
-                  : !selection ? pointOverview?.territoryScore : null}
+                  : territoryHeadline}
                   metric={selection ? headlineMinimums.length === 1 ? headlineMinimums[0] : headlineObservedTimes.length === 1 ? headlineObservedTimes[0] : null : null}
+                  destination={headlineDestination}
                   journey={selection && selectedJourney.length === 1 ? selectedJourney[0] : null} />
                 {scenario && <ScenarioComparison scenario={scenario} metrics={shownMetrics} scores={shownScores} selectionActive={!!selection} scenarioView={scenarioView} onViewChange={setScenarioView} />}
                 {categoryRows.length > 0 && <div className="sect"><h4>Категории и приоритеты</h4><ResultCategoryTable rows={categoryRows} overall={headlinePointScores.length === 1 ? measureText(headlinePointScores[0]) : "Нет данных"} /></div>}
                 {selection && <div className="kvs tnum"><ResultFigure title="Население точки" value={feature?.population == null ? "Неизвестно" : feature.population.toLocaleString("ru")} />
                   <ResultFigure title="Индекс города" value={pointOverview?.territoryScore ? measureText(pointOverview.territoryScore) : "Нет данных"} /></div>}
-                {pointOverview && <CalculatedPoints overview={pointOverview} selection={selection} areaSelected={!!("area_id" in result.request && result.request.area_id)} onSelect={chooseCalculatedPoint} />}
+                {pointOverview && <CalculatedPoints overview={pointOverview} showTerritory={!selection && !territoryHeadline} selection={selection} areaSelected={!!("area_id" in result.request && result.request.area_id)} onSelect={chooseCalculatedPoint} />}
                 {!!estimateOverview?.points.length && <CalculatedPoints overview={estimateOverview} estimate selection={selection} areaSelected={!!("area_id" in result.request && result.request.area_id)} onSelect={chooseCalculatedPoint} />}
                 {!scenarioView && <CalculatedJourneys key={`journey-picker-${result.analysis_id}`} result={result} onSelect={chooseCalculatedPoint} />}
                 {!shownMetrics.length && !shownScores.length && (
@@ -679,9 +685,9 @@ export function ApiAtlasPage() {
                       ))}
                     </details>
                   )}
-                {result.limitations.map((t, i) => (
+                {noticeTexts(result.limitations).map((text, i) => (
                   <p className="fhint" key={i}>
-                    {noticeText(t)}
+                    {text}
                   </p>
                 ))}
                 <Sources refs={scenarioView && scenario ? scenario.evidence_refs : result.evidence_refs}
@@ -938,8 +944,8 @@ export function ApiAtlasPage() {
                       разрешённое сервером предложение ниже.
                     </p>
                   ))}
-                  {m.answer.limitations.map((t, j) => (
-                    <p key={j}>{noticeText(t)}</p>
+                  {noticeTexts(m.answer.limitations).map((text, j) => (
+                    <p key={j}>{text}</p>
                   ))}
                   <Sources refs={m.answer.retrieved_evidence || []} resolveSources={result?.evidence_groups?.length ? () => explanationSources(result, m.answer) : undefined} />
                 </div>
@@ -966,8 +972,8 @@ export function ApiAtlasPage() {
                 {p.assumptions.some((text) => /^(scenario-document:|scenario-plan:)/i.test(text)) && <details className="more"><summary>Источники сценария</summary>
                   {p.assumptions.filter((text) => /^(scenario-document:|scenario-plan:)/i.test(text)).map((text, index) => <p key={index}>{text}</p>)}
                 </details>}
-                {p.limitations.map((t, i) => (
-                  <p key={i}>{noticeText(t)}</p>
+                {noticeTexts(p.limitations).map((text, i) => (
+                  <p key={i}>{text}</p>
                 ))}
                 <button
                   className="iconbtn primary"
