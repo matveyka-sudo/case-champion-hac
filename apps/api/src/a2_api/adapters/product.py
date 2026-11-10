@@ -431,9 +431,10 @@ def calculate(
 
         result = attach_demo_result(result, snapshot)
     if isinstance(inputs, UrbanInputs) and inputs.timetable is not None:
+        from a2_api.adapters.evidence_groups import pack_analysis_evidence
         from a2_api.adapters.result_evidence import compact_result_evidence
 
-        result = compact_result_evidence(result)
+        result = pack_analysis_evidence(compact_result_evidence(result))
     return finish_analysis(
         claim,
         result,
