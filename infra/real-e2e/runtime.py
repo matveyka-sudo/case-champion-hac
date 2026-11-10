@@ -17,6 +17,7 @@ from pathlib import Path
 
 IMAGE = "ghcr.io/valhalla/valhalla@sha256:4ac3d13d1019f9a130e9e6b6924c16ea55da0fa51e3653039152e33ad4095661"
 BUNDLE = "kaliningrad-urban-2026-11-10.2"
+SUPPORTED_BUNDLES = (BUNDLE, "kaliningrad-urban-2026-11-10.3")
 PBF = "kaliningrad-261107.osm.pbf"
 PBF_URL = "https://download.geofabrik.de/russia/" + PBF
 PBF_SHA = "769a6a6ac552b534057f2480b88f1c2d0709636761ab6d08483efe69c1e97b69"
@@ -87,7 +88,7 @@ def source_models(args):
     from a2_data_pipeline.contract_v2 import load_accepted_data
     from a2_data_pipeline.store import load_bundle
 
-    return load_bundle(BUNDLE), load_accepted_data(BUNDLE).model_dump(mode="json")
+    return load_bundle(args.bundle_id), load_accepted_data(args.bundle_id).model_dump(mode="json")
 
 
 def location(node):
@@ -431,7 +432,7 @@ def artifact(args):
     )
     source_ref = evidence("osm-geofabrik-pbf-", PBF_URL, "Accepted source PBF", PBF_SHA)
     build_model = ValhallaBuild(
-        BUNDLE,
+        args.bundle_id,
         raw["provenance"]["graph_version"],
         "waydex-klgd-351-" + build_hash[:16],
         "valhalla-351-tiles-" + build_hash,
@@ -465,7 +466,10 @@ def artifact(args):
     connectors = [
         c
         for c in walk_connectors(
-            BUNDLE, walking_speed_kmh=5, speed_evidence_refs=[profile_ref], profile_version=PROFILE
+            args.bundle_id,
+            walking_speed_kmh=5,
+            speed_evidence_refs=[profile_ref],
+            profile_version=PROFILE,
         )
         if c["physical_node_id"] in physical
     ]
@@ -475,7 +479,7 @@ def artifact(args):
         raise RuntimeError("Confirmed physical connectors required")
     status, _ = post(args, "/status", {}, True)
     payload = dict(
-        bundle_id=BUNDLE,
+        bundle_id=args.bundle_id,
         endpoint_url=args.endpoint,
         point_ids=[point_id],
         destination_ids=[destination_id],
@@ -638,6 +642,8 @@ def verify(args):
     verify_files(args)
     _, accepted = source_models(args)
     payload = read(args.runtime / args.artifact)
+    if payload["bundle_id"] != args.bundle_id or payload["build"]["snapshot_id"] != args.bundle_id:
+        raise RuntimeError("Requested accepted bundle differs from artifact snapshot")
     if sha(args.runtime / "valhalla-build-manifest.json") not in payload["build"]["graph_version"]:
         raise RuntimeError("Build manifest differs from artifact graph identity")
     if payload["endpoint_url"] != args.endpoint:
@@ -671,6 +677,7 @@ def main():
         "--runtime", type=Path, required=True, help="Isolated directory outside the repository"
     )
     parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument("--bundle-id", choices=SUPPORTED_BUNDLES, default=BUNDLE)
     parser.add_argument("--endpoint", default="http://127.0.0.1:8007")
     parser.add_argument("--name", default="waydex-e2e-valhalla")
     parser.add_argument("--port", type=int, default=8007)

@@ -11,6 +11,15 @@ export A2_DATA_DIR="$PWD/data"
 export WAYDEX_RUNTIME="$(mktemp -d "${TMPDIR:-/tmp}/waydex-real-e2e.XXXXXX")"
 ```
 
+Phase 2 also accepts the explicitly selected source revision
+`--bundle-id kaliningrad-urban-2026-11-10.3`. Pass this option consistently to
+`select`, `artifact` and `verify`, and choose a new artifact filename when reusing
+a verified graph. The default remains `.2`; an artifact/snapshot mismatch is an
+error, never a fallback. Revision `.3` has 77 accepted school sites and retains
+partial catalog coverage. It adds one independently verified municipal campus;
+it does not make any route minimum or city index proven. The API/worker must use
+the same newly generated artifact hash, not the old snapshot's artifact.
+
 Run from the repository root. Keep the runtime outside the checkout. No PBF,
 tiles, generated artifacts, GTFS or Yandex bindings are committed here. These
 scripts make zero Yandex requests and need no paid API. The supplied bundle stays
