@@ -130,3 +130,15 @@ Bound walking results use the reviewed `attach_walk_map` helper: all canonical
 city points/cells and selected destinations remain visible, and verified network
 geometry attaches only to the matching movement leg. Approach geometry and full
 Journey geometry remain absent unless independently established.
+
+After map attachment, bound walking results remove only unused `EvidenceRef`
+definitions. Every metric, score, journey, leg, geometry, reference, count, return
+and map feature remains byte-for-byte equivalent as a JSON value. Evidence used
+only by map metadata or a nested geometry/calibration/count/return survives.
+The complete original and compacted DTOs are validated before a fresh canonical
+result hash is assigned; this path does not repair historical saved results.
+The compaction implementation participates in the executor fingerprint, so a
+deployment that adds or changes it requires a new immutable runtime code identity
+and cannot resume checkpoints admitted with the former implementation. Source
+catalogs, numeric facts, unknown states, route artifacts, budgets and the 16 MiB
+final IPC bound are preserved.
