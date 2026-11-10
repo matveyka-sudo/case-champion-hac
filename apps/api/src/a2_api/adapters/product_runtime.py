@@ -4,7 +4,7 @@ import hashlib
 import json
 import os
 from collections.abc import Iterator
-from dataclasses import dataclass, fields, is_dataclass
+from dataclasses import dataclass, field, fields, is_dataclass, replace
 from datetime import timedelta
 from math import fsum
 from pathlib import Path
@@ -12,7 +12,7 @@ from typing import Any, Literal
 from zoneinfo import ZoneInfo
 
 from a2_contracts.common import canonical_hash
-from a2_contracts.v2.api import AreaOption, Capabilities, TerritoryOption
+from a2_contracts.v2.api import AreaOption, Capabilities, TerritoryOption, UrbanPassengerScope
 from a2_contracts.v2.base import AnalysisKind, ContractModel, Identifier, Timestamp, TrafficMode
 from a2_contracts.v2.dataset import AcceptedData
 from a2_contracts.v2.requests import (
@@ -38,6 +38,7 @@ from a2_api.adapters.product_inputs import (
     UrbanInputs,
     candidate_is_static,
 )
+from a2_api.adapters.product_scenario_inputs import ScenarioDocument
 from a2_api.adapters.timetable_source import verify_timetable_source
 from a2_api.core.errors import DomainError
 from a2_api.core.registry import ProductRegistry
@@ -82,6 +83,7 @@ class Profile(ContractModel):
         "accepted_inputs"
     )
     inputs: FileRef | None = None
+    scenarios: list[FileRef] = Field(default_factory=list, max_length=16)
     evidence: list[EvidenceRef] = Field(default_factory=list)
     static_observations: bool = False
     max_route_pairs: int = Field(gt=0, le=100000)
@@ -542,6 +544,8 @@ class Runtime:
     snapshots: dict[str, AcceptedData]
     profiles: dict[str, tuple[Profile, EngineInputs | None]]
     unavailable_kinds: frozenset[str]
+    scenario_documents: dict[str, tuple[ScenarioDocument, ...]] = field(default_factory=dict)
+    urban_passenger_scopes: list[UrbanPassengerScope] = field(default_factory=list)
 
     def select(
         self, request: AnalysisRequest, snapshot: AcceptedData
@@ -731,14 +735,54 @@ def load_runtime() -> Runtime:
                 profiles[key] = profile, inputs
             except (OSError, ValueError, TypeError, KeyError, DomainError):
                 missing.add(profile.analysis_kind)
-        return Runtime(digest, manifest, snapshots, profiles, frozenset(missing))
+        product_runtime = Runtime(digest, manifest, snapshots, profiles, frozenset(missing))
+        from a2_api.adapters.product_scenario_runtime import load_profile_documents
+
+        for key, (profile, inputs) in profiles.items():
+            if not profile.scenarios:
+                continue
+            product_runtime.scenario_documents[key] = ()
+            if profile.executor != "accepted_inputs" or inputs is None:
+                continue
+            snapshot = snapshots[profile.snapshot_id]
+            try:
+                product_runtime.scenario_documents[key] = load_profile_documents(
+                    source.parent,
+                    profile.scenarios,
+                    profile_id=key,
+                    snapshot=snapshot,
+                    inputs=inputs,
+                    budget=budget,
+                    request_allowed=lambda request: (
+                        product_runtime.select(request, snapshot)[0].profile_id == key
+                    ),
+                )
+            except (OSError, ValueError, TypeError, KeyError, DomainError):
+                # Optional experiments cannot erase a valid base calculation.
+                # The worker exposes an explicit limitation instead of proposals.
+                product_runtime.scenario_documents[key] = ()
+        from a2_api.adapters.product_capabilities import urban_passenger_scopes
+
+        return replace(
+            product_runtime,
+            urban_passenger_scopes=urban_passenger_scopes(
+                product_runtime,
+                certified_service_date=certified_proof.binding.service_date
+                if certified_proof is not None
+                else None,
+            ),
+        )
     except (OSError, ValueError, TypeError, KeyError) as exc:
         raise unavailable("PRODUCT_RUNTIME_UNAVAILABLE_OR_INCONSISTENT") from exc
 
 
 class RuntimeRegistry(ProductRegistry):
+    scenario_template_ids: frozenset[str] = frozenset()
+    urban_passenger_scopes: list[UrbanPassengerScope] = []
+
     def capabilities(self) -> Capabilities:
         result = super().capabilities()
+        result.urban_passenger_scopes = list(self.urban_passenger_scopes)
         for item in result.analyses:
             if not item.calculation_available:
                 item.reason_code = "RUNTIME_INPUTS_UNAVAILABLE"
@@ -750,7 +794,7 @@ def registry() -> ProductRegistry:
     traffic: set[TrafficMode] = {"static"}
     for profile, _ in runtime.profiles.values():
         traffic.update(profile.traffic_modes)
-    return RuntimeRegistry(
+    result = RuntimeRegistry(
         territories=runtime.manifest.territories,
         areas=runtime.manifest.areas,
         snapshots=list(runtime.snapshots.values()),
@@ -759,3 +803,8 @@ def registry() -> ProductRegistry:
         ready_kinds=sorted({p.analysis_kind for p, _ in runtime.profiles.values()}),
         supported_traffic=sorted(traffic),
     )
+    from a2_api.adapters.product_scenario_runtime import template_ids
+
+    result.scenario_template_ids = template_ids(runtime.scenario_documents)
+    result.urban_passenger_scopes = runtime.urban_passenger_scopes
+    return result

@@ -15,6 +15,7 @@ from typing import Literal
 
 from a2_contracts.common import canonical_hash
 from a2_contracts.v2.base import ContractModel, Identifier
+from a2_contracts.v2.requests import AnalysisRequest
 from a2_contracts.v2.results import EvidenceRef
 from a2_engine import (
     CargoScenarioInput,
@@ -75,6 +76,9 @@ class ScenarioDocument(ContractModel):
     snapshot_id: Identifier
     snapshot_hash: Identifier
     request_hash: Identifier
+    normalized_request: AnalysisRequest | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
     source_inputs_hash: Identifier
     inputs: ScenarioInputs
     plans: tuple[ScenarioPlan, ...] = Field(min_length=1, max_length=10)
@@ -86,6 +90,12 @@ class ScenarioDocument(ContractModel):
 
     @model_validator(mode="after")
     def distinct_plans(self) -> "ScenarioDocument":
+        if self.normalized_request is not None and (
+            self.normalized_request.snapshot_id != self.snapshot_id
+            or self.normalized_request.methodology is None
+            or canonical_hash(self.normalized_request.model_dump(mode="json")) != self.request_hash
+        ):
+            raise ValueError("SCENARIO_NORMALIZED_REQUEST_BINDING_MISMATCH")
         identities = [plan.operation.operation_id for plan in self.plans]
         if len(set(identities)) != len(identities):
             raise ValueError("DUPLICATE_SCENARIO_PLAN")
