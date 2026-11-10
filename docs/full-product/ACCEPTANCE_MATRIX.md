@@ -9,6 +9,28 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 
 ## Three-city priority — 2026-11-10 continuation
 
+### Current gate update — 2026-11-11 01:35 MSK
+
+- Lossless grouped evidence is integrated through680973c across canonical DTO,
+  backend publication, React and Alice. Root independently reproduced original
+  versus grouped M16 and PT/scenario facts, child serialization, and actual PG
+  roundtrip. No points, leaf definitions, geometry or unknown values are removed.
+- M16 worker envelope10.86MB, full-catalog PT analysis7.67MB/scenario15.56MB.
+  All2361points/284clinics remain; PT has300 source-bound dated runs. These are
+  offline adapter/transport and database checks, not live UI acceptance.
+- Full1401 Moscow campaign output is projected above20MB from actual16 routes.
+  Bounded compressed IPC is RUNNING; no complete campaign/publication yet.
+- Prototype frontend groups are accepted (root200units/build/API check and
+  grouped browser case; owner47API browser cases). Actual large-map selection
+  recreation takes about1.6s; performance correction is RUNNING.
+- Next immutable release must combine three cities/four profiles including
+  Moscow public transit and its real-source hypothetical scenario. Current
+  live5193 remains API f448ed15/web d07d584. No new deployment or full-city
+  index is claimed; independent per-city live E2E remains an open gate.
+- Reviewer found and verified corrections for grouped absence validation,
+  repeated-citation CPU amplification and repacking hash instability. Root49
+  focused API/actualPG checks pass after the final correction.
+
 ### Current gate update — 2026-11-11 00:33 MSK
 
 - Shared prototype web d07d584 is LIVE on5193; root GET-only landing/atlas

@@ -1,5 +1,57 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Lossless result integration checkpoint — 2026-11-11 01:35 MSK
+
+Goal ACTIVE. Root integration680973c includes canonical groups, Alice consumers,
+frontend3d22a93, backendc401ca9, and independent-review corrections044f75e and
+95afe5f. Live5193 remains the old API f448ed15/web d07d584; health GET passes.
+No new image or runtime has been activated. Dev remains91ed5262; PR26/27 are
+still open drafts at their known SHAs. PR29 is an open draft at2fa8382 with all
+six checks successful; that CI does not cover these newer local commits.
+
+Root independently recomputed the real saved16-route and public-transit
+artifacts without network. Lossless equality covers17,398 reference edges and
+447,848 other scalar values for Moscow16; PT baseline11,856 edges/246,127 scalars
+and scenario18,944 edges/541,307 scalars. Every leaf definition is retained.
+Actual child output sizes are10,864,271B for Moscow16,7,666,048B for PT analysis
+and15,557,576B for PT scenario. Original PT envelopes were175,781,577B and
+267,776,802B. Independent receipts are outside Git under
+`/Users/kirito/waydex-full-runtime/root-evidence-packing-20261111-v1/`.
+
+Root also repeated real-source PT PostgreSQL baseline/scenario roundtrip in a
+new isolated55447 schema:2361points/284clinics/300datedruns retained; exact saved
+before/baseline, cache/replay, two forged-publication rejections and foreign-scope
+denial pass in12.26s. Receipt `root-packed-pt-pg-roundtrip-20261111.json` is in
+the same ignored runtime parent. This is adapter/DB verification, not live UI E2E.
+
+Root checks:1168enginePASS8.91s;729contracts/assistant/group-consumerPASS1.13s;
+49focusedAPI tests including actualPG PASS7.84s after final packer correction;
+200frontend units/build/API freshness PASS; new grouped browser casePASS3.3s.
+Frontend owner additionally ran47API Chromium tests. Independent reviewer
+verified65Python/7packing/22frontend tests and all M16 evidence equivalence.
+Its findings were fixed: publication lacked group context, repeated citations
+caused superlinear expansion, and the packer changed hash on a second pass.
+Root repeated4000x4096 group expansion:1.91s before,0.0008s after; legacy leaf
+order/duplicates remain unchanged. Real M16 repeated packing is byte-equivalent.
+
+Next release gate is now full1401 output scaling, not evidence loss. Measured
+M16 journeys total105,195B; full1401 extrapolates above20MB with fixed catalog,
+so16-route success is not a full campaign size guarantee. BACKEND is implementing
+a separately reviewed versioned lossless compressed IPC: ordinary wire16MiB,
+default decoded16MiB, explicit operator-enabled decoded32MiB, strict declared
+length/ratio/truncation/trailing-data checks. No transport change is integrated
+yet. FRONTEND measured full map recreation at each selection (~1.6s/5605layers)
+and is optimizing joins/style updates without redesign. DEVOPS is testing GET
+saved-analysis-only nginx compression and preparing a NEW private assembler
+with three cities/four profiles (Moscow walk + actual public-transit scenario).
+Existing immutable v1 runtime3609e204 stays inactive and must not be overwritten.
+Final freeze must include all reviewed consumers, transport and fingerprint;
+then image memory/admission checks and root real UI/worker/PG replay are required.
+
+All three active engineering agents explicitly confirmed full filesystem/network
+access and approval never; no session restart is needed. No provider/paid calls,
+production data deletion or protected-branch merge occurred in this checkpoint.
+
 ## Real route and integration checkpoint — 2026-11-11 01:00 MSK
 
 Goal ACTIVE. Root integrated source is cbfa33c6465b3b2fe25598eade3f605c165d3dfc.
