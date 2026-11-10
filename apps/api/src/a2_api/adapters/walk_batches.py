@@ -369,5 +369,7 @@ def calculate(
     if bound is not None:
         from a2_api.adapters.walk_map import attach_walk_map
 
-        return attach_walk_map(result, snapshot, calculated, bound.destination_names)
+        return attach_walk_map(
+            result, snapshot, calculated, bound.destination_names, map_features=bound.map_features
+        )
     return result
