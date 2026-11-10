@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { Selection } from "../api/types";
 import type { CalculatedPointOverview } from "../api/adapters/pointOverview";
 import { measureText, scoreBand } from "../api/adapters/result";
@@ -10,6 +10,7 @@ export function CalculatedPoints({ overview, selection, areaSelected, onSelect }
   onSelect: (selection: Selection) => void;
 }) {
   const details = useRef<HTMLDetailsElement>(null);
+  const [expanded, setExpanded] = useState(false);
   const { territoryScore } = overview;
   const count = `${overview.points.length}${overview.denominator === null ? "" : ` из ${overview.denominator}`}`;
   return (
@@ -18,13 +19,13 @@ export function CalculatedPoints({ overview, selection, areaSelected, onSelect }
         {areaSelected ? "Индекс выбранной территории" : "Индекс города"}: {territoryScore ? measureText(territoryScore) : "не предоставлен"}
         {territoryScore?.completeness === "partial" && " · частичная оценка"}
       </p>
-      <details ref={details}>
+      <details ref={details} onToggle={(event) => setExpanded(event.currentTarget.open)}>
         <summary>Рассчитанные точки ({count})</summary>
         <p className="fhint">Общие численные индексы отдельных точек не заменяют индекс города. Неизвестные показатели остаются в общем результате.</p>
         {overview.denominator === null && <p className="fhint">{overview.inventoryCount === null
           ? "Общее число точек для этого списка не предоставлено."
           : "Переданная карта содержит не все точки из результата. Соотношение не определено."}</p>}
-        {overview.points.length ? (
+        {expanded && (overview.points.length ? (
           <ul>
             {overview.points.map((point) => (
               <li key={point.pointId}>
@@ -35,6 +36,7 @@ export function CalculatedPoints({ overview, selection, areaSelected, onSelect }
                   aria-controls="apiResultCard"
                   onClick={() => {
                     if (details.current) details.current.open = false;
+                    setExpanded(false);
                     onSelect({ entity_kind: "sample_point", entity_id: point.pointId });
                   }}
                 >
@@ -44,7 +46,7 @@ export function CalculatedPoints({ overview, selection, areaSelected, onSelect }
               </li>
             ))}
           </ul>
-        ) : <p className="fhint">Численные общие индексы точек в ответе не предоставлены.</p>}
+        ) : <p className="fhint">Численные общие индексы точек в ответе не предоставлены.</p>)}
       </details>
     </div>
   );

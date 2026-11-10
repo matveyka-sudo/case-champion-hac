@@ -8,7 +8,7 @@ export function UrbanReadiness({ value }: { value: Readiness }) {
   const cityScore = overview?.territoryScore;
   return (
     <section className="api-readiness" aria-label="Готовность выбранных условий">
-      <p className="flabel">Готовность · {value.city.name}</p>
+      <details className="more"><summary>Готовность · {value.city.name}</summary>
       <dl>
         <dt>Набор данных</dt>
         <dd>{value.snapshot ? "Подходящий набор опубликован. Полнота данных не подтверждается этим фактом."
@@ -34,6 +34,7 @@ export function UrbanReadiness({ value }: { value: Readiness }) {
           : !cityScore ? "Не предоставлен."
           : <><b data-score-band={scoreBand(cityScore)}>{measureText(cityScore)}</b>{cityScore.completeness === "partial" && " · частичная оценка"}.</>}</dd>
       </dl>
+      </details>
     </section>
   );
 }

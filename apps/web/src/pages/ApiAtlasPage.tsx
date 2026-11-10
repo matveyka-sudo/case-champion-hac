@@ -36,7 +36,6 @@ import {
   safeSource,
   subjectMatches,
   timestampText,
-  deltaText,
   statusText,
   modeText,
   trafficText,
@@ -58,6 +57,8 @@ import { CalculatedJourneys } from "../widgets/CalculatedJourneys";
 import { DemoModelBanner } from "../widgets/DemoModelBanner";
 import { isDemoModelSnapshot } from "../api/adapters/demoModel";
 import { proposalShiftText } from "../api/adapters/result";
+import { ResultHeadline } from "../widgets/ResultHeadline";
+import { ScenarioComparison } from "../widgets/ScenarioComparison";
 import { Select } from "../shared/Select";
 import { DatePicker } from "../shared/DatePicker";
 import { Icon, Wordmark } from "../shared/ui";
@@ -165,6 +166,10 @@ function resultTitle(result: AnalysisResult, catalog: Territory[]) {
     to = r.destination_id;
   return `${catalog.find((t) => t.territory_id === from)?.name || "Территория отправления"} → ${catalog.find((t) => t.territory_id === to)?.name || "Территория назначения"}`;
 }
+function ResultDetails({ summary, initialOpen, className, children }: { summary: string; initialOpen: boolean; className: string; children: () => React.ReactNode }) {
+  const [open, setOpen] = useState(initialOpen);
+  return <details className={`more ${className}`} open={open} onToggle={(event) => setOpen(event.currentTarget.open)}><summary>{summary}</summary>{open && children()}</details>;
+}
 const viewportSubscribe = (cb: () => void) => {
   window.addEventListener("resize", cb);
   return () => window.removeEventListener("resize", cb);
@@ -181,6 +186,7 @@ export function ApiAtlasPage() {
     [selection, setSelection] = useState<Selection | null>(null),
     [chatOpen, setChatOpen] = useState(window.innerWidth >= 1600),
     [filtersOpen, setFiltersOpen] = useState(false),
+    [filtersCollapsed, setFiltersCollapsed] = useState(false),
     [cardHidden, setCardHidden] = useState(false),
     [question, setQuestion] = useState(""),
     [scenarioView, setScenarioView] = useState(false),
@@ -315,6 +321,8 @@ export function ApiAtlasPage() {
     setZoom((z) => ({ kind: "selection", id: z.id + 1 }));
     requestAnimationFrame(() => {
       if (resultCard.current) resultCard.current.scrollTop = 0;
+      const body = resultCard.current?.querySelector<HTMLElement>(".ctx-b");
+      if (body) body.scrollTop = 0;
       resultTitleRef.current?.focus({ preventScroll: true });
     });
   };
@@ -474,6 +482,9 @@ export function ApiAtlasPage() {
         selection.entity_id === j.origin_node_id ||
         selection.entity_id === j.destination_node_id,
     );
+  const headlinePointScores = shownScores.filter((score) => score.subject.kind === "sample_point" && score.subject.category == null);
+  const headlineCategoryScores = shownScores.filter((score) => score.subject.kind === "sample_point" && score.subject.category != null);
+  const headlineMinimums = shownMetrics.filter((metric) => metric.name === "minimum_journey_seconds");
   const profileOptions =
     caps?.cargo_profiles
       .filter((p) =>
@@ -535,7 +546,7 @@ export function ApiAtlasPage() {
       s.completeness === "full",
   );
   return (
-    <div id="atlas" className={`atlas api-atlas${demoModel ? " has-demo-model" : ""}`} aria-label="Атлас Waydex — API">
+    <div id="atlas" className={`atlas api-atlas${demoModel ? " has-demo-model" : ""}${filtersCollapsed ? " filters-collapsed" : ""}`} aria-label="Атлас Waydex — API">
       <header className="at-top">
         <NavigationLink
           className="at-back"
@@ -602,6 +613,8 @@ export function ApiAtlasPage() {
         >
           <div className="api-panel-head">
             <b>Условия</b>
+            <button className="ctx-x api-filter-toggle" aria-label={filtersCollapsed ? "Развернуть фильтры" : "Свернуть фильтры"}
+              aria-expanded={!filtersCollapsed} onClick={() => setFiltersCollapsed((value) => !value)}><Icon name={filtersCollapsed ? "panel-left-open" : "panel-left"} /></button>
             <button
               className="ctx-x api-mobile"
               aria-label="Закрыть фильтры"
@@ -610,6 +623,7 @@ export function ApiAtlasPage() {
               <Icon name="x" />
             </button>
           </div>
+          <div className="api-filter-content" hidden={filtersCollapsed && !mobile}>
           {!caps && (
             <div className="stmsg">
               <span>
@@ -654,19 +668,7 @@ export function ApiAtlasPage() {
                     }
                   />,
                 )}
-              {field(
-                "Поиск территорий",
-                <>
-                  <input
-                    className="api-input"
-                    aria-label="Поиск территорий"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Название города или субъекта"
-                  />
-                  {searchError && <span role="alert">{searchError}</span>}
-                </>,
-              )}
+
               {urban ? (
                 field(
                   "Город",
@@ -727,45 +729,9 @@ export function ApiAtlasPage() {
                     onChange={(areaId) => change({ areaId })}
                   />,
                 )}
-              {caps.snapshots !== undefined &&
-                field(
-                  "Набор данных",
-                  <>
-                    <Select
-                      label="Набор данных"
-                      value={snapshotId}
-                      options={[
-                        { value: "", label: "Выберите набор данных" },
-                        ...snapshots.map((s) => ({
-                          value: s.snapshot_id,
-                          label: `${isDemoModelSnapshot(s.snapshot_id) ? "ДЕМО · " : ""}${snapshotLabel(s, catalog, caps.snapshots || [])}`,
-                          disabled: scopeState.published && !scopeState.time.some((scope) => scope.snapshot_id === s.snapshot_id),
-                          reason: scopeState.published && !scopeState.time.some((scope) => scope.snapshot_id === s.snapshot_id) ? "Для этого набора и времени городской расчёт не зарегистрирован." : undefined,
-                        })),
-                      ]}
-                      onChange={(snapshotId) => change({ snapshotId })}
-                    />
-                    <p className="fhint api-snapshot-hint">
-                      {!(urban ? draft.cityId : draft.originId && draft.destinationId)
-                        ? "Сначала выберите территорию или пару."
-                        : !snapshots.length
-                          ? "Нет подтверждённых данных для этих территорий и даты. Измените условия."
-                          : snapshots.length === 1
-                            ? "Единственный подходящий набор выбран автоматически."
-                            : "Есть несколько подходящих наборов. Выберите версию для расчёта."}
-                    </p>
-                    {snapshots.length === 1 && (
-                      <p className="fhint api-snapshot-coverage">
-                        {snapshotLabel(snapshots[0], catalog, caps.snapshots)}
-                      </p>
-                    )}
-                    {inline("snapshotId", ["snapshot_id"])}
-                  </>,
-                )}
               {scopeState.published && (
                 <UrbanScopeHelp key={draft.cityId} state={scopeState} selection={scopeSelection} draft={draft} caps={caps} catalog={catalog} onApply={change} />
               )}
-              {readiness && <UrbanReadiness value={readiness} />}
               {!cargo &&
                 (urban
                   ? field(
@@ -993,6 +959,57 @@ export function ApiAtlasPage() {
                       )}
                 </>
               )}
+              {caps.snapshots !== undefined &&
+                field(
+                  "Набор данных",
+                  <>
+                    <Select
+                      label="Набор данных"
+                      value={snapshotId}
+                      options={[
+                        { value: "", label: "Выберите набор данных" },
+                        ...snapshots.map((s) => ({
+                          value: s.snapshot_id,
+                          label: `${isDemoModelSnapshot(s.snapshot_id) ? "ДЕМО · " : ""}${snapshotLabel(s, catalog, caps.snapshots || [])}`,
+                          disabled: scopeState.published && !scopeState.time.some((scope) => scope.snapshot_id === s.snapshot_id),
+                          reason: scopeState.published && !scopeState.time.some((scope) => scope.snapshot_id === s.snapshot_id) ? "Для этого набора и времени городской расчёт не зарегистрирован." : undefined,
+                        })),
+                      ]}
+                      onChange={(snapshotId) => change({ snapshotId })}
+                    />
+                    <details className="more api-snapshot-details"><summary>Период и область данных</summary><p className="fhint api-snapshot-hint">
+                      {!(urban ? draft.cityId : draft.originId && draft.destinationId)
+                        ? "Сначала выберите территорию или пару."
+                        : !snapshots.length
+                          ? "Нет подтверждённых данных для этих территорий и даты. Измените условия."
+                          : snapshots.length === 1
+                            ? "Единственный подходящий набор выбран автоматически."
+                            : "Есть несколько подходящих наборов. Выберите версию для расчёта."}
+                    </p>
+                    {snapshots.length === 1 && (
+                      <p className="fhint api-snapshot-coverage">
+                        {snapshotLabel(snapshots[0], catalog, caps.snapshots)}
+                      </p>
+                    )}
+                    </details>
+                    {inline("snapshotId", ["snapshot_id"])}
+                  </>,
+                )}
+
+              {readiness && <UrbanReadiness value={readiness} />}
+              <details className="more api-territory-search"><summary>Поиск по каталогу</summary>{field(
+                "Поиск территорий",
+                <>
+                  <input
+                    className="api-input"
+                    aria-label="Поиск территорий"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Название города или субъекта"
+                  />
+                  {searchError && <span role="alert">{searchError}</span>}
+                </>,
+              )}</details>
               {field(
                 "Дорожные условия",
                 <Select
@@ -1029,6 +1046,7 @@ export function ApiAtlasPage() {
               </button>
             </>
           )}
+          </div>
         </aside>
         <main className="at-map api-map" aria-label="Результат анализа">
           <ApiMap
@@ -1155,6 +1173,12 @@ export function ApiAtlasPage() {
                     Все показатели
                   </button>
                 )}
+                <ResultHeadline score={selection?.entity_kind === "sample_point"
+                  ? headlinePointScores.length === 1 ? headlinePointScores[0] : !headlinePointScores.length && headlineCategoryScores.length === 1 ? headlineCategoryScores[0] : null
+                  : !selection ? pointOverview?.territoryScore : null}
+                  metric={selection && headlineMinimums.length === 1 ? headlineMinimums[0] : null}
+                  journey={selection && selectedJourney.length === 1 ? selectedJourney[0] : null} />
+                {scenario && <ScenarioComparison scenario={scenario} metrics={shownMetrics} scores={shownScores} selectionActive={!!selection} scenarioView={scenarioView} onViewChange={setScenarioView} />}
                 {pointOverview && <CalculatedPoints overview={pointOverview} selection={selection} areaSelected={!!("area_id" in result.request && result.request.area_id)} onSelect={chooseCalculatedPoint} />}
                 {!scenarioView && <CalculatedJourneys key={result.analysis_id} result={result} onSelect={chooseCalculatedPoint} />}
                 {!shownMetrics.length && !shownScores.length && (
@@ -1162,13 +1186,14 @@ export function ApiAtlasPage() {
                     Для выбранного объекта нет показателей в ответе сервера.
                   </p>
                 )}
+                <ResultDetails className="api-all-measures" key={selection?.entity_id || result.analysis_id} initialOpen={!!selection || shownScores.length + shownMetrics.length <= 12} summary={`Все показатели (${shownScores.length + shownMetrics.length})`}>{() => <>
                 {shownScores.map((s) => (
                   <Measure key={s.score_id} value={s} />
                 ))}
-                {shownScores.length > 0 && <IndexLegend />}
                 {shownMetrics.map((m) => (
                   <Measure key={m.metric_id} value={m} />
                 ))}
+                </>}</ResultDetails>
                 {!hasRanking && result.status === "partial" && (
                   <p className="fhint">
                     Оценка неполная и не участвует в полном рейтинге территорий.
@@ -1177,15 +1202,16 @@ export function ApiAtlasPage() {
                 {feature?.population !== undefined &&
                   (feature.entity_kind === "cell" ||
                     feature.entity_kind === "sample_point" || feature.cell_id) && (
-                    <p>
+                    <div className="api-population">
                       Население ячейки:{" "}
                       {feature.population === null
                         ? "неизвестно"
                         : feature.population}{" "}
                       · {feature.population_year || "год неизвестен"} ·{" "}
-                      {feature.population_method || "метод неизвестен"}
-                    </p>
+                      <details className="more"><summary>Источник населения</summary>{feature.population_method || "метод неизвестен"}</details>
+                    </div>
                   )}
+                {selectedJourney.length > 0 && <ResultDetails className="api-route-details" key={`routes-${selection?.entity_id || result.analysis_id}`} initialOpen={!!selection || selectedJourney.length <= 3} summary={`Маршруты из ответа (${selectedJourney.length})`}>{() => <>
                 {selectedJourney.map((journey) => (
                   <JourneyDetails
                     key={journey.journey_id}
@@ -1196,45 +1222,9 @@ export function ApiAtlasPage() {
                     scenario={scenarioView}
                   />
                 ))}
+                </>}</ResultDetails>}
                 {scenarioView && !selectedJourney.length && (
                   <p className="fhint">Для выбранного объекта путь сценария не предоставлен.</p>
-                )}
-                {scenario && (
-                  <div className="sect">
-                    <h4>Сравнение до / после</h4>
-                    <div className="segc">
-                      <button
-                        aria-pressed={!scenarioView}
-                        onClick={() => setScenarioView(false)}
-                      >
-                        База
-                      </button>
-                      <button
-                        aria-pressed={scenarioView}
-                        onClick={() => setScenarioView(true)}
-                      >
-                        Сценарий
-                      </button>
-                    </div>
-                    {scenario.deltas.map((d) => (
-                      <p key={d.effect_id}>{deltaText(d)}</p>
-                    ))}
-                    <p>
-                      {scenario.affected_population !== null
-                        ? `${scenario.affected_population} жителей`
-                        : scenario.affected_sites !== null
-                          ? `${scenario.affected_sites} площадок`
-                          : "Охват неизвестен"}
-                    </p>
-                    <p>
-                      {scenario.feasibility === "unverified"
-                        ? "Модельный эксперимент, реализуемость не подтверждена"
-                        : "Реализуемость подтверждена"}
-                    </p>
-                    {scenario.limitations.map((t, i) => (
-                      <p key={i}>{noticeText(t)}</p>
-                    ))}
-                  </div>
                 )}
                 {!scenarioView &&
                   (result.counts.length > 0 ||
@@ -1300,6 +1290,7 @@ export function ApiAtlasPage() {
             </button>
           )}
           <div className="api-bottom">
+            {!!values?.scores.length && <div className="api-floating-legend panelc"><details open={!mobile}><summary>Шкала индекса</summary><IndexLegend /></details></div>}
             <div className="timedock panelc">
               <div className="td-date">
                 <label htmlFor="apiDate">Дата</label>
@@ -1424,9 +1415,12 @@ export function ApiAtlasPage() {
                     ? "Модельный эксперимент, реализуемость не подтверждена"
                     : "Реализуемость подтверждена"}
                 </p>
-                {p.assumptions.map((t, i) => (
+                {p.assumptions.filter((text) => !/^(scenario-document:|scenario-plan:)/i.test(text)).map((t, i) => (
                   <p key={i}>{noticeText(t)}</p>
                 ))}
+                {p.assumptions.some((text) => /^(scenario-document:|scenario-plan:)/i.test(text)) && <details className="more"><summary>Источники сценария</summary>
+                  {p.assumptions.filter((text) => /^(scenario-document:|scenario-plan:)/i.test(text)).map((text, index) => <p key={index}>{text}</p>)}
+                </details>}
                 {p.limitations.map((t, i) => (
                   <p key={i}>{noticeText(t)}</p>
                 ))}
