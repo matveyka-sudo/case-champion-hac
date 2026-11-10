@@ -8,8 +8,9 @@ from a2_contracts.api import ErrorDetail
 
 from a2_api.core.errors import DomainError
 from a2_api.core.jobs import CalculationOutput, ClaimedJob, V2JobContext
+from a2_api.db.repositories.checkpoints import CheckpointRepository
 from a2_api.db.repositories.jobs import JobRepository
-from a2_api.workers.calculation import HandlerOutput, calculate
+from a2_api.workers.calculation import HandlerOutput, calculate, calculate_batches
 
 logger = logging.getLogger("a2_api.workers.runner")
 
@@ -136,4 +137,12 @@ class Worker:
     async def _calculate(
         self, claim: ClaimedJob, handler: str, timeout_seconds: float
     ) -> HandlerOutput:
+        if (
+            isinstance(claim, ClaimedJob)
+            and isinstance(claim.context, V2JobContext)
+            and claim.context.batch_execution is not None
+        ):
+            return await calculate_batches(
+                claim, handler, timeout_seconds, CheckpointRepository(self.repository)
+            )
         return await calculate(claim, handler, timeout_seconds)

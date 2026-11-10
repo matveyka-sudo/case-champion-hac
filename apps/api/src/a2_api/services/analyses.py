@@ -20,8 +20,9 @@ from a2_contracts.v2.scenarios import (
 )
 
 from a2_api.assistant.explanations import explain as _explain
+from a2_api.core.batches import BatchExecution, BatchPlan
 from a2_api.core.errors import DomainError, unavailable
-from a2_api.core.jobs import V2JobContext
+from a2_api.core.jobs import V2JobContext, batch_context_fingerprint
 from a2_api.core.registry import ProductRegistry
 from a2_api.core.scope import territory_ids as territory_ids
 from a2_api.db.repositories.jobs import JobRepository
@@ -29,7 +30,7 @@ from a2_api.services.scenarios import proposals as _proposals
 from a2_api.services.scenarios import scenario as _scenario
 from a2_api.services.scenarios import scenario_result as _scenario_result
 
-Preflight = Callable[[AnalysisRequest, AcceptedData], Awaitable[None]]
+Preflight = Callable[[AnalysisRequest, AcceptedData], Awaitable[BatchPlan | None]]
 DEFAULT_TEMPLATES = frozenset({"coordinate_transfer", "additional_departure"})
 
 
@@ -95,9 +96,10 @@ class AnalysisService:
         normalized = self.registry.normalize(request)
         snapshot = self.registry.resolve_snapshot(normalized)
         normalized = normalized.model_copy(update={"snapshot_id": snapshot.snapshot_id})
+        batch_plan = None
         if self.preflight is not None:
             # I/O readiness only. CPU calculations stay in the separate worker process.
-            await asyncio.wait_for(self.preflight(normalized, snapshot), timeout=30)
+            batch_plan = await asyncio.wait_for(self.preflight(normalized, snapshot), timeout=30)
         assert self.code_version is not None
         context = V2JobContext(
             schema_version="2",
@@ -117,6 +119,21 @@ class AnalysisService:
             access_scope=scope,
             cache_valid_until=self.registry.required_cache_valid_until(normalized, snapshot),
         )
+        if batch_plan is not None:
+            plan = BatchPlan.model_validate(batch_plan.model_dump(mode="json"))
+            execution = BatchExecution.model_validate(
+                {
+                    **plan.model_dump(mode="json"),
+                    "access_scope": scope,
+                    "context_fingerprint": batch_context_fingerprint(context),
+                }
+            )
+            context = V2JobContext.model_validate(
+                {
+                    **context.model_dump(mode="json"),
+                    "batch_execution": execution.model_dump(mode="json"),
+                }
+            )
         accepted = await repository.enqueue(
             "analysis", request, context, scoped_key, request_id, scope=scope
         )

@@ -54,13 +54,15 @@ from a2_api.adapters.product_projection import (
 )
 from a2_api.adapters.product_runtime import load_runtime, unavailable
 from a2_api.adapters.product_runtime import registry as registry
+from a2_api.core.batches import BatchPlan
 from a2_api.core.config import RuntimeSettings
 from a2_api.core.errors import DomainError
 from a2_api.core.jobs import ClaimedJob, V2JobContext
 from a2_api.core.registry import ProductRegistry
+from a2_api.workers.checkpoint_channel import CheckpointChannel
 
 
-async def preflight(request: AnalysisRequest, snapshot: AcceptedData) -> None:
+async def preflight(request: AnalysisRequest, snapshot: AcceptedData) -> BatchPlan | None:
     runtime = await asyncio.to_thread(load_runtime)
     if runtime.digest not in (RuntimeSettings().code_version or ""):
         raise DomainError(409, "incompatible_versions", "Product runtime code identity differs")
@@ -69,11 +71,16 @@ async def preflight(request: AnalysisRequest, snapshot: AcceptedData) -> None:
         from a2_api.adapters import walk_pilot
 
         await walk_pilot.preflight(request, snapshot)
+    elif profile.executor == "walk_batches":
+        from a2_api.adapters import walk_batches
+
+        return await walk_batches.preflight(request, snapshot)
     elif inputs is None:
         raise unavailable("RUNTIME_TRANSPORT_INPUTS_REQUIRED")
+    return None
 
 
-def calculate(claim: ClaimedJob) -> AnalysisResult:
+def calculate(claim: ClaimedJob, channel: CheckpointChannel | None = None) -> AnalysisResult:
     if claim.kind != "analysis" or not isinstance(claim.context, V2JobContext):
         raise DomainError(
             422, "unsupported_scenario", "Product analysis handler requires an analysis job"
@@ -99,6 +106,12 @@ def calculate(claim: ClaimedJob) -> AnalysisResult:
         from a2_api.adapters import walk_pilot
 
         return walk_pilot.calculate(claim)
+    if profile.executor == "walk_batches":
+        if channel is None:
+            raise unavailable("FENCED_CHECKPOINT_CHANNEL_REQUIRED")
+        from a2_api.adapters import walk_batches
+
+        return walk_batches.calculate(claim, channel)
     evidence = {
         row.evidence_id: EvidenceRef(
             evidence_id=row.evidence_id,

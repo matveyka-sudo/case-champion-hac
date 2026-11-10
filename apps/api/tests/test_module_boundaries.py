@@ -22,6 +22,9 @@ from fastapi.testclient import TestClient
 SOURCE = Path(__file__).parents[1] / "src/a2_api"
 ROOT = SOURCE.parents[3]
 BASELINE = json.loads((Path(__file__).parent / "fixtures/refactor_baseline.json").read_text())
+BATCH_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/od_checkpoint_extension.json").read_text()
+)
 RETIRED_ROOT_MODULES = frozenset(
     "alice analysis_service api_v2 app budget_cli budget_hook configuration "
     "deployment_budget env_settings evidence_search export job_services jobs "
@@ -96,7 +99,12 @@ def normalize_signature(value):
 
 
 def test_all_185_existing_signatures_and_defaults():
-    for path, signature in BASELINE["signatures"].items():
+    assert set(BATCH_EXTENSION["signatures"]) == {
+        "a2_api.core.jobs:V2JobContext",
+        "a2_api.services.analyses:AnalysisService",
+        "a2_api.services.analyses:AnalysisService.__init__",
+    }
+    for path, signature in (BASELINE["signatures"] | BATCH_EXTENSION["signatures"]).items():
         module, qualified = path.split(":")
         obj = importlib.import_module(module)
         for name in qualified.split("."):
@@ -150,7 +158,10 @@ def test_sql_literals_unchanged_and_confined_to_database_layer():
         if found:
             assert path.is_relative_to(SOURCE / "db"), path
         strings.extend(found)
-    assert collections.Counter(strings) == BASELINE["sql_literals"]
+    assert BATCH_EXTENSION["module"] == "db/repositories/checkpoints.py"
+    assert collections.Counter(strings) == collections.Counter(
+        BASELINE["sql_literals"]
+    ) + collections.Counter(BATCH_EXTENSION["sql_literals"])
 
 
 @pytest.mark.parametrize(
@@ -288,4 +299,6 @@ def test_sql_parameter_binding_and_transaction_options_unchanged():
                 hashes.append(
                     hashlib.sha256(ast.dump(node, include_attributes=False).encode()).hexdigest()
                 )
-    assert collections.Counter(hashes) == BASELINE["sql_call_hashes"]
+    assert collections.Counter(hashes) == collections.Counter(
+        BASELINE["sql_call_hashes"]
+    ) + collections.Counter(BATCH_EXTENSION["sql_call_hashes"])

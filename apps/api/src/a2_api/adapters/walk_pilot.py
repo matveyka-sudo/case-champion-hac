@@ -79,7 +79,7 @@ class Runtime:
     status_expectation: dict[str, Any]
 
 
-def load_runtime() -> Runtime:
+def load_runtime(*, approved_pairs: frozenset[tuple[str, str]] | None = None) -> Runtime:
     """Validate the operator's artifact on every boundary, including spawned workers."""
     path = os.environ.get("A2_WALK_PILOT_ARTIFACT_PATH")
     expected = os.environ.get("A2_WALK_PILOT_ARTIFACT_SHA256", "")
@@ -93,7 +93,9 @@ def load_runtime() -> Runtime:
         if len(content) > MAX_ARTIFACT_BYTES or digest != expected:
             raise ValueError("runtime artifact hash/size mismatch")
         raw = json.loads(content)
-        school_limit = PILOT_BUNDLE_SCHOOL_LIMITS.get(raw["bundle_id"])
+        school_limit = (
+            PILOT_BUNDLE_SCHOOL_LIMITS.get(raw["bundle_id"]) if approved_pairs is None else 4096
+        )
         if school_limit is None:
             raise ValueError("unsupported pilot bundle")
         endpoint = urlparse(raw["endpoint_url"])
@@ -137,10 +139,19 @@ def load_runtime() -> Runtime:
         )
         points = tuple(raw["point_ids"])
         destinations = tuple(raw["destination_ids"])
-        if len(points) != 1 or not 1 <= len(destinations) <= school_limit:
+        if (
+            (approved_pairs is None and len(points) != 1)
+            or not 1 <= len(points) <= 4096
+            or not 1 <= len(destinations) <= school_limit
+        ):
             raise ValueError("pilot must declare one point and bounded school subset")
-        if len(set(destinations)) != len(destinations):
-            raise ValueError("duplicate pilot destination")
+        if approved_pairs is not None and (
+            set(points) != {p for p, _ in approved_pairs}
+            or set(destinations) != {d for _, d in approved_pairs}
+        ):
+            raise ValueError("runtime endpoints differ from approved physical pairs")
+        if len(set(points)) != len(points) or len(set(destinations)) != len(destinations):
+            raise ValueError("duplicate runtime point or destination")
         evidence = tuple(EvidenceRef.model_validate(row) for row in raw["evidence_refs"])
         evidence_ids = {row.evidence_id for row in evidence}
         if len(evidence_ids) != len(evidence):
@@ -159,10 +170,11 @@ def load_runtime() -> Runtime:
         school_ids = {
             row.destination_id for row in snapshot.destinations if "school" in row.categories
         }
-        if len(school_ids) > school_limit:
+        if approved_pairs is None and len(school_ids) > school_limit:
             raise ValueError("accepted school inventory exceeds reviewed pilot bound")
         if any(
-            identity not in destination_map or "school" not in destination_map[identity].categories
+            identity not in destination_map
+            or (approved_pairs is None and "school" not in destination_map[identity].categories)
             for identity in destinations
         ) or not set(points) <= {p.point_id for p in snapshot.sample_points}:
             raise ValueError("unknown pilot endpoint or non-school destination")
