@@ -14,6 +14,11 @@ def baseline(claim):
     payload = saved.model_dump(mode="json")
     first = payload["metrics"][0]
     first["value"] = 30.0
+    # This fixture tests generic signed transition coverage; physical urban
+    # point times require actual source-bound journey proofs in product runs.
+    first["subject"] = dict(
+        kind="connection", origin_id="synthetic-C", destination_id="synthetic-D", mode="rail"
+    )
     second = dict(
         first,
         metric_id="B",

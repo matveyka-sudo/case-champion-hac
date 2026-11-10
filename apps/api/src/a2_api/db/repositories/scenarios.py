@@ -80,7 +80,13 @@ class ScenariosRepository(RunsRepository):
             raise DomainError(409, "incompatible_versions", "Scenario result differs from job kind")
         baseline = await self._check_scenario_inputs(connection, claim.request, context)
         assert context.scenario_proposal is not None
-        self._validate_scenario_semantics(result, baseline, context.scenario_proposal)
+        self._validate_scenario_semantics(
+            result,
+            baseline,
+            context.scenario_proposal,
+            endpoint_scope=context.scenario_endpoint_scope,
+            expected_snapshot_hash=context.snapshot_hash,
+        )
 
     async def get_proposal(self, scenario_id: str, scope: str) -> ScenarioProposal:
         row = await self.pool.fetchrow(

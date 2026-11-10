@@ -46,18 +46,35 @@ def success(claim: ClaimedJob) -> AnalysisResult:
     return AnalysisResult.model_validate(payload)
 
 
+def scenario_baseline(claim):
+    """Point-independent TEST_ONLY time DTO for worker/publication plumbing.
+
+    Physical urban sample-point times require real accepted journey proofs;
+    those are exercised by the product scenario PostgreSQL controls.
+    """
+    saved = success(claim)
+    payload = saved.model_dump(mode="json")
+    payload["metrics"][0]["subject"] = dict(
+        kind="connection",
+        origin_id="synthetic-connection-a",
+        destination_id="synthetic-connection-b",
+        mode=claim.context.normalized_request.passenger_mode,
+    )
+    return AnalysisResult.model_validate(payload)
+
+
 def with_proposals(claim):
     from a2_api.core.jobs import CalculationOutput
     from test_v2_storage import proposal
 
-    saved = success(claim)
+    saved = scenario_baseline(claim)
     return CalculationOutput(analysis=saved, proposals=[proposal(saved)])
 
 
 def scenario_success(claim):
     from test_v2_storage import scenario_result
 
-    baseline = success(claim)
+    baseline = scenario_baseline(claim)
     command = claim.context.scenario_proposal
     baseline = baseline.model_copy(update={"result_hash": command.baseline_result_hash})
     return scenario_result(baseline, command)
