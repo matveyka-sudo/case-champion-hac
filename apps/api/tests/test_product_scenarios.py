@@ -806,3 +806,213 @@ def test_new_intercity_after_chain_cannot_publish_forged_operands(monkeypatch, a
             profile_id=document.profile_id,
         )
         _validate_scenario_semantics(result, baseline, claim.context.scenario_proposal)
+
+
+def trusted_urban_scope(case):
+    """TEST_ONLY trusted fixture facts; never obtain scope from worker output."""
+    from a2_api.core.scenario_scope import ScenarioEndpointScope
+
+    context, facts, _, _, _ = case
+    return ScenarioEndpointScope(
+        snapshot_id=context.snapshot_id,
+        snapshot_hash=canonical_hash({"TEST_ONLY_accepted_facts": source_inputs_hash(facts)}),
+        city_id=context.normalized_request.city_id,
+        point_origins={point.point_id: point.origin_node_id for point in facts.points},
+        point_access_nodes={point.point_id: point.access_node_id for point in facts.points},
+        destination_nodes={
+            row.destination_id: row.physical_node_id or row.access_node_id
+            for row in facts.destinations
+        },
+        destination_access_nodes={
+            row.destination_id: row.access_node_id for row in facts.destinations
+        },
+        destination_categories={
+            row.destination_id: sorted(row.categories) for row in facts.destinations
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    "attack",
+    [
+        "origin",
+        "destination",
+        "object",
+        "private_car",
+        "category",
+        "category_mismatch",
+        "missing_scope",
+        "snapshot",
+        "city",
+        "origin_access",
+        "destination_access",
+    ],
+)
+def test_new_urban_chain_requires_trusted_point_object_category_and_mode_bindings(attack):
+    from a2_api.db.scenario_journeys import scenario_journeys
+
+    case = make_case()
+    result, _ = run(case)
+    baseline = case[3]
+    scope = trusted_urban_scope(case)
+    payload = result.model_dump(mode="json")
+    journey = next(row for row in payload["after_journeys"] if row["point_id"] == "p1")
+    assert not any(row.point_id == "p1" for row in baseline.journeys)
+    if attack == "origin":
+        journey["origin_node_id"] = journey["legs"][0]["from_node_id"] = "TEST_ONLY-foreign-origin"
+    elif attack == "destination":
+        journey["destination_node_id"] = journey["legs"][-1]["to_node_id"] = (
+            "TEST_ONLY-foreign-destination"
+        )
+    elif attack == "object":
+        journey["destination_object_id"] = "TEST_ONLY-foreign-object"
+    elif attack == "private_car":
+        for leg in journey["legs"]:
+            if leg["kind"] != "walk":
+                leg["mode"] = "private_car"
+    elif attack == "category":
+        scope = scope.model_copy(update={"destination_categories": {"d": ["shopping_center"]}})
+    elif attack == "category_mismatch":
+        scope = scope.model_copy(update={"destination_categories": {"d": ["school"]}})
+    elif attack == "missing_scope":
+        scope = None
+    elif attack == "snapshot":
+        scope = scope.model_copy(update={"snapshot_id": "TEST_ONLY-other-snapshot"})
+    elif attack == "city":
+        scope = scope.model_copy(update={"city_id": "TEST_ONLY-other-city"})
+    elif attack == "origin_access":
+        scope = scope.model_copy(
+            update={
+                "point_access_nodes": {**scope.point_access_nodes, "p1": "TEST_ONLY-other-access"}
+            }
+        )
+    else:
+        scope = scope.model_copy(
+            update={"destination_access_nodes": {"d": "TEST_ONLY-other-access"}}
+        )
+    forged = ScenarioResult.model_validate(payload)
+    with pytest.raises(DomainError):
+        scenario_journeys(forged, baseline, endpoint_scope=scope)
+
+
+def closest_destination_case():
+    case = make_case()
+    context, facts, document, _, _ = case
+    dataset, job = document.inputs.timetables[0], document.inputs.urban[0]
+    outgoing = next(
+        row
+        for row in dataset.timetable.runs
+        if row.run_id == document.plans[0].operation.execution_id
+    )
+    start = context.normalized_request.departure_at
+    alternative = replace(
+        outgoing,
+        trip_id="TEST_ONLY-alternative",
+        events=(
+            replace(
+                outgoing.events[0],
+                arrival_at=start + timedelta(seconds=800),
+                departure_at=start + timedelta(seconds=800),
+            ),
+            replace(
+                outgoing.events[-1],
+                node_id="Y",
+                arrival_at=start + timedelta(seconds=1400),
+                departure_at=start + timedelta(seconds=1400),
+            ),
+        ),
+    )
+    table = replace(
+        dataset.timetable,
+        scope=replace(dataset.timetable.scope, node_ids=dataset.timetable.scope.node_ids | {"Y"}),
+        runs=(*dataset.timetable.runs, alternative),
+    )
+    physical = PhysicalService(
+        "TEST_ONLY-alternative-physical",
+        (alternative.run_id,),
+        (
+            PhysicalDeparture(
+                0, "TEST_ONLY-alternative-departure", alternative.calendar_evidence_refs
+            ),
+        ),
+        alternative.calendar_evidence_refs,
+    )
+    dataset = replace(
+        dataset, timetable=table, physical_services=(*dataset.physical_services, physical)
+    )
+    destination = replace(
+        job.destinations[0],
+        destination_id="d2",
+        object_identity="TEST_ONLY-object2",
+        access_node_id="Y",
+    )
+    destinations = (*job.destinations, destination)
+    coverage = tuple(
+        replace(row, catalog_destination_ids=row.catalog_destination_ids | {"d2"})
+        for row in job.coverage
+    )
+    job = replace(job, destinations=destinations, coverage=coverage)
+    inputs = ScenarioInputs(timetables=(dataset,), urban=(job,))
+    frozen = create_scenario_baseline(inputs)
+    operation = replace(document.plans[0].operation, baseline_id=frozen.baseline_id)
+    facts = facts.model_copy(
+        update={"timetable": table, "destinations": destinations, "coverage": coverage}
+    )
+    out = projection(
+        "urban_passenger",
+        operation.evidence_refs,
+        city_id="city",
+        passenger_mode="public_transport",
+        categories=list(dict(job.selected_categories)),
+        priorities=dict(job.selected_categories),
+    )
+    out.context.normalized_request.departure_at = start
+    project_urban(out, frozen.before.urban[0].analysis)
+    baseline = out.finish()
+    document = document.model_copy(
+        update={
+            "source_inputs_hash": source_inputs_hash(facts),
+            "inputs": inputs,
+            "plans": (document.plans[0].model_copy(update={"operation": operation}),),
+        }
+    )
+    return out.context, facts, document, baseline, frozen
+
+
+def test_trusted_category_roster_allows_new_closest_destination_without_freezing_old_winner():
+    from a2_api.db.scenario_journeys import scenario_journeys
+
+    case = closest_destination_case()
+    result, _ = run(case)
+    before = next(row for row in case[3].journeys if row.point_id == "p2")
+    changed = [row for row in result.after_journeys if row.point_id == "p2"]
+    assert before.destination_object_id == "d" and before.destination_node_id == "D"
+    assert changed and all(
+        row.destination_object_id == "d2" and row.destination_node_id == "Y" for row in changed
+    )
+    scenario_journeys(result, case[3], endpoint_scope=trusted_urban_scope(case))
+
+
+@pytest.mark.parametrize("with_scope", [True, False])
+def test_absent_before_point_cannot_rebind_another_points_frozen_chain(with_scope):
+    from a2_api.db.scenario_journeys import scenario_journeys
+
+    case = make_case()
+    result, _ = run(case)
+    baseline = case[3]
+    frozen = next(row for row in baseline.journeys if row.point_id == "p2")
+    payload = result.model_dump(mode="json")
+    p1_journeys = {
+        row["journey_id"] for row in payload["after_journeys"] if row["point_id"] == "p1"
+    }
+    payload["after_journeys"] = [
+        row for row in payload["after_journeys"] if row["point_id"] != "p1"
+    ]
+    for metric in payload["after"]["metrics"]:
+        if metric["journey_id"] in p1_journeys:
+            metric["journey_id"] = frozen.journey_id
+    forged = ScenarioResult.model_validate(payload)
+    with pytest.raises(DomainError):
+        scenario_journeys(
+            forged, baseline, endpoint_scope=trusted_urban_scope(case) if with_scope else None
+        )
