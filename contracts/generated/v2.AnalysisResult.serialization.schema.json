@@ -185,6 +185,32 @@
       "title": "CountResult",
       "type": "object"
     },
+    "EvidenceGroup": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 4096,
+          "minItems": 2,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "group_id": {
+          "pattern": "^evidence-group:[a-f0-9]{64}$",
+          "title": "Group Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "group_id",
+        "evidence_ids"
+      ],
+      "title": "EvidenceGroup",
+      "type": "object"
+    },
     "EvidenceRef": {
       "additionalProperties": false,
       "properties": {
@@ -2398,6 +2424,14 @@
         "$ref": "#/$defs/CountResult"
       },
       "title": "Counts",
+      "type": "array"
+    },
+    "evidence_groups": {
+      "items": {
+        "$ref": "#/$defs/EvidenceGroup"
+      },
+      "maxItems": 8192,
+      "title": "Evidence Groups",
       "type": "array"
     },
     "evidence_refs": {

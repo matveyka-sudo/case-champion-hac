@@ -14,6 +14,7 @@ from a2_contracts.v2 import api as api_v2
 from a2_contracts.v2 import assistant as assistant_v2
 from a2_contracts.v2 import base as base_v2
 from a2_contracts.v2 import dataset as dataset_v2
+from a2_contracts.v2 import evidence as evidence_v2
 from a2_contracts.v2 import journeys as journeys_v2
 from a2_contracts.v2 import map_data as map_v2
 from a2_contracts.v2 import requests as requests_v2
@@ -48,6 +49,7 @@ def model_registry() -> dict[str, type[ContractModel]]:
         requests_v2,
         map_v2,
         results_v2,
+        evidence_v2,
         retrieval_v2,
         scenarios_v2,
     ):
