@@ -23,6 +23,8 @@ from a2_api.core.jobs import (
     cache_fingerprint,
     request_hash,
 )
+from a2_api.core.private_sources import validate_bindings
+from a2_api.db.repositories.private_sources import PrivateSourceRepository, decoded
 from a2_api.db.repositories.runs import RunsRepository
 from a2_api.db.rows import RunResult, _check_scope, _proposal_from_row
 
@@ -96,6 +98,7 @@ class ScenariosRepository(RunsRepository):
                     or original.normalized_request != context.normalized_request
                     or original.versions != context.versions
                     or original.snapshot_hash != context.snapshot_hash
+                    or original.private_source_bindings != context.private_source_bindings
                     or baseline.request != context.normalized_request
                     or baseline.versions != context.versions
                     or baseline.result_hash != context.scenario_proposal.baseline_result_hash
@@ -103,7 +106,10 @@ class ScenariosRepository(RunsRepository):
                     raise DomainError(
                         409, "incompatible_versions", "Saved scenario baseline changed"
                     )
-                return baseline
+        await PrivateSourceRepository(self.pool).read_access(
+            baseline.analysis_id, context.access_scope, expected_hash=baseline.result_hash
+        )
+        return baseline
 
     async def _check_scenario_inputs(
         self, connection: asyncpg.Connection, request: ScenarioRunRequest, context: V2JobContext
@@ -125,6 +131,16 @@ class ScenariosRepository(RunsRepository):
         )
         if not isinstance(baseline, AnalysisResult):
             raise DomainError(404, "unknown_id", "Analysis not found")
+        metadata = await connection.fetchval(
+            "SELECT private_source_bindings FROM runs WHERE run_id=$1", baseline.analysis_id
+        )
+        bindings = validate_bindings(decoded(metadata)) if metadata is not None else ()
+        if bindings != context.private_source_bindings:
+            raise DomainError(
+                409,
+                "incompatible_versions",
+                "Scenario private source binding differs from baseline",
+            )
         if (
             baseline.request != context.normalized_request
             or baseline.versions != context.versions
@@ -176,7 +192,9 @@ class ScenariosRepository(RunsRepository):
         )
         if row is None:
             raise DomainError(404, "unknown_id", "Scenario proposal not found")
-        return _proposal_from_row(row)
+        proposal = _proposal_from_row(row)
+        await PrivateSourceRepository(self.pool).read_access(proposal.baseline_analysis_id, scope)
+        return proposal
 
     async def get_proposals(self, analysis_id: str, scope: str) -> list[ScenarioProposal]:
         baseline = await self.get_run(analysis_id, scope)
@@ -187,6 +205,9 @@ class ScenariosRepository(RunsRepository):
             "ORDER BY created_at,scenario_id",
             analysis_id,
             scope,
+        )
+        await PrivateSourceRepository(self.pool).read_access(
+            analysis_id, scope, expected_hash=baseline.result_hash
         )
         return [_proposal_from_row(row) for row in rows]
 
