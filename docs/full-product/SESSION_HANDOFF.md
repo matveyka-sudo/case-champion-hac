@@ -1,5 +1,33 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Latest correction: keep the prototype frontend and implement its backend
+
+Goal remains ACTIVE. The user explicitly requires the existing demo/prototype
+design AND intended functionality unchanged; backend limitations must be repaired,
+not used to replace the frontend with a reduced API dashboard. Frontend owns
+shared presenters/actions; backend owns real adapters and workflow completion.
+No generated Moscow transport may be reactivated on the active stand.
+
+At this checkpoint root b15ae961 includes observed mapper 393c7c7 and engine
+01033a9. The root runtime regression found a duplicate source-ref map validation
+failure; BACKEND is fixing it plus multiple-candidate journey linking. Do not
+deploy this mapper until those checks pass. FRONTEND phases 5897ce2/59d0403/
+230b0e6 are still under review; shared card/map/mobile work continues. Review
+also requires disabled-priority guards, chat length/submit guards, offscreen
+mobile filter inertness and generated-model warnings in fullscreen panels.
+
+Live 5193 is real Moscow .4, manifest 214b1247, one GP109 pair; API f448ed15,
+web 8f8ba849. Full 2361 points retained. Real source/native capture gives 1401
+currently supported candidate pairs, not 1836: preserve the 435 unresolved
+pairs and all other unknown points. Native supplement ac95047d has 211 files
+independently rehashed by root. Compact checkpoint implementation and first
+full bounded campaign are pending. See current ACCEPTANCE_MATRIX section.
+
+Alice remains live with the authorized total 500 RUB ledger; do not reset holds.
+Observed adac60bf job has unknown browser actor and is not root E2E evidence.
+Root must personally repeat real UI -> saved result after reviewed deployment.
+Do not count historical generated transport scenarios as real-data completion.
+
 ## Latest continuation — three mandatory cities and source corrections
 
 Goal ACTIVE; user explicitly requires Moscow, Kaliningrad and Novorossiysk in
