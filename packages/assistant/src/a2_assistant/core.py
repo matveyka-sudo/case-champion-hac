@@ -36,6 +36,7 @@ from a2_contracts.v2.retrieval import EvidenceSearchResult
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError
 from pydantic_core import ErrorDetails
 
+from .focus import focused_metrics
 from .tools import AccessScope, ToolBackend, ToolRejected, tool_definitions, validate_tool
 from .transport import FlashConfig, ModelFailure, ModelReply, ModelTransport
 
@@ -184,17 +185,23 @@ def _parse_model_content(raw: str) -> _ModelSelection:
 
 
 def _build_content(
-    selection: _ModelSelection, saved: AnalysisResult, templates: frozenset[str]
+    selection: _ModelSelection,
+    saved: AnalysisResult,
+    templates: frozenset[str],
+    *,
+    allowed_metrics: set[str] | None = None,
 ) -> ExplanationContent:
-    metrics = {metric.metric_id: metric for metric in saved.metrics[:20]}
-    evidence = {item.evidence_id for item in saved.evidence_refs[:50]}
+    metrics = {metric.metric_id: metric for metric in saved.metrics}
+    evidence = {item.evidence_id for item in saved.evidence_refs}
     if len({item.metric_id for item in selection.findings}) != len(selection.findings):
         raise _ModelAnswerRejected("reference_invalid")
     findings: list[Finding] = []
     cited: list[str] = []
     for item in selection.findings:
         metric = metrics.get(item.metric_id)
-        if metric is None:
+        if metric is None or (
+            allowed_metrics is not None and item.metric_id not in allowed_metrics
+        ):
             raise _ModelAnswerRejected("reference_invalid")
         sentence, status = _FINDING_CODES[item.explanation_code]
         if metric.status != status or (
@@ -299,7 +306,13 @@ def _validate_content(
         raise _ModelAnswerRejected("limitation_invalid")
 
 
-def template_explanation(saved: AnalysisResult, request_id: str, reason: str) -> Explanation:
+def template_explanation(
+    saved: AnalysisResult,
+    request_id: str,
+    reason: str,
+    *,
+    context: ExplanationRequest | None = None,
+) -> Explanation:
     findings = [
         Finding(
             text=metric.name[:1000],
@@ -307,7 +320,7 @@ def template_explanation(saved: AnalysisResult, request_id: str, reason: str) ->
             evidence_refs=metric.source_refs[:50],
             claims=[NumericClaim(metric_id=metric.metric_id, value=metric.value, unit=metric.unit)],
         )
-        for metric in saved.metrics[:20]
+        for metric in focused_metrics(saved, context)
     ]
     # An analysis may have only scores/no metrics; no metric is invented for it.
     return Explanation(
@@ -319,7 +332,9 @@ def template_explanation(saved: AnalysisResult, request_id: str, reason: str) ->
         reason_code=reason,
         findings=findings,
         proposals=[],
-        evidence_refs=[item.evidence_id for item in saved.evidence_refs][:50],
+        evidence_refs=list(dict.fromkeys(ref for item in findings for ref in item.evidence_refs))[
+            :50
+        ],
         limitations=[
             *(text[:1000] for text in saved.limitations[:19]),
             "Шаблонное объяснение сохранённого результата; численные данные взяты из расчёта.",
@@ -401,9 +416,11 @@ class FlashAssistant:
         if re.fullmatch(r"[a-zA-Z0-9_-]{1,128}", request_id) is None:
             raise ValueError("Invalid opaque request ID")
         if not self._enabled():
-            return template_explanation(saved, request_id, "DISABLED")
+            return template_explanation(saved, request_id, "DISABLED", context=context)
         if not saved.metrics:
-            return template_explanation(saved, request_id, "NO_METRICS")
+            return template_explanation(saved, request_id, "NO_METRICS", context=context)
+        if not focused_metrics(saved, context):
+            return template_explanation(saved, request_id, "NO_SELECTED_METRICS", context=context)
         started = time.monotonic()
         try:
             async with asyncio.timeout(self.config.total_timeout_seconds):
@@ -428,7 +445,7 @@ class FlashAssistant:
             reason,
             round((time.monotonic() - started) * 1000),
         )
-        return template_explanation(saved, request_id, reason)
+        return template_explanation(saved, request_id, reason, context=context)
 
     async def _run(
         self,
@@ -440,6 +457,9 @@ class FlashAssistant:
         context: ExplanationRequest | None = None,
     ) -> Explanation:
         assert self.transport is not None and self.budget is not None
+        initial_metrics = focused_metrics(saved, context)
+        allowed_metrics = {metric.metric_id for metric in initial_metrics}
+        saved_metric_ids = {metric.metric_id for metric in saved.metrics}
         facts = {
             "metrics": [
                 {
@@ -448,7 +468,7 @@ class FlashAssistant:
                     "status": metric.status,
                     "unit": metric.unit,
                 }
-                for metric in saved.metrics[:20]
+                for metric in initial_metrics
             ],
             "registered_template_ids": sorted(templates),
         }
@@ -458,8 +478,8 @@ class FlashAssistant:
             if context is None
             else context.model_dump(mode="json"),
         }
-        if saved.metrics:
-            metric = saved.metrics[0]
+        if initial_metrics:
+            metric = initial_metrics[0]
             user_payload["response_example"] = {
                 "findings": [
                     {
@@ -672,6 +692,10 @@ class FlashAssistant:
                             if len(encoded.encode()) > 12000:
                                 raise ValueError("Tool payload too large")
                             cache[fingerprint] = encoded
+                            if name == "get_metric_details":
+                                metric_id = args.get("metric_id")
+                                if isinstance(metric_id, str) and metric_id in saved_metric_ids:
+                                    allowed_metrics.add(metric_id)
                         except Exception:
                             raise _Fallback("TOOL_UNAVAILABLE") from None
                         logger.info("assistant_tool request_id=%s tool=%s", request_id, name)
@@ -683,7 +707,9 @@ class FlashAssistant:
                 if reply.finish_reason != "stop" or reply.content is None:
                     raise _ModelAnswerRejected("response_incomplete")
                 selection = _parse_model_content(reply.content)
-                content = _build_content(selection, saved, templates)
+                content = _build_content(
+                    selection, saved, templates, allowed_metrics=allowed_metrics
+                )
                 _validate_content(
                     content, saved, templates, retrieved_evidence=list(retrieved.values())
                 )

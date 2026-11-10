@@ -1012,3 +1012,179 @@ async def test_question_context_is_passed_as_untrusted_input_and_cannot_add_acti
     assert payload["untrusted_question_context"]["selection"]["entity_id"] == "point"
     assert "запусти сценарий" in payload["untrusted_question_context"]["question"]
     assert not backend.calls
+
+
+def many_metrics():
+    saved = analysis().model_dump(mode="json")
+    prototype = saved["metrics"][0]
+    saved["metrics"] = [
+        prototype
+        | {
+            "metric_id": f"time-{index}",
+            "value": float(index),
+            "subject": {"kind": "sample_point", "point_id": f"point-{index}"},
+        }
+        for index in range(25)
+    ]
+    return AnalysisResult.model_validate(saved)
+
+
+async def explain_saved(agent, saved, *, point=None):
+    from a2_contracts.v2.assistant import ExplanationRequest
+
+    return await agent.explain(
+        saved,
+        access_scope=scope(),
+        registered_template_ids=set(),
+        request_id="focused-request",
+        context=ExplanationRequest(
+            selection=None if point is None else {"entity_kind": "sample_point", "entity_id": point}
+        ),
+    )
+
+
+@pytest.mark.asyncio
+async def test_selected_metric_after_first_twenty_is_grounded_and_presented_to_model():
+    data = selection()
+    data["findings"][0]["metric_id"] = "time-24"
+    agent, transport, _, _ = assistant([reply(data)])
+    saved = many_metrics()
+    answer = await explain_saved(agent, saved, point="point-24")
+    assert answer.status == "generated"
+    assert answer.findings[0].claims[0].value == 24
+    assert answer.findings[0].metric_ids == ["time-24"]
+    payload = json.loads(transport.calls[0]["messages"][1]["content"])
+    assert [m["metric_id"] for m in payload["saved_facts"]["metrics"]] == ["time-24"]
+    assert payload["response_example"]["findings"][0]["metric_id"] == "time-24"
+    module().render_explanation(answer, saved)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("disabled", [True, False])
+async def test_disabled_or_failed_model_fallback_keeps_selected_subject(disabled):
+    agent, transport, _, _ = assistant(
+        [] if disabled else [reply({"findings": []})],
+        config=module().FlashConfig() if disabled else None,
+    )
+    answer = await explain_saved(agent, many_metrics(), point="point-24")
+    assert answer.status == "template"
+    assert [f.metric_ids for f in answer.findings] == [["time-24"]]
+    assert len(transport.calls) == (0 if disabled else 1)
+
+
+@pytest.mark.asyncio
+async def test_unrelated_existing_metric_requires_explicit_scoped_retrieval():
+    data = selection()
+    data["findings"][0]["metric_id"] = "time-24"
+    agent, _, _, _ = assistant([reply(data)])
+    answer = await explain_saved(agent, many_metrics())
+    assert answer.reason_code == "INVALID_EXPLANATION"
+    agent, _, backend, _ = assistant(
+        [
+            reply(
+                calls=[
+                    tool(
+                        "get_metric_details",
+                        {
+                            "analysis_id": "analysis",
+                            "metric_id": "time-24",
+                        },
+                    )
+                ],
+                finish_reason="tool_calls",
+            ),
+            reply(data),
+        ]
+    )
+    answer = await explain_saved(agent, many_metrics())
+    assert answer.status == "generated"
+    assert answer.findings[0].claims[0].value == 24
+    assert len(backend.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_tool_cannot_authorize_a_metric_absent_from_saved_analysis():
+    data = selection()
+    data["findings"][0]["metric_id"] = "invented"
+    agent, _, _, _ = assistant(
+        [
+            reply(
+                calls=[
+                    tool(
+                        "get_metric_details",
+                        {
+                            "analysis_id": "analysis",
+                            "metric_id": "invented",
+                        },
+                    )
+                ],
+                finish_reason="tool_calls",
+            ),
+            reply(data),
+        ],
+        backend=Backend({"metric_id": "invented", "value": 999}),
+    )
+    assert (await explain_saved(agent, many_metrics())).reason_code == "INVALID_EXPLANATION"
+
+
+@pytest.mark.asyncio
+async def test_selected_entity_without_metrics_does_not_substitute_another_entity():
+    agent, transport, _, _ = assistant([])
+    answer = await explain_saved(agent, many_metrics(), point="no-metric")
+    assert answer.reason_code == "NO_SELECTED_METRICS"
+    assert not answer.findings and not transport.calls
+
+
+def test_selected_cell_uses_saved_point_link_and_evidence_after_first_fifty():
+    from a2_contracts.v2.assistant import ExplanationRequest
+
+    saved = many_metrics().model_dump(mode="json")
+    original = saved["evidence_refs"][0]
+    saved["evidence_refs"] = [
+        original | {"evidence_id": f"evidence-{index}"} for index in range(51)
+    ] + [original]
+    saved["map_data"] = {
+        "status": "available",
+        "completeness": "partial",
+        "reason_code": None,
+        "features": [
+            {
+                "entity_kind": "sample_point",
+                "entity_id": "point-24",
+                "territory_id": "city",
+                "point_id": "point-24",
+                "cell_id": "cell",
+                "geometry": None,
+                "geometry_kind": "none",
+                "reason_code": "NO_GEOMETRY",
+                "source_refs": ["evidence"],
+            },
+            {
+                "entity_kind": "cell",
+                "entity_id": "cell",
+                "territory_id": "city",
+                "point_id": "point-24",
+                "cell_id": "cell",
+                "geometry": None,
+                "geometry_kind": "none",
+                "reason_code": "NO_GEOMETRY",
+                "source_refs": ["evidence"],
+            },
+        ],
+    }
+    checked = AnalysisResult.model_validate(saved)
+    answer = module().template_explanation(
+        checked,
+        "request",
+        "DISABLED",
+        context=ExplanationRequest(selection={"entity_kind": "cell", "entity_id": "cell"}),
+    )
+    assert answer.findings[0].metric_ids == ["time-24"]
+    assert answer.evidence_refs == ["evidence"]
+    selected = module()._ModelSelection.model_validate(
+        {
+            "findings": [{"metric_id": "time-24", "explanation_code": "saved_value"}],
+        }
+    )
+    generated = module()._build_content(selected, checked, frozenset())
+    assert generated.findings[0].evidence_refs == ["evidence"]
