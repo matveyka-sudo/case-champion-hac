@@ -1,0 +1,35 @@
+{
+  "dataset_id": "khrabrovo_observed_board.20261110",
+  "source_id": "khrabrovo_observed_board",
+  "source_url": "https://kgdavia.ru/",
+  "retrieved_at": "2026-11-10T14:32:25.408673Z",
+  "publication_date": null,
+  "valid_from": "2026-11-10",
+  "valid_to": "2026-11-10",
+  "geography": "Калининград: официально обслуживающие город пассажирские аэропорты",
+  "license": {
+    "name": "Factual identifiers and observed roster/operation facts only; source documents not redistributed",
+    "url": "https://kgdavia.ru/",
+    "status": "permitted",
+    "attribution": "khrabrovo_observed_board"
+  },
+  "access_method": "manual",
+  "raw_path": "airport-official-20261110/khrabrovo-official-board-web-observation.txt",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "1a176f16e84456c84c69cf55b1896c9bfe6ba5c8264687bfc2351dc076560269",
+    "size_bytes": 23194
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "web-extraction:lines49-114:20261110": "Operator board observed10Nov2026 reports scheduled passenger flightsSU6334andSU1005"
+  },
+  "coverage": "Observed current official city-serving passenger-airport roster,10Nov2026 only",
+  "limitations": [
+    "No historical or future completeness is inferred from an undated publication",
+    "No raw source documents redistributed in Git; accepted outputs contain factual identifiers/provenance",
+    "Operator observation is web text extraction, not raw HTTP; it may be cached"
+  ],
+  "status": "accepted",
+  "qa_report": "data/bundles/kaliningrad-urban-2026-11-10.5/qa_report.json"
+}

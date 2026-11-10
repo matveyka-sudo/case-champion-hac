@@ -10,6 +10,8 @@ export function ApiMap({
   onSelect,
   zoomAction,
   scenarioView = false,
+  journeys,
+  viewId,
 }: {
   result: AnalysisResult | null;
   scores: Schemas["Score"][];
@@ -17,6 +19,8 @@ export function ApiMap({
   onSelect: (s: Selection) => void;
   zoomAction: { id: number; kind: string };
   scenarioView?: boolean;
+  journeys?: Schemas["JourneyResult"][];
+  viewId?: string;
 }) {
   const host = useRef<HTMLDivElement>(null),
     map = useRef<L.Map | null>(null),
@@ -78,10 +82,13 @@ export function ApiMap({
             }),
           ),
       );
-      const value = (
+      const score = (
         candidates.find((s) => s.calculation_kind === "aggregate") ||
         (candidates.length === 1 ? candidates[0] : undefined)
-      )?.value;
+      );
+      const value = score?.value;
+      const partial = score?.completeness === "partial";
+      const dashArray = partial ? "1 4" : f.geometry_kind === "schematic" ? "5 5" : undefined;
       const color =
         value == null
           ? "#8990a7"
@@ -101,19 +108,22 @@ export function ApiMap({
         } as GeoJsonObject,
         {
           style: {
-            color: selected ? "#2f5bff" : "white",
-            weight: selected ? 3 : 1,
+            color: selected ? "#2f5bff" : partial ? "#59647e" : "white",
+            weight: selected ? 3 : partial ? 2 : 1,
             fillColor: color,
-            fillOpacity: 0.62,
-            dashArray: f.geometry_kind === "schematic" ? "5 5" : undefined,
+            fillOpacity: partial ? 0.3 : 0.62,
+            dashArray,
+            lineCap: partial ? "round" : "butt",
           },
           pointToLayer: (_, latlng) =>
             L.circleMarker(latlng, {
               radius: selected ? 10 : 7,
-              color: selected ? "#2f5bff" : "#fff",
+              color: selected ? "#2f5bff" : partial ? "#59647e" : "#fff",
               weight: 2,
               fillColor: color,
-              fillOpacity: 0.9,
+              fillOpacity: partial ? 0.45 : 0.9,
+              dashArray,
+              lineCap: partial ? "round" : "butt",
             }),
         },
       );
@@ -121,7 +131,8 @@ export function ApiMap({
       tip.textContent =
         (f.name || selectionText[f.entity_kind]) +
         (f.geometry_kind === "schematic" ? " · схема" : "") +
-        (value == null ? " · нет индекса" : ` · ${value.toFixed(1)}`);
+        (value == null ? " · нет индекса" : ` · ${value.toFixed(1)}`) +
+        (partial ? " · частичная оценка" : "");
       layer
         .bindTooltip(tip)
         .on("click", () =>
@@ -130,12 +141,13 @@ export function ApiMap({
         .addTo(g);
       bounds.extend(layer.getBounds());
     });
-    if (!scenarioView)
-      result?.journeys.forEach((j) => {
+    const paths = journeys ?? (scenarioView ? [] : result?.journeys || []);
+    paths.forEach((j) => {
         if (!j.geometry) return;
         const tip = document.createElement("span");
         tip.textContent =
-          j.geometry_kind === "schematic" ? "Схема пути" : "Маршрут";
+          (j.geometry_kind === "schematic" ? "Схема пути" : "Маршрут") +
+          (scenarioView ? " сценария" : "");
         const route = L.geoJSON(j.geometry as GeoJsonObject, {
           style: {
             color: "#7a52ff",
@@ -147,16 +159,17 @@ export function ApiMap({
           .addTo(g);
         bounds.extend(route.getBounds());
       });
-    if (result && last.current !== result.analysis_id && bounds.isValid()) {
+    const shownView = `${result?.analysis_id}:${scenarioView ? viewId || "scenario" : "baseline"}`;
+    if (result && last.current !== shownView && bounds.isValid()) {
       m.fitBounds(bounds, {
         paddingTopLeft: [30, 130],
         paddingBottomRight: [window.innerWidth < 768 ? 30 : 360, 130],
         maxZoom: 14,
         animate: false,
       });
-      last.current = result.analysis_id;
+      last.current = shownView;
     }
-  }, [result, scores, selection, onSelect, scenarioView]);
+  }, [result, scores, selection, onSelect, scenarioView, journeys, viewId]);
   useEffect(() => {
     if (lastZoom.current === zoomAction.id || !map.current) return;
     lastZoom.current = zoomAction.id;
@@ -179,6 +192,12 @@ export function ApiMap({
         className="map-layer"
         aria-label="Карта результатов API"
       />
+      {scores.some((s) => s.status === "available" && s.completeness === "partial") && (
+        <div className="api-map-key" aria-label="Условные обозначения карты">
+          <span className="api-partial-symbol" aria-hidden="true" />
+          Точечный контур — частичная оценка
+        </div>
+      )}
       {tileError && (
         <div className="api-map-note">
           Подложка недоступна. Полученные геометрии остаются видимыми.

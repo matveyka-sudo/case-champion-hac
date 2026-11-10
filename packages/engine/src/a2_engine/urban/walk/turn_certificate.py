@@ -9,6 +9,7 @@ relaxed; equality requires another native feasibility replay of the optimum.
 import hashlib
 import json
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from fractions import Fraction
 from heapq import heappop, heappush
@@ -40,6 +41,11 @@ class NativeTurnPlan:
     ball_nodes: frozenset[int]
     state_edges: frozenset[int]
     pairs: tuple[tuple[int, int], ...]
+    cutoff_seconds: Fraction | None = None
+
+    @property
+    def ceiling_seconds(self) -> Fraction:
+        return self.incumbent.upper_seconds if self.cutoff_seconds is None else self.cutoff_seconds
 
     @property
     def fingerprint(self) -> str:
@@ -48,6 +54,7 @@ class NativeTurnPlan:
             self.incumbent.export_sha256,
             self.incumbent.replay_sha256,
             str(self.incumbent.upper_seconds),
+            str(self.ceiling_seconds),
             sorted(self.ball_nodes),
             sorted(self.state_edges),
             self.pairs,
@@ -133,7 +140,11 @@ def make_native_turn_incumbent(
 
 
 def plan_native_turn_pairs(
-    graph: NativeWalkExport, source_scope_id: str, incumbent: NativeTurnIncumbent
+    graph: NativeWalkExport,
+    source_scope_id: str,
+    incumbent: NativeTurnIncumbent,
+    *,
+    ceiling_seconds: Fraction | None = None,
 ) -> NativeTurnPlan:
     if (
         incumbent.source_scope_id != source_scope_id
@@ -145,6 +156,9 @@ def plan_native_turn_pairs(
     )
     if current != incumbent:
         raise ValueError("INCUMBENT_REPLAY_CHANGED")
+    ceiling = incumbent.upper_seconds if ceiling_seconds is None else ceiling_seconds
+    if not isinstance(ceiling, Fraction) or ceiling < incumbent.upper_seconds:
+        raise ValueError("CLOSED_BALL_CEILING_BELOW_REPLAYED_INCUMBENT")
     edges = {e.edge_id: e for e in graph.edges if e.retained}
     outgoing: dict[int, list[tuple[int, Fraction]]] = {}
     aliases: dict[int, list[int]] = {}
@@ -156,11 +170,7 @@ def plan_native_turn_pairs(
     distance: dict[int, Fraction] = {}
     queue: list[tuple[Fraction, int]] = []
     for origin in graph.endpoints:
-        if (
-            origin.endpoint == 0
-            and origin.edge_id in edges
-            and origin.partial_seconds <= incumbent.upper_seconds
-        ):
+        if origin.endpoint == 0 and origin.edge_id in edges and origin.partial_seconds <= ceiling:
             node = edges[origin.edge_id].end
             if origin.partial_seconds < distance.get(node, origin.partial_seconds + 1):
                 distance[node] = origin.partial_seconds
@@ -171,7 +181,7 @@ def plan_native_turn_pairs(
             continue
         for target, weight in outgoing.get(node, []):
             total = seconds + weight
-            if total <= incumbent.upper_seconds and total < distance.get(target, total + 1):
+            if total <= ceiling and total < distance.get(target, total + 1):
                 distance[target] = total
                 heappush(queue, (total, target))
     ball = frozenset(distance)
@@ -186,7 +196,7 @@ def plan_native_turn_pairs(
         end = edges[previous].end
         for node in (end, *aliases.get(end, [])):
             pairs.update((previous, edge.edge_id) for edge in out_edges.get(node, []))
-    return NativeTurnPlan(incumbent, ball, states, tuple(sorted(pairs)))
+    return NativeTurnPlan(incumbent, ball, states, tuple(sorted(pairs)), ceiling_seconds)
 
 
 def load_native_turn_weights(
@@ -223,11 +233,28 @@ def load_native_turn_weights(
     )
 
 
-def solve_native_turn_plan(
-    graph: NativeWalkExport, plan: NativeTurnPlan, weights: NativeTurnWeights
-) -> NativeWalkCandidate:
-    if plan_native_turn_pairs(graph, plan.incumbent.source_scope_id, plan.incumbent) != plan:
+def _solve_native_turn_problem(
+    graph: NativeWalkExport,
+    plan: NativeTurnPlan,
+    weights: NativeTurnWeights,
+    origin_costs: Mapping[int, Fraction],
+    destination_costs: Mapping[int, Fraction],
+) -> tuple[NativeWalkCandidate, Fraction]:
+    if (
+        plan_native_turn_pairs(
+            graph,
+            plan.incumbent.source_scope_id,
+            plan.incumbent,
+            ceiling_seconds=plan.cutoff_seconds,
+        )
+        != plan
+    ):
         raise ValueError("CLOSED_BALL_PLAN_CHANGED")
+    if any(
+        not isinstance(value, Fraction) or value < 0
+        for value in (*origin_costs.values(), *destination_costs.values())
+    ):
+        raise ValueError("NONNEGATIVE_EXACT_ENDPOINT_WEIGHTS_REQUIRED")
     if (
         weights.source_scope_id != plan.incumbent.source_scope_id
         or weights.plan_sha256 != plan.fingerprint
@@ -254,13 +281,20 @@ def solve_native_turn_plan(
     seeds: dict[int, tuple[int, tuple[tuple[int, int], ...], tuple[Fraction, ...]]] = {}
     queue: list[tuple[Fraction, int]] = []
     best: NativeWalkCandidate | None = None
+    best_objective: Fraction | None = None
 
     def accept(candidate: NativeWalkCandidate) -> None:
-        nonlocal best
-        if candidate.lower_seconds <= plan.incumbent.upper_seconds and (
-            best is None or candidate.lower_seconds < best.lower_seconds
+        nonlocal best, best_objective
+        objective = (
+            candidate.lower_seconds
+            + origin_costs.get(candidate.origin_index, Fraction())
+            + destination_costs.get(candidate.destination_index, Fraction())
+        )
+        if objective <= plan.ceiling_seconds and (
+            best_objective is None or objective < best_objective
         ):
             best = candidate
+            best_objective = objective
 
     def seed(
         state: int,
@@ -268,10 +302,10 @@ def solve_native_turn_plan(
         traversals: tuple[tuple[int, int], ...],
         seconds: tuple[Fraction, ...],
     ) -> None:
-        total = sum(seconds, Fraction())
+        total = sum(seconds, Fraction()) + origin_costs.get(origin, Fraction())
         if (
             state in plan.state_edges
-            and total <= plan.incumbent.upper_seconds
+            and total <= plan.ceiling_seconds
             and total < distance.get(state, total + 1)
         ):
             distance[state] = total
@@ -339,7 +373,7 @@ def solve_native_turn_plan(
             continue
         for current in next_edges.get(previous, []):
             total = elapsed + turns[previous, current] + edges[current].seconds
-            if total <= plan.incumbent.upper_seconds and total < distance.get(current, total + 1):
+            if total <= plan.ceiling_seconds and total < distance.get(current, total + 1):
                 distance[current] = total
                 parents[current] = previous
                 seeds.pop(current, None)
@@ -355,9 +389,14 @@ def solve_native_turn_plan(
                 if binary_fraction(final_fraction) > 0
                 else Fraction()
             )
-            total = distance[previous] + terminal_turn + final.partial_seconds
-            if total > plan.incumbent.upper_seconds or (
-                best is not None and total >= best.lower_seconds
+            total = (
+                distance[previous]
+                + terminal_turn
+                + final.partial_seconds
+                + destination_costs.get(final.index, Fraction())
+            )
+            if total > plan.ceiling_seconds or (
+                best_objective is not None and total >= best_objective
             ):
                 continue
             trail = []
@@ -389,7 +428,9 @@ def solve_native_turn_plan(
                     origin_index,
                     final.index,
                     tuple(traversals),
-                    total,
+                    total
+                    - origin_costs.get(origin_index, Fraction())
+                    - destination_costs.get(final.index, Fraction()),
                     tuple(running),
                     tuple(turn_values),
                 )
@@ -397,7 +438,14 @@ def solve_native_turn_plan(
     if best is None:
         raise ValueError("REPLAYED_INCUMBENT_NOT_REPRESENTED_BY_CLOSED_BALL")
     _validate_candidate(graph, best)
-    return best
+    assert best_objective is not None
+    return best, best_objective
+
+
+def solve_native_turn_plan(
+    graph: NativeWalkExport, plan: NativeTurnPlan, weights: NativeTurnWeights
+) -> NativeWalkCandidate:
+    return _solve_native_turn_problem(graph, plan, weights, {}, {})[0]
 
 
 def check_native_turn_minimum(candidate: NativeWalkCandidate, replay: str) -> NativeWalkBounds:

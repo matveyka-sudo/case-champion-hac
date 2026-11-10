@@ -454,3 +454,15 @@ def check_native_walk_bounds(
         tuple(sorted(reasons)),
         candidate,
     )
+
+
+def verify_native_walk_replay(candidate: NativeWalkCandidate, replay: str) -> Fraction:
+    """Return feasible elapsed path time without making a global minimum claim."""
+    checked = check_native_walk_bounds(
+        candidate,
+        replay,
+        origin_connector_seconds=Fraction(),
+        destination_connector_seconds=Fraction(),
+    )
+    assert checked.network_upper_seconds is not None
+    return checked.network_upper_seconds
