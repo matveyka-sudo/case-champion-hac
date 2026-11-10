@@ -3,40 +3,10 @@ import { categories, fixtures, type CatId, type CityId } from "../mocks/model";
 import { useAtlas, type Params } from "../features/state";
 import { Icon } from "../shared/ui";
 
-export function Seg({
-  name,
-  items,
-  value,
-  onChange,
-  stack = false,
-}: {
-  name: string;
-  items: readonly (readonly [string, string, string?, boolean?])[];
-  value: string | null;
-  onChange: (v: string) => void;
-  stack?: boolean;
-}) {
-  return (
-    <div
-      className={`segc ${stack ? "stack" : ""}`}
-      role="group"
-      aria-label={name}
-    >
-      {items.map(([v, label, icon, disabled]) => (
-        <button
-          key={v}
-          type="button"
-          disabled={disabled}
-          aria-pressed={v === value}
-          onClick={() => onChange(v)}
-        >
-          {icon && <Icon name={icon} />}
-          <span>{label}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
+import { Seg } from "./SegmentedControl";
+import { FiltersPanelView } from "./FiltersPanelView";
+import { CategoryChoices } from "./CategoryChoices";
+export { Seg } from "./SegmentedControl";
 const cityItems = [
   ["msk", "Москва"],
   ["kgd", "Калининград"],
@@ -124,70 +94,32 @@ export function FiltersPanel({ run }: { run: () => void }) {
   const setProfile = (key: "group" | "handling", v: string) =>
     set({ profile: { ...p.profile, [key]: v } });
   return (
-    <aside
-      className={`at-filters ${s.collapsed ? "is-collapsed" : ""} ${s.mobileFilters ? "m-open" : ""}`}
-      id="filters"
-      aria-label="Фильтры и условия"
-    >
-      <div className="m-head">
-        <b>Фильтры</b>
+    <FiltersPanelView collapsed={s.collapsed} mobileOpen={s.mobileFilters}
+      onClose={() => dispatch({ type: "ui", patch: { mobileFilters: false } })}
+      onToggle={() => dispatch({ type: "ui", patch: { collapsed: !s.collapsed, ...(s.collapsed && window.innerWidth < 1360 ? { chatOpen: false } : {}) } })}
+      onExpand={() => dispatch({ type: "ui", patch: { collapsed: false } })}
+      railIcons={p.mode === "city" ? ["map-pin", p.travel === "pt" ? "tram-front" : p.travel === "walk" ? "footprints" : "car-front", "list-checks"] : ["sliders-horizontal"]}
+      footer={<>
         <button
-          className="ctx-x"
-          aria-label="Закрыть фильтры"
-          onClick={() =>
-            dispatch({ type: "ui", patch: { mobileFilters: false } })
-          }
+          className="iconbtn primary runbtn"
+          onClick={run}
+          disabled={s.status === "run"}
         >
-          <Icon name="x" />
+          <Icon name="play" />
+          <span>
+            {p.mode === "pax" ||
+            (p.mode === "cargo" && p.cargoScale === "inter")
+              ? "Проанализировать"
+              : "Рассчитать"}
+          </span>
         </button>
-      </div>
-      <div className="f-head">
-        <h2>Условия</h2>
-        <button
-          className="ctx-x d-only"
-          aria-label={s.collapsed ? "Развернуть фильтры" : "Свернуть фильтры"}
-          aria-expanded={!s.collapsed}
-          onClick={() =>
-            dispatch({
-              type: "ui",
-              patch: {
-                collapsed: !s.collapsed,
-                ...(s.collapsed && window.innerWidth < 1360
-                  ? { chatOpen: false }
-                  : {}),
-              },
-            })
-          }
-        >
-          <Icon name={s.collapsed ? "panel-left-open" : "panel-left"} />
-        </button>
-      </div>
-      <div className="f-rail">
-        {(p.mode === "city"
-          ? [
-              "map-pin",
-              p.travel === "pt"
-                ? "tram-front"
-                : p.travel === "walk"
-                  ? "footprints"
-                  : "car-front",
-              "list-checks",
-            ]
-          : ["sliders-horizontal"]
-        ).map((i) => (
-          <button
-            className="zbtn"
-            key={i}
-            aria-label="Развернуть условия"
-            onClick={() =>
-              dispatch({ type: "ui", patch: { collapsed: false } })
-            }
-          >
-            <Icon name={i} />
-          </button>
-        ))}
-      </div>
-      <div className="f-scroll">
+        <small>
+          {p.mode === "city"
+            ? "Демо-результат: вт, 10 ноября, 08:30"
+            : "Расчёт пары запускается этой кнопкой"}
+        </small>
+</>}>
+
         {p.mode === "city" && (
           <>
             {field(
@@ -225,50 +157,11 @@ export function FiltersPanel({ run }: { run: () => void }) {
                 Категории{" "}
                 <small>{Object.keys(p.cats).length} из 9 · приоритет</small>
               </p>
-              <div role="group" aria-label="Категории объектов и приоритеты">
-                {categories.map((c) => (
-                  <div className={`cat ${p.cats[c.id] ? "on" : ""}`} key={c.id}>
-                    <button
-                      className="cat-tog"
-                      aria-pressed={!!p.cats[c.id]}
-                      onClick={() => {
-                        const cats = { ...p.cats };
-                        if (cats[c.id]) delete cats[c.id];
-                        else cats[c.id] = 2;
-                        set({ cats });
-                        if (s.metric === c.id)
-                          dispatch({
-                            type: "ui",
-                            patch: { metric: "overall" },
-                          });
-                      }}
-                    >
-                      <span className="box">
-                        <Icon name="check" />
-                      </span>
-                      <span>{c.name}</span>
-                    </button>
-                    <div
-                      className="prio"
-                      role="group"
-                      aria-label={`Приоритет: ${c.name}`}
-                    >
-                      {[1, 2, 3].map((w, i) => (
-                        <button
-                          key={w}
-                          aria-pressed={p.cats[c.id] === w}
-                          aria-label={`${["Низкий", "Средний", "Высокий"][i]} приоритет`}
-                          onClick={() =>
-                            set({ cats: { ...p.cats, [c.id]: w } })
-                          }
-                        >
-                          {["Н", "С", "В"][i]}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <CategoryChoices items={categories} selected={p.cats} onToggle={(id) => {
+                const cats = { ...p.cats }, category = id as CatId;
+                if (cats[category]) delete cats[category]; else cats[category] = 2;
+                set({ cats }); if (s.metric === category) dispatch({ type: "ui", patch: { metric: "overall" } });
+              }} onPriority={(id, priority) => set({ cats: { ...p.cats, [id]: priority } })} />
               <div className="prio-legend">
                 <span>Н — низкий · 1</span>
                 <span>С — средний · 2</span>
@@ -566,27 +459,6 @@ export function FiltersPanel({ run }: { run: () => void }) {
             )}
           </>
         )}
-      </div>
-      <div className="f-foot">
-        <button
-          className="iconbtn primary runbtn"
-          onClick={run}
-          disabled={s.status === "run"}
-        >
-          <Icon name="play" />
-          <span>
-            {p.mode === "pax" ||
-            (p.mode === "cargo" && p.cargoScale === "inter")
-              ? "Проанализировать"
-              : "Рассчитать"}
-          </span>
-        </button>
-        <small>
-          {p.mode === "city"
-            ? "Демо-результат: вт, 10 ноября, 08:30"
-            : "Расчёт пары запускается этой кнопкой"}
-        </small>
-      </div>
-    </aside>
+    </FiltersPanelView>
   );
 }

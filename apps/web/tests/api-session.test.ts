@@ -158,6 +158,21 @@ describe("saved analysis session boundaries", () => {
     });
     expect(result.current.messages).toEqual([]);
   });
+  it("starts a new chat without losing the saved result or accepting the old pending answer", async () => {
+    const g = gateway();
+    let finish!: (value: unknown) => void;
+    g.explain = vi.fn().mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+    const { result } = renderHook(() => useAnalysisSession(g));
+    await act(() => result.current.run(base.request));
+    let pending!: Promise<void>;
+    act(() => { pending = result.current.explain("Почему?", null); });
+    act(() => result.current.clearExplanation());
+    await act(async () => { finish({ analysis_id: base.analysis_id, analysis_result_hash: base.result_hash }); await pending; });
+    expect(result.current.result).toEqual(base);
+    expect(result.current.dirty).toBe(false);
+    expect(result.current.chatBusy).toBe(false);
+    expect(result.current.messages).toEqual([]);
+  });
   it("formats destination time independently of browser time zone and preserves null connection deltas", () => {
     expect(
       timestampText("2026-11-09T09:00:00+03:00", "Europe/Kaliningrad"),
