@@ -7,6 +7,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { EvidenceSources as Sources } from "../widgets/EvidenceSources";
 import { backend } from "../api/gateway";
 import { ApiError } from "../api/client";
 import type {
@@ -31,7 +32,6 @@ import {
 import {
   measureText,
   measureLabel,
-  safeSource,
   subjectMatches,
   timestampText,
   statusText,
@@ -84,42 +84,6 @@ const phaseLabels: Record<string, string> = {
   failed: "Новый результат не получен",
   cancelled: "Задание отменено",
 };
-function Sources({ refs }: { refs: Schemas["EvidenceRef"][] }) {
-  return (
-    <details className="src">
-      <summary>Источники и условия</summary>
-      {refs.length ? (
-        refs.map((e) => (
-          <p key={e.evidence_id}>
-            {safeSource(e.url) ? (
-              <a
-                href={safeSource(e.url)}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {new URL(safeSource(e.url)!).hostname} · {e.section}
-              </a>
-            ) : (
-              e.section || "Источник без публичной ссылки"
-            )}
-            <br />
-            <small>
-              {e.observed_at
-                ? `Данные на ${new Date(e.observed_at).toLocaleDateString("ru", { timeZone: "UTC" })}`
-                : "Дата наблюдения неизвестна"}{" "}
-              · получено{" "}
-              {new Date(e.retrieved_at).toLocaleDateString("ru", {
-                timeZone: "UTC",
-              })}
-            </small>
-          </p>
-        ))
-      ) : (
-        <p>Ссылки отсутствуют в ответе.</p>
-      )}
-    </details>
-  );
-}
 function Measure({ value }: { value: Schemas["Metric"] | Schemas["Score"] }) {
   const context = [
     {
@@ -570,13 +534,13 @@ export function ApiAtlasPage() {
                   <ResultFigure title="Индекс города" value={pointOverview?.territoryScore ? measureText(pointOverview.territoryScore) : "Нет данных"} /></div>}
                 {pointOverview && <CalculatedPoints overview={pointOverview} selection={selection} areaSelected={!!("area_id" in result.request && result.request.area_id)} onSelect={chooseCalculatedPoint} />}
                 {!!estimateOverview?.points.length && <CalculatedPoints overview={estimateOverview} estimate selection={selection} areaSelected={!!("area_id" in result.request && result.request.area_id)} onSelect={chooseCalculatedPoint} />}
-                {!scenarioView && <CalculatedJourneys key={result.analysis_id} result={result} onSelect={chooseCalculatedPoint} />}
+                {!scenarioView && <CalculatedJourneys key={`journey-picker-${result.analysis_id}`} result={result} onSelect={chooseCalculatedPoint} />}
                 {!shownMetrics.length && !shownScores.length && (
                   <p>
                     Для выбранного объекта нет показателей в ответе сервера.
                   </p>
                 )}
-                <ResultDetails className="api-all-measures" key={selection?.entity_id || result.analysis_id} initialOpen={!!selection || shownScores.length + shownMetrics.length <= 12} summary={`Все показатели (${shownScores.length + shownMetrics.length})`}>{() => <>
+                <ResultDetails className="api-all-measures" key={`measures-${selection?.entity_id || result.analysis_id}`} initialOpen={!!selection || shownScores.length + shownMetrics.length <= 12} summary={`Все показатели (${shownScores.length + shownMetrics.length})`}>{() => <>
                 {shownScores.map((s) => (
                   <Measure key={s.score_id} value={s} />
                 ))}
