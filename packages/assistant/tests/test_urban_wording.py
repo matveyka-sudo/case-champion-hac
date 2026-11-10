@@ -47,9 +47,9 @@ def test_generated_walk_wording_remains_fixed_and_exact_saved_time():
 def test_walk_notes_cannot_be_copied_to_other_mode_or_missing_selected_facts():
     saved = analysis()
     payload = deepcopy(saved.model_dump(mode="json"))
-    payload["request"]["passenger_mode"] = "public_transport"
+    payload["request"]["passenger_mode"] = "private_car"
     other = AnalysisResult.model_validate(payload)
-    assert not core._urban_walk_notes(other)
+    assert not core._urban_passenger_notes(other)
     selection = core._ModelSelection.model_validate(
         {"findings": [{"metric_id": "travel-time", "explanation_code": "travel_time"}]}
     )
@@ -109,3 +109,24 @@ async def test_prompt_supplies_exact_saved_status_code_for_metrics(status):
     assert answer.status == "generated"
     facts = json.loads(transport.calls[0]["messages"][1]["content"])["saved_facts"]
     assert facts["metrics"][0]["required_explanation_code"] == code
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("value,partial", [(25.0, False), (0.497, True), (None, True)])
+async def test_public_transport_generated_and_fallback_use_saved_category_formula(value, partial):
+    payload = score_analysis(value=value, partial=partial).model_dump(mode="json")
+    payload["request"]["passenger_mode"] = "public_transport"
+    saved = AnalysisResult.model_validate(payload)
+    original = saved.model_dump_json()
+    fallback = core.template_explanation(saved, "request", "DISABLED")
+    assert core._URBAN_FORMULA_NOTE in fallback.limitations
+    assert (core._URBAN_UNKNOWN_NOTE in fallback.limitations) == (value is None)
+    code = "saved_value" if value is not None else "unknown"
+    agent, *_ = assistant(
+        [reply({"findings": [{"score_id": "accessibility", "explanation_code": code}]})]
+    )
+    generated = await explain_saved(agent, saved, point="point")
+    assert generated.status == "generated" and fallback.status == "template"
+    assert core._URBAN_FORMULA_NOTE in generated.limitations
+    assert generated.findings[0].score_claims[0].value == value
+    assert saved.model_dump_json() == original
