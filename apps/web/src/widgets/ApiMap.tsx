@@ -4,6 +4,10 @@ import type { GeoJsonObject } from "geojson";
 import type { AnalysisResult, Schemas, Selection } from "../api/types";
 import { subjectMatches, selectionText } from "../api/adapters/result";
 import { journeyLines, segmentGeometryNotice } from "../api/adapters/journeyGeometry";
+import { isDemoModelSnapshot } from "../api/adapters/demoModel";
+
+// Presentation camera for the explicitly labelled generated demo, not data scope.
+const showDemoCenter = (map: L.Map) => map.setView([55.75, 37.62], 10, { animate: false });
 export function ApiMap({
   result,
   scores,
@@ -27,6 +31,7 @@ export function ApiMap({
     map = useRef<L.Map | null>(null),
     layers = useRef<L.LayerGroup | null>(null),
     last = useRef(""),
+    lastAnalysis = useRef(""),
     lastZoom = useRef(zoomAction.id);
   const [tileError, setTileError] = useState(false);
   useEffect(() => {
@@ -175,14 +180,21 @@ export function ApiMap({
       });
     });
     const shownView = `${result?.analysis_id}:${scenarioView ? viewId || "scenario" : "baseline"}`;
-    if (result && last.current !== shownView && bounds.isValid()) {
-      m.fitBounds(bounds, {
+    if (result && last.current !== shownView) {
+      if (isDemoModelSnapshot(result.snapshot_id)) {
+        if (lastAnalysis.current !== result.analysis_id) showDemoCenter(m);
+        last.current = shownView;
+        lastAnalysis.current = result.analysis_id;
+      } else if (bounds.isValid()) {
+        m.fitBounds(bounds, {
         paddingTopLeft: [30, 130],
         paddingBottomRight: [window.innerWidth < 768 ? 30 : 360, 130],
         maxZoom: 14,
         animate: false,
       });
-      last.current = shownView;
+        last.current = shownView;
+        lastAnalysis.current = result.analysis_id;
+      }
     }
   }, [result, scores, selection, onSelect, scenarioView, journeys, viewId]);
   useEffect(() => {
@@ -191,6 +203,14 @@ export function ApiMap({
     const m = map.current;
     if (zoomAction.kind === "in") m.zoomIn();
     else if (zoomAction.kind === "out") m.zoomOut();
+    else if (zoomAction.kind === "all_points") {
+      const positions = (result?.map_data?.features || []).flatMap((feature): [number, number][] =>
+        feature.entity_kind === "sample_point" && feature.geometry_kind === "actual" && feature.geometry?.type === "Point"
+          ? [[feature.geometry.coordinates[1], feature.geometry.coordinates[0]]] : []);
+      const bounds = L.latLngBounds(positions);
+      if (bounds.isValid()) m.fitBounds(bounds, { padding: [30, 30], maxZoom: 14, animate: false });
+    }
+    else if (zoomAction.kind === "home" && isDemoModelSnapshot(result?.snapshot_id)) showDemoCenter(m);
     else if (zoomAction.kind === "selection") {
       const target = result?.map_data?.features?.find((f) => f.entity_kind === selection?.entity_kind &&
         (f.entity_id === selection.entity_id || f.point_id === selection.entity_id));

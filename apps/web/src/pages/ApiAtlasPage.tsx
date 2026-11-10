@@ -1343,7 +1343,7 @@ export function ApiAtlasPage() {
               {[
                 ["in", "plus", "Приблизить"],
                 ["out", "minus", "Отдалить"],
-                ["home", "globe", "Показать Россию"],
+                ...(!savedDemoModel ? [["home", "globe", "Показать Россию"]] : []),
               ].map(([kind, icon, label]) => (
                 <button
                   className="zbtn"
@@ -1354,6 +1354,11 @@ export function ApiAtlasPage() {
                   <Icon name={icon} />
                 </button>
               ))}
+              {savedDemoModel && <>
+                <button className="iconbtn" onClick={() => setZoom((z) => ({ kind: "home", id: z.id + 1 }))}>Центр Москвы</button>
+                <button className="iconbtn" disabled={!result?.map_data?.features?.some((feature) => feature.entity_kind === "sample_point" && feature.geometry_kind === "actual" && feature.geometry?.type === "Point")}
+                  onClick={() => setZoom((z) => ({ kind: "all_points", id: z.id + 1 }))}>Все точки</button>
+              </>}
             </div>
           </div>
         </main>
