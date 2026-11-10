@@ -1,0 +1,16 @@
+# Opt-in provider credentials for the API only; secrets stay outside the source tree.
+services:
+  runtime-check:
+    mem_limit: 2g
+    memswap_limit: 2g
+
+  api:
+    env_file:
+      - path: ${WAYDEX_ASSISTANT_ENV_FILE:?}
+        format: raw
+    mem_limit: 2g
+    memswap_limit: 2g
+
+  worker:
+    mem_limit: 2g
+    memswap_limit: 2g
