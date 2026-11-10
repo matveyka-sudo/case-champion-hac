@@ -10,6 +10,7 @@ import cargo from "../tests/fixtures/api/urban_cargo.json" with { type: "json" }
 import interCargo from "../tests/fixtures/api/intercity_cargo.json" with { type: "json" };
 import { scenarioRouteFixture } from "../tests/fixtures/scenario-routes";
 import { returnContextFixture } from "../tests/fixtures/return-context";
+import { airportScope, scopedCapabilities } from "../tests/fixtures/urban-scopes";
 const fixtures = {
   urban_passenger: urban,
   intercity_passenger: pax,
@@ -120,9 +121,9 @@ async function mockApi(
         const kind = sent.analysis_kind as keyof typeof fixtures;
         result = {
           ...structuredClone(fixtures[kind]),
-          request: sent,
           ...(kind === "urban_passenger" ? { map_data: base.map_data } : {}),
           ...options.result,
+          request: { ...structuredClone(fixtures[kind].request), ...sent },
         } as AnalysisResult;
         status = 202;
         body = {
@@ -695,4 +696,103 @@ test("API: partial point index stays numerical and scoped while the city total i
   await expect(page.locator(".api-card")).toContainText("не участвует в полном рейтинге");
   await page.screenshot({ path: "test-results/api-partial-point-index.png" });
   expect(mock.posts).toBe(1);
+});
+
+test("API: airport-only scope blocks unsupported controls and applies available parameters explicitly", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const result = structuredClone(urban) as AnalysisResult;
+  result.status = "partial";
+  result.metrics[0].name = "minimum_journey_seconds";
+  result.metrics[0].subject.category = "airport";
+  result.metrics[0].subject.mode = "walk";
+  result.scores[0] = { ...result.scores[0], name: "point_index", value: null, status: "unknown", completeness: "partial", ranking_eligible: false, subject: { kind: "sample_point", point_id: "demo-point", mode: "walk" }, reason_code: "MINIMUM_TIME_UNPROVEN" };
+  const mock = await mockApi(page, { capabilities: scopedCapabilities(), result, emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Калининград");
+  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Общественный транспорт");
+  await expect(page.getByRole("checkbox", { name: "Школы", exact: true })).toBeChecked();
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
+  await page.getByRole("combobox", { name: "Передвижение", exact: true }).click();
+  await expect(page.getByRole("option", { name: "Общественный транспорт", exact: true })).toBeDisabled();
+  await expect(page.getByRole("option", { name: "Пешком", exact: true })).toBeEnabled();
+  await page.keyboard.press("Escape");
+  expect(mock.posts).toBe(0);
+  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Пешком");
+  await expect(page.getByRole("checkbox", { name: "Аэропорты", exact: true })).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: "Школы", exact: true })).not.toBeChecked();
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeEnabled();
+  expect(mock.posts).toBe(0);
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  expect(mock.request).toMatchObject({ city_id: "city-2", snapshot_id: "demo-snapshot", passenger_mode: "walk", categories: ["airport"] });
+  await expect(page.locator('.api-measure b[data-score-band="unknown"]')).toHaveText("Нет данных");
+  await expect(page.locator(".api-card")).toContainText("Полное время до объекта");
+  await expect(page.locator(".api-card")).not.toContainText("minimum_journey_seconds");
+});
+
+test("API: categories from separate scopes cannot be combined", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const mock = await mockApi(page, { capabilities: scopedCapabilities([airportScope(), { ...airportScope(), scope_id: "school-walk", categories: ["school"] }]) });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Калининград");
+  await choose(page, "Передвижение", "Пешком");
+  for (const name of ["Взрослые поликлиники", "Школы", "ТЦ"]) await page.getByRole("checkbox", { name, exact: true }).uncheck();
+  await page.getByRole("checkbox", { name: "Аэропорты", exact: true }).check();
+  await expect(page.getByRole("checkbox", { name: "Школы", exact: true })).toBeDisabled();
+  await expect(page.locator("#apiFilters")).toContainText("Нет общего набора расчёта");
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeEnabled();
+  expect(mock.posts).toBe(0);
+});
+
+test("API: scope end is exclusive and does not silently reset selected time or mode", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const scope = { ...airportScope(), valid_from: "2026-11-10T06:30:00Z", valid_to: "2026-11-10T07:00:00Z" };
+  const mock = await mockApi(page, { capabilities: scopedCapabilities([scope]) });
+  await page.goto("/?data=api#atlas");
+  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeEnabled();
+  const time = page.getByRole("slider", { name: "Время отправления, шаг 15 минут" });
+  await time.focus();
+  await time.press("ArrowRight");
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeEnabled();
+  await time.press("ArrowRight");
+  await expect(time).toHaveValue("36");
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
+  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Пешком");
+  await expect(page.getByRole("checkbox", { name: "Аэропорты", exact: true })).toBeChecked();
+  await expect(page.locator("#apiFilters")).toContainText("Для этой даты и времени нет доступного набора расчёта");
+  expect(mock.posts).toBe(0);
+});
+
+for (const detail of [null, undefined]) test(`API: ${detail === null ? "null" : "omitted"} scope detail preserves legacy controls`, async ({ page }) => {
+  const c = scopedCapabilities(detail === null ? null : []);
+  if (detail === undefined) delete c.urban_passenger_scopes;
+  await mockApi(page, { capabilities: c, emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Москва");
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeEnabled();
+  await expect(page.getByLabel("Доступность городского расчёта")).toHaveCount(0);
+});
+
+test("API: an explicitly empty scope list disables launch with a reason", async ({ page }) => {
+  const mock = await mockApi(page, { capabilities: scopedCapabilities([]) });
+  await page.goto("/?data=api#atlas");
+  await expect(page.getByLabel("Доступность городского расчёта")).toContainText("нет зарегистрированных наборов параметров");
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Использовать доступные параметры", exact: true })).toHaveCount(0);
+  expect(mock.posts).toBe(0);
+});
+
+test("API: overlapping scopes cannot be resolved by arbitrarily choosing one", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const mock = await mockApi(page, { capabilities: scopedCapabilities([airportScope(), { ...airportScope(), scope_id: "overlap-airport" }]) });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Калининград");
+  await choose(page, "Передвижение", "Пешком");
+  for (const name of ["Взрослые поликлиники", "Школы", "ТЦ"]) await page.getByRole("checkbox", { name, exact: true }).uncheck();
+  await page.getByRole("checkbox", { name: "Аэропорты", exact: true }).check();
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
+  await expect(page.getByLabel("Доступность городского расчёта")).toContainText("подходят несколько наборов");
+  expect(mock.posts).toBe(0);
 });

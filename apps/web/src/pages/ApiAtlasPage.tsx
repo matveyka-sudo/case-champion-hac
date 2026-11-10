@@ -25,6 +25,8 @@ import {
   eligibleSnapshots,
   resolvedSnapshotId,
   pipelineProducts,
+  passengerModes,
+  departureAt,
   type ApiDraft,
 } from "../api/adapters/request";
 import {
@@ -47,6 +49,7 @@ import {
 } from "../api/adapters/result";
 import { useAnalysisSession } from "../features/analysis/useAnalysisSession";
 import { scenarioJourneys } from "../api/adapters/scenario";
+import { scopeAllowsArea, scopeContainsTime, urbanScopeAvailability, type UrbanSelection } from "../api/adapters/urbanScopes";
 import { Select } from "../shared/Select";
 import { DatePicker } from "../shared/DatePicker";
 import { Icon, Wordmark } from "../shared/ui";
@@ -55,6 +58,7 @@ import { ApiMap } from "../widgets/ApiMap";
 import { ExplanationFinding } from "../widgets/ExplanationFinding";
 import { JourneyDetails } from "../widgets/JourneyDetails";
 import { IndexLegend } from "../widgets/IndexLegend";
+import { UrbanScopeHelp } from "../widgets/UrbanScopeHelp";
 import { useModalFocus } from "../features/accessibility";
 const kinds: Record<AnalysisKind, string> = {
   urban_passenger: "В городе",
@@ -277,7 +281,7 @@ export function ApiAtlasPage() {
       ...d,
       ...patch,
       ...(["kind", "level", "cityId", "originId", "destinationId", "date", "slot"]
-        .some((key) => key in patch && patch[key as keyof ApiDraft] !== d[key as keyof ApiDraft])
+        .some((key) => key in patch && patch[key as keyof ApiDraft] !== d[key as keyof ApiDraft]) && !("snapshotId" in patch)
         ? { snapshotId: "" }
         : {}),
     }));
@@ -345,7 +349,14 @@ export function ApiAtlasPage() {
               t.territory_id,
             )),
       )
-      .map((t) => ({ value: t.territory_id, label: t.name })),
+      .map((t) => {
+        const reason = publishedScopes == null ? undefined
+          : !publishedScopes.some((s) => s.city_id === t.territory_id)
+            ? "Для этого города нет зарегистрированного расчёта."
+            : !publishedScopes.some((s) => s.city_id === t.territory_id && scopeContainsTime(s, scopeDeparture(t.territory_id)))
+              ? "Для выбранной даты и времени расчёт недоступен." : undefined;
+        return { value: t.territory_id, label: t.name, disabled: !!reason, reason };
+      }),
   ];
   const origin = catalog.find(
     (t) => t.territory_id === (urban ? draft.cityId : draft.originId),
@@ -445,6 +456,26 @@ export function ApiAtlasPage() {
       })) || [];
   const snapshots = caps ? eligibleSnapshots(draft, catalog, caps) : [];
   const snapshotId = resolvedSnapshotId(draft, snapshots);
+  const publishedScopes = draft.kind === "urban_passenger" ? caps?.urban_passenger_scopes : null;
+  const scopeDeparture = (cityId: string) => {
+    const city = catalog.find((t) => t.territory_id === cityId && t.level === "city");
+    try { return city ? departureAt(draft.date, draft.slot, city.timezone) : null; }
+    catch { return null; }
+  };
+  const scopeSelection: UrbanSelection = {
+    cityId: draft.cityId, snapshotId, areaId: draft.areaId, departureAt: scopeDeparture(draft.cityId),
+    mode: passengerModes[draft.travel], traffic: draft.traffic,
+    categories: Object.keys(draft.cats).flatMap((id) => categoryIds[id as keyof typeof categoryIds] || []),
+  };
+  const scopeState = urbanScopeAvailability(scopeSelection, publishedScopes);
+  const scopeBlocked = scopeState.published && !!scopeState.problem;
+  const categoryReason = (category: Schemas["UrbanPassengerRequest"]["categories"][number]) => {
+    if (!scopeState.published) return undefined;
+    if (!scopeState.traffic.some((s) => s.categories.includes(category))) return "Категория недоступна для выбранных условий.";
+    if (!scopeState.traffic.some((s) => [...new Set([...scopeSelection.categories, category])].every((c) => s.categories.includes(c))))
+      return "Нет общего набора расчёта. Снимите несовместимые категории.";
+    return undefined;
+  };
   const missingSnapshotCoverage = caps?.snapshots !== undefined && !snapshots.length;
   const shownReturns = lastReturnsForSelection(
     result?.last_returns || [],
@@ -638,10 +669,13 @@ export function ApiAtlasPage() {
                     label="Район"
                     value={draft.areaId}
                     options={[
-                      { value: "", label: "Весь город" },
+                      { value: "", label: "Весь город", disabled: scopeState.published && !scopeState.snapshot.some((s) => s.whole_city),
+                        reason: scopeState.published && !scopeState.snapshot.some((s) => s.whole_city) ? "Для всего города запуск не зарегистрирован." : undefined },
                       ...caps.areas
                         .filter((a) => a.city_id === draft.cityId)
-                        .map((a) => ({ value: a.area_id, label: a.name })),
+                        .map((a) => ({ value: a.area_id, label: a.name,
+                          disabled: scopeState.published && !scopeState.snapshot.some((s) => scopeAllowsArea(s, a.area_id)),
+                          reason: scopeState.published && !scopeState.snapshot.some((s) => scopeAllowsArea(s, a.area_id)) ? "Для этого района запуск не зарегистрирован." : undefined })),
                     ]}
                     onChange={(areaId) => change({ areaId })}
                   />,
@@ -658,6 +692,8 @@ export function ApiAtlasPage() {
                         ...snapshots.map((s) => ({
                           value: s.snapshot_id,
                           label: snapshotLabel(s, catalog, caps.snapshots || []),
+                          disabled: scopeState.published && !scopeState.time.some((scope) => scope.snapshot_id === s.snapshot_id),
+                          reason: scopeState.published && !scopeState.time.some((scope) => scope.snapshot_id === s.snapshot_id) ? "Для этого набора и времени городской расчёт не зарегистрирован." : undefined,
                         })),
                       ]}
                       onChange={(snapshotId) => change({ snapshotId })}
@@ -679,6 +715,9 @@ export function ApiAtlasPage() {
                     {inline("snapshotId", ["snapshot_id"])}
                   </>,
                 )}
+              {scopeState.published && (
+                <UrbanScopeHelp state={scopeState} selection={scopeSelection} draft={draft} caps={caps} catalog={catalog} onApply={change} />
+              )}
               {!cargo &&
                 (urban
                   ? field(
@@ -690,7 +729,10 @@ export function ApiAtlasPage() {
                           { value: "pt", label: "Общественный транспорт" },
                           { value: "walk", label: "Пешком" },
                           { value: "car", label: "Личный автомобиль" },
-                        ]}
+                        ].map((option) => ({ ...option,
+                          disabled: scopeState.published && !scopeState.area.some((s) => s.passenger_modes.includes(passengerModes[option.value as ApiDraft["travel"]])),
+                          reason: scopeState.published && !scopeState.area.some((s) => s.passenger_modes.includes(passengerModes[option.value as ApiDraft["travel"]])) ? "Для выбранных города, времени и набора данных этот способ недоступен." : undefined,
+                        }))}
                         onChange={(travel) =>
                           change({ travel: travel as ApiDraft["travel"] })
                         }
@@ -733,10 +775,14 @@ export function ApiAtlasPage() {
                     {Object.entries(categoryIds)
                       .filter(([, id]) => caps.categories.includes(id))
                       .map(([id, category]) => (
-                        <div className="api-category" key={id}>
+                        <div className="api-category" key={id} data-unavailable={!!categoryReason(category)}>
                           <label>
                             <input
                               type="checkbox"
+                              aria-label={categoryLabels[category]}
+                              aria-invalid={!!categoryReason(category)}
+                              aria-describedby={categoryReason(category) ? `api-category-${id}-reason` : undefined}
+                              disabled={!draft.cats[id as keyof typeof categoryIds] && !!categoryReason(category)}
                               checked={
                                 !!draft.cats[id as keyof typeof categoryIds]
                               }
@@ -749,7 +795,7 @@ export function ApiAtlasPage() {
                                 change({ cats });
                               }}
                             />
-                            {categoryLabels[category]}
+                            <span>{categoryLabels[category]}{categoryReason(category) && <small className="api-choice-reason" id={`api-category-${id}-reason`}>{categoryReason(category)}</small>}</span>
                           </label>
                           {draft.cats[id as keyof typeof categoryIds] && (
                             <div
@@ -911,6 +957,8 @@ export function ApiAtlasPage() {
                       live: "Текущие условия",
                       historical: "Исторические условия",
                     }[v],
+                    disabled: scopeState.published && !scopeState.mode.some((s) => s.traffic_modes.includes(v)),
+                    reason: scopeState.published && !scopeState.mode.some((s) => s.traffic_modes.includes(v)) ? "Для выбранного способа передвижения этот режим недоступен." : undefined,
                   }))}
                   onChange={(v) =>
                     change({ traffic: v as ApiDraft["traffic"] })
@@ -924,7 +972,7 @@ export function ApiAtlasPage() {
               </p>
               <button
                 className="iconbtn primary"
-                disabled={!ready?.calculation_available || running || missingSnapshotCoverage}
+                disabled={!ready?.calculation_available || running || missingSnapshotCoverage || scopeBlocked}
                 onClick={start}
               >
                 <Icon name="play" />
@@ -1230,7 +1278,7 @@ export function ApiAtlasPage() {
               </div>
               <button
                 className="iconbtn primary"
-                disabled={!ready?.calculation_available || running || missingSnapshotCoverage}
+                disabled={!ready?.calculation_available || running || missingSnapshotCoverage || scopeBlocked}
                 onClick={start}
               >
                 Рассчитать
