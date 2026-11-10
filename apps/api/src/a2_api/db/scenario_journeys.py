@@ -91,6 +91,9 @@ def _urban_score_scope(
         for row in baseline.metrics
         if row.subject.kind == "sample_point" and row.unit == "seconds"
     ]
+    times_by_point: dict[str | None, list[Metric]] = {}
+    for row in old_times:
+        times_by_point.setdefault(row.subject.point_id, []).append(row)
     old_scores = {row.score_id: row for row in baseline.scores}
     score_pairs = {
         effect.after_id: effect.before_id
@@ -112,8 +115,89 @@ def _urban_score_scope(
             raise DomainError(
                 409, "incompatible_versions", "Scenario urban index task identity differs"
             )
+    request = baseline.request
+    assert isinstance(request, UrbanPassengerRequest)
     metrics = {row.metric_id: row for row in result.after.metrics}
     scores = {row.score_id: row for row in result.after.scores}
+
+    for aggregate in result.after.scores:
+        if aggregate.status != "available" or aggregate.completeness != "full":
+            continue
+        if (
+            aggregate.subject.kind == "sample_point"
+            and aggregate.subject.category is None
+            and aggregate.subject.point_id in times_by_point
+        ):
+            children = [scores[item.id] for item in aggregate.components if item.kind == "score"]
+            categories = [child.subject.category for child in children]
+            if (
+                len(children) != len(aggregate.components)
+                or len(categories) != len(set(request.categories))
+                or set(categories) != set(request.categories)
+                or any(
+                    child.subject.kind != "sample_point"
+                    or child.subject.point_id != aggregate.subject.point_id
+                    or child.subject.territory_id != request.city_id
+                    or child.subject.mode != request.passenger_mode
+                    or child.status != "available"
+                    or child.completeness != "full"
+                    for child in children
+                )
+            ):
+                raise DomainError(
+                    409, "incompatible_versions", "Scenario full point category inventory differs"
+                )
+        if aggregate.subject.kind == "territory":
+            rows = [
+                row
+                for row in old_times
+                if row.subject.territory_id == request.city_id
+                and row.subject.mode == request.passenger_mode
+                and (
+                    aggregate.subject.category is None
+                    or row.subject.category == aggregate.subject.category
+                )
+            ]
+            if not rows:
+                continue
+            point_rows: dict[str | None, list[Metric]] = {}
+            for row in rows:
+                point_rows.setdefault(row.subject.point_id, []).append(row)
+            points = set(point_rows)
+            # Only an explicitly known original zero weight may be optional.
+            # Unknown and positive original weights remain mandatory operands.
+            required = {
+                point
+                for point, records in point_rows.items()
+                if any(
+                    row.population_basis is None
+                    or row.population_basis.population != 0
+                    or row.population_basis.coverage != 1
+                    or row.population_basis.unknown_positive_weight
+                    for row in records
+                )
+            }
+            children = [scores[item.id] for item in aggregate.components if item.kind == "score"]
+            actual = [child.subject.point_id for child in children]
+            if (
+                len(children) != len(aggregate.components)
+                or len(actual) != len(set(actual))
+                or not required <= set(actual) <= points
+                or aggregate.subject.territory_id != request.city_id
+                or aggregate.subject.mode != request.passenger_mode
+                or any(
+                    child.subject.kind != "sample_point"
+                    or child.subject.territory_id != request.city_id
+                    or child.subject.mode != request.passenger_mode
+                    or child.subject.category != aggregate.subject.category
+                    or child.status != "available"
+                    or child.completeness != "full"
+                    for child in children
+                )
+            ):
+                raise DomainError(
+                    409, "incompatible_versions", "Scenario full territory point inventory differs"
+                )
     old_to_new = {old: new for new, old in renamed.items()}
     leaves: dict[str, list[Metric]] = {}
 
@@ -137,9 +221,8 @@ def _urban_score_scope(
             continue
         expected = [
             row
-            for row in old_times
-            if row.subject.point_id == score.subject.point_id
-            and (score.subject.category is None or row.subject.category == score.subject.category)
+            for row in times_by_point.get(score.subject.point_id, ())
+            if score.subject.category is None or row.subject.category == score.subject.category
         ]
         if not expected:
             continue
