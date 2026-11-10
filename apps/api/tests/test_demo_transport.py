@@ -1,0 +1,177 @@
+"""TEST_ONLY closed synthetic schedules; production closure guard stays closed."""
+
+from dataclasses import replace
+from datetime import timedelta
+
+import pytest
+from a2_api.adapters.demo_transport import (
+    DEMO_LIMITATIONS,
+    DEMO_SOURCE,
+    DemoTransportReceipt,
+    verify_demo_model,
+)
+from a2_api.adapters.timetable_source import service_timestamp, verify_timetable_source
+from a2_contracts.common import canonical_hash
+from a2_contracts.v2.dataset import AcceptedData
+from a2_engine import (
+    Timetable,
+    TimetableEvent,
+    TimetableFootpath,
+    TimetableRun,
+    TimetableScope,
+    TimetableTransfer,
+)
+from test_product_runtime import transport_facts as transport_facts
+
+CLOCK = "local_service_midnight_v1"
+
+
+@pytest.fixture
+def demo(transport_facts):
+    snapshot = transport_facts[0]
+    payload = snapshot.model_dump(mode="json")
+    proof = "TEST_ONLY-DEMO-proof"
+    payload["snapshot_id"] = "demo-moscow-TEST_ONLY"
+    payload["qa"]["checks"].append(DEMO_SOURCE)
+    payload["source_versions"][DEMO_SOURCE] = "TEST_ONLY-v1"
+    payload["evidence"].append(
+        payload["evidence"][0]
+        | {
+            "evidence_id": proof,
+            "source_id": DEMO_SOURCE,
+            "source_version": "TEST_ONLY-v1",
+            "verified": True,
+        }
+    )
+    payload["scheduled_services"] = [payload["scheduled_services"][0] | {"source_refs": [proof]}]
+    snapshot = AcceptedData.model_validate(payload)
+    service = snapshot.scheduled_services[0]
+    runs = tuple(
+        TimetableRun(
+            snapshot.snapshot_id,
+            DEMO_SOURCE,
+            service.trip_id,
+            day,
+            service.timezone,
+            "bus" if service.mode == "public_transport" else service.mode,
+            tuple(
+                TimetableEvent(
+                    stop.sequence,
+                    stop.node_id,
+                    service_timestamp(day, stop.arrival_seconds, service.timezone, CLOCK),
+                    service_timestamp(day, stop.departure_seconds, service.timezone, CLOCK),
+                    stop.pickup,
+                    stop.dropoff,
+                    (proof,),
+                )
+                for stop in service.stop_times
+            ),
+            True,
+            (proof,),
+        )
+        for day in service.service_dates
+    )
+    nodes = frozenset(stop.node_id for stop in service.stop_times)
+    first, last = service.stop_times[0].node_id, service.stop_times[-1].node_id
+    table = Timetable(
+        TimetableScope(
+            snapshot.snapshot_id,
+            snapshot.provenance.graph_version,
+            snapshot.provenance.calendar_version,
+            "TEST_ONLY-timetable",
+            "TEST_ONLY-footpaths",
+            "TEST_ONLY-transfers",
+            service.timezone,
+            min(run.events[0].arrival_at for run in runs) - timedelta(days=1),
+            max(run.events[-1].departure_at for run in runs) + timedelta(days=1),
+            nodes,
+            True,
+            True,
+            True,
+            True,
+            True,
+            (proof,),
+            tuple(sorted(DEMO_LIMITATIONS)),
+        ),
+        runs,
+        (TimetableFootpath("TEST_ONLY-path", first, last, 30, True, (proof,)),),
+        (TimetableTransfer("TEST_ONLY-transfer", first, first, 0, True, (proof,)),),
+    )
+    receipt = DemoTransportReceipt(
+        schema_version="waydex-demo-closed-transport/1",
+        snapshot_hash=canonical_hash(snapshot.model_dump(mode="json")),
+        model=table,
+    )
+    return snapshot, table, receipt
+
+
+def test_explicit_exact_demo_receipt_does_not_change_production_guard(demo, monkeypatch):
+    snapshot, table, receipt = demo
+    monkeypatch.setenv("A2_DEMO_TRANSPORT_ENABLED", "true")
+    assert verify_demo_model(snapshot, table, CLOCK, receipt) == receipt
+    assert DemoTransportReceipt.model_validate_json(receipt.model_dump_json()) == receipt
+    with pytest.raises(ValueError, match="EXHAUSTIVE_CONNECTOR"):
+        verify_timetable_source(snapshot, table, CLOCK)
+
+
+@pytest.mark.parametrize("flag", [None, "false", "1", "yes"])
+def test_demo_disabled_by_default(demo, monkeypatch, flag):
+    monkeypatch.delenv("A2_DEMO_TRANSPORT_ENABLED", raising=False)
+    if flag is not None:
+        monkeypatch.setenv("A2_DEMO_TRANSPORT_ENABLED", flag)
+    with pytest.raises(ValueError, match="DEPLOYMENT_DISABLED"):
+        verify_demo_model(demo[0], demo[1], CLOCK, demo[2])
+
+
+@pytest.mark.parametrize(
+    "attack",
+    [
+        "prefix",
+        "snapshot",
+        "nodes",
+        "run",
+        "edge",
+        "transfer",
+        "clock",
+        "label",
+        "proof",
+        "calendar",
+    ],
+)
+def test_demo_receipt_never_accepts_mutated_or_unlabelled_inventory(demo, monkeypatch, attack):
+    snapshot, table, receipt = demo
+    monkeypatch.setenv("A2_DEMO_TRANSPORT_ENABLED", "true")
+    clock = CLOCK
+    if attack == "prefix":
+        snapshot = snapshot.model_copy(update={"snapshot_id": "ordinary-moscow-snapshot"})
+    elif attack == "snapshot":
+        receipt = receipt.model_copy(update={"snapshot_hash": "TEST_ONLY-foreign"})
+    elif attack == "nodes":
+        table = replace(
+            table, scope=replace(table.scope, node_ids=table.scope.node_ids | {"TEST_ONLY-extra"})
+        )
+    elif attack == "run":
+        table = replace(table, runs=())
+    elif attack == "edge":
+        table = replace(table, footpaths=())
+    elif attack == "transfer":
+        table = replace(table, transfers=())
+    elif attack == "clock":
+        clock = None
+    elif attack == "label":
+        snapshot = snapshot.model_copy(
+            update={"qa": snapshot.qa.model_copy(update={"checks": ["TEST_ONLY"]})}
+        )
+        receipt = receipt.model_copy(
+            update={"snapshot_hash": canonical_hash(snapshot.model_dump(mode="json"))}
+        )
+    elif attack == "proof":
+        table = replace(
+            table, scope=replace(table.scope, evidence_refs=(snapshot.evidence[0].evidence_id,))
+        )
+        receipt = receipt.model_copy(update={"model": table})
+    elif attack == "calendar":
+        table = replace(table, runs=())
+        receipt = receipt.model_copy(update={"model": table})
+    with pytest.raises(ValueError):
+        verify_demo_model(snapshot, table, clock, receipt)
