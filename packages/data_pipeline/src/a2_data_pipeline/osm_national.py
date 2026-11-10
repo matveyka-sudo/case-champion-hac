@@ -23,12 +23,14 @@ EPSG:4326 under ``data/processed/<dataset_id>/national/``:
 
 ``extract_meta.json`` binds the output to the PBF sha256, the rules and the
 table list, like ``osm.extract``; ``national_is_current`` reuses it only when all
-match. Rings are assembled from member ways with ``polygonize``; a relation whose
+match. ``ensure_national`` publishes it like ``osm.ensure_extract``: one directory
+per input (``national-<key>``), written in staging and renamed atomically. Rings are assembled from member ways with ``polygonize``; a relation whose
 rings do not close is reported, not repaired.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from collections.abc import Iterator
@@ -349,6 +351,60 @@ def _qids_hash(qids: set[str]) -> str:
     return hashlib.sha256("\n".join(sorted(qids)).encode()).hexdigest()
 
 
+def national_key(source_sha256: str, city_qids: set[str]) -> str:
+    payload = {
+        "rules": RULES_VERSION,
+        "source_sha256": source_sha256,
+        "city_qids_sha256": _qids_hash(city_qids),
+        "tables": list(TABLES),
+    }
+    text = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(text.encode()).hexdigest()[:16]
+
+
+def national_dir(base_dir: Path, source_sha256: str, city_qids: set[str]) -> Path:
+    return base_dir / f"national-{national_key(source_sha256, city_qids)}"
+
+
+def ensure_national(
+    pbf: Path,
+    city_qids: set[str],
+    base_dir: Path,
+    *,
+    source_dataset_id: str,
+    expected_sha256: str,
+) -> Path:
+    """The immutable national extract of this input, extracted and published if missing."""
+
+    import os
+    import shutil
+    import uuid
+
+    target = national_dir(base_dir, expected_sha256, city_qids)
+    if national_is_current(target, city_qids, source_sha256=expected_sha256):
+        return target
+    if target.exists():
+        raise RuntimeError(f"{target}: exists but is not a complete national extract")
+    base_dir.mkdir(parents=True, exist_ok=True)
+    staging = base_dir / f".staging-{target.name}-{uuid.uuid4().hex}"
+    try:
+        extract_national(
+            pbf,
+            city_qids,
+            staging,
+            source_dataset_id=source_dataset_id,
+            expected_sha256=expected_sha256,
+        )
+        try:
+            os.rename(staging, target)
+        except OSError:
+            if not national_is_current(target, city_qids, source_sha256=expected_sha256):
+                raise
+    finally:
+        shutil.rmtree(staging, ignore_errors=True)
+    return target
+
+
 def national_is_current(out_dir: Path, city_qids: set[str], *, source_sha256: str) -> bool:
     path = out_dir / "extract_meta.json"
     if not path.is_file():
@@ -390,19 +446,16 @@ def main() -> None:
         for e in territories.load_directory(args.territory_directory_id)
         if e.level == "city"
     }
-    out_dir = processed_dir() / args.osm_dataset_id / "national"
-    sha = manifest.checksum.value
-    if national_is_current(out_dir, city_qids, source_sha256=sha):
-        print(f"{out_dir}: current")
-        return
-    report = extract_national(
+    target = ensure_national(
         raw_dir() / manifest.raw_path,
         city_qids,
-        out_dir,
+        processed_dir() / args.osm_dataset_id,
         source_dataset_id=manifest.dataset_id,
-        expected_sha256=sha,
+        expected_sha256=manifest.checksum.value,
     )
-    print(json.dumps({k: v for k, v in report.items() if k != "unclosed"}, ensure_ascii=False))
+    meta = json.loads((target / "extract_meta.json").read_text())
+    report = {k: v for k, v in meta["report"].items() if k != "unclosed"}
+    print(target, json.dumps(report, ensure_ascii=False))
 
 
 if __name__ == "__main__":

@@ -67,7 +67,7 @@ from .geo import (
 )
 from .institutions import KIND_TO_CATEGORY, match_points, match_roster
 from .manifest import DatasetManifest, load_dataset_manifest
-from .osm import extract, extract_is_current, file_sha256
+from .osm import ensure_extract, file_sha256
 from .paths import processed_dir, raw_dir
 from .store import publish_bundle
 
@@ -231,18 +231,16 @@ def build(config: CityConfig, bundle_id: str, accept: bool) -> Path:
         raise ValueError(
             f"{osm_manifest.dataset_id}: raw sha256 {osm_sha256} differs from the manifest"
         )
-    if not extract_is_current(
-        osm_dir, boundary_ids, config.extract_bbox, config.poi_bbox, source_sha256=osm_sha256
-    ):
-        extract(
-            osm_pbf,
-            boundary_ids,
-            osm_dir,
-            config.extract_bbox,
-            config.poi_bbox,
-            source_dataset_id=osm_manifest.dataset_id,
-            expected_sha256=osm_sha256,
-        )
+    # an immutable directory per input, published atomically (no mixed metadata and tables)
+    osm_dir = ensure_extract(
+        osm_pbf,
+        boundary_ids,
+        osm_dir,
+        config.extract_bbox,
+        config.poi_bbox,
+        source_dataset_id=osm_manifest.dataset_id,
+        expected_sha256=osm_sha256,
+    )
     layers = load_osm_layers(osm_dir, config.osm_boundary_relation, config.osm_district_relations)
     grid = build_grid(layers, config.utm_epsg)
     assign_population(grid, raw_dir() / ghsl_manifest.raw_path, config.ghsl_tif)

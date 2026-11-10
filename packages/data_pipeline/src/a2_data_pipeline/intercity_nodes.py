@@ -636,11 +636,19 @@ def publish(
     sources = [raw_manifest, airports_manifest]
     national_dir = None
     if osm_dataset_id is not None:
+        from .osm_national import national_dir as keyed_national_dir
+        from .osm_national import national_is_current
+
         osm_manifest = load_dataset_manifest(osm_dataset_id)
-        national_dir = processed_dir() / osm_dataset_id / "national"
-        meta = json.loads((national_dir / "extract_meta.json").read_text())
-        if meta["source"]["sha256"] != osm_manifest.checksum.value:
-            raise ValueError(f"{national_dir}: not extracted from {osm_dataset_id}")
+        qids = {
+            e.wikidata_id
+            for e in territories.load_directory(territory_directory_id)
+            if e.level == "city"
+        }
+        sha = osm_manifest.checksum.value
+        national_dir = keyed_national_dir(processed_dir() / osm_dataset_id, sha, qids)
+        if not national_is_current(national_dir, qids, source_sha256=sha):
+            raise ValueError(f"{national_dir}: run osm_national for {osm_dataset_id} first")
         sources.append(osm_manifest)
     raw_zip = raw_dir() / raw_manifest.raw_path
     airports_csv = raw_dir() / airports_manifest.raw_path

@@ -53,6 +53,7 @@ from . import territories
 from .freight import COMMENT, _lines, parse_seaport
 from .manifest import Identifier, load_dataset_manifest
 from .osm import file_sha256
+from .osm_national import national_dir, national_is_current
 from .paths import data_dir, processed_dir, raw_dir
 
 RULES_VERSION = "ru-seaports-rules-v1"
@@ -370,12 +371,14 @@ def publish(
     raw_zip = raw_dir() / rmp.raw_path
     if file_sha256(raw_zip) != rmp.checksum.value:
         raise ValueError(f"{rosmorport_dataset_id}: raw sha256 mismatch")
-    national_dir = processed_dir() / osm_dataset_id / "national"
-    meta = json.loads((national_dir / "extract_meta.json").read_text())
-    if meta["source"]["sha256"] != osm.checksum.value:
-        raise ValueError(f"{national_dir}: not extracted from {osm_dataset_id}")
     directory = territories.load_directory(territory_directory_id)
-    ports, report = build_ports(raw_zip, national_dir, directory)
+    city_qids = {e.wikidata_id for e in directory if e.level == "city"}
+    national = national_dir(processed_dir() / osm_dataset_id, osm.checksum.value, city_qids)
+    if not national_is_current(national, city_qids, source_sha256=osm.checksum.value):
+        raise ValueError(f"{national}: run osm_national for {osm_dataset_id} first")
+    meta = json.loads((national / "extract_meta.json").read_text())
+    national_dir_path = national
+    ports, report = build_ports(raw_zip, national_dir_path, directory)
     checks = _checks(ports, report)
     failed = [c["check_id"] for c in checks if c["status"] == "fail"]
     if failed:

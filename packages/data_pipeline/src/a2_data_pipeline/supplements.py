@@ -52,7 +52,7 @@ from .bundle import (
 from .cities import CITIES
 from .geo import to_crs
 from .manifest import load_dataset_manifest
-from .osm import extract_is_current, file_sha256
+from .osm import ensure_extract, file_sha256
 from .osm_national import _entities
 from .paths import data_dir, processed_dir, raw_dir
 from .store import BUNDLE_COLLECTIONS, load_bundle, publish_bundle
@@ -341,12 +341,16 @@ def derive(  # noqa: C901
     sha = file_sha256(pbf)
     if sha != osm_manifest.checksum.value:
         raise ValueError(f"{osm_manifest.dataset_id}: raw sha256 differs from the manifest")
-    osm_dir = processed_dir() / city_id / "osm"
     boundary_ids = {config.osm_boundary_relation, *config.osm_district_relations}
-    if not extract_is_current(
-        osm_dir, boundary_ids, config.extract_bbox, config.poi_bbox, source_sha256=sha
-    ):
-        raise ValueError(f"{osm_dir}: the extract is not from {osm_manifest.dataset_id}")
+    osm_dir = ensure_extract(
+        pbf,
+        boundary_ids,
+        processed_dir() / city_id / "osm",
+        config.extract_bbox,
+        config.poi_bbox,
+        source_dataset_id=osm_manifest.dataset_id,
+        expected_sha256=sha,
+    )
     crs = f"EPSG:{config.utm_epsg}"
     osm_evidence = "osm:dataset:" + osm_manifest.dataset_id
     if osm_evidence not in {e.evidence_id for e in data.evidence}:

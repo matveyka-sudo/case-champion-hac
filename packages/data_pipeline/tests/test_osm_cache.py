@@ -108,3 +108,72 @@ def test_extract_refuses_an_unexpected_pbf(tmp_path: Path, extracted: tuple[Path
         osm.extract(other, {BOUNDARY}, out, source_dataset_id="syn.city-b", expected_sha256=sha)
     # the cached extract of city-a is untouched by the refused run
     assert osm.extract_is_current(out, {BOUNDARY}, source_sha256=sha)
+
+
+def _published(directory: Path) -> tuple[str, str]:
+    import pyarrow.parquet as pq
+
+    meta = json.loads((directory / "extract_meta.json").read_text())
+    building = pq.read_table(directory / "buildings.parquet").to_pylist()[0]["building"]
+    return meta["source"]["sha256"], building
+
+
+def test_interleaved_sources_never_mix(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Source B is extracted and published while A has written its tables: no mixing."""
+
+    a = write_pbf(tmp_path / "a.osm", building="yes")
+    b = write_pbf(tmp_path / "b.osm", building="house")
+    sha_a, sha_b = osm.file_sha256(a), osm.file_sha256(b)
+    base = tmp_path / "osm"
+    real = osm.extract
+    interleaved: list[Path] = []
+
+    def extract_with_b_in_between(pbf: Path, *args: object, **kwargs: object) -> object:
+        counts = real(pbf, *args, **kwargs)  # type: ignore[arg-type]
+        if pbf == a and not interleaved:
+            interleaved.append(pbf)
+            osm.ensure_extract(
+                b, {BOUNDARY}, base, source_dataset_id="syn.b", expected_sha256=sha_b
+            )
+        return counts
+
+    monkeypatch.setattr(osm, "extract", extract_with_b_in_between)
+    dir_a = osm.ensure_extract(
+        a, {BOUNDARY}, base, source_dataset_id="syn.a", expected_sha256=sha_a
+    )
+    dir_b = osm.ensure_extract(
+        b, {BOUNDARY}, base, source_dataset_id="syn.b", expected_sha256=sha_b
+    )
+    assert interleaved and dir_a != dir_b
+    assert _published(dir_a) == (sha_a, "yes")
+    assert _published(dir_b) == (sha_b, "house")
+    assert not list(base.glob(".staging-*"))
+
+
+def test_same_input_race_reuses_the_winner(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    pbf = write_pbf(tmp_path / "a.osm")
+    sha = osm.file_sha256(pbf)
+    base = tmp_path / "osm"
+    real = osm.extract
+    raced: list[bool] = []
+
+    def extract_while_another_build_wins(path: Path, *args: object, **kwargs: object) -> object:
+        counts = real(path, *args, **kwargs)  # type: ignore[arg-type]
+        if not raced:
+            raced.append(True)  # the other build publishes the same input first
+            osm.ensure_extract(pbf, {BOUNDARY}, base, source_dataset_id="syn", expected_sha256=sha)
+        return counts
+
+    monkeypatch.setattr(osm, "extract", extract_while_another_build_wins)
+    target = osm.ensure_extract(pbf, {BOUNDARY}, base, source_dataset_id="syn", expected_sha256=sha)
+    assert raced and _published(target) == (sha, "yes")
+    assert [p.name for p in base.iterdir()] == [target.name]  # the loser's staging is gone
+
+
+def test_incomplete_directory_is_not_reused(tmp_path: Path) -> None:
+    pbf = write_pbf(tmp_path / "a.osm")
+    sha = osm.file_sha256(pbf)
+    base = tmp_path / "osm"
+    (base / osm.extract_key(sha, {BOUNDARY})).mkdir(parents=True)  # e.g. left by hand
+    with pytest.raises(RuntimeError, match="not a complete extract"):
+        osm.ensure_extract(pbf, {BOUNDARY}, base, source_dataset_id="syn", expected_sha256=sha)

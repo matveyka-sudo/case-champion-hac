@@ -10,12 +10,22 @@ The extract is a cache bound to its input: the meta records the sha256 of the PB
 it was read from, the source dataset id, the walk and road rule versions and the
 table list. ``extract_is_current`` reuses it only when the expected PBF sha256,
 the rules, the boundaries, the boxes and every table file match.
+
+``ensure_extract`` is the only way builds get an extract: each input (PBF sha256,
+rules, boundaries, boxes) has its own directory named by a key over all of them,
+written in a staging directory and published by one atomic rename. A published
+directory never changes, so two builds of different sources can never leave the
+metadata of one over the tables of the other; two builds of the same input race
+for the rename and the loser reads the winner's directory.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import os
+import shutil
+import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -515,6 +525,71 @@ def file_sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1 << 20), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def extract_key(
+    source_sha256: str,
+    boundary_ids: set[int],
+    bbox: BBox | None = None,
+    poi_bbox: BBox | None = None,
+) -> str:
+    """Name of the extract directory of one input: every field that changes the tables."""
+
+    payload = {
+        "extract_version": EXTRACT_VERSION,
+        "walk_rules": WALK_RULES_VERSION,
+        "road_rules": ROAD_RULES_VERSION,
+        "source_sha256": source_sha256,
+        "boundary_ids": sorted(boundary_ids),
+        "bbox": list(bbox) if bbox else None,
+        "poi_bbox": list(poi_bbox) if poi_bbox else None,
+        "tables": list(TABLES),
+    }
+    text = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(text.encode()).hexdigest()[:16]
+
+
+def ensure_extract(
+    pbf: Path,
+    boundary_ids: set[int],
+    base_dir: Path,
+    bbox: BBox | None = None,
+    poi_bbox: BBox | None = None,
+    *,
+    source_dataset_id: str,
+    expected_sha256: str,
+) -> Path:
+    """The immutable extract directory of this input, extracted and published if missing."""
+
+    target = base_dir / extract_key(expected_sha256, boundary_ids, bbox, poi_bbox)
+    if extract_is_current(target, boundary_ids, bbox, poi_bbox, source_sha256=expected_sha256):
+        return target
+    if target.exists():
+        # only a complete extract is ever renamed into place
+        raise RuntimeError(f"{target}: exists but is not a complete extract of this input")
+    base_dir.mkdir(parents=True, exist_ok=True)
+    staging = base_dir / f".staging-{target.name}-{uuid.uuid4().hex}"
+    try:
+        extract(
+            pbf,
+            boundary_ids,
+            staging,
+            bbox,
+            poi_bbox,
+            source_dataset_id=source_dataset_id,
+            expected_sha256=expected_sha256,
+        )
+        try:
+            os.rename(staging, target)
+        except OSError:
+            # another build published the same input first: use its directory
+            if not extract_is_current(
+                target, boundary_ids, bbox, poi_bbox, source_sha256=expected_sha256
+            ):
+                raise
+    finally:
+        shutil.rmtree(staging, ignore_errors=True)
+    return target
 
 
 def extract_is_current(
