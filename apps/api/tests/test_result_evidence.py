@@ -7,6 +7,7 @@ from a2_api.adapters.walk_observed import project_observed_walk
 from a2_contracts.common import canonical_hash
 from a2_contracts.v2.map_data import AnalysisMapData, MapFeature, PointGeometry
 from pydantic import ValidationError
+from test_evidence_group_packing import leaf_facts
 from test_walk_batches import AcknowledgedChannel
 from test_walk_observed import setup
 from test_walk_runtime import SNAPSHOTS, city_profile, claim_for, configure
@@ -177,9 +178,11 @@ async def test_bound_walk_compacts_only_after_map_attachment(tmp_path, monkeypat
     claim = await claim_for(entry)
     result = product.calculate(claim, AcknowledgedChannel(claim.context.batch_execution))
     assert len(before) == 1
-    assert result.model_dump(mode="json", exclude={"evidence_refs", "result_hash"}) == before[
-        0
-    ].model_dump(mode="json", exclude={"evidence_refs", "result_hash"})
+    actual_facts = leaf_facts(result)
+    expected_facts = leaf_facts(before[0])
+    actual_facts.pop("evidence_refs")
+    expected_facts.pop("evidence_refs")
+    assert actual_facts == expected_facts
     ids = {row.evidence_id for row in result.evidence_refs}
     assert "TEST_ONLY-map-only-proof" in ids
     assert "TEST_ONLY-unused-proof" not in ids
@@ -193,6 +196,10 @@ async def test_bound_walk_compacts_only_after_map_attachment(tmp_path, monkeypat
     "module",
     [
         "a2_api.adapters.result_evidence",
+        "a2_api.adapters.evidence_groups",
+        "a2_contracts.v2.evidence",
+        "a2_contracts.v2.results",
+        "a2_contracts.v2.scenarios",
         "a2_engine.urban.valhalla.codec",
         "a2_engine.urban.valhalla.models",
         "a2_engine.urban.valhalla._grisu2",

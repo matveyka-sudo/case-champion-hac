@@ -14,9 +14,18 @@ from a2_contracts.v2.evidence import (
     EvidenceResolver,
 )
 from a2_contracts.v2.results import AnalysisResult
-from a2_contracts.v2.scenarios import ScenarioResult
+from a2_contracts.v2.scenarios import ScenarioProposal, ScenarioResult
 
-REFERENCE_FIELDS = frozenset({"source_refs", "evidence_refs", "calibration_evidence"})
+REFERENCE_FIELDS = frozenset(
+    {
+        "source_refs",
+        "evidence_refs",
+        "calibration_evidence",
+        "demand_evidence",
+        "resource_evidence",
+        "turnaround_evidence",
+    }
+)
 
 
 def _reference_edges(payload: dict[str, Any]) -> list[list[str]]:
@@ -65,7 +74,7 @@ def _factor_edges(
     original_order = list(existing)
     total_members = sum(len(row["evidence_ids"]) for row in existing.values())
     replacements: dict[str, str] = {}
-    for positions, identities in sorted(classes.items(), key=lambda item: tuple(sorted(item[1]))):
+    for pattern, identities in sorted(classes.items(), key=lambda item: tuple(sorted(item[1]))):
         identities.sort()
         for offset in range(0, len(identities), MAX_GROUP_MEMBERS):
             members = identities[offset : offset + MAX_GROUP_MEMBERS]
@@ -73,7 +82,7 @@ def _factor_edges(
                 continue
             group_id = EVIDENCE_GROUP_PREFIX + canonical_hash(members)
             row = {"group_id": group_id, "evidence_ids": members}
-            saving = len(positions) * (_encoded_size(members) - _encoded_size([group_id]))
+            saving = len(pattern) * (_encoded_size(members) - _encoded_size([group_id]))
             cost = 0 if group_id in existing else _encoded_size(row) + 1
             if saving <= cost:
                 continue
@@ -98,8 +107,9 @@ def _factor_edges(
         packed: list[str] = []
         used: set[str] = set()
         for identity in refs:
-            group_id = replacements.get(identity)
-            replacement = group_id if group_id in allowed else identity
+            target_group = replacements.get(identity)
+            replacement = target_group if target_group in allowed else identity
+            assert replacement is not None
             if replacement not in used:
                 packed.append(replacement)
                 used.add(replacement)
@@ -133,6 +143,30 @@ def pack_analysis_evidence(result: AnalysisResult) -> AnalysisResult:
             "result_hash": canonical_hash(packed.model_dump(mode="json", exclude={"result_hash"}))
         }
     )
+
+
+def pack_proposal_evidence(proposal: ScenarioProposal) -> ScenarioProposal:
+    """Pack worker-generated command edges before the analysis-output envelope.
+
+    Saved commands are never rewritten. Regenerating the same proposal uses this
+    same deterministic representation before comparing it to the saved command.
+    """
+    payload = proposal.model_dump(mode="json")
+    ScenarioProposal.model_validate(payload)
+    resolver = EvidenceResolver(
+        (row.evidence_id for row in proposal.evidence_refs), proposal.evidence_groups
+    )
+    edges = _reference_edges(payload)
+    before = [resolver.expand(refs) for refs in edges]
+    if not _factor_edges(payload, edges, resolver):
+        return proposal
+    grouped = EvidenceResolver(
+        resolver.leaf_ids,
+        [EvidenceGroup.model_validate(row) for row in payload["evidence_groups"]],
+    )
+    if any(grouped.expand(refs) != original for refs, original in zip(edges, before, strict=True)):
+        raise ValueError("PACKED_PROPOSAL_EVIDENCE_LEAF_SET_CHANGED")
+    return ScenarioProposal.model_validate(payload)
 
 
 def _same_facts(
@@ -217,9 +251,9 @@ def pack_scenario_evidence(result: ScenarioResult, baseline: AnalysisResult) -> 
                 protected.add(id(row[field]))
     saved_journeys = {row.journey_id: row for row in baseline.journeys}
     for index, row in enumerate(payload.get("after_journeys", [])):
-        previous = saved_journeys.get(row["journey_id"])
-        if previous is not None:
-            original = previous.model_dump(mode="json")
+        previous_journey = saved_journeys.get(row["journey_id"])
+        if previous_journey is not None:
+            original = previous_journey.model_dump(mode="json")
             if not _same_facts(row, original, resolver, saved_resolver):
                 raise ValueError("SAVED_BASELINE_JOURNEY_CHANGED")
             payload["after_journeys"][index] = original
