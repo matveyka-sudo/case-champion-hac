@@ -1,0 +1,36 @@
+{
+  "check": "population-raster-coverage",
+  "date": "2026-11-10",
+  "why": "ML1 review of PR #9 (P1): a cell of nodata pixels became population 0 with status zero; since 2026-11-10 such a cell is unknown (geo.assign_population, build_city)",
+  "rule": "GHSL pixels inside the city boundary read boundless (off-raster = nodata); a cell with any nodata pixel has population null and status unknown",
+  "results": [
+    {
+      "city": "kaliningrad",
+      "ghsl_dataset_id": "ghsl_pop.e2025-r2023a-100m-r3c20",
+      "raster_sha256": "1dfddf9e523c01fc23ad19f48339c41f158f9c0305aaf2dc6385d7340f8aa92f",
+      "nodata_value": -200.0,
+      "pixels_inside_city": 22404,
+      "invalid_pixels_inside_city": 0,
+      "zero_value_pixels": 9227
+    },
+    {
+      "city": "novorossiysk",
+      "ghsl_dataset_id": "ghsl_pop.e2025-r2023a-100m-r4c22",
+      "raster_sha256": "ab535d4ecdf555f1a8dc5e2f9fa5c23aaa5bf45a5ea7273510710d3b2f099483",
+      "nodata_value": -200.0,
+      "pixels_inside_city": 84852,
+      "invalid_pixels_inside_city": 0,
+      "zero_value_pixels": 69337
+    },
+    {
+      "city": "moscow",
+      "ghsl_dataset_id": "ghsl_pop.e2025-r2023a-100m-r3c21",
+      "raster_sha256": "31605219ef3125f41f5ed016fe3fe99985d6ea1e1cad601f44b9650eed1413d2",
+      "nodata_value": -200.0,
+      "pixels_inside_city": 255635,
+      "invalid_pixels_inside_city": 0,
+      "zero_value_pixels": 120468
+    }
+  ],
+  "conclusion": "No nodata pixel inside the three pilot cities: every zero in the published bundles is a GHSL zero, the bundles are unaffected"
+}
