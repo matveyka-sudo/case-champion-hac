@@ -17,7 +17,7 @@ from a2_data_pipeline.contract_v2 import load_accepted_data
 from a2_data_pipeline.store import load_bundle
 
 POINT = "kaliningrad-utm34n-1km-v1-e467-n6062-p"
-SCHOOL = "kaliningrad-school-klgd_education-4418382"
+SCHOOL = "kaliningrad-school-klgd_education-4409878"
 
 
 @pytest.fixture
@@ -195,6 +195,7 @@ def transport(
     malformed_edge=False,
     stale_status=False,
     malformed_body=False,
+    route_change=None,
 ):
     def response(body):
         return httpx.Response(200, stream=httpx.ByteStream(json.dumps(body).encode()))
@@ -231,6 +232,12 @@ def transport(
         body = [] if malformed_body else {"error_code": 442} if no_route else route_body(payload)
         if ferry:
             body["trip"]["summary"]["has_ferry"] = True
+        if route_change is not None:
+            path, value = route_change
+            target = body
+            for key in path[:-1]:
+                target = target[key]
+            target[path[-1]] = value
         return response(body)
 
     return httpx.MockTransport(respond)
@@ -267,6 +274,21 @@ def test_real_accepted_data_registry_and_hash_bound_partial_result(configured, m
     cell = next(row for row in snapshot.population_cells if row.cell_id == point.cell_id)
     saved_point = next(row for row in result.map_data.features if row.entity_kind == "sample_point")
     assert set(cell.source_refs) <= set(saved_point.source_refs)
+    assert saved_point.population == cell.population
+    assert saved_point.population_year == cell.population_year
+    assert saved_point.population_method == cell.population_method
+    # No dangling cell link: this deliberately sampled map has no cell feature.
+    assert saved_point.cell_id is None
+    saved_school = next(row for row in result.map_data.features if row.entity_kind == "destination")
+    accepted_school = next(
+        row for row in load_bundle(pilot.PILOT_BUNDLE).destinations if row.destination_id == SCHOOL
+    )
+    assert accepted_school.name == "МАОУ СОШ № 12"
+    assert saved_school.name == accepted_school.name
+    assert saved_school.entity_id == SCHOOL
+    assert saved_school.source_refs == next(
+        row.source_refs for row in snapshot.destinations if row.destination_id == SCHOOL
+    )
     assert result.result_hash == canonical_hash(
         result.model_dump(mode="json", exclude={"result_hash"})
     )
@@ -296,6 +318,42 @@ def test_unproven_or_failed_provider_is_unknown_never_zero(
     # Raw known H remains valid; route failures do not convert into zero travel time.
     assert [m.name for m in result.metrics] == ["urban_h_seconds"]
     assert reason in result.limitations
+
+
+@pytest.mark.parametrize(
+    "path,value",
+    [
+        (("trip",), None),
+        (("trip",), []),
+        (("trip", "summary"), None),
+        (("trip", "summary"), []),
+        (("trip", "locations"), None),
+        (("trip", "locations"), {}),
+        (("trip", "locations", 0), None),
+        (("trip", "legs"), None),
+        (("trip", "legs"), {}),
+        (("trip", "legs"), "TEST_ONLY-malformed"),
+        (("trip", "legs", 0), None),
+        (("trip", "legs", 0), []),
+        (("trip", "legs", 0, "summary"), None),
+        (("trip", "legs", 0, "maneuvers"), None),
+        (("trip", "legs", 0, "maneuvers"), {}),
+        (("trip", "legs", 0, "maneuvers"), "TEST_ONLY-malformed"),
+        (("trip", "legs", 0, "maneuvers", 0), None),
+        (("trip", "legs", 0, "maneuvers", 0), []),
+    ],
+)
+def test_malformed_nested_route_is_unknown_through_calculate(configured, monkeypatch, path, value):
+    _, _, snapshot = configured
+    mock_client(monkeypatch, route_change=(path, value))
+    result = pilot.calculate(claim_for(snapshot))
+    assert result.status == "partial"
+    assert result.journeys == []
+    assert all(score.value is None and not score.ranking_eligible for score in result.scores)
+    assert [metric.name for metric in result.metrics] == ["urban_h_seconds"]
+    assert result.metrics[0].value is not None and result.metrics[0].value > 0
+    assert "PROVIDER_HTTP_ERROR" in result.limitations
+    assert all("UNREACHABLE" not in reason for reason in result.limitations)
 
 
 def test_changed_artifact_rejected(configured):

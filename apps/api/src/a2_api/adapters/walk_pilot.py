@@ -312,6 +312,49 @@ def check_status(runtime: Runtime) -> EvidenceRef:
         raise _unavailable("Pinned routing server is unavailable") from exc
 
 
+def _pure_walk_response(body: Any) -> bool:
+    """Validate nested provider containers before attesting pedestrian mode.
+
+    The engine owns route semantics. Invalid containers must never reach its
+    semantic checks or be mistaken for evidence of an unreachable destination.
+    Provider error objects and non-object bodies retain their existing handling.
+    """
+    if not isinstance(body, dict) or "error_code" in body:
+        return False
+    trip = body.get("trip")
+    if not isinstance(trip, dict):
+        raise ValueError("Invalid routing trip object")
+    summary, locations, legs = trip.get("summary"), trip.get("locations"), trip.get("legs")
+    if (
+        not isinstance(summary, dict)
+        or not isinstance(locations, list)
+        or any(not isinstance(row, dict) for row in locations)
+        or not isinstance(legs, list)
+    ):
+        raise ValueError("Invalid routing trip containers")
+    maneuvers = []
+    for leg in legs:
+        if (
+            not isinstance(leg, dict)
+            or not isinstance(leg.get("summary"), dict)
+            or not isinstance(leg.get("maneuvers"), list)
+            or any(not isinstance(row, dict) for row in leg["maneuvers"])
+        ):
+            raise ValueError("Invalid routing leg containers")
+        maneuvers.extend(leg["maneuvers"])
+    return (
+        bool(maneuvers)
+        and summary.get("has_ferry") is False
+        and all(
+            row.get("travel_mode") == "pedestrian"
+            and row.get("travel_type") == "foot"
+            and not row.get("ferry", False)
+            and row.get("type") not in range(28, 37)
+            for row in maneuvers
+        )
+    )
+
+
 def execute_route(
     client: httpx.Client, runtime: Runtime, request: WalkRouteRequest
 ) -> tuple[WalkResponseEnvelope, list[EvidenceRef]]:
@@ -353,21 +396,7 @@ def execute_route(
         route_ref = _record(runtime, "/route", route_payload, body)
         refs.append(route_ref)
         # Independent response inspection; never claim minimum-time search completion.
-        pure = False
-        if isinstance(body, dict) and isinstance(body.get("trip"), dict):
-            trip = body["trip"]
-            maneuvers = [m for leg in trip.get("legs", []) for m in leg.get("maneuvers", [])]
-            pure = (
-                bool(maneuvers)
-                and trip.get("summary", {}).get("has_ferry") is False
-                and all(
-                    m.get("travel_mode") == "pedestrian"
-                    and m.get("travel_type") == "foot"
-                    and not m.get("ferry", False)
-                    and m.get("type") not in range(28, 37)
-                    for m in maneuvers
-                )
-            )
+        pure = _pure_walk_response(body)
         envelope = WalkResponseEnvelope(
             request.request_id,
             request.point_id,
@@ -577,6 +606,11 @@ def project_result(
     ]
     point_map = {row.point_id: row for row in snapshot.sample_points}
     cells = {row.cell_id: row for row in snapshot.population_cells}
+    destination_names = {
+        row.destination_id: row.name
+        for row in load_bundle(runtime.bundle_id).destinations
+        if row.status == "accepted"
+    }
     features = []
     for identity in runtime.point_ids:
         point = point_map[identity]
@@ -606,7 +640,7 @@ def project_result(
                 entity_id=destination.destination_id,
                 territory_id=request.city_id,
                 categories=["school"],
-                name=destination.destination_id,
+                name=destination_names[destination.destination_id],
                 geometry=PointGeometry(
                     type="Point", coordinates=(destination.location.lon, destination.location.lat)
                 ),

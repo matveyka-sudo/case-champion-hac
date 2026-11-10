@@ -90,6 +90,17 @@ school catalog coverage remains partial, population exclusions stay explicit,
 and map features describe the configured sample only. The known ML1 H metric
 remains visible even when provider routes are unavailable.
 
+Malformed nested route containers are rejected before pedestrian-mode inspection;
+the pair remains unknown, including null legs or maneuvers. Destination labels
+come from the checksum-verified accepted bundle rather than opaque object IDs.
+The saved sample-point population retains its accepted year, method and evidence;
+it describes the associated cell, not occupants at the point. This two-feature
+map has no cell feature, so it intentionally has no dangling `cell_id` reference.
+The UI may show the saved population metadata without requiring that reference.
+
+The proposed bounded resume lifecycle and required architecture approvals are in
+[phase2-batches.md](phase2-batches.md). No batch runtime or mass matrix is enabled.
+
 Focused regression tests deliberately mock provider observations and label all
 proofs `TEST_ONLY`; real accepted geography does not make those responses real.
 Live deployment acceptance requires a separate real API→PostgreSQL→spawned worker
