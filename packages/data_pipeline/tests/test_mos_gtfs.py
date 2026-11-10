@@ -107,6 +107,32 @@ def test_stream_reader_survives_small_chunks(monkeypatch: pytest.MonkeyPatch) ->
         list(mos_gtfs.iter_array(io.BytesIO(b'{"a": 1}')))
 
 
+@pytest.mark.parametrize(
+    ("payload", "message"),
+    [
+        (b'[{"trip_id":"T1"}', "not closed"),  # cut right after a complete record
+        (b'[{"trip_id":"T1"}, {"trip_id":"T', "inside a record"),  # cut inside a record
+        (b'[{"trip_id":"T1"},', "not closed"),  # cut after a comma
+        (b"", "not closed"),  # an empty file is not an empty array
+        (b'[{"a":1} {"a":2}]', "comma"),  # a missing comma
+        (b'[{"a":1},,{"a":2}]', "array|object|record"),  # a doubled comma
+        (b'[{"a":1}] x', "after the end"),  # data after the array
+        (b"[1, 2]", "object"),  # not records
+    ],
+)
+def test_stream_reader_rejects_broken_arrays(
+    payload: bytes, message: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    for chunk in (7, 1 << 20):  # the cut may fall on any chunk boundary
+        monkeypatch.setattr(mos_gtfs, "CHUNK", chunk)
+        with pytest.raises(ValueError, match=message):
+            list(mos_gtfs.iter_array(io.BytesIO(payload)))
+
+
+def test_stream_reader_accepts_an_empty_array() -> None:
+    assert list(mos_gtfs.iter_array(io.BytesIO(b" [ ] \n"))) == []
+
+
 def test_assembly_repair_and_overlaps(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(mos_gtfs.gtfs, "repo_root", lambda: tmp_path)
     raws = tables(tmp_path)

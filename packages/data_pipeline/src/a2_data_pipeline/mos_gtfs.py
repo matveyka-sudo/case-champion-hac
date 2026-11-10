@@ -53,36 +53,57 @@ CHUNK = 1 << 20
 
 
 def iter_array(stream: IO[bytes]) -> Iterator[dict[str, Any]]:
-    """Objects of a top-level JSON array, decoded in chunks (no full load in memory)."""
+    """Objects of a top-level JSON array, decoded in chunks (no full load in memory).
+
+    Strict: ``[``, then values separated by single commas, then ``]`` and only
+    whitespace after it. A file that ends before ``]`` (a truncated export, also
+    right after a complete record) raises instead of looking complete.
+    """
 
     decoder = json.JSONDecoder()
     reader = io.TextIOWrapper(stream, encoding="utf-8")
     buffer = ""
-    started = False
+    state = "open"  # open → first (value or ]) → after (, or ]) → value → … → closed
+    eof = False
     while True:
         chunk = reader.read(CHUNK)
+        eof = not chunk
         buffer += chunk
         position = 0
         while True:
-            while position < len(buffer) and buffer[position] in " \t\r\n,":
+            while position < len(buffer) and buffer[position] in " \t\r\n":
                 position += 1
-            if not started and position < len(buffer):
-                if buffer[position] != "[":
+            if position >= len(buffer):
+                break
+            char = buffer[position]
+            if state == "closed":
+                raise ValueError("data after the end of the JSON array")
+            if state == "open":
+                if char != "[":
                     raise ValueError("a JSON array is expected")
-                started = True
-                position += 1
+                state, position = "first", position + 1
                 continue
-            if position < len(buffer) and buffer[position] == "]":
-                return
+            if state in {"first", "after"} and char == "]":
+                state, position = "closed", position + 1
+                continue
+            if state == "after":
+                if char != ",":
+                    raise ValueError("a comma or the end of the JSON array is expected")
+                state, position = "value", position + 1
+                continue
             try:
-                item, end = decoder.raw_decode(buffer, position)
+                item, stop = decoder.raw_decode(buffer, position)
             except json.JSONDecodeError:
-                break  # the object continues in the next chunk
+                if eof:
+                    raise ValueError("the JSON array ends inside a record") from None
+                break  # the record continues in the next chunk
+            if not isinstance(item, dict):
+                raise ValueError("a JSON object is expected in the array")
             yield item
-            position = end
+            state, position = "after", stop
         buffer = buffer[position:]
-        if not chunk:
-            if buffer.strip():
+        if eof:
+            if state != "closed":
                 raise ValueError("the JSON array is not closed")
             return
 
