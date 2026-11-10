@@ -5,6 +5,7 @@ import json
 from decimal import ROUND_DOWN, Decimal
 
 from a2_engine.urban.models import UrbanGeometry
+from a2_engine.urban.valhalla._grisu2 import coordinate_boundary_echo
 
 # Opt-in source evidence for 3.5.1's JSON route locations, distinct from /locate.
 ROUTE_ECHO_TRUNC6_EVIDENCE_REF = "valhalla-3.5.1-route-echo-trunc6-v1"
@@ -17,17 +18,17 @@ def _valhalla351_route_echo(value: float) -> float | None:
     rapidjson_utils.h forwards this to SetMaxDecimalPlaces. Prettify in dtoa.h
     truncates decimal digits (not the binary value multiplied by 1e6). Its tiny
     1e-7 decade uses scientific notation unchanged; smaller values become signed
-    zero. Decimal preserves that sign. Six-place noninteger inputs are excluded:
-    Grisu2 can choose a longer decimal below that exact decimal boundary. Their
-    existing exact/locate match behavior remains available. This is serialization
-    only, not evidence that either endpoint is a physically exact network match.
+    zero. Decimal preserves that sign. For six-place noninteger source boundaries,
+    reproduce Grisu2's digits: they can fall below the shortest Python decimal.
+    This is serialization only, not evidence that either endpoint is a physically
+    exact network match.
     """
     decimal = Decimal(str(value))
     if decimal and decimal.copy_abs().adjusted() == -7:
         return value
     truncated = decimal.quantize(Decimal("0.000001"), rounding=ROUND_DOWN)
     if decimal == truncated and decimal != decimal.to_integral_value():
-        return None
+        return coordinate_boundary_echo(value)
     return float(truncated)
 
 
