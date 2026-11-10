@@ -200,6 +200,8 @@ async def test_bound_walk_compacts_only_after_map_attachment(tmp_path, monkeypat
         "a2_contracts.v2.evidence",
         "a2_contracts.v2.results",
         "a2_contracts.v2.scenarios",
+        "a2_api.workers.calculation",
+        "a2_api.workers.result_transport",
         "a2_engine.urban.valhalla.codec",
         "a2_engine.urban.valhalla.models",
         "a2_engine.urban.valhalla._grisu2",

@@ -37,6 +37,9 @@ PRIVATE_SOURCES_EXTENSION = json.loads(
 WALK_RUNTIME_EXTENSION = json.loads(
     (Path(__file__).parent / "fixtures/walk_runtime_extension.json").read_text()
 )
+RESULT_TRANSPORT_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/result_transport_extension.json").read_text()
+)
 
 
 def private_sources_counter(expected, kind):
@@ -136,6 +139,12 @@ def normalize_signature(value):
 
 
 def test_all_185_existing_signatures_and_defaults():
+    assert set(RESULT_TRANSPORT_EXTENSION["signatures"]) == {
+        "a2_api.workers.calculation:calculate",
+        "a2_api.workers.runner:Worker",
+        "a2_api.workers.runner:Worker.__init__",
+        "a2_api.core.config:RuntimeSettings",
+    }
     assert WALK_RUNTIME_EXTENSION["module"] == "adapters/walk_runtime.py"
     assert set(WALK_RUNTIME_EXTENSION["signatures"]) == {
         "a2_api.adapters.walk_runtime:load_binding",
@@ -169,6 +178,7 @@ def test_all_185_existing_signatures_and_defaults():
         | RASP_QUOTA_EXTENSION["signatures"]
         | PRIVATE_SOURCES_EXTENSION["signatures"]
         | WALK_RUNTIME_EXTENSION["signatures"]
+        | RESULT_TRANSPORT_EXTENSION["signatures"]
     ).items():
         module, qualified = path.split(":")
         obj = importlib.import_module(module)

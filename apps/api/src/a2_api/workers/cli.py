@@ -20,6 +20,7 @@ async def run_worker(settings: RuntimeSettings, once: bool = False) -> None:
             handler=settings.calculation_handler,
             code_version=settings.code_version,
             timeout_seconds=settings.job_timeout_seconds,
+            decoded_result_bytes=settings.worker_result_decoded_mib * 1024 * 1024,
         )
         if once:
             await worker.run_once()

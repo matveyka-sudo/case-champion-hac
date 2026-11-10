@@ -44,3 +44,4 @@ class RuntimeSettings(WaydexSettings):
     calculation_handler: str | None = None
     job_timeout_seconds: Annotated[float, Field(gt=0, le=600)] = 600
     worker_poll_seconds: Annotated[float, Field(gt=0, le=60)] = 0.5
+    worker_result_decoded_mib: Annotated[int, Field(ge=16, le=32)] = 16

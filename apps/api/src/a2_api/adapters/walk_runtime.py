@@ -132,6 +132,8 @@ def executor_fingerprint() -> str:
         "a2_api.core.batches",
         "a2_api.core.walk_route_artifacts",
         "a2_api.workers.checkpoint_channel",
+        "a2_api.workers.calculation",
+        "a2_api.workers.result_transport",
         "a2_api.adapters.product_projection",
         "a2_engine.urban.walk.observed",
         "a2_api.adapters.walk_pilot",
