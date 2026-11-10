@@ -1,5 +1,48 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Latest continuation — Draft PR29 and calculated-point UI acceptance
+
+Goal ACTIVE. Root candidate72a624830604887b12d19c3c47f5e290616a04b0 before this
+note. Draft PR29 created: https://github.com/matveyka-sudo/case-champion-hac/pull/29.
+Initial published head d6c9c0a; remote dev independently rechecked unchanged at
+91ed5262b62c16afa3ca619f8140c43917cf8325. PR26 ancestorPR27 ancestorintegration
+verified again. No dev merge. Old notes saying no push/PR are now historical.
+
+- FRONTEND60dfcd8+d7bfabf accepted and integrated. Explicit calculated-point list,
+  numerical point totals includingzero, citynull retained, actualsample inventory
+  denominator. Reviewer found P2: one mappedknownpoint plus215unmappedunknown tasks
+  misleadingly showed1of1. Fixed by requiring all saved point-total IDs in inventory
+  or omitting ratio. Root actual mobile screenshot exposed a separate native
+  details/state race; fixed by synchronous native closure before selection.
+  Root104unit/buildPASS,30ChromiumbrowsercasesPASS48.8s; desktop/mobile screenshot
+  inspected after final fix. Reviewer29focused+actualsavedresult partialinventory
+  replay PASS. These browser responses are synthetic; newclean real5193 pending.
+- Earlier zoom replay suspicion was NOT a defect: existing consumed-command-ID
+  guard already prevented it. Root checked surrounding code and withdrew finding;
+  regression now covers changed effect dependencies.
+- DEVOPS2686f8a accepted/integrated: separate bounded Chromium fixture CI job,
+  locked Node/npm/Playwright, CI=true, one worker, no retries/agents,300s global/
+  10min job. Owner27localcasesPASS43.2s; root30cases cover final frontend.
+  Linux run of this new job still pending updated PR head.
+- Initial PR29 CI observed engine/ML2/PostGIS/environment SUCCESS, backend/PG
+  still running at last observation; do not infer newhead checks from oldhead.
+- BACKEND geometry implementation and source/precision/actualreplay tests ongoing;
+  DEVOPS supplement transport checker/package awaiting final backend source.
+- Approved SCENARIOS private-source implementation in apps/api: omitted empty
+  context bindings, independent from freshness TTL;0007 episodes+grants tables and
+  nullable runs.private_source_bindings trusted copy. Final DB clock publication
+  fence, fresh post-RR read authorization, revoke/purge denial, scoped capabilities,
+  private external-LLM disabled unless explicitly granted. Only disposable tests;
+  no production migration/purge/provider activation. Source attribution UI separate.
+- ML1 read-only next-scope audit: adjacent n6068+n6069 whole-cell weights total
+ 4390.421; zeroadditional origins covered by oldpair certificate. Fresh native
+  endpoint/turn/physical/geometry proof required. Hcity1800 unchanged; no city or
+  administrative district completeness. ML2 independently auditing n6068 source
+  geometry/maincomponent/obstacles. Important correction: accessID suffix180.7 is
+  along-way OFFSET, not approach distance; accepted approach21.12m (connector21.1).
+  n6069 districtshare661.233 vswholecell661.234 uses distinct floor/round conventions;
+  preserve discrepancy, never normalize silently. No new native/matrixcalls yet.
+
 ## Latest continuation — reviewed quota integration and full backend verification
 
 Supersedes older task statuses below. Goal ACTIVE. Integration candidate before

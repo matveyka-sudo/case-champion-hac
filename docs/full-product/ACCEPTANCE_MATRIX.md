@@ -12,7 +12,7 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 | Task | Owner / branch | Status | Delivery and independent acceptance |
 |---|---|---|---|
 | Dynamic dispatcher, all four kinds and pipeline | BACKEND / work/full-backend | INTEGRATED | Corrections through4d3e4e9 reviewed: cargo roster/area, dated candidate and canonical timetable source binding, verified completeness evidence; root24 focused tests PASS. Real profiles beyond pilot remain separate acceptance gates |
-| Map/form/snapshot correctness | FRONTEND / work/full-frontend | INTEGRATED | Through8b074f1: runtime scope constraints, explicit preset, no cross-profile unions, local-time boundaries, human metric labels. Root93 unit/build/API freshness and27 browser cases PASS. Latest live5192 still8fc49fe; new-image scope UI replay pending |
+| Map/form/snapshot correctness | FRONTEND / work/full-frontend | INTEGRATED | Throughd7bfabf: runtime scope constraints and calculated-point list, honest incomplete inventory, mobile native closure. Root104 unit/build and30 browser cases PASS48.8s; reviewer accepted after two fixes. Latest live5192 still8fc49fe; new-image real UI replay pending |
 | Actual graph minimum bounds | ML1 / work/full-ml1 | INTEGRATED | Through63992f2 reviewed. Exact network and designated canonical-access model minima reproduced independently; root1045 engine tests PASS. e4d83a2 performs full proof recomputation; actual numeric point E2E below. Full physical entrance completeness and city index remain unproved |
 | External data restoration and normalized inputs | ML2 / work/full-ml2 | INTEGRATED | Through3b8c26f, immutable .5:79 accepted/51 quarantined schools,216 unchanged points; airport official roster full onlyNov10. Explicit .3→.5 physical compatibility, root271 ML2 tests PASS |
 | Isolated API-mode stack | DEVOPS / work/full-devops | INTEGRATED | Clean8fc49fe stack on5192, root real numerical browser E2E. df33d0a documents 189-file private restoration, restart and dump/restore. External archive hosting still unavailable; no claim of public one-command retrieval |
@@ -54,13 +54,21 @@ renderer validation and no mutation. Independent review accepted; new-image UI r
 
 GitHub recheck: dev remains91ed5262b62c16afa3ca619f8140c43917cf8325;
 PR26 dd46659 and PR27 297accd remain OPEN/DRAFT/CLEAN, five checks each SUCCESS.
-Those remote checks do not cover this unpublished integration branch.
+Those remote checks do not cover this integration branch. Draft PR29 now tracks
+it at https://github.com/matveyka-sudo/case-champion-hac/pull/29, initially published
+d6c9c0a. Current-head CI must be checked separately; no dev merge performed.
 
 Root full API/contracts/assistant checks on54ce057:1237PASS172.31s, including
 disposable real PostgreSQL schemas. Mypy100sources, Ruff,196-file formatting,
 canonical schema export freshness, web layout/API freshness and product config
 PASS. Later geometry/UI deliveries and the final clean image remain separate
 acceptance gates; this is not real-data E2E for all product profiles.
+
+Calculated-point UI60dfcd8+d7bfabf: root104unit/build and30Chromium browser cases
+PASS48.8s. Independent review reproduced/fixed false1of1 coverage when unknown
+points lacked mapfeatures; root visually caught/fixed a mobile native-details
+reopening race. Citynull, partial labels, zero and allunknown tasks stay visible.
+New bounded Chromium fixture CI2686f8a integrated; Linux CI observation pending.
 
 On the same actual5192 deployment, root opened an isolated browser context and
 queried the saved root analysis/job IDs: both returned404/unknown_id without
