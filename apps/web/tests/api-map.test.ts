@@ -43,6 +43,23 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe("map score completeness", () => {
+  it.each([
+    [0, "#c72d44"], [49.9, "#c72d44"], [50, "#d49520"],
+    [74.9, "#d49520"], [75, "#0b8a5c"], [100, "#0b8a5c"],
+  ] as const)("colors the saved numeric index %s using the approved band", (value, color) => {
+    const result = decode("AnalysisResult", structuredClone(resultRaw));
+    const score = { ...result.scores[0], value };
+    result.map_data = { status: "available", features: [{
+      entity_kind: "sample_point", entity_id: score.subject.point_id!, territory_id: "city-1",
+      geometry: { type: "Point", coordinates: [37, 55] }, geometry_kind: "actual", source_refs: [],
+    }] };
+    render(createElement(ApiMap, {
+      result, scores: [score], selection: null, onSelect: vi.fn(), zoomAction: { id: 0, kind: "home" },
+    }));
+    expect(drawn.layers[0].marker?.fillColor).toBe(color);
+    expect(drawn.layers[0].style?.fillColor).toBe(color);
+    expect(drawn.layers[0].tooltip).toContain(value.toFixed(1));
+  });
   it.each(["full", "partial"] as const)("keeps zero numeric and distinguishes %s geometry and tooltips", (completeness) => {
     const result = decode("AnalysisResult", structuredClone(resultRaw));
     const score = { ...result.scores[0], completeness, value: 0 };

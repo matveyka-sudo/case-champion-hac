@@ -43,6 +43,7 @@ import {
   noticeText,
   snapshotLabel,
   lastReturnsForSelection,
+  scoreBand,
 } from "../api/adapters/result";
 import { useAnalysisSession } from "../features/analysis/useAnalysisSession";
 import { Select } from "../shared/Select";
@@ -50,6 +51,7 @@ import { DatePicker } from "../shared/DatePicker";
 import { Icon, Wordmark } from "../shared/ui";
 import { NavigationLink } from "../shared/NavigationLink";
 import { ApiMap } from "../widgets/ApiMap";
+import { ExplanationFinding } from "../widgets/ExplanationFinding";
 import { useModalFocus } from "../features/accessibility";
 const kinds: Record<AnalysisKind, string> = {
   urban_passenger: "В городе",
@@ -119,7 +121,7 @@ function Measure({ value }: { value: Schemas["Metric"] | Schemas["Score"] }) {
         {measureLabel(value.name)}
         {context && <small>{context}</small>}
       </span>
-      <b>{measureText(value)}</b>
+      <b data-score-band={"score_id" in value ? scoreBand(value) : undefined}>{measureText(value)}</b>
       {note && <small>{note}</small>}
     </div>
   );
@@ -1293,42 +1295,7 @@ export function ApiAtlasPage() {
                       : "Объяснение модели"}
                   </small>
                   {m.answer.findings.map((finding, j) => (
-                    <div key={j}>
-                      <p>{finding.text}</p>
-                      {[
-                        ...new Set([
-                          ...finding.metric_ids,
-                          ...finding.claims.map((c) => c.metric_id),
-                        ]),
-                      ].map((id) => {
-                        const value = result?.metrics.find(
-                          (v) => v.metric_id === id,
-                        );
-                        return value ? (
-                          <button
-                            className="api-claim"
-                            key={id}
-                            onClick={() => {
-                              const f = result?.map_data?.features?.find((f) =>
-                                subjectMatches(value.subject, {
-                                  entity_kind: f.entity_kind,
-                                  entity_id: f.entity_id,
-                                }),
-                              );
-                              if (f)
-                                choose({
-                                  entity_kind: f.entity_kind,
-                                  entity_id: f.entity_id,
-                                });
-                            }}
-                          >
-                            {measureLabel(value.name)}: {measureText(value)}
-                          </button>
-                        ) : (
-                          <span key={id}>Метрика недоступна</span>
-                        );
-                      })}
-                    </div>
+                    <ExplanationFinding key={j} finding={finding} result={result} onSelect={choose} />
                   ))}
                   {m.answer.proposals.map((p, j) => (
                     <p className="fhint" key={j}>

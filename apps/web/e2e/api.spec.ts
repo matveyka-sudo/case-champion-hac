@@ -599,3 +599,38 @@ test("API: selected point and destination scope return times and partial map ass
   await expect(page.locator(".api-card")).not.toContainText("20:00");
   await expect(page.locator(".api-card")).toContainText("Выбранная точка → Школа А");
 });
+
+test("API: score-only explanations use saved zero and partial labels, and null remains neutral", async ({ page }) => {
+  const data = structuredClone(urban) as AnalysisResult;
+  data.scores[0] = { ...data.scores[0], name: "urban_accessibility_index", value: 0, completeness: "partial", ranking_eligible: false };
+  await mockApi(page, { result: data, emptyProposals: true });
+  await page.route("**/explanation", (route) => route.fulfill({ json: {
+    analysis_id: data.analysis_id, analysis_result_hash: data.result_hash,
+    status: "template", model_id: null, reason_code: null, request_id: "synthetic-score-explanation",
+    findings: [{ text: "Сохранённый частичный индекс.", metric_ids: [], claims: [], evidence_refs: [], score_ids: [data.scores[0].score_id], score_claims: [{ score_id: data.scores[0].score_id, value: 99 }] }],
+    evidence_refs: [], proposals: [], limitations: [],
+  } }));
+  await page.goto("/?data=api#atlas");
+  await cityRun(page);
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator('.api-measure b[data-score-band="low"]')).toHaveText("0 из 100");
+  await page.getByRole("button", { name: "Агент", exact: true }).click();
+  await page.getByLabel("Вопрос агенту").fill("Объясни индекс");
+  await page.getByRole("button", { name: "Отправить", exact: true }).click();
+  await expect(page.locator('.api-claim[data-score-band="low"]')).toHaveText("Индекс доступности: 0 из 100 · частичная оценка");
+  await expect(page.locator(".api-chat-log")).not.toContainText("99 из 100");
+  data.scores[0] = { ...data.scores[0], value: null, status: "unknown" };
+  await page.route(`**/analyses/${data.analysis_id}`, (route) => route.fulfill({ json: data }));
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.locator('.api-measure b[data-score-band="unknown"]')).toHaveText("Нет данных");
+  await expect(page.locator(".api-card")).not.toContainText("0 из 100");
+});
+
+test("API: landing identifies illustrative examples without labeling API results as demo", async ({ page }) => {
+  await page.goto("/?data=api");
+  await expect(page.locator(".method-note")).toContainText("Числа в примерах на этой странице демонстрационные");
+  await expect(page.locator(".lp-footer")).toContainText("Атлас — результаты API");
+  await expect(page.locator(".lp-footer")).not.toContainText("Данные — демонстрационные");
+  await page.goto("/?data=demo");
+  await expect(page.locator(".lp-footer")).toContainText("Данные — демонстрационные");
+});

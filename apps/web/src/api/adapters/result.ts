@@ -147,6 +147,10 @@ export function measureText(m: Schemas["Metric"] | Schemas["Score"]) {
   const value = unit === "seconds" ? m.value / 60 : m.value;
   return `${new Intl.NumberFormat("ru", { maximumFractionDigits: 1 }).format(value)} ${unit === "seconds" || unit === "minutes" ? "мин" : unit === "points_0_100" ? "из 100" : unit === "hours" ? "ч" : unit}`;
 }
+export function scoreBand(score: Schemas["Score"]) {
+  if (score.status !== "available" || score.value === null) return "unknown";
+  return score.value < 50 ? "low" : score.value < 75 ? "medium" : "high";
+}
 export function subjectMatches(
   subject: Schemas["SubjectRef"],
   selection: Selection,
