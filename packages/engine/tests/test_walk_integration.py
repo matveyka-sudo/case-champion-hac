@@ -2,6 +2,7 @@
 
 import copy
 import json
+import math
 from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -24,6 +25,10 @@ from a2_engine import (
     prepare_walk_inputs,
 )
 from a2_engine.urban.valhalla import digest
+from a2_engine.urban.valhalla.codec import (
+    ROUTE_ECHO_TRUNC6_EVIDENCE_REF,
+    _valhalla351_route_echo,
+)
 from a2_engine.urban.walk import WalkInputs, WalkRoutePlan
 
 FIXTURE = Path(__file__).parent / "fixtures" / "kaliningrad_walk_canonical_subset.json"
@@ -717,6 +722,107 @@ def test_serialization_uncertainty_does_not_accept_real_resnap(canonical: dict[s
     for shifted in (WalkCoordinate(20.495588, 54.708788), WalkCoordinate(20.4955871, 54.708788)):
         with pytest.raises(ValueError, match="REVISED_ACCESS_CONNECTOR_REQUIRED"):
             replace(precise, correlated_location=shifted)
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        (37.7356494, 37.735649),
+        (55.6927005, 55.6927),
+        (37.7196439, 37.719643),
+        (55.6916808, 55.69168),
+        (-37.7196439, -37.719643),
+        (-55.6916808, -55.69168),
+        (1.000001, None),
+        (-1.000001, None),
+        (-47.204542, None),
+        (0.000000125, 0.000000125),
+        (-0.000000125, -0.000000125),
+        (0.00000001, 0.0),
+        (-0.00000001, -0.0),
+        (-0.0, -0.0),
+    ],
+)
+def test_pinned_route_writer_decimal_truncation_and_signed_zero(
+    source: float, expected: float | None
+) -> None:
+    # Pinned writer expectations; ambiguous six-place boundary inputs fail closed.
+    actual = _valhalla351_route_echo(source)
+    assert actual == expected
+    if expected == 0:
+        assert math.copysign(1, actual) == math.copysign(1, expected)
+
+
+def test_gp109_echo_requires_exact_versioned_evidence_and_keeps_minimum_unknown(
+    canonical: dict[str, Any],
+) -> None:
+    request = plan(synthetic_inputs(canonical)).requests[0]
+
+    def correlation(original: ValhallaCorrelation, lon: float, lat: float) -> ValhallaCorrelation:
+        return replace(
+            original,
+            source_location=WalkCoordinate(lon, lat),
+            correlated_location=WalkCoordinate(round(lon, 6), round(lat, 6)),
+            coordinate_precision_digits=6,
+            serialization_evidence_refs=("synthetic-locate-source", ROUTE_ECHO_TRUNC6_EVIDENCE_REF),
+        )
+
+    request = replace(
+        request,
+        origin=correlation(request.origin, 37.7356494, 55.6927005),
+        destination=correlation(request.destination, 37.7196439, 55.6916808),
+    )
+    payload = request.payload()
+    for row, correlated in zip(
+        payload["locations"], (request.origin, request.destination), strict=True
+    ):
+        row.update(correlated.source_location.location())
+    request = replace(request, payload_json=json.dumps(payload, separators=(",", ":")))
+    envelope = response(request)
+    body = json.loads(envelope.response_json or "{}")
+    body["trip"]["locations"] = [
+        {"lon": 37.735649, "lat": 55.6927},
+        {"lon": 37.719643, "lat": 55.69168},
+    ]
+    envelope = replace(envelope, response_json=json.dumps(body))
+    observed = normalize_walk_response(request, envelope)
+    assert observed.state == "reachable" and observed.minimum_proven is False
+    assert observed.reason_code == "MINIMUM_TIME_UNPROVEN"
+    assert request.payload()["locations"][1]["lon"] == 37.7196439
+    assert request.destination.source_location == WalkCoordinate(37.7196439, 55.6916808)
+    assert request.destination.correlated_location == WalkCoordinate(37.719644, 55.691681)
+    for marker in (
+        "synthetic-locate-source",
+        "valhalla-3.5.1-route-echo-trunc5-v1",
+        "valhalla-3.5.2-route-echo-trunc6-v1",
+    ):
+        unapproved = replace(
+            request, destination=replace(request.destination, serialization_evidence_refs=(marker,))
+        )
+        assert not unapproved.destination.matches_response_location(
+            WalkCoordinate(37.719643, 55.69168)
+        )
+    for wrong in (
+        WalkCoordinate(37.719642, 55.69168),
+        WalkCoordinate(37.71964, 55.69168),
+        WalkCoordinate(37.719643, 55.691681),
+    ):
+        assert not request.destination.matches_response_location(wrong)
+    with pytest.raises(ValueError, match="ACTUAL_ENDPOINT_MISMATCH"):
+        normalize_walk_response(
+            request, replace(envelope, matched_destination=request.destination.source_location)
+        )
+    with pytest.raises(ValueError, match="UNSUPPORTED_VALHALLA_VERSION"):
+        replace(request.build, engine_version="3.5.2")
+    with pytest.raises(ValueError, match="SERIALIZATION_EVIDENCE_REQUIRED"):
+        replace(request.destination, coordinate_precision_digits=5)
+    boundary = correlation(request.destination, -47.204542, 55.6916808)
+    # Native Grisu2 can serialize this exact six-place source below its decimal
+    # boundary. Do not invent either new mixed-coordinate echo as a fallback.
+    assert not boundary.matches_response_location(WalkCoordinate(-47.204542, 55.69168))
+    assert not boundary.matches_response_location(WalkCoordinate(-47.204541, 55.69168))
+    assert boundary.matches_response_location(boundary.source_location)
+    assert boundary.matches_response_location(boundary.correlated_location)
 
 
 def test_missing_route_for_positive_population_never_renormalizes_known_points(

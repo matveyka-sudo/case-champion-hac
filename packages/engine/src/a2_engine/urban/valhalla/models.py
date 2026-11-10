@@ -8,7 +8,12 @@ from typing import Any, Literal
 
 from a2_engine.shared.results import finite_number
 from a2_engine.urban.models import UrbanGeometry, identifier, references
-from a2_engine.urban.valhalla.codec import canonical_json, digest
+from a2_engine.urban.valhalla.codec import (
+    ROUTE_ECHO_TRUNC6_EVIDENCE_REF,
+    _valhalla351_route_echo,
+    canonical_json,
+    digest,
+)
 
 
 @dataclass(frozen=True)
@@ -141,8 +146,23 @@ class ValhallaCorrelation:
             raise ValueError("REVISED_ACCESS_CONNECTOR_REQUIRED")
 
     def matches_response_location(self, location: WalkCoordinate) -> bool:
-        return location == self.source_location or (
+        if location == self.source_location or (
             self.coordinate_precision_digits == 6 and location == self.correlated_location
+        ):
+            return True
+        # /route echoes original inputs through RapidJSON, while /locate uses
+        # fixed_t rounding for projections. Accept only this explicitly evidenced
+        # 3.5.1 codec result; the correlated location and its half-quantum check,
+        # actual endpoint attestations, and minimum-proof rules stay unchanged.
+        return (
+            self.build.engine_version == "3.5.1"
+            and self.coordinate_precision_digits == 6
+            and ROUTE_ECHO_TRUNC6_EVIDENCE_REF in self.serialization_evidence_refs
+            and (location.lon, location.lat)
+            == (
+                _valhalla351_route_echo(self.source_location.lon),
+                _valhalla351_route_echo(self.source_location.lat),
+            )
         )
 
 

@@ -177,3 +177,30 @@ preserved. The supplement receipt binds the current proof-binding (including
 target snapshot compatibility), original native/model/physical receipts, all
 source tile hashes and exact sequence. Source authority is established by the
 reviewed native execution and deployment registry, not self-selected hashes.
+
+## Versioned route endpoint echoes
+
+`valhalla-3.5.1-route-echo-trunc6-v1` is an optional existing
+`serialization_evidence_refs` entry. It permits only the supported deterministic
+six-place echo of the original source coordinate when the build is 3.5.1 and the
+correlation already carries six-place locate evidence. It changes neither the
+source request nor the separately attested correlated endpoint. Correlation
+half-quantum checks and minimum-proof restrictions remain unchanged.
+
+The 3.5.1 `src/tyr/route_serializer_valhalla.cc` `locations()` sets precision6 and
+writes `location->ll()`. Source SHA256:
+`8a704ca51b9df32f8a491cd022a375935f306c1a36b2ce8c81fbec57bf325217`.
+The pinned `baldr/rapidjson_utils.h` forwards this to `SetMaxDecimalPlaces`
+(SHA256 `30aeb5b7d2d678f0834a12577b7ae6e1b9cfcfb36460e1e3d228102e96c99505`).
+Pinned RapidJSON `internal/dtoa.h` `Prettify` truncates decimal digits
+(SHA256 `73bdbedab68a0647156c918a7c879b7b0f13b88e2de2145c05fd7c65c8970cc5`).
+This differs from `/locate`'s `fixed_t` rounded projection.
+
+The validator uses decimal source digits, not binary multiplication by1e6.
+Negative truncation is toward zero and tiny signed zero is preserved. The native
+scientific-notation decade near1e-7 is handled separately. Noninteger inputs
+already at six decimal places receive no new echo alternative: Grisu2 can choose
+a longer decimal across that boundary. Their previous exact/locate acceptance
+remains available. This conservative subset avoids a radius or rounding tolerance.
+An offline pinned-writer oracle covered40644 values;29615 supported values agreed
+bit-for-bit, and11029 boundary inputs were excluded from the new alternative.
