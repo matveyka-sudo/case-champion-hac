@@ -277,6 +277,8 @@ def _proposal(
         else []
     )
     limitations = set(feasibility.reasons)
+    if any(score.name == "observed_route_accessibility" for score in baseline.scores):
+        limitations.add("HYPOTHETICAL_SCENARIO_ROUTE_ESTIMATE")
     if DEMO_LIMITATIONS <= prepared.before.limitations:
         limitations.update(DEMO_LIMITATIONS)
     if feasibility.state == "unverified" and not turnaround_refs:

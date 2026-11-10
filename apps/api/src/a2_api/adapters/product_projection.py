@@ -12,6 +12,7 @@ from a2_contracts.v2.journeys import (
     Leg,
     ReferenceResult,
 )
+from a2_contracts.v2.map_data import AnalysisMapData
 from a2_contracts.v2.requests import (
     IntercityCargoRequest,
     IntercityPassengerRequest,
@@ -28,7 +29,7 @@ from a2_contracts.v2.results import (
     SiteBasis,
     SubjectRef,
 )
-from a2_engine import MetricResult
+from a2_engine import MetricResult, category_index
 
 from a2_api.core.jobs import V2JobContext
 
@@ -42,6 +43,7 @@ class Projection:
         self.journeys: list[JourneyResult] = []
         self.references: list[ReferenceResult] = []
         self.counts: list[CountResult] = []
+        self.map_data = AnalysisMapData()
         self.limitations: set[str] = set()
 
     def metric(
@@ -142,6 +144,7 @@ class Projection:
             references=self.references,
             counts=self.counts,
             last_returns=[],
+            map_data=self.map_data,
             result_hash="pending-publication",
         )
         return result.model_copy(
@@ -299,6 +302,32 @@ def project_urban(out: Projection, analysis: Any) -> None:
                         metrics=() if confirmed_absence else (raw, h),
                     )
                 )
+                if mode.passenger_mode == "public_transport":
+                    observed = category_index(
+                        chosen.journey.total_seconds if chosen is not None else None,
+                        analysis.h_seconds.value,
+                    )
+                    out.score(
+                        "observed-urban-accessibility-" + key,
+                        "observed_route_accessibility",
+                        MetricResult(
+                            observed.value,
+                            observed.status,
+                            "MINIMUM_NOT_PROVEN"
+                            if observed.value is not None
+                            else "OBSERVED_ROUTE_UNAVAILABLE"
+                            if chosen is None
+                            else observed.reason_code,
+                        ),
+                        s,
+                        sorted(set(category.evidence_refs) | set(analysis.area.source_refs)),
+                        metrics=(raw, h),
+                        full=False,
+                        ranking=False,
+                    )
+                    out.limitations.update(
+                        {"OBSERVED_ROUTE_ESTIMATE", "MINIMUM_NOT_PROVEN", "NOT_A_CITY_RANKING"}
+                    )
                 out.limitations.update(category.limitations)
             point_score = out.score(
                 "urban-point-" + p.point_id,

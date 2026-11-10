@@ -8,76 +8,12 @@ from dataclasses import asdict
 from a2_contracts.common import canonical_hash
 from a2_contracts.v2.dataset import AcceptedData
 from a2_contracts.v2.journeys import Leg, LineGeometry
-from a2_contracts.v2.map_data import AnalysisMapData, MapFeature, PointGeometry
+from a2_contracts.v2.map_data import AnalysisMapData, MapFeature
 from a2_contracts.v2.requests import UrbanPassengerRequest
 from a2_contracts.v2.results import AnalysisResult
 from a2_engine import WalkAnalysisResult
 
-
-def _features(
-    snapshot: AcceptedData, request: UrbanPassengerRequest, names: Mapping[str, str]
-) -> list[MapFeature]:
-    city = request.city_id
-    cells = {cell.cell_id: cell for cell in snapshot.population_cells if cell.territory_id == city}
-    features = [
-        MapFeature(
-            entity_kind="cell",
-            entity_id=cell.cell_id,
-            cell_id=cell.cell_id,
-            territory_id=city,
-            geometry=None,
-            geometry_kind="none",
-            geometry_ref=cell.geometry.geometry_id,
-            reason_code="MAP_GEOMETRY_UNAVAILABLE",
-            population=cell.population,
-            population_year=cell.population_year,
-            population_method=cell.population_method,
-            source_refs=sorted(set(cell.source_refs) | set(cell.geometry.source_refs)),
-        )
-        for cell in sorted(cells.values(), key=lambda row: row.cell_id)
-    ]
-    for point in sorted(snapshot.sample_points, key=lambda row: row.point_id):
-        if point.territory_id != city:
-            continue
-        cell = cells[point.cell_id]
-        features.append(
-            MapFeature(
-                entity_kind="sample_point",
-                entity_id=point.point_id,
-                point_id=point.point_id,
-                cell_id=point.cell_id,
-                territory_id=city,
-                geometry=PointGeometry(
-                    type="Point", coordinates=(point.location.lon, point.location.lat)
-                ),
-                geometry_kind="actual",
-                population=cell.population,
-                population_year=cell.population_year,
-                population_method=cell.population_method,
-                source_refs=sorted(set(point.source_refs) | set(cell.source_refs)),
-            )
-        )
-    for destination in sorted(snapshot.destinations, key=lambda row: row.destination_id):
-        categories = [
-            category for category in request.categories if category in destination.categories
-        ]
-        if destination.territory_id != city or not categories:
-            continue
-        features.append(
-            MapFeature(
-                entity_kind="destination",
-                entity_id=destination.destination_id,
-                territory_id=city,
-                categories=categories,
-                name=names.get(destination.destination_id),
-                geometry=PointGeometry(
-                    type="Point", coordinates=(destination.location.lon, destination.location.lat)
-                ),
-                geometry_kind="actual",
-                source_refs=sorted(set(destination.source_refs)),
-            )
-        )
-    return features
+from a2_api.adapters.urban_map import urban_map_features as _features
 
 
 def attach_walk_map(

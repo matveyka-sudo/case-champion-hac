@@ -359,7 +359,10 @@ async def test_mixed_known_and_proven_absent_category_can_publish(database, comp
         payload = candidate.model_dump(mode="json")
         changed = set()
         for score in payload["after"]["scores"]:
-            if score["reason_code"] != "NO_FEASIBLE_ROUTE":
+            if (
+                score["reason_code"] != "NO_FEASIBLE_ROUTE"
+                and score["name"] != "observed_route_accessibility"
+            ):
                 score.update(completeness="partial", ranking_eligible=False)
                 changed.add(score["score_id"])
         for effect in payload["deltas"]:
@@ -374,7 +377,7 @@ async def test_mixed_known_and_proven_absent_category_can_publish(database, comp
     assert all(
         score.value == 0 and score.components == []
         for score in saved.after.scores
-        if score.subject.category == "school"
+        if score.subject.category == "school" and score.name != "observed_route_accessibility"
     )
     assert (
         await repository.get_run(baseline.analysis_id, claim.context.access_scope)
