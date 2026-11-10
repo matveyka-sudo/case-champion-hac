@@ -7,6 +7,71 @@ Authority: PRODUCT_SPEC.md → FORMULAS.md → IMPLEMENTATION.md → contracts.
 Data, functional implementation, numerical eligibility and national coverage
 must be assessed independently. Earlier Phase2 evidence is historical until replayed.
 
+## Three-city priority — 2026-11-10 continuation
+
+Moscow, Kaliningrad and Novorossiysk are mandatory parallel pilot profiles.
+Kaliningrad is the reference for proof and batch acceptance, not a restriction
+of the product scope. One shared urban engine and executor must serve all three.
+
+The following counts are snapshot inventories, **not independent confirmation of
+every object, physical entrance, population weight or route**. An ownership
+classifier defect (`государственн` also matches `негосударственн`) was confirmed
+across the source records. Root reproduced the seven selected institutional
+record hashes and classifications from the separately captured official ZIP.
+Five Moscow college objects and one Novorossiysk school require quarantine;
+immutable corrections .4/.3 are in preparation. Kaliningrad's eleven relevant
+registry organisations had no affected classification. Two Moscow ПК50 objects
+have an unresolved current-record change, separate from this defect. The
+Novorossiysk НОУ НПЛ school has not been routed or promoted as public evidence.
+
+| Evidence | Moscow | Kaliningrad | Novorossiysk |
+|---|---|---|---|
+| Current immutable source bundle | .3, conservative airport-coverage correction3171c07 | .5 | .2 |
+| Sample points / accepted passenger objects | 2361 / 3471 | 216 / 265, including79 schools | 409 / 107, including25 schools |
+| Included population / population in excluded cells | 13275683.671 / 2275.772 | 485498.638 / 277.772 | 315735.613 / 453.752 |
+| Administrative area / configured H | 2562.625 km² /3600s | 224.668 km² /1800s | 848.313 km² /2400s |
+| Graph source | Exact central-fed-district-261107 PBF restored; graph pending | Pinned Valhalla3.5.1 graph and proof replayed | Exact south-fed-district-261107 PBF;1126 built tiles independently rehashed |
+| Root real browser E2E | Not yet | School partial time; separately airport canonical-access model point index | Not yet |
+| Proven numerical point index | None | Airport0.4971801994143471 at one point, selected model/date only | None |
+| District / full-city index | Unknown / unknown | Unknown / unknown | Unknown / unknown |
+
+Moscow .3 preserves all factual collection bytes and the four airport candidates;
+the old radius/IATA/OurAirports evidence does not establish an exhaustive
+city-serving airport roster. Root independently ran3 correction tests. Existing
+3730 dated c894 executions remain one route, with no citywide transit coverage;
+the old .2-derived timetable must not be silently relabeled .3.
+
+Novorossiysk graph build:84.614s, exit0, no OOM, cgroup peak2236379136B under
+4294967296B total memory/swap cap. Root verified source/config/profile/receipt
+hashes and the exhaustive1126-tile inventory326987664B. This proves artifact
+identity, not a network or full-trip minimum. Isolated local endpoint8028 reports
+Valhalla3.5.1. Root independently repeated the source-verified municipal-school17
+pair on8028: network582.215s, response SHA
+`b285179bb553504ae84b4c5a2dbbeeadf9f769f4a409031d87dfbf3f6c5888a4`,29.7ms.
+The historical ML2 adapter rounds each approach to0.1s:11.6+582.215+7.5=601.315s.
+The separate exploratory unrounded length/speed receipt has601.295s; it is not
+the normalized runtime artifact. Both are unproven minima with null indices.
+This observation remains bound to .2; corrected .3 product/API/UI replay is pending.
+
+Dependencies: accepted source/ownership → approved physical endpoints → pinned
+per-profile routing binding → bounded shared OD jobs → ML1 → canonical saved
+result → city-specific UI. Numerical eligibility additionally requires catalogue,
+population and full-time minimum evidence for the exact scope. A small selected
+scope never changes administrative H or becomes a full-city rating.
+
+| Parallel task | Owner | Status | Acceptance boundary |
+|---|---|---|---|
+| Per-profile city/category routing bindings and shared batch identity | BACKEND | RUNNING | No global endpoint fallback, no city-specific engine, old cache bytes preserved |
+| Moscow exact graph preparation and source-ownership audit | ML2 + DEVOPS | RUNNING | Historic hashes, source identities, no inferred public ownership |
+| Novorossiysk graph and first actual passenger pair | DEVOPS + ML2 | RUNNING | Graph accepted; physical/source pair and real API/UI remain gates |
+| City transitions and contextual scope presets | FRONTEND | INTEGRATED | afdd2dc: prior-city result/map cleared, late responses guarded, no invented modes. Root7 focused Chromium cases PASS13.4s; fixtures only |
+| Expiring private-source permission fences | SCENARIOS + reviewer | INTEGRATED | fdc9+b92: all grants checked at one fresh clock; every private-source LLM path disabled even with opt-in. Reviewer repeated0-wire late-revoke case; root91 PG/migration/scenario/focus tests PASS15.84s. No private provider activation |
+
+Current published PR29 head1e67d67 has six successful CI checks, including the new
+Chromium fixture job:104 frontend unit,30 browser,1236 backend/contracts/assistant
+passed and1 explicit missing-local-proof skip. Later local commits require their
+own checks; these fixture tests are not three-city real E2E evidence.
+
 ## Execution and ownership
 
 | Task | Owner / branch | Status | Delivery and independent acceptance |
@@ -22,7 +87,7 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 | Saved baseline scenario integration | SCENARIOS / work/full-scenarios | INTEGRATED | bf7849d runtime+readonly frozen baseline and a616822 full/partial unknown operand guards independently accepted. Root123 scenario/runtime/publication tests PASS8.36s, including actual HTTP+spawned worker+PG on explicit TEST_ONLY inputs; no real scenario dataset enabled |
 | Runtime scope availability in form | root + FRONTEND + SCENARIOS | INTEGRATED | cdf1bad+91d7824+bf7849d+8b074f1, independent helper/runtime review. Root actual installed manifest emits exactly walk/airport/static/Nov10 local-day scope and empty scenario template inventory;27 browser cases PASS. Clean final-image replay pending |
 | Shared Rasp quota and source ingestion | BACKEND + ML2 | INTEGRATED | 3090cef+1e138ec: shared account/day cap500, decoded credential-echo rejection, private capture; independent reviewer accepted. Root185 provider/PG/migration tests PASS28.59s. Private normalizer integrated; frozen-job validity/reuse wiring still open. No live calls or production allowance initialized |
-| Certified route geometry | ML1 → BACKEND → DEVOPS | RUNNING | a3c549c integrated/independently accepted. Root verifies32 files, recomputes full native minimum and97-edge/392-vertex geometry with exact joins. Backend Journey/timeline projection and portable supplement bundle pending; no promotion of physical coverage |
+| Certified route geometry | ML1 → BACKEND → DEVOPS | INTEGRATED | a3c549c+3704f1d+732f3f6+223e52b accepted:97-edge/392-vertex source geometry, exact index operand separate from rounded display timeline. Root49 actual proof/adapter controls and new Chromium route case PASS. New-image real UI replay and final portable archive remain pending |
 
 Six child threads were simultaneously active after runtime reconfiguration;
 all were requested as gpt-6.1-sol / ultra. Runtime supplies seven slots including
