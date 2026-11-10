@@ -38,6 +38,7 @@ from a2_api.adapters.product_inputs import (
     UrbanInputs,
     candidate_is_static,
 )
+from a2_api.adapters.timetable_source import verify_timetable_source
 from a2_api.core.errors import DomainError
 from a2_api.core.registry import ProductRegistry
 
@@ -228,6 +229,8 @@ def validate_inputs(
             if not proof or not proof <= verified_evidence:
                 raise ValueError("FULL_SCOPE_REQUIRES_VERIFIED_CANONICAL_EVIDENCE")
     if isinstance(inputs, UrbanInputs):
+        if inputs.timetable is not None:
+            verify_timetable_source(snapshot, inputs.timetable, inputs.timetable_service_clock)
         if any(coverage.search_complete for coverage in inputs.coverage):
             raise ValueError(
                 "EXTERNALLY_ASSERTED_URBAN_SEARCH_COMPLETENESS_REQUIRES_SERVER_VERIFIED_RECEIPT"
@@ -362,6 +365,12 @@ def validate_inputs(
         if "public_transport" in profile.passenger_modes and inputs.timetable is None:
             raise ValueError("DATED_TIMETABLE_REQUIRED_FOR_PUBLIC_TRANSPORT")
     elif isinstance(inputs, IntercityInputs):
+        verify_timetable_source(
+            snapshot,
+            inputs.timetable,
+            inputs.timetable_service_clock,
+            {binding.transport_type: binding.mode for binding in inputs.transport_modes},
+        )
         scope = inputs.scope.comparison_scope
         if (scope.origin_territory_id, scope.destination_territory_id) != (
             profile.origin_id,

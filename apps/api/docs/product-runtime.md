@@ -84,6 +84,16 @@ city boundary remain eligible under that source scope. Population completeness i
 checked against all original cells, including positive or unknown excluded weights;
 the accepted point list cannot erase those weights.
 
+A supplemental timetable declares `timetable_service_clock` explicitly as
+`gtfs_noon_elapsed_v1` or `local_service_midnight_v1`. The server derives a
+`TimetableSourceReceipt` by matching every active normalized run to canonical
+trip/date/source/timezone/events/pickup/dropoff facts and calendar evidence.
+Declared complete schedules must contain the exact canonical dated execution
+inventory. Current canonical data cannot prove exhaustive physical connectors,
+run-specific transfer permissions or continuation closure; their complete flags
+are rejected until an independently verifiable closure receipt is supported.
+Verified catalog evidence alone is never an exhaustive routing certificate.
+
 Each input file is bounded to 32 MiB; all manifest, snapshot and supplemental
 bytes together are bounded to 64 MiB before JSON decoding. Duplicate keys,
 nonfinite numbers, wrong hashes, missing evidence and mismatched identities fail
