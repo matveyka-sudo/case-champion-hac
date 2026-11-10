@@ -9,7 +9,7 @@ from math import isclose
 from a2_contracts.common import utc
 from a2_contracts.v2.journeys import JourneyResult
 from a2_contracts.v2.requests import IntercityBase, UrbanPassengerRequest
-from a2_contracts.v2.results import AnalysisResult, validate_reference_applicability
+from a2_contracts.v2.results import AnalysisResult, Metric, validate_reference_applicability
 from a2_contracts.v2.scenarios import ScenarioResult
 
 from a2_api.core.errors import DomainError
@@ -82,6 +82,99 @@ def _urban_journey(
         raise DomainError(409, "incompatible_versions", "Scenario urban physical connector differs")
 
 
+def _urban_score_scope(
+    result: ScenarioResult, baseline: AnalysisResult, renamed: dict[str, str]
+) -> None:
+    """A full point index must use its own preserved point/category time task."""
+    old_times = [
+        row
+        for row in baseline.metrics
+        if row.subject.kind == "sample_point" and row.unit == "seconds"
+    ]
+    old_scores = {row.score_id: row for row in baseline.scores}
+    score_pairs = {
+        effect.after_id: effect.before_id
+        for effect in result.deltas
+        if effect.kind == "score" and effect.after_id and effect.before_id
+    }
+    for score in result.after.scores:
+        previous = old_scores.get(score_pairs.get(score.score_id, score.score_id))
+        if previous is not None and any(
+            getattr(previous, field) != getattr(score, field)
+            for field in (
+                "name",
+                "subject",
+                "methodology_version",
+                "calculation_kind",
+                "aggregation_basis",
+            )
+        ):
+            raise DomainError(
+                409, "incompatible_versions", "Scenario urban index task identity differs"
+            )
+    metrics = {row.metric_id: row for row in result.after.metrics}
+    scores = {row.score_id: row for row in result.after.scores}
+    old_to_new = {old: new for new, old in renamed.items()}
+    leaves: dict[str, list[Metric]] = {}
+
+    def operands(identifier: str) -> list[Metric]:
+        if identifier not in leaves:
+            result_metrics = []
+            for component in scores[identifier].components:
+                if component.kind == "metric":
+                    result_metrics.append(metrics[component.id])
+                else:
+                    result_metrics.extend(operands(component.id))
+            leaves[identifier] = result_metrics
+        return leaves[identifier]
+
+    for score in result.after.scores:
+        if (
+            score.subject.kind != "sample_point"
+            or score.status != "available"
+            or score.completeness != "full"
+        ):
+            continue
+        expected = [
+            row
+            for row in old_times
+            if row.subject.point_id == score.subject.point_id
+            and (score.subject.category is None or row.subject.category == score.subject.category)
+        ]
+        if not expected:
+            continue
+        expected_after = [
+            metrics.get(old_to_new.get(row.metric_id, row.metric_id)) for row in expected
+        ]
+        if score.value == 0 and all(
+            row is not None
+            and row.value is None
+            and row.status == "not_applicable"
+            and row.reason_code == "NO_FEASIBLE_ROUTE"
+            and row.completeness == "full"
+            for row in expected_after
+        ):
+            continue
+        point_times = [
+            row
+            for row in operands(score.score_id)
+            if row.subject.kind == "sample_point" and row.unit == "seconds"
+        ]
+        if not point_times or any(
+            row.subject.point_id != score.subject.point_id
+            or row.subject.territory_id != score.subject.territory_id
+            or row.subject.mode != score.subject.mode
+            or (
+                score.subject.category is not None
+                and row.subject.category != score.subject.category
+            )
+            for row in point_times
+        ):
+            raise DomainError(
+                409, "incompatible_versions", "Scenario point index uses another time task"
+            )
+
+
 def scenario_journeys(
     result: ScenarioResult,
     baseline: AnalysisResult,
@@ -150,14 +243,42 @@ def scenario_journeys(
     }
     for metric in result.after.metrics:
         urban = isinstance(baseline.request, UrbanPassengerRequest)
+        previous_task = old_metrics.get(renamed.get(metric.metric_id, metric.metric_id))
+        preserved_point_time = (
+            urban
+            and previous_task is not None
+            and previous_task.subject.kind == "sample_point"
+            and previous_task.unit == "seconds"
+        )
+        if (
+            preserved_point_time
+            and endpoint_scope is not None
+            and previous_task is not None
+            and any(
+                getattr(previous_task, field) != getattr(metric, field)
+                for field in (
+                    "name",
+                    "unit",
+                    "subject",
+                    "time_kind",
+                    "population_basis",
+                    "site_basis",
+                )
+            )
+        ):
+            raise DomainError(
+                409, "incompatible_versions", "Scenario urban time task identity differs"
+            )
         if metric.journey_id not in new_ids and not urban:
             continue
         resolved_journey = journeys.get(metric.journey_id or "")
         if resolved_journey is None:
             numeric_point_chain = (
                 urban
-                and metric.subject.kind == "sample_point"
-                and metric.unit == "seconds"
+                and (
+                    preserved_point_time
+                    or (metric.subject.kind == "sample_point" and metric.unit == "seconds")
+                )
                 and metric.status == "available"
                 and metric.value is not None
             )
@@ -226,4 +347,6 @@ def scenario_journeys(
             raise DomainError(
                 409, "incompatible_versions", "Scenario journey territory task differs"
             )
+    if isinstance(baseline.request, UrbanPassengerRequest) and endpoint_scope is not None:
+        _urban_score_scope(result, baseline, renamed)
     return journeys

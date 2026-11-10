@@ -298,3 +298,18 @@ def test_publication_checks_scope_hash_against_trusted_context_not_worker_result
                 endpoint_scope=scope,
                 expected_snapshot_hash=expected,
             )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("attack", ["kind", "unit"])
+async def test_changed_raw_point_task_cannot_publish_full_indices_without_chain(database, attack):
+    from test_product_scenarios import forged_time_task
+
+    pool, _, _ = database
+    repository, claim, candidate, baseline = await queued_case(pool, make_case())
+    with pytest.raises(DomainError, match="time task identity"):
+        await repository.succeed(claim, forged_time_task(candidate, attack))
+    assert await pool.fetchval("SELECT count(*) FROM runs WHERE result_kind='scenario_v2'") == 0
+    assert (
+        await repository.get_run(baseline.analysis_id, claim.context.access_scope)
+    ).result_hash == baseline.result_hash
