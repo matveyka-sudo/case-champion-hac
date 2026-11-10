@@ -1959,6 +1959,17 @@
             "title": "From Node Id",
             "type": "string"
           },
+          "geometry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LineGeometry"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Actual geometry of this movement leg only; does not establish approach or whole-journey geometry."
+          },
           "kind": {
             "enum": [
               "walk",

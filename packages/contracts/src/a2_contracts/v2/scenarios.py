@@ -494,6 +494,12 @@ class ScenarioResult(ContractModel):
                 raise ValueError("After journey snapshot differs from scenario")
             journey_refs = [*journey.evidence_refs]
             journey_refs.extend(ref for leg in journey.legs for ref in leg.evidence_refs)
+            journey_refs.extend(
+                ref
+                for leg in journey.legs
+                if leg.geometry is not None
+                for ref in leg.geometry.evidence_refs
+            )
             if journey.geometry is not None:
                 journey_refs.extend(journey.geometry.evidence_refs)
             _evidence_ids(self.evidence_refs, journey_refs)
