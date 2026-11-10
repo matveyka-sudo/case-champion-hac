@@ -47,6 +47,7 @@ export function ApiMap({
     ]);
     map.current = m;
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      className: "tl-osm",
       attribution: "© OpenStreetMap",
       maxZoom: 19,
     })

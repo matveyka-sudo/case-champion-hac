@@ -819,7 +819,8 @@ for (const mobile of [false, true]) test(`API: calculated point overview reveals
   const card = page.locator("#apiResultCard");
   const overview = page.getByLabel("Обзор рассчитанных точек");
   await expect(overview).toContainText("Индекс города: Нет данных");
-  await expect(card.locator(".api-measure")).toHaveCount(650);
+  await expect(card.locator(".api-measure")).toHaveCount(0);
+  await expect(card.getByText("Все показатели (650)", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Все показатели", exact: true })).toHaveCount(0);
   await expect(card.locator("h3")).toHaveText("Калининград");
   const summary = overview.locator("summary");
@@ -845,6 +846,7 @@ for (const mobile of [false, true]) test(`API: calculated point overview reveals
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: `test-results/api-calculated-points-${mobile ? "mobile" : "desktop"}.png` });
   await page.getByRole("button", { name: "Все показатели", exact: true }).click();
+  await card.getByText("Все показатели (650)", { exact: true }).click();
   await expect(card.locator(".api-measure")).toHaveCount(650);
   await expect(card.locator("h3")).toHaveText("Калининград");
   await expect(overview.locator("details")).toHaveJSProperty("open", false);
@@ -1102,6 +1104,9 @@ test("API: generated transport snapshot remains explicitly demo through canonica
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
   await expect(page.getByRole("status")).toContainText("Результат получен");
   await expect(page.locator("#apiResultCard .k")).toHaveText("Демонстрационный анализ");
+  await page.getByRole("button", { name: "Свернуть фильтры", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Развернуть фильтры", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Развернуть фильтры", exact: true }).click();
   await expect(page.getByRole("button", { name: "Центр Москвы", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Все точки", exact: true }).click();
   await page.getByRole("button", { name: "Центр Москвы", exact: true }).click();

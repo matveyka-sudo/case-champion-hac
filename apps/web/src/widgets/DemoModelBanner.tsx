@@ -12,8 +12,8 @@ export function DemoModelBanner({ selectedSnapshotId, savedSnapshotId, hasSavedR
   return (
     <section className="api-demo-banner" role="note" aria-label="Демонстрационная модель" ref={bannerRef}>
       <strong>{demoModelWarning}</strong>
-      <span>{saved ? "Показатели сохранённого анализа относятся к демонстрационным входным данным."
-        : `Демонстрационный набор выбран для следующего расчёта.${hasSavedResult ? " На карте сохранён прежний результат." : ""}`}</span>
+      <details><summary>Подробнее</summary><span>{saved ? "Показатели сохранённого анализа относятся к демонстрационным входным данным."
+        : `Демонстрационный набор выбран для следующего расчёта.${hasSavedResult ? " На карте сохранён прежний результат." : ""}`}</span></details>
     </section>
   );
 }

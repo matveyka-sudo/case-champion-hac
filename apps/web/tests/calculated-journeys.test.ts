@@ -21,11 +21,12 @@ describe("saved calculated journey selection", () => {
     expect(detail.open).toBe(false);
     expect(result.scores.every((score) => score.value === null)).toBe(true);
   });
-  it("omits unknown, unlinked and movement-only journeys and never exposes technical destination names", () => {
+  it("omits unknown, unlinked and movement-only journeys and never exposes technical destination names", async () => {
     const result = legGeometryFixture(null), route = result.journeys[0];
     const destination = result.map_data!.features!.find((feature) => feature.entity_id === route.destination_object_id)!;
     destination.name = destination.entity_id;
     const view = render(createElement(CalculatedJourneys, { result, onSelect: vi.fn() }));
+    await userEvent.setup().click(screen.getByText("Рассчитанные маршруты (1)"));
     expect(screen.getByText("Объект назначения")).toBeTruthy();
     route.status = "unknown";
     view.rerender(createElement(CalculatedJourneys, { result: structuredClone(result), onSelect: vi.fn() }));

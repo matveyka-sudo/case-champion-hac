@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { AnalysisResult, Selection } from "../api/types";
 
 export function CalculatedJourneys({ result, onSelect }: {
@@ -6,15 +6,16 @@ export function CalculatedJourneys({ result, onSelect }: {
   onSelect: (selection: Selection) => void;
 }) {
   const details = useRef<HTMLDetailsElement>(null);
+  const [expanded, setExpanded] = useState(false);
   const journeys = result.journeys.filter((journey) => journey.status === "available" && journey.point_id &&
     journey.time_kind === "complete_chain" && journey.total_seconds !== null && Number.isFinite(journey.total_seconds));
   if (!journeys.length) return null;
   return (
     <div className="api-calculated-points" aria-label="Обзор рассчитанных маршрутов">
-      <details ref={details}>
+      <details ref={details} onToggle={(event) => setExpanded(event.currentTarget.open)}>
         <summary>Рассчитанные маршруты ({journeys.length})</summary>
         <p className="fhint">Показаны маршруты из сохранённого результата. Наличие маршрута не подтверждает индекс точки или полноту каталога.</p>
-        <ul>
+        {expanded && <ul>
           {journeys.map((journey) => {
             const destination = result.map_data?.features?.find((feature) => feature.entity_id === (journey.destination_object_id || journey.destination_node_id));
             const name = destination?.name?.trim();
@@ -23,6 +24,7 @@ export function CalculatedJourneys({ result, onSelect }: {
               <li key={journey.journey_id}>
                 <button className="api-claim api-point-choice" aria-controls="apiResultCard" onClick={() => {
                   if (details.current) details.current.open = false;
+                  setExpanded(false);
                   onSelect({ entity_kind: "sample_point", entity_id: journey.point_id! });
                 }}>
                   <span>{label}{journey.completeness === "partial" && <small>Частичные данные</small>}</span>
@@ -31,7 +33,7 @@ export function CalculatedJourneys({ result, onSelect }: {
               </li>
             );
           })}
-        </ul>
+        </ul>}
       </details>
     </div>
   );
