@@ -89,5 +89,14 @@
     "SYNTHETIC_ONLY"
   ],
   "areas": [],
-  "snapshots": []
+  "snapshots": [
+    {
+      "snapshot_id": "demo-snapshot",
+      "territory_ids": ["city-1", "city-2", "region-1", "region-2"],
+      "valid_from": "1900-01-01",
+      "valid_to": "2100-12-31",
+      "graph_version": "synthetic-graph",
+      "calendar_version": "synthetic-calendar"
+    }
+  ]
 }

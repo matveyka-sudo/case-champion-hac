@@ -78,7 +78,7 @@ class Profile(ContractModel):
     snapshot_hash: str = Field(pattern="^[a-f0-9]{64}$")
     graph_fingerprint: str = Field(pattern="^[a-f0-9]{64}$")
     routing_profile_fingerprint: str = Field(pattern="^[a-f0-9]{64}$")
-    executor: Literal["accepted_inputs", "walk_pilot"] = "accepted_inputs"
+    executor: Literal["accepted_inputs", "walk_pilot", "walk_batches"] = "accepted_inputs"
     inputs: FileRef | None = None
     evidence: list[EvidenceRef] = Field(default_factory=list)
     static_observations: bool = False
@@ -679,7 +679,7 @@ def load_runtime() -> Runtime:
                         _referenced(source.parent, profile.inputs, budget)
                     ).inputs
                     validate_inputs(profile, inputs, snapshot, base)
-                else:
+                elif profile.executor == "walk_pilot":
                     from a2_api.adapters import walk_pilot
 
                     if (
@@ -690,6 +690,21 @@ def load_runtime() -> Runtime:
                         or walk_pilot.load_runtime().bundle_id != profile.snapshot_id
                     ):
                         raise ValueError("WALK_PILOT_SNAPSHOT_MISMATCH")
+                else:
+                    from a2_api.adapters import walk_batches
+
+                    approval, _, runtime = walk_batches.load_approval()
+                    if (
+                        profile.city_id != approval.city_id
+                        or profile.categories != approval.categories
+                        or profile.passenger_modes != ["walk"]
+                        or profile.traffic_modes != ["static"]
+                        or runtime.bundle_id != profile.snapshot_id
+                        or profile.graph_fingerprint
+                        != approval.routing_binding.graph_manifest.sha256
+                        or profile.routing_profile_fingerprint != runtime.build.profile_hash
+                    ):
+                        raise ValueError("WALK_BATCH_PROFILE_BINDING_MISMATCH")
                 profiles[key] = profile, inputs
             except (OSError, ValueError, TypeError, KeyError, DomainError):
                 missing.add(profile.analysis_kind)

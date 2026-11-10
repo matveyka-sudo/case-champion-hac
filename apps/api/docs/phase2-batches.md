@@ -1,10 +1,13 @@
 # Phase 2: resumable pedestrian OD work (proposal)
 
-Status: **proposal for architect review; runtime implementation is not approved**.
-The current adapter still executes one configured sample and an explicitly bounded
-school subset. This document authorizes no larger sample, matrix, provider call,
-new job status, migration or background retry. All prospective regression fixtures
-below must be labelled `TEST_ONLY` and use mocked routing observations.
+Status: **bounded runtime implementation approved by the integration architect**.
+The private `0005_od_checkpoints` schema, parent-acknowledged checkpoint IPC and
+typed BatchPlan/BatchExecution are approved for this stage. Activation and every
+physical OD pair still require a pinned approval manifest, accepted supplements,
+actual graph/profile binding and explicit call/attempt/byte budgets. Approval of
+the mechanism does not authorize a larger sample or matrix. There is no automatic
+retry, new public job status or progress DTO. Tests use `TEST_ONLY` mocked routing
+observations. The original design requirements below remain acceptance criteria.
 
 ## Existing constraints
 
@@ -17,8 +20,10 @@ below must be labelled `TEST_ONLY` and use mocked routing observations.
   means a queued job is claimed once. Cancellation is terminal and scoped.
 - `workers/runner.py` and `workers/calculation.py`: work runs in a spawned,
   killable process; heartbeat/lock loss cancels calculation. The hard timeout is
-  at most 600 seconds. The current IPC sends one final result of at most 16 MiB;
-  it does not support checkpoints. The child must not gain direct job SQL access.
+  at most 600 seconds. Legacy IPC still sends one final result of at most 16 MiB.
+  Approved batch jobs additionally send bounded version-1 checkpoints (8 MiB each,
+  16 MiB total) and wait for the parent's committed acknowledgment. The child has
+  no direct job SQL access. The timeout covers resume and every batch together.
 - `JobRepository.succeed` is the sole transaction publishing a validated run,
   proposals and succeeded job. Internal checkpoints cannot appear as saved runs,
   partial publications or reusable successful result-cache entries.

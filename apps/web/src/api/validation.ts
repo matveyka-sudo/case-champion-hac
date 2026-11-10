@@ -1,6 +1,6 @@
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
-import raw from "./generated/validation.json";
+import raw from "./generated/validation.json" with { type: "json" };
 import type { Schemas } from "./types";
 const ajv = new Ajv({ strict: false, allErrors: false });
 addFormats(ajv);

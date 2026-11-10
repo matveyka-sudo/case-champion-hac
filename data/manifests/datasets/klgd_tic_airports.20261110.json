@@ -1,0 +1,35 @@
+{
+  "dataset_id": "klgd_tic_airports.20261110",
+  "source_id": "klgd_tic_airports",
+  "source_url": "https://visit-kaliningrad.ru/info/how-to-get/kak-dobratsya-v-aeroport-iz-aeroporta.php",
+  "retrieved_at": "2026-11-10T14:27:58.343327Z",
+  "publication_date": null,
+  "valid_from": "2026-11-10",
+  "valid_to": "2026-11-10",
+  "geography": "Калининград: официально обслуживающие город пассажирские аэропорты",
+  "license": {
+    "name": "Factual identifiers and observed roster/operation facts only; source documents not redistributed",
+    "url": "https://visit-kaliningrad.ru/info/how-to-get/kak-dobratsya-v-aeroport-iz-aeroporta.php",
+    "status": "permitted",
+    "attribution": "klgd_tic_airports"
+  },
+  "access_method": "manual",
+  "raw_path": "airport-official-20261110/tic-airport-roster-c064f4a52b4fe1cf.html",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "c064f4a52b4fe1cf0359bef9414bf297d6b5290add2fc31e5c7bd6afb17bef92",
+    "size_bytes": 88427
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "main-article:first-paragraph": "Khrabrovo is the only passenger airport in the region; direct Kaliningrad service"
+  },
+  "coverage": "Observed current official city-serving passenger-airport roster,10Nov2026 only",
+  "limitations": [
+    "No historical or future completeness is inferred from an undated publication",
+    "No raw source documents redistributed in Git; accepted outputs contain factual identifiers/provenance",
+    "No distance cutoff used as completeness proof"
+  ],
+  "status": "accepted",
+  "qa_report": "data/bundles/kaliningrad-urban-2026-11-10.5/qa_report.json"
+}

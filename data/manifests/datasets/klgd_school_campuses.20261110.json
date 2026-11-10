@@ -1,0 +1,35 @@
+{
+  "dataset_id": "klgd_school_campuses.20261110",
+  "source_id": "klgd_school_campuses",
+  "source_url": "https://www.klgd.ru/activity/education/institutions/schools/index.php?SHOWALL_1=1",
+  "retrieved_at": "2026-11-10T11:54:48.089276Z",
+  "publication_date": null,
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Городской округ «Город Калининград»",
+  "license": {
+    "name": "Общедоступная официальная информация ОМСУ: используются только факты (ст. 1259 ГК РФ, 8-ФЗ)",
+    "url": "https://www.klgd.ru/",
+    "status": "permitted",
+    "attribution": "Администрация ГО «Город Калининград», klgd.ru"
+  },
+  "access_method": "file",
+  "raw_path": "klgd_education/schools-20261110.html",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "89808fa312acc81f470a39681c655e1c2f48aa345e6841b1ea2142efaaa54e2f",
+    "size_bytes": 68742
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "founder rows4409878/4409869 campus2 addresses": "municipal institution and physical-campus identity",
+    "pinned addressed building fully within school-site polygon": "exact physical-site join; no proximity rule"
+  },
+  "coverage": "Only school12 campus2 Багратиона107А and school3 campus2 Березовая2; public-school catalogue remains partial",
+  "limitations": [
+    "OSM school/campus labels are stale and are reconciled only for these two exact addresses",
+    "No new entrance, connector, travel time or complete school inventory is verified"
+  ],
+  "status": "accepted",
+  "qa_report": "data/bundles/kaliningrad-urban-2026-11-10.4/qa_report.json"
+}

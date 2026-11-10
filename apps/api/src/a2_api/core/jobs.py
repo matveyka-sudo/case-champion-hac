@@ -12,6 +12,7 @@ from a2_contracts.v2.results import AnalysisResult
 from a2_contracts.v2.scenarios import ScenarioProposal, ScenarioRunRequest
 from pydantic import Field, model_validator
 
+from a2_api.core.batches import BatchExecution
 from a2_api.core.scenario_scope import ScenarioEndpointScope
 
 JobKind = Literal["analysis", "scenario"]
@@ -41,6 +42,9 @@ class V2JobContext(ContractModel):
     scenario_proposal: ScenarioProposal | None = None
     cache_valid_until: Timestamp | None = None
     scenario_endpoint_scope: ScenarioEndpointScope | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+    batch_execution: BatchExecution | None = Field(
         default=None, exclude_if=lambda value: value is None
     )
 
@@ -76,7 +80,30 @@ class V2JobContext(ContractModel):
             or endpoint_scope.city_id != request.city_id
         ):
             raise ValueError("Scenario endpoint scope differs from its immutable baseline context")
+        execution = self.batch_execution
+        if execution is not None and (
+            self.scenario_proposal is not None
+            or execution.snapshot_id != self.snapshot_id
+            or execution.snapshot_hash != self.snapshot_hash
+            or execution.source_graph_version != self.versions.graph_version
+            or execution.access_scope != self.access_scope
+            or execution.context_fingerprint != batch_context_fingerprint(self)
+        ):
+            raise ValueError("Batch execution differs from its immutable job context")
         return self
+
+
+def batch_context_fingerprint(context: V2JobContext) -> str:
+    return canonical_hash(
+        context.model_dump(
+            mode="json",
+            exclude={
+                "analysis_id",
+                "cache_valid_until",
+                "batch_execution",
+            },
+        )
+    )
 
 
 JobContextUnion = JobContext | V2JobContext
