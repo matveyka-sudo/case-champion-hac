@@ -3,6 +3,7 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -59,6 +60,8 @@ import { ExplanationFinding } from "../widgets/ExplanationFinding";
 import { JourneyDetails } from "../widgets/JourneyDetails";
 import { IndexLegend } from "../widgets/IndexLegend";
 import { UrbanScopeHelp } from "../widgets/UrbanScopeHelp";
+import { CalculatedPoints } from "../widgets/CalculatedPoints";
+import { calculatedPoints, pointDisplayName } from "../api/adapters/pointOverview";
 import { useModalFocus } from "../features/accessibility";
 const kinds: Record<AnalysisKind, string> = {
   urban_passenger: "В городе",
@@ -177,6 +180,7 @@ export function ApiAtlasPage() {
     [theme, setTheme] = useState<"auto" | "light" | "dark">("auto"),
     [zoom, setZoom] = useState({ kind: "home", id: 0 });
   const session = useAnalysisSession();
+  const resultCard = useRef<HTMLElement>(null), resultTitleRef = useRef<HTMLHeadingElement>(null);
   const { result, scenario, dirty, phase } = session;
   const urban = draft.kind.startsWith("urban_"),
     cargo = draft.kind.endsWith("cargo");
@@ -290,6 +294,14 @@ export function ApiAtlasPage() {
     setSelection(value);
     setCardHidden(false);
   }, []);
+  const chooseCalculatedPoint = (value: Selection) => {
+    choose(value);
+    setZoom((z) => ({ kind: "selection", id: z.id + 1 }));
+    requestAnimationFrame(() => {
+      if (resultCard.current) resultCard.current.scrollTop = 0;
+      resultTitleRef.current?.focus({ preventScroll: true });
+    });
+  };
   const start = () => {
     if (!caps) return;
     try {
@@ -390,6 +402,10 @@ export function ApiAtlasPage() {
       ].filter((id): id is string => !!id)
     : [];
   const values = scenarioView && scenario ? scenario.after : result;
+  const pointOverview = useMemo(
+    () => result?.analysis_kind === "urban_passenger" ? calculatedPoints(result, values?.scores || []) : null,
+    [result, values?.scores],
+  );
   const scenarioPaths = useMemo(
     () => result && scenario ? scenarioJourneys(result, scenario) : null,
     [result, scenario],
@@ -1070,6 +1086,8 @@ export function ApiAtlasPage() {
           )}
           {result && !cardHidden && (
             <section
+              ref={resultCard}
+              id="apiResultCard"
               className="ctx panelc api-card"
               aria-label="Выбранный объект"
             >
@@ -1078,8 +1096,10 @@ export function ApiAtlasPage() {
                   <span className="k">
                     {scenarioView ? "Сценарий" : "Сохранённый анализ"}
                   </span>
-                  <h3>
-                    {feature?.name ||
+                  <h3 ref={resultTitleRef} tabIndex={-1}>
+                    {selection?.entity_kind === "sample_point"
+                      ? pointOverview?.points.find((p) => p.pointId === selection.entity_id)?.name || pointDisplayName(selection.entity_id, feature)
+                      : feature?.name ||
                       (selection
                         ? selectionText[selection.entity_kind]
                         : requestTitle)}
@@ -1102,6 +1122,7 @@ export function ApiAtlasPage() {
                     Все показатели
                   </button>
                 )}
+                {pointOverview && <CalculatedPoints overview={pointOverview} selection={selection} areaSelected={!!("area_id" in result.request && result.request.area_id)} onSelect={chooseCalculatedPoint} />}
                 {!shownMetrics.length && !shownScores.length && (
                   <p>
                     Для выбранного объекта нет показателей в ответе сервера.

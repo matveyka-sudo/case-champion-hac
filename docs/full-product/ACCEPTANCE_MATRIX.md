@@ -12,16 +12,17 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 | Task | Owner / branch | Status | Delivery and independent acceptance |
 |---|---|---|---|
 | Dynamic dispatcher, all four kinds and pipeline | BACKEND / work/full-backend | INTEGRATED | Corrections through4d3e4e9 reviewed: cargo roster/area, dated candidate and canonical timetable source binding, verified completeness evidence; root24 focused tests PASS. Real profiles beyond pilot remain separate acceptance gates |
-| Map/form/snapshot correctness | FRONTEND / work/full-frontend | INTEGRATED | Throughd340170: scoped numeric indices, approved colors, zero/null, partial map, snapshot/product guards, selected returns, published scenario paths. Root20 API browser tests PASS39.0s; synthetic UI evidence only |
+| Map/form/snapshot correctness | FRONTEND / work/full-frontend | INTEGRATED | Throughd7bfabf: runtime scope constraints and calculated-point list, honest incomplete inventory, mobile native closure. Root104 unit/build and30 browser cases PASS48.8s; reviewer accepted after two fixes. Latest live5192 still8fc49fe; new-image real UI replay pending |
 | Actual graph minimum bounds | ML1 / work/full-ml1 | INTEGRATED | Through63992f2 reviewed. Exact network and designated canonical-access model minima reproduced independently; root1045 engine tests PASS. e4d83a2 performs full proof recomputation; actual numeric point E2E below. Full physical entrance completeness and city index remain unproved |
 | External data restoration and normalized inputs | ML2 / work/full-ml2 | INTEGRATED | Through3b8c26f, immutable .5:79 accepted/51 quarantined schools,216 unchanged points; airport official roster full onlyNov10. Explicit .3→.5 physical compatibility, root271 ML2 tests PASS |
 | Isolated API-mode stack | DEVOPS / work/full-devops | INTEGRATED | Clean8fc49fe stack on5192, root real numerical browser E2E. df33d0a documents 189-file private restoration, restart and dump/restore. External archive hosting still unavailable; no claim of public one-command retrieval |
 | Independent reliability review | reviewer / read-only baseline | RUNNING | Reproducible defects with tests, then review delivered commits |
 | Selection-aware grounded Alice | root / integration branch | INTEGRATED | a220985+140da8c+ef826f7+c30d0cd reviewed; saved metric/score facts, bounded context, null/zero and partial preserved. Actual browser saved score-only explanation test PASS; no new paid calls |
 | Bounded resumable OD executor | BACKEND / work/full-backend | INTEGRATED | Through2151884, independent review accepted expiry/cache/provider budget fixes including SQL-clock race; root63 PG/HTTP/module tests PASS42.48s. No production batch enabled; real matrix performance remains unverified |
-| Saved baseline scenario integration | SCENARIOS / work/full-scenarios | CHANGES_REQUIRED | Through681bc848 point-task classification protected; root80 focused tests PASS. Reviewer found selected unknown category can be omitted from a full aggregate. Owner correcting operand inventory; runtime hooks still pending |
-| Runtime scope availability in form | root + FRONTEND + SCENARIOS | RUNNING | cdf1bad+91d7824 add typed scopes and pure date-bound projection; 11 scope/421 contract/41 module-scope checks PASS. Runtime/UI hooks pending; no feature-completion claim |
-| Shared Rasp quota and source ingestion | BACKEND + ML2 | RUNNING | Central account/day hard cap500 including retries and copyright; private expiring observations. No real calls, missing key and verified remaining account allowance; no synthetic accepted snapshot |
+| Saved baseline scenario integration | SCENARIOS / work/full-scenarios | INTEGRATED | bf7849d runtime+readonly frozen baseline and a616822 full/partial unknown operand guards independently accepted. Root123 scenario/runtime/publication tests PASS8.36s, including actual HTTP+spawned worker+PG on explicit TEST_ONLY inputs; no real scenario dataset enabled |
+| Runtime scope availability in form | root + FRONTEND + SCENARIOS | INTEGRATED | cdf1bad+91d7824+bf7849d+8b074f1, independent helper/runtime review. Root actual installed manifest emits exactly walk/airport/static/Nov10 local-day scope and empty scenario template inventory;27 browser cases PASS. Clean final-image replay pending |
+| Shared Rasp quota and source ingestion | BACKEND + ML2 | INTEGRATED | 3090cef+1e138ec: shared account/day cap500, decoded credential-echo rejection, private capture; independent reviewer accepted. Root185 provider/PG/migration tests PASS28.59s. Private normalizer integrated; frozen-job validity/reuse wiring still open. No live calls or production allowance initialized |
+| Certified route geometry | ML1 → BACKEND → DEVOPS | RUNNING | a3c549c integrated/independently accepted. Root verifies32 files, recomputes full native minimum and97-edge/392-vertex geometry with exact joins. Backend Journey/timeline projection and portable supplement bundle pending; no promotion of physical coverage |
 
 Six child threads were simultaneously active after runtime reconfiguration;
 all were requested as gpt-6.1-sol / ultra. Runtime supplies seven slots including
@@ -49,11 +50,52 @@ hash without external provider calls. It exposed a separate usability defect:
 the first20 unknown scores hid the two numeric scores and city total. Root fix
 b7aa963 adds a bounded representative overview and retains unknown totals.99
 assistant tests and an offline replay of the actual saved result pass, including
-renderer validation and no mutation. Independent review/new-image UI replay pending.
+renderer validation and no mutation. Independent review accepted; new-image UI replay pending.
 
 GitHub recheck: dev remains91ed5262b62c16afa3ca619f8140c43917cf8325;
 PR26 dd46659 and PR27 297accd remain OPEN/DRAFT/CLEAN, five checks each SUCCESS.
-Those remote checks do not cover this unpublished integration branch.
+Those remote checks do not cover this integration branch. Draft PR29 now tracks
+it at https://github.com/matveyka-sudo/case-champion-hac/pull/29, initially published
+d6c9c0a. Current-head CI must be checked separately; no dev merge performed.
+
+Root full API/contracts/assistant checks on54ce057:1237PASS172.31s, including
+disposable real PostgreSQL schemas. Mypy100sources, Ruff,196-file formatting,
+canonical schema export freshness, web layout/API freshness and product config
+PASS. Later geometry/UI deliveries and the final clean image remain separate
+acceptance gates; this is not real-data E2E for all product profiles.
+
+Calculated-point UI60dfcd8+d7bfabf: root104unit/build and30Chromium browser cases
+PASS48.8s. Independent review reproduced/fixed false1of1 coverage when unknown
+points lacked mapfeatures; root visually caught/fixed a mobile native-details
+reopening race. Citynull, partial labels, zero and allunknown tasks stay visible.
+New bounded Chromium fixture CI2686f8a integrated; Linux CI observation pending.
+
+On the same actual5192 deployment, root opened an isolated browser context and
+queried the saved root analysis/job IDs: both returned404/unknown_id without
+result data. Actual intercity passenger, urban cargo, intercity cargo and separate
+pipeline forms disabled launch and explained unavailable computation. These are
+real unavailability/isolation checks, not successful transport analyses.
+
+Geometrya3c549c adds a separate immutable supplement; all earlier proof bytes stay
+unchanged. Root rehashed32 receipt files and independently recomputed the full
+native minimum before geometry verification:97 directed edges,392 physical model
+vertices, no gaps, exact original time.12.749s wall/901496832B macOS peak RSS.
+External record:`root-certified-geometry-replay.json`; final geometry receipt
+SHA89dcd9238cf1289e243030611303bb2a964b819a978e51aba9bf83a2045a4eab.
+Shape encoding is six decimal places; canonical-access model limitations remain.
+Independent reviewer separately verified source copies/hashes/geometry replay;
+root1071 engine tests PASS5.93s. This is not yet the deployed Journey/map adapter.
+
+ML2 private Rasp preparation1c750fa+9a06234 integrated after permission/time fixes:
+new private files0600/directories0700, unsafe reuse rejected, future capture time
+rejected. Root315 ML2 tests PASS14.44s; independent reviewer reproduced fixes.
+No actual schedule response was fetched or accepted. BACKEND3090cef quota and
+1e138ec decoded JSON credential-echo protection are integrated in54ce057. Root185
+provider/PG/migration tests PASS28.59s; reviewer26 independent attack variants and
+48 provider regressions PASS. Rejected responses never reach capture/DTO/cache,
+and reservations remain consumed. No production allowance was initialized and
+no provider call was made. Runtime validity at admission/publication/reuse remains
+a separate prerequisite for enabling expiring schedule observations.
 
 At `fee4112d`, the coordinator used the actual browser UI on port 5191 to request
 Kaliningrad / school / walk / static, 2026-11-10 08:30 Europe/Kaliningrad.
@@ -94,24 +136,24 @@ labels. This is UI acceptance, not real numerical E2E; live5191 still has fee411
 
 | Requirement | Existing implementation / evidence boundary | Required completion evidence | Dependency / owner |
 |---|---|---|---|
-| Three urban pilot cities, nine approved categories, modes/date/time/territory | Canonical request/UI exist; real walk adapter restricts Kaliningrad/school/static | Each exposed capability matches accepted city/category/mode/calendar; parameters alter real calculation | ML2 → BACKEND → FRONTEND |
+| Three urban pilot cities, nine approved categories, modes/date/time/territory | Canonical request/UI and explicit runtime scope constraints exist; current certified profile is Kaliningrad/airport/walk/static onNov10 | Each exposed capability matches accepted city/category/mode/calendar; parameters alter real calculation | ML2 → BACKEND → FRONTEND |
 | Stable metric grid, water/buildings, original cell population, districts | Accepted bundles and engine preparation exist; excluded cells remain QA | Source-verified cell/point geometry, population/year/method, nonduplicating district shares; positive unknown weight blocks full aggregate | ML2 / ML1 |
-| Physical approaches + nearest full-time object | One observed network route and two approaches; no minimum proof | All admissible endpoint alternatives and candidate objects covered; independent minimum bound equals feasible total time | ML1 + ML2 |
+| Physical approaches + nearest full-time object | Exact network and designated canonical-access model minimum independently verified for one airport pair; full physical entrance scope unproved | All admissible endpoint alternatives and candidate objects covered; independent minimum bound equals feasible total time | ML1 + ML2 |
 | Urban routes/breakdown/geometry and honest missing geometry | Walk pilot observed 547.404 seconds historically | Repeat live executor and canonical/API/UI persistence; no fabricated connector line or duplicate wait | DEVOPS / BACKEND / FRONTEND |
-| Category, weighted point, population territory/district indices | Pure engine implemented; real pilot indices null | Formula boundary tests plus genuinely complete restricted scope; label exact territory, never city-wide by inference | ML1 + ML2 |
+| Category, weighted point, population territory/district indices | Real airport category/point0.4971801994143471 persisted and displayed red; citynull and215otherpointsunknown | Formula boundary tests plus genuinely complete restricted scope; label exact territory, never city-wide by inference | ML1 + ML2 |
 | OD τ, 28 local weekly slices, accessible counts, last return | Engine functions exist; no production mass executor | Correct week/calendar/direction/population weighting, separate H, persisted resumable jobs and selected return context | BACKEND + ML1 |
-| Intercity passengers, city and region-via-capitals, road separately | Engine/public DTO/UI exist; production dispatcher pending | Real dated chains, 7-day departure window, initial wait/path separation, reference A proof/coverage, actual transfers and unique departures | ML2 + BACKEND |
+| Intercity passengers, city and region-via-capitals, road separately | Engine/public DTO/UI and dispatcher implemented; sufficient accepted production chains absent | Real dated chains, 7-day departure window, initial wait/path separation, reference A proof/coverage, actual transfers and unique departures | ML2 + BACKEND |
 | Static/typical/live/historical | Contract and version validators exist | Requested profile used or explicit unavailable; stale/wrong graph/direction rejected; no static fallback | BACKEND / ML2 |
 | Urban freight, physical sites, compatible infrastructure, direction | Engine and accepted site inventory exist | Real truck approaches + compatibility + all required operations; separate receipt/dispatch, equal site weights only when volumes absent | ML2 + BACKEND |
 | Intercity freight, city/subject, urgency 24/72/744 h | Engine/public DTO/UI exist | Full preparation/wait/movement/handling chain, 31-day departure window, confirmed compatibility; absent operations retain unknown | ML2 + BACKEND |
 | Pipeline separate | Engine and contract exist; terminal coordinates alone insufficient | Directed accepted connection/product plus comparable period/unit V/Q, >100% QA; never delivery index | ML2 + BACKEND |
-| Approved scenario templates and explicit execution | HTTP/jobs/UI and pure Scenario Engine exist | Saved immutable baseline → validated dated physical overlay → recompute → persisted canonical result → UI; losses/negative effects visible | BACKEND + ML1 |
+| Approved scenario templates and explicit execution | Saved-baseline runtime/HTTP/spawned worker/PG verified on TEST_ONLY inputs; no real scenario document enabled in certified pilot | Saved immutable baseline → validated dated physical overlay → recompute → persisted canonical result → UI; losses/negative effects visible | BACKEND + ML1 |
 | Scenario feasibility/demand/resources | Engine richer than wire interface | No silent loss of dated event/resource constraints; unverified remains model experiment; adding service requires evidence | Shared contract review |
-| Alice saved-result explanation | Read-only tools/budget/grounding exist; selected metrics after #20 defect confirmed | Context-relevant bounded facts and fallback, exact saved claims, evidence, prompt injection/timeout/budget tests; analytics survives disabled AI | root + reviewer |
+| Alice saved-result explanation | Selected and bounded overview facts fixed/reviewed; actual UI fallback and saved-result offline replay pass; updated image replay pending | Context-relevant bounded facts and fallback, exact saved claims, evidence, prompt injection/timeout/budget tests; analytics survives disabled AI | root + reviewer |
 | Worker/session reliability | Existing leases, subprocess timeout, PG atomic publication | Real isolated DB: duplicate payload/keys, restart, cancel, stale worker, concurrent claims, unauthorized session, final persistence | BACKEND + reviewer |
-| Scalable batches | Design document only at baseline | Bounded chunks, stable identities, checkpoints/resume/cache, rate limits/backpressure/memory/progress/deadline; measured real matrix workload | BACKEND |
+| Scalable batches | Checkpoint/resume/cache/fenced publication implemented and PG-tested; production input matrix not enabled | Bounded chunks, stable identities, checkpoints/resume/cache, rate limits/backpressure/memory/progress/deadline; measured real matrix workload | BACKEND |
 | Functional UI across all profiles | Existing forms/map/jobs/scenarios/Alice; five audited defects being fixed | Real backend browser tests; no dead controls, responsive/keyboard/a11y, supported/partial/unavailable, null/zero/long names | FRONTEND |
-| Reproducible whole stack | Old Compose demo-only/no worker; host pilot launcher exists | Clean archived checkout + restored artifacts; migration order/PostGIS/API/worker/real graph/API SPA health and real job; restart persistence | DEVOPS |
+| Reproducible whole stack | Clean8fc49fe archived build and private189-file restore verified on5192; restart and PG dump/restore pass; new integrated image pending | Clean archived checkout + restored artifacts; migration order/PostGIS/API/worker/real graph/API SPA health and real job; restart persistence | DEVOPS |
 | Data retrieval and provenance | Manifests and local handoff; missing artifacts in fresh checkout | Verified external retrieval or explicit local licensed handoff, immutable hashes/source versions, QA, reproducible restore and exact unavailable items | ML2 / DEVOPS |
 | CI and final QA | PR27 historical five checks green | Current integration Python suites/Ruff/mypy/import, frontend install/types/lint/build/unit/browser, PG and real E2E; distinguish synthetic and skipped | root + all owners |
 | National coverage | Catalog is not route/data coverage | Accepted source coverage for requested nationwide scope; no inference from pilot success | External data + ML2 |
@@ -135,9 +177,9 @@ jobs, UI, data restore, scenario wiring and route proof work continue.
 
 | Flag | Verdict | Basis |
 |---|---|---|
-| PRODUCT_FUNCTIONAL_READY | partial | One real partial chain; full dispatcher/batches/scenario deployment still open |
+| PRODUCT_FUNCTIONAL_READY | partial | Real numerical point chain works; dispatcher/batches/scenario runtime implemented with tests, but all-profile real inputs/E2E and latest integrated deployment remain open |
 | REAL_DATA_COVERAGE_READY | partial | Real Kaliningrad bundle and accepted source artifacts; city catalog/connectors incomplete |
-| NUMERICAL_INDEX_READY | partial | Exact limited canonical-access model proof and existing formula independently reproduced; source-bound product projection, saved numeric result and real UI replay remain pending. City/district aggregate remains null |
+| NUMERICAL_INDEX_READY | partial | Exact canonical-access airport model point index0.4971801994143471 recomputed by worker, saved in PostgreSQL and shown red through real UI. This limited point result does not prove full physical entrance coverage; city/district aggregate remains null |
 | NATIONWIDE_COVERAGE_READY | no | National catalog/bindings do not prove national accepted routing/operation coverage |
 
 No dev merge is authorized. Acceptance requires reviewing final diffs and replaying

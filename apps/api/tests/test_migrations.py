@@ -10,7 +10,7 @@ async def test_migration_upgrade_twice_and_downgrade_preserve_unrelated_tables(d
     pool, schema, url = database
     await pool.execute("CREATE TABLE unrelated_table(note text)")
     await asyncio.to_thread(migrate, url, schema)
-    assert await pool.fetchval("SELECT version_num FROM alembic_version") == "0005_od_checkpoints"
+    assert await pool.fetchval("SELECT version_num FROM alembic_version") == "0006_rasp_quota"
     await asyncio.to_thread(migrate, url, schema, "base", True)
     assert await pool.fetchval("SELECT to_regclass('jobs')") is None
     assert await pool.fetchval("SELECT to_regclass('runs')") is None
@@ -18,6 +18,10 @@ async def test_migration_upgrade_twice_and_downgrade_preserve_unrelated_tables(d
     assert await pool.fetchval("SELECT to_regclass('od_checkpoints')") is None
     assert await pool.fetchval("SELECT to_regclass('od_attempts')") is None
     assert await pool.fetchval("SELECT to_regclass('od_executions')") is None
+    assert await pool.fetchval("SELECT to_regclass('rasp_quota_accounts')") is None
+    assert await pool.fetchval("SELECT to_regclass('rasp_quota_days')") is None
+    assert await pool.fetchval("SELECT to_regclass('rasp_quota_attempts')") is None
+    assert await pool.fetchval("SELECT to_regclass('rasp_quota_credentials')") is None
     assert await pool.fetchval("SELECT to_regclass('unrelated_table')") == "unrelated_table"
     await asyncio.to_thread(migrate, url, schema)
     assert await pool.fetchval("SELECT count(*) FROM jobs") == 0

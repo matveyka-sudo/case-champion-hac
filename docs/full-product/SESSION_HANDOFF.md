@@ -1,5 +1,157 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Latest continuation — Draft PR29 and calculated-point UI acceptance
+
+Goal ACTIVE. Root candidate72a624830604887b12d19c3c47f5e290616a04b0 before this
+note. Draft PR29 created: https://github.com/matveyka-sudo/case-champion-hac/pull/29.
+Initial published head d6c9c0a; remote dev independently rechecked unchanged at
+91ed5262b62c16afa3ca619f8140c43917cf8325. PR26 ancestorPR27 ancestorintegration
+verified again. No dev merge. Old notes saying no push/PR are now historical.
+
+- FRONTEND60dfcd8+d7bfabf accepted and integrated. Explicit calculated-point list,
+  numerical point totals includingzero, citynull retained, actualsample inventory
+  denominator. Reviewer found P2: one mappedknownpoint plus215unmappedunknown tasks
+  misleadingly showed1of1. Fixed by requiring all saved point-total IDs in inventory
+  or omitting ratio. Root actual mobile screenshot exposed a separate native
+  details/state race; fixed by synchronous native closure before selection.
+  Root104unit/buildPASS,30ChromiumbrowsercasesPASS48.8s; desktop/mobile screenshot
+  inspected after final fix. Reviewer29focused+actualsavedresult partialinventory
+  replay PASS. These browser responses are synthetic; newclean real5193 pending.
+- Earlier zoom replay suspicion was NOT a defect: existing consumed-command-ID
+  guard already prevented it. Root checked surrounding code and withdrew finding;
+  regression now covers changed effect dependencies.
+- DEVOPS2686f8a accepted/integrated: separate bounded Chromium fixture CI job,
+  locked Node/npm/Playwright, CI=true, one worker, no retries/agents,300s global/
+  10min job. Owner27localcasesPASS43.2s; root30cases cover final frontend.
+  Linux run of this new job still pending updated PR head.
+- Initial PR29 CI observed engine/ML2/PostGIS/environment SUCCESS, backend/PG
+  still running at last observation; do not infer newhead checks from oldhead.
+- BACKEND geometry implementation and source/precision/actualreplay tests ongoing;
+  DEVOPS supplement transport checker/package awaiting final backend source.
+- Approved SCENARIOS private-source implementation in apps/api: omitted empty
+  context bindings, independent from freshness TTL;0007 episodes+grants tables and
+  nullable runs.private_source_bindings trusted copy. Final DB clock publication
+  fence, fresh post-RR read authorization, revoke/purge denial, scoped capabilities,
+  private external-LLM disabled unless explicitly granted. Only disposable tests;
+  no production migration/purge/provider activation. Source attribution UI separate.
+- ML1 read-only next-scope audit: adjacent n6068+n6069 whole-cell weights total
+ 4390.421; zeroadditional origins covered by oldpair certificate. Fresh native
+  endpoint/turn/physical/geometry proof required. Hcity1800 unchanged; no city or
+  administrative district completeness. ML2 independently auditing n6068 source
+  geometry/maincomponent/obstacles. Important correction: accessID suffix180.7 is
+  along-way OFFSET, not approach distance; accepted approach21.12m (connector21.1).
+  n6069 districtshare661.233 vswholecell661.234 uses distinct floor/round conventions;
+  preserve discrepancy, never normalize silently. No new native/matrixcalls yet.
+
+## Latest continuation — reviewed quota integration and full backend verification
+
+Supersedes older task statuses below. Goal ACTIVE. Integration candidate before
+this note is54ce057d54c5b33c1fa2a5cff907cb026e3b0747. No push or dev merge.
+
+- Integrated3090cef+1e138ec after root source review and independent reviewer
+  acceptance. Shared PostgreSQL account/day quota includes every retry/copyright
+  wire attempt; no default fresh allowance, no uncertain refunds. Decoded/raw
+  credential echoes and duplicate JSON keys rejected before capture/DTO/cache.
+  Reviewer26 independent attacks +48 provider regressions PASS. Root185 focused
+  provider/PG/migration tests PASS28.59s. No actual provider calls or initialized
+  production quota. Migration0006 creates tables only.
+- Root full API/contracts/assistant suite on merged54ce057:1237PASS172.31s with
+  real disposable PostgreSQL schemas. Mypy100sources, Ruff, formatting196files,
+  schema export freshness, web layout/API freshness and product config all PASS.
+  No pending root test sessions at this checkpoint. New geometry/UI changes will
+  still need their own checks and integrated replay.
+- BACKEND implementing approved optional ProofBinding.geometry FileRef to typed
+  geometry-supplement.json (schema waydex-certified-walk-geometry-binding/1,
+  receipt and original_snapshot FileRefs). Original proof binding remains copied
+  unchanged and core equality excludes the optional field. Reuse live verified
+  graph/access/minimum; no second native graph parse. Exact time/index operand
+  stays unchanged and unlinked; separate partial total_seconds metric binds a
+  single walking Journey with microsecond-rounded timeline and explicit precision
+  limitation. No public DTO/formula/tolerance edits approved.
+- DEVOPS found and root independently confirmed hash convention correction:
+  snapshot raw file SHA f616122d81a297917d49fa64bec39a9876c20ef385469a3f4a7cbdf9b271b82d;
+  API canonical e3ac08680e52b9938d4f816690aefd6d15054ccf308cbc780918b4c8d61e4930
+  matches old proof binding and geometry receipt. ML1 compatibility7c57ada uses
+  ensure_ascii=True and is separate. Do not confuse these authorities. Preserve
+  original manifest753efeee in new archive provenance. Geometry staging verified
+  33files/2730733B; old189-file archive and5190/5191/5192 unchanged.
+- FRONTEND implementing explicit calculated-point overview, distinct numeric
+  point totals (zero included), denominator from actual sample inventory, citynull
+  visible, no automatic selection/draft changes. Await delivery and root browser
+  review. DEVOPS preparing fixture-only Chromium CI to close missing browser job;
+  final5193 clean build waits integrated geometry/UI source SHA.
+- SCENARIOS has new read-only design task: carry private Rasp cache validity and
+  authorization through frozen-job admission/execution/publication/result reuse.
+  No implementation approved yet; no provider activation or invented timetable.
+
+## Latest continuation — scope UI, scenarios, geometry and private ingestion
+
+Supersedes older status below. Goal ACTIVE. Root clean candidate before this note
+68e444f690aff2addf56d7be273146c9b62f2e9f, integration/full-product-20261110.
+Still no push/Draft PR/dev merge for this completion wave.
+
+Accepted and integrated since the preceding note:
+- FRONTEND8b074f1: runtime scope guards/preset/human names; root93unit/build/
+  API freshness and27 actual browser cases PASS(1min). Browser fixtures synthetic.
+- SCENARIOSbf7849d: product registry/preflight/worker saved-baseline scenario path,
+  one readonly RR connection, closure before CPU, hash/version/token/proposal checks.
+  Runtime scopes derived without extra proof reread, template inventory empty unless
+  source-bound scenario documents registered. Root actual installed .5 runtime
+  exposes only airport/walk/static localNov10 and no scenario templates.
+- SCENARIOSa616822: full AND partial numeric aggregates cannot omit unknown inputs;
+  mixed known-positive + confirmed-absence category0 stays valid (root identified
+  an initial false rejection before final commit). H stays immutable. Reviewer
+  independently accepted. Root123 scenario/PG/runtime tests PASS8.36s after this
+  final fix; prior161 broader runtime/projection/module tests PASS10.08s.
+- ML21c750fa+9a06234: private expiring direct-rail observation normalizer, zero HTTP.
+  ReviewerP2 fixes0700/0600 final modes +future captures<=now committed; owner315
+  and root315 tests PASS14.44s, reviewer11 focused fixes PASS. Pure preparation,
+  NOT runtime activation: cache-policy frozen-job admission/publication/reuse seam
+  still required; actual key/known allowance and licensed captures absent.
+- ML1a3c549c: exact97-edge geometry supplement, root source review, all32hashes,
+  full native minimum recomputation+geometry replay PASS12.749s/901496832BmacOSRSS.
+  Root1071enginePASS5.93s. Reviewer26geometry/executor+actual independent replay
+  PASS (reviewer did not rerun351562pair proof; root did).392 physical vertices,
+  96 exact network joins, oldtime/index unchanged. Source shape6digit precision;
+  DirectedEdge.forward attested authority, node lattice only necessary sanity,
+  no invented snapping/interpolation/new coverage claim.
+  Actual artifact: /Users/kirito/waydex-phase2-runtime/source-bound-walk/
+  geometry-builds/airport-directed-v2-20261110/runs/airport-geometry-final-20261110-v1.
+  receiptSHA89dcd9238cf1289e243030611303bb2a964b819a978e51aba9bf83a2045a4eab.
+  Root evidence /Users/kirito/waydex-full-runtime/root-certified-geometry-replay.json.
+
+Open owners / next operations:
+- BACKEND3090cef quota NOT integrated yet: reviewerP1 raw-byte key echo scan misses
+  JSON unicode escaped secret in copyright/capture, including no-callback path.
+  Owner fixing decoded keys/values+duplicate JSON keys, no capture/cache on failure,
+  consumed reservation retained.184 ownerPG/mock+70 revieweroffline tests otherwise
+  positive. Migration0006/centralDB explicit policy is not activated anywhere.
+  After separate security commit, BACKEND must propose geometry→Journey precision
+  bridge before edits: Python datetime microseconds vs exact13773.627798430474s.
+  No canonical DTO weakening or formula change. Optional ProofBinding.geometry
+  FileRef is preferred; originalgeometry/proof-binding.json pinned d527… core
+  fields must match new binding excludinggeometry (avoid circular receipt hash).
+  Reuse verifiedgraph/minimum/access; no double100MBparse in production.
+- FRONTEND next task RUNNING: explicit calculated-point overview/selection for
+ 433score result. Distinct available point TOTALs (zero included), notknowncategory
+  withunknowntotal; preservecitynull/allunknown access; no silent selection/draft
+  changes. Own apps/web. No redesign. Root will rerun browser after delivery.
+- DEVOPS RUNNING only geometry packaging/checker plan+exclusive staging; await exact
+  backendoptionalfield and finalsourceSHA before new5193. Preserve5192/oldarchive.
+- Reviewer available after acceptedpartial/ML2/geometry; recheck quota securityfix.
+- ML1/ML2/scenario threads briefly errored403; resumed once, completed clean
+  commits listed above. Original /root/backend remains pending_init ghost even
+  afterinterrupt; realbackendowner is concurrency_backend. Do not recreate work.
+
+Root current static checks PASS: Ruffallareas, mypyAPI/contracts/assistant95files,
+engine157files, ML239files. No pending root exec sessions at this note.
+Actual5192 browser isolatedcontext tab2 denied foreignsavedanalysis/job404; all
+nonwalk/pipeline forms disable unavailable launches. OSMtile errors show honest
+basemap fallback. Tab1 retains original owning real result; latestimage8fc49fe.
+Need final fullAPI/PG afterquota+geometrybridge, freshcleanstack5193, browseractual
+scope/route/pointoverview/Alice replay, finalCI and DraftPR. Fullproduct scope
+remains unmet where genuine accepted transport inputs/coverage are absent.
+
 ## Latest continuation — numerical browser acceptance and runtime scopes
 
 This section supersedes older status below. Goal remains ACTIVE; no dev merge.

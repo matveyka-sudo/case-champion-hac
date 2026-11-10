@@ -152,6 +152,15 @@
 .api-scope-help{margin:14px 0;padding:12px 0;border-block:1px solid var(--line)}
 .api-scope-help .iconbtn{width:100%;white-space:normal}
 .api-scope-preview{overflow-wrap:anywhere}
+.api-calculated-points{margin:12px 0}
+.api-point-territory{font-size:13px;color:var(--text-2);margin:8px 0}
+.api-card .api-calculated-points details{margin:8px 0 14px}
+.api-calculated-points summary{min-height:44px;padding:10px 0;cursor:pointer;font-size:13px;font-weight:700;color:var(--accent)}
+.api-calculated-points ul{list-style:none;margin:10px 0;padding:0;display:grid;gap:8px}
+.api-calculated-points .api-point-choice{width:100%;min-height:44px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin:0;padding:10px}
+.api-point-choice>span{color:var(--text);overflow-wrap:anywhere}
+.api-point-choice small{display:block;color:var(--text-2);font-size:12px;margin-top:4px}
+.api-point-choice b{white-space:nowrap;font-size:13px}
 .wx-select-popup .lucide {
   width: 16px;
   height: 16px;
