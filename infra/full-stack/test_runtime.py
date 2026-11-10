@@ -52,5 +52,37 @@ class GraphReaderSources(unittest.TestCase):
             runtime.directory_sources(self.graph, self.configuration)
 
 
+class BoundWalkingExecutors(unittest.TestCase):
+    def make_runtime(self, executors, bindings):
+        from types import SimpleNamespace
+
+        return SimpleNamespace(
+            profiles={
+                name: (SimpleNamespace(executor=value), None) for name, value in executors.items()
+            },
+            walk_bindings=bindings,
+        )
+
+    def test_admitted_bound_walk_and_certified_profile_are_supported(self):
+        configured = self.make_runtime(
+            {"m": "walk_batches", "k": "certified_walk_model"}, {"m": object()}
+        )
+        self.assertEqual(
+            runtime.supported_executors(configured), {"walk_batches", "certified_walk_model"}
+        )
+
+    def test_legacy_global_batch_cannot_bypass_private_binding(self):
+        with self.assertRaisesRegex(RuntimeError, "operator binding"):
+            runtime.supported_executors(self.make_runtime({"m": "walk_batches"}, {}))
+
+    def test_empty_admission_is_rejected(self):
+        with self.assertRaisesRegex(RuntimeError, "operator binding"):
+            runtime.supported_executors(self.make_runtime({"m": "walk_batches"}, {"m": None}))
+
+    def test_unknown_executor_is_rejected(self):
+        with self.assertRaisesRegex(RuntimeError, "no approved checker"):
+            runtime.supported_executors(self.make_runtime({"x": "unreviewed_code"}, {}))
+
+
 if __name__ == "__main__":
     unittest.main()
