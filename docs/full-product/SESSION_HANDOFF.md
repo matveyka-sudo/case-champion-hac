@@ -3,7 +3,8 @@
 ## Latest continuation — numerical browser acceptance and runtime scopes
 
 This section supersedes older status below. Goal remains ACTIVE; no dev merge.
-Root candidate before this note: b7aa963, branch integration/full-product-20261110.
+Root candidate before the latest update: dbb0de639ed561928951da897b19059f4d112fcd,
+branch integration/full-product-20261110.
 
 - Real root browser5192 job46c9aba0-cdd2-499d-8ac0-48df59f7b453 succeeded;
   analysis5bf81f85-5787-495b-bee0-8bbc8d4e04a0, saved hash
@@ -16,9 +17,12 @@ Root candidate before this note: b7aa963, branch integration/full-product-202611
   healthy; dump/restore+restart confirmed. Post-root cgroup peak1009315840B,
   limit1073741824B, zeroOOM. Private189-file archive restored, no remote upload.
 - Engine1045PASS5.87s; ML2271PASS12.81s. Prior pending sessions completed.
-- SCENARIOS681bc848 integrated, root80PASS, but reviewer new P1: full point score
-  may omit an unknown selected category. Owner fixing complete operand inventory
-  (also territory positive-population points); not accepted. Runtime hooks WIP.
+- SCENARIOS1f6f342 now integrated: exact category/point operand inventory guard,
+  duplicate/substituted/foreign subjects rejected; zero-population unknown task
+  remains visible but is excluded from territorial weighted dependencies.
+  Root95 focused tests PASS4.59s including realPG publication. Reviewer inspected
+  WIP63tests with no finding; committed-SHA confirmation still pending. Runtime
+  hooks WIP. Scenarios remain disabled on actual certified profile.
 - Rootcdf1bad+91d7824: UrbanPassengerScope DTO/generated schemas/pure
   product_capabilities.urban_passenger_scopes(runtime, certified_service_date=None).
   None legacy vs[] registered none; no completeness claim, one matching scope.
@@ -29,7 +33,9 @@ Root candidate before this note: b7aa963, branch integration/full-product-202611
 - Rootb7aa963 assistant bounded overview fixes live433-score result omitting its
   only numeric point and citynull.99assistant+1API focus PASS; actual saved-result
   offline replay+renderer PASS without mutation/calls. Reviewer currently checks
-  scopes and assistant. Real UI had template/DISABLED, no external AI credentials.
+  scopes and assistant: both subsequently ACCEPTED by independent reviewer
+  (12scope/schema +99assistant tests and actual saved-result replay).
+  Real UI had template/DISABLED, no external AI credentials.
 - BACKEND quota in progress: shared central account/day allowance<=500, explicit
   already_used/operator baseline, retries and copyright count, no auto-reset or
   app-DB fallback. Owns test_module_boundaries.py again after root91d7824;
@@ -42,6 +48,16 @@ Root candidate before this note: b7aa963, branch integration/full-product-202611
   Also localizing raw metric names seen in actual UI. Agent work not yet accepted.
 - GitHub freshly checked PR26/27 OPEN/DRAFT/CLEAN fiveSUCCESS each; dev unchanged
   91ed5262b62c16afa3ca619f8140c43917cf8325. Current integration still unpublished.
+- ML1 existing thread resumed on NEW clean worktree
+  /Users/kirito/waydex-full-ml1-geometry, work/full-ml1-geometry, base4b8c26c.
+  Approved separate geometry exporter/verifier for exactly97 certified directed
+  traversals from the pinned local tiles; preserve old artifacts/weights/proofs.
+  Clip using actual pinned Loki projection algorithm/bits, not percent*geodesic;
+  no arbitrary tolerance or actor92-edge polyline. Honest network-only components
+  if physical continuity cannot be verified. Backend handoff after real receipt.
+  New spawn and reviewer reactivation hit thread limit; existing ML1 followup
+  succeeded. Old /root/backend stays pending_init even after interrupt attempt;
+  do not mistake it for active backend implementation (concurrency_backend owns it).
 
 Next: accept scenario omission fix, integrate runtime scopes/templates hooks and
 frontend; independently review quota/ingestion, full backend/PG/static/current
