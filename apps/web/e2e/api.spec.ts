@@ -39,6 +39,7 @@ async function mockApi(
     territories?: Territory[];
     result?: Partial<AnalysisResult>;
     scenarioResult?: Partial<Schemas["ScenarioResult"]>;
+    scenarioProposal?: Partial<Schemas["ScenarioProposal"]>;
   } = {},
 ) {
   let request: unknown = null,
@@ -170,6 +171,7 @@ async function mockApi(
         : [
             {
               ...proposal,
+              ...options.scenarioProposal,
               baseline_analysis_id: result.analysis_id,
               baseline_result_hash: result.result_hash,
             },
@@ -1117,4 +1119,20 @@ test("API: generated transport snapshot remains explicitly demo through canonica
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await choose(page, "Город", "Калининград");
   await expect(notice).toHaveCount(0);
+});
+
+test("API: synthetic saved proposal shows its exact two-minute shift before the run button is pressed", async ({ page }) => {
+  // Synthetic UI protocol fixture; no production scenario or numerical proof.
+  const mock = await mockApi(page, { scenarioProposal: { fixed_parameters: { ...proposal.fixed_parameters, shift_seconds: 120 } } });
+  await page.goto("/?data=api#atlas");
+  await cityRun(page);
+  await page.getByRole("button", { name: "Агент", exact: true }).click();
+  const card = page.locator(".api-chat .proposal");
+  await expect(card).toContainText("Согласовать пересадку");
+  await expect(card).toContainText("Сдвиг отправления: +2 мин");
+  await expect(card.getByRole("button", { name: "Проверить сценарий", exact: true })).toBeEnabled();
+  expect(mock.requests.some((request) => request.url.endsWith("/runs"))).toBe(false);
+  await card.getByRole("button", { name: "Проверить сценарий", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Сценарий", exact: true })).toBeVisible();
+  expect(mock.requests.filter((request) => request.url.endsWith("/runs"))).toHaveLength(1);
 });

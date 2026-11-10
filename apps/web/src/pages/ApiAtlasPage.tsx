@@ -57,6 +57,7 @@ import { UrbanReadiness } from "../widgets/UrbanReadiness";
 import { CalculatedJourneys } from "../widgets/CalculatedJourneys";
 import { DemoModelBanner } from "../widgets/DemoModelBanner";
 import { isDemoModelSnapshot } from "../api/adapters/demoModel";
+import { proposalShiftText } from "../api/adapters/result";
 import { Select } from "../shared/Select";
 import { DatePicker } from "../shared/DatePicker";
 import { Icon, Wordmark } from "../shared/ui";
@@ -1412,6 +1413,7 @@ export function ApiAtlasPage() {
                     ? "Согласовать пересадку"
                     : "Дополнительное отправление"}
                 </b>
+                <p>{proposalShiftText(p.fixed_parameters.shift_seconds)}</p>
                 <p>
                   {p.feasibility === "unverified"
                     ? "Модельный эксперимент, реализуемость не подтверждена"
