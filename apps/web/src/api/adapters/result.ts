@@ -1,4 +1,4 @@
-import type { Schemas, Selection } from "../types";
+import type { Schemas, Selection, Territory } from "../types";
 export const statusText: Record<string, string> = {
   available: "Данные доступны",
   partial: "Частичные данные",
@@ -147,6 +147,10 @@ export function measureText(m: Schemas["Metric"] | Schemas["Score"]) {
   const value = unit === "seconds" ? m.value / 60 : m.value;
   return `${new Intl.NumberFormat("ru", { maximumFractionDigits: 1 }).format(value)} ${unit === "seconds" || unit === "minutes" ? "мин" : unit === "points_0_100" ? "из 100" : unit === "hours" ? "ч" : unit}`;
 }
+export function scoreBand(score: Schemas["Score"]) {
+  if (score.status !== "available" || score.value === null) return "unknown";
+  return score.value < 50 ? "low" : score.value < 75 ? "medium" : "high";
+}
 export function subjectMatches(
   subject: Schemas["SubjectRef"],
   selection: Selection,
@@ -172,6 +176,54 @@ export function selectFeature(
         f.entity_id === selection.entity_id,
     ) || null
   );
+}
+export function snapshotLabel(
+  snapshot: Schemas["SnapshotAvailability"],
+  territories: Territory[],
+  snapshots: Schemas["SnapshotAvailability"][],
+) {
+  const names = snapshot.territory_ids
+    .map((id) => territories.find((t) => t.territory_id === id))
+    .filter((t): t is Territory => !!t)
+    .map((t) => t.name + (t.level === "region" ? " (субъект)" : ""));
+  const remaining = snapshot.territory_ids.length - Math.min(names.length, 2);
+  const scope = names.slice(0, 2).join(", ") || "Область набора данных";
+  const day = (date: string | null) =>
+    date
+      ? new Date(date + "T00:00:00Z").toLocaleDateString("ru", { timeZone: "UTC" })
+      : "дата неизвестна";
+  let length = Math.min(8, snapshot.snapshot_id.length);
+  while (
+    length < snapshot.snapshot_id.length &&
+    snapshots.some(
+      (s) => s.snapshot_id !== snapshot.snapshot_id &&
+        s.snapshot_id.endsWith(snapshot.snapshot_id.slice(-length)),
+    )
+  )
+    length++;
+  return `${scope}${remaining ? ` и ещё ${remaining}` : ""} · ${day(snapshot.valid_from)}–${day(snapshot.valid_to)} · версия ${snapshot.snapshot_id.slice(-length)}`;
+}
+export function lastReturnsForSelection(
+  returns: Schemas["LastReturn"][],
+  selection: Selection | null,
+  features: Schemas["MapFeature"][],
+) {
+  if (!selection) return returns;
+  if (selection.entity_kind === "destination")
+    return returns.filter((r) => r.destination_object_id === selection.entity_id);
+  const points = new Set<string>();
+  if (selection.entity_kind === "sample_point") points.add(selection.entity_id);
+  for (const f of features) {
+    if (
+      (f.entity_id === selection.entity_id && f.entity_kind === selection.entity_kind) ||
+      (selection.entity_kind === "cell" && f.cell_id === selection.entity_id) ||
+      (selection.entity_kind === "territory" && f.territory_id === selection.entity_id)
+    ) {
+      if (f.entity_kind === "sample_point") points.add(f.entity_id);
+      if (f.point_id) points.add(f.point_id);
+    }
+  }
+  return returns.filter((r) => points.has(r.point_id));
 }
 export function safeSource(url: string | null | undefined) {
   if (!url) return undefined;

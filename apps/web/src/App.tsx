@@ -91,7 +91,7 @@ export default function App() {
             <AtlasPage />
           </Suspense>
         ) : (
-          <LandingPage />
+          <LandingPage dataMode={dataMode === "api" ? "api" : "demo"} />
         )}
       </AtlasProvider>
     </Boundary>

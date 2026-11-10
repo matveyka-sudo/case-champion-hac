@@ -20,6 +20,10 @@ import {
   DraftError,
   categoryIds,
   categoryLabels,
+  isUrbanCity,
+  eligibleSnapshots,
+  resolvedSnapshotId,
+  pipelineProducts,
   type ApiDraft,
 } from "../api/adapters/request";
 import {
@@ -37,6 +41,9 @@ import {
   reasonText,
   profileLabel,
   noticeText,
+  snapshotLabel,
+  lastReturnsForSelection,
+  scoreBand,
 } from "../api/adapters/result";
 import { useAnalysisSession } from "../features/analysis/useAnalysisSession";
 import { Select } from "../shared/Select";
@@ -44,6 +51,7 @@ import { DatePicker } from "../shared/DatePicker";
 import { Icon, Wordmark } from "../shared/ui";
 import { NavigationLink } from "../shared/NavigationLink";
 import { ApiMap } from "../widgets/ApiMap";
+import { ExplanationFinding } from "../widgets/ExplanationFinding";
 import { useModalFocus } from "../features/accessibility";
 const kinds: Record<AnalysisKind, string> = {
   urban_passenger: "В городе",
@@ -113,7 +121,7 @@ function Measure({ value }: { value: Schemas["Metric"] | Schemas["Score"] }) {
         {measureLabel(value.name)}
         {context && <small>{context}</small>}
       </span>
-      <b>{measureText(value)}</b>
+      <b data-score-band={"score_id" in value ? scoreBand(value) : undefined}>{measureText(value)}</b>
       {note && <small>{note}</small>}
     </div>
   );
@@ -252,7 +260,14 @@ export function ApiAtlasPage() {
     setSelection(null);
     setScenarioView(false);
     setQuestion("");
-    setDraft((d) => ({ ...d, ...patch }));
+    setDraft((d) => ({
+      ...d,
+      ...patch,
+      ...(["kind", "level", "cityId", "originId", "destinationId", "date", "slot"]
+        .some((key) => key in patch && patch[key as keyof ApiDraft] !== d[key as keyof ApiDraft])
+        ? { snapshotId: "" }
+        : {}),
+    }));
   };
   const choose = useCallback((value: Selection) => {
     setSelection(value);
@@ -308,6 +323,7 @@ export function ApiAtlasPage() {
       .filter(
         (t) =>
           t.level === l &&
+          (!urban || (!!caps && isUrbanCity(t, caps))) &&
           (!search ||
             t.name
               .toLocaleLowerCase("ru")
@@ -392,13 +408,23 @@ export function ApiAtlasPage() {
     caps?.cargo_profiles
       .filter((p) =>
         !urban && draft.pipeline
-          ? p.kind === "pipeline"
+          ? p.kind === "pipeline" && !!draft.pipelineProduct &&
+            p.product === pipelineProducts[draft.pipelineProduct] &&
+            caps.pipeline_products.includes(p.product)
           : p.kind === "delivery",
       )
       .map((p) => ({
         value: p.profile_id,
         label: profileLabel(p),
       })) || [];
+  const snapshots = caps ? eligibleSnapshots(draft, catalog, caps) : [];
+  const snapshotId = resolvedSnapshotId(draft, snapshots);
+  const missingSnapshotCoverage = caps?.snapshots !== undefined && !snapshots.length;
+  const shownReturns = lastReturnsForSelection(
+    result?.last_returns || [],
+    selection,
+    result?.map_data?.features || [],
+  );
   const hasRanking = result?.scores.some(
     (s) =>
       s.ranking_eligible &&
@@ -594,6 +620,39 @@ export function ApiAtlasPage() {
                     onChange={(areaId) => change({ areaId })}
                   />,
                 )}
+              {caps.snapshots !== undefined &&
+                field(
+                  "Набор данных",
+                  <>
+                    <Select
+                      label="Набор данных"
+                      value={snapshotId}
+                      options={[
+                        { value: "", label: "Выберите набор данных" },
+                        ...snapshots.map((s) => ({
+                          value: s.snapshot_id,
+                          label: snapshotLabel(s, catalog, caps.snapshots || []),
+                        })),
+                      ]}
+                      onChange={(snapshotId) => change({ snapshotId })}
+                    />
+                    <p className="fhint api-snapshot-hint">
+                      {!(urban ? draft.cityId : draft.originId && draft.destinationId)
+                        ? "Сначала выберите территорию или пару."
+                        : !snapshots.length
+                          ? "Нет подтверждённых данных для этих территорий и даты. Измените условия."
+                          : snapshots.length === 1
+                            ? "Единственный подходящий набор выбран автоматически."
+                            : "Есть несколько подходящих наборов. Выберите версию для расчёта."}
+                    </p>
+                    {snapshots.length === 1 && (
+                      <p className="fhint api-snapshot-coverage">
+                        {snapshotLabel(snapshots[0], catalog, caps.snapshots)}
+                      </p>
+                    )}
+                    {inline("snapshotId", ["snapshot_id"])}
+                  </>,
+                )}
               {!cargo &&
                 (urban
                   ? field(
@@ -724,20 +783,19 @@ export function ApiAtlasPage() {
                         label="Продукт трубопровода"
                         value={draft.pipelineProduct}
                         options={[
+                          { value: "", label: "Выберите продукт" },
                           { value: "oil", label: "Нефть" },
                           { value: "oilprod", label: "Нефтепродукты" },
                           { value: "gas", label: "Газ" },
-                        ].filter((p) =>
-                          caps.pipeline_products.includes(
-                            (
-                              {
-                                oil: "oil",
-                                oilprod: "oil_products",
-                                gas: "gas",
-                              } as const
-                            )[p.value as ApiDraft["pipelineProduct"]],
+                        ].filter((p) => !p.value || caps.pipeline_products.includes(
+                          pipelineProducts[p.value as Exclude<ApiDraft["pipelineProduct"], "">],
+                        )).map((p) => ({
+                          ...p,
+                          disabled: !!p.value && !caps.cargo_profiles.some((profile) =>
+                            profile.kind === "pipeline" &&
+                            profile.product === pipelineProducts[p.value as Exclude<ApiDraft["pipelineProduct"], "">],
                           ),
-                        )}
+                        }))}
                         onChange={(v) =>
                           change({
                             pipelineProduct: v as ApiDraft["pipelineProduct"],
@@ -760,8 +818,11 @@ export function ApiAtlasPage() {
                       />
                       {inline("profileId", ["cargo_profile_id"])}
                       <p className="fhint">
-                        Срочность, температура и обработка определены профилем,
-                        не угадываются из вида груза.
+                        {draft.pipeline && !urban
+                          ? draft.pipelineProduct
+                            ? "Показаны профили выбранного продукта трубопровода."
+                            : "Сначала выберите продукт трубопровода."
+                          : "Срочность, температура и обработка определены профилем, не угадываются из вида груза."}
                       </p>
                     </>,
                   )}
@@ -837,7 +898,7 @@ export function ApiAtlasPage() {
               </p>
               <button
                 className="iconbtn primary"
-                disabled={!ready?.calculation_available || running}
+                disabled={!ready?.calculation_available || running || missingSnapshotCoverage}
                 onClick={start}
               >
                 <Icon name="play" />
@@ -1083,7 +1144,7 @@ export function ApiAtlasPage() {
                 )}
                 {!scenarioView &&
                   (result.counts.length > 0 ||
-                    result.last_returns.length > 0) && (
+                    shownReturns.length > 0) && (
                     <details>
                       <summary>Дополнительные показатели</summary>
                       {result.counts.map((c) => (
@@ -1097,9 +1158,16 @@ export function ApiAtlasPage() {
                             : ""}
                         </p>
                       ))}
-                      {result.last_returns.map((r, i) => (
+                      {shownReturns.map((r, i) => (
                         <p key={i}>
                           Последний обратный рейс · {statusText[r.status]}
+                          <br />
+                          {result.map_data?.features?.find((f) =>
+                            f.entity_kind === "sample_point" && f.entity_id === r.point_id,
+                          )?.name || "Точка анализа"}{" → "}
+                          {result.map_data?.features?.find((f) =>
+                            f.entity_kind === "destination" && f.entity_id === r.destination_object_id,
+                          )?.name || "Объект назначения"}
                           <br />
                           Выйти: {timestampText(r.leave_at, r.timezone)}
                           <br />
@@ -1171,7 +1239,7 @@ export function ApiAtlasPage() {
               </div>
               <button
                 className="iconbtn primary"
-                disabled={!ready?.calculation_available || running}
+                disabled={!ready?.calculation_available || running || missingSnapshotCoverage}
                 onClick={start}
               >
                 Рассчитать
@@ -1227,42 +1295,7 @@ export function ApiAtlasPage() {
                       : "Объяснение модели"}
                   </small>
                   {m.answer.findings.map((finding, j) => (
-                    <div key={j}>
-                      <p>{finding.text}</p>
-                      {[
-                        ...new Set([
-                          ...finding.metric_ids,
-                          ...finding.claims.map((c) => c.metric_id),
-                        ]),
-                      ].map((id) => {
-                        const value = result?.metrics.find(
-                          (v) => v.metric_id === id,
-                        );
-                        return value ? (
-                          <button
-                            className="api-claim"
-                            key={id}
-                            onClick={() => {
-                              const f = result?.map_data?.features?.find((f) =>
-                                subjectMatches(value.subject, {
-                                  entity_kind: f.entity_kind,
-                                  entity_id: f.entity_id,
-                                }),
-                              );
-                              if (f)
-                                choose({
-                                  entity_kind: f.entity_kind,
-                                  entity_id: f.entity_id,
-                                });
-                            }}
-                          >
-                            {measureLabel(value.name)}: {measureText(value)}
-                          </button>
-                        ) : (
-                          <span key={id}>Метрика недоступна</span>
-                        );
-                      })}
-                    </div>
+                    <ExplanationFinding key={j} finding={finding} result={result} onSelect={choose} />
                   ))}
                   {m.answer.proposals.map((p, j) => (
                     <p className="fhint" key={j}>

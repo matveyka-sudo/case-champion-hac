@@ -78,10 +78,13 @@ export function ApiMap({
             }),
           ),
       );
-      const value = (
+      const score = (
         candidates.find((s) => s.calculation_kind === "aggregate") ||
         (candidates.length === 1 ? candidates[0] : undefined)
-      )?.value;
+      );
+      const value = score?.value;
+      const partial = score?.completeness === "partial";
+      const dashArray = partial ? "1 4" : f.geometry_kind === "schematic" ? "5 5" : undefined;
       const color =
         value == null
           ? "#8990a7"
@@ -101,19 +104,22 @@ export function ApiMap({
         } as GeoJsonObject,
         {
           style: {
-            color: selected ? "#2f5bff" : "white",
-            weight: selected ? 3 : 1,
+            color: selected ? "#2f5bff" : partial ? "#59647e" : "white",
+            weight: selected ? 3 : partial ? 2 : 1,
             fillColor: color,
-            fillOpacity: 0.62,
-            dashArray: f.geometry_kind === "schematic" ? "5 5" : undefined,
+            fillOpacity: partial ? 0.3 : 0.62,
+            dashArray,
+            lineCap: partial ? "round" : "butt",
           },
           pointToLayer: (_, latlng) =>
             L.circleMarker(latlng, {
               radius: selected ? 10 : 7,
-              color: selected ? "#2f5bff" : "#fff",
+              color: selected ? "#2f5bff" : partial ? "#59647e" : "#fff",
               weight: 2,
               fillColor: color,
-              fillOpacity: 0.9,
+              fillOpacity: partial ? 0.45 : 0.9,
+              dashArray,
+              lineCap: partial ? "round" : "butt",
             }),
         },
       );
@@ -121,7 +127,8 @@ export function ApiMap({
       tip.textContent =
         (f.name || selectionText[f.entity_kind]) +
         (f.geometry_kind === "schematic" ? " · схема" : "") +
-        (value == null ? " · нет индекса" : ` · ${value.toFixed(1)}`);
+        (value == null ? " · нет индекса" : ` · ${value.toFixed(1)}`) +
+        (partial ? " · частичная оценка" : "");
       layer
         .bindTooltip(tip)
         .on("click", () =>
@@ -179,6 +186,12 @@ export function ApiMap({
         className="map-layer"
         aria-label="Карта результатов API"
       />
+      {scores.some((s) => s.status === "available" && s.completeness === "partial") && (
+        <div className="api-map-key" aria-label="Условные обозначения карты">
+          <span className="api-partial-symbol" aria-hidden="true" />
+          Точечный контур — частичная оценка
+        </div>
+      )}
       {tileError && (
         <div className="api-map-note">
           Подложка недоступна. Полученные геометрии остаются видимыми.
