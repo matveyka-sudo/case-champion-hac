@@ -3,40 +3,8 @@ import { categories, fixtures, type CatId, type CityId } from "../mocks/model";
 import { useAtlas, type Params } from "../features/state";
 import { Icon } from "../shared/ui";
 
-export function Seg({
-  name,
-  items,
-  value,
-  onChange,
-  stack = false,
-}: {
-  name: string;
-  items: readonly (readonly [string, string, string?, boolean?])[];
-  value: string | null;
-  onChange: (v: string) => void;
-  stack?: boolean;
-}) {
-  return (
-    <div
-      className={`segc ${stack ? "stack" : ""}`}
-      role="group"
-      aria-label={name}
-    >
-      {items.map(([v, label, icon, disabled]) => (
-        <button
-          key={v}
-          type="button"
-          disabled={disabled}
-          aria-pressed={v === value}
-          onClick={() => onChange(v)}
-        >
-          {icon && <Icon name={icon} />}
-          <span>{label}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
+import { Seg } from "./SegmentedControl";
+export { Seg } from "./SegmentedControl";
 const cityItems = [
   ["msk", "Москва"],
   ["kgd", "Калининград"],

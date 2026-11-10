@@ -60,9 +60,7 @@ import { proposalShiftText } from "../api/adapters/result";
 import { ResultHeadline } from "../widgets/ResultHeadline";
 import { ScenarioComparison } from "../widgets/ScenarioComparison";
 import { Select } from "../shared/Select";
-import { DatePicker } from "../shared/DatePicker";
-import { Icon, Wordmark } from "../shared/ui";
-import { NavigationLink } from "../shared/NavigationLink";
+import { Icon } from "../shared/ui";
 import { ApiMap } from "../widgets/ApiMap";
 import { ExplanationFinding } from "../widgets/ExplanationFinding";
 import { JourneyDetails } from "../widgets/JourneyDetails";
@@ -71,12 +69,10 @@ import { UrbanScopeHelp } from "../widgets/UrbanScopeHelp";
 import { CalculatedPoints } from "../widgets/CalculatedPoints";
 import { calculatedPoints, pointDisplayName } from "../api/adapters/pointOverview";
 import { useModalFocus } from "../features/accessibility";
-const kinds: Record<AnalysisKind, string> = {
-  urban_passenger: "В городе",
-  intercity_passenger: "Пассажирские связи",
-  urban_cargo: "Грузовой доступ",
-  intercity_cargo: "Грузовые связи",
-};
+import { AtlasShell } from "../widgets/AtlasShell";
+import { AtlasHeader } from "../widgets/AtlasHeader";
+import { TimeDockView } from "../widgets/TimeDockView";
+import { Seg } from "../widgets/SegmentedControl";
 const phaseLabels: Record<string, string> = {
   idle: "Выберите условия и запустите анализ",
   running: "Расчёт выполняется",
@@ -546,69 +542,15 @@ export function ApiAtlasPage() {
       s.completeness === "full",
   );
   return (
-    <div id="atlas" className={`atlas api-atlas${demoModel ? " has-demo-model" : ""}${filtersCollapsed ? " filters-collapsed" : ""}`} aria-label="Атлас Waydex — API">
-      <header className="at-top">
-        <NavigationLink
-          className="at-back"
-          to="top"
-          aria-label="Вернуться на главную"
-        >
-          <Icon name="arrow-left" />
-        </NavigationLink>
-        <Wordmark small />
-        <div className="modes" role="group" aria-label="Режим анализа">
-          {Object.entries(kinds).map(([kind, label]) => (
-            <button
-              key={kind}
-              aria-pressed={draft.kind === kind}
-              className={draft.kind === kind ? "on" : ""}
-              onClick={() => toggleMode(kind as AnalysisKind)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <div className="at-sp" />
-
-        <button
-          className="iconbtn api-mobile"
-          aria-label="Фильтры"
-          onClick={() => {
-            setFiltersOpen((v) => !v);
-            setChatOpen(false);
-          }}
-        >
-          <Icon name="sliders-horizontal" />
-        </button>
-        <button
-          className="iconbtn"
-          aria-label="Тема оформления"
-          onClick={() =>
-            setTheme((t) =>
-              t === "auto" ? "dark" : t === "dark" ? "light" : "auto",
-            )
-          }
-        >
-          <Icon name={theme === "dark" ? "moon" : "sun"} />
-        </button>
-        <button
-          className="iconbtn"
-          aria-label="Агент"
-          aria-pressed={chatOpen}
-          onClick={() => {
-            setChatOpen((v) => !v);
-            setFiltersOpen(false);
-          }}
-        >
-          <Icon name="sparkles" />
-          Агент
-        </button>
-      </header>
-      <DemoModelBanner selectedSnapshotId={snapshotId} savedSnapshotId={result?.snapshot_id} hasSavedResult={!!result} bannerRef={demoBanner} />
-      <div className={`api-body ${chatOpen ? "with-chat" : ""}`}>
+    <AtlasShell className={`api-atlas${demoModel ? " has-demo-model" : ""}${filtersCollapsed ? " filters-collapsed" : ""}`} label="Атлас Waydex — API"
+      header={<AtlasHeader mode={draft.kind === "urban_passenger" ? "city" : draft.kind === "intercity_passenger" ? "pax" : "cargo"}
+        title={origin?.name || "Россия · выберите город"} theme={theme} onThemeChange={setTheme}
+        onModeChange={(mode) => toggleMode(mode === "city" ? "urban_passenger" : mode === "pax" ? "intercity_passenger" : draft.kind.endsWith("cargo") ? draft.kind : "urban_cargo")}
+        onFilters={() => { setFiltersOpen(true); setChatOpen(false); }} chatOpen={chatOpen}
+        onChat={() => { setChatOpen((value) => !value); setFiltersOpen(false); }} />} notice={      <DemoModelBanner selectedSnapshotId={snapshotId} savedSnapshotId={result?.snapshot_id} hasSavedResult={!!result} bannerRef={demoBanner} />}>
         <aside
           id="apiFilters"
-          className={`api-filters ${filtersOpen ? "m-open" : ""}`}
+          className={`at-filters api-filters ${filtersCollapsed ? "is-collapsed" : ""} ${filtersOpen ? "m-open" : ""}`}
           aria-label="Условия анализа"
         >
           <div className="api-panel-head">
@@ -644,6 +586,9 @@ export function ApiAtlasPage() {
           )}
           {caps && (
             <>
+              {cargo && field("Режим грузовых связей", <Seg name="Режим грузовых связей" value={urban ? "city" : "inter"}
+                items={[["city", "В городе", "building-2"], ["inter", "Между территориями", "waypoints"]]}
+                onChange={(value) => toggleMode(value === "city" ? "urban_cargo" : "intercity_cargo")} />)}
               {!urban &&
                 field(
                   "Масштаб",
@@ -1291,45 +1236,11 @@ export function ApiAtlasPage() {
           )}
           <div className="api-bottom">
             {!!values?.scores.length && <div className="api-floating-legend panelc"><details open={!mobile}><summary>Шкала индекса</summary><IndexLegend /></details></div>}
-            <div className="timedock panelc">
-              <div className="td-date">
-                <label htmlFor="apiDate">Дата</label>
-                <DatePicker
-                  id="apiDate"
-                  value={draft.date}
-                  min="1900-01-01"
-                  max="2100-12-31"
-                  onChange={(date) => change({ date })}
-                />
-                <span className="tz">
-                  {origin?.timezone || "Выберите территорию"}
-                </span>
-              </div>
-              <div className="api-time">
-                <label htmlFor="apiTime">
-                  {String(Math.floor(draft.slot / 4)).padStart(2, "0")}:
-                  {String((draft.slot % 4) * 15).padStart(2, "0")}
-                </label>
-                <input
-                  id="apiTime"
-                  aria-label="Время отправления, шаг 15 минут"
-                  type="range"
-                  min="0"
-                  max="95"
-                  step="1"
-                  value={draft.slot}
-                  onChange={(e) => change({ slot: +e.target.value })}
-                />
-                {inline("date", ["departure_at"])}
-              </div>
-              <button
-                className="iconbtn primary"
-                disabled={!ready?.calculation_available || running || missingSnapshotCoverage || scopeBlocked || missingPassengerMode}
-                onClick={start}
-              >
-                Рассчитать
-              </button>
-            </div>
+            <TimeDockView date={draft.date} slot={draft.slot} timezoneLabel={origin?.timezone || "Выберите территорию"}
+              min="1900-01-01" max="2100-12-31" dateInputId="apiDate" timeInputId="apiTime"
+              onDateChange={(date) => change({ date })} onSlotChange={(slot) => change({ slot })} run={start}
+              disabled={!ready?.calculation_available || running || missingSnapshotCoverage || scopeBlocked || missingPassengerMode}
+              highlighted={dirty} />
             <div className="zgroup panelc">
               {[
                 ["in", "plus", "Приблизить"],
@@ -1355,7 +1266,7 @@ export function ApiAtlasPage() {
         </main>
         <aside
           id="apiChat"
-          className={`api-chat ${chatOpen ? "m-open" : ""}`}
+          className={`at-chat api-chat ${chatOpen ? "m-open" : "is-closed"}`}
           aria-label="Агент Waydex"
           hidden={!chatOpen}
         >
@@ -1466,7 +1377,6 @@ export function ApiAtlasPage() {
             расчёта.
           </p>
         </aside>
-      </div>
-    </div>
+    </AtlasShell>
   );
 }

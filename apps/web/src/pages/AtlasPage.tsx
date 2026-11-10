@@ -1,15 +1,13 @@
-import { NavigationLink } from "../shared/NavigationLink";
 import { useLayoutEffect, useEffect, useRef, useState } from "react";
 import { useModalFocus } from "../features/accessibility";
 import {
   useAtlas,
   currentStatus,
   type Status,
-  type Mode,
 } from "../features/state";
 import { fixtures, categoryById } from "../mocks/model";
 import { mockGateway } from "../mocks/gateway";
-import { Icon, Wordmark, Demo } from "../shared/ui";
+import { Icon, Demo } from "../shared/ui";
 import { timeLabel } from "../shared/format";
 import { FiltersPanel } from "../widgets/FiltersPanel";
 import { RussiaMap } from "../widgets/RussiaMap";
@@ -17,6 +15,8 @@ import { CityMap } from "../widgets/CityMap";
 import { ResultCard } from "../widgets/ResultCard";
 import { AgentChat, type ChatHandle } from "../widgets/AgentChat";
 import { TimeDock } from "../widgets/TimeDock";
+import { AtlasHeader } from "../widgets/AtlasHeader";
+import { AtlasShell } from "../widgets/AtlasShell";
 import { timezone } from "../shared/timezone";
 const states: [Status, string, string][] = [
   ["idle", "circle-dashed", "До расчёта"],
@@ -252,80 +252,12 @@ export function AtlasPage() {
           ? "Грузовой доступ к узлам"
           : "Грузовая связь А → Б";
   return (
-    <div id="atlas" className="atlas" aria-label="Атлас Waydex">
-      <header className="at-top">
-        <NavigationLink
-          className="at-back"
-          to="top"
-          aria-label="Вернуться на главную"
-        >
-          <Icon name="arrow-left" />
-        </NavigationLink>
-        <Wordmark small />
-        <div
-          className="modes"
-          role="tablist"
-          aria-label="Режим анализа"
-          id="modeTabs"
-          onKeyDown={(e) => {
-            if (!["ArrowLeft", "ArrowRight"].includes(e.key)) return;
-            e.preventDefault();
-            const items: Mode[] = ["city", "pax", "cargo"],
-              next =
-                items[
-                  (items.indexOf(p.mode) + (e.key === "ArrowRight" ? 1 : 2)) % 3
-                ];
-            dispatch({ type: "mode", mode: next });
-            document.getElementById("mode-" + next)?.focus();
-          }}
-        >
-          {(
-            [
-              ["city", "building-2", "В городе", "В городе"],
-              ["pax", "waypoints", "Пассажирские связи", "Пассажиры"],
-              ["cargo", "container", "Грузовые связи", "Грузы"],
-            ] as const
-          ).map(([mode, icon, long, short]) => (
-            <button
-              id={"mode-" + mode}
-              key={mode}
-              role="tab"
-              aria-selected={p.mode === mode}
-              tabIndex={p.mode === mode ? 0 : -1}
-              onClick={() => dispatch({ type: "mode", mode })}
-            >
-              <Icon name={icon} />
-              <span className="lbl">
-                <span className="l-full">{long}</span>
-                <span className="l-short">{short}</span>
-              </span>
-            </button>
-          ))}
-        </div>
-        <div className="crumbs">
-          <Icon name="map" />
-          <span>Россия</span>
-          {title !== "Россия · выберите город" && (
-            <>
-              <Icon name="chevron-right" />
-              <b>{title}</b>
-            </>
-          )}
-        </div>
-        <div className="at-sp" />
-        <div className="theme-seg" role="group" aria-label="Тема оформления">
-          {(["auto", "light", "dark"] as const).map((v, i) => (
-            <button
-              key={v}
-              aria-label={`Тема: ${["авто", "светлая", "тёмная"][i]}`}
-              aria-pressed={s.themeMode === v}
-              title={["Авто: по времени на шкале", "Светлая", "Тёмная"][i]}
-              onClick={() => dispatch({ type: "ui", patch: { themeMode: v } })}
-            >
-              <Icon name={["sun-moon", "sun", "moon"][i]} />
-            </button>
-          ))}
-        </div>
+    <AtlasShell header={<>
+      <AtlasHeader mode={p.mode} title={title} theme={s.themeMode} onModeChange={(mode) => dispatch({ type: "mode", mode })}
+        onThemeChange={(themeMode) => dispatch({ type: "ui", patch: { themeMode } })}
+        filtersButtonRef={filtersButton} chatButtonRef={chatButton} onFilters={() => dispatch({ type: "ui", patch: { mobileFilters: true } })}
+        chatOpen={s.chatOpen} onChat={() => dispatch({ type: "ui", patch: { chatOpen: !s.chatOpen, ...(width < 1520 ? { collapsed: !s.chatOpen } : {}) } })}
+        controls={<>
         <div className="dropdown d-only">
           <button
             className="iconbtn"
@@ -368,38 +300,9 @@ export function AtlasPage() {
             </ul>
           )}
         </div>
-        <button
-          ref={filtersButton}
-          className="iconbtn m-only"
-          aria-label="Фильтры"
-          onClick={() =>
-            dispatch({ type: "ui", patch: { mobileFilters: true } })
-          }
-        >
-          <Icon name="sliders-horizontal" />
-        </button>
-        <button
-          ref={chatButton}
-          className="iconbtn"
-          id="chatToggle"
-          aria-pressed={s.chatOpen}
-          aria-expanded={s.chatOpen}
-          aria-controls="chat"
-          onClick={() =>
-            dispatch({
-              type: "ui",
-              patch: {
-                chatOpen: !s.chatOpen,
-                ...(width < 1520 ? { collapsed: !s.chatOpen } : {}),
-              },
-            })
-          }
-        >
-          <Icon name="sparkles" />
-          <span className="d-only">Агент</span>
-        </button>
-      </header>
-      <div className="at-body">
+        </>} />
+ </>}>
+
         <FiltersPanel run={() => void run()} />
         <section
           className={`at-map ${cardVisible && !mobile ? "has-card" : ""} ${s.chatOpen && !mobile ? "chat-open" : ""} ${["stale", "run", "demoonly"].includes(st) ? "dimmed" : ""}`}
@@ -738,7 +641,6 @@ export function AtlasPage() {
           </svg>
         </section>
         <AgentChat key={s.revision} handle={chat} />
-      </div>
-    </div>
+    </AtlasShell>
   );
 }
