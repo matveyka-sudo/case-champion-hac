@@ -117,6 +117,7 @@ class Profile(ContractModel):
     )
     inputs: FileRef | None = None
     walk_binding: FileRef | None = Field(default=None, exclude_if=lambda value: value is None)
+    demo_transport: FileRef | None = Field(default=None, exclude_if=lambda value: value is None)
     scenarios: list[FileRef] = Field(default_factory=list, max_length=16)
     evidence: list[EvidenceRef] = Field(default_factory=list)
     static_observations: bool = False
@@ -206,7 +207,12 @@ def _walk(value: Any) -> Iterator[Any]:
 
 
 def validate_inputs(
-    profile: Profile, inputs: EngineInputs, snapshot: AcceptedData, registry: ProductRegistry
+    profile: Profile,
+    inputs: EngineInputs,
+    snapshot: AcceptedData,
+    registry: ProductRegistry,
+    *,
+    demo_transport: Any = None,
 ) -> None:
     expected_kind = "pipeline" if profile.cargo_transport == "pipeline" else profile.analysis_kind
     if inputs.kind != expected_kind:
@@ -268,7 +274,14 @@ def validate_inputs(
                 raise ValueError("FULL_SCOPE_REQUIRES_VERIFIED_CANONICAL_EVIDENCE")
     if isinstance(inputs, UrbanInputs):
         if inputs.timetable is not None:
-            verify_timetable_source(snapshot, inputs.timetable, inputs.timetable_service_clock)
+            if demo_transport is not None:
+                from a2_api.adapters.demo_transport import verify_demo_model
+
+                verify_demo_model(
+                    snapshot, inputs.timetable, inputs.timetable_service_clock, demo_transport
+                )
+            else:
+                verify_timetable_source(snapshot, inputs.timetable, inputs.timetable_service_clock)
         if any(coverage.search_complete for coverage in inputs.coverage):
             raise ValueError(
                 "EXTERNALLY_ASSERTED_URBAN_SEARCH_COMPLETENESS_REQUIRES_SERVER_VERIFIED_RECEIPT"
@@ -725,7 +738,16 @@ def load_runtime() -> Runtime:
                     inputs = InputDocument.model_validate(
                         _referenced(source.parent, profile.inputs, budget)
                     ).inputs
-                    validate_inputs(profile, inputs, snapshot, base)
+                    demo_receipt = None
+                    if profile.demo_transport is not None:
+                        from a2_api.adapters.demo_transport import DemoTransportReceipt
+
+                        if not isinstance(inputs, UrbanInputs) or inputs.timetable is None:
+                            raise ValueError("DEMO_TRANSPORT_REQUIRES_URBAN_TIMETABLE")
+                        demo_receipt = DemoTransportReceipt.model_validate(
+                            _referenced(source.parent, profile.demo_transport, budget)
+                        )
+                    validate_inputs(profile, inputs, snapshot, base, demo_transport=demo_receipt)
                 elif profile.executor == "walk_pilot":
                     from a2_api.adapters import walk_pilot
 
