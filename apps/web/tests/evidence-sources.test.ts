@@ -1,0 +1,25 @@
+import { createElement } from "react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, expect, it } from "vitest";
+import { EvidenceSources } from "../src/widgets/EvidenceSources";
+afterEach(cleanup);
+it("keeps closed source DOM empty and makes every row reachable in bounded pages", () => {
+  const refs = Array.from({ length: 43 }, (_, index) => ({ evidence_id: `synthetic-${index}`, source_id: "synthetic", section: `Source ${index}`, url: "https://example.org/source", observed_at: null, retrieved_at: "2026-11-10T00:00:00Z" }));
+  const view = render(createElement(EvidenceSources, { refs }));
+  expect(view.container.querySelectorAll("p,a")).toHaveLength(0);
+  const details = view.container.querySelector("details")!;
+  details.open = true;
+  fireEvent(details, new Event("toggle"));
+  expect(screen.getAllByRole("link")).toHaveLength(20);
+  expect(screen.getByRole("link", { name: /Source 0$/ })).toBeDefined();
+  fireEvent.click(screen.getByRole("button", { name: "Далее" }));
+  expect(screen.getAllByRole("link")).toHaveLength(20);
+  expect(screen.getByRole("link", { name: /Source 20$/ })).toBeDefined();
+  fireEvent.click(screen.getByRole("button", { name: "Далее" }));
+  expect(screen.getAllByRole("link")).toHaveLength(3);
+  expect(screen.getByRole("link", { name: /Source 42$/ })).toBeDefined();
+  expect(screen.getByRole("button", { name: "Далее" })).toHaveProperty("disabled", true);
+  details.open = false;
+  fireEvent(details, new Event("toggle"));
+  expect(view.container.querySelectorAll("p,a")).toHaveLength(0);
+});
