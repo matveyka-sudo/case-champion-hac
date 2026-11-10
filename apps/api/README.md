@@ -67,7 +67,7 @@ The original user request is used for idempotency; normalized snapshot, methodol
 
 The backend-owned Alice hook is `ASSISTANT_HOOK=a2_api.assistant.alice:build_assistant`; set `ASSISTANT_BUDGET_HOOK=a2_api.assistant.budget:build_budget` to use the bundled ledger. It reads existing Yandex settings, uses `SDKTransport` and closes it with the API lifespan. Missing key, `LLM_ENABLED=false`, unset currency authorization, absent hook or unconfigured budget keeps the endpoint on the saved-result template fallback. An operator must explicitly install the monetary and total-token ceilings; RUB prices are versioned public reference prices and do not confirm the billing account currency. The model selects metric IDs and semantic codes; the backend assembles all values, units, evidence and narrative from the saved result. See [Alice integration](docs/alice-integration.md) for CLI commands, offline checks and live rollout gates.
 
-The separately injectable `a2_api.providers.rasp.RaspProvider` has bounded paging, retry/quota/rate limits, cache and explicit direct-only/partial coverage. It never supplies a complete multimodal index. Connecting it to ML2 ingestion or an engine adapter is an explicit integration step, not an HTTP side effect.
+The separately injectable `a2_api.providers.rasp.RaspProvider` has bounded paging, retries, rate limits, cache and explicit direct-only/partial coverage. Every key-bearing Search/Copyright attempt requires the [shared account/day quota](docs/rasp-quota.md): at most 500 including retries, with an explicit known usage baseline in a separate central ledger. It never supplies a complete multimodal index. Connecting it to ML2 ingestion or an engine adapter is an explicit integration step.
 
 ## Verify and export
 

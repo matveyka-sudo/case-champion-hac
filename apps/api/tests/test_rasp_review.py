@@ -7,10 +7,12 @@ from datetime import UTC, datetime
 import httpx
 import pytest
 from a2_api.providers.rasp import RaspError, RaspProvider
+from rasp_quota_helpers import TestOnlyQuota
 from test_rasp_provider import page, segment
 
 
 async def run_response(body, **options):
+    options.setdefault("wire_quota", TestOnlyQuota())
     async with httpx.AsyncClient(
         transport=httpx.MockTransport(lambda req: httpx.Response(200, json=body))
     ) as client:
@@ -92,7 +94,7 @@ async def test_oversized_response_closed_without_body_leak(compressed, status):
     ) as client:
         with pytest.raises(RaspError) as exc:
             await RaspProvider(
-                client, api_key="synthetic", max_response_bytes=512
+                client, api_key="synthetic", max_response_bytes=512, wire_quota=TestOnlyQuota()
             ).intercity_departures(
                 "s1",
                 "s2",
@@ -114,7 +116,11 @@ async def test_decoded_byte_limit_exact_boundary(extra):
         transport=httpx.MockTransport(lambda req: httpx.Response(200, stream=stream))
     ) as client:
         provider = RaspProvider(
-            client, api_key="synthetic", max_pages=1, max_response_bytes=len(body)
+            client,
+            api_key="synthetic",
+            max_pages=1,
+            max_response_bytes=len(body),
+            wire_quota=TestOnlyQuota(),
         )
         if extra:
             with pytest.raises(RaspError, match="invalid_response"):
@@ -150,7 +156,13 @@ async def test_conflicting_duplicate_across_pages_is_not_cached():
         return httpx.Response(200, json=body)
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:
-        provider = RaspProvider(client, api_key="synthetic", page_size=1, requests_per_second=1000)
+        provider = RaspProvider(
+            client,
+            api_key="synthetic",
+            page_size=1,
+            requests_per_second=1000,
+            wire_quota=TestOnlyQuota(),
+        )
         for _ in range(2):
             with pytest.raises(RaspError, match="invalid_response"):
                 await provider.intercity_departures(
@@ -180,7 +192,9 @@ async def test_read_timeout_and_cancellation_close_response(cancel):
     async with httpx.AsyncClient(
         transport=httpx.MockTransport(lambda req: httpx.Response(200, stream=stream))
     ) as client:
-        provider = RaspProvider(client, api_key="synthetic", timeout_seconds=0.05)
+        provider = RaspProvider(
+            client, api_key="synthetic", timeout_seconds=0.05, wire_quota=TestOnlyQuota()
+        )
         task = asyncio.create_task(
             provider.intercity_departures(
                 "s1",
@@ -211,7 +225,9 @@ async def test_city_scope_uses_echo_not_literal_station_code_and_local_date():
         return httpx.Response(200, json=body)
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:
-        result = await RaspProvider(client, api_key="synthetic", max_pages=1).intercity_departures(
+        result = await RaspProvider(
+            client, api_key="synthetic", max_pages=1, wire_quota=TestOnlyQuota()
+        ).intercity_departures(
             "c1",
             "c2",
             datetime(2026, 11, 9, 21, tzinfo=UTC),
