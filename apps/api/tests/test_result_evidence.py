@@ -189,7 +189,16 @@ async def test_bound_walk_compacts_only_after_map_attachment(tmp_path, monkeypat
     )
 
 
-def test_evidence_compaction_source_is_in_executor_fingerprint(tmp_path, monkeypatch):
+@pytest.mark.parametrize(
+    "module",
+    [
+        "a2_api.adapters.result_evidence",
+        "a2_engine.urban.valhalla.codec",
+        "a2_engine.urban.valhalla.models",
+        "a2_engine.urban.valhalla._grisu2",
+    ],
+)
+def test_transitive_execution_source_is_in_executor_fingerprint(tmp_path, monkeypatch, module):
     from types import SimpleNamespace
 
     source = tmp_path / "TEST_ONLY-result-evidence.py"
@@ -199,7 +208,7 @@ def test_evidence_compaction_source_is_in_executor_fingerprint(tmp_path, monkeyp
 
     def imported(name):
         seen.append(name)
-        if name == "a2_api.adapters.result_evidence":
+        if name == module:
             return SimpleNamespace(__file__=str(source))
         return original_import(name)
 
@@ -207,4 +216,4 @@ def test_evidence_compaction_source_is_in_executor_fingerprint(tmp_path, monkeyp
     before = walk_runtime.executor_fingerprint()
     source.write_text("TEST_ONLY changed implementation")
     assert walk_runtime.executor_fingerprint() != before
-    assert "a2_api.adapters.result_evidence" in seen
+    assert module in seen
