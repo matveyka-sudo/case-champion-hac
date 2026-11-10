@@ -732,3 +732,77 @@ def test_intercity_loss_preserves_road_and_public_tasks_without_stale_journeys()
         assert score_id in losses and score.value == 0 and score.components == []
     assert result.status == "partial"
     assert case[3].model_dump_json() == saved_bytes
+
+
+def test_new_intercity_chain_can_pass_saved_baseline_publication_without_changing_reference():
+    from a2_api.db.validation import _validate_scenario_semantics
+
+    case = intercity_case()
+    baseline_bytes = case[3].model_dump_json()
+    claim, facts, document, baseline, _ = with_claim(case)
+    result = bridge.calculate(
+        claim, baseline=baseline, inputs=facts, document=document, profile_id=document.profile_id
+    )
+    # The baseline legitimately has no route for this task. The actual new
+    # chain must supply the waiting/path proof needed by atomic publication.
+    assert not baseline.journeys
+    assert result.after_journeys
+    public_wait = next(
+        row for row in result.after.metrics if row.metric_id == "intercity-public-wait"
+    )
+    chain = next(row for row in result.after_journeys if row.journey_id == public_wait.journey_id)
+    assert chain.initial_wait_seconds == public_wait.value == 0
+    assert chain.reference_id in {row.reference_id for row in baseline.references}
+    assert chain.origin_node_id == "S" and chain.destination_node_id == "D"
+    assert result.versions == baseline.versions
+    assert result.baseline_result_hash == baseline.result_hash
+    _validate_scenario_semantics(result, baseline, claim.context.scenario_proposal)
+    assert baseline.model_dump_json() == baseline_bytes
+
+
+@pytest.mark.parametrize(
+    "attack", ["foreign_boundary", "partial_chain", "different_wait", "unresolved_evidence"]
+)
+def test_new_intercity_after_chain_cannot_publish_forged_operands(monkeypatch, attack):
+    from a2_api.db.validation import _validate_scenario_semantics
+
+    claim, facts, document, baseline, _ = with_claim(intercity_case())
+    original = bridge._project
+
+    def forged(*args, **kwargs):
+        projected = original(*args, **kwargs)
+        if projected.journeys:
+            journey = projected.journeys[0]
+            if attack == "foreign_boundary":
+                journey = journey.model_copy(
+                    update={
+                        "origin_node_id": "TEST_ONLY-foreign",
+                        "legs": [
+                            leg.model_copy(update={"from_node_id": "TEST_ONLY-foreign"})
+                            if leg.from_node_id == journey.origin_node_id
+                            else leg
+                            for leg in journey.legs
+                        ],
+                    }
+                )
+            elif attack == "partial_chain":
+                journey = journey.model_copy(update={"completeness": "partial"})
+            elif attack == "different_wait":
+                journey = journey.model_copy(
+                    update={"initial_wait_seconds": journey.initial_wait_seconds + 1}
+                )
+            else:
+                journey = journey.model_copy(update={"evidence_refs": ["TEST_ONLY-unresolved"]})
+            projected.journeys[0] = journey
+        return projected
+
+    monkeypatch.setattr(bridge, "_project", forged)
+    with pytest.raises((DomainError, ValueError)):
+        result = bridge.calculate(
+            claim,
+            baseline=baseline,
+            inputs=facts,
+            document=document,
+            profile_id=document.profile_id,
+        )
+        _validate_scenario_semantics(result, baseline, claim.context.scenario_proposal)

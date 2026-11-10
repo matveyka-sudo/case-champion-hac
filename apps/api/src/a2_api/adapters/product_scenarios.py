@@ -482,6 +482,8 @@ def calculate(
         limitations.add("AFFECTED_POPULATION_LOWER_BOUND")
     if not engine.impact.sites_complete:
         limitations.add("AFFECTED_SITES_LOWER_BOUND")
+    journey_ids = {metric.journey_id for metric in after_values.metrics}
+    after_journeys = [journey for journey in after.journeys if journey.journey_id in journey_ids]
     try:
         result = ScenarioResult(
             schema_version="2",
@@ -491,6 +493,7 @@ def calculate(
             status="available" if complete else "partial" if known else "unknown",
             before=before_values,
             after=after_values,
+            after_journeys=after_journeys,
             deltas=deltas,
             affected_population=engine.impact.known_affected_population
             if document.inputs.urban and engine.impact.population_complete
