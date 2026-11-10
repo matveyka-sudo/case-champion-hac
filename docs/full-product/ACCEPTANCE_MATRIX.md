@@ -9,7 +9,21 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 
 ## Three-city priority — 2026-11-10 continuation
 
-### Current gate update — 2026-11-11 01:35 MSK
+### Current gate update — 2026-11-11, transport and rendering
+
+- Bounded compressed worker transport INTEGRATED580ca78; root126tests with
+  real PG pass, independent malformed-stream/deadline/cancellation review passes.
+  Larger decoded32MiB is an explicit deployment choice; wire16MiB remains.
+- Prototype map/client performance INTEGRATED33b70f7: root208units/buildPASS,
+  actual saved-M16 offline selection114ms with0layers rebuilt. Owner63browser
+  regressions pass. These are performance/interface checks, not live E2E.
+- Saved-analysis GET gzip INTEGRATED9ce47e8; root3real Nginx Docker tests pass.
+- Four-profile source assembly is BLOCKED by the existing96MiB cumulative
+  read budget during immutable walk bundle verification. Exact resource policy
+  and load-memory measurements are next; all existing validation remains on.
+  No new image is activated, and full1401 Moscow output is still unobserved.
+
+### Previous gate update — 2026-11-11, lossless evidence
 
 - Lossless grouped evidence is integrated through680973c across canonical DTO,
   backend publication, React and Alice. Root independently reproduced original

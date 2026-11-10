@@ -1,6 +1,49 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
-## Lossless result integration checkpoint — 2026-11-11 01:35 MSK
+## Transport and rendering checkpoint — 2026-11-11
+
+Root33b70f74706f5cb97fe62fe9d88519111083d0cc now includes reviewed worker
+transport580ca78/09b787f, saved-analysis nginx compression9ce47e8/265d9d6,
+and map/client performance33b70f7/fcd482a. Root126targeted tests with PostgreSQL
+PASS60.29s; independent reviewer found no remaining transport defect after
+malformed-stream/allocation/deadline/cancellation probes. Ordinary wire16MiB
+and default decoded16MiB remain; explicit worker setting
+`A2_WORKER_RESULT_DECODED_MIB=32` enables the separately bounded larger result.
+
+Root actual Nginx Docker regressions3PASS4.18s; identity/gzip content equality,
+session/Host/Origin/Vary/no-store preservation and exclusion of chat/auth/POST
+verified. Root current-source M16 packing on prior dependency image with
+network disabled and2GiB cap:2.663s,478,879,744B cgroup peak, no OOM. This does
+not substitute for final-image full worker/init resource acceptance.
+
+Root208frontend units/buildPASS. Root actual saved-M16 offline browser replay:
+631ms response-to-paint,114ms selection,5605initial geometries,0new/cleared
+layers on selection,0JS errors. All APIs were intercepted for this performance
+check: it is not a live E2E. Owner63API+legacy browser regressions also pass.
+Root receipts: runtime/root-map-scaling-20261111.{json,log,mjs} and
+root-packed-m16-memory-20261111.json. Temporary root5199 preview stopped.
+
+Next confirmed blocker: composing all four profiles exceeds the current96MiB
+cumulative runtime input read budget. Exact old-code replay: Moscow walk
+source verification receives47,826,138B remaining then fails with
+DERIVED_GRAPH_CUMULATIVE_BYTE_BUDGET_EXCEEDED; Nov/PT subsequently fail. Four
+main snapshots plus PT inputs/scenario are65,230,857B before immutable walk
+bundle verification. BACKEND is diagnosing unique reads versus duplication;
+no input validation or byte budget has been bypassed. A bounded explicit
+deployment policy requires exact byte/memory evidence before enabling it.
+
+Private four-profile assembler is
+runtime/threecity-fourprofile-builder-20261111-v2/assemble.py (8a9e67c0...);
+source binding8155e753... pins24unchanged PT files. V1 artifacts are preserved;
+only FileRef prefixes change in the composed manifest. New runner/overlay
+expects decoded32,timeout600,2GiB,5193 and existing volumes. Do not freeze/build
+until input-budget correction is reviewed; then run final image checks and
+full1401 campaign only under the final executor identity, avoiding reroutes.
+Live5193 remains unchanged and healthy; no paid calls/production writes were
+made in this checkpoint. Last pushed a93ff5c has5CI checks passed, backendPG
+still running at the last poll. Later local commits need final CI.
+
+## Lossless result integration checkpoint — 2026-11-11
 
 Goal ACTIVE. Root integration680973c includes canonical groups, Alice consumers,
 frontend3d22a93, backendc401ca9, and independent-review corrections044f75e and
