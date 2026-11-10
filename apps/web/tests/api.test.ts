@@ -159,6 +159,7 @@ describe("canonical API contracts", () => {
     expect(
       measureText({ ...value, value: 0, status: "available", unit: "seconds" }),
     ).toBe("0 мин");
+    expect(measureText({ ...decode("Score", result.scores[0]), value: 0.497 })).toBe("0,5 из 100");
     expect(safeSource("javascript:alert(1)")).toBeUndefined();
   });
 });

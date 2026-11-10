@@ -35,6 +35,22 @@ describe("partial walk result explanations", () => {
     expect(noticeText("canonical_access_model")).toBe(text);
   });
 
+  it("keeps model, territory and uncomputed-data reasons distinct", () => {
+    const labels = {
+      PARTIAL_APPROACH_MODEL_COVERAGE: "Модель охватывает только часть пеших подходов.",
+      POINT_ONLY_SCOPE: "Рассчитана только выбранная точка.",
+      TERRITORY_INDEX_UNAVAILABLE: "Индекс территории не рассчитан.",
+      CATALOG_DATE_OR_ROSTER_UNPROVEN: "Состав объектов или его актуальность на выбранную дату не подтверждены.",
+      UNCOMPUTED_TERRITORY_POINTS: "Не все точки территории рассчитаны.",
+      UNCOMPUTED_CATEGORY: "Эта категория объектов ещё не рассчитана.",
+    };
+    for (const [code, label] of Object.entries(labels)) {
+      expect(reasonText(code)).toBe(label);
+      expect(noticeText(code)).toBe(label);
+    }
+    expect(new Set(Object.values(labels)).size).toBe(Object.keys(labels).length);
+  });
+
   it("does not turn an unfamiliar reason into a confirmed explanation", () => {
     expect(reasonText("FUTURE_UNREVIEWED_REASON")).toBe("");
     expect(noticeText("FUTURE_UNREVIEWED_REASON")).toBe("Для результата указано дополнительное ограничение.");
