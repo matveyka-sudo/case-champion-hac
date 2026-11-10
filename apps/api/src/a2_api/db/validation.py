@@ -7,8 +7,10 @@ from a2_contracts.scenarios import Comparison, ScenarioRequest
 from a2_contracts.v2.requests import RequestBase
 from a2_contracts.v2.results import (
     AnalysisResult,
+    _absence_score,
     validate_reference_applicability,
     validate_score_context,
+    validate_score_dependencies,
 )
 from a2_contracts.v2.scenarios import (
     ScenarioProposal,
@@ -26,6 +28,7 @@ from a2_api.core.jobs import (
     JobRequest,
 )
 from a2_api.db.rows import RunResult
+from a2_api.db.scenario_journeys import scenario_journeys
 
 
 def _check_result_context(claim: ClaimedJob, result: RunResult) -> None:
@@ -134,6 +137,7 @@ def _validate_scenario_semantics(
     ):
         raise DomainError(409, "incompatible_versions", "Scenario baseline versions/hash differ")
     try:
+        validate_score_dependencies(result.after.metrics, result.after.scores)
         validate_score_context(result.after.metrics, result.after.scores, baseline.analysis_kind)
     except ValueError:
         raise DomainError(
@@ -143,7 +147,8 @@ def _validate_scenario_semantics(
     baseline_metrics = {item.metric_id: item for item in baseline.metrics}
     after_metrics = {item.metric_id: item for item in result.after.metrics}
     baseline_scores = {item.score_id: item for item in baseline.scores}
-    journeys = {item.journey_id: item for item in baseline.journeys}
+    frozen_journeys = {item.journey_id: item for item in baseline.journeys}
+    journeys = scenario_journeys(result, baseline)
     renamed = {
         effect.after_id: effect.before_id
         for effect in result.deltas
@@ -171,6 +176,11 @@ def _validate_scenario_semantics(
         return evaluated_metrics[score_id]
 
     for score in result.after.scores:
+        if _absence_score(score):
+            # Shared validators require the exact scoped full null chain and
+            # prohibit numeric/reference operands for this boundary outcome.
+            # A lost route does not evaluate its baseline's former denominator.
+            continue
         full = score.status == "available" and score.completeness == "full"
         required_references = set(score.reference_ids)
         previous_score = baseline_scores.get(score.score_id) or baseline_scores.get(
@@ -220,7 +230,7 @@ def _validate_scenario_semantics(
                 previous = matches[0] if len(matches) == 1 else None
             supplied_journey = journeys.get(metric.journey_id or "")
             frozen_journey = (
-                journeys.get(previous.journey_id or "") if previous is not None else None
+                frozen_journeys.get(previous.journey_id or "") if previous is not None else None
             )
             if supplied_journey is not None and frozen_journey is not None:
                 frozen_reference = references.get(frozen_journey.reference_id or "")

@@ -78,6 +78,394 @@
       "title": "EvidenceRef",
       "type": "object"
     },
+    "JourneyResult": {
+      "additionalProperties": false,
+      "properties": {
+        "arrival_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Arrival At"
+        },
+        "completeness": {
+          "enum": [
+            "full",
+            "partial"
+          ],
+          "title": "Completeness",
+          "type": "string"
+        },
+        "departure_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Departure At"
+        },
+        "destination_node_id": {
+          "minLength": 1,
+          "title": "Destination Node Id",
+          "type": "string"
+        },
+        "destination_object_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Destination Object Id"
+        },
+        "evidence_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "geometry": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineGeometry"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "geometry_kind": {
+          "enum": [
+            "actual",
+            "schematic",
+            "none"
+          ],
+          "title": "Geometry Kind",
+          "type": "string"
+        },
+        "initial_wait_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Initial Wait Seconds"
+        },
+        "journey_id": {
+          "minLength": 1,
+          "title": "Journey Id",
+          "type": "string"
+        },
+        "legs": {
+          "items": {
+            "$ref": "#/$defs/Leg"
+          },
+          "title": "Legs",
+          "type": "array"
+        },
+        "origin_node_id": {
+          "minLength": 1,
+          "title": "Origin Node Id",
+          "type": "string"
+        },
+        "path_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Path Seconds"
+        },
+        "point_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Point Id"
+        },
+        "reason_code": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason Code"
+        },
+        "reference_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reference Id"
+        },
+        "requested_departure_at": {
+          "format": "date-time",
+          "title": "Requested Departure At",
+          "type": "string"
+        },
+        "scope": {
+          "enum": [
+            "urban",
+            "intercity"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "minLength": 1,
+          "title": "Snapshot Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "available",
+            "unknown",
+            "not_applicable"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "time_kind": {
+          "enum": [
+            "movement",
+            "complete_chain"
+          ],
+          "title": "Time Kind",
+          "type": "string"
+        },
+        "total_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Total Seconds"
+        },
+        "total_wait_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Total Wait Seconds"
+        },
+        "traffic_mode": {
+          "enum": [
+            "static",
+            "typical",
+            "live",
+            "historical"
+          ],
+          "title": "Traffic Mode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "journey_id",
+        "scope",
+        "origin_node_id",
+        "destination_node_id",
+        "requested_departure_at",
+        "departure_at",
+        "arrival_at",
+        "total_seconds",
+        "initial_wait_seconds",
+        "path_seconds",
+        "total_wait_seconds",
+        "legs",
+        "geometry",
+        "geometry_kind",
+        "status",
+        "reason_code",
+        "snapshot_id",
+        "completeness",
+        "traffic_mode",
+        "time_kind",
+        "reference_id",
+        "destination_object_id",
+        "evidence_refs"
+      ],
+      "title": "JourneyResult",
+      "type": "object"
+    },
+    "Leg": {
+      "additionalProperties": false,
+      "properties": {
+        "duration_seconds": {
+          "minimum": 0,
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "end_at": {
+          "format": "date-time",
+          "title": "End At",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "from_node_id": {
+          "minLength": 1,
+          "title": "From Node Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "walk",
+            "ride",
+            "wait_initial",
+            "wait_transfer",
+            "handling",
+            "transfer_operation"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "walk",
+            "public_transport",
+            "private_car",
+            "road",
+            "rail",
+            "air",
+            "water",
+            "mixed"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "service_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Service Id"
+        },
+        "start_at": {
+          "format": "date-time",
+          "title": "Start At",
+          "type": "string"
+        },
+        "to_node_id": {
+          "minLength": 1,
+          "title": "To Node Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "mode",
+        "kind",
+        "from_node_id",
+        "to_node_id",
+        "start_at",
+        "end_at",
+        "duration_seconds",
+        "service_id",
+        "evidence_refs"
+      ],
+      "title": "Leg",
+      "type": "object"
+    },
+    "LineGeometry": {
+      "additionalProperties": false,
+      "properties": {
+        "coordinates": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "minItems": 2,
+          "title": "Coordinates",
+          "type": "array"
+        },
+        "evidence_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "type": {
+          "const": "LineString",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "coordinates",
+        "evidence_refs"
+      ],
+      "title": "LineGeometry",
+      "type": "object"
+    },
     "Metric": {
       "additionalProperties": false,
       "properties": {
@@ -860,6 +1248,14 @@
     },
     "after": {
       "$ref": "#/$defs/ScenarioValues"
+    },
+    "after_journeys": {
+      "items": {
+        "$ref": "#/$defs/JourneyResult"
+      },
+      "maxItems": 10000,
+      "title": "After Journeys",
+      "type": "array"
     },
     "assumptions": {
       "items": {

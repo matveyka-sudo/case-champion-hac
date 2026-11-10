@@ -1,0 +1,18 @@
+{
+  "added": {
+    "v2.ScoreClaim.serialization.schema.json": "2312af19cffb90e91c1e384b1ae15924152220c04abf39ff8792bb046639c0a9",
+    "v2.ScoreClaim.validation.schema.json": "2312af19cffb90e91c1e384b1ae15924152220c04abf39ff8792bb046639c0a9"
+  },
+  "reason": "Approved additive ScoreClaim and Finding.score_ids/score_claims contract extension; original relocation baseline remains unchanged.",
+  "replaced": {
+    "manifest.json": "039c401b07b3f1b7dbe0d0dabb2432f9e4ad845f25c44f1513dd9c4e08ecb4cc",
+    "openapi.json": "5c8a50055cb79729e32c745693fa6471e26eb39f3f62989f3f2c95c01604ea2c",
+    "v2.Explanation.serialization.schema.json": "84060412c32b9ce5d95a8b5574e19894368fbff2aa88081e705abb474b434fc3",
+    "v2.Explanation.validation.schema.json": "84060412c32b9ce5d95a8b5574e19894368fbff2aa88081e705abb474b434fc3",
+    "v2.ExplanationContent.serialization.schema.json": "345c9a89d1f2e9e31308fc0c215576f7668f7814de26815358694f5f196ac891",
+    "v2.ExplanationContent.validation.schema.json": "345c9a89d1f2e9e31308fc0c215576f7668f7814de26815358694f5f196ac891",
+    "v2.Finding.serialization.schema.json": "f4eeccfee1b8e667463a05a99b0c96d122d0b0214bed98ed0282422173f951a2",
+    "v2.Finding.validation.schema.json": "f4eeccfee1b8e667463a05a99b0c96d122d0b0214bed98ed0282422173f951a2"
+  },
+  "revision": "140da8c"
+}

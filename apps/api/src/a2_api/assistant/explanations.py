@@ -70,7 +70,7 @@ async def explain(
                 404, "unknown_id", "Selected entity is not part of the saved analysis"
             )
     if service.assistant is None:
-        return template_explanation(result, request_id, "DISABLED")
+        return template_explanation(result, request_id, "DISABLED", context=context)
     snapshot = await service.accepted_snapshot(result, scope)
     permitted_sources = {e.source_id for e in result.evidence_refs}
     if snapshot is not None:
