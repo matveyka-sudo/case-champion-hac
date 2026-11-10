@@ -10,7 +10,8 @@ import pytest
 from a2_api.adapters import walk_batches, walk_pilot
 from a2_api.core.batches import BatchExecution
 from a2_api.core.jobs import V2JobContext, batch_context_fingerprint
-from a2_api.db.repositories.checkpoints import validate_raw_files
+from a2_api.db.repositories.checkpoints import CheckpointRepository, validate_raw_files
+from a2_api.db.repositories.jobs import JobRepository
 from a2_contracts.common import canonical_hash
 from a2_data_pipeline.store import load_bundle
 from test_walk_pilot import claim_for as pilot_claim
@@ -179,6 +180,65 @@ async def test_changed_physical_graph_manifest_fails_before_routing(approved):
     (path.parent / "TEST_ONLY-graph.json").write_text("{}")
     with pytest.raises(Exception, match="APPROVAL_OR_BINDING_UNAVAILABLE"):
         await walk_batches.preflight(pilot_request(), snapshot)
+
+
+@pytest.mark.asyncio
+async def test_repeated_preflight_does_not_spend_unreserved_provider_calls(approved, monkeypatch):
+    snapshot, _, _, _ = approved
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Provider calls require a fenced reserved attempt")
+
+    monkeypatch.setattr(walk_pilot, "check_status", forbidden)
+    monkeypatch.setattr(walk_pilot, "execute_route", forbidden)
+    for _ in range(6):
+        batch = await walk_batches.preflight(pilot_request(), snapshot)
+        assert batch.pairs
+
+
+@pytest.mark.asyncio
+async def test_atomic_publication_cache_ttl_uses_earliest_raw_evidence(
+    database, approved, monkeypatch
+):
+    pool, _, _ = database
+    snapshot, approval, _, path = approved
+    approval["observation_retention_seconds"] = 1800
+    digest = write(path.parent / "TEST_ONLY-batch-approval.json", approval)
+    monkeypatch.setenv("A2_WALK_BATCH_APPROVAL_SHA256", digest)
+    monkeypatch.setenv(
+        "A2_CODE_VERSION", "TEST_ONLY-" + approval["runtime_artifact_hash"] + "-" + digest
+    )
+    source = await prepared_claim(snapshot)
+    repo = JobRepository(pool)
+    await repo.enqueue(
+        "analysis",
+        source.request,
+        source.context,
+        "TEST_ONLY-raw-expiry",
+        "TEST_ONLY-trace",
+        scope=source.context.access_scope,
+    )
+    claim = await repo.claim("TEST_ONLY-claim")
+    progress = CheckpointRepository(repo)
+    await progress.begin(claim)
+    execution = claim.context.batch_execution
+    channel = AcknowledgedChannel(execution)
+    result = walk_batches.calculate(claim, channel)
+    for checkpoint in channel.completed:
+        await progress.put(claim, checkpoint)
+    await repo.succeed(claim, result)
+    expiry = await pool.fetchval(
+        "SELECT cache_valid_until FROM jobs WHERE job_id=$1", claim.job.job_id
+    )
+    earliest = min(
+        evidence.retrieved_at
+        for checkpoint in channel.completed
+        for observation in checkpoint.observations
+        for evidence in observation.evidence
+    )
+    assert expiry == earliest + timedelta(seconds=execution.observation_retention_seconds)
+    saved = await repo.get_run_parameters(result.analysis_id, scope=claim.context.access_scope)
+    assert V2JobContext.model_validate(saved["context"]).cache_valid_until == expiry
 
 
 def test_multiple_approved_points_do_not_inherit_single_point_pilot_limit(approved, monkeypatch):

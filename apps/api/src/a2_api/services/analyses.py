@@ -121,6 +121,14 @@ class AnalysisService:
         )
         if batch_plan is not None:
             plan = BatchPlan.model_validate(batch_plan.model_dump(mode="json"))
+            context = context.model_copy(
+                update={
+                    "cache_valid_until": min(
+                        plan.valid_until,
+                        context.cache_valid_until or plan.valid_until,
+                    )
+                }
+            )
             execution = BatchExecution.model_validate(
                 {
                     **plan.model_dump(mode="json"),

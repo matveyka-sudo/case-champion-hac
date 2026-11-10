@@ -12,9 +12,11 @@
     "24c1092952c82e863cc00740b83895375c8ce1899807645dc98b06a51659d1f1": 1,
     "530897e240da7e8347b51784cd4be04080b754a84d14f4d1d6efa8dd31a905a1": 1,
     "5bfbbecbde4ab857d730cfc6d5f037724d47703f7fbbd798dda5674c1979c4de": 1,
+    "618deefa5ad3d1711f16b44787c62a9a0841b467b6734ba5a08c80109585a838": 1,
     "7532ed676d4511db3a67f980cf707e810b1a77df14c3628aa75fff2a4c0007f0": 1,
     "7718486bfbbd0fb97c94375fbd688bfe07f80c19be498170a3e7cfe071cfffec": 1,
     "a3993ebeedc40f0d815108201ed8d1c5276201f8eb2252312aef6935774c4d5d": 2,
+    "a4c613efb096a1e5b7d7441bc04917beb427e75f7ec7352f217e503d9b7e1e26": 1,
     "c6866f61d1bf522d8212ee8d4b00041ed352e0ae62459453989afffc5971e499": 1,
     "d117b892f4e0f8e1fb51aea5191e810ad34f802b86faf844c3ef5fb6085784b0": 1,
     "dba2749afd30f7da632e84ff7d33d0407ca0a2eec6351d311ffd4a43111f77b4": 1,
@@ -32,7 +34,9 @@
     "SELECT content_hash FROM od_checkpoints WHERE access_scope=$1 AND execution_identity=$2 AND batch_id=$3": 1,
     "SELECT execution_identity FROM od_executions WHERE access_scope=$1 AND execution_identity=$2 FOR UPDATE": 1,
     "SELECT job_id FROM od_attempts WHERE job_id=$1": 1,
+    "SELECT min(created_at) FROM od_checkpoints WHERE access_scope=$1 AND execution_identity=$2": 1,
     "SELECT payload,content_hash,created_at FROM od_checkpoints WHERE access_scope=$1 AND execution_identity=$2 ORDER BY batch_id": 1,
+    "UPDATE jobs SET cache_valid_until=$2,payload=jsonb_set(payload,'{context,cache_valid_until}',to_jsonb($2::timestamptz)) WHERE job_id=$1": 1,
     "UPDATE od_executions SET attempts=attempts+1,reserved_calls=reserved_calls+$3 WHERE access_scope=$1 AND execution_identity=$2": 1
   }
 }

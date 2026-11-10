@@ -312,6 +312,13 @@ class JobRepository(ScenariosRepository):
                             for proposal in proposals
                         ]
                         await self._save_proposals(connection, rebound, owner)
+                    if (
+                        isinstance(claim.context, V2JobContext)
+                        and claim.context.batch_execution is not None
+                    ):
+                        from a2_api.db.repositories.checkpoints import CheckpointRepository
+
+                        await CheckpointRepository(self).publish(connection, claim)
                     await connection.execute(
                         "UPDATE jobs SET status='succeeded',run_id=$2,finished_at=now() WHERE job_id=$1",
                         claim.job.job_id,
