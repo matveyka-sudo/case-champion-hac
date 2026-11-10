@@ -7,6 +7,7 @@ https://aistudio.yandex.ru/ru/docs/ai-studio/operations/generation/completions-f
 Flash tool support and project billing still require an authorized real smoke.
 """
 
+import logging
 import math
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
@@ -15,6 +16,42 @@ from typing import Annotated, Literal, Protocol, cast
 from openai import APIStatusError, APITimeoutError, AsyncOpenAI, DefaultAsyncHttpxClient
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionToolParam
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, SecretStr
+
+logger = logging.getLogger("a2_assistant")
+_DIAGNOSTIC_EXCEPTION_TYPES = frozenset(
+    {
+        "APIConnectionError",
+        "APIResponseValidationError",
+        "ModelFailure",
+        "ValidationError",
+        "JSONDecodeError",
+        "UnicodeDecodeError",
+        "AttributeError",
+        "TypeError",
+        "ValueError",
+        "KeyError",
+        "IndexError",
+        "AssertionError",
+        "ConnectError",
+        "ReadError",
+        "WriteError",
+        "ConnectTimeout",
+        "ReadTimeout",
+        "WriteTimeout",
+        "PoolTimeout",
+        "RemoteProtocolError",
+        "LocalProtocolError",
+        "ProxyError",
+        "UnsupportedProtocol",
+        "DecodingError",
+    }
+)
+
+
+def _diagnostic_exception_type(error: BaseException | None) -> str:
+    # Never log exception messages, repr, provider content or arbitrary class names.
+    name = type(error).__name__
+    return name if name in _DIAGNOSTIC_EXCEPTION_TYPES else "other"
 
 
 class FlashConfig(BaseModel):
@@ -132,6 +169,9 @@ class SDKTransport:
             raise ModelFailure("disabled")
         if model != self.config.model_uri or not 0 < max_tokens <= 2000 or not 0 < timeout <= 30:
             raise ModelFailure("invalid_response")
+        stage = "sdk_request"
+        choice_count = "unknown"
+        usage_presence = "unknown"
         try:
             response = await self._client.chat.completions.create(
                 model=model,
@@ -142,18 +182,25 @@ class SDKTransport:
                 timeout=timeout,
                 stream=False,
             )
-            if len(response.choices) != 1:
+            stage = "response_choices"
+            count = len(response.choices)
+            choice_count = "zero" if count == 0 else "one" if count == 1 else "multiple"
+            usage_presence = "present" if response.usage is not None else "absent"
+            if count != 1:
                 raise ModelFailure("invalid_response")
             choice = response.choices[0]
             calls = []
+            stage = "tool_calls"
             for call in choice.message.tool_calls or []:
                 if call.type != "function":
                     raise ModelFailure("invalid_response")
+                stage = "tool_validation"
                 calls.append(
                     ModelToolCall(
                         id=call.id, name=call.function.name, arguments=call.function.arguments
                     )
                 )
+            stage = "reply_validation"
             return ModelReply(
                 content=choice.message.content,
                 tool_calls=calls,
@@ -168,7 +215,16 @@ class SDKTransport:
             ) from None
         except APITimeoutError:
             raise ModelFailure("timeout") from None
-        except Exception:
+        except Exception as exc:
+            logger.info(
+                "assistant_transport_invalid_response stage=%s exception_type=%s "
+                "cause_type=%s choices=%s usage=%s",
+                stage,
+                _diagnostic_exception_type(exc),
+                _diagnostic_exception_type(exc.__cause__),
+                choice_count,
+                usage_presence,
+            )
             raise ModelFailure("invalid_response") from None
 
 
