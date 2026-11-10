@@ -1,5 +1,8 @@
 """Compatibility exports; implementations live in concrete submodules."""
 
+from a2_engine.urban.walk.analysis import (
+    analyze_normalized_walk_routes as analyze_normalized_walk_routes,
+)
 from a2_engine.urban.walk.analysis import analyze_walk_responses as analyze_walk_responses
 from a2_engine.urban.walk.analysis import plan_walk_routes as plan_walk_routes
 from a2_engine.urban.walk.inputs import _active as _active
@@ -26,4 +29,5 @@ __all__ = [
     "prepare_walk_inputs",
     "plan_walk_routes",
     "analyze_walk_responses",
+    "analyze_normalized_walk_routes",
 ]
