@@ -108,7 +108,7 @@ def test_all_185_existing_signatures_and_defaults():
         )
 
 
-def test_exported_artifacts_match_baseline_and_approved_score_extension(tmp_path):
+def test_exported_artifacts_match_baseline_and_approved_contract_extensions(tmp_path):
     export_schemas(tmp_path)
     actual = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in tmp_path.glob("*.json")}
     # Preserve the historical relocation baseline. Only this reviewed additive
@@ -127,6 +127,13 @@ def test_exported_artifacts_match_baseline_and_approved_score_extension(tmp_path
     assert replaced <= BASELINE["schemas"].keys()
     assert added.isdisjoint(BASELINE["schemas"])
     expected = BASELINE["schemas"] | extension["replaced"] | extension["added"]
+    scenario_extension = json.loads(
+        (Path(__file__).parent / "fixtures/scenario_journeys_schema_extension.json").read_text()
+    )
+    assert set(scenario_extension["replaced"]) == {"manifest.json", "openapi.json"} | {
+        f"v2.ScenarioResult.{mode}.schema.json" for mode in ("serialization", "validation")
+    }
+    expected.update(scenario_extension["replaced"])
     assert actual == expected
 
 

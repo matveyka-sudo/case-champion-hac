@@ -32,7 +32,7 @@ from a2_contracts.v2.assistant import (
     ScenarioSuggestion,
     ScoreClaim,
 )
-from a2_contracts.v2.results import AnalysisResult, EvidenceRef
+from a2_contracts.v2.results import AnalysisResult, EvidenceRef, Score
 from a2_contracts.v2.retrieval import EvidenceSearchResult
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError, model_validator
 from pydantic_core import ErrorDetails
@@ -329,6 +329,13 @@ def _validate_content(
             score = scores.get(score_claim.score_id)
             if score is None or score_claim.value != score.value:
                 raise _ModelAnswerRejected("claim_mismatch")
+        if not check_text and finding.score_ids:
+            if (
+                len(finding.score_ids) != 1
+                or finding.metric_ids
+                or finding.text != _template_score_text(scores[finding.score_ids[0]])
+            ):
+                raise _ModelAnswerRejected("narrative_invalid")
         if check_text:
             if finding.text not in _FINDING_TEXT:
                 raise _ModelAnswerRejected("narrative_invalid")
@@ -366,6 +373,14 @@ def _validate_content(
         raise _ModelAnswerRejected("limitation_invalid")
 
 
+def _template_score_text(score: Score) -> str:
+    return (
+        score.name[:1000]
+        if score.completeness == "full"
+        else f"{score.name[:900]} — полнота данных ограничена."
+    )
+
+
 def template_explanation(
     saved: AnalysisResult,
     request_id: str,
@@ -375,11 +390,7 @@ def template_explanation(
 ) -> Explanation:
     score_findings = [
         Finding(
-            text=(
-                score.name[:1000]
-                if score.completeness == "full"
-                else f"{score.name[:900]} — полнота данных ограничена."
-            ),
+            text=_template_score_text(score),
             metric_ids=[],
             claims=[],
             score_ids=[score.score_id],
@@ -543,6 +554,11 @@ class FlashAssistant:
         assert self.transport is not None and self.budget is not None
         initial_metrics = focused_metrics(saved, context)
         initial_scores = focused_scores(saved, context)
+        # One bounded context, not twenty metrics plus twenty scores. Keep both
+        # kinds discoverable without silently increasing the deployment budget.
+        if initial_metrics and initial_scores:
+            initial_metrics = initial_metrics[:10]
+            initial_scores = initial_scores[:10]
         allowed_metrics = {metric.metric_id for metric in initial_metrics}
         allowed_scores = {score.score_id for score in initial_scores}
         saved_metric_ids = {metric.metric_id for metric in saved.metrics}

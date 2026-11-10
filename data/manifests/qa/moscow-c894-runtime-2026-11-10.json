@@ -1,0 +1,49 @@
+{
+  "check": "real-bounded-gtfs-engine-search",
+  "date": "2026-11-10",
+  "synthetic": false,
+  "rules": "bounded-gtfs-inputs-v1",
+  "base_snapshot_id": "moscow-urban-2026-11-10.2",
+  "snapshot_id": "moscow-urban-2026-11-10.2:gtfs:c0817a072c5536f0f9bf",
+  "source_archive_sha256": "681afec73b21f8538a675194c95595093dbde03e95cfd72df0b4ef1f4114b2bc",
+  "accepted_data_sha256": "3892d3d270aac699b3b533a77470fe5ed7cc6add073b88b26c0d0b19d8cecd6c",
+  "timetable_sha256": "927736082148ec7ad14f3bb414094afb9e2942b98180fcb64afef19ac658dce6",
+  "selection": {
+    "route_id": "141500134",
+    "route_short_name": "с894",
+    "first_service_date": "2026-11-05",
+    "last_service_date": "2026-11-30",
+    "source_trip_ids": 275,
+    "dated_runs": 3730,
+    "physical_stops": 54,
+    "excluded_whole_trips": 0
+  },
+  "query": {
+    "origin_node_id": "gtfs-stop:mos-ground-transport-gtfs-20261110:1010377",
+    "destination_node_id": "gtfs-stop:mos-ground-transport-gtfs-20261110:6930",
+    "departure_at": "2026-11-10T06:00:00Z",
+    "max_wait_seconds": 14400,
+    "require_transit": true
+  },
+  "best_known": {
+    "arrival_at": "2026-11-10T06:38:00Z",
+    "total_seconds": 2280,
+    "waiting_seconds": 300,
+    "movement_seconds": 1980,
+    "transfers": 0
+  },
+  "state": "unknown",
+  "minimum_proven": false,
+  "index": null,
+  "ranking_eligible": false,
+  "expanded_states": 87,
+  "reasons": [
+    "BOUNDED_GTFS_ROUTE_DATE_SUBSET",
+    "CONTINUATIONS_INCOMPLETE",
+    "FOOTPATH_COVERAGE_INCOMPLETE",
+    "GROUND_TRANSPORT_ONLY",
+    "SCHEDULE_INCOMPLETE",
+    "TRANSFER_COVERAGE_INCOMPLETE",
+    "TRANSFER_RULE_UNAVAILABLE"
+  ]
+}

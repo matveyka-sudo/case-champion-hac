@@ -53,6 +53,13 @@ jobs:
         run: node scripts/check_web_layout.mjs
       - name: Validate current product configuration
         run: python3 scripts/check_product_config.py
+      - name: Validate deployment graph source guards
+        run: |
+          .venv/bin/ruff check infra/full-stack
+          .venv/bin/ruff format --check infra/full-stack
+          .venv/bin/python -m unittest discover -s infra/full-stack -p 'test_*.py'
+          docker compose --env-file infra/full-stack/.env.product.example \
+            -f infra/full-stack/compose.product.yaml config --quiet
       - name: Verify installed API entrypoint
         env:
           UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/a2-api-smoke
@@ -70,6 +77,23 @@ jobs:
           routes = build_app().openapi()["paths"]
           assert "/health" in routes and "/api/v1/capabilities" in routes
           PYTHON
+      - name: Verify isolated data pipeline CLI dependencies
+        env:
+          UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/a2-data-pipeline-smoke
+        run: |
+          uv sync --frozen --package a2-data-pipeline --no-default-groups
+          workspace_python="$UV_PROJECT_ENVIRONMENT/bin/python"
+          uv pip check --python "$workspace_python"
+          "$workspace_python" -I - <<'PYTHON'
+          import importlib.util
+
+          import a2_contracts
+          import a2_data_pipeline.gtfs_inputs
+          import a2_engine
+
+          assert importlib.util.find_spec("a2_api") is None
+          PYTHON
+          "$workspace_python" -I -m a2_data_pipeline.gtfs_inputs --help
       - name: Validate PostgreSQL Compose configuration
         run: docker compose --env-file .env.example config --quiet
 
