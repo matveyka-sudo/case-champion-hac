@@ -57,7 +57,13 @@ relative to the retained inventory, content changes, dangling states, empty endp
 alternatives, physical endpoint mismatch, and endpoints with serialization uncertainty.
 It accepts alternative tied paths, zero weights and cycles. Equal network states still
 require both physical connectors. Identical physical endpoint IDs admit a zero stay
-path after input verification. An unreachable result means unreachable **only in the
+path after input verification. The solver represents this stay with both connector
+IDs `None`, an empty arc tuple, and zero seconds; the candidate verifier accepts that
+same representation. It rejects a single missing connector, nonzero stay time,
+network arcs combined with omitted connectors, or omitted connectors for distinct
+physical endpoint IDs. Explicit connector paths still require their full elapsed
+total and must attain the minimum, including when the physical IDs coincide.
+An unreachable result means unreachable **only in the
 supplied inventory**; it is not a global no-route claim.
 
 The inventory's rosters and hash detect an export truncated or changed after that
