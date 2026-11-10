@@ -285,6 +285,31 @@
     width: 36px;
     height: 40px;
   }
+  .atlas .has-empty-state .ov-center {
+    top: 88px;
+    bottom: calc(var(--sheet-h, 196px) + 148px);
+    width: calc(100% - 32px);
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+  }
+  .atlas .has-empty-state .statecard {
+    width: 100%;
+    max-height: 100%;
+    overflow: auto;
+    padding: 16px;
+  }
+  .atlas .has-empty-state .statecard .si {
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+  }
+  .atlas .has-empty-state .statecard h3 {
+    margin-top: 12px;
+  }
+  .atlas .has-empty-state .statecard .row-act {
+    margin-top: 12px;
+  }
 }
 
 .tr-stage-cargo .tr-list {

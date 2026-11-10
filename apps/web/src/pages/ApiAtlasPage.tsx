@@ -154,6 +154,7 @@ export function ApiAtlasPage() {
     [filtersCollapsed, setFiltersCollapsed] = useState(false),
     [cardHidden, setCardHidden] = useState(false),
     [question, setQuestion] = useState(""),
+    [interfaceMessages, setInterfaceMessages] = useState<{ question: string; text: string }[]>([]),
     [scenarioView, setScenarioView] = useState(false),
     [theme, setTheme] = useState<"auto" | "light" | "dark">("auto"),
     [legendOpen, setLegendOpen] = useState(false),
@@ -275,6 +276,7 @@ export function ApiAtlasPage() {
     setSelection(null);
     setScenarioView(false);
     setQuestion("");
+    setInterfaceMessages([]);
     setDraft((d) => ({
       ...d,
       ...(cityChanged ? { areaId: "", snapshotId: "", travel: "" as const } : {}),
@@ -312,6 +314,7 @@ export function ApiAtlasPage() {
       setLocalError(null);
       setFiltersOpen(false);
       setScenarioView(false);
+      setInterfaceMessages([]);
       void session.run(request);
     } catch (e) {
       setLocalError(
@@ -508,6 +511,22 @@ export function ApiAtlasPage() {
     categories: Object.keys(draft.cats).flatMap((id) => categoryIds[id as keyof typeof categoryIds] || []),
   };
   const scopeState = urbanScopeAvailability(scopeSelection, publishedScopes);
+  const sendQuestion = () => {
+    const text = question.trim();
+    if (!text || text.length > 2000 || session.chatBusy) return;
+    if (result) void session.explain(text, selection);
+    else {
+      const guidance = !caps
+        ? bootError ? "Возможности сервера сейчас недоступны. Повторите загрузку в фильтрах." : "Возможности сервера загружаются. Дождитесь списка доступных условий в фильтрах."
+        : !ready?.calculation_available
+          ? "Расчёт выбранного направления сейчас недоступен. Выберите другое направление или вернитесь позже."
+          : draft.kind === "urban_passenger" && scopeState.problem
+            ? `${scopeState.problem.message} Доступные параметры показаны в фильтрах.`
+            : `${draftInstructions}. Проверьте дату и время, затем нажмите «${runLabel}». Доступность результата проверяется сервером.`;
+      setInterfaceMessages((messages) => [...messages, { question: text, text: guidance }]);
+    }
+    setQuestion("");
+  };
   const readiness = caps && draft.kind === "urban_passenger" ? urbanReadiness(draft, catalog, caps, result, dirty) : null;
   const categoryReason = (category: Schemas["UrbanPassengerRequest"]["categories"][number]) => {
     if (!scopeState.published) return undefined;
@@ -800,7 +819,7 @@ export function ApiAtlasPage() {
             </>
           )}
         </FiltersPanelView>
-        <MapViewport mapRef={mapArea} className={`${result && !cardHidden && !mobile ? "has-card" : ""} ${chatOpen && !mobile ? "chat-open" : ""} ${dirty ? "dimmed" : ""}`}><MapCanvas>
+        <MapViewport mapRef={mapArea} className={`${result && !cardHidden && !mobile ? "has-card" : ""} ${!result ? "has-empty-state" : ""} ${chatOpen && !mobile ? "chat-open" : ""} ${dirty ? "dimmed" : ""}`}><MapCanvas>
           <ApiMap
             result={result}
             scores={values?.scores || []}
@@ -863,14 +882,19 @@ export function ApiAtlasPage() {
             {mobile && result && <details className="more"><summary>Результат и рассчитанные точки</summary>{!cardHidden ? renderResultCard() : <button className="iconbtn" onClick={() => setCardHidden(false)}>Показать результат</button>}</details>}
           </AtlasMobileSheet>
         </MapViewport>
-        <AgentChatView open={chatOpen} onClose={() => { setChatOpen(false); if (window.innerWidth < 1520) setFiltersCollapsed(false); }} onNewDialog={session.clearExplanation}
-          subtitle="Объясняет по сохранённому результату"
+        <AgentChatView open={chatOpen} onClose={() => { setChatOpen(false); if (window.innerWidth < 1520) setFiltersCollapsed(false); }} onNewDialog={() => { setInterfaceMessages([]); session.clearExplanation(); }}
+          subtitle={result ? "Объясняет по сохранённому результату" : "Помогает выбрать условия до расчёта"}
           error={session.error ? <p role="alert">{errorText(session.error)}</p> : undefined}
-          contextLabel={result ? `${requestTitle} · ${dirty ? "прежние условия" : "сохранённый результат"}` : "Объяснение доступно после анализа"}
+          contextLabel={result ? `${requestTitle} · ${dirty ? "прежние условия" : "сохранённый результат"}` : "Помощь по интерфейсу · расчёта ещё нет"}
           contextRows={[{ label: "Контекст", value: result ? requestTitle : "Результат ещё не получен" },
-            { label: "Условия", value: result ? timestampText(result.request.departure_at, savedOrigin?.timezone) : "Не выбраны" },
+            { label: "Условия", value: result ? timestampText(result.request.departure_at, savedOrigin?.timezone) : "Текущие параметры фильтров" },
             { label: "Результат", value: dirty ? "Для предыдущих условий" : result ? statusText[result.status] : "Не получен" }]}
-          messages={<>            {session.messages.map((m, i) => (
+          messages={<>{!result && interfaceMessages.map((message, index) => <div key={`help-${index}`}>
+            <div className="msg u">{message.question}</div>
+            <div className="msg a"><small>Помощь по интерфейсу · локально</small><p>{message.text}</p>
+              <p>Эта справка не запускает расчёт. Объяснение показателей и проверка сценария доступны после получения результата.</p>
+            </div>
+          </div>)}{session.messages.map((m, i) => (
               <div key={i}>
                 <div className="msg u">{m.question}</div>
                 <div className="msg a">
@@ -931,11 +955,11 @@ export function ApiAtlasPage() {
                 )}
               </div>
             ))}
-</>} hasMessages={session.messages.length > 0 || session.chatBusy || session.proposals.length > 0}
-          suggestions={["Объясни выбранную точку и ограничения результата", "Какая часть пути занимает больше всего времени?", "Какие изменения можно проверить?"]}
+</>} hasMessages={(!result && interfaceMessages.length > 0) || session.messages.length > 0 || session.chatBusy || session.proposals.length > 0}
+          suggestions={result ? ["Объясни выбранную точку и ограничения результата", "Какая часть пути занимает больше всего времени?", "Какие изменения можно проверить?"] : ["Как запустить расчёт?", "Какие условия сейчас доступны?", "Когда появится объяснение результата?"]}
           onSuggestion={(value) => { setQuestion(value); chatInput.current?.focus(); }} draft={question} onDraftChange={setQuestion}
-          onSend={() => { void session.explain(question, selection); setQuestion(""); }} disabled={!result} busy={session.chatBusy}
-          inputRef={chatInput} maxLength={2000} notice={mobile && demoModel ? demoModelWarning : undefined} note="Числа берутся только из сохранённого расчёта. Сценарий запускается отдельно по кнопке." />
+          onSend={sendQuestion} disabled={false} busy={session.chatBusy}
+          inputRef={chatInput} maxLength={2000} notice={mobile && demoModel ? demoModelWarning : undefined} note={result ? "Числа берутся только из сохранённого расчёта. Сценарий запускается отдельно по кнопке." : "До расчёта доступна локальная помощь по интерфейсу. Вопросы к модели доступны после получения результата."} />
     </AtlasShell>
   );
 }
