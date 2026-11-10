@@ -106,6 +106,37 @@ class SnapshotAvailability(ContractModel):
     calendar_version: Identifier
 
 
+class UrbanPassengerScope(ContractModel):
+    """One registered input scope, not a promise of complete metrics or admission.
+
+    All selections must match the same scope; unions across scopes are unsafe.
+    ``whole_city`` permits an absent request area_id, not a full-city rating.
+    The time interval includes valid_from and excludes valid_to.
+    """
+
+    scope_id: Identifier
+    snapshot_id: Identifier
+    city_id: Identifier
+    passenger_modes: list[Literal["walk", "public_transport", "private_car"]] = Field(min_length=1)
+    categories: list[Category] = Field(min_length=1)
+    traffic_modes: list[TrafficMode] = Field(min_length=1)
+    valid_from: Timestamp
+    valid_to: Timestamp
+    whole_city: bool = Field(strict=True)
+    area_ids: list[Identifier] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def coherent_scope(self) -> Self:
+        if self.valid_from >= self.valid_to:
+            raise ValueError("Runtime scope requires a nonempty validity interval")
+        if not self.whole_city and not self.area_ids:
+            raise ValueError("Runtime scope requires an allowed area selection")
+        for values in (self.passenger_modes, self.categories, self.traffic_modes, self.area_ids):
+            if len(values) != len(set(values)):
+                raise ValueError("Runtime scope selections must be unique")
+        return self
+
+
 class Capabilities(ContractModel):
     schema_version: Literal["2"]
     spec_version: Literal["2026-11-08.1"]
@@ -122,3 +153,5 @@ class Capabilities(ContractModel):
     limitations: list[Identifier]
     snapshots: list[SnapshotAvailability] = Field(default_factory=list)
     areas: list[AreaOption] = Field(default_factory=list)
+    # None: legacy registry does not publish detailed constraints; []: none registered.
+    urban_passenger_scopes: list[UrbanPassengerScope] | None = None
