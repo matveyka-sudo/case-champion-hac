@@ -27,6 +27,9 @@ class NginxResponseCompressionTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.directory = tempfile.TemporaryDirectory(prefix="waydex-nginx-")
         cls.folder = Path(cls.directory.name)
+        # The upstream worker runs as nginx, not the host user that owns mkdtemp.
+        # These synthetic public fixtures must remain readable on Linux binds.
+        cls.folder.chmod(0o755)
         cls.network = "waydex-nginx-" + uuid4().hex[:12]
         cls.backend = cls.network + "-api"
         cls.proxy = cls.network + "-proxy"
@@ -52,6 +55,8 @@ class NginxResponseCompressionTests(unittest.TestCase):
             " }\n"
             "}\n"
         )
+        for fixture in ("payload.json", "upstream.conf"):
+            (cls.folder / fixture).chmod(0o644)
         cls.docker("network", "create", cls.network)
         common = ("--network", cls.network, "--memory", "64m", "--pids-limit", "64")
         cls.docker(
@@ -92,8 +97,22 @@ class NginxResponseCompressionTests(unittest.TestCase):
             except (OSError, http.client.HTTPException):
                 pass
             if time.monotonic() >= deadline:
-                raise AssertionError("Isolated Nginx proxy did not become ready")
+                raise AssertionError(
+                    "Isolated Nginx proxy did not become ready\n" + cls.readiness_diagnostics()
+                )
             time.sleep(0.1)
+
+    @classmethod
+    def readiness_diagnostics(cls) -> str:
+        details = []
+        for container in (cls.backend, cls.proxy):
+            try:
+                state = json.loads(cls.docker("inspect", container))[0]["State"]
+                details.append(container + " state=" + json.dumps(state))
+                details.append(cls.docker("logs", "--tail", "20", container))
+            except subprocess.CalledProcessError as error:
+                details.append(container + ": " + error.output)
+        return "\n".join(details)
 
     @classmethod
     def cleanup_containers(cls) -> None:
