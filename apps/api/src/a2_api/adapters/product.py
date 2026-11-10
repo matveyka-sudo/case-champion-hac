@@ -425,9 +425,14 @@ def calculate(
         raise unavailable("RUNTIME_TRANSPORT_INPUTS_REQUIRED")
     from a2_api.adapters.product_scenario_runtime import finish_analysis
 
+    result = out.finish()
+    if profile.demo_transport is not None:
+        from a2_api.adapters.demo_map import attach_demo_result
+
+        result = attach_demo_result(result, snapshot)
     return finish_analysis(
         claim,
-        out.finish(),
+        result,
         inputs,
         profile_id=profile.profile_id,
         documents=runtime.scenario_documents.get(profile.profile_id, ()),
