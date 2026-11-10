@@ -256,12 +256,17 @@ def test_real_accepted_data_registry_and_hash_bound_partial_result(configured, m
     assert journey.total_seconds > 120
     assert len(journey.legs) == 3
     assert journey.completeness == "partial" and journey.geometry is None
+    assert {ref for leg in journey.legs for ref in leg.evidence_refs} <= set(journey.evidence_refs)
     assert all(s.value is None and not s.ranking_eligible for s in result.scores)
     assert {"PILOT_SAMPLE_ONLY", "MINIMUM_TIME_UNPROVEN", "PARTIAL_SCHOOL_CATALOG"} <= set(
         result.limitations
     )
     assert len(list(path.parent.glob("*.json"))) == 4
     assert len(result.map_data.features) == 2
+    point = next(row for row in snapshot.sample_points if row.point_id == POINT)
+    cell = next(row for row in snapshot.population_cells if row.cell_id == point.cell_id)
+    saved_point = next(row for row in result.map_data.features if row.entity_kind == "sample_point")
+    assert set(cell.source_refs) <= set(saved_point.source_refs)
     assert result.result_hash == canonical_hash(
         result.model_dump(mode="json", exclude={"result_hash"})
     )

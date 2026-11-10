@@ -505,6 +505,10 @@ def project_result(
     journeys = []
     for timing in calculated.analysis.journeys:
         candidate = timing.candidate
+        journey_evidence = sorted(
+            set(candidate.evidence_refs)
+            | {reference for leg in candidate.legs for reference in leg.evidence_refs}
+        )
         journeys.append(
             JourneyResult(
                 journey_id=candidate.journey_id,
@@ -531,7 +535,7 @@ def project_result(
                 reference_id=None,
                 destination_object_id=candidate.destination_id,
                 point_id=candidate.point_id,
-                evidence_refs=list(candidate.evidence_refs),
+                evidence_refs=journey_evidence,
             )
         )
         metrics.append(
@@ -542,7 +546,7 @@ def project_result(
                 unit="seconds",
                 status="available",
                 reason_code="MINIMUM_TIME_UNPROVEN",
-                source_refs=list(candidate.evidence_refs),
+                source_refs=journey_evidence,
                 subject=SubjectRef(
                     kind="sample_point",
                     territory_id=request.city_id,
@@ -587,7 +591,7 @@ def project_result(
                     type="Point", coordinates=(point.location.lon, point.location.lat)
                 ),
                 geometry_kind="actual",
-                source_refs=point.source_refs,
+                source_refs=sorted(set(point.source_refs) | set(cell.source_refs)),
                 population=cell.population,
                 population_year=cell.population_year,
                 population_method=cell.population_method,
