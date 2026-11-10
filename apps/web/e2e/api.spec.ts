@@ -12,6 +12,7 @@ import { scenarioRouteFixture } from "../tests/fixtures/scenario-routes";
 import { returnContextFixture } from "../tests/fixtures/return-context";
 import { airportScope, scopedCapabilities } from "../tests/fixtures/urban-scopes";
 import { pointOverviewFixture } from "../tests/fixtures/point-overview";
+import { partialWalkGeometryFixture } from "../tests/fixtures/partial-walk-geometry";
 const fixtures = {
   urban_passenger: urban,
   intercity_passenger: pax,
@@ -865,5 +866,39 @@ test("API: partial point inventory never presents the one known point as complet
   await expect(overview).not.toContainText("1 из 1");
   await expect(overview).toContainText("Индекс города: Нет данных");
   await expect(overview.getByRole("button", { name: /Точка · 54.71500, 20.51500/ })).toContainText("0,5 из 100");
+  expect(mock.posts).toBe(1);
+});
+
+test("API: calculated point reveals its partial walk route with a separate rounded display timeline", async ({ page }) => {
+  // Synthetic protocol evidence; this does not prove a production route or index.
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const data = partialWalkGeometryFixture();
+  const mock = await mockApi(page, { result: data, emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Калининград");
+  await choose(page, "Передвижение", "Пешком");
+  for (const name of ["Взрослые поликлиники", "Школы", "ТЦ"]) await page.getByRole("checkbox", { name, exact: true }).uncheck();
+  await page.getByRole("checkbox", { name: "Аэропорты", exact: true }).check();
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  const card = page.locator("#apiResultCard");
+  const overview = page.getByLabel("Обзор рассчитанных точек");
+  await expect(overview.locator("summary")).toHaveText("Рассчитанные точки (1 из 3)");
+  await overview.locator("summary").click();
+  await overview.getByRole("button", { name: /Точка · 54.50200, 20.30200/ }).click();
+  await expect(card.locator("h3")).toHaveText("Точка · 54.50200, 20.30200");
+  await expect(card.locator("h3")).toBeFocused();
+  await expect(overview).toContainText("Индекс города: Нет данных");
+  await expect(card).toContainText("0,5 из 100");
+  const route = card.locator(".api-journey");
+  await expect(route).toHaveCount(1);
+  await expect(route.locator("summary")).toHaveText("Путь · Данные доступны · геометрия источника · частичные данные");
+  await route.locator("summary").click();
+  await expect(route).toContainText("Синтетический аэропорт · 10 мин");
+  await expect(route).toContainText("Пеший участок · Пешком · 10 мин");
+  await expect(card).toContainText("Время маршрута округлено для отображения; точность расчёта индекса сохранена.");
+  await expect(card).toContainText("Координаты линии округлены источником.");
+  await expect(card).not.toContainText("MODEL_TIMELINE_MICROSECOND_PRECISION");
+  await expect(card).not.toContainText("PINNED_TILE_SHAPE_6_DECIMAL_ENCODING");
   expect(mock.posts).toBe(1);
 });

@@ -55,6 +55,8 @@ describe("partial walk result explanations", () => {
       CATALOG_DATE_OR_ROSTER_UNPROVEN: "Состав объектов или его актуальность на выбранную дату не подтверждены.",
       UNCOMPUTED_TERRITORY_POINTS: "Не все точки территории рассчитаны.",
       UNCOMPUTED_CATEGORY: "Эта категория объектов ещё не рассчитана.",
+      MODEL_TIMELINE_MICROSECOND_PRECISION: "Время маршрута округлено для отображения; точность расчёта индекса сохранена.",
+      PINNED_TILE_SHAPE_6_DECIMAL_ENCODING: "Координаты линии округлены источником.",
     };
     for (const [code, label] of Object.entries(labels)) {
       expect(reasonText(code)).toBe(label);

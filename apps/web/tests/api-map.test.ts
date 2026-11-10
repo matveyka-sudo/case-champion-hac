@@ -6,6 +6,7 @@ import { decode } from "../src/api/validation";
 import resultRaw from "./fixtures/api/urban_passenger.json";
 import { scenarioJourneys } from "../src/api/adapters/scenario";
 import { scenarioRouteFixture } from "./fixtures/scenario-routes";
+import { partialWalkGeometryFixture } from "./fixtures/partial-walk-geometry";
 const drawn = vi.hoisted(() => ({
   layers: [] as { style?: Record<string, unknown>; marker?: Record<string, unknown>; tooltip: string; geometry?: unknown }[],
   pans: [] as unknown[], zooms: [] as unknown[],
@@ -118,6 +119,21 @@ describe("scenario map paths", () => {
     }));
     expect(drawn.layers.some((l) => (l.geometry as { type?: string })?.type === "LineString")).toBe(false);
     expect(baseline.journeys.every((j) => j.geometry !== null)).toBe(true);
+  });
+});
+describe("partial walk map path", () => {
+  it("draws the supplied actual route even when the exact score operand is not journey-linked", () => {
+    const result = partialWalkGeometryFixture();
+    render(createElement(ApiMap, {
+      result, scores: result.scores,
+      selection: { entity_kind: "sample_point", entity_id: "synthetic-point-2" },
+      onSelect: vi.fn(), zoomAction: { id: 0, kind: "home" },
+    }));
+    const lines = drawn.layers.filter((layer) => (layer.geometry as { type?: string })?.type === "LineString");
+    expect(lines).toHaveLength(1);
+    expect(lines[0].geometry).toEqual(result.journeys[0].geometry);
+    expect(lines[0].tooltip).toBe("Маршрут");
+    expect(lines[0].style?.dashArray).toBeUndefined();
   });
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
