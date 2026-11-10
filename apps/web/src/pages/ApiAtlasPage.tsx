@@ -54,6 +54,7 @@ import { NavigationLink } from "../shared/NavigationLink";
 import { ApiMap } from "../widgets/ApiMap";
 import { ExplanationFinding } from "../widgets/ExplanationFinding";
 import { JourneyDetails } from "../widgets/JourneyDetails";
+import { IndexLegend } from "../widgets/IndexLegend";
 import { useModalFocus } from "../features/accessibility";
 const kinds: Record<AnalysisKind, string> = {
   urban_passenger: "В городе",
@@ -1061,6 +1062,7 @@ export function ApiAtlasPage() {
                 {shownScores.map((s) => (
                   <Measure key={s.score_id} value={s} />
                 ))}
+                {shownScores.length > 0 && <IndexLegend />}
                 {shownMetrics.map((m) => (
                   <Measure key={m.metric_id} value={m} />
                 ))}
