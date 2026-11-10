@@ -1,3 +1,4 @@
+import { pointScorePresentation, observedScoreName } from "./scorePresentation";
 import type { AnalysisResult, Schemas } from "../types";
 
 export function pointDisplayName(pointId: string, feature?: Schemas["MapFeature"], ordinal?: number) {
@@ -37,3 +38,20 @@ export function calculatedPoints(result: AnalysisResult, scores = result.scores)
   return { points, denominator, inventoryCount, territoryScore: territory.length === 1 ? territory[0] : null };
 }
 export type CalculatedPointOverview = ReturnType<typeof calculatedPoints>;
+
+// A separate list: observed-route estimates never become canonical point totals.
+export function routeEstimatePoints(result: AnalysisResult, scores = result.scores) {
+  const canonical = calculatedPoints(result, scores);
+  const inventory = new Map((result.map_data?.features || []).filter((feature) => feature.entity_kind === "sample_point")
+    .map((feature) => [feature.point_id || feature.entity_id, feature]));
+  const tasks = new Set(scores.filter((score) => score.name === observedScoreName && score.subject.kind === "sample_point" && score.subject.point_id).map((score) => score.subject.point_id!));
+  const points = [...tasks].flatMap((pointId) => {
+    const candidates = scores.filter((score) => score.subject.kind === "sample_point" && score.subject.point_id === pointId);
+    const totals = candidates.filter((score) => score.subject.category == null);
+    const presentation = pointScorePresentation(result, candidates, totals.length === 1 ? totals[0] : undefined);
+    if (!presentation.observed || !presentation.score) return [];
+    const feature = inventory.get(pointId);
+    return [{ pointId, score: presentation.score, feature, name: pointDisplayName(pointId, feature) }];
+  });
+  return { ...canonical, points, denominator: canonical.inventoryCount !== null && [...tasks].every((id) => inventory.has(id)) ? canonical.inventoryCount : null };
+}

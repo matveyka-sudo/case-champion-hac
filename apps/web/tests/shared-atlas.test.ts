@@ -9,6 +9,14 @@ import { FiltersPanelView } from "../src/widgets/FiltersPanelView";
 import { AgentChatView } from "../src/widgets/AgentChatView";
 afterEach(cleanup);
 describe("shared atlas presentation", () => {
+  it("makes closed mobile filters inert without hiding the desktop controller", () => {
+    const props = { collapsed: false, mobileOpen: false, mobile: true, onClose: vi.fn(), onToggle: vi.fn(), onExpand: vi.fn(), railIcons: [], footer: "Run", children: "Fields" };
+    const view = render(createElement(FiltersPanelView, props));
+    expect(view.container.querySelector("aside")?.hasAttribute("inert")).toBe(true);
+    view.rerender(createElement(FiltersPanelView, { ...props, mobile: false }));
+    expect(view.container.querySelector("aside")?.hasAttribute("inert")).toBe(false);
+  });
+
   it("uses the incumbent three tabs and keyboard navigation without a data source dependency", () => {
     const onModeChange = vi.fn();
     render(createElement(AtlasHeader, { mode: "city", title: "Москва", theme: "light", onModeChange,

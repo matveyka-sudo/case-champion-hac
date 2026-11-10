@@ -5,8 +5,11 @@ import type { AnalysisResult, Schemas, Selection } from "../api/types";
 import { subjectMatches, selectionText } from "../api/adapters/result";
 import { journeyLines, segmentGeometryNotice } from "../api/adapters/journeyGeometry";
 import { isDemoModelSnapshot } from "../api/adapters/demoModel";
+import { pointScorePresentation, observedScoreLabel } from "../api/adapters/scorePresentation";
+import type { Category } from "../api/types";
+const moscowCamera = (result: AnalysisResult | null) => isDemoModelSnapshot(result?.snapshot_id) || (result?.request.analysis_kind === "urban_passenger" && result.request.city_id === "moscow");
 
-// Presentation camera for the explicitly labelled generated demo, not data scope.
+// City presentation camera; accepted source points and calculation scope are unchanged.
 const showDemoCenter = (map: L.Map) => map.setView([55.75, 37.62], 10, { animate: false });
 export function ApiMap({
   result,
@@ -17,6 +20,8 @@ export function ApiMap({
   scenarioView = false,
   journeys,
   viewId,
+  category = null,
+  layers: visibleLayers = { index: true, objects: true, pop: false },
 }: {
   result: AnalysisResult | null;
   scores: Schemas["Score"][];
@@ -26,6 +31,8 @@ export function ApiMap({
   scenarioView?: boolean;
   journeys?: Schemas["JourneyResult"][];
   viewId?: string;
+  category?: Category | null;
+  layers?: { index: boolean; objects: boolean; pop: boolean };
 }) {
   const host = useRef<HTMLDivElement>(null),
     map = useRef<L.Map | null>(null),
@@ -70,8 +77,11 @@ export function ApiMap({
     g.clearLayers();
     const bounds = L.latLngBounds([]);
     const features = result?.map_data?.features || [];
+    const maxPopulation = Math.max(1, ...features.flatMap((feature) => feature.population == null ? [] : [feature.population]));
     features.forEach((f) => {
       if (!f.geometry) return;
+      const indexEntity = ["sample_point", "cell", "territory"].includes(f.entity_kind);
+      if (indexEntity ? !visibleLayers.index && !visibleLayers.pop : !visibleLayers.objects) return;
       const ids = [
         f.entity_id,
         f.point_id,
@@ -97,12 +107,14 @@ export function ApiMap({
         (s.subject.kind === totalKind && s.subject.category == null),
       );
       // An unavailable total cannot be replaced by a known category index.
-      const score = totals.length === 1 ? totals[0]
+      const canonical = totals.length === 1 ? totals[0]
         : !totals.length && candidates.length === 1 ? candidates[0] : undefined;
+      const presentation = result && totalKind === "sample_point" ? pointScorePresentation(result, candidates, canonical, category) : { score: canonical, observed: false };
+      const score = presentation.score;
       const value = score?.status === "available" ? score.value : null;
       const partial = score?.completeness === "partial";
       const dashArray = partial ? "1 4" : f.geometry_kind === "schematic" ? "5 5" : undefined;
-      const color =
+      const color = visibleLayers.pop && indexEntity ? f.population == null ? "#8990a7" : `hsl(250 45% ${90 - 55 * f.population / maxPopulation}%)` :
         value == null
           ? "#8990a7"
           : value < 50
@@ -145,6 +157,8 @@ export function ApiMap({
         (f.name || selectionText[f.entity_kind]) +
         (f.geometry_kind === "schematic" ? " · схема" : "") +
         (value == null ? " · нет индекса" : ` · ${value.toFixed(1)}`) +
+        (presentation.observed ? ` · ${observedScoreLabel}` : "") +
+        (visibleLayers.pop ? ` · население: ${f.population == null ? "неизвестно" : f.population.toLocaleString("ru")}` : "") +
         (partial ? " · частичная оценка" : "");
       layer
         .bindTooltip(tip)
@@ -182,7 +196,7 @@ export function ApiMap({
     });
     const shownView = `${result?.analysis_id}:${scenarioView ? viewId || "scenario" : "baseline"}`;
     if (result && last.current !== shownView) {
-      if (isDemoModelSnapshot(result.snapshot_id)) {
+      if (moscowCamera(result)) {
         if (lastAnalysis.current !== result.analysis_id) showDemoCenter(m);
         last.current = shownView;
         lastAnalysis.current = result.analysis_id;
@@ -197,7 +211,7 @@ export function ApiMap({
         lastAnalysis.current = result.analysis_id;
       }
     }
-  }, [result, scores, selection, onSelect, scenarioView, journeys, viewId]);
+  }, [result, scores, selection, onSelect, scenarioView, journeys, viewId, category, visibleLayers.index, visibleLayers.objects, visibleLayers.pop]);
   useEffect(() => {
     if (lastZoom.current === zoomAction.id || !map.current) return;
     lastZoom.current = zoomAction.id;
@@ -211,7 +225,7 @@ export function ApiMap({
       const bounds = L.latLngBounds(positions);
       if (bounds.isValid()) m.fitBounds(bounds, { padding: [30, 30], maxZoom: 14, animate: false });
     }
-    else if (zoomAction.kind === "home" && isDemoModelSnapshot(result?.snapshot_id)) showDemoCenter(m);
+    else if (zoomAction.kind === "home" && moscowCamera(result)) showDemoCenter(m);
     else if (zoomAction.kind === "selection") {
       const target = result?.map_data?.features?.find((f) => f.entity_kind === selection?.entity_kind &&
         (f.entity_id === selection.entity_id || f.point_id === selection.entity_id));
@@ -222,8 +236,8 @@ export function ApiMap({
       let top = 110, right = window.innerWidth < 768 ? 24 : 360, bottom = 120;
       const rect = host.current?.getBoundingClientRect();
       const card = document.getElementById("apiResultCard")?.getBoundingClientRect();
-      const status = host.current?.parentElement?.querySelector(".api-status")?.getBoundingClientRect();
-      const dock = host.current?.parentElement?.querySelector(".api-bottom")?.getBoundingClientRect();
+      const status = host.current?.closest(".at-map")?.querySelector(".ov-tl")?.getBoundingClientRect();
+      const dock = host.current?.closest(".at-map")?.querySelector(".ov-bottom")?.getBoundingClientRect();
       if (rect && card && rect.height > 0) {
         top = Math.max(24, (status?.bottom || rect.top) - rect.top + 12);
         bottom = Math.max(24, rect.bottom - (dock?.top || rect.bottom) + 12);

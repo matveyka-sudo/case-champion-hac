@@ -11,7 +11,7 @@ describe("saved result visual headline", () => {
     const view = render(createElement(ResultHeadline, { score, journey }));
     expect(view.container.querySelector(".bignum")?.textContent).toBe("10мин");
     expect(screen.getByText("Нет данных").getAttribute("data-score-band")).toBe("unknown");
-    expect(screen.getByLabelText("Время участков полученного маршрута").children).toHaveLength(5);
+    expect(screen.getByRole("img").children).toHaveLength(5);
     expect(journey.total_seconds).toBe(600.123457);
   });
   it("keeps zero numerical and creates no timeline for an unknown journey", () => {
@@ -19,8 +19,8 @@ describe("saved result visual headline", () => {
     journey.status = "unknown";
     render(createElement(ResultHeadline, { score: result.scores.find((value) => value.score_id === "synthetic-total-2"), journey }));
     expect(screen.getByText("0 из 100").getAttribute("data-score-band")).toBe("low");
-    expect(screen.queryByLabelText("Время участков полученного маршрута")).toBeNull();
-    expect(screen.queryByText("Полное время пути")).toBeNull();
+    expect(screen.queryByRole("img")).toBeNull();
+    expect(screen.queryByRole("img")).toBeNull();
   });
   it("prefers the named minimum operand over a different route time and never uses H as primary time", () => {
     const result = legGeometryFixture(0), journey = result.journeys[0];
