@@ -1170,3 +1170,206 @@ def test_unknown_positive_population_cannot_be_removed_from_full_city_index_basi
             endpoint_scope=scope,
             expected_snapshot_hash=scope.snapshot_hash,
         )
+
+
+def incomplete_aggregate_case(level, *, zero_weight=False):
+    """TEST_ONLY actual engine unknowns for an omitted category/positive point."""
+    context, facts, document, original, _ = make_case()
+    if level == "point":
+        destinations = tuple(
+            replace(row, categories=frozenset({"airport"})) for row in facts.destinations
+        )
+        coverage = tuple(
+            replace(row, catalog_complete=False, catalog_destination_ids=frozenset())
+            if row.scope.category == "school"
+            else row
+            for row in facts.coverage
+        )
+    else:
+        destinations = facts.destinations
+        coverage = tuple(
+            replace(row, catalog_complete=False) if row.scope.point_id == "p1" else row
+            for row in facts.coverage
+        )
+    points = tuple(
+        replace(point, population=0) if zero_weight and point.point_id == "p1" else point
+        for point in facts.points
+    )
+    facts = facts.model_copy(
+        update={"points": points, "destinations": destinations, "coverage": coverage}
+    )
+    job = replace(
+        document.inputs.urban[0], points=points, destinations=destinations, coverage=coverage
+    )
+    inputs = replace(document.inputs, urban=(job,))
+    frozen = create_scenario_baseline(inputs)
+    out = projection(
+        "urban_passenger",
+        document.plans[0].operation.evidence_refs,
+        city_id="city",
+        passenger_mode="public_transport",
+        categories=list(dict(job.selected_categories)),
+        priorities=dict(job.selected_categories),
+    )
+    out.context.normalized_request.departure_at = context.normalized_request.departure_at
+    project_urban(out, frozen.before.urban[0].analysis)
+    baseline = out.finish()
+    plan = document.plans[0].model_copy(
+        update={"operation": replace(document.plans[0].operation, baseline_id=frozen.baseline_id)}
+    )
+    document = document.model_copy(
+        update={"inputs": inputs, "source_inputs_hash": source_inputs_hash(facts), "plans": (plan,)}
+    )
+    return context, facts, document, baseline, frozen
+
+
+def forged_aggregate(result, level, attack="omit"):
+    payload = result.model_dump(mode="json")
+    if level == "point":
+        target = next(
+            row for row in payload["after"]["scores"] if row["score_id"] == "urban-point-p2"
+        )
+        known = next(
+            row
+            for row in payload["after"]["scores"]
+            if row["subject"]["point_id"] == "p2" and row["subject"]["category"] == "airport"
+        )
+    else:
+        target = next(
+            row
+            for row in payload["after"]["scores"]
+            if row["score_id"] == "urban-territory-public_transport"
+        )
+        known = next(
+            row for row in payload["after"]["scores"] if row["score_id"] == "urban-point-p2"
+        )
+    assert target["value"] is None and known["value"] is not None
+    target.update(
+        value=80.0,
+        status="available",
+        completeness="full",
+        reason_code=None,
+        components=[dict(kind="score", id=known["score_id"])],
+    )
+    if attack == "duplicate":
+        target["components"].append(dict(kind="score", id=known["score_id"]))
+    elif attack == "wrong_point":
+        other = next(
+            row
+            for row in payload["after"]["scores"]
+            if row["subject"]["point_id"] == "p1" and row["subject"]["category"] == "airport"
+        )
+        target["components"].append(dict(kind="score", id=other["score_id"]))
+    elif attack == "category_as_point":
+        other = next(
+            row
+            for row in payload["after"]["scores"]
+            if row["subject"]["point_id"] == "p2" and row["subject"]["category"] == "airport"
+        )
+        target["components"].append(dict(kind="score", id=other["score_id"]))
+    for effect in payload["deltas"]:
+        if effect["kind"] == "score" and effect["after_id"] == target["score_id"]:
+            effect.update(outcome="unknown", delta=None, reason_code="INCOMPARABLE_SCOPE")
+    payload["status"] = "partial"
+    return ScenarioResult.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    "level,attack",
+    [
+        ("point", "omit"),
+        ("point", "duplicate"),
+        ("point", "wrong_point"),
+        ("territory", "omit"),
+        ("territory", "duplicate"),
+        ("territory", "category_as_point"),
+    ],
+)
+def test_full_aggregate_requires_every_requested_category_and_positive_or_unknown_point(
+    level, attack
+):
+    from a2_api.db.validation import _validate_scenario_semantics
+
+    case = incomplete_aggregate_case(level)
+    claim, facts, document, baseline, _ = with_claim(case)
+    scope = trusted_urban_scope(case)
+    honest = bridge.calculate(
+        claim, baseline=baseline, inputs=facts, document=document, profile_id=document.profile_id
+    )
+    _validate_scenario_semantics(
+        honest,
+        baseline,
+        claim.context.scenario_proposal,
+        endpoint_scope=scope,
+        expected_snapshot_hash=scope.snapshot_hash,
+    )
+    forged = forged_aggregate(honest, level, attack)
+    with pytest.raises(DomainError, match="inventory"):
+        _validate_scenario_semantics(
+            forged,
+            baseline,
+            claim.context.scenario_proposal,
+            endpoint_scope=scope,
+            expected_snapshot_hash=scope.snapshot_hash,
+        )
+
+
+def test_explicit_known_zero_population_point_may_be_omitted_without_erasing_task():
+    from a2_api.db.validation import _validate_scenario_semantics
+
+    case = incomplete_aggregate_case("territory", zero_weight=True)
+    claim, facts, document, baseline, frozen = with_claim(case)
+    scope = trusted_urban_scope(case)
+    result = bridge.calculate(
+        claim, baseline=baseline, inputs=facts, document=document, profile_id=document.profile_id
+    )
+    local = next(row for row in result.after.scores if row.score_id == "urban-point-p1")
+    city = next(
+        row for row in result.after.scores if row.score_id == "urban-territory-public_transport"
+    )
+    assert local.value is None and local.status == "unknown"
+    assert city.value is not None and city.completeness == "full"
+    assert [component.id for component in city.components] == ["urban-point-p2"]
+    assert any(
+        row.subject.point_id == "p1" and row.population_basis.population == 0
+        for row in result.after.metrics
+        if row.population_basis is not None
+    )
+    _validate_scenario_semantics(
+        result,
+        baseline,
+        claim.context.scenario_proposal,
+        endpoint_scope=scope,
+        expected_snapshot_hash=scope.snapshot_hash,
+    )
+
+
+def test_full_aggregate_cannot_substitute_a_category_from_another_city():
+    from a2_api.db.validation import _validate_scenario_semantics
+
+    case = make_case()
+    claim, facts, document, baseline, _ = with_claim(case)
+    scope = trusted_urban_scope(case)
+    result = bridge.calculate(
+        claim, baseline=baseline, inputs=facts, document=document, profile_id=document.profile_id
+    )
+    payload = result.model_dump(mode="json")
+    child = next(
+        row
+        for row in payload["after"]["scores"]
+        if row["subject"]["point_id"] == "p2" and row["subject"]["category"] == "airport"
+    )
+    child["subject"]["territory_id"] = "TEST_ONLY-foreign-city"
+    for effect in payload["deltas"]:
+        if effect["kind"] == "score" and effect["after_id"] == child["score_id"]:
+            effect.update(outcome="unknown", delta=None, reason_code="INCOMPARABLE_SCOPE")
+    payload["status"] = "partial"
+    forged = ScenarioResult.model_validate(payload)
+    with pytest.raises(DomainError, match="index task identity"):
+        _validate_scenario_semantics(
+            forged,
+            baseline,
+            claim.context.scenario_proposal,
+            endpoint_scope=scope,
+            expected_snapshot_hash=scope.snapshot_hash,
+        )

@@ -313,3 +313,29 @@ async def test_changed_raw_point_task_cannot_publish_full_indices_without_chain(
     assert (
         await repository.get_run(baseline.analysis_id, claim.context.access_scope)
     ).result_hash == baseline.result_hash
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("level", ["point", "territory"])
+async def test_aggregate_cannot_publish_by_dropping_unknown_requested_operand(database, level):
+    from test_product_scenarios import forged_aggregate, incomplete_aggregate_case
+
+    pool, _, _ = database
+    repository, claim, candidate, baseline = await queued_case(
+        pool, incomplete_aggregate_case(level)
+    )
+    with pytest.raises(DomainError, match="inventory"):
+        await repository.succeed(claim, forged_aggregate(candidate, level))
+    assert await pool.fetchval("SELECT count(*) FROM runs WHERE result_kind='scenario_v2'") == 0
+    await repository.succeed(claim, candidate)
+    saved = await repository.get_run(candidate.run_id, claim.context.access_scope)
+    target = next(
+        row
+        for row in saved.after.scores
+        if row.score_id
+        == ("urban-point-p2" if level == "point" else "urban-territory-public_transport")
+    )
+    assert target.value is None and target.status == "unknown"
+    assert (
+        await repository.get_run(baseline.analysis_id, claim.context.access_scope)
+    ).result_hash == baseline.result_hash

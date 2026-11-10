@@ -298,17 +298,19 @@ def project_urban(out: Projection, analysis: Any) -> None:
                     )
                 )
                 out.limitations.update(category.limitations)
-            point_scores.append(
-                out.score(
-                    "urban-point-" + p.point_id,
-                    "point_index",
-                    point.index,
-                    subject,
-                    p.source_refs,
-                    full=point.completeness == "full",
-                    scores=tuple(c_scores),
-                )
+            point_score = out.score(
+                "urban-point-" + p.point_id,
+                "point_index",
+                point.index,
+                subject,
+                p.source_refs,
+                full=point.completeness == "full",
+                scores=tuple(c_scores),
             )
+            # Keep every point task visible, while the territorial dependency
+            # graph follows the engine's original positive/unknown weights.
+            if p.population != 0:
+                point_scores.append(point_score)
         populations = [point.point.population for point in mode.points]
         population = sum(populations) if all(p is not None for p in populations) else None
         coverage = analysis.population_coverage
