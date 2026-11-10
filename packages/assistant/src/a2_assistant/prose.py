@@ -13,6 +13,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from a2_contracts.v2.assistant import Explanation, Finding
+from a2_contracts.v2.evidence import EvidenceResolver
 from a2_contracts.v2.results import AnalysisResult, Metric, Score
 from pydantic import PrivateAttr
 
@@ -143,9 +144,10 @@ def generated_finding(
     evidence_ids: list[str],
     *,
     has_proposal: bool,
+    resolver: EvidenceResolver | None = None,
 ) -> Finding:
     canonical = conversational_finding(
-        "help", saved, metric_ids, score_ids, has_proposal=has_proposal
+        "help", saved, metric_ids, score_ids, has_proposal=has_proposal, resolver=resolver
     )
     metrics, scores = {m.metric_id: m for m in saved.metrics}, {s.score_id: s for s in saved.scores}
     facts: list[Metric | Score] = [
@@ -224,6 +226,15 @@ def _source_digest(explanation: Explanation, saved: AnalysisResult) -> str:
                 if journey.journey_id in journey_ids
             ],
             "evidence": [evidence.model_dump(mode="json") for evidence in saved.evidence_refs],
+            **(
+                {
+                    "evidence_groups": [
+                        group.model_dump(mode="json") for group in saved.evidence_groups
+                    ]
+                }
+                if saved.evidence_groups
+                else {}
+            ),
         }
     )
 

@@ -33,6 +33,7 @@ from a2_contracts.v2.assistant import (
     ScenarioSuggestion,
     ScoreClaim,
 )
+from a2_contracts.v2.evidence import EvidenceResolver, require_result_evidence
 from a2_contracts.v2.requests import UrbanPassengerRequest
 from a2_contracts.v2.results import AnalysisResult, EvidenceRef, Metric, Score
 from a2_contracts.v2.retrieval import EvidenceSearchResult
@@ -47,6 +48,7 @@ from pydantic import (
 )
 from pydantic_core import ErrorDetails
 
+from .evidence import leaf_references
 from .focus import focused_metrics, focused_scores
 from .narrative import (
     ANSWER_MODES,
@@ -231,7 +233,7 @@ def _json(value: object) -> str:
     )
 
 
-def _fact(value: Metric | Score) -> dict[str, object]:
+def _fact(value: Metric | Score, resolver: EvidenceResolver) -> dict[str, object]:
     result: dict[str, object] = {
         "metric_id" if isinstance(value, Metric) else "score_id": (
             value.metric_id if isinstance(value, Metric) else value.score_id
@@ -243,9 +245,9 @@ def _fact(value: Metric | Score) -> dict[str, object]:
         "required_explanation_code": "saved_value" if value.status == "available" else value.status,
         "subject": value.subject.model_dump(mode="json", exclude_none=True),
         "placeholder": fact_placeholder(value),
-        "evidence_ids": (value.source_refs if isinstance(value, Metric) else value.evidence_refs)[
-            :5
-        ],
+        "evidence_ids": leaf_references(
+            value.source_refs if isinstance(value, Metric) else value.evidence_refs, resolver
+        )[:5],
     }
     if isinstance(value, Metric):
         result["unit"] = value.unit
@@ -294,7 +296,7 @@ def _build_content(
 ) -> ExplanationContent:
     metrics = {metric.metric_id: metric for metric in saved.metrics}
     scores = {score.score_id: score for score in saved.scores}
-    evidence = {item.evidence_id for item in saved.evidence_refs}
+    resolver = require_result_evidence(saved)
     if len({(item.metric_id, item.score_id) for item in selection.findings}) != len(
         selection.findings
     ):
@@ -313,7 +315,7 @@ def _build_content(
                 raise _ModelAnswerRejected("narrative_invalid")
             if score.status == "available" and score.completeness != "full":
                 sentence = "Предварительный индекс сохранён; полнота данных ограничена."
-            refs = [ref for ref in score.evidence_refs if ref in evidence][:50]
+            refs = leaf_references(score.evidence_refs, resolver)[:50]
             cited.extend(refs)
             findings.append(
                 Finding(
@@ -338,7 +340,7 @@ def _build_content(
             and metric.unit not in {"seconds", "minutes", "hours"}
         ):
             raise _ModelAnswerRejected("narrative_invalid")
-        refs = [ref for ref in metric.source_refs if ref in evidence][:50]
+        refs = leaf_references(metric.source_refs, resolver)[:50]
         cited.extend(refs)
         findings.append(
             Finding(
@@ -367,6 +369,7 @@ def _build_content(
                     [identifier for finding in findings for identifier in finding.score_ids],
                     selection.evidence_ids,
                     has_proposal=bool(selection.template_ids),
+                    resolver=resolver,
                 )
             ]
         except (ValueError, KeyError):
@@ -383,6 +386,7 @@ def _build_content(
                 [identifier for finding in findings for identifier in finding.metric_ids],
                 [identifier for finding in findings for identifier in finding.score_ids],
                 has_proposal=bool(selection.template_ids),
+                resolver=resolver,
             )
         ]
     try:
@@ -431,11 +435,12 @@ def _validate_content(
 ) -> None:
     metrics = {metric.metric_id: metric for metric in saved.metrics}
     scores = {score.score_id: score for score in saved.scores}
-    evidence = {item.evidence_id for item in saved.evidence_refs}
+    resolver = require_result_evidence(saved)
+    evidence = set(resolver.leaf_ids)
     if retrieved_evidence is not None:
         if len({item.evidence_id for item in retrieved_evidence}) != len(retrieved_evidence):
             raise _ModelAnswerRejected("reference_invalid")
-        evidence.update(item.evidence_id for item in retrieved_evidence)
+        evidence.update(EvidenceResolver(item.evidence_id for item in retrieved_evidence).leaf_ids)
     if content.analysis_id != saved.analysis_id:
         raise _ModelAnswerRejected("identity_mismatch")
     if not set(content.evidence_refs) <= evidence:
@@ -459,7 +464,9 @@ def _validate_content(
                 raise _ModelAnswerRejected("claim_mismatch")
         if approved is not None and finding == approved:
             continue
-        if verified_conversational_finding(finding, saved, has_proposal=bool(content.proposals)):
+        if verified_conversational_finding(
+            finding, saved, has_proposal=bool(content.proposals), resolver=resolver
+        ):
             continue
         if not check_text and finding.score_ids:
             if (
@@ -522,6 +529,7 @@ def template_explanation(
     *,
     context: ExplanationRequest | None = None,
 ) -> Explanation:
+    resolver = require_result_evidence(saved)
     scores = focused_scores(saved, context)
     metrics = focused_metrics(saved, context)
     notes = _urban_passenger_notes(saved, context)
@@ -535,7 +543,7 @@ def template_explanation(
             claims=[],
             score_ids=[score.score_id],
             score_claims=[ScoreClaim(score_id=score.score_id, value=score.value)],
-            evidence_refs=score.evidence_refs[:50],
+            evidence_refs=leaf_references(score.evidence_refs, resolver)[:50],
         )
         for score in scores[:score_limit]
     ]
@@ -545,7 +553,7 @@ def template_explanation(
             Finding(
                 text=metric.name[:1000],
                 metric_ids=[metric.metric_id],
-                evidence_refs=metric.source_refs[:50],
+                evidence_refs=leaf_references(metric.source_refs, resolver)[:50],
                 claims=[
                     NumericClaim(metric_id=metric.metric_id, value=metric.value, unit=metric.unit)
                 ],
@@ -660,6 +668,7 @@ class FlashAssistant:
             raise ToolRejected()
         if re.fullmatch(r"[a-zA-Z0-9_-]{1,128}", request_id) is None:
             raise ValueError("Invalid opaque request ID")
+        resolver = require_result_evidence(saved)
         if not self._enabled():
             return template_explanation(saved, request_id, "DISABLED", context=context)
         if not saved.metrics and not saved.scores:
@@ -676,6 +685,7 @@ class FlashAssistant:
                     request_id,
                     started,
                     context,
+                    resolver,
                 )
         except TimeoutError:
             reason = "TIMEOUT"
@@ -699,7 +709,8 @@ class FlashAssistant:
         templates: frozenset[str],
         request_id: str,
         started: float,
-        context: ExplanationRequest | None = None,
+        context: ExplanationRequest | None,
+        resolver: EvidenceResolver,
     ) -> Explanation:
         assert self.transport is not None and self.budget is not None
         initial_metrics = focused_metrics(saved, context)
@@ -723,8 +734,8 @@ class FlashAssistant:
         allowed_metrics = {metric.metric_id for metric in initial_metrics}
         allowed_scores = {score.score_id for score in initial_scores}
         saved_metric_ids = {metric.metric_id for metric in saved.metrics}
-        metric_facts = [_fact(metric) for metric in initial_metrics]
-        score_facts = [_fact(score) for score in initial_scores]
+        metric_facts = [_fact(metric, resolver) for metric in initial_metrics]
+        score_facts = [_fact(score, resolver) for score in initial_scores]
         facts: dict[str, object] = {
             "analysis_id": saved.analysis_id,
             "analysis_result_hash": saved.result_hash,
@@ -759,7 +770,7 @@ class FlashAssistant:
                         "paragraph": "Для выбранного показателя сохранено "
                         + fact_placeholder(metric)
                         + ". [[coverage]]",
-                        "evidence_ids": metric.source_refs[:5],
+                        "evidence_ids": leaf_references(metric.source_refs, resolver)[:5],
                     }
                     if context is not None and context.question
                     else {}
@@ -783,7 +794,7 @@ class FlashAssistant:
                         "paragraph": "Для выбранной оценки сохранено "
                         + fact_placeholder(score)
                         + ". [[coverage]]",
-                        "evidence_ids": score.evidence_refs[:5],
+                        "evidence_ids": leaf_references(score.evidence_refs, resolver)[:5],
                     }
                     if context is not None and context.question
                     else {}
@@ -993,6 +1004,8 @@ class FlashAssistant:
                                     raise ValueError("Invalid retrieval territory scope")
                                 selected = {str(value) for value in selected_values}
                                 for hit in search.hits:
+                                    # A group is a local alias, never a retrieved URL citation.
+                                    EvidenceResolver((hit.evidence_id,))
                                     if (
                                         hit.snapshot_id not in scope.snapshot_ids
                                         or hit.source_id not in scope.source_ids
@@ -1052,7 +1065,7 @@ class FlashAssistant:
                                         and isinstance(row.get(identifier), str)
                                     }
                                     compact[key] = [
-                                        _fact(item)
+                                        _fact(item, resolver)
                                         for item in saved_items
                                         if getattr(item, identifier) in ids
                                     ][:10]
