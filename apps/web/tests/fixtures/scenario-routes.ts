@@ -1,9 +1,9 @@
 // Synthetic protocol fixtures; these do not calculate or prove production routes.
 import type { Schemas } from "../../src/api/types";
 import { decode } from "../../src/api/validation";
-import urbanRaw from "./api/urban_passenger.json";
-import intercityRaw from "./api/intercity_passenger.json";
-import scenarioRaw from "./api/scenario.json";
+import urbanRaw from "./api/urban_passenger.json" with { type: "json" };
+import intercityRaw from "./api/intercity_passenger.json" with { type: "json" };
+import scenarioRaw from "./api/scenario.json" with { type: "json" };
 
 export function scenarioRouteFixture() {
   const baseline = decode("AnalysisResult", structuredClone(urbanRaw));
