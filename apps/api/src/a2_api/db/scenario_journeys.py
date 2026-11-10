@@ -313,7 +313,15 @@ def scenario_journeys(
     journeys = {journey.journey_id: journey for journey in baseline.journeys}
     references = {reference.reference_id: reference for reference in baseline.references}
     evidence = {row.evidence_id: row for row in result.evidence_refs}
+    if result.evidence_groups[: len(baseline.evidence_groups)] != baseline.evidence_groups:
+        raise DomainError(
+            409, "incompatible_versions", "Scenario changes saved baseline evidence groups"
+        )
     for previous_evidence in baseline.evidence_refs:
+        if baseline.evidence_groups and previous_evidence.evidence_id not in evidence:
+            raise DomainError(
+                409, "incompatible_versions", "Scenario drops grouped baseline evidence"
+            )
         if (
             previous_evidence.evidence_id in evidence
             and previous_evidence != evidence[previous_evidence.evidence_id]

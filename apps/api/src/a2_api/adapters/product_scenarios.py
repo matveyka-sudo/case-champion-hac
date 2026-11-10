@@ -298,6 +298,7 @@ def _proposal(
             resource_constraints=list(plan.resource_constraints),
         ),
         evidence_refs=prepared.evidence,
+        evidence_groups=baseline.evidence_groups,
         assumptions=[
             *plan.assumptions,
             "scenario-document:" + canonical_hash(document.model_dump(mode="json")),
@@ -313,7 +314,9 @@ def _proposal(
     referenced = set(plan.operation.evidence_refs) | set(feasibility.evidence_refs)
     if not referenced <= {row.evidence_id for row in prepared.evidence}:
         raise _refuse("SCENARIO_EVIDENCE_UNRESOLVED")
-    return proposal
+    from a2_api.adapters.evidence_groups import pack_proposal_evidence
+
+    return pack_proposal_evidence(proposal)
 
 
 def propose(
@@ -554,6 +557,7 @@ def calculate(
                 }
             ),
             evidence_refs=prepared.evidence,
+            evidence_groups=command.evidence_groups,
             turnaround_evidence=command.fixed_parameters.turnaround_evidence,
             resource_evidence=command.fixed_parameters.resource_evidence,
             assumptions=command.assumptions,
@@ -562,8 +566,6 @@ def calculate(
         )
     except ValueError as exc:
         raise _refuse("SCENARIO_CANONICAL_EFFECTS_UNREPRESENTABLE:" + str(exc)) from exc
-    return result.model_copy(
-        update={
-            "result_hash": canonical_hash(result.model_dump(mode="json", exclude={"result_hash"}))
-        }
-    )
+    from a2_api.adapters.evidence_groups import pack_scenario_evidence
+
+    return pack_scenario_evidence(result, baseline)

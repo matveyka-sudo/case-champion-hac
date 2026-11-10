@@ -4,6 +4,7 @@ from a2_contracts.api import AnalysisRequest
 from a2_contracts.common import canonical_hash
 from a2_contracts.results import ProfileResult
 from a2_contracts.scenarios import Comparison, ScenarioRequest
+from a2_contracts.v2.evidence import EvidenceResolver
 from a2_contracts.v2.requests import RequestBase
 from a2_contracts.v2.results import (
     AnalysisResult,
@@ -149,7 +150,12 @@ def _validate_scenario_semantics(
             409, "incompatible_versions", "Scenario endpoint scope source hash differs"
         )
     try:
-        validate_score_dependencies(result.after.metrics, result.after.scores)
+        resolver = EvidenceResolver(
+            (row.evidence_id for row in result.evidence_refs), result.evidence_groups
+        )
+        validate_score_dependencies(
+            result.after.metrics, result.after.scores, evidence_resolver=resolver
+        )
         validate_score_context(result.after.metrics, result.after.scores, baseline.analysis_kind)
     except ValueError:
         raise DomainError(
