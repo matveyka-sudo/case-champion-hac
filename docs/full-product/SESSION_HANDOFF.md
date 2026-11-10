@@ -1,5 +1,54 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Real route and integration checkpoint — 2026-11-11 01:00 MSK
+
+Goal ACTIVE. Root integrated source is cbfa33c6465b3b2fe25598eade3f605c165d3dfc.
+New commits: sparse-scenario boundary c34844b, exact native coordinate serializer
+4675f4c, bounded transit/scenario semantics4dc1ac4, full serializer dependency
+fingerprints6adb4cd, local frontend help/mobile9e61c84, separate chat errors70f38e1.
+
+Root ran the actual first16 Moscow routes on the pinned private Valhalla. The
+files-only checkpoint was retained but canonical validation initially failed for
+2 of16 mixed exact/truncated coordinate echoes. No SQL result was published.
+The correction reproduces the pinned Grisu2 writer, not a geographic tolerance.
+Root independently executed the native binary network-disabled over100708
+binary64 values, all bit-equal, and replayed the original16 raw responses:
+16reachable, all minima unknown. Both failed run and later offline proof remain
+in ignored runtime/root-first16-20261111-v1 and
+ml1-route-echo-boundary-351-20261111-v1. No reroutes were used for this proof.
+
+Root checks after relevant changes:46 API Chromium cases PASS1.2m, frontend
+build PASS;1161 engine tests PASS8.27s before the final serializer delivery;
+102 serializer/evidence tests PASS1.84s after it;118 timetable/scenario/contracts
+and real PostgreSQL publication tests PASS9.33s. Independent reviewer ran104
+offline checks without additional actionable defects in its explicitly scoped
+review. Its review did not cover live routing or the later representation work.
+GitHub54cebe6 exposed two global/chat error collisions;70f38e1 fixes their
+product cause, and the full root46browser suite passes. Fresh CI is required;
+older green jobs do not cover the final local revision.
+
+New immutable three-city runtime3609e204f36efb92d23c56129b6b202b9b378f61522e852070ee1cc427e71e70
+is inactive. It retains original full catalogs: Moscow2361points/2931cells,
+Kaliningrad216/286, Novorossiysk409/968. Approved requests are Moscow1401candidate
+walk pairs to adult clinics, Kaliningrad's unchanged historical Nov10 certified
+airport scope, and one Nov11 Novorossiysk school17 pair. Image
+sha256:a5413e9bc4c6f002d3871b9c94c7dc78dd49e513d55be731487c0d30828f9ff2
+is frozen from cbfa33c. A2_CODE_VERSION includes full git revision, manifest,
+certified-proof and executor identities. Exact-image admission/HTTP latency and
+a new first16 bounded operator run precede promotion. Live5193 remains unchanged
+API f448ed15/shared web d07d584 until those checks pass.
+
+Real full-catalog GTFS scenario now computes5595.143->5235.143 seconds but its
+minimum delta remains unknown. A genuine size blocker was measured:
+175781577-byte analysis envelope and267776847-byte scenario envelope, chiefly
+millions of repeated evidence links. Do not raise the16MiB ceiling or drop points.
+Approved next contract: optional leaf-only content-hashed evidence_groups,
+lossless expanded leaf sets, all original definitions retained, legacy empty
+serialization/hash unchanged. BACKEND owns contracts/API packing; FRONTEND owns
+browser resolution; alice_evidence_groups owns assistant/tools/explanations.
+This work is not merged or activated and does not block the independent walk
+three-city release. Full product/city/national readiness remains unproven.
+
 ## Verified integration update — 2026-11-11 00:33 MSK
 
 Goal remains ACTIVE. This section supersedes older deployment/checkpoint claims.
