@@ -1016,3 +1016,28 @@ def test_absent_before_point_cannot_rebind_another_points_frozen_chain(with_scop
         scenario_journeys(
             forged, baseline, endpoint_scope=trusted_urban_scope(case) if with_scope else None
         )
+
+
+@pytest.mark.parametrize("attack", ["unknown_id", "missing_id", "missing_declared_chain"])
+@pytest.mark.parametrize("with_scope", [True, False])
+def test_new_numeric_urban_task_cannot_omit_its_actual_chain_proof(attack, with_scope):
+    from a2_api.db.scenario_journeys import scenario_journeys
+
+    case = make_case()
+    result, _ = run(case)
+    payload = result.model_dump(mode="json")
+    p1_ids = {row["journey_id"] for row in payload["after_journeys"] if row["point_id"] == "p1"}
+    payload["after_journeys"] = (
+        [row for row in payload["after_journeys"] if row["point_id"] != "p1"] if with_scope else []
+    )
+    for metric in payload["after"]["metrics"]:
+        if metric["journey_id"] in p1_ids:
+            if attack == "unknown_id":
+                metric["journey_id"] = "TEST_ONLY-unresolved-chain"
+            elif attack == "missing_id":
+                metric["journey_id"] = None
+    forged = ScenarioResult.model_validate(payload)
+    with pytest.raises(DomainError):
+        scenario_journeys(
+            forged, case[3], endpoint_scope=trusted_urban_scope(case) if with_scope else None
+        )

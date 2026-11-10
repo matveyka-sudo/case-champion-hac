@@ -154,6 +154,27 @@ def scenario_journeys(
             continue
         resolved_journey = journeys.get(metric.journey_id or "")
         if resolved_journey is None:
+            numeric_point_chain = (
+                urban
+                and metric.subject.kind == "sample_point"
+                and metric.unit == "seconds"
+                and metric.status == "available"
+                and metric.value is not None
+            )
+            previous_unbound = old_metrics.get(renamed.get(metric.metric_id, metric.metric_id))
+            legacy_binding = (
+                previous_unbound is not None
+                and previous_unbound.status == "available"
+                and previous_unbound.value is not None
+                and previous_unbound.journey_id == metric.journey_id
+                and previous_unbound.subject == metric.subject
+                and (previous_unbound.name, previous_unbound.unit, previous_unbound.time_kind)
+                == (metric.name, metric.unit, metric.time_kind)
+            )
+            if numeric_point_chain and (endpoint_scope is not None or not legacy_binding):
+                raise DomainError(
+                    409, "incompatible_versions", "Scenario urban journey proof is unavailable"
+                )
             continue
         journey = resolved_journey
         if urban:
