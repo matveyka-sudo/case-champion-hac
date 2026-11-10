@@ -50,7 +50,10 @@ from a2_api.core.registry import ProductRegistry
 
 MAX_ARTIFACT_BYTES = 8 * 1024 * 1024
 MAX_RESPONSE_BYTES = 4 * 1024 * 1024
-PILOT_BUNDLE = "kaliningrad-urban-2026-11-10.2"
+PILOT_BUNDLE_SCHOOL_LIMITS = {
+    "kaliningrad-urban-2026-11-10.2": 76,
+    "kaliningrad-urban-2026-11-10.3": 77,
+}
 
 
 def _unavailable(message: str) -> DomainError:
@@ -90,7 +93,8 @@ def load_runtime() -> Runtime:
         if len(content) > MAX_ARTIFACT_BYTES or digest != expected:
             raise ValueError("runtime artifact hash/size mismatch")
         raw = json.loads(content)
-        if raw["bundle_id"] != PILOT_BUNDLE:
+        school_limit = PILOT_BUNDLE_SCHOOL_LIMITS.get(raw["bundle_id"])
+        if school_limit is None:
             raise ValueError("unsupported pilot bundle")
         endpoint = urlparse(raw["endpoint_url"])
         if endpoint.scheme not in ("http", "https") or not endpoint.hostname:
@@ -133,7 +137,7 @@ def load_runtime() -> Runtime:
         )
         points = tuple(raw["point_ids"])
         destinations = tuple(raw["destination_ids"])
-        if len(points) != 1 or not 1 <= len(destinations) <= 76:
+        if len(points) != 1 or not 1 <= len(destinations) <= school_limit:
             raise ValueError("pilot must declare one point and bounded school subset")
         if len(set(destinations)) != len(destinations):
             raise ValueError("duplicate pilot destination")
@@ -152,6 +156,11 @@ def load_runtime() -> Runtime:
         if not required <= known or build.source_graph_version != snapshot.provenance.graph_version:
             raise ValueError("runtime evidence or source graph mismatch")
         destination_map = {row.destination_id: row for row in snapshot.destinations}
+        school_ids = {
+            row.destination_id for row in snapshot.destinations if "school" in row.categories
+        }
+        if len(school_ids) > school_limit:
+            raise ValueError("accepted school inventory exceeds reviewed pilot bound")
         if any(
             identity not in destination_map or "school" not in destination_map[identity].categories
             for identity in destinations

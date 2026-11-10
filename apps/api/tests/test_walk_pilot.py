@@ -18,12 +18,15 @@ from a2_data_pipeline.store import load_bundle
 
 POINT = "kaliningrad-utm34n-1km-v1-e467-n6062-p"
 SCHOOL = "kaliningrad-school-klgd_education-4409878"
+BUNDLE_V2 = "kaliningrad-urban-2026-11-10.2"
+BUNDLE_V3 = "kaliningrad-urban-2026-11-10.3"
 
 
 @pytest.fixture
-def configured(tmp_path, monkeypatch):
-    snapshot = load_accepted_data(pilot.PILOT_BUNDLE)
-    bundle = load_bundle(pilot.PILOT_BUNDLE)
+def configured(tmp_path, monkeypatch, request):
+    bundle_id = getattr(request, "param", BUNDLE_V2)
+    snapshot = load_accepted_data(bundle_id)
+    bundle = load_bundle(bundle_id)
     nodes = {n.node_id: n for n in snapshot.access_nodes}
     endpoints = {
         **{f"physical:point:{p.point_id}": p for p in snapshot.sample_points},
@@ -250,6 +253,7 @@ def mock_client(monkeypatch, **options):
     )
 
 
+@pytest.mark.parametrize("configured", [BUNDLE_V2, BUNDLE_V3], indirect=True)
 def test_real_accepted_data_registry_and_hash_bound_partial_result(configured, monkeypatch):
     _, path, snapshot = configured
     claim = claim_for(snapshot)
@@ -281,13 +285,19 @@ def test_real_accepted_data_registry_and_hash_bound_partial_result(configured, m
     assert saved_point.cell_id is None
     saved_school = next(row for row in result.map_data.features if row.entity_kind == "destination")
     accepted_school = next(
-        row for row in load_bundle(pilot.PILOT_BUNDLE).destinations if row.destination_id == SCHOOL
+        row
+        for row in load_bundle(snapshot.snapshot_id).destinations
+        if row.destination_id == SCHOOL
     )
     assert accepted_school.name == "МАОУ СОШ № 12"
     assert saved_school.name == accepted_school.name
     assert saved_school.entity_id == SCHOOL
     assert saved_school.source_refs == next(
         row.source_refs for row in snapshot.destinations if row.destination_id == SCHOOL
+    )
+    assert result.snapshot_id == snapshot.snapshot_id
+    assert len([row for row in snapshot.destinations if "school" in row.categories]) == (
+        76 if snapshot.snapshot_id == BUNDLE_V2 else 77
     )
     assert result.result_hash == canonical_hash(
         result.model_dump(mode="json", exclude={"result_hash"})
@@ -361,6 +371,129 @@ def test_changed_artifact_rejected(configured):
     path.write_text(path.read_text() + " ")
     with pytest.raises(DomainError, match="runtime artifact"):
         pilot.load_runtime()
+
+
+def repin(raw, path, monkeypatch):
+    path.write_text(json.dumps(raw))
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    monkeypatch.setenv("A2_WALK_PILOT_ARTIFACT_SHA256", digest)
+    monkeypatch.setenv("A2_CODE_VERSION", "TEST_ONLY-walk-" + digest)
+
+
+@pytest.mark.parametrize("configured", [BUNDLE_V2, BUNDLE_V3], indirect=True)
+def test_explicit_bundle_school_bound_and_single_point(configured, monkeypatch):
+    raw, path, snapshot = configured
+    schools = [row.destination_id for row in snapshot.destinations if "school" in row.categories]
+    raw["destination_ids"] = schools
+    repin(raw, path, monkeypatch)
+    # Readiness still needs per-pair correlation/connector proofs; this is not execution.
+    assert pilot.load_runtime().destination_ids == tuple(schools)
+    raw["destination_ids"] = [*schools, "TEST_ONLY-over-limit"]
+    repin(raw, path, monkeypatch)
+    with pytest.raises(DomainError, match="runtime artifact"):
+        pilot.load_runtime()
+    raw["destination_ids"] = [SCHOOL]
+    raw["point_ids"] = [POINT, POINT]
+    repin(raw, path, monkeypatch)
+    with pytest.raises(DomainError, match="runtime artifact"):
+        pilot.load_runtime()
+
+
+@pytest.mark.parametrize("bundle_id", ["kaliningrad-urban-2026-11-10.4", "TEST_ONLY-unknown", ""])
+def test_unknown_bundle_rejected_before_data_lookup(configured, monkeypatch, bundle_id):
+    raw, path, _ = configured
+    raw["bundle_id"] = bundle_id
+    repin(raw, path, monkeypatch)
+
+    def unexpected_lookup(identity):
+        pytest.fail(f"Unsupported bundle triggered data lookup: {identity}")
+
+    monkeypatch.setattr(pilot, "load_accepted_data", unexpected_lookup)
+    with pytest.raises(DomainError, match="runtime artifact"):
+        pilot.load_runtime()
+
+
+@pytest.mark.parametrize("configured", [BUNDLE_V2, BUNDLE_V3], indirect=True)
+def test_missing_allowed_bundle_has_no_snapshot_fallback(configured, monkeypatch):
+    raw, _, _ = configured
+    lookups = []
+
+    def missing(identity):
+        lookups.append(identity)
+        raise KeyError("TEST_ONLY unavailable accepted bundle")
+
+    monkeypatch.setattr(pilot, "load_accepted_data", missing)
+    with pytest.raises(DomainError, match="runtime artifact"):
+        pilot.load_runtime()
+    assert lookups == [raw["bundle_id"]]
+
+
+@pytest.mark.parametrize("configured", [BUNDLE_V2, BUNDLE_V3], indirect=True)
+def test_unexpected_school_inventory_growth_exceeds_reviewed_bound(configured, monkeypatch):
+    _, _, snapshot = configured
+    school = next(row for row in snapshot.destinations if "school" in row.categories)
+    # Deliberately TEST_ONLY altered loader output: no source-data mutation/publication.
+    enlarged = snapshot.model_copy(
+        update={
+            "destinations": [
+                *snapshot.destinations,
+                school.model_copy(update={"destination_id": "TEST_ONLY-unreviewed-school"}),
+            ]
+        }
+    )
+    monkeypatch.setattr(pilot, "load_accepted_data", lambda identity: enlarged)
+    with pytest.raises(DomainError, match="runtime artifact"):
+        pilot.load_runtime()
+
+
+@pytest.mark.parametrize("configured", [BUNDLE_V2, BUNDLE_V3], indirect=True)
+def test_allowed_bundle_does_not_accept_other_snapshot_build(configured, monkeypatch):
+    raw, path, snapshot = configured
+    raw["build"]["snapshot_id"] = BUNDLE_V2 if snapshot.snapshot_id == BUNDLE_V3 else BUNDLE_V3
+    repin(raw, path, monkeypatch)
+    with pytest.raises(DomainError, match="runtime artifact"):
+        pilot.load_runtime()
+
+
+def test_revision_retains_same_pilot_physical_endpoints():
+    old, new = (load_accepted_data(identity) for identity in (BUNDLE_V2, BUNDLE_V3))
+    assert old.sample_points == new.sample_points
+    old_point = next(row for row in old.sample_points if row.point_id == POINT)
+    new_point = next(row for row in new.sample_points if row.point_id == POINT)
+    old_school = next(row for row in old.destinations if row.destination_id == SCHOOL)
+    new_school = next(row for row in new.destinations if row.destination_id == SCHOOL)
+    assert old_point == new_point and old_school == new_school
+    assert old.provenance.graph_version == new.provenance.graph_version
+    assert canonical_hash(old.model_dump(mode="json")) != canonical_hash(
+        new.model_dump(mode="json")
+    )
+    assert load_bundle(BUNDLE_V2).walk_connectors == load_bundle(BUNDLE_V3).walk_connectors
+
+
+@pytest.mark.parametrize("configured", [BUNDLE_V3], indirect=True)
+@pytest.mark.asyncio
+async def test_new_runtime_rejects_queued_and_preflight_old_snapshot(configured, monkeypatch):
+    _, _, snapshot = configured
+    old = load_accepted_data(BUNDLE_V2)
+
+    def unexpected_http(*args, **kwargs):
+        pytest.fail("TEST_ONLY mismatched snapshot reached provider I/O")
+
+    monkeypatch.setattr(pilot, "_post", unexpected_http)
+    with pytest.raises(DomainError, match="fingerprint"):
+        await pilot.preflight(request(), old)
+    claim = claim_for(snapshot)
+    claim.context.snapshot_id = BUNDLE_V2
+    with pytest.raises(DomainError, match="Queued walk inputs"):
+        pilot.calculate(claim)
+    claim = claim_for(snapshot)
+    claim.context.snapshot_hash = canonical_hash(old.model_dump(mode="json"))
+    with pytest.raises(DomainError, match="Queued walk inputs"):
+        pilot.calculate(claim)
+    claim = claim_for(snapshot)
+    claim.context.versions.code_version = "TEST_ONLY-code-without-artifact-fingerprint"
+    with pytest.raises(DomainError, match="Queued walk inputs"):
+        pilot.calculate(claim)
 
 
 @pytest.mark.parametrize(

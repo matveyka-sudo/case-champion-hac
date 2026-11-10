@@ -1,10 +1,21 @@
 # Kaliningrad walk/static pilot
 
 The operator-selected adapter is `a2_api.adapters.walk_pilot`. It connects the
-accepted `kaliningrad-urban-2026-11-10.2` bundle to the existing PostgreSQL job,
+accepted `kaliningrad-urban-2026-11-10.2` or `kaliningrad-urban-2026-11-10.3`
+bundle to the existing PostgreSQL job,
 spawned worker, ML1 pedestrian analysis and canonical v2 result publication.
 It supports one configured sample point and a bounded subset of accepted schools.
 The accepted catalog remains intact when ML1 evaluates completeness.
+
+Only those two exact bundle IDs are allowed: the reviewed school inventory and
+configured destination subset are bounded to 76 for `.2` and 77 for `.3`, with
+one configured sample point. `.3` adds one verified gymnasium campus and retains
+partial school coverage. No latest-version lookup or fallback selects a bundle.
+Existing `.2` artifacts remain `.2`; opting into `.3` requires an explicit new
+artifact with matching bundle/build/connector snapshot IDs, its full digest in
+the code version, and newly queued inputs bound to that exact snapshot hash.
+Unchanged physical endpoints or source graphs do not permit old queued inputs
+to run against the new snapshot. These bounds do not enable a mass matrix.
 
 Configure API and worker with the same immutable runtime and code version:
 
@@ -103,6 +114,9 @@ The proposed bounded resume lifecycle and required architecture approvals are in
 
 Focused regression tests deliberately mock provider observations and label all
 proofs `TEST_ONLY`; real accepted geography does not make those responses real.
+The `.2`/`.3` regression requires both accepted bundles. In an isolated backend
+checkout before the data commit is integrated, set `A2_DATA_DIR` to the reviewed
+data checkout's `data` directory; no source-data copy or fallback is performed.
 Live deployment acceptance requires a separate real API→PostgreSQL→spawned worker
 run and inspection of its saved raw observations and canonical partial result.
 
