@@ -57,6 +57,8 @@ mode, then commits under the current worker connection and active job-row fence.
 Acknowledgment follows commit. Checkpoints are limited to 8 MiB each and 16 MiB
 total; a plan is limited to 8 MiB. Provider calls are conservatively reserved before
 an attempt; unused reservations are not silently refunded after a crash.
+Preflight performs only local immutable-input validation. Provider readiness calls
+run in the child after the parent has reserved the attempt/call budget.
 
 Cancellation, expired lease, stale claim or loss of the worker's database session
 prevents later checkpoint writes and final publication. A committed checkpoint
@@ -74,6 +76,10 @@ observations. Saved runs/proposals/cache are published solely through the existi
 `JobRepository.succeed` transaction. Checkpoints cannot appear as saved runs or
 explanations. Retention cleanup must preserve evidence referenced by saved runs;
 this stage adds no destructive cleanup process.
+The publication transaction independently revalidates every checkpoint, raw file,
+active lease and approval expiry. It atomically limits the cache TTL to the earliest
+approval, checkpoint/evidence-retention or registry expiry. A preliminary IPC
+finalization cannot authorize a later expired publication.
 
 Offline acceptance uses disposable PostgreSQL schemas and TEST_ONLY HTTP fixtures:
 immutable duplicate/conflicting writes, cross-scope isolation, explicit retry,

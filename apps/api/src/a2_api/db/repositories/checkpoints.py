@@ -313,13 +313,54 @@ class CheckpointRepository:
                 )
 
     async def finalize(self, claim: ClaimedJob) -> None:
-        execution = self.execution(claim)
         async with self.jobs._publication_connection() as connection:
             async with connection.transaction():
-                now = await self._active(connection, claim)
-                checkpoints = await self._load(connection, execution, now)
-                await self._active(connection, claim)
-                if {checkpoint.batch_id for checkpoint in checkpoints} != {
-                    batch_id for batch_id, _ in execution.batches
-                }:
-                    raise _conflict("Final publication requires every approved executable OD batch")
+                await self._publication_inventory(connection, claim)
+
+    async def _publication_inventory(
+        self, connection: Any, claim: ClaimedJob
+    ) -> tuple[BatchExecution, list[BatchCheckpoint], datetime]:
+        execution = self.execution(claim)
+        now = await self._active(connection, claim)
+        checkpoints = await self._load(connection, execution, now)
+        now = await self._active(connection, claim)
+        if {checkpoint.batch_id for checkpoint in checkpoints} != {
+            batch_id for batch_id, _ in execution.batches
+        }:
+            raise _conflict("Final publication requires every approved executable OD batch")
+        return execution, checkpoints, now
+
+    async def publish(self, connection: Any, claim: ClaimedJob, run_id: str) -> None:
+        """Revalidate inside the caller's sole run-publication transaction."""
+        execution, checkpoints, now = await self._publication_inventory(connection, claim)
+        oldest = await connection.fetchval(
+            "SELECT min(created_at) FROM od_checkpoints WHERE access_scope=$1 AND execution_identity=$2",
+            execution.access_scope,
+            execution.identity,
+        )
+        expiry = min(
+            execution.valid_until,
+            oldest + timedelta(seconds=execution.observation_retention_seconds),
+            *(
+                evidence.retrieved_at + timedelta(seconds=execution.observation_retention_seconds)
+                for checkpoint in checkpoints
+                for observation in checkpoint.observations
+                for evidence in observation.evidence
+            ),
+        )
+        if isinstance(claim.context, V2JobContext) and claim.context.cache_valid_until is not None:
+            expiry = min(expiry, claim.context.cache_valid_until)
+        if expiry <= now:
+            raise _conflict("Checkpoint publication validity expired")
+        published = await connection.fetchval(
+            "UPDATE jobs SET status='succeeded',run_id=$2,finished_at=clock_timestamp(),cache_valid_until=$3,"
+            "payload=jsonb_set(payload,'{context,cache_valid_until}',to_jsonb($3::timestamptz)) "
+            "WHERE job_id=$1 AND status='running' AND claim_token=$4 "
+            "AND lease_expires_at>clock_timestamp() AND $3::timestamptz>clock_timestamp() RETURNING job_id",
+            claim.job.job_id,
+            run_id,
+            expiry,
+            claim.claim_token,
+        )
+        if published is None:
+            raise _conflict("Checkpoint final publication claim or validity expired")

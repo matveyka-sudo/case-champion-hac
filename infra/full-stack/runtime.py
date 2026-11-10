@@ -161,8 +161,38 @@ def product_check(args):
         raise RuntimeError("Every configured product profile must have valid accepted inputs")
     if runtime.digest not in (RuntimeSettings().code_version or ""):
         raise RuntimeError("Product manifest digest is missing from the code fingerprint")
-    if any(profile.executor == "walk_pilot" for profile, _ in runtime.profiles.values()):
+    executors = {profile.executor for profile, _ in runtime.profiles.values()}
+    if executors - {"accepted_inputs", "walk_pilot", "certified_walk_model"}:
+        raise RuntimeError("This deployment has no approved checker for the configured executor")
+    if "walk_pilot" in executors:
         verify(args)
+    if "certified_walk_model" in executors:
+        from a2_api.adapters.certified_walk_model import load_binding
+
+        if os.environ["A2_CERTIFIED_WALK_MODEL_SHA256"] not in (
+            RuntimeSettings().code_version or ""
+        ):
+            raise RuntimeError("Certified proof digest is missing from the code fingerprint")
+        bundle_spec = importlib.util.spec_from_file_location(
+            "waydex_runtime_bundle", Path(__file__).with_name("bundle.py")
+        )
+        bundle = importlib.util.module_from_spec(bundle_spec)
+        bundle_spec.loader.exec_module(bundle)
+        bundle.verify(
+            Path(os.environ["WAYDEX_RUNTIME_BUNDLE_PATH"]),
+            os.environ["WAYDEX_RUNTIME_BUNDLE_SHA256"],
+        )
+        proof = load_binding(registry().config_hash)
+        graph = Path(os.environ["WAYDEX_GRAPH_PATH"])
+        digest = graph_check(graph, real.read(proof.native_root / "artifact.json"))
+        if (
+            digest != proof.native["files_sha256"]["build-manifest.json"]
+            or real.sha(graph / "valhalla.json") != proof.native["files_sha256"]["valhalla.json"]
+            or real.sha(graph / "walking-profile.json")
+            != proof.native["files_sha256"]["walking-profile.json"]
+        ):
+            raise ValueError("Mounted directory graph differs from the certified native proof")
+        print("Restored native proof files and mounted graph verified; no HTTP actor requested")
     registry()
     print(
         json.dumps(

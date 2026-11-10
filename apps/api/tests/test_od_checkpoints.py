@@ -308,6 +308,129 @@ async def test_checkpoint_total_byte_budget_is_enforced_before_insert(database, 
 
 
 @pytest.mark.asyncio
+async def test_atomic_publication_rechecks_retention_after_preliminary_finalize(
+    database, batch_context
+):
+    from batch_handlers import result
+
+    pool, _, _ = database
+    repo = JobRepository(pool)
+    progress = CheckpointRepository(repo)
+    claim = await enqueue(repo, batch_context)
+    await progress.begin(claim)
+    await progress.put(claim, timeout_checkpoint(claim.context.batch_execution))
+    await progress.finalize(claim)
+    await pool.execute("UPDATE od_checkpoints SET created_at=now()-interval '2 hours'")
+    with pytest.raises(DomainError, match="observations expired"):
+        await repo.succeed(claim, result(claim))
+    assert await pool.fetchval("SELECT count(*) FROM runs") == 0
+    assert (
+        await repo.get_job(claim.job.job_id, scope=claim.context.access_scope)
+    ).status == "running"
+
+
+@pytest.mark.asyncio
+async def test_atomic_publication_rechecks_approval_after_preliminary_finalize(
+    database, batch_context
+):
+    from batch_handlers import result
+
+    pool, _, _ = database
+    request, context = batch_context
+    execution = context.batch_execution.model_copy(
+        update={"valid_until": datetime.now(UTC) + timedelta(seconds=2)}
+    )
+    context = context.model_copy(update={"batch_execution": execution})
+    repo = JobRepository(pool)
+    progress = CheckpointRepository(repo)
+    claim = await enqueue(repo, (request, context))
+    await progress.begin(claim)
+    await progress.put(claim, timeout_checkpoint(claim.context.batch_execution))
+    await progress.finalize(claim)
+    await asyncio.sleep(max(0, (execution.valid_until - datetime.now(UTC)).total_seconds()) + 0.05)
+    with pytest.raises(DomainError, match="validity expired"):
+        await repo.succeed(claim, result(claim))
+    assert await pool.fetchval("SELECT count(*) FROM runs") == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expiry_kind", ["approval", "lease"])
+async def test_final_status_sql_rejects_expiry_after_inventory_validation(
+    database, batch_context, monkeypatch, expiry_kind
+):
+    from batch_handlers import result
+
+    pool, _, _ = database
+    request, context = batch_context
+    if expiry_kind == "approval":
+        execution = context.batch_execution.model_copy(
+            update={"valid_until": datetime.now(UTC) + timedelta(seconds=2)}
+        )
+        context = context.model_copy(update={"batch_execution": execution})
+    repo = JobRepository(pool)
+    progress = CheckpointRepository(repo)
+    claim = await enqueue(repo, (request, context))
+    await progress.begin(claim)
+    await progress.put(claim, timeout_checkpoint(claim.context.batch_execution))
+    if expiry_kind == "lease":
+        deadline = datetime.now(UTC) + timedelta(seconds=2)
+        await pool.execute(
+            "UPDATE jobs SET lease_expires_at=$2 WHERE job_id=$1", claim.job.job_id, deadline
+        )
+    else:
+        deadline = context.batch_execution.valid_until
+    original = CheckpointRepository._publication_inventory
+    validated = []
+
+    async def delayed(self, connection, incoming):
+        inventory = await original(self, connection, incoming)
+        validated.append(True)
+        await asyncio.sleep(max(0, (deadline - datetime.now(UTC)).total_seconds()) + 0.05)
+        return inventory
+
+    monkeypatch.setattr(CheckpointRepository, "_publication_inventory", delayed)
+    with pytest.raises(DomainError, match="final publication claim or validity expired"):
+        await repo.succeed(claim, result(claim))
+    assert validated == [True]
+    assert await pool.fetchval("SELECT count(*) FROM runs") == 0
+    assert (await repo.get_job(claim.job.job_id, scope=context.access_scope)).status == "running"
+
+
+@pytest.mark.asyncio
+async def test_fresh_key_after_checkpoint_retention_cannot_reuse_succeeded_cache(
+    database, batch_context
+):
+    from batch_handlers import result
+
+    pool, _, _ = database
+    request, context = batch_context
+    execution = context.batch_execution.model_copy(update={"observation_retention_seconds": 1})
+    context = context.model_copy(update={"batch_execution": execution})
+    repo = JobRepository(pool)
+    progress = CheckpointRepository(repo)
+    claim = await enqueue(repo, (request, context))
+    await progress.begin(claim)
+    await progress.put(claim, timeout_checkpoint(claim.context.batch_execution))
+    await repo.succeed(claim, result(claim))
+    expiry = await pool.fetchval(
+        "SELECT cache_valid_until FROM jobs WHERE job_id=$1", claim.job.job_id
+    )
+    created = await pool.fetchval("SELECT min(created_at) FROM od_checkpoints")
+    assert expiry == created + timedelta(seconds=1) and expiry < execution.valid_until
+    await asyncio.sleep(max(0, (expiry - datetime.now(UTC)).total_seconds()) + 0.05)
+    fresh = await repo.enqueue(
+        "analysis",
+        request,
+        context.model_copy(update={"analysis_id": "TEST_ONLY-fresh-cache"}),
+        "TEST_ONLY-fresh-cache-key",
+        "TEST_ONLY-trace",
+        scope=context.access_scope,
+    )
+    assert fresh.status == "queued"
+    assert await pool.fetchval("SELECT count(*) FROM runs") == 1
+
+
+@pytest.mark.asyncio
 async def test_expired_unknown_checkpoint_is_not_promoted_or_reused(database, batch_context):
     pool, _, _ = database
     repo = JobRepository(pool)

@@ -1,5 +1,130 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Latest continuation — 18:28 MSK (supersedes all older sections)
+
+Goal remains ACTIVE. Root candidate HEAD before this note is
+`8fc49fe5607f3077c22771c8a9debb50ee4f6e02`. User asked which problems remain;
+answered honestly: city completeness, numerical UI E2E, map selection, missing
+certified route geometry, non-walk transport inputs and scenario integration.
+
+New integrated/independently checked deliveries:
+- Batch b069beb+09108af+2151884: reviewer accepted all three expiry/cache/provider
+  budget fixes and final SQL-clock race. Root63 PG/checkpoint/HTTP/module tests PASS
+  in42.48s. No real production batches activated.
+- ML1 63992f2: explicit .3→.5 canonical point model projection. Reviewer16 controls
+  and actual date/category cases PASS. Root combined scenario/projection114PASS.
+- BACKEND e4d83a2 certified_walk_model: full native+turn+physical recomputation,
+  scoped category/point0.4971801994143471, citynull,215otherpointsunknown, no route
+  geometry/journeys. Root actual adapter5testsPASS11.86s; independent final review
+  still RUNNING. Product hooks released to SCENARIOS after this commit.
+- External actual runtime: `/Users/kirito/waydex-full-runtime/certified-walk-model-v1`;
+  product manifest SHA753efeeeff293196e56208faa8d082c401922167924ff505a51fb768220aa546;
+  proof-binding SHAd52715d0617d53895db04f22695c055667c6c1a3abd250c13c0f5eb200cd0cd2.
+  Relative native/physical/metadata refs preserved; five settings in runtime-settings.json.
+- FRONTEND through aebe756: root83unit/build and20browser tests PASS40.9s. Final
+  screenshot visually inspected with accessible color legend. Canonical urban
+  scores MUST keep calculation_kind=None (aggregate kind forbidden by contract).
+  Map now chooses unique category-free same-subject total, preserving null total
+  over a known category; point scores cannot color the whole territory. Actual
+  e4 production-shaped category+point0.497/unit map case covered. Live5191 remains old.
+- DEVOPS8c8cee5: restored proof/graph allowlist bundle, certified overlay, checker;
+  root19infra tests PASS. Agent preparing clean archived8fc49fe build for isolated
+ 5192/waydex-full-index-1110; wait final reviewer/root approval before first job.
+  Existing5190/5191 preserved. Record actual worker cgroup memory.peak/OOM; approved
+  bounded2GiB override if needed. Root host proof replay previously peaked831799296B.
+- ML2 6418fb3+b31dc90: non-walk blocker matrix integrated. Real3730 Moscow runs
+  source-matched, but no endpoint chains.341 real cargo source-only features and
+  four pipeline locations do not establish transport coverage. No invented vehicle
+  or active non-walk profile; parameterized external builder requires reviewed facts.
+
+SCENARIOS through340ad27 integrated for testing, NOT ACCEPTED. Root114 combined
+focused controls PASS; owner broad1003 passed with two stale migration expectations
+subsequently fixed by ec5fcc0. Reviewer found a new P1: remove point after-journeys,
+change its raw time metric subject.kind to territory (or unit away from seconds),
+mark raw deltas unknown, and full point scores could survive without chain proof.
+Owner is fixing immutable task classification/scope/dependency checks with exact
+pure and PG regressions, separate from uncommitted runtime hook work. This blocks
+scenario acceptance, not numerical profile (no scenario documents enabled there).
+Next runtime integration: Profile.scenarios bounded16 FileRefs, normalized request
+and input hashes, source-valid templates, worker-only proposals; read-only bounded
+baseline repository load, close before engine. Shared product/runtime/bootstrap
+edits must stay with one owner after BACKEND handoff.
+
+Agents: BACKEND completed e4 assembly; FRONTEND completed aebe; ML2 completed b31;
+DEVOPS preparing archive/build; SCENARIOS fixing P1 then runtime module; reviewer
+reviewing e4+8c. ML1 errored403 during remote compaction AFTER clean639 commit and
+successful handoff; work preserved, no need restart/recreate engine implementation.
+
+Pending root tests at checkpoint: engine pytest session67177 and ML2 pytest92674.
+Contracts+assistant517PASS0.65s. An attempted combined engine+ML2 pytest collection
+hit duplicate test_freight module names; rerun separately as CI does, not a code bug.
+Final full API/PG/static/CI, real5192 UI→PG numerical result, scenario runtime/E2E,
+clean restore and Draft PR remain open. No dev merge or paid/Rasp calls.
+
+## Latest checkpoint — index display and source proof (17:55 MSK)
+
+This section supersedes the older checkpoint below. Full objective remains ACTIVE;
+no dev merge, paid provider call or full-product/nationwide readiness is claimed.
+Root branch is `integration/full-product-20261110`, HEAD before this note
+`3c6da54f842f5d71dc2696b16373c86d7a1720e8`. Six Sol6.1/ultra slots remain available;
+no session restart is required. Latest user priority: numerical indices and colors.
+
+- FRONTEND `2c264fd`, `c30d0cd`, `d66ee83`, `b1f6fd0` integrated. Thresholds:
+  <50 red, [50,75) amber, >=75 green; zero numeric, null neutral, partial dotted
+  map boundary and explicit point/territory label. Saved Alice score references
+  and scenario after-journey inventory display integrated. Root independently ran
+  72 unit tests, build, lint and OpenAPI freshness check: PASS. Native Node24 browser
+  runner import failure was fixed by b1f6fd0. Actual browser suite ran 13 PASS then
+  rejected an invalid synthetic last-return fixture (empty source_refs); owner is
+  correcting fixture without weakening validation. Remaining six browser tests
+  were not run. Chromium needs approved unsandboxed launch on macOS; MCP works for
+  root, other agent profile is locked. These UI fixtures are not real-data E2E.
+- ML2 `0897c1c`, `c317980`, `3b8c26f` integrated and reviewed. Immutable .5:
+  79 accepted/51 quarantined schools, unchanged 216 points, geometry/population/
+  connectors. Official city-serving airport catalogue full ONLY 2026-11-10, partial
+  other November days. Root 271 ML2 tests PASS (14.61s). .3→.5 compatibility receipt
+  SHA794149d884066093bc61f985d899fd895b83b33f3ed0b13cc489a14118b670d0.
+- ML1 `14c2bd6`, `5701b75` integrated; root 1029 engine tests PASS (7.04s).
+  Independent reviewer rechecked all native/physical hashes, 351562 turn pairs,
+  97-edge network optimum, four physical binding alternatives, eight segment
+  lengths and pinned 68777-way canonical access policy. Airport model total
+  13773.627798430474s, H1800, existing category formula0.4971801994143471.
+  This is a canonical-access MODEL partial-point proof, not all physical entrances
+  or city completeness. Ordinary Valhalla actor route uses DIFFERENT 92-edge path;
+  do not attach its polyline to certified97-edge duration. Geometry stays null.
+  Final receipts under external `source-bound-walk/builds/closed-turn-v3-0b4724e549/
+  runs/airport-{network,physical}-final-20261110-v4/`. Numerical production
+  projection/runtime/persistence/UI replay remain pending ML1+BACKEND delivery.
+- BACKEND source guards through4d3e4e9 and private scope428af78 integrated; root24
+  source guard/timetable/runtime tests PASS. Batchb069beb integrated for testing,
+  root58 checkpoint/HTTP/migration/module tests PASS with isolated real PG (28.93s),
+  but acceptance is CHANGES_REQUIRED. Reviewer found approval/retention expiry can
+  pass between separate finalize and succeed, and cache reuse can outlive retained
+  observations. BACKEND is fixing final publication under the same transaction and
+  cache expiry bounds. No production batch enabled. Afterwards BACKEND resumes
+  distinct certified_walk_model executor, recomputing the proof in the child.
+- SCENARIOS owns new bridge/projection and trusted scope wiring in services/scenarios,
+  db/validation, db/scenario_journeys, repositories/runs+scenarios. Root c1d3a93
+  after_journeys extension is CHANGES_REQUIRED until these deliveries land. Root
+  e3ef00d scope factory is integrated. Agent fixes through0c0cc8c remain unmerged:
+  source-bound origins/category/leg modes, valid closest-object changes, missing
+  chain proof. Its latest real PG roundtrip/forgery tests12PASS; full wiring commit
+  and root review pending. Scenario runtime hook registration remains outstanding.
+- DEVOPS preparing separate5192/waydex-full-index-1110 clean deployment with fresh
+  volumes and external proof restoration. Preserve5190/5191 unchanged. Await final
+  certified executor/manifest and source SHA before building. Root reserves this
+  handoff and ACCEPTANCE_MATRIX; DEVOPS owns infra and other build instructions.
+
+Live5191 still fee4112d: root personally repeated school547.404s partial/null UI job
+`a153ec33-7b5e-4251-b177-9582c153f3dd`, stored analysis
+`068ac102-9fe3-4ff3-b018-d85dcf19fa7d`, hash
+`07a075bcce1b27745898d9567c3ed1ae7acb95741218f7b2d70424a53e3b6759`.
+Do not claim new frontend or airport index deployed there. Private test PG env:
+`/Users/kirito/waydex-full-runtime/backend-tests.env`, never print secrets; every
+test creates disposable schemas. Final broad tests/real numerical browser E2E,
+scenario hooks/E2E, available profile runtime integrations, clean restore and PR
+remain required. Continue autonomous work after this checkpoint.
+
 ## Current execution checkpoint (supersedes the historical restart sections below)
 
 The full objective remains ACTIVE. The runtime now grants seven total slots;

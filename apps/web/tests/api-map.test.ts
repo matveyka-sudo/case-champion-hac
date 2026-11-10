@@ -74,6 +74,76 @@ describe("scenario map paths", () => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe("map score completeness", () => {
+  it.each([false, true])("prefers the canonical category-free point total in either candidate order (%s)", (reverse) => {
+    const result = decode("AnalysisResult", structuredClone(resultRaw));
+    const category = { ...result.scores[0], name: "category_index", value: 0.497, calculation_kind: null, subject: { ...result.scores[0].subject, territory_id: "city-1" } };
+    const point = {
+      ...category, name: "point_index", score_id: "point-total",
+      subject: { ...category.subject, category: null },
+    };
+    const city = { ...point, name: "territory_index", score_id: "city-total", value: null, status: "unknown" as const, subject: { kind: "territory" as const, territory_id: "city-1" } };
+    result.map_data = { status: "available", features: [{
+      entity_kind: "sample_point", entity_id: point.subject.point_id!, territory_id: "city-1",
+      geometry: { type: "Point", coordinates: [37, 55] }, geometry_kind: "actual", source_refs: ["demo-evidence"],
+    }, {
+      entity_kind: "territory", entity_id: "city-1", territory_id: "city-1",
+      geometry: { type: "Point", coordinates: [37.1, 55.1] }, geometry_kind: "actual", source_refs: ["demo-evidence"],
+    }] };
+    const props = { result, scores: [city, ...(reverse ? [point, category] : [category, point])], selection: null, onSelect: vi.fn(), zoomAction: { id: 0, kind: "home" } };
+    const view = render(createElement(ApiMap, props));
+    expect(drawn.layers[0].marker?.fillColor).toBe("#c72d44");
+    expect(drawn.layers[0].tooltip).toContain("0.5");
+    expect(drawn.layers[1].marker?.fillColor).toBe("#8990a7");
+    expect(drawn.layers[1].tooltip).toContain("нет индекса");
+    // A conflicting category makes accidental category-first selection observable.
+    drawn.layers.length = 0;
+    view.rerender(createElement(ApiMap, { ...props, scores: [city, { ...category, value: 90 }, point] }));
+    expect(drawn.layers[0].marker?.fillColor).toBe("#c72d44");
+    expect(drawn.layers[0].tooltip).toContain("0.5");
+  });
+  it("does not replace an unknown point total with its known category", () => {
+    const result = decode("AnalysisResult", structuredClone(resultRaw));
+    const category = { ...result.scores[0], name: "category_index", value: 90 };
+    const point = { ...category, name: "point_index", score_id: "point-total", status: "unknown" as const, value: null, subject: { ...category.subject, category: null } };
+    result.map_data = { status: "available", features: [{
+      entity_kind: "sample_point", entity_id: point.subject.point_id!, territory_id: "city-1",
+      geometry: { type: "Point", coordinates: [37, 55] }, geometry_kind: "actual", source_refs: ["demo-evidence"],
+    }] };
+    render(createElement(ApiMap, {
+      result, scores: [category, point], selection: null, onSelect: vi.fn(), zoomAction: { id: 0, kind: "home" },
+    }));
+    expect(drawn.layers[0].marker?.fillColor).toBe("#8990a7");
+    expect(drawn.layers[0].tooltip).toContain("нет индекса");
+    expect(drawn.layers[0].tooltip).not.toContain("90.0");
+  });
+  it("leaves multiple categories neutral when no total exists", () => {
+    const result = decode("AnalysisResult", structuredClone(resultRaw));
+    const category = { ...result.scores[0], name: "category_index", value: 25 };
+    const other = { ...category, score_id: "other-category", value: 90, subject: { ...category.subject, category: "adult_polyclinic" as const } };
+    result.map_data = { status: "available", features: [{
+      entity_kind: "sample_point", entity_id: category.subject.point_id!, territory_id: "city-1",
+      geometry: { type: "Point", coordinates: [37, 55] }, geometry_kind: "actual", source_refs: ["demo-evidence"],
+    }] };
+    render(createElement(ApiMap, {
+      result, scores: [category, other], selection: null, onSelect: vi.fn(), zoomAction: { id: 0, kind: "home" },
+    }));
+    expect(drawn.layers[0].marker?.fillColor).toBe("#8990a7");
+    expect(drawn.layers[0].tooltip).toContain("нет индекса");
+  });
+  it("retains explicit aggregate selection for intercity connections", () => {
+    const result = decode("AnalysisResult", structuredClone(resultRaw));
+    const mode = { ...result.scores[0], value: 10, subject: { kind: "city_pair" as const, origin_id: "city-1", destination_id: "city-2", mode: "rail" as const } };
+    const total = { ...mode, score_id: "connection-total", value: 80, calculation_kind: "aggregate" as const };
+    result.map_data = { status: "available", features: [{
+      entity_kind: "territory", entity_id: "city-1", territory_id: "city-1",
+      geometry: { type: "Point", coordinates: [37, 55] }, geometry_kind: "actual", source_refs: ["demo-evidence"],
+    }] };
+    render(createElement(ApiMap, {
+      result, scores: [mode, total], selection: null, onSelect: vi.fn(), zoomAction: { id: 0, kind: "home" },
+    }));
+    expect(drawn.layers[0].marker?.fillColor).toBe("#0b8a5c");
+    expect(drawn.layers[0].tooltip).toContain("80.0");
+  });
   it("keeps a partial numeric point colored when the city aggregate is unknown", () => {
     const result = decode("AnalysisResult", structuredClone(resultRaw));
     const point = { ...result.scores[0], value: 72.5, completeness: "partial" as const };
@@ -89,7 +159,7 @@ describe("map score completeness", () => {
     expect(drawn.layers[0].tooltip).toContain("72.5 · частичная оценка");
   });
   it.each([
-    [0, "#c72d44"], [49.9, "#c72d44"], [50, "#d49520"],
+    [0, "#c72d44"], [0.497, "#c72d44"], [49.9, "#c72d44"], [50, "#d49520"],
     [74.9, "#d49520"], [75, "#0b8a5c"], [100, "#0b8a5c"],
   ] as const)("colors the saved numeric index %s using the approved band", (value, color) => {
     const result = decode("AnalysisResult", structuredClone(resultRaw));

@@ -75,6 +75,10 @@ async def preflight(request: AnalysisRequest, snapshot: AcceptedData) -> BatchPl
         from a2_api.adapters import walk_batches
 
         return await walk_batches.preflight(request, snapshot)
+    elif profile.executor == "certified_walk_model":
+        from a2_api.adapters import certified_walk_model
+
+        await certified_walk_model.preflight(request, snapshot)
     elif inputs is None:
         raise unavailable("RUNTIME_TRANSPORT_INPUTS_REQUIRED")
     return None
@@ -112,6 +116,10 @@ def calculate(claim: ClaimedJob, channel: CheckpointChannel | None = None) -> An
         from a2_api.adapters import walk_batches
 
         return walk_batches.calculate(claim, channel)
+    if profile.executor == "certified_walk_model":
+        from a2_api.adapters import certified_walk_model
+
+        return certified_walk_model.calculate(claim)
     evidence = {
         row.evidence_id: EvidenceRef(
             evidence_id=row.evidence_id,

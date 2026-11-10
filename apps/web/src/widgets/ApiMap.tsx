@@ -72,9 +72,12 @@ export function ApiMap({
           .filter((p) => p.cell_id === f.entity_id)
           .map((p) => p.entity_id),
       ].filter((id): id is string => !!id);
+      const totalKind = f.entity_kind === "territory" ? "territory"
+        : f.entity_kind === "sample_point" || f.entity_kind === "cell" ? "sample_point" : null;
       const candidates = scores.filter(
         (s) =>
-          s.status === "available" &&
+          !(totalKind === "territory" && s.subject.kind === "sample_point") &&
+          !(totalKind === "sample_point" && s.subject.kind === "territory") &&
           ids.some((id) =>
             subjectMatches(s.subject, {
               entity_kind: f.entity_kind,
@@ -82,11 +85,14 @@ export function ApiMap({
             }),
           ),
       );
-      const score = (
-        candidates.find((s) => s.calculation_kind === "aggregate") ||
-        (candidates.length === 1 ? candidates[0] : undefined)
+      const totals = candidates.filter((s) =>
+        s.calculation_kind === "aggregate" ||
+        (s.subject.kind === totalKind && s.subject.category == null),
       );
-      const value = score?.value;
+      // An unavailable total cannot be replaced by a known category index.
+      const score = totals.length === 1 ? totals[0]
+        : !totals.length && candidates.length === 1 ? candidates[0] : undefined;
+      const value = score?.status === "available" ? score.value : null;
       const partial = score?.completeness === "partial";
       const dashArray = partial ? "1 4" : f.geometry_kind === "schematic" ? "5 5" : undefined;
       const color =

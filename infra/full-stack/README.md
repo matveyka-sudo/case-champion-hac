@@ -160,6 +160,10 @@ shutdown is `full down`; volume deletion is a separate explicit operator action.
 
 ## Extend the runtime
 
+For the certified native replay profile and a reproducible private artifact
+handoff, follow [RESTORE.md](RESTORE.md). Its graph source checks run without an
+HTTP actor and retain the original native artifact identities.
+
 The API image contains the workspace source and all committed accepted-data
 collections, while `.dockerignore` excludes `.env`, local dependencies, secrets,
 raw data and graph artifacts. Rebuild from the integrated revision when new

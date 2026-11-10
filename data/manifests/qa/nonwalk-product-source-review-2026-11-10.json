@@ -1,0 +1,561 @@
+{
+  "schema_version": "waydex-nonwalk-product-source-review/1",
+  "review_date": "2026-11-10",
+  "acceptance_state": "source_inventory_and_parameterized_preparation_only",
+  "production_manifest_activated": false,
+  "successful_nonwalk_transport_e2e": false,
+  "source_only_map_catalog_available": true,
+  "backend_version": {
+    "source_state": "working_tree_captures_with_base_head",
+    "base_head": "ec5fcc066deb3a44458ad338c87fade135a6b04e",
+    "source_repository": "/Users/kirito/waydex-full-backend",
+    "owning_files": {
+      "apps/api/src/a2_api/adapters/product_inputs.py": {
+        "path": "/Users/kirito/waydex-full-backend/apps/api/src/a2_api/adapters/product_inputs.py",
+        "sha256": "0838b3f15f2a8626cc8409daf23776cfe9db647645a6ffe7afb4d165c34c9935",
+        "size_bytes": 3686,
+        "capture_kind": "working_tree_file_hash",
+        "matches_base_head_blob": true,
+        "base_head_blob_sha256": "0838b3f15f2a8626cc8409daf23776cfe9db647645a6ffe7afb4d165c34c9935",
+        "base_head_blob_size_bytes": 3686,
+        "reproducible_from_base_head": true
+      },
+      "apps/api/src/a2_api/adapters/product_runtime.py": {
+        "path": "/Users/kirito/waydex-full-backend/apps/api/src/a2_api/adapters/product_runtime.py",
+        "sha256": "ff1239eaa1fa11e4023dfdd27c80c4fca351392cf22fb6825519f02654fbfa6c",
+        "size_bytes": 35648,
+        "capture_kind": "working_tree_file_hash",
+        "matches_base_head_blob": false,
+        "base_head_blob_sha256": "737f3eb08a0b9286992c7520627c428e673775c4ec79833fd3b6cea54fbe250c",
+        "base_head_blob_size_bytes": 34531,
+        "reproducible_from_base_head": false
+      },
+      "apps/api/src/a2_api/adapters/timetable_source.py": {
+        "path": "/Users/kirito/waydex-full-backend/apps/api/src/a2_api/adapters/timetable_source.py",
+        "sha256": "9957cd18322c52e1e1fb5a3f591f9529b80dddcd04376cab510eac158b3c0101",
+        "size_bytes": 6048,
+        "capture_kind": "working_tree_file_hash",
+        "matches_base_head_blob": true,
+        "base_head_blob_sha256": "9957cd18322c52e1e1fb5a3f591f9529b80dddcd04376cab510eac158b3c0101",
+        "base_head_blob_size_bytes": 6048,
+        "reproducible_from_base_head": true
+      },
+      "apps/api/src/a2_api/adapters/product.py": {
+        "path": "/Users/kirito/waydex-full-backend/apps/api/src/a2_api/adapters/product.py",
+        "sha256": "6a90ba90a1a85c3ef98c4dc434446a4a1c3c3d7aaa4af63c8700e60badda3e53",
+        "size_bytes": 16689,
+        "capture_kind": "working_tree_file_hash",
+        "matches_base_head_blob": false,
+        "base_head_blob_sha256": "ecae313c66c083d8b148755e60f8356cfaae4e98c4439f6b6767bef6a59f6e79",
+        "base_head_blob_size_bytes": 16352,
+        "reproducible_from_base_head": false
+      },
+      "packages/engine/src/a2_engine/freight/models.py": {
+        "path": "/Users/kirito/waydex-full-backend/packages/engine/src/a2_engine/freight/models.py",
+        "sha256": "a35969b25574013636704db720f9a4cd3aea3c9533b0ab61c1c94d47788552ec",
+        "size_bytes": 6173,
+        "capture_kind": "working_tree_file_hash",
+        "matches_base_head_blob": true,
+        "base_head_blob_sha256": "a35969b25574013636704db720f9a4cd3aea3c9533b0ab61c1c94d47788552ec",
+        "base_head_blob_size_bytes": 6173,
+        "reproducible_from_base_head": true
+      },
+      "packages/engine/src/a2_engine/freight/truck.py": {
+        "path": "/Users/kirito/waydex-full-backend/packages/engine/src/a2_engine/freight/truck.py",
+        "sha256": "9f0adf89ef566d1c2c980071432657be6642cc01777cc38a83550da7084dada6",
+        "size_bytes": 3709,
+        "capture_kind": "working_tree_file_hash",
+        "matches_base_head_blob": true,
+        "base_head_blob_sha256": "9f0adf89ef566d1c2c980071432657be6642cc01777cc38a83550da7084dada6",
+        "base_head_blob_size_bytes": 3709,
+        "reproducible_from_base_head": true
+      }
+    },
+    "base_head_identifies_entire_captured_source": false,
+    "working_tree_files_differing_from_base_head": [
+      "apps/api/src/a2_api/adapters/product_runtime.py",
+      "apps/api/src/a2_api/adapters/product.py"
+    ],
+    "files_matching_committed_base_head": [
+      "apps/api/src/a2_api/adapters/product_inputs.py",
+      "apps/api/src/a2_api/adapters/timetable_source.py",
+      "packages/engine/src/a2_engine/freight/models.py",
+      "packages/engine/src/a2_engine/freight/truck.py"
+    ],
+    "mismatching_working_tree_bytes_archived_by_this_review": false,
+    "limitations": [
+      "All six hashes were read from the owning working tree. The base HEAD is contextual; it does not identify the entire source state used by this audit.",
+      "product.py and product_runtime.py contained uncommitted certified-executor work. Their recorded hashes are preserved as working-tree captures and cannot be reproduced from the stated base HEAD.",
+      "The timetable source verifier and freight models/truck files match their committed base-HEAD blobs. Data/source facts and artifact hashes are unchanged."
+    ],
+    "source_verification_command_template": "git -C /Users/kirito/waydex-full-backend show ec5fcc066deb3a44458ad338c87fade135a6b04e:RELATIVE_PATH | shasum -a 256",
+    "source_verification_expected_value": "Compare the command output to each file base_head_blob_sha256; matches_base_head_blob states whether that committed blob also equals the recorded working-tree capture sha256."
+  },
+  "inventory_scope": {
+    "current_accepted_snapshots": [
+      {
+        "bundle_id": "kaliningrad-urban-2026-11-10.5",
+        "manifest": {
+          "path": "/Users/kirito/waydex-full-ml2/data/bundles/kaliningrad-urban-2026-11-10.5/manifest.json",
+          "sha256": "bf26c9b75d1b424f5c13ea2461b14d8619a812b207d219707ea0c2790062c32c",
+          "size_bytes": 37128
+        },
+        "canonical_counts": {
+          "freight_sites": 250,
+          "freight_nodes": 3,
+          "freight_compatibility": 0,
+          "pipeline_connections": 0,
+          "scheduled_services": 0,
+          "reference_edges": 0,
+          "minimum_transfers": 0
+        },
+        "accepted_node_kinds": {
+          "port": 3
+        },
+        "source_files": {
+          "freight_sites": {
+            "path": "/Users/kirito/waydex-full-ml2/data/bundles/kaliningrad-urban-2026-11-10.5/freight_sites.json",
+            "sha256": "50072523b566f8c7d32289eea27dd975885e3ddf3b56b015a33606949b676e33",
+            "size_bytes": 75078
+          },
+          "freight_nodes": {
+            "path": "/Users/kirito/waydex-full-ml2/data/bundles/kaliningrad-urban-2026-11-10.5/freight_nodes.json",
+            "sha256": "ef68db6babc1a68c07d42314df1e04b32dfc33152448c44d936f50865c4df964",
+            "size_bytes": 7030
+          },
+          "access_nodes": {
+            "path": "/Users/kirito/waydex-full-ml2/data/bundles/kaliningrad-urban-2026-11-10.5/access_nodes.json",
+            "sha256": "9e98a1abda1ff2bb9309dd8fd07d1f5ac45473ca760dbacbf25e5d7a929fd4a3",
+            "size_bytes": 272447
+          },
+          "evidence": {
+            "path": "/Users/kirito/waydex-full-ml2/data/bundles/kaliningrad-urban-2026-11-10.5/evidence.json",
+            "sha256": "06f6fed00bd8ae3dd95dbde698c9e6b829c73d5dd9f7eb58ffcb72a864a8dc9a",
+            "size_bytes": 1334229
+          }
+        },
+        "accepted_ports": [
+          {
+            "node_id": "kaliningrad-port-relation-21031708",
+            "name": "Калининградский морской рыбный порт – Судоремонтный завод Преголь",
+            "access_node_id": "road:way:136575679:275.5",
+            "source_refs": [
+              "osm:relation:21031708",
+              "rosmorport:seaport-kaliningrad"
+            ]
+          },
+          {
+            "node_id": "kaliningrad-port-relation-21031711",
+            "name": "Калининградский морской торговый порт",
+            "access_node_id": "road:way:1121216597:64.8",
+            "source_refs": [
+              "osm:relation:21031711",
+              "rosmorport:seaport-kaliningrad:operator-2f9c45216fef",
+              "rosmorport:seaport-kaliningrad"
+            ]
+          },
+          {
+            "node_id": "kaliningrad-port-way-74964546",
+            "name": "Калиниградский речной порт",
+            "access_node_id": "road:way:1014084154:40.9",
+            "source_refs": [
+              "osm:way:74964546",
+              "rosmorport:seaport-kaliningrad"
+            ]
+          }
+        ],
+        "interpretation": "Accepted mapped physical site/node inventory; enterprise activity, demand, gate approach and profile compatibility are not implied."
+      },
+      {
+        "bundle_id": "novorossiysk-urban-2026-11-10.2",
+        "manifest": {
+          "path": "/Users/kirito/waydex-full-ml2/data/bundles/novorossiysk-urban-2026-11-10.2/manifest.json",
+          "sha256": "82fd4ca03dbdfbcd44ab8f28d969b0f998bf58fad4eb787d5add83fffa85638a",
+          "size_bytes": 27632
+        },
+        "canonical_counts": {
+          "freight_sites": 86,
+          "freight_nodes": 6,
+          "freight_compatibility": 0,
+          "pipeline_connections": 0,
+          "scheduled_services": 0,
+          "reference_edges": 0,
+          "minimum_transfers": 0
+        },
+        "accepted_node_kinds": {
+          "pipeline_terminal": 4,
+          "port": 2
+        },
+        "source_files": {
+          "freight_sites": {
+            "path": "/Users/kirito/waydex-full-ml2/data/bundles/novorossiysk-urban-2026-11-10.2/freight_sites.json",
+            "sha256": "f12afaf33ed3a6514e248e886c314cf0f015dd769569214d01dff2c666182bcd",
+            "size_bytes": 25583
+          },
+          "freight_nodes": {
+            "path": "/Users/kirito/waydex-full-ml2/data/bundles/novorossiysk-urban-2026-11-10.2/freight_nodes.json",
+            "sha256": "5688edc74cbda9e1f6afd240b8cb7ecabd04d461f879ffbb15949b8da9c8a55a",
+            "size_bytes": 5437
+          },
+          "access_nodes": {
+            "path": "/Users/kirito/waydex-full-ml2/data/bundles/novorossiysk-urban-2026-11-10.2/access_nodes.json",
+            "sha256": "8b69833518174b8cb907a39ce813326bc49b8ed60e9e9af8365d5476e8543c71",
+            "size_bytes": 212273
+          },
+          "evidence": {
+            "path": "/Users/kirito/waydex-full-ml2/data/bundles/novorossiysk-urban-2026-11-10.2/evidence.json",
+            "sha256": "f2136ca4da1853dd5bcaa9a362b672995cd7bf5d1b8a0a248abf18816fb83a28",
+            "size_bytes": 547769
+          }
+        },
+        "accepted_ports": [
+          {
+            "node_id": "novorossiysk-port-way-1168951234",
+            "name": "Новороссийский порт, участок 1",
+            "access_node_id": "road:way:106625466:109.8",
+            "source_refs": [
+              "osm:way:1168951234",
+              "rosmorport:seaport-novorossiysk"
+            ]
+          },
+          {
+            "node_id": "novorossiysk-port-way-1222501559",
+            "name": "Контейнерный терминал НУТЭП",
+            "access_node_id": "road:way:252675278:183.2",
+            "source_refs": [
+              "osm:way:1222501559",
+              "rosmorport:seaport-novorossiysk:operator-70c4fa44d076",
+              "rosmorport:seaport-novorossiysk"
+            ]
+          }
+        ],
+        "interpretation": "Accepted mapped physical site/node inventory; enterprise activity, demand, gate approach and profile compatibility are not implied."
+      },
+      {
+        "bundle_id": "moscow-urban-2026-11-10.2",
+        "manifest": {
+          "path": "/Users/kirito/waydex-full-ml2/data/bundles/moscow-urban-2026-11-10.2/manifest.json",
+          "sha256": "84df02d264702906319b5db9f82235c1f3b221a5dcf27edb9facc6d52d950fa5",
+          "size_bytes": 34703
+        },
+        "canonical_counts": {
+          "freight_sites": 2222,
+          "freight_nodes": 0,
+          "freight_compatibility": 0,
+          "pipeline_connections": 0,
+          "scheduled_services": 0,
+          "reference_edges": 0,
+          "minimum_transfers": 0
+        },
+        "accepted_node_kinds": {},
+        "source_files": {
+          "freight_sites": {
+            "path": "/Users/kirito/waydex-full-ml2/data/bundles/moscow-urban-2026-11-10.2/freight_sites.json",
+            "sha256": "fc6bd8b7a898de085d2822ca8dfe69ef3bbe740af52b8d72791f9a69d8f192a0",
+            "size_bytes": 654680
+          },
+          "freight_nodes": {
+            "path": "/Users/kirito/waydex-full-ml2/data/bundles/moscow-urban-2026-11-10.2/freight_nodes.json",
+            "sha256": "6e798dcc7db2dd53b48aefa7a884f2d0b8126426257d52266352f3bdf6e56a3a",
+            "size_bytes": 32257
+          },
+          "access_nodes": {
+            "path": "/Users/kirito/waydex-full-ml2/data/bundles/moscow-urban-2026-11-10.2/access_nodes.json",
+            "sha256": "9169bafd044d8a6522d599b8cebd441a1de31929aafba161eaf92738cef59614",
+            "size_bytes": 8398119
+          },
+          "evidence": {
+            "path": "/Users/kirito/waydex-full-ml2/data/bundles/moscow-urban-2026-11-10.2/evidence.json",
+            "sha256": "065dde007d445f38aaba9c545387cf8872c14a659bb53e04a2667bf92c8ea2a4",
+            "size_bytes": 14373034
+          }
+        },
+        "accepted_ports": [],
+        "interpretation": "Accepted mapped physical site/node inventory; enterprise activity, demand, gate approach and profile compatibility are not implied."
+      }
+    ],
+    "all_published_bundle_manifests_examined": 19,
+    "full_survey": {
+      "path": "/Users/kirito/waydex-full-runtime/ml2/nonwalk-input-review-2026-11-10/source-inventory.json",
+      "sha256": "c1daeeaeb00622335a7cd2fe805381b2a24b41cf277fa10cb95f1cbfcb06ed0f",
+      "size_bytes": 36350
+    },
+    "private_provider_binding_codes_redistributed": false
+  },
+  "real_scheduled_source_validation": {
+    "scope": "Moscow ground route c894/141500134, service dates05–30Nov2026, ground-only partial public network",
+    "inputs": {
+      "accepted-data.json": {
+        "path": "/Users/kirito/waydex-full-runtime/ml2/moscow-c894-nov2026/accepted-data.json",
+        "sha256": "3892d3d270aac699b3b533a77470fe5ed7cc6add073b88b26c0d0b19d8cecd6c",
+        "size_bytes": 24187309
+      },
+      "timetable.json": {
+        "path": "/Users/kirito/waydex-full-runtime/ml2/moscow-c894-nov2026/timetable.json",
+        "sha256": "927736082148ec7ad14f3bb414094afb9e2942b98180fcb64afef19ac658dce6",
+        "size_bytes": 25448261
+      },
+      "normalization-report.json": {
+        "path": "/Users/kirito/waydex-full-runtime/ml2/moscow-c894-nov2026/normalization-report.json",
+        "sha256": "f4aef9174fcd2c6c1186eec6954c70947cc40a9434d08104da7baf1ec78dfcd8",
+        "size_bytes": 661
+      },
+      "real-search-report.json": {
+        "path": "/Users/kirito/waydex-full-runtime/ml2/moscow-c894-nov2026/real-search-report.json",
+        "sha256": "e1eebe4f08073781950d24e96d595566d00a61ceba3be23ac43fe1419232b22b",
+        "size_bytes": 921
+      }
+    },
+    "current_backend_source_guard": "verify_timetable_source(snapshot,table,gtfs_noon_elapsed_v1)",
+    "receipt": {
+      "path": "/Users/kirito/waydex-full-runtime/ml2/nonwalk-input-review-2026-11-10/moscow-c894-current-backend-source-receipt.json",
+      "sha256": "80af42ef94548d22b7760e45745a02b99c6b99a08d0312f81b3a37e8ecc4d6d8",
+      "size_bytes": 584465
+    },
+    "canonical_services": 275,
+    "dated_runs": 3730,
+    "source_matched_executions": 3730,
+    "expected_execution_count": 3730,
+    "materialization_complete_for_existing_canonical_services": true,
+    "footpaths": 0,
+    "transfers": 0,
+    "urban_physical_endpoint_chains_verified": 0,
+    "runtime_document_budget": {
+      "accepted_snapshot_bytes": 24187309,
+      "timetable_bytes": 25448261,
+      "per_document_limit_bytes": 33554432,
+      "cumulative_limit_bytes": 67108864,
+      "under_limits_before_small_urban_wrapper": true
+    },
+    "eligible_complete_urban_profile": false,
+    "reason": "GTFS stop-to-stop execution is real; no source-bound physical sample-point→stop and stop→physical destination chain is present. Missing walk links cannot be replaced with zero or straight-line distance."
+  },
+  "nonwalk_profile_matrix": [
+    {
+      "profile": "urban_passenger/public_transport/Moscow/c894",
+      "state": "scheduled_source_valid_but_product_endpoint_chains_missing",
+      "available": "275canonical trips,3730dated runs,54physical stops; real observed scheduled2280s remains restricted stop-to-stop result",
+      "runtime_guards": [
+        "DATED_TIMETABLE_REQUIRED_FOR_PUBLIC_TRANSPORT",
+        "EXHAUSTIVE_CONNECTOR_TRANSFER_CONTINUATION_RECEIPT_REQUIRED",
+        "RUNTIME_POINT_SEMANTICS_DIFFER_FROM_ACCEPTED_SNAPSHOT"
+      ],
+      "minimal_missing_facts": [
+        "At least one accepted physical urban sample point and accepted category destination joined to actual timetable stop events through source-verified traversable physical approaches and dated footpaths",
+        "All accepted population and sample weights retained; incomplete category/network flags preserved",
+        "Complete category roster and search/physical-model closure additionally required for a numerical category minimum/index"
+      ]
+    },
+    {
+      "profile": "urban_cargo/Novorossiysk/outbound or inbound/port",
+      "state": "real_inventory_only_transport_unavailable",
+      "available": "86accepted mapped industrial/warehouse sites and2accepted port objects",
+      "runtime_guards": [
+        "CargoProfile.vehicle requires positive reviewed truck mass,height,width,length",
+        "RUNTIME_CARGO_PROFILE_CONTENT_MISMATCH",
+        "ACCEPTED_STATIC_TRUCK_OBSERVATION_PROOF_REQUIRED",
+        "PARTIAL_CARGO_SOURCE_CANNOT_CLAIM_COMPLETE_INVENTORY"
+      ],
+      "minimal_missing_facts": [
+        "Reviewed canonical cargo profile and matching normalized profile with actual vehicle specifications, access class, temperature/handling requirements and valid direction/date scope",
+        "For any actual time result: source-bound truck route and vehicle-compatible physical approaches for both site and actual port gate; no passenger-auto cast",
+        "Dated service/profile/vehicle compatibility receipt for the chosen pair",
+        "For nearest/index: source-complete eligible node roster and validated truck search/minimum receipt; operating or shipment handling durations are additionally required for complete delivery, not invented from terminal capacity"
+      ]
+    },
+    {
+      "profile": "urban_cargo/Kaliningrad/port",
+      "state": "real_inventory_only_transport_unavailable",
+      "available": "250accepted mapped sites and3accepted port objects; source road projections are not gates",
+      "runtime_guards": [
+        "ACCEPTED_STATIC_TRUCK_OBSERVATION_PROOF_REQUIRED",
+        "PARTIAL_CARGO_SOURCE_CANNOT_CLAIM_COMPLETE_INVENTORY"
+      ],
+      "minimal_missing_facts": [
+        "Same reviewed vehicle/profile, compatibility, actual truck approaches and route obligations as Novorossiysk",
+        "No accepted truck build/route observation is provided by the existing pedestrian native certificate"
+      ]
+    },
+    {
+      "profile": "intercity_passenger/public",
+      "state": "no_complete_dated_intercity_execution",
+      "available": "2957source directory nodes:2299rail/482bus/176airport; private provider bindings contain identifiers only. Current captured Khrabrovo board supplies departure facts, not a full intercity stop/time chain",
+      "runtime_guards": [
+        "DATED_TIMETABLE_EXECUTION_DOES_NOT_MATCH_CANONICAL_SERVICE",
+        "RUNTIME_INPUT_EVIDENCE_UNRESOLVED"
+      ],
+      "minimal_missing_facts": [
+        "One official dated origin→destination departure AND arrival with IANA timezone/calendar and stable physical execution identity, tied to accepted terminal access nodes and immutable source bytes",
+        "Accepted reference graph/A with compatible source scope is needed for a passenger index; unknown transfer/readiness buffers cannot become zero",
+        "Node/provider-code catalogs alone never supply departures or frequency"
+      ]
+    },
+    {
+      "profile": "intercity_passenger/private_car",
+      "state": "no_accepted_car_time_observation",
+      "available": "Mapped road access projections, no accepted non-walk route observation; existing Valhalla positive observations are pedestrian",
+      "runtime_guards": [
+        "RUNTIME_INPUT_GRAPH_MISMATCH",
+        "RUNTIME_INPUT_EVIDENCE_UNRESOLVED"
+      ],
+      "minimal_missing_facts": [
+        "Actual static passenger-car route/time observation for accepted physical boundary nodes, proper graph/profile/build and explicit date/traffic scope",
+        "Source-supported border/transit access if route crosses foreign territory",
+        "Compatible accepted reference/A for an index; partial route does not prove full minimum"
+      ]
+    },
+    {
+      "profile": "intercity_cargo/multimodal",
+      "state": "no_source_valid_delivery_chain",
+      "available": "Port/site location and operational-service descriptions; no accepted cargo compatibility or delivery actions",
+      "runtime_guards": [
+        "RUNTIME_CARGO_BOUNDARY_OUTSIDE_ACCEPTED_SNAPSHOT",
+        "RUNTIME_CARGO_PROFILE_CONTENT_MISMATCH"
+      ],
+      "minimal_missing_facts": [
+        "Reviewed cargo/vehicle profile and two accepted origin/destination cargo boundaries",
+        "Dated compatible departure/arrival/service chain or truck action with actual approaches",
+        "Known waiting, handling and transfer operations for full delivery; unknown operations leave only confirmed movement as partial"
+      ]
+    },
+    {
+      "profile": "intercity_cargo/pipeline",
+      "state": "terminal_locations_only_no_directed_connection",
+      "available": "Four accepted Novorossiysk pipeline-terminal locations; zero canonical pipeline_connections, all four in one city",
+      "runtime_guards": [
+        "RUNTIME_PIPELINE_CONNECTION_SEMANTICS_MISMATCH",
+        "RUNTIME_PIPELINE_CONNECTION_UNCONFIRMED",
+        "RUNTIME_PIPELINE_QUANTITY_SEMANTICS_MISMATCH"
+      ],
+      "minimal_missing_facts": [
+        "Confirmed intake role and delivery role at distinct accepted intercity endpoints",
+        "Source-confirmed directed end-to-end connection and specific oil/oil_products/gas product, with validity period",
+        "For utilization: V and Q with identical product/unit/period/basis; terminal location or transit is not connection, capacity is not free commercial capacity"
+      ]
+    }
+  ],
+  "cargo_candidate_preparation": {
+    "builder": {
+      "path": "/Users/kirito/waydex-full-runtime/ml2/nonwalk-input-review-2026-11-10/build_cargo_inventory_candidate.py",
+      "sha256": "fc1bca97c5c5e3bd643c0ff9b72c6b20bc194d91a5f1a56ae85794f52b21af24",
+      "size_bytes": 9174
+    },
+    "required_parameters_schema": {
+      "path": "/Users/kirito/waydex-full-runtime/ml2/nonwalk-input-review-2026-11-10/required-reviewed-parameters.schema.json",
+      "sha256": "14776be0fafb46b6120e34b1295fafeddbe54d2f283c36ca59e55a120c4c71ce",
+      "size_bytes": 8655
+    },
+    "reviewed_vehicle_profile_file_available": false,
+    "default_vehicle_generated": false,
+    "candidate_runtime_manifest_created": false,
+    "production_runtime_activated": false,
+    "behavior_if_reviewed_parameters_are_supplied": "Retain every accepted site and accepted port, routes=receipts=(), incomplete inventory flags; validate with owning backend InputDocument and validate_inputs. static_observations remains false, so transport handler stays unavailable until actual observations are accepted.",
+    "negative_checks": [
+      {
+        "probe": "missing-reviewed-profile",
+        "result": "REVIEWED_VEHICLE_PROFILE_FILE_REQUIRED_OR_HASH_MISMATCH",
+        "output_created": false
+      },
+      {
+        "probe": "changed-reviewed-profile",
+        "result": "REVIEWED_VEHICLE_PROFILE_FILE_REQUIRED_OR_HASH_MISMATCH",
+        "output_created": false
+      }
+    ],
+    "map_only_exports": [
+      {
+        "path": "/Users/kirito/waydex-full-runtime/ml2/nonwalk-input-review-2026-11-10/kaliningrad-real-freight-inventory.geojson",
+        "sha256": "d7e6655975d007fd3d487e86f2794e5ae1903e387806ff79f48e04b207b1235c",
+        "size_bytes": 139258,
+        "features": 253,
+        "use": "source catalog/map only; not transport availability"
+      },
+      {
+        "path": "/Users/kirito/waydex-full-runtime/ml2/nonwalk-input-review-2026-11-10/novorossiysk-real-freight-inventory.geojson",
+        "sha256": "dcfcec4429ac8bd8ff449ce8967f5ddcc4e0d0ba6ae799ad0c30c97dffde4e09",
+        "size_bytes": 48179,
+        "features": 88,
+        "use": "source catalog/map only; not transport availability"
+      }
+    ],
+    "pipeline_locations_only": {
+      "path": "/Users/kirito/waydex-full-runtime/ml2/nonwalk-input-review-2026-11-10/novorossiysk-pipeline-terminal-locations-only.geojson",
+      "sha256": "13e9b73afb1f44363730c12cea5545f2e7eb052b0ad3a620c54dbe7b6a21df9e",
+      "size_bytes": 2469,
+      "features": 4
+    }
+  },
+  "nutep_specific_minimum_missing_facts": {
+    "prior_review": "data/manifests/qa/novorossiysk-nutep-source-review-2026-11-10.json",
+    "review_sha256": "30988652a844ff88138f3acfd055ec01db30c6eb170e970e74d592ae95340882",
+    "facts_available": "Official operator confirms road/rail container services and controlled distinct entry/exit/booked slots",
+    "still_missing": [
+      "Exact verified automobile gate coordinate and source-bound physical connection to road graph; canonical road projection is141.561m inside terminal boundary",
+      "Specific vehicle/profile/service compatibility and actual readiness/booking",
+      "Waiting/handling durations for complete delivery; zero is not inferred"
+    ]
+  },
+  "next_action": "Keep transport capability unavailable. A reviewed vehicle/profile file and one fully source-bound truck-access pair is the smallest cargo transport foundation; existing locations can already support an explicitly labelled map/catalog layer.",
+  "catalog_source_files": [
+    {
+      "path": "/Users/kirito/waydex-full-ml2/data/directories/russia-intercity-nodes-2026-11-09.2/manifest.json",
+      "sha256": "6a595cfce1b2794bf1f123a012dc2b9baf33a5174112d879544bff0e22f29380",
+      "size_bytes": 2195
+    },
+    {
+      "path": "/Users/kirito/waydex-full-ml2/data/directories/russia-intercity-nodes-2026-11-09.2/nodes.json",
+      "sha256": "9f5b57eca5ddaee82efa8300cb01c0dffa1f81940759181dae19f58c1bc6cbdf",
+      "size_bytes": 1156466
+    },
+    {
+      "path": "/Users/kirito/waydex-full-ml2/data/directories/russia-seaports-2026-11-09.1/manifest.json",
+      "sha256": "9e0cb1dfb34e42f3e8b93cbc2f09ba5f91ece959e20c23a3a8db8f5f69357632",
+      "size_bytes": 2086
+    },
+    {
+      "path": "/Users/kirito/waydex-full-ml2/data/directories/russia-seaports-2026-11-09.1/seaports.json",
+      "sha256": "0183dd86ea0d0a3c11fdbdfe5594de267b7d04dc9289bd3ff796866fe217e201",
+      "size_bytes": 43235
+    },
+    {
+      "path": "/Users/kirito/waydex-full-ml2/data/directories/russia-territories-2026-11-09.1/manifest.json",
+      "sha256": "c168dc5104a8babccacb921593fb8c8a99eb691b369da3d78b11e4f17476bd6b",
+      "size_bytes": 791
+    },
+    {
+      "path": "/Users/kirito/waydex-full-ml2/data/directories/russia-territories-2026-11-09.1/territories.json",
+      "sha256": "cc37a9252569220dc4bfd4a228c89ce2d78accb67c998798d9303874d2de0cca",
+      "size_bytes": 396630
+    }
+  ],
+  "private_binding_inventory": {
+    "source": "data/processed/yandex_rasp/rasp-bindings-2026-11-09.1",
+    "status": "internal identifier bindings only; no schedule requests made",
+    "public_report_contains_codes": false,
+    "pinned_artifact_metadata": [
+      {
+        "artifact_id": "mos-ground-transport-gtfs-20261110",
+        "kind": "gtfs",
+        "sha256": "681afec73b21f8538a675194c95595093dbde03e95cfd72df0b4ef1f4114b2bc",
+        "size_bytes": 34717074,
+        "state": "verified"
+      },
+      {
+        "artifact_id": "rasp-bindings-2026-11-09.1",
+        "kind": "internal_rasp_bindings",
+        "sha256": "bc12decf35208b4c68424c9bd9a9259a0ff521104a5f06c2c68a1bf1611c54b5",
+        "rows": {
+          "node_codes.json": 2415,
+          "bindings.json": 826
+        },
+        "internal_only": true,
+        "state": "verified"
+      }
+    ]
+  },
+  "existing_official_flight_board_observation": {
+    "source_manifest": "data/manifests/research/kaliningrad-airport-official-sources-2026-11-10.json",
+    "source_manifest_sha256": "c8c118ffa272525bc1a6a8eb76da63d26079f891f19270cbf4d79f655ac62918",
+    "role": "Observed passenger operation; complete dated departure+arrival execution chain not normalized or accepted"
+  }
+}

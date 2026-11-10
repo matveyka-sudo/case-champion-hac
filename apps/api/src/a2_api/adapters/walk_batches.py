@@ -243,8 +243,9 @@ def _prepare(
 
 
 async def preflight(request: AnalysisRequest, snapshot: AcceptedData) -> BatchPlan:
-    batch, _, runtime = await asyncio.to_thread(_prepare, request, snapshot)
-    await asyncio.to_thread(walk_pilot.check_status, runtime)
+    # Provider readiness is checked only after the parent's fenced attempt has
+    # reserved its call budget. Repeated HTTP submissions cannot spend free calls.
+    batch, _, _ = await asyncio.to_thread(_prepare, request, snapshot)
     return batch
 
 

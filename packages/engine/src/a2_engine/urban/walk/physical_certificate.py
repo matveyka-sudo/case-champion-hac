@@ -15,6 +15,7 @@ from typing import Any
 
 from a2_engine.urban.valhalla.models import WalkCoordinate
 from a2_engine.urban.walk.source_bound import (
+    NativeEndpoint,
     NativeWalkCandidate,
     NativeWalkExport,
     verify_native_walk_replay,
@@ -233,11 +234,12 @@ def _segment(
     return seconds
 
 
-def load_designated_access_receipt(
+def load_designated_access_receipt_for_verified_roster(
     content: str,
     *,
     expected_sha256: str,
-    graph: NativeWalkExport,
+    native_export_sha256: str,
+    native_endpoints: tuple[NativeEndpoint, ...],
     expected_bindings: Mapping[str, str],
     artifact: Mapping[str, Any],
 ) -> DesignatedAccessReceipt:
@@ -262,7 +264,7 @@ def load_designated_access_receipt(
     ):
         if body[key] != expected_bindings[key]:
             raise ValueError("PHYSICAL_ACCESS_SOURCE_PROFILE_BINDING_MISMATCH:" + key)
-    if body["native_export_sha256"] != graph.content_sha256:
+    if body["native_export_sha256"] != native_export_sha256:
         raise ValueError("PHYSICAL_ACCESS_NATIVE_EXPORT_MISMATCH")
     for key in (
         "snapshot_id",
@@ -276,7 +278,9 @@ def load_designated_access_receipt(
     speed = float(json.loads(artifact["build"]["pedestrian_options_json"])["walking_speed"])
     if body["walking_speed_kmh"] != speed:
         raise ValueError("PHYSICAL_ACCESS_WALKING_PROFILE_MISMATCH")
-    native = {(e.endpoint, e.index): e for e in graph.endpoints}
+    native = {(e.endpoint, e.index): e for e in native_endpoints}
+    if len(native) != len(native_endpoints) or {e.endpoint for e in native_endpoints} != {0, 1}:
+        raise ValueError("VERIFIED_NATIVE_ENDPOINT_ROSTER_REQUIRED")
     connectors = {c["physical_node_id"]: c for c in artifact["connectors"]}
     endpoint_ids = (
         "physical:point:" + artifact["point_ids"][0],
@@ -359,10 +363,28 @@ def load_designated_access_receipt(
         digest,
         body["scope_id"],
         body["source_scope_id"],
-        graph.content_sha256,
+        native_export_sha256,
         tuple(choices[key] for key in sorted(choices)),
         tuple(body["limitations"]),
         content,
+    )
+
+
+def load_designated_access_receipt(
+    content: str,
+    *,
+    expected_sha256: str,
+    graph: NativeWalkExport,
+    expected_bindings: Mapping[str, str],
+    artifact: Mapping[str, Any],
+) -> DesignatedAccessReceipt:
+    return load_designated_access_receipt_for_verified_roster(
+        content,
+        expected_sha256=expected_sha256,
+        native_export_sha256=graph.content_sha256,
+        native_endpoints=graph.endpoints,
+        expected_bindings=expected_bindings,
+        artifact=artifact,
     )
 
 
