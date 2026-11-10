@@ -41,6 +41,7 @@ from a2_api.adapters.product_inputs import (
     PipelineInputs,
     UrbanCargoInputs,
     UrbanInputs,
+    candidate_is_static,
 )
 from a2_api.adapters.product_projection import (
     Projection,
@@ -129,6 +130,8 @@ def calculate(claim: ClaimedJob) -> AnalysisResult:
                 or candidate.category not in request.categories
             ):
                 continue
+            if not candidate_is_static(candidate):
+                raise unavailable("SCHEDULED_CANDIDATES_REQUIRE_DATED_TIMETABLE_RECOMPUTATION")
             offset = request.departure_at - candidate.departure_at
             candidates.append(
                 replace(

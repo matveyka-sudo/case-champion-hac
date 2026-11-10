@@ -39,6 +39,8 @@ from a2_engine import (
 )
 from pydantic import Field, TypeAdapter
 
+from a2_api.adapters.timetable_source import ServiceClock
+
 
 class UrbanInputs(ContractModel):
     kind: Literal["urban_passenger"]
@@ -51,6 +53,7 @@ class UrbanInputs(ContractModel):
     population_coverage: UrbanPopulationCoverage
     thresholds: tuple[UrbanThreshold, ...] = ()
     timetable: Timetable | None = None
+    timetable_service_clock: ServiceClock | None = None
     resource_limit: int | None = Field(default=None, gt=0)
 
 
@@ -58,6 +61,7 @@ class IntercityInputs(ContractModel):
     kind: Literal["intercity_passenger"]
     scope: IntercityAnalysisScope
     timetable: Timetable
+    timetable_service_clock: ServiceClock | None = None
     transport_modes: tuple[TransportModeBinding, ...]
     physical_services: tuple[PhysicalService, ...]
     reference_graph: ReferenceGraph
@@ -102,6 +106,16 @@ EngineInputs = Annotated[
     Field(discriminator="kind"),
 ]
 INPUT_ADAPTER = TypeAdapter(EngineInputs)
+
+
+def candidate_is_static(candidate: UrbanCandidate) -> bool:
+    """A declared static cost model cannot turn a scheduled ride into a new run."""
+    return candidate.passenger_mode in ("walk", "private_car") and all(
+        leg.kind in ("walk", "ride")
+        and leg.service_id is None
+        and (leg.kind != "ride" or leg.mode == "private_car")
+        for leg in candidate.legs
+    )
 
 
 class InputDocument(ContractModel):

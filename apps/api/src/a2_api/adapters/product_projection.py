@@ -57,6 +57,7 @@ class Projection:
         journey_id: str | None = None,
         time_kind: Literal["movement", "complete_chain"] | None = None,
         population_basis: PopulationBasis | None = None,
+        confirmed_absence: bool = False,
     ) -> str:
         self.metrics.append(
             Metric(
@@ -64,8 +65,8 @@ class Projection:
                 name=name,
                 value=result.value,
                 unit=unit,
-                status=result.status,
-                reason_code=result.reason_code,
+                status="not_applicable" if confirmed_absence else result.status,
+                reason_code="NO_FEASIBLE_ROUTE" if confirmed_absence else result.reason_code,
                 source_refs=list(refs),
                 subject=subject,
                 completeness="full" if full else "partial",
@@ -238,6 +239,12 @@ def project_urban(out: Projection, analysis: Any) -> None:
                 key = canonical_hash([p.point_id, category.category, mode.passenger_mode])[:24]
                 s = subject.model_copy(update={"category": category.category})
                 chosen = category.best
+                confirmed_absence = (
+                    chosen is None
+                    and category.minimum_proven
+                    and category.index.value == 0
+                    and category.index.reason_code == "NO_FEASIBLE_ROUTE"
+                )
                 raw = out.metric(
                     "urban-time-" + key,
                     "minimum_journey_seconds",
@@ -253,6 +260,7 @@ def project_urban(out: Projection, analysis: Any) -> None:
                     journey_id=chosen.journey.candidate.journey_id if chosen else None,
                     time_kind="complete_chain",
                     population_basis=basis,
+                    confirmed_absence=confirmed_absence,
                 )
                 count_id = out.metric(
                     "urban-count-" + key,
@@ -286,7 +294,7 @@ def project_urban(out: Projection, analysis: Any) -> None:
                         s,
                         category.evidence_refs,
                         full=category.completeness == "full",
-                        metrics=(h,) if chosen is None and category.index.value == 0 else (raw, h),
+                        metrics=() if confirmed_absence else (raw, h),
                     )
                 )
                 out.limitations.update(category.limitations)
@@ -518,6 +526,16 @@ def project_intercity(
             analysis.evidence_refs,
             full=c.chain_complete,
             journey_id=c.route.chain_id,
+        )
+        out.metric(
+            prefix + "-total",
+            "total_seconds",
+            known(c.total_seconds),
+            subject,
+            analysis.evidence_refs,
+            full=c.chain_complete,
+            journey_id=c.route.chain_id,
+            time_kind="complete_chain",
         )
         path_score = out.score(
             prefix + "-path-score",

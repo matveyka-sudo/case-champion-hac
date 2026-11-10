@@ -151,3 +151,17 @@ def test_public_engine_results_project_to_valid_canonical_dto(kind):
         assert saved.metrics[0].value == 120
     else:
         assert any(item.value is not None for item in saved.scores)
+    if kind == "intercity":
+        total = next(
+            metric for metric in saved.metrics if metric.metric_id == "intercity-public-total"
+        )
+        assert total.value == result.public.best_known.total_seconds == 5400
+        assert total.time_kind == "complete_chain" and total.journey_id is not None
+    if kind == "urban":
+        absent = [metric for metric in saved.metrics if metric.reason_code == "NO_FEASIBLE_ROUTE"]
+        assert absent and all(
+            metric.value is None
+            and metric.status == "not_applicable"
+            and metric.completeness == "full"
+            for metric in absent
+        )

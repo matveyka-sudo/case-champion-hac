@@ -2,6 +2,9 @@
 
 import hashlib
 import json
+import os
+import subprocess
+import sys
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -265,6 +268,8 @@ def test_profile_scope_and_route_budget_refuse_unsupported_requests(
         runtime.select(request_for(snapshot, passenger_mode="public_transport"), snapshot)
     with pytest.raises(DomainError, match="RUNTIME_INPUTS_UNAVAILABLE"):
         runtime.select(request_for(snapshot, departure_at="2027-01-01T00:00:00Z"), snapshot)
+    with pytest.raises(DomainError, match="RUNTIME_INPUTS_UNAVAILABLE"):
+        runtime.select(request_for(snapshot, area_id="TEST_ONLY-known-district"), snapshot)
 
 
 def real_partial_school_inputs():
@@ -366,3 +371,39 @@ def test_serving_object_outside_city_is_bound_by_source_scope(transport_facts):
     )
     profile = profile.model_copy(update={"valid_to": datetime(2026, 11, 30, 20, tzinfo=UTC)})
     validate_inputs(bind_fingerprints(profile, facts), facts, canonical, ProductRegistry())
+
+
+def test_input_fingerprint_is_identical_across_process_hash_seeds(tmp_path, transport_facts):
+    _, facts, profile = transport_facts
+    facts = facts.model_copy(
+        update={
+            "destinations": (
+                replace(
+                    facts.destinations[0],
+                    categories=frozenset(
+                        {"school", "airport", "adult_polyclinic", "shopping_center"}
+                    ),
+                ),
+            )
+        }
+    )
+    document = tmp_path / "TEST_ONLY-inputs.json"
+    document.write_text(
+        InputDocument(schema_version="waydex-engine-inputs/1", inputs=facts).model_dump_json()
+    )
+    profile_path = tmp_path / "TEST_ONLY-profile.json"
+    profile_path.write_text(profile.model_dump_json())
+    script = "from pathlib import Path;import sys;from a2_api.adapters.product_inputs import InputDocument;from a2_api.adapters.product_runtime import Profile,input_fingerprints;from a2_api.core.registry import ProductRegistry;print(input_fingerprints(Profile.model_validate_json(Path(sys.argv[2]).read_bytes()),InputDocument.model_validate_json(Path(sys.argv[1]).read_bytes()).inputs,ProductRegistry())[0])"
+    outputs = []
+    for seed in ("1", "137", "random"):
+        env = dict(os.environ, PYTHONHASHSEED=seed)
+        outputs.append(
+            subprocess.check_output(
+                [sys.executable, "-c", script, str(document), str(profile_path)],
+                cwd=ROOT,
+                env=env,
+                text=True,
+            ).strip()
+        )
+    assert len(set(outputs)) == 1
+    assert outputs[0] == input_fingerprints(profile, facts, ProductRegistry())[0]

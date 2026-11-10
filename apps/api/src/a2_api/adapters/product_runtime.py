@@ -24,6 +24,7 @@ from a2_contracts.v2.requests import (
     UrbanPassengerRequest,
 )
 from a2_contracts.v2.results import EvidenceRef
+from a2_engine import scenario_hash
 from pydantic import Field
 
 from a2_api.adapters.product_inputs import (
@@ -35,7 +36,9 @@ from a2_api.adapters.product_inputs import (
     PipelineInputs,
     UrbanCargoInputs,
     UrbanInputs,
+    candidate_is_static,
 )
+from a2_api.adapters.timetable_source import verify_timetable_source
 from a2_api.core.errors import DomainError
 from a2_api.core.registry import ProductRegistry
 
@@ -137,7 +140,7 @@ def input_fingerprints(
     This hash is not a claim about a deployed routing tile store. Live executors
     must additionally verify their own physical build, as walk_pilot does.
     """
-    graph = canonical_hash(INPUT_ADAPTER.dump_python(inputs, mode="json"))
+    graph = scenario_hash(INPUT_ADAPTER.dump_python(inputs, mode="python"))
     costing = canonical_hash(
         {
             "config_hash": registry.config_hash,
@@ -175,6 +178,7 @@ def validate_inputs(
     ):
         raise ValueError("RUNTIME_ACTUAL_INPUT_OR_PROFILE_FINGERPRINT_MISMATCH")
     known_evidence = {row.evidence_id for row in snapshot.evidence}
+    verified_evidence = {row.evidence_id for row in snapshot.evidence if row.verified}
     known_evidence.update(row.evidence_id for row in profile.evidence)
     for item in _walk(inputs):
         if hasattr(item, "snapshot_id") and item.snapshot_id != snapshot.snapshot_id:
@@ -203,7 +207,34 @@ def validate_inputs(
             refs = getattr(item, name, ())
             if refs and not set(refs) <= known_evidence:
                 raise ValueError("RUNTIME_INPUT_EVIDENCE_UNRESOLVED")
+        complete_flags = (
+            "complete",
+            "catalog_complete",
+            "search_complete",
+            "roster_complete",
+            "modes_complete",
+            "schedule_complete",
+            "calendar_complete",
+            "footpaths_complete",
+            "transfers_complete",
+            "continuations_complete",
+            "coverage_complete",
+            "minimum_confirmed",
+        )
+        if (
+            any(getattr(item, flag, None) is True for flag in complete_flags)
+            or getattr(item, "coverage", None) == "full"
+        ):
+            proof = set(getattr(item, "evidence_refs", ())) | set(getattr(item, "source_refs", ()))
+            if not proof or not proof <= verified_evidence:
+                raise ValueError("FULL_SCOPE_REQUIRES_VERIFIED_CANONICAL_EVIDENCE")
     if isinstance(inputs, UrbanInputs):
+        if inputs.timetable is not None:
+            verify_timetable_source(snapshot, inputs.timetable, inputs.timetable_service_clock)
+        if any(coverage.search_complete for coverage in inputs.coverage):
+            raise ValueError(
+                "EXTERNALLY_ASSERTED_URBAN_SEARCH_COMPLETENESS_REQUIRES_SERVER_VERIFIED_RECEIPT"
+            )
         if (
             inputs.context.city_id != profile.city_id
             or inputs.context.traffic_mode not in profile.traffic_modes
@@ -243,6 +274,10 @@ def validate_inputs(
                 raise ValueError("RUNTIME_POINT_SEMANTICS_DIFFER_FROM_ACCEPTED_SNAPSHOT")
         for destination in inputs.destinations:
             original_destination = destinations[destination.destination_id]
+            if destination.eligible is not True:
+                raise ValueError("ACCEPTED_DESTINATION_ELIGIBILITY_CANNOT_BE_OVERRIDDEN")
+            if destination.in_service_scope is not True:
+                raise ValueError("ACCEPTED_DESTINATION_SERVICE_SCOPE_CANNOT_BE_OVERRIDDEN")
             if (
                 destination.object_identity,
                 destination.categories,
@@ -300,6 +335,8 @@ def validate_inputs(
                 and coverage.scope.passenger_mode in scope.modes
                 and (not scope.categories or coverage.scope.category in scope.categories)
                 and scope.completeness == "full"
+                and bool(scope.source_refs)
+                and set(scope.source_refs) <= verified_evidence
                 and scope.valid_period.start is not None
                 and scope.valid_period.end is not None
                 and scope.valid_period.start <= first_day <= last_day <= scope.valid_period.end
@@ -323,9 +360,17 @@ def validate_inputs(
             not profile.static_observations or profile.traffic_modes != ["static"]
         ):
             raise ValueError("STATIC_OBSERVATION_VALIDITY_PROOF_REQUIRED")
+        if any(not candidate_is_static(candidate) for candidate in inputs.candidates):
+            raise ValueError("SCHEDULED_CANDIDATES_REQUIRE_DATED_TIMETABLE_RECOMPUTATION")
         if "public_transport" in profile.passenger_modes and inputs.timetable is None:
             raise ValueError("DATED_TIMETABLE_REQUIRED_FOR_PUBLIC_TRANSPORT")
     elif isinstance(inputs, IntercityInputs):
+        verify_timetable_source(
+            snapshot,
+            inputs.timetable,
+            inputs.timetable_service_clock,
+            {binding.transport_type: binding.mode for binding in inputs.transport_modes},
+        )
         scope = inputs.scope.comparison_scope
         if (scope.origin_territory_id, scope.destination_territory_id) != (
             profile.origin_id,
@@ -342,13 +387,64 @@ def validate_inputs(
             inputs.coverage.direction != profile.direction
         ):
             raise ValueError("RUNTIME_CARGO_PROFILE_OR_DIRECTION_MISMATCH")
-        accepted_ids = {site.site_id for site in snapshot.freight_sites}
+        accepted_ids = {
+            site.site_id for site in snapshot.freight_sites if site.territory_id == profile.city_id
+        }
         if not set(inputs.coverage.expected_site_ids) <= accepted_ids:
             raise ValueError("RUNTIME_CARGO_SITE_OUTSIDE_SNAPSHOT")
-        nodes = {node.freight_node_id: node for node in snapshot.freight_nodes}
+        if inputs.coverage.roster_complete and (
+            set(inputs.coverage.expected_site_ids) != accepted_ids
+            or {site.site_id for site in inputs.sites} != accepted_ids
+        ):
+            raise ValueError("OMITTED_ACCEPTED_SITE_CANNOT_CLAIM_COMPLETE_ROSTER")
+        if {site.site_id for site in inputs.sites} - set(inputs.coverage.expected_site_ids):
+            raise ValueError("RUNTIME_CARGO_SITE_OUTSIDE_DECLARED_ROSTER")
+        territory = next(t for t in snapshot.territories if t.territory_id == profile.city_id)
+        if inputs.area_km2 != territory.area_km2:
+            raise ValueError("RUNTIME_CARGO_ADMINISTRATIVE_AREA_MISMATCH")
+        nodes = {
+            node.freight_node_id: node
+            for node in snapshot.freight_nodes
+            if node.territory_id == profile.city_id
+        }
         for node in inputs.nodes:
             if node.node_id not in nodes or node.canonical_kind != nodes[node.node_id].kind:
                 raise ValueError("RUNTIME_FREIGHT_NODE_SEMANTICS_MISMATCH")
+        canonical_kinds = {
+            "port": "port",
+            "rail_freight_station": "rail_terminal",
+            "terminal": "logistics_terminal",
+            "logistics_center": "logistics_terminal",
+        }
+        for kind in inputs.coverage.complete_node_types:
+            expected_nodes = {
+                node.freight_node_id
+                for node in nodes.values()
+                if node.kind == canonical_kinds.get(kind)
+            }
+            supplied_nodes = {node.node_id for node in inputs.nodes if node.analysis_type == kind}
+            if supplied_nodes != expected_nodes:
+                raise ValueError("OMITTED_ACCEPTED_NODE_CANNOT_CLAIM_COMPLETE_NODE_TYPE")
+        zone = ZoneInfo(snapshot.timezone)
+        first_day = profile.valid_from.astimezone(zone).date()
+        last_day = (profile.valid_to - timedelta(microseconds=1)).astimezone(zone).date()
+        if inputs.coverage.roster_complete or inputs.coverage.complete_node_types:
+            full_sources = [
+                scope
+                for scope in snapshot.coverage_by_mode_date_category
+                if profile.city_id in scope.territory_ids
+                and "road" in scope.modes
+                and not scope.categories
+                and scope.completeness == "full"
+                and bool(scope.source_refs)
+                and set(scope.source_refs) <= verified_evidence
+                and scope.valid_period.start is not None
+                and scope.valid_period.end is not None
+                and scope.valid_period.start <= first_day <= last_day <= scope.valid_period.end
+                and set(scope.source_refs) <= set(inputs.coverage.evidence_refs)
+            ]
+            if not full_sources:
+                raise ValueError("PARTIAL_CARGO_SOURCE_CANNOT_CLAIM_COMPLETE_INVENTORY")
         if any(route.requested_at != inputs.routes[0].requested_at for route in inputs.routes):
             raise ValueError("MIXED_STATIC_ROUTE_OBSERVATIONS")
     elif isinstance(inputs, (DeliveryInputs, PipelineInputs)):
