@@ -31,13 +31,13 @@ uv sync --frozen --all-packages --group dev --group notebooks --group ml
 После установки окружения из раздела выше выполните из корня:
 
 ```bash
-uv run --frozen --all-packages python scripts/restore-ml2-handoff.py
+.venv/bin/python scripts/restore-ml2-handoff.py
 ```
 
 Можно восстановить прямо из другого каталога:
 
 ```bash
-uv run --frozen --all-packages python scripts/restore-ml2-handoff.py \
+.venv/bin/python scripts/restore-ml2-handoff.py \
   --archive /path/to/ml2-handoff-2026-11-10.zip
 ```
 
