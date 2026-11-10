@@ -68,6 +68,26 @@ describe("contextual urban readiness facts", () => {
     expect(value.overview?.points).toEqual([]);
     expect(value.populationBasis).toBeNull();
   });
+  it("does not label the city index or its population basis as the requested area's facts", () => {
+    const { current, caps, result } = context();
+    const areaId = "synthetic-area";
+    current.areaId = areaId;
+    caps.areas = [{ area_id: areaId, city_id: current.cityId, name: "Синтетический район" }];
+    caps.urban_passenger_scopes = [{ ...airportScope(), whole_city: false, area_ids: [areaId] }];
+    result.request = toRequest(current, catalog, caps);
+    const city = result.scores.find((score) => score.name === "territory_index")!;
+    city.value = 85; city.status = "available";
+    city.aggregation_basis = { unit: "persons", population: 1000, coverage: 1, year: 2025, population_method: "synthetic", unknown_positive_weight: false };
+    const value = urbanReadiness(current, catalog, caps, result, false);
+    expect(value.saved).not.toBeNull();
+    expect(value.overview?.territoryScore).toBeNull();
+    expect(value.populationBasis).toBeNull();
+    render(createElement(UrbanReadiness, { value }));
+    expect(screen.getByText("Индекс выбранной территории")).toBeTruthy();
+    expect(screen.getByText("Не предоставлен.")).toBeTruthy();
+    expect(screen.queryByText("85 из 100")).toBeNull();
+    expect(screen.getByText("Полнота данных о населении не подтверждена.")).toBeTruthy();
+  });
   it("exposes only explicitly supplied population basis including zero, not whole-city completeness", () => {
     const { current, caps, result } = context();
     result.scores.find((score) => score.name === "territory_index")!.aggregation_basis = {
