@@ -50,7 +50,7 @@ export interface ApiDraft {
   date: string;
   slot: number;
   traffic: Schemas["Capabilities"]["traffic_modes"][number];
-  travel: "pt" | "walk" | "car";
+  travel: "" | "pt" | "walk" | "car";
   cats: Partial<Record<keyof typeof categoryIds, number>>;
   paxModes: string[];
   cargoModes: string[];
@@ -230,6 +230,7 @@ export function toRequest(
     destination_id: d.destinationId,
   };
   if (d.kind === "urban_passenger") {
+    if (!d.travel) throw new DraftError("travel", "Выберите способ передвижения для выбранного города");
     const entries = Object.entries(d.cats) as [
       keyof typeof categoryIds,
       number,

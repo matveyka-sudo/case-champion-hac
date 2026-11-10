@@ -22,6 +22,8 @@ describe("registered urban passenger scopes", () => {
     expect(() => toRequest({ ...draft(), travel: "pt" }, catalog, caps())).toThrow("способ передвижения недоступен");
     expect(() => toRequest({ ...draft(), cats: { c04: 2 } }, catalog, caps())).toThrow("всех выбранных категорий");
     expect(() => toRequest({ ...draft(), cityId: "city-1" }, catalog, caps())).toThrow("города нет зарегистрированного");
+    expect(() => toRequest({ ...draft(), travel: "" }, catalog, caps())).toThrow("Выберите способ передвижения");
+    expect(urbanScopeAvailability({ ...selection(), mode: "" }, [airportScope()]).problem?.field).toBe("travel");
   });
   it("cannot union categories from separate profiles or pick an ambiguous profile", () => {
     const c = caps();
@@ -92,5 +94,14 @@ describe("registered urban passenger scopes", () => {
     expect(apply).toHaveBeenCalledWith(expect.objectContaining({ date: "2026-11-10", slot: 0, travel: "walk", cityId: "city-2", snapshotId: "demo-snapshot", cats: { c08: 2 } }));
     expect(d.travel).toBe("pt");
     expect(d.date).toBe("2026-11-12");
+  });
+  it("does not offer another city's registered preset while inspecting an unavailable city", () => {
+    const c = caps();
+    const current = { ...selection(), cityId: "city-1", mode: "" as const };
+    render(createElement(UrbanScopeHelp, { state: urbanScopeAvailability(current, c.urban_passenger_scopes),
+      selection: current, draft: { ...draft(), cityId: "city-1", travel: "" }, caps: c, catalog, onApply: vi.fn() }));
+    expect(screen.getByText("Для выбранного города нет зарегистрированного расчёта.")).toBeTruthy();
+    expect(screen.queryByRole("combobox", { name: "Доступный набор параметров" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Использовать доступные параметры" })).toBeNull();
   });
 });
