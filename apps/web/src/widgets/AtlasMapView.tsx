@@ -11,8 +11,8 @@ export function AtlasStatus({ kind, title, subtitle, actions, comparison }: { ki
   return <div className="status panelc" data-s={kind} role="status" aria-live="polite"><span className="sdot" aria-hidden="true" />
     <span className="st"><b>{title}</b><span>{subtitle}</span></span>{actions}{comparison}</div>;
 }
-export function StateCard({ icon, title, description, actions, loading = false }: { icon: string; title: ReactNode; description: ReactNode; actions?: ReactNode; loading?: boolean }) {
-  return <MapOverlay position="center"><div className="statecard panelc" role="status"><span className="si"><Icon name={icon} className={loading ? "spin" : ""} /></span>
+export function StateCard({ icon, title, description, actions, loading = false, role = "status" }: { icon: string; title: ReactNode; description: ReactNode; actions?: ReactNode; loading?: boolean; role?: "status" | "alert" }) {
+  return <MapOverlay position="center"><div className="statecard panelc" role={role}><span className="si"><Icon name={icon} className={loading ? "spin" : ""} /></span>
     <h3>{title}</h3><p>{description}</p>{loading ? <div className="progress"><i /></div> : <div className="row-act">{actions}</div>}</div></MapOverlay>;
 }
 export function MapControls({ items, onAction }: { items: string[][]; onAction: (kind: string) => void }) {

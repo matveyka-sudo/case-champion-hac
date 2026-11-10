@@ -61,6 +61,18 @@ beforeEach(() => {
   vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
 });
 describe("explicit calculated-point focus", () => {
+  it("focuses a source-backed Moscow selection before analysis once and never initiates a calculation", () => {
+    const props = { result: null, scores: [], onSelect: vi.fn(), selection: null, zoomAction: { id: 0, kind: "home" } };
+    const view = render(createElement(ApiMap, { ...props, cityId: "" }));
+    view.rerender(createElement(ApiMap, { ...props, cityId: "moscow" }));
+    expect(drawn.views).toEqual([{ center: [55.75, 37.62], zoom: 10 }]);
+    view.rerender(createElement(ApiMap, { ...props, cityId: "moscow", selection: { entity_kind: "sample_point", entity_id: "unused" } }));
+    expect(drawn.views).toHaveLength(1);
+    view.rerender(createElement(ApiMap, { ...props, cityId: "moscow", zoomAction: { id: 1, kind: "home" } }));
+    expect(drawn.views).toHaveLength(2);
+    expect(drawn.layers).toHaveLength(0);
+  });
+
   it("opens only new DEMO analyses centrally, retains New Moscow, and preserves camera on before/after toggles", () => {
     const result = decode("AnalysisResult", structuredClone(resultRaw));
     result.snapshot_id = "demo-moscow-synthetic-camera";

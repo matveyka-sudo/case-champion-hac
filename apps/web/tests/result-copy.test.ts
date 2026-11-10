@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { measureLabel, noticeText, reasonText } from "../src/api/adapters/result";
+import { errorText, measureLabel, noticeText, reasonText } from "../src/api/adapters/result";
 
 describe("partial walk result explanations", () => {
   it("labels actual backend metrics without changing unknown names", () => {
@@ -69,4 +69,11 @@ describe("partial walk result explanations", () => {
     expect(reasonText("FUTURE_UNREVIEWED_REASON")).toBe("");
     expect(noticeText("FUTURE_UNREVIEWED_REASON")).toBe("Для результата указано дополнительное ограничение.");
   });
+});
+
+it("explains preparation failures while preserving the API error object", () => {
+  const error = { code: "RUNTIME_INPUTS_BUSY", message: "RUNTIME_INPUTS_BUSY", retryable: true };
+  expect(errorText(error)).toBe("Сервер подготавливает данные. Повторите расчёт чуть позже.");
+  expect(error.code).toBe("RUNTIME_INPUTS_BUSY");
+  expect(errorText({ message: "Engine not ready" })).toBe("Engine not ready");
 });
