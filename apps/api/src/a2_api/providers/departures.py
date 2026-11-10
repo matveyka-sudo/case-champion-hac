@@ -9,7 +9,7 @@ from a2_contracts.common import Identifier, valid_timezone
 from a2_contracts.v2.dataset import AcceptedData, Period
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from .rasp import Code, RaspDeparture, RaspError, RaspProvider, Transport
+from a2_api.providers.rasp import Code, RaspDeparture, RaspError, RaspProvider, Transport
 
 
 class _DTO(BaseModel):

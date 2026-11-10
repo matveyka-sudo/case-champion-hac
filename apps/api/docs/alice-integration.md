@@ -89,3 +89,17 @@ Expected status is `template` with `reason_code=DISABLED` and `analysis_result_h
 3. **One isolated LIVE E2E succeeded on 2026-11-09:** a single Alice Flash call through FastAPI returned a generated explanation of synthetic saved data; the existing PostgreSQL ledger recorded usage. The server stopped and both LIVE gates were left off. The actual organizer billing currency remains unconfirmed. This test does not authorize deployment, real data, tool calling, or additional paid calls.
 
 No public API endpoint or DTO field changed. Generated OpenAPI and JSON Schema remain unchanged. The existing eight tools stay on their read-only allowlist and access-scope checks; enabling model tool calling is a separate deployment decision.
+
+## Расположение после структурного разделения fix-fullstack
+
+Каноническая backend-фабрика — `a2_api.assistant.alice`, read-only adapters —
+`a2_api.assistant.tools`, scoped explanation orchestration —
+`a2_api.assistant.explanations`. PostgreSQL ledger/SQL —
+`a2_api.db.repositories.budget`; hook/settings и CLI —
+`a2_api.assistant.budget` и `a2_api.assistant.budget_cli`.
+Библиотека `packages/assistant` осталась в прежнем расположении; её обработка ответа Alice AI использует минимальный DTO и серверную сборку ExplanationContent.
+
+Все прежние module:function hooks и команды выше работают через compatibility
+facades. `a2_api.alice.build_assistant` сохраняет точку внедрения SDKTransport;
+paid-call gates, восемь read-only tools, budgets/timeouts/fallback и scope
+проверки сохранены. При выключенных tools разрешён один model call без retries. Тарифы и операционные лимиты этим переносом не пересматривались.

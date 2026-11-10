@@ -3,7 +3,7 @@
 import asyncio
 import re
 
-from a2_api.runtime import RuntimeSettings
+from a2_api.core.config import RuntimeSettings
 from alembic import context
 from sqlalchemy import Connection, text
 from sqlalchemy.engine import make_url
