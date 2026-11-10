@@ -127,6 +127,31 @@ def verify(args):
     print("Source graph, deployment binding, accepted data and real walk route verified")
 
 
+def product_check(args):
+    from a2_api.adapters.product_runtime import load_runtime, registry
+    from a2_api.core.config import RuntimeSettings
+
+    runtime = load_runtime()
+    if not runtime.profiles or len(runtime.profiles) != len(runtime.manifest.profiles):
+        raise RuntimeError("Every configured product profile must have valid accepted inputs")
+    if runtime.digest not in (RuntimeSettings().code_version or ""):
+        raise RuntimeError("Product manifest digest is missing from the code fingerprint")
+    if any(profile.executor == "walk_pilot" for profile, _ in runtime.profiles.values()):
+        verify(args)
+    registry()
+    print(
+        json.dumps(
+            {
+                "product_manifest_sha256": runtime.digest,
+                "verified_profiles": sorted(runtime.profiles),
+                "analysis_kinds": sorted(
+                    {profile.analysis_kind for profile, _ in runtime.profiles.values()}
+                ),
+            }
+        )
+    )
+
+
 async def worker_health():
     import asyncpg
     from a2_api.core.config import RuntimeSettings
@@ -155,6 +180,7 @@ def main():
     preparation.add_argument("--output", type=Path, required=True)
     commands.add_parser("graph-check")
     commands.add_parser("verify")
+    commands.add_parser("product-check")
     commands.add_parser("worker-health")
     args = parser.parse_args()
     if args.command == "prepare":
@@ -164,6 +190,8 @@ def main():
         print("Pinned source graph verified")
     elif args.command == "verify":
         verify(args)
+    elif args.command == "product-check":
+        product_check(args)
     else:
         asyncio.run(worker_health())
 

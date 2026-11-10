@@ -160,13 +160,53 @@ shutdown is `full down`; volume deletion is a separate explicit operator action.
 The API image contains the workspace source and all committed accepted-data
 collections, while `.dockerignore` excludes `.env`, local dependencies, secrets,
 raw data and graph artifacts. Rebuild from the integrated revision when new
-runtime owners land changes. Optional `A2_REGISTRY_HOOK`, `A2_PREFLIGHT_HOOK` and
-`A2_CALCULATION_HANDLER` variables can select reviewed product hooks. Place a
-hash-pinned product manifest and its relative input files in the deployment
-directory; configure `WAYDEX_PRODUCT_PATH=/runtime/manifest.json` and
-`WAYDEX_PRODUCT_SHA256` identically for API and worker. The product digest is
-included in the code fingerprint. Paid provider credentials are not part of this
-profile. A hook change requires its own real acceptance checks.
+runtime owners land changes.
+
+`compose.product.yaml` is the generic product deployment. Use
+`.env.product.example` for a new private environment and a new project/port.
+Place a hash-pinned product manifest and all its relative snapshot/input files
+in `WAYDEX_DEPLOYMENT_DIR`. Set `WAYDEX_PRODUCT_SHA256` and optionally
+`WAYDEX_PRODUCT_MANIFEST` (default `manifest.json`). This profile requires the
+integrated backend's `a2_api.adapters.product` hooks. It runs the same API/worker,
+migration and API-mode SPA path, with the product digest in both fingerprints.
+Accepted-input transit, pipeline and other profiles need no walk artifact,
+Valhalla graph or graph environment variables:
+
+```sh
+product() {
+  docker compose --env-file /absolute/path/to/private/product.env \
+    -f "$release/infra/full-stack/compose.product.yaml" "$@"
+}
+product config --quiet
+product build api web
+product up -d --no-build --wait --wait-timeout 180
+```
+
+The product readiness job calls the backend's real manifest loader and requires
+every configured profile to validate its input/snapshot/evidence/fingerprint.
+Unavailable scopes should be omitted from the configured manifest; they cannot
+silently enable a calculation kind. Generic startup validation does not execute
+transport calculations or establish physical graph minimum proofs. Run each
+enabled scope through its own real API/worker acceptance.
+
+If the manifest includes `executor=walk_pilot`, also provide the original walk
+variables from `.env.example` and the immutable derivative prepared above. Add
+the walk overlay to **every** command, for example:
+
+```sh
+docker compose --env-file /absolute/path/to/private/product-walk.env \
+  -f "$release/infra/full-stack/compose.product.yaml" \
+  -f "$release/infra/full-stack/compose.product-walk.yaml" \
+  up -d --no-build --wait --wait-timeout 180
+```
+
+The overlay adds source-bound graph verification and Valhalla, then observes the
+real walk route before allowing product migrations/API/worker to start. API and
+worker fingerprints contain both the product manifest and walk artifact hashes.
+An undeclared or missing physical walk runtime fails startup. Keep the walk-only
+`compose.yaml` project running independently while accepting a new product
+revision on a different port. Paid provider credentials are outside these
+profiles; provider hooks need a separate operator configuration and acceptance.
 
 `proof-builder.Dockerfile` is an optional isolated compiler image for the
 engine-owned native source-bound verifier. It links the installed pinned

@@ -47,6 +47,16 @@ missing ZeroMQ/date development headers. `pkg-config --libs libvalhalla`
 resolved the pinned Valhalla archive and shared dependencies. Builder image ID
 was `sha256:829fa84fde0e664a34fba73dc1c18e95a2a30309b6cf7ca4d3e45b5492439753`;
 binary SHA256 was
-`ce69e9e49e9779708948652bf8f6ab0b464e7fe29e27fa5905fa0f788298d35d`.
+`f87db95c3591e5e8312e76722c58e580207fbfed2d3dea2d0525a39e9e0c632a`
+after the engine owner's zero-fraction endpoint correction. Its source SHA256
+was `1f8512c8244cb1c3b3064022bca97db33c06296ba2e4d6fb4449a24df830c5ec`.
 Actual native export/replay belongs to the engine acceptance, separately from
 the deployment checks above.
+
+The generic `compose.product.yaml` was also rendered with the graph-free
+`.env.product.example`: exactly six services, no Valhalla/graph-check, no walk
+artifact environment and only runtime/observation mounts. Rendering the optional
+walk overlay confirmed that both fingerprints reach API/worker, the runtime
+checker receives the physical graph/parent mounts, and migration ordering is
+retained. Real unified-product startup awaits the integrated backend and an
+accepted product manifest; these structural checks are not a product-run claim.
