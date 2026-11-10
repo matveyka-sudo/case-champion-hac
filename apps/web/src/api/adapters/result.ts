@@ -9,6 +9,11 @@ export const statusText: Record<string, string> = {
   queued: "В очереди",
   running: "Расчёт выполняется",
 };
+export function proposalShiftText(seconds: number) {
+  const wholeMinutes = seconds % 60 === 0;
+  const value = wholeMinutes ? seconds / 60 : seconds;
+  return `Сдвиг отправления: ${value > 0 ? "+" : ""}${value.toLocaleString("ru")} ${wholeMinutes ? "мин" : "с"}`;
+}
 export const modeText: Record<string, string> = {
   walk: "Пешком",
   public_transport: "Общественный транспорт",
