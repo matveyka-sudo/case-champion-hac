@@ -268,18 +268,24 @@ def capture_walk_inventory(
         raise ValueError("ACCEPTED_BUNDLE_MANIFEST_CHANGED")
     for reference in bundle.manifest.files.values():
         capture.reference(producer_root, reference)
-    sources = [
-        row
-        for row in bundle.manifest.source_versions
-        if runtime.build.source_graph_version.startswith(row.dataset_id + ":")
-    ]
-    if len(sources) != 1:
-        raise ValueError("WALK_INPUT_SOURCE_VERSION_REQUIRED")
-    registered = dataset_manifest_path(sources[0].dataset_id)
-    source_hash = graph["source_manifest_sha256"]
-    capture.add(registered.parent, registered.name, source_hash, limit=_MIB)
-    capture.add(graph_root, "source-manifest.json", source_hash, limit=_MIB)
     markers = {"derivation", "upstream_source", "tool_installation"}
+    if "source_manifest_sha256" in graph:
+        sources = [
+            row
+            for row in bundle.manifest.source_versions
+            if runtime.build.source_graph_version.startswith(row.dataset_id + ":")
+        ]
+        if len(sources) != 1:
+            raise ValueError("WALK_INPUT_SOURCE_VERSION_REQUIRED")
+        registered = dataset_manifest_path(sources[0].dataset_id)
+        source_hash = graph["source_manifest_sha256"]
+        capture.add(registered.parent, registered.name, source_hash, limit=_MIB)
+        capture.add(graph_root, "source-manifest.json", source_hash, limit=_MIB)
+    elif markers & graph.keys():
+        raise ValueError("DERIVED_GRAPH_SOURCE_MANIFEST_PIN_REQUIRED")
+    # Reviewed legacy original-PBF graphs have no source-manifest FileRef.
+    # Their producer checksum/graph binding was already checked by load_binding;
+    # do not invent a new authority or rewrite that original graph manifest.
     if markers & graph.keys():
         if not markers <= graph.keys():
             raise ValueError("DERIVED_GRAPH_COMPLETE_PROVENANCE_REQUIRED")
