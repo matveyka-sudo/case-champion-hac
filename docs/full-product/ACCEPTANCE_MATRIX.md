@@ -11,21 +11,41 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 
 | Task | Owner / branch | Status | Delivery and independent acceptance |
 |---|---|---|---|
-| Dynamic dispatcher, all four kinds and pipeline | BACKEND / work/full-backend | RUNNING | Typed source-bound inputs, request-sensitive engine calls, canonical projection; negative semantic/hash/coverage tests; root diff and DB review |
+| Dynamic dispatcher, all four kinds and pipeline | BACKEND / work/full-backend | CHANGES_REQUIRED | Initial hooks integrated; independent review found cargo roster/area, dated-candidate replay and unverified completeness evidence defects. Corrections remain under review; no complete-data promotion |
 | Map/form/snapshot correctness | FRONTEND / work/full-frontend | RUNNING | Urban city guard, explicit snapshot selection, pipeline product binding, partial map, selected last returns; browser tests |
-| Actual graph minimum bounds | ML1 / work/full-ml1 | RUNNING | Source-bound graph export, independent lower bound and feasible upper bound, exact equality only with complete endpoint model; real measured replay |
-| External data restoration and normalized inputs | ML2 / work/full-ml2 | RUNNING | Immutable checksum-verified restore, accepted timetable adapter, per-profile source inventory; quarantine preserved |
-| Isolated API-mode stack | DEVOPS / work/full-devops | RUNNING | New Compose project, PostGIS, migrations, API, worker, Valhalla, SPA, resource bounds; clean checkout launch |
+| Actual graph minimum bounds | ML1 / work/full-ml1 | INTEGRATED | 34a04a8 independently reviewed and integrated; root repeated exact graph-bound calculation and 26 tests. Network gap remains 6 seconds; physical proof remains false. Tighter turn-state solver is a separate RUNNING task |
+| External data restoration and normalized inputs | ML2 / work/full-ml2 | INTEGRATED | Checksum restore and bounded GTFS adapter integrated; root replayed real Moscow route. Further source research 7ca61d3 in REVIEW; two candidate school-campus promotions being verified for a new immutable bundle |
+| Isolated API-mode stack | DEVOPS / work/full-devops | INTEGRATED | Clean fee4112d stack on 5191; root performed real browser request, job polling and saved result retrieval. Archive/remote source guards and explicit infrastructure/package CI checks integrated |
 | Independent reliability review | reviewer / read-only baseline | RUNNING | Reproducible defects with tests, then review delivered commits |
-| Selection-aware grounded Alice | root / integration branch | RUNNING | Metrics beyond first twenty remain explainable; fallback matches selected entity; no new LLM permissions |
-| Bounded resumable OD executor | BACKEND after dispatcher | PLANNED | Durable checkpoints/cache identity, fenced retries, cancel/deadline, deterministic atomic final publication |
-| Saved baseline scenario integration | BACKEND + ML1, approved shared contract | PLANNED | Dated physical executions, immutable overlay, before/after, negative effects, explicit user run |
+| Selection-aware grounded Alice | root / integration branch | INTEGRATED | a220985 + 140da8c + ef826f7 reviewed; selected metrics/scores use saved facts, combined bounded context, null/zero preserved. Frontend score claim rendering remains pending; no new paid calls |
+| Bounded resumable OD executor | BACKEND / work/full-backend | RUNNING | Private models/repository/IPC in isolated worktree; not enabled or accepted. Durable checkpoints/cache identity, fenced retries, cancel/deadline, deterministic atomic publication remain acceptance gates |
+| Saved baseline scenario integration | SCENARIOS / work/full-scenarios | RUNNING | Separate sixth Sol ultra executor owns new adapter modules only; private source-bound document and pure bridge implemented, tests/review/runtime hooks still pending |
 
 Six child threads were simultaneously active after runtime reconfiguration;
-all were requested as gpt-6.1-sol / ultra. Before reconfiguration the third child
-was rejected. Current practical evidence includes two ongoing implementation
-threads and four newly launched read-only audits, subsequently assigned work.
-It is not a claim that the earlier five-read-only probe succeeded.
+all were requested as gpt-6.1-sol / ultra. Runtime supplies seven slots including
+the coordinator. Before reconfiguration the third child was rejected; that
+earlier probe is not retroactively counted as a success. Completed DEVOPS work
+freed a slot for the independent scenario adapter implementation.
+
+## Independently repeated integration evidence
+
+At `fee4112d`, the coordinator used the actual browser UI on port 5191 to request
+Kaliningrad / school / walk / static, 2026-11-10 08:30 Europe/Kaliningrad.
+Job `a153ec33-7b5e-4251-b177-9582c153f3dd` produced saved analysis
+`068ac102-9fe3-4ff3-b018-d85dcf19fa7d`, result hash
+`07a075bcce1b27745898d9567c3ed1ae7acb95741218f7b2d70424a53e3b6759`.
+The UI displayed 9.1 minutes, partial coverage and no index. A fresh API retrieval
+returned the same stored analysis: 9.7 + 519.204 + 18.5 = 547.404 seconds,
+`MINIMUM_TIME_UNPROVEN`, null score, ranking disabled, full journey geometry null.
+This is a real partial browser E2E, not acceptance of the full product.
+
+For ML1 commit `34a04a8`, the coordinator independently checked all 15 recorded
+file hashes and re-executed the Python solver against the immutable native export
+in external run `min-turn-reviewed-20261110-v2`: 132,178 nodes, 300,288 edges,
+lower bound 514.484144449234 seconds, feasible upper 520.484144449234 seconds.
+The check took 3.213 seconds; this measures hash/export checking and the Python
+bound calculation, not a fresh native graph export. Physical bounds remain null,
+and no numerical index is established. The raw receipt and graph stay outside Git.
 
 ## Product gates
 

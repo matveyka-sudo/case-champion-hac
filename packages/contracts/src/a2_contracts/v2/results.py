@@ -162,6 +162,12 @@ class Score(ContractModel):
             return
         if self.calculation_kind is None:
             raise ValueError("Full intercity index requires explicit calculation semantics")
+        if _absence_score(self):
+            # An exhaustive no-route result is a separate boundary outcome;
+            # there is no observed time/reference ratio to supply as an operand.
+            if self.components or self.reference_ids:
+                raise ValueError("Confirmed absence cannot claim numerical calculation operands")
+            return
         if self.calculation_kind == "aggregate":
             if not self.components or any(c.kind != "score" for c in self.components):
                 raise ValueError("Full aggregate requires score operands")
@@ -225,6 +231,18 @@ class Score(ContractModel):
         return self
 
 
+def _absence_score(score: Score) -> bool:
+    """Canonical boundary state, not a substitute for the executor's route proof."""
+    return (
+        score.calculation_kind is not None
+        and score.reason_code == "NO_FEASIBLE_ROUTE"
+        and score.status == "available"
+        and score.value == 0
+        and score.completeness == "full"
+        and bool(score.evidence_refs)
+    )
+
+
 def validate_score_dependencies(metrics: list[Metric], scores: list[Score]) -> None:
     """Shared analysis/scenario invariants, without computing any domain formula."""
     metric_map = {metric.metric_id: metric for metric in metrics}
@@ -239,6 +257,23 @@ def validate_score_dependencies(metrics: list[Metric], scores: list[Score]) -> N
             return
         visiting.add(identifier)
         score = score_map[identifier]
+        if _absence_score(score):
+            if score.components or score.reference_ids:
+                raise ValueError("Confirmed absence cannot claim numerical calculation operands")
+            if not any(
+                metric.subject == score.subject
+                and metric.value is None
+                and metric.status == "not_applicable"
+                and metric.completeness == "full"
+                and metric.reason_code == "NO_FEASIBLE_ROUTE"
+                and metric.time_kind == "complete_chain"
+                and metric.unit == "seconds"
+                and metric.journey_id is None
+                and bool(metric.source_refs)
+                and set(metric.source_refs) <= set(score.evidence_refs)
+                for metric in metrics
+            ):
+                raise ValueError("Confirmed absence requires its scoped complete-chain placeholder")
         for component in score.components:
             dependencies = metric_map if component.kind == "metric" else score_map
             if component.id not in dependencies:
@@ -282,6 +317,7 @@ def validate_score_context(
             full
             and analysis_kind == "intercity_passenger"
             and score.calculation_kind == "aggregate"
+            and not _absence_score(score)
             and not has_path_operand(score)
         ):
             raise ValueError("Passenger aggregate requires its path operand")
@@ -450,6 +486,7 @@ class AnalysisResult(ContractModel):
             if (
                 self.analysis_kind == "intercity_cargo"
                 and score.status == "available"
+                and not _absence_score(score)
                 and not has_complete_chain_operand(score)
             ):
                 raise ValueError("Cargo delivery score needs a complete-chain time operand")
@@ -511,6 +548,10 @@ class AnalysisResult(ContractModel):
             return evaluated_journeys[score.score_id]
 
         def check_required_dependencies(score: Score) -> None:
+            if _absence_score(score):
+                # The matching full absent chain was checked by the shared
+                # dependency validator. A nonexistent route has no denominator.
+                return
             full = score.status == "available" and score.completeness == "full"
             required_references = set(score.reference_ids)
             kind = score.calculation_kind
