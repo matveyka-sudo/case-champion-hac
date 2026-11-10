@@ -63,3 +63,15 @@ async def test_runtime_refuses_database_with_only_historical_migration(database)
     await asyncio.to_thread(migrate, url, schema, "0001_jobs_runs", True)
     with pytest.raises(ValueError, match="migrations"):
         await open_pool(RuntimeSettings(database_url=url, database_schema=schema))
+
+
+@pytest.mark.asyncio
+async def test_runtime_requires_budget_migration_even_when_llm_is_disabled(database):
+    import asyncio
+
+    from apps.api.tests.migration_support import migrate
+
+    _, schema, url = database
+    await asyncio.to_thread(migrate, url, schema, "0003_evidence_search", True)
+    with pytest.raises(ValueError, match="migrations"):
+        await open_pool(RuntimeSettings(database_url=url, database_schema=schema))

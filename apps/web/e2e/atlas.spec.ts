@@ -1,0 +1,373 @@
+import { test, expect, type Locator } from "@playwright/test";
+// Stable network fixtures: analytic layers do not depend on a public tile service.
+test.beforeEach(async ({ page }) => {
+  await page.route("https://tile.openstreetmap.org/**", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "image/png",
+      body: Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aCMsAAAAASUVORK5CYII=",
+        "base64",
+      ),
+    }),
+  );
+});
+test("landing, transport tabs, anchors and browser navigation", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
+    "Связи территорий.",
+  );
+  await page.getByRole("tab", { name: "Грузы", exact: true }).click();
+  await expect(page.getByRole("tab", { name: /Трубопроводный/ })).toBeVisible();
+  await page
+    .locator("#lpHeader")
+    .getByRole("link", { name: /Открыть атлас/ })
+    .click();
+  await expect(page.locator("#atlas")).toBeVisible();
+  await page.goBack();
+  await expect(page.locator("#landing")).toBeVisible();
+});
+test("city selection, states and time never invent fresh values", async ({
+  page,
+}) => {
+  await page.goto("/#atlas");
+  await page
+    .locator("#filters")
+    .getByRole("button", { name: "Москва", exact: true })
+    .click();
+  await expect(page.locator(".ctx .bignum")).toContainText("44");
+  await page.locator("#timedock input[type=range]").fill("80");
+  await expect(page.locator(".status")).toContainText("Параметры изменены");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator(".ctx .bignum")).toContainText("44");
+  await page.locator("#timedock .td-run").click();
+  await expect(page.locator(".status")).toContainText(
+    "Демо-результат только для одного времени",
+  );
+  await page.locator(".status").getByRole("button", { name: "08:30" }).click();
+  await expect(page.locator(".status")).toContainText("Результат получен");
+});
+test("cancels a pending response after parameters change", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/#atlas");
+  await page
+    .locator("#filters")
+    .getByRole("button", { name: "Москва", exact: true })
+    .click();
+  await page.locator("#timedock .td-run").click();
+  await page.locator("#timedock input[type=range]").fill("81");
+  await page.waitForTimeout(1700);
+  await expect(page.locator(".status")).toContainText("Параметры изменены");
+  await expect(page.locator("#timedock .td-now")).toHaveText("20:15");
+});
+test("chat suggestion and scenario use the same results as the map", async ({
+  page,
+}) => {
+  await page.goto("/#atlas");
+  await page
+    .locator("#filters")
+    .getByRole("button", { name: "Москва", exact: true })
+    .click();
+  await page
+    .locator(".ctx-actions")
+    .getByRole("button", { name: "Проанализировать", exact: true })
+    .click();
+  await expect(page.locator(".proposal")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Проверить сценарий", exact: true })
+    .click();
+  await expect(page.locator(".msg.a").last()).toContainText("с 44 до 36 минут");
+  await expect(page.locator(".basecmp")).toBeVisible();
+  await expect(page.locator(".ctx .bignum")).toContainText("36");
+  await page
+    .locator(".basecmp")
+    .getByRole("button", { name: "База", exact: true })
+    .click();
+  await expect(page.locator(".ctx .bignum")).toContainText("44");
+});
+test("free question is safe text and does not pretend to call AI", async ({
+  page,
+}) => {
+  await page.goto("/#atlas");
+  await page.getByRole("button", { name: "Агент", exact: true }).click();
+  const unsafeMessage = String.fromCharCode(60) + "img src=x onerror=alert(1)>";
+  await page.getByLabel("Вопрос агенту").fill(unsafeMessage);
+  await page.getByRole("button", { name: "Отправить", exact: true }).click();
+  await expect(page.locator(".msg.u")).toHaveText(unsafeMessage);
+  await expect(page.locator(".msg.a").last()).toContainText(
+    "агент не подключён",
+  );
+  await expect(page.locator(".msg.u img")).toHaveCount(0);
+});
+test("passenger direction and freight scopes are separate", async ({
+  page,
+}) => {
+  await page.goto("/#atlas");
+  await page.locator("#modeTabs button").nth(1).click();
+  await expect(page.locator(".ctx")).toContainText("Москва → Калининград");
+  await page.getByRole("button", { name: "Поменять направление" }).click();
+  await expect(page.locator(".status")).toContainText("Параметры изменены");
+  await expect(page.locator(".ctx")).toContainText("Москва → Калининград");
+  await page.locator("#timedock .td-run").click();
+  await expect(page.locator(".ctx")).toContainText("Калининград → Москва");
+  await page.locator("#modeTabs button").nth(2).click();
+  await expect(page.locator(".ctx")).toContainText("Склад");
+  await page
+    .getByRole("button", { name: "Между территориями", exact: true })
+    .click();
+  await page.locator("#timedock .td-run").click();
+  await expect(page.locator(".ctx")).toContainText("Москва → Новороссийск");
+  const liquidCargo: Locator = page.getByRole("button", {
+    name: "Наливной",
+    exact: true,
+  });
+  await liquidCargo.click();
+  await expect(
+    page.getByRole("button", { name: "Газ", exact: true }),
+  ).toBeEnabled();
+});
+test("all eleven demo states can be selected without crashing", async ({
+  page,
+}) => {
+  await page.goto("/#atlas");
+  await page
+    .locator("#filters")
+    .getByRole("button", { name: "Москва", exact: true })
+    .click();
+  for (const name of [
+    "До расчёта",
+    "Параметры изменены",
+    "Расчёт выполняется",
+    "Результат получен",
+    "Частичный результат",
+    "Нет подтверждённых данных",
+    "Подтверждённо нет маршрута",
+    "Источник недоступен",
+    "Дата не поддерживается",
+    "Индекс ещё не рассчитан",
+    "Агент недоступен",
+  ]) {
+    await page.getByRole("button", { name: "Состояния", exact: true }).click();
+    await page
+      .locator("#statesMenu")
+      .getByRole("button", { name, exact: true })
+      .click();
+    await expect(page.locator("#atlas")).toBeVisible();
+  }
+  await expect(page.getByRole("alert")).toContainText(
+    "Агент временно недоступен",
+  );
+});
+test("mobile panels, range keyboard and absence of overflow", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/#atlas");
+  await page
+    .getByRole("button", { name: "Фильтры", exact: true })
+    .first()
+    .click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page
+    .locator("#filters")
+    .getByRole("button", { name: "Москва", exact: true })
+    .click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  const range = page.locator("#mTime input[type=range]");
+  await range.focus();
+  await page.keyboard.press("PageUp");
+  await expect(range).toHaveValue("38");
+  await expect(page.locator("#mTime .td-now")).toHaveText("09:30");
+  await page.locator(".m-btns").getByRole("button", { name: "Агент" }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  const fitsViewport = await page.evaluate<boolean>(() => {
+    return document.documentElement.scrollWidth <= window.innerWidth;
+  });
+  expect(fitsViewport).toBe(true);
+});
+
+test("scroll motion and reduced motion preserve the content", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+  await expect(page.locator("#landing")).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 600));
+  await expect
+    .poll(() =>
+      page
+        .locator("#top")
+        .evaluate((el) =>
+          parseFloat((el as HTMLElement).style.getPropertyValue("--p")),
+        ),
+    )
+    .toBeGreaterThan(0.5);
+  await page.locator("#featTitle").scrollIntoViewIfNeeded();
+  await expect(page.locator("#featTitle")).toHaveClass(/is-in/);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator("#featTitle")).toHaveCSS("opacity", "1");
+});
+
+test("custom selectors support pointer, keyboard and dark theme", async ({
+  page,
+}) => {
+  await page.goto("/#atlas");
+  await page.locator("#modeTabs button").nth(1).click();
+  const selector = page.getByRole("combobox", { name: "Территория А" });
+  await selector.click();
+  await expect(
+    page.getByRole("listbox", { name: "Территория А" }),
+  ).toBeVisible();
+  await page.getByRole("option", { name: "Казань", exact: true }).click();
+  await expect(selector).toContainText("Казань");
+  await expect(selector).toHaveAttribute("aria-expanded", "false");
+  await selector.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(selector).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(selector).toContainText("Екатеринбург");
+  await page.getByRole("button", { name: "Тема: тёмная" }).click();
+  await selector.click();
+  await expect(page.getByRole("listbox", { name: "Территория А" })).toHaveCSS(
+    "background-color",
+    "rgb(20, 25, 71)",
+  );
+  await page.keyboard.press("Escape");
+  await expect(selector).toBeFocused();
+  await expect(selector).toHaveAttribute("aria-expanded", "false");
+});
+test("custom calendar selects a date and closes without hiding the atlas", async ({
+  page,
+}) => {
+  await page.goto("/#atlas");
+  const calendar = page
+    .locator("#timedock")
+    .getByRole("button", { name: "Выбрать дату" });
+  await calendar.click();
+  await expect(page.getByRole("dialog", { name: "Выбор даты" })).toBeVisible();
+  await page
+    .getByRole("button", { name: "среда, 11 ноября 2026 г.", exact: true })
+    .click();
+  await expect(calendar).toContainText("11.11.2026");
+  await expect(page.getByRole("dialog", { name: "Выбор даты" })).toBeHidden();
+  await expect(page.locator(".status")).toContainText("Параметры изменены");
+  await expect(calendar).toBeFocused();
+});
+
+test("city map zooms out to Russia and returns without replacing the map", async ({
+  page,
+}) => {
+  await page.goto("/#atlas");
+  await page
+    .locator("#filters")
+    .getByRole("button", { name: "Москва", exact: true })
+    .click();
+  const map = page.locator("#mapCity");
+  await expect(map.locator("canvas")).toBeVisible();
+  await map.evaluate((el) => el.setAttribute("data-instance-test", "original"));
+  await page
+    .getByRole("button", { name: "Показать всю территорию", exact: true })
+    .click();
+  await expect(map).toHaveAttribute("data-map-level", "0");
+  await expect(
+    map.getByText("Калининград · демо-данные", { exact: true }),
+  ).toHaveCount(1);
+  await expect(
+    map.getByText("Калининград · демо-данные", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    map.getByText("Новороссийск · демо-данные", { exact: true }),
+  ).toBeVisible();
+  await page.locator("#timedock input[type=range]").fill("80");
+  await expect(map).toHaveAttribute("data-map-level", "0");
+  await expect(map).toHaveAttribute("data-instance-test", "original");
+  await page
+    .getByRole("button", { name: "К выбранному городу", exact: true })
+    .click();
+  await expect(map).toHaveAttribute("data-map-level", "2");
+  await expect(map.locator("canvas")).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page
+    .getByRole("button", { name: "Показать всю территорию", exact: true })
+    .click();
+  await expect(map).toHaveAttribute("data-map-level", "0");
+  await expect(
+    map.getByText("Калининград · демо-данные", { exact: true }),
+  ).toHaveCount(1);
+  await expect(
+    map.getByText("Калининград · демо-данные", { exact: true }),
+  ).toBeVisible();
+});
+
+test("chat cancels old context and refuses a scenario without a current result", async ({
+  page,
+}) => {
+  await page.goto("/#atlas");
+  await page
+    .locator("#filters")
+    .getByRole("button", { name: "Москва", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Агент", exact: true }).click();
+  const input = page.getByLabel("Вопрос агенту");
+  await input.fill("Почему здесь низкая доступность поликлиник?");
+  await page.getByRole("button", { name: "Отправить", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Проверить сценарий", exact: true }),
+  ).toBeVisible();
+  await page.locator("#timedock input[type=range]").fill("80");
+  await expect(page.locator(".ch-log .msg")).toHaveCount(0);
+  await input.fill("Почему здесь низкая доступность поликлиник?");
+  await page.getByRole("button", { name: "Отправить", exact: true }).click();
+  await expect(page.locator(".ch-log")).toContainText(
+    "нет готового демо-результата",
+  );
+  await expect(
+    page.getByRole("button", { name: "Проверить сценарий", exact: true }),
+  ).toHaveCount(0);
+});
+
+test("missing results are hidden on mobile and in intercity cards", async ({
+  page,
+}) => {
+  await page.goto("/#atlas");
+  await page
+    .locator("#filters")
+    .getByRole("button", { name: "Москва", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Состояния", exact: true }).click();
+  await page
+    .locator("#statesMenu")
+    .getByRole("button", { name: "Нет подтверждённых данных", exact: true })
+    .click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator(".m-sum")).toContainText("результата нет");
+  await expect(page.locator(".m-sum")).not.toContainText("индекс 36");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.locator("#modeTabs button").nth(1).click();
+  await page.getByRole("button", { name: "Состояния", exact: true }).click();
+  await page
+    .locator("#statesMenu")
+    .getByRole("button", { name: "Нет подтверждённых данных", exact: true })
+    .click();
+  await expect(page.locator(".ctx")).toContainText("Результата нет");
+  await expect(page.locator(".ctx")).not.toContainText("2 ч 10 мин");
+});
+
+test("overview map preserves its zoom when closing the card", async ({
+  page,
+}) => {
+  await page.goto("/#atlas");
+  const group = page.locator("#mapRussia svg > g").first();
+  await expect(group).toBeVisible();
+  await page.getByRole("button", { name: "Приблизить", exact: true }).click();
+  await expect(group).toHaveAttribute("transform", /scale\(1.5\)/);
+  const transform = await group.getAttribute("transform");
+  await page
+    .getByRole("button", { name: "Закрыть карточку", exact: true })
+    .click();
+  await expect(group).toHaveAttribute("transform", transform!);
+});

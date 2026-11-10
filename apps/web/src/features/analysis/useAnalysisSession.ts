@@ -1,0 +1,278 @@
+import { useEffect, useRef, useState } from "react";
+import { BackendGateway, backend } from "../../api/gateway";
+import { ApiError } from "../../api/client";
+import type {
+  AnalysisRequest,
+  AnalysisResult,
+  Schemas,
+  Selection,
+} from "../../api/types";
+export interface ChatMessage {
+  question: string;
+  answer: Schemas["Explanation"];
+}
+export function useAnalysisSession(gateway: BackendGateway = backend) {
+  const [result, setResult] = useState<AnalysisResult | null>(null),
+    [scenario, setScenario] = useState<Schemas["ScenarioResult"] | null>(null),
+    [proposals, setProposals] = useState<Schemas["ScenarioProposal"][]>([]),
+    [job, setJob] = useState<
+      Schemas["JobAccepted"] | Schemas["JobView"] | null
+    >(null),
+    [phase, setPhase] = useState("idle"),
+    [error, setError] = useState<Error | null>(null),
+    [warning, setWarning] = useState(""),
+    [messages, setMessages] = useState<ChatMessage[]>([]),
+    [chatBusy, setChatBusy] = useState(false),
+    [dirty, setDirty] = useState(false);
+  const revision = useRef(0),
+    active = useRef<AbortController | null>(null),
+    chat = useRef<AbortController | null>(null),
+    currentResult = useRef<AnalysisResult | null>(null),
+    proposalAbort = useRef<AbortController | null>(null),
+    busy = useRef(false);
+  useEffect(
+    () => () => {
+      active.current?.abort();
+      chat.current?.abort();
+      proposalAbort.current?.abort();
+    },
+    [],
+  );
+  const changed = () => {
+    revision.current++;
+    active.current?.abort();
+    chat.current?.abort();
+    proposalAbort.current?.abort();
+    busy.current = false;
+    setJob(null);
+    setPhase("idle");
+    setDirty(!!currentResult.current);
+    setScenario(null);
+    setProposals([]);
+    setMessages([]);
+    setChatBusy(false);
+    setError(null);
+    setWarning("");
+  };
+  const loadProposals = (value: AnalysisResult) => {
+    const controller = new AbortController();
+    proposalAbort.current?.abort();
+    proposalAbort.current = controller;
+    const rev = revision.current;
+    void gateway
+      .proposals(value.analysis_id, controller.signal)
+      .then((items) => {
+        if (rev === revision.current && !controller.signal.aborted) {
+          setProposals(
+            items.filter(
+              (p) =>
+                p.baseline_analysis_id === value.analysis_id &&
+                p.baseline_result_hash === value.result_hash,
+            ),
+          );
+        }
+      })
+      .catch((e) => {
+        if (!controller.signal.aborted && rev === revision.current)
+          setWarning(
+            "Предложения сценариев недоступны. " +
+              (e instanceof Error ? e.message : ""),
+          );
+      });
+  };
+  const run = async (request: AnalysisRequest) => {
+    if (busy.current) return;
+    busy.current = true;
+    active.current?.abort();
+    chat.current?.abort();
+    setChatBusy(false);
+    setMessages([]);
+    setScenario(null);
+    setProposals([]);
+    setWarning("");
+    proposalAbort.current?.abort();
+    const controller = new AbortController();
+    active.current = controller;
+    const rev = revision.current;
+    setPhase("running");
+    setError(null);
+    try {
+      const value = await gateway.analyze(
+        request,
+        crypto.randomUUID(),
+        controller.signal,
+        (j) => {
+          if (rev === revision.current && !controller.signal.aborted) setJob(j);
+        },
+      );
+      if (rev !== revision.current || controller.signal.aborted) return;
+      if (!value) {
+        setPhase("cancelled");
+        return;
+      }
+      currentResult.current = value;
+      setResult(value);
+      setDirty(false);
+      setPhase("done");
+      loadProposals(value);
+    } catch (e) {
+      if (!controller.signal.aborted && rev === revision.current) {
+        setError(e instanceof Error ? e : new Error("Ошибка расчёта"));
+        setPhase("failed");
+      }
+    } finally {
+      if (active.current === controller) {
+        busy.current = false;
+      }
+    }
+  };
+  const runScenario = async (proposal: Schemas["ScenarioProposal"]) => {
+    const base = currentResult.current;
+    if (
+      busy.current ||
+      dirty ||
+      !base ||
+      !proposal.editable_local_graph ||
+      proposal.baseline_analysis_id !== base.analysis_id ||
+      proposal.baseline_result_hash !== base.result_hash
+    )
+      return;
+    busy.current = true;
+    active.current?.abort();
+    const controller = new AbortController();
+    active.current = controller;
+    const rev = revision.current;
+    setPhase("running");
+    setError(null);
+    try {
+      const accepted = await gateway.scenario(
+        proposal.scenario_id,
+        crypto.randomUUID(),
+        controller.signal,
+      );
+      const j = await gateway.wait(accepted, controller.signal, (j) => {
+        if (rev === revision.current && !controller.signal.aborted) setJob(j);
+      });
+      if (controller.signal.aborted || rev !== revision.current) return;
+      if (j.status === "cancelled") {
+        setPhase("cancelled");
+        return;
+      }
+      if (!j.scenario_run_id) {
+        setError(
+          new ApiError(
+            0,
+            "invalid_response",
+            "Задание не содержит идентификатор сценария",
+          ),
+        );
+        setPhase("failed");
+        return;
+      }
+      const value = await gateway.scenarioResult(
+        j.scenario_run_id,
+        controller.signal,
+      );
+      if (controller.signal.aborted || rev !== revision.current) return;
+      if (
+        value.baseline_analysis_id !== base.analysis_id ||
+        value.baseline_result_hash !== base.result_hash
+      ) {
+        setError(
+          new ApiError(
+            409,
+            "baseline_mismatch",
+            "Сценарий относится к другой базе",
+          ),
+        );
+        setPhase("failed");
+        return;
+      }
+      setScenario(value);
+      setPhase("done");
+    } catch (e) {
+      if (!controller.signal.aborted && rev === revision.current) {
+        setError(e instanceof Error ? e : new Error("Ошибка сценария"));
+        setPhase("failed");
+      }
+    } finally {
+      if (active.current === controller) busy.current = false;
+    }
+  };
+  const cancel = async () => {
+    if (!job || !["queued", "running"].includes(job.status)) return;
+    const rev = revision.current;
+    try {
+      const value = await gateway.cancel(job.job_id);
+      if (rev !== revision.current) return;
+      setJob(value);
+      if (value.status === "cancelled") {
+        active.current?.abort();
+        busy.current = false;
+        setPhase("cancelled");
+      }
+    } catch (e) {
+      if (rev === revision.current)
+        setError(e instanceof Error ? e : new Error("Не удалось отменить"));
+    }
+  };
+  const explain = async (question: string, selection: Selection | null) => {
+    const base = currentResult.current;
+    const q = question.trim();
+    if (!base || !q || q.length > 2000 || chatBusy) return;
+    chat.current?.abort();
+    const controller = new AbortController();
+    chat.current = controller;
+    const rev = revision.current;
+    setChatBusy(true);
+    setError(null);
+    try {
+      const answer = await gateway.explain(
+        base.analysis_id,
+        {
+          schema_version: "2",
+          question: q,
+          ...(selection ? { selection } : {}),
+        },
+        controller.signal,
+      );
+      if (controller.signal.aborted || rev !== revision.current) return;
+      if (
+        answer.analysis_id !== base.analysis_id ||
+        answer.analysis_result_hash !== base.result_hash
+      ) {
+        setError(
+          new ApiError(
+            409,
+            "analysis_mismatch",
+            "Объяснение относится к другому результату",
+          ),
+        );
+        return;
+      }
+      setMessages((m) => [...m, { question: q, answer }]);
+    } catch (e) {
+      if (!controller.signal.aborted && rev === revision.current)
+        setError(e instanceof Error ? e : new Error("Объяснение недоступно"));
+    } finally {
+      if (chat.current === controller) setChatBusy(false);
+    }
+  };
+  return {
+    result,
+    scenario,
+    proposals,
+    job,
+    phase,
+    error,
+    warning,
+    messages,
+    chatBusy,
+    dirty,
+    changed,
+    run,
+    runScenario,
+    cancel,
+    explain,
+  };
+}

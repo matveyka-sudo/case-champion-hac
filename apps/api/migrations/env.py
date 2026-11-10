@@ -1,9 +1,9 @@
 """Schema-isolated PostgreSQL migrations, using asyncpg only for the connection."""
 
 import asyncio
-import os
 import re
 
+from a2_api.core.config import RuntimeSettings
 from alembic import context
 from sqlalchemy import Connection, text
 from sqlalchemy.engine import make_url
@@ -11,14 +11,15 @@ from sqlalchemy.exc import ArgumentError
 from sqlalchemy.pool import NullPool
 
 config = context.config
-schema = config.attributes.get("database_schema", os.getenv("A2_DATABASE_SCHEMA", "a2_backend"))
+settings = RuntimeSettings()
+schema = config.attributes.get("database_schema", settings.database_schema)
 if not isinstance(schema, str) or re.fullmatch(r"[a-z][a-z0-9_]{0,62}", schema) is None:
     raise ValueError("Database schema must match ^[a-z][a-z0-9_]{0,62}$")
 config.attributes["database_schema"] = schema
 
-raw_url = config.attributes.get("database_url", os.getenv("A2_DATABASE_URL"))
+raw_url = config.attributes.get("database_url", settings.database_url)
 if not raw_url:
-    raise ValueError("Configure database_url or A2_DATABASE_URL for PostgreSQL")
+    raise ValueError("Configure database_url or DATABASE_URL for PostgreSQL")
 try:
     url = make_url(raw_url)
     if url.drivername not in {"postgres", "postgresql", "postgresql+asyncpg"}:

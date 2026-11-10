@@ -1,0 +1,296 @@
+/* React host integration; visual tokens and layout remain in prototype.css. */
+.map-wrapper {
+  position: absolute;
+  inset: 0;
+  transition: opacity 280ms;
+}
+.map-wrapper.dim {
+  opacity: 0.65;
+}
+.tile-note {
+  position: absolute;
+  left: 50%;
+  top: 84px;
+  transform: translateX(-50%);
+  z-index: 600;
+  max-width: 420px;
+  background: var(--surface);
+}
+.dropdown-menu.show {
+  right: 0;
+  left: auto;
+  top: 100%;
+}
+@media (max-width: 767.98px) {
+  .at-chat.is-closed {
+    display: none;
+  }
+  .at-filters:not(.m-open) {
+    visibility: hidden;
+  }
+  .at-map {
+    --sheet-h: 220px;
+  }
+}
+/* Keep Leaflet panes and map overlays below the application header dropdown. */
+.at-map {
+  isolation: isolate;
+}
+
+/* Header branding sits directly on the page, without a white capsule. */
+.lp-header .wordmark,
+.at-top .wordmark,
+[data-theme="dark"] .at-top .wordmark {
+  background: transparent;
+  box-shadow: none;
+}
+.lp-header:not(.is-solid) .wordmark .wm-dex {
+  color: var(--wx-white);
+}
+[data-theme="dark"] .at-top .wordmark .wm-dex {
+  color: var(--text);
+}
+
+/* Align the wordmark itself with the header's outer inset. */
+.lp-header .wordmark,
+.at-top .wordmark {
+  padding-left: 0;
+}
+
+/* Waydex pickers: custom surfaces in the browser top layer, not OS menus. */
+.wx-select {
+  width: 100%;
+  min-width: 0;
+}
+.wx-select-trigger {
+  width: 100%;
+  min-height: 46px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 10px 12px 10px 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.wx-select-trigger span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wx-select-trigger > .lucide {
+  width: 16px;
+  height: 16px;
+  color: var(--text-3);
+  transition: transform var(--t-fast);
+}
+.wx-select-trigger[aria-expanded="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.wx-select-trigger[aria-expanded="true"] > .lucide {
+  transform: rotate(180deg);
+}
+.wx-popup {
+  margin: 0;
+  padding: 6px;
+  border: 1px solid var(--line-2);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-2);
+  overflow: auto;
+  font-family: var(--f-ui), sans-serif;
+  font-size: 14px;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.wx-popup:popover-open {
+  animation: wx-picker-in 140ms var(--ease);
+}
+.wx-select-popup > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  text-align: left;
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+}
+.wx-select-popup > button:hover,
+.wx-select-popup > button:focus-visible {
+  background: var(--surface-2);
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent-soft);
+}
+.wx-select-popup > button[aria-selected="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 800;
+}
+.wx-select-popup > button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.wx-select-popup .lucide {
+  width: 16px;
+  height: 16px;
+}
+.wx-date-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 32px;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  padding: 3px 0;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.wx-date-trigger:hover,
+.wx-date-trigger[aria-expanded="true"] {
+  color: var(--accent);
+}
+.wx-calendar {
+  padding: 14px;
+  max-height: none !important;
+}
+.wx-calendar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.wx-calendar-head b {
+  font-size: 14px;
+  text-transform: capitalize;
+}
+.wx-calendar-head button {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+.wx-calendar-head button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.wx-calendar-week,
+.wx-calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  text-align: center;
+}
+.wx-calendar-week {
+  font-size: 11px;
+  color: var(--text-3);
+  font-weight: 700;
+  margin-bottom: 7px;
+}
+.wx-calendar-days button {
+  aspect-ratio: 1;
+  min-height: 32px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+}
+.wx-calendar-days button:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.wx-calendar-days button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.wx-calendar-days button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.wx-calendar p {
+  margin: 12px 0 0;
+  font-size: 10.5px;
+  color: var(--text-3);
+  text-align: center;
+}
+@keyframes wx-picker-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wx-popup:popover-open {
+    animation: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .atlas .ov-bottom .zgroup {
+    display: flex;
+    position: fixed;
+    right: 12px;
+    bottom: calc(var(--sheet-h, 196px) + 86px);
+  }
+  .atlas .ov-bottom .zgroup .zbtn {
+    width: 36px;
+    height: 40px;
+  }
+}
+
+.tr-stage-cargo .tr-list {
+  justify-content: center;
+}
+
+/* API adapter: existing Waydex tokens and controls, independent of demo fixtures. */
+.api-atlas .api-body{display:grid;grid-template-columns:var(--filters-w,308px) minmax(0,1fr);height:calc(100dvh - 64px);min-height:0}
+.api-atlas .api-body.with-chat{grid-template-columns:var(--filters-w,308px) minmax(0,1fr) 350px}
+.api-filters,.api-chat{background:var(--surface);padding:18px;overflow:auto;min-height:0;border-right:1px solid var(--line)}
+.api-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.api-atlas .api-map{position:relative;min-height:0;overflow:hidden;isolation:isolate}
+.api-status{position:absolute;z-index:450;top:18px;left:18px;max-width:calc(100% - 36px);padding:14px 18px;display:flex;flex-direction:column;gap:5px;font-size:13px}
+.api-status b{font-size:15px}.api-status span{overflow-wrap:anywhere;color:var(--text-2)}
+.api-error{position:absolute;z-index:480;top:115px;left:18px;max-width:calc(100% - 36px);padding:16px;border-left:4px solid var(--err);display:flex;flex-direction:column;gap:8px;font-size:13px;overflow-wrap:anywhere}
+.api-map-note,.api-overlay-note{position:absolute;left:18px;bottom:112px;z-index:450;background:var(--surface);padding:10px 14px;border-radius:14px;max-width:calc(100% - 36px);font-size:12px;color:var(--text-2)}
+.api-overlay-note{bottom:160px}.api-empty{position:absolute;top:35%;left:12%;width:70%;padding:25px;z-index:400}.api-empty p{font-size:14px;color:var(--text-2)}
+.api-card{position:absolute;z-index:440;right:18px;top:110px;bottom:120px;width:330px;max-width:calc(100% - 36px);overflow:auto}.api-card .ctx-b{overflow-wrap:anywhere}.api-card details{font-size:12px;margin:15px 0}.api-reopen{position:absolute;z-index:450;right:18px;top:170px}
+.api-measure{display:grid;gap:7px;padding:13px 0;border-bottom:1px solid var(--line);font-size:13px}.api-measure span small{display:block;font-size:11px;color:var(--text-3);margin-top:4px}.api-measure b{font-size:21px;color:var(--text)}.api-measure>small{color:var(--text-3);font-size:11px}
+.api-input{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;color:var(--text);padding:10px 12px;width:100%;font:inherit;font-size:13px}.api-category{padding:10px 0;display:flex;align-items:center;gap:8px;justify-content:space-between;border-bottom:1px solid var(--line)}.api-category label{font-size:12px;display:flex;align-items:center;gap:8px}.api-weight{border:0;border-radius:7px;background:var(--surface-2);font-size:11px;width:22px;height:26px;color:var(--text-2)}.api-weight[aria-pressed=true]{background:var(--accent);color:white}.api-field-error{display:block;font-size:12px;color:var(--err);margin:7px 0}
+.api-bottom{position:absolute;z-index:460;bottom:18px;left:18px;right:18px;display:flex;gap:12px;align-items:end}.api-bottom .timedock{width:auto;flex:1;min-width:0}.api-time{flex:1;min-width:90px;display:flex;flex-direction:column;gap:8px}.api-time input{width:100%;accent-color:var(--accent)}.api-time label{font-size:15px;font-weight:700}
+.api-chat{display:flex;flex-direction:column;gap:12px;border-left:1px solid var(--line)}.api-chat[hidden]{display:none}.api-chat-log{flex:1;overflow:auto;min-height:0}.api-chat .msg{font-size:13px;overflow-wrap:anywhere}.api-chat .composer{flex:none}.api-chat .composer textarea{min-width:0}.api-claim{border:0;border-radius:8px;background:var(--surface-2);color:var(--accent);padding:6px;text-align:left;font-size:12px;margin:3px}.api-mobile{display:none}.api-atlas .modes button[aria-pressed=true]{background:var(--accent);color:#fff}
+@media(max-width:1100px) and (min-width:768px){.api-atlas .api-body.with-chat{grid-template-columns:260px minmax(0,1fr)}.api-chat{position:absolute;z-index:700;right:0;top:64px;bottom:0;width:340px;box-shadow:var(--shadow-2)}.api-atlas .modes button{font-size:11px;padding:8px}.api-atlas .api-body{grid-template-columns:260px minmax(0,1fr)}}
+@media(max-width:767px){.api-mobile{display:flex}.api-atlas .api-body,.api-atlas .api-body.with-chat{display:block;height:calc(100dvh - 64px)}.api-atlas .api-map{height:100%}.api-atlas .at-top{padding:8px;gap:6px}.api-atlas .modes{max-width:calc(100vw - 180px);overflow:auto}.api-atlas .modes button{font-size:11px;padding:6px;flex:none}.api-filters,.api-chat{display:none;position:fixed;z-index:900;inset:64px 0 0;width:100%;padding:20px}.api-filters.m-open{display:block}.api-chat.m-open{display:flex}.api-card{top:180px;bottom:145px;width:calc(100% - 36px);max-height:45vh}.api-status{font-size:11px}.api-status b{font-size:12px}.api-bottom{flex-direction:column;align-items:stretch;bottom:12px;gap:6px}.api-bottom .timedock{display:flex;padding:10px;flex-wrap:wrap;gap:8px}.api-bottom .td-date{width:auto}.api-bottom .tz{display:none}.api-bottom .zgroup{align-self:flex-end}.api-bottom .zbtn{width:34px;height:34px}.api-empty{top:35%;font-size:13px}.api-atlas .badge-s{display:none}}
