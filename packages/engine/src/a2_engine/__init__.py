@@ -423,7 +423,6 @@ __all__ = [
     "prepare_walk_inputs",
     "plan_walk_routes",
     "analyze_walk_responses",
-    "analyze_normalized_walk_routes",
     "UrbanOriginalCell",
     "UrbanDistrict",
     "UrbanDistrictShare",
@@ -625,3 +624,6 @@ __all__ += [
     "apply_scenario_overlay",
     "execution_hash",
 ]
+
+# Additions append to preserve the versioned public export order.
+__all__ += ["analyze_normalized_walk_routes"]
