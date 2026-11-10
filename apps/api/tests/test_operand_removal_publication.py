@@ -3,10 +3,10 @@
 from hashlib import sha256
 
 import pytest
-from a2_api.analysis_service import AnalysisService
-from a2_api.api_v2 import create_app
-from a2_api.storage import JobRepository
-from a2_api.worker import Worker
+from a2_api.api.application import create_app
+from a2_api.db.repositories.jobs import JobRepository
+from a2_api.services.analyses import AnalysisService
+from a2_api.workers.runner import Worker
 from httpx import ASGITransport, AsyncClient
 from test_v2_storage import context, request, result
 

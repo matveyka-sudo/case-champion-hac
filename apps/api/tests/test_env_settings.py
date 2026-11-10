@@ -6,10 +6,10 @@ import sys
 from pathlib import Path
 
 import pytest
-from a2_api.alice import AliceSettings, build_assistant
-from a2_api.analysis_service import AnalysisService
-from a2_api.budget_hook import BudgetSettings
-from a2_api.runtime import RuntimeSettings
+from a2_api.assistant.alice import AliceSettings, build_assistant
+from a2_api.assistant.budget import BudgetSettings
+from a2_api.core.config import RuntimeSettings
+from a2_api.services.analyses import AnalysisService
 
 
 def test_local_dotenv_uses_current_names_and_keeps_live_disabled(monkeypatch, tmp_path):
@@ -36,8 +36,8 @@ def test_local_dotenv_uses_current_names_and_keeps_live_disabled(monkeypatch, tm
     budget = BudgetSettings()
     assert runtime.database_url == "postgresql://a2:private@127.0.0.1:5432/a2"
     assert runtime.database_schema == "a2_backend"
-    assert runtime.assistant_hook == "a2_api.alice:build_assistant"
-    assert alice.assistant_budget_hook == "a2_api.budget_hook:build_budget"
+    assert runtime.assistant_hook == "a2_api.assistant.alice:build_assistant"
+    assert alice.assistant_budget_hook == "a2_api.assistant.budget:build_budget"
     assert alice.assistant_tools_enabled is False
     assert alice.alice_billing_currency_confirmed is False
     assert budget.alice_budget_limit == 10 and budget.alice_token_limit == 50000
@@ -69,9 +69,9 @@ def test_conflicting_aliases_fail_without_values(
 def test_legacy_names_remain_readable_without_conflict(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("A2_DATABASE_URL", "postgresql://legacy@localhost/a2")
-    monkeypatch.setenv("A2_ASSISTANT_HOOK", "a2_api.alice:build_assistant")
+    monkeypatch.setenv("A2_ASSISTANT_HOOK", "a2_api.assistant.alice:build_assistant")
     assert RuntimeSettings().database_url == "postgresql://legacy@localhost/a2"
-    assert RuntimeSettings().assistant_hook == "a2_api.alice:build_assistant"
+    assert RuntimeSettings().assistant_hook == "a2_api.assistant.alice:build_assistant"
 
 
 def test_alembic_reads_local_dotenv(database, tmp_path):

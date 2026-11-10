@@ -33,7 +33,7 @@ DTO четырёх видов анализа, отдельные Metric и Score
 
 ## Контракт 2.0.0 — адаптация к PRODUCT_SPEC 2026-11-08.1
 
-Текущая реализация использует `a2_contracts.v2`, `a2_api.api_v2` и production factory v2 по умолчанию. Исторические записи выше относятся только к прежним выпускам; их региональные/профильные правила не являются текущим scope. Конфигурация продукта и утверждённые методики берутся из `config/product.json` и FORMULAS.
+Текущая реализация использует `a2_contracts.v2`, `a2_api.api.application` и production factory `a2_api.api.bootstrap.build_app` по умолчанию. Исторические записи выше относятся только к прежним выпускам; их региональные/профильные правила не являются текущим scope. Конфигурация продукта и утверждённые методики берутся из `config/product.json` и FORMULAS.
 
 - [x] DTO четырёх видов, tagged requests, отдельные Metric/Score, nullable states, availability/completeness и cross-field validators.
 - [x] Accepted snapshot schema: QA/evidence/FK, registry ownership, grid/sample/population, service dates/night times, freight/pipeline/reference/traffic.
@@ -49,7 +49,7 @@ DTO четырёх видов анализа, отдельные Metric и Score
 
 Фактическая итоговая проверка: **465 passed, 0 skipped**, включая отдельные процессы API/worker для v2 и legacy, scoped idempotency/cache/cancel, атомарные server proposals и неизменность baseline после сценария. Исправлены найденные review проблемы: versioned template ID отделён от operation enum; calendar tool ограничен территорией и принятым периодом; эквивалентные offset timestamps сравниваются как один instant; scope симметрично изолирует legacy/v2; cache hit не продлевает source TTL.
 
-Команды из README: full pytest с `A2_TEST_DATABASE_URL` и `PYTHONPATH` трёх src-пакетов; Ruff check/format — 80 файлов; strict mypy — 39 source files; `a2_api.export --check`; `scripts/check_product_config.py`; pinned uv pip check — 57 compatible packages; `git diff --check`. Все перечисленные проверки прошли. Paid/provider live вызовы не выполнялись. Автоматическое планирование отдельного τ-расчёта требует согласования реального ML1 adapter; DTO позволяет pending и отдельный dependency job, но выдуманный τ не создаётся.
+Команды из README: full pytest с `A2_TEST_DATABASE_URL` и `PYTHONPATH` трёх src-пакетов; Ruff check/format — 80 файлов; strict mypy — 39 source files; проверка экспорта схем; `scripts/check_product_config.py`; pinned uv pip check — 57 compatible packages; `git diff --check`. Все перечисленные проверки прошли. Paid/provider live вызовы не выполнялись. Автоматическое планирование отдельного τ-расчёта требует согласования реального ML1 adapter; DTO позволяет pending и отдельный dependency job, но выдуманный τ не создаётся.
 
 После fetch проверена `origin/work/ml1` (`a117340`): математический слой уже есть; он не содержит маршрутизацию/эталонный граф/применение сценария и пока не входит в текущий dev checkout. Не дублировать его формулы; подключить после согласованного слияния и поставки accepted данных.
 

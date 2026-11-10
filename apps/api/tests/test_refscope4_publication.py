@@ -3,11 +3,11 @@
 from hashlib import sha256
 
 import pytest
-from a2_api.analysis_service import AnalysisService
-from a2_api.api_v2 import create_app
-from a2_api.jobs import V2JobContext
-from a2_api.storage import JobRepository
-from a2_api.worker import Worker
+from a2_api.api.application import create_app
+from a2_api.core.jobs import V2JobContext
+from a2_api.db.repositories.jobs import JobRepository
+from a2_api.services.analyses import AnalysisService
+from a2_api.workers.runner import Worker
 from a2_contracts.v2.requests import parse_analysis_request
 from httpx import ASGITransport, AsyncClient
 from refscope4_handlers import raw_case

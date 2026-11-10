@@ -1,6 +1,6 @@
 # Waydex → API v2: передача FRONTEND
 
-Основание: PRODUCT_SPEC 2026-11-08.1, ASSISTANT, IMPLEMENTATION; текущий API `a2_api.api_v2`, `contracts/generated/openapi.json`. Ветки для чтения: `origin/dev=c783435`, `origin/work/frontend=cddfa34`; проверены README, AtlasPage, AgentChat, FiltersPanel, gateway, state, model. Эти файлы не изменялись. Дизайн остаётся прежним; требуется frontend gateway и привязка существующих widgets к DTO.
+Основание: PRODUCT_SPEC 2026-11-08.1, ASSISTANT, IMPLEMENTATION; текущий API `a2_api.api.application`, `contracts/generated/openapi.json`. Ветки для чтения: `origin/dev=c783435`, `origin/work/frontend=cddfa34`; проверены README, AtlasPage, AgentChat, FiltersPanel, gateway, state, model. Эти файлы не изменялись. Дизайн остаётся прежним; требуется frontend gateway и привязка существующих widgets к DTO.
 
 ## 1. Последовательность
 

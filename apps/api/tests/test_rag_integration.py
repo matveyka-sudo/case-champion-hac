@@ -4,11 +4,11 @@ import json
 from decimal import Decimal
 
 import pytest
-from a2_api.analysis_service import AnalysisService
-from a2_api.evidence_search import EvidenceRepository
-from a2_api.storage import JobRepository
-from a2_api.tool_services import SavedTools
-from a2_api.worker import Worker
+from a2_api.assistant.tools import SavedTools
+from a2_api.db.repositories.evidence import EvidenceRepository
+from a2_api.db.repositories.jobs import JobRepository
+from a2_api.services.analyses import AnalysisService
+from a2_api.workers.runner import Worker
 from a2_assistant import AccessScope, FlashAssistant, FlashConfig
 from a2_assistant.transport import ModelReply
 from a2_contracts.common import canonical_hash

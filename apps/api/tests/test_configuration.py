@@ -1,8 +1,9 @@
 import json
 
 import pytest
-from a2_api.app import create_app
-from a2_api.configuration import CatalogConfig, CatalogServices, load_catalog
+from a2_api.api.legacy import create_app
+from a2_api.core.catalog import CatalogConfig, load_catalog
+from a2_api.services.catalog import CatalogServices
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 

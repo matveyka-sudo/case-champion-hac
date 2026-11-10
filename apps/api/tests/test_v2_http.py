@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
-from a2_api.api_v2 import create_app
+from a2_api.api.application import create_app
 from fastapi.testclient import TestClient
 
 FIXTURES = Path(__file__).resolve().parents[3] / "packages/contracts/fixtures/v2"

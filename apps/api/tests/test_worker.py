@@ -2,8 +2,8 @@ import asyncio
 import os
 
 import pytest
-from a2_api.storage import JobRepository
-from a2_api.worker import Worker
+from a2_api.db.repositories.jobs import JobRepository
+from a2_api.workers.runner import Worker
 from test_storage import context, request
 
 

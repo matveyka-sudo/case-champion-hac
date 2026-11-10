@@ -6,9 +6,9 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-from a2_api import jobs
+from a2_api.core import jobs
+from a2_api.db.repositories.jobs import JobRepository
 from a2_api.services import DomainError
-from a2_api.storage import JobRepository
 from a2_contracts.common import canonical_hash
 from a2_contracts.v2.requests import parse_analysis_request
 from a2_contracts.v2.results import AnalysisResult
@@ -418,7 +418,7 @@ async def test_cancellation_and_expired_claim_fence_publication_without_auto_ret
 
 
 def synthetic_success(claim):
-    from a2_api.jobs import CalculationOutput
+    from a2_api.core.jobs import CalculationOutput
 
     saved = result(claim.context.normalized_request.analysis_kind, claim.context.analysis_id)
     return CalculationOutput(analysis=saved, proposals=[proposal(saved)])
@@ -426,7 +426,7 @@ def synthetic_success(claim):
 
 @pytest.mark.asyncio
 async def test_spawned_worker_can_publish_v2_analysis_and_proposals(database):
-    from a2_api.worker import Worker
+    from a2_api.workers.runner import Worker
 
     pool, _, _ = database
     repo = JobRepository(pool)
@@ -448,7 +448,7 @@ async def test_worker_cancellation_reaps_child_and_preserves_cancelled_state(
 ):
     import os
 
-    from a2_api.worker import Worker
+    from a2_api.workers.runner import Worker
 
     pool, _, _ = database
     repo = JobRepository(pool)

@@ -6,8 +6,8 @@ import sys
 from pathlib import Path
 
 import pytest
-from a2_api.storage import JobRepository
-from a2_api.worker import Worker
+from a2_api.db.repositories.jobs import JobRepository
+from a2_api.workers.runner import Worker
 from test_storage import context, request
 
 
@@ -40,7 +40,7 @@ async def test_worker_parent_loss_cannot_leave_a_calculation_orphan(
         ),
     }
     parent = subprocess.Popen(
-        [sys.executable, "-m", "a2_api.runtime", "worker", "--once"],
+        [sys.executable, "-m", "a2_api.workers.cli", "worker", "--once"],
         cwd=root,
         env=env,
         stdout=subprocess.DEVNULL,

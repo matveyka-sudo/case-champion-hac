@@ -1,9 +1,9 @@
 """Scenario references are resolved against the immutable accepted baseline."""
 
 import pytest
-from a2_api.jobs import V2JobContext
+from a2_api.core.jobs import V2JobContext
+from a2_api.db.repositories.jobs import JobRepository
 from a2_api.services import DomainError
-from a2_api.storage import JobRepository
 from a2_contracts.v2.scenarios import ScenarioRunRequest
 from test_v2_storage import context, proposal, request, result, scenario_result
 

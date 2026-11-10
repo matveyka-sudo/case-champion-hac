@@ -3,8 +3,8 @@
 import json
 from pathlib import Path
 
-from a2_api.jobs import ClaimedJob, V2JobContext
-from a2_api.product_registry import ProductRegistry
+from a2_api.core.jobs import ClaimedJob, V2JobContext
+from a2_api.core.registry import ProductRegistry
 from a2_contracts.v2.api import TerritoryOption
 from a2_contracts.v2.dataset import AcceptedData
 from a2_contracts.v2.results import AnalysisResult
@@ -47,7 +47,7 @@ def success(claim: ClaimedJob) -> AnalysisResult:
 
 
 def with_proposals(claim):
-    from a2_api.jobs import CalculationOutput
+    from a2_api.core.jobs import CalculationOutput
     from test_v2_storage import proposal
 
     saved = success(claim)

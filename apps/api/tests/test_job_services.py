@@ -1,9 +1,9 @@
 import pytest
-from a2_api.app import create_app
-from a2_api.job_services import QueuedServices
+from a2_api.api.legacy import create_app
+from a2_api.db.repositories.jobs import JobRepository
 from a2_api.services import DomainError
-from a2_api.storage import JobRepository
-from a2_api.worker import Worker
+from a2_api.services.jobs import QueuedServices
+from a2_api.workers.runner import Worker
 from httpx import ASGITransport, AsyncClient
 from test_storage import context, request
 

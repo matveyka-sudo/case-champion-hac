@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 import pytest
-from a2_api.export import export_schemas
+from a2_api.exports.schemas import export_schemas
 from a2_contracts.results import ProfileResult
 from pydantic import ValidationError
 

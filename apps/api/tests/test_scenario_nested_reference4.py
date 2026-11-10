@@ -3,9 +3,9 @@
 from copy import deepcopy
 
 import pytest
-from a2_api.jobs import V2JobContext
+from a2_api.core.jobs import V2JobContext
+from a2_api.db.repositories.jobs import JobRepository
 from a2_api.services import DomainError
-from a2_api.storage import JobRepository
 from a2_contracts.v2.journeys import ReferenceResult
 from a2_contracts.v2.results import ComponentRef
 from a2_contracts.v2.scenarios import ScenarioRunRequest

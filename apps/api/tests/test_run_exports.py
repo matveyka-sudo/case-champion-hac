@@ -16,8 +16,8 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 def exporter() -> Any:
-    assert importlib.util.find_spec("a2_api.run_exports") is not None, "run exports missing"
-    return importlib.import_module("a2_api.run_exports").export_run
+    assert importlib.util.find_spec("a2_api.exports.results") is not None, "run exports missing"
+    return importlib.import_module("a2_api.exports.results").export_run
 
 
 def profile(kind: str = "partial") -> ProfileResult:

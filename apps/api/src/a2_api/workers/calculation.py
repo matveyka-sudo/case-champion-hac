@@ -20,7 +20,7 @@ from a2_api.core.errors import DomainError
 from a2_api.core.jobs import CalculationOutput, ClaimedJob
 from a2_api.db.rows import RunResult
 
-logger = logging.getLogger("a2_api.worker")
+logger = logging.getLogger("a2_api.workers.calculation")
 MAX_RESULT_BYTES = 16 * 1024 * 1024
 HandlerOutput = RunResult | CalculationOutput
 

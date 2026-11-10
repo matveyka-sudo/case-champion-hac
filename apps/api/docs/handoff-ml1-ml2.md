@@ -29,7 +29,7 @@ BACKEND отвечает за DTO, HTTP, очередь, миграции, до�
 Расчёт получает `ClaimedJob` с `V2JobContext`:
 
 ```python
-from a2_api.jobs import ClaimedJob, CalculationOutput, V2JobContext
+from a2_api.core.jobs import ClaimedJob, CalculationOutput, V2JobContext
 from a2_contracts.v2 import AnalysisResult, ScenarioResult
 
 def calculate(claim: ClaimedJob) -> AnalysisResult | ScenarioResult | CalculationOutput:
@@ -79,7 +79,7 @@ def calculate(claim: ClaimedJob) -> AnalysisResult | ScenarioResult | Calculatio
 
 ### Контракт документов для ML2
 
-BACKEND предоставляет `a2_contracts.v2.retrieval.EvidenceChunk` и `a2_api.evidence_search.EvidenceRepository.publish(snapshot, chunks)`. Это доверенный серверный вход, не HTTP endpoint и не загрузчик URL. ML2 передаёт уже полученный, проверенный публичный текст без персональных данных:
+BACKEND предоставляет `a2_contracts.v2.retrieval.EvidenceChunk` и `a2_api.db.repositories.evidence.EvidenceRepository.publish(snapshot, chunks)`. Это доверенный серверный вход, не HTTP endpoint и не загрузчик URL. ML2 передаёт уже полученный, проверенный публичный текст без персональных данных:
 
 - `chunk_id`, accepted `snapshot_id`, `evidence_id`, `source_id/source_version`;
 - URL и `retrieved_at`, точно совпадающие с verified Evidence принятого snapshot;

@@ -44,7 +44,7 @@ async def test_separate_api_and_worker_processes_complete_a_synthetic_job(databa
             sys.executable,
             "-m",
             "uvicorn",
-            "a2_api.app:create_configured_app",
+            "a2_api.api.bootstrap:build_app",
             "--factory",
             "--host",
             "127.0.0.1",
@@ -74,7 +74,7 @@ async def test_separate_api_and_worker_processes_complete_a_synthetic_job(databa
             assert accepted.status_code == 202
             job_id = accepted.json()["job_id"]
             worker = subprocess.Popen(
-                [sys.executable, "-m", "a2_api.runtime", "worker", "--once"],
+                [sys.executable, "-m", "a2_api.workers.cli", "worker", "--once"],
                 cwd=root,
                 env=env,
                 stdout=subprocess.DEVNULL,

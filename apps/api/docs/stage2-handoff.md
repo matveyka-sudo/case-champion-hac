@@ -33,7 +33,7 @@ export A2_DATABASE_URL='postgresql://USER:PASSWORD@HOST:PORT/DATABASE'
 export A2_DATABASE_SCHEMA='a2_backend'
 .venv/bin/alembic -c apps/api/alembic.ini upgrade head
 .venv/bin/alembic -c apps/api/alembic.ini current
-.venv/bin/uvicorn a2_api.app:create_configured_app --factory --host 127.0.0.1 --port 8033
+.venv/bin/uvicorn a2_api.api.bootstrap:build_app --factory --host 127.0.0.1 --port 8033
 ```
 
 Schema names are validated before connecting. API lifespan opens/closes a bounded pool and checks migrations; it never migrates production automatically. `A2_CATALOG_PATH` optionally selects metadata configuration. Database-only mode can read existing jobs/runs; new analyses remain 503 until trusted adapters are configured. No real-data adapter or paid model call is claimed in this release.
@@ -41,7 +41,7 @@ Schema names are validated before connecting. API lifespan opens/closes a bounde
 ## Next integration: two BACKEND adapter functions
 
 ```python
-from a2_api.jobs import ClaimedJob, JobContext, JobKind, JobRequest
+from a2_api.core.jobs import ClaimedJob, JobContext, JobKind, JobRequest
 from a2_contracts import ProfileResult, Comparison
 
 async def prepare(kind: JobKind, request: JobRequest) -> JobContext:
@@ -75,7 +75,7 @@ export A2_CODE_VERSION='ACTUAL_CALCULATION_COMMIT'
 export A2_PREFLIGHT_HOOK='TRUSTED_BACKEND_ADAPTER_MODULE:prepare'
 export A2_CALCULATION_HANDLER='TRUSTED_BACKEND_ADAPTER_MODULE:calculate'
 export A2_JOB_TIMEOUT_SECONDS=600
-.venv/bin/python -m a2_api.runtime worker
+.venv/bin/python -m a2_api.workers.cli worker
 ```
 
 Uppercase names above are placeholders, not implemented modules. Hook/handler are trusted operator `module:function` configuration, never HTTP/tool parameters. They are unset by default. API requires hook+handler+code together; worker requires database+handler+code. `--once` processes at most one job. Poll interval is `A2_WORKER_POLL_SECONDS`, default 0.5 seconds. API and worker need identical accepted storage and versions.

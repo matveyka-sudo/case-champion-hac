@@ -23,10 +23,10 @@ async def test_migration_upgrade_twice_and_downgrade_preserve_unrelated_tables(d
 
 @pytest.mark.asyncio
 async def test_api_export_includes_accepted_request_and_immutable_context(database):
-    from a2_api.app import create_app
-    from a2_api.job_services import QueuedServices
-    from a2_api.storage import JobRepository
-    from a2_api.worker import Worker
+    from a2_api.api.legacy import create_app
+    from a2_api.db.repositories.jobs import JobRepository
+    from a2_api.services.jobs import QueuedServices
+    from a2_api.workers.runner import Worker
     from httpx import ASGITransport, AsyncClient
     from test_job_services import synthetic_preflight
     from test_storage import request

@@ -3,7 +3,7 @@
 from datetime import date
 
 import pytest
-from a2_api.evidence_search import EvidenceRepository
+from a2_api.db.repositories.evidence import EvidenceRepository
 from a2_api.services import DomainError
 from a2_contracts.common import canonical_hash
 from a2_contracts.v2.retrieval import EvidenceChunk, EvidenceSearchRequest

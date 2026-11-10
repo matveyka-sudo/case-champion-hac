@@ -16,7 +16,7 @@ TOKEN_LIMIT = 10000
 
 
 def ledger(pool, limit=LIMIT, token_limit=TOKEN_LIMIT):
-    from a2_api.deployment_budget import TARIFF_ID, PostgresDeploymentBudget
+    from a2_api.db.repositories.budget import TARIFF_ID, PostgresDeploymentBudget
 
     return PostgresDeploymentBudget(
         pool,
@@ -29,7 +29,7 @@ def ledger(pool, limit=LIMIT, token_limit=TOKEN_LIMIT):
 
 
 async def configure(pool, limit=LIMIT, token_limit=TOKEN_LIMIT):
-    from a2_api.deployment_budget import TARIFF_ID, configure_budget
+    from a2_api.db.repositories.budget import TARIFF_ID, configure_budget
 
     await configure_budget(
         pool,
@@ -74,7 +74,7 @@ async def test_no_budget_is_fail_closed_and_successful_reservations_use_money(da
 
 @pytest.mark.asyncio
 async def test_known_usage_settles_once_and_unknown_usage_keeps_full_reserve(database):
-    from a2_api.deployment_budget import BudgetUnavailable
+    from a2_api.db.repositories.budget import BudgetUnavailable
 
     pool, _, _ = database
     await configure(pool)
@@ -166,7 +166,7 @@ async def test_unexpected_provider_usage_blocks_future_reservations(database):
 
 @pytest.mark.asyncio
 async def test_database_failure_denies_reserve_and_never_releases_unknown_cost(database):
-    from a2_api.deployment_budget import BudgetUnavailable
+    from a2_api.db.repositories.budget import BudgetUnavailable
 
     pool, schema, url = database
     await configure(pool)
@@ -182,7 +182,7 @@ async def test_database_failure_denies_reserve_and_never_releases_unknown_cost(d
 
 @pytest.mark.asyncio
 async def test_limit_increase_preserves_spend_and_rejects_mismatch(database):
-    from a2_api.deployment_budget import BudgetUnavailable
+    from a2_api.db.repositories.budget import BudgetUnavailable
 
     pool, _, _ = database
     await configure(pool)
@@ -202,7 +202,7 @@ async def test_limit_increase_preserves_spend_and_rejects_mismatch(database):
 
 @pytest.mark.asyncio
 async def test_wrong_model_currency_or_tariff_never_reserves(database):
-    from a2_api.deployment_budget import TARIFF_ID, PostgresDeploymentBudget
+    from a2_api.db.repositories.budget import TARIFF_ID, PostgresDeploymentBudget
 
     pool, _, _ = database
     await configure(pool)
@@ -248,10 +248,10 @@ async def test_guarded_downgrade_preserves_configured_ledger(database):
 
 @pytest.mark.asyncio
 async def test_budget_hook_uses_explicit_operator_settings_and_shared_pool(database, monkeypatch):
-    from a2_api.analysis_service import AnalysisService
-    from a2_api.budget_hook import build_budget
-    from a2_api.deployment_budget import TARIFF_ID
-    from a2_api.storage import JobRepository
+    from a2_api.assistant.budget import build_budget
+    from a2_api.db.repositories.budget import TARIFF_ID
+    from a2_api.db.repositories.jobs import JobRepository
+    from a2_api.services.analyses import AnalysisService
 
     pool, _, _ = database
     service = AnalysisService(repository=JobRepository(pool))
@@ -276,8 +276,8 @@ async def test_budget_hook_uses_explicit_operator_settings_and_shared_pool(datab
 
 @pytest.mark.asyncio
 async def test_admin_cli_reports_aggregate_and_only_explicitly_sets_limit(database, monkeypatch):
-    from a2_api.budget_cli import run_command
-    from a2_api.deployment_budget import TARIFF_ID
+    from a2_api.assistant.budget_cli import run_command
+    from a2_api.db.repositories.budget import TARIFF_ID
 
     pool, _, _ = database
     assert await run_command("status", pool) == {"status": "unconfigured"}
@@ -316,7 +316,7 @@ def saved_scope():
 
 
 def set_hook_env(monkeypatch, *, limit="2.00", token_limit="20000"):
-    from a2_api.deployment_budget import TARIFF_ID
+    from a2_api.db.repositories.budget import TARIFF_ID
 
     monkeypatch.setenv("LLM_ENABLED", "true")
     monkeypatch.setenv("A2_ALICE_BILLING_CURRENCY_CONFIRMED", "true")  # synthetic test only
@@ -324,7 +324,7 @@ def set_hook_env(monkeypatch, *, limit="2.00", token_limit="20000"):
     monkeypatch.setenv("YANDEX_FOLDER_ID", "synthetic-folder")
     monkeypatch.setenv("YANDEX_MODEL", "aliceai-llm-flash")
     monkeypatch.setenv("YANDEX_BASE_URL", "https://ai.api.cloud.yandex.net/v1")
-    monkeypatch.setenv("A2_ASSISTANT_BUDGET_HOOK", "a2_api.budget_hook:build_budget")
+    monkeypatch.setenv("A2_ASSISTANT_BUDGET_HOOK", "a2_api.assistant.budget:build_budget")
     monkeypatch.setenv("A2_ASSISTANT_TOOLS_ENABLED", "false")
     monkeypatch.setenv("A2_ALICE_CURRENCY", "RUB")
     monkeypatch.setenv("A2_ALICE_TARIFF_ID", TARIFF_ID)
@@ -334,9 +334,9 @@ def set_hook_env(monkeypatch, *, limit="2.00", token_limit="20000"):
 
 @pytest.mark.asyncio
 async def test_existing_factory_falls_back_without_configured_budget(database, monkeypatch):
-    from a2_api import alice
-    from a2_api.analysis_service import AnalysisService
-    from a2_api.storage import JobRepository
+    from a2_api.assistant import alice
+    from a2_api.db.repositories.jobs import JobRepository
+    from a2_api.services.analyses import AnalysisService
     from test_alice_runtime import FakeSDKTransport
 
     pool, _, _ = database

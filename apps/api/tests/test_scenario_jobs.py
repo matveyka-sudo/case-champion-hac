@@ -1,8 +1,8 @@
 import pytest
-from a2_api.job_services import QueuedServices
+from a2_api.db.repositories.jobs import JobRepository
 from a2_api.services import DomainError
-from a2_api.storage import JobRepository
-from a2_api.worker import Worker
+from a2_api.services.jobs import QueuedServices
+from a2_api.workers.runner import Worker
 from a2_contracts.common import canonical_hash
 from a2_contracts.scenarios import Comparison, ScenarioRequest
 from test_storage import context, request
