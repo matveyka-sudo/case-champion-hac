@@ -293,6 +293,30 @@ def validate_score_dependencies(metrics: list[Metric], scores: list[Score]) -> N
     for identifier in score_map:
         visit(identifier)
 
+    numeric_leaves: dict[str, bool] = {}
+
+    def has_numeric_leaf(score: Score) -> bool:
+        if score.score_id not in numeric_leaves:
+            numeric_leaves[score.score_id] = not _absence_score(score) and (
+                score.calculation_kind != "aggregate"
+                or any(
+                    component.kind == "score" and has_numeric_leaf(score_map[component.id])
+                    for component in score.components
+                )
+            )
+        return numeric_leaves[score.score_id]
+
+    for score in scores:
+        if (
+            score.status == "available"
+            and score.completeness == "full"
+            and score.calculation_kind == "aggregate"
+            and not _absence_score(score)
+            and score.components
+            and not has_numeric_leaf(score)
+        ):
+            raise ValueError("Numeric aggregate requires a non-absence calculation operand")
+
 
 def validate_score_context(
     metrics: list[Metric], scores: list[Score], analysis_kind: AnalysisKind
@@ -304,9 +328,12 @@ def validate_score_context(
 
     def has_path_operand(score: Score) -> bool:
         if score.score_id not in path_operands:
-            path_operands[score.score_id] = score.calculation_kind == "reference_ratio" or any(
-                component.kind == "score" and has_path_operand(score_map[component.id])
-                for component in score.components
+            path_operands[score.score_id] = not _absence_score(score) and (
+                score.calculation_kind == "reference_ratio"
+                or any(
+                    component.kind == "score" and has_path_operand(score_map[component.id])
+                    for component in score.components
+                )
             )
         return path_operands[score.score_id]
 

@@ -7,8 +7,10 @@ from a2_contracts.scenarios import Comparison, ScenarioRequest
 from a2_contracts.v2.requests import RequestBase
 from a2_contracts.v2.results import (
     AnalysisResult,
+    _absence_score,
     validate_reference_applicability,
     validate_score_context,
+    validate_score_dependencies,
 )
 from a2_contracts.v2.scenarios import (
     ScenarioProposal,
@@ -134,6 +136,7 @@ def _validate_scenario_semantics(
     ):
         raise DomainError(409, "incompatible_versions", "Scenario baseline versions/hash differ")
     try:
+        validate_score_dependencies(result.after.metrics, result.after.scores)
         validate_score_context(result.after.metrics, result.after.scores, baseline.analysis_kind)
     except ValueError:
         raise DomainError(
@@ -171,6 +174,11 @@ def _validate_scenario_semantics(
         return evaluated_metrics[score_id]
 
     for score in result.after.scores:
+        if _absence_score(score):
+            # Shared validators require the exact scoped full null chain and
+            # prohibit numeric/reference operands for this boundary outcome.
+            # A lost route does not evaluate its baseline's former denominator.
+            continue
         full = score.status == "available" and score.completeness == "full"
         required_references = set(score.reference_ids)
         previous_score = baseline_scores.get(score.score_id) or baseline_scores.get(
