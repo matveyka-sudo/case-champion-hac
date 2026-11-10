@@ -176,6 +176,7 @@ def validate_inputs(
     ):
         raise ValueError("RUNTIME_ACTUAL_INPUT_OR_PROFILE_FINGERPRINT_MISMATCH")
     known_evidence = {row.evidence_id for row in snapshot.evidence}
+    verified_evidence = {row.evidence_id for row in snapshot.evidence if row.verified}
     known_evidence.update(row.evidence_id for row in profile.evidence)
     for item in _walk(inputs):
         if hasattr(item, "snapshot_id") and item.snapshot_id != snapshot.snapshot_id:
@@ -204,6 +205,27 @@ def validate_inputs(
             refs = getattr(item, name, ())
             if refs and not set(refs) <= known_evidence:
                 raise ValueError("RUNTIME_INPUT_EVIDENCE_UNRESOLVED")
+        complete_flags = (
+            "complete",
+            "catalog_complete",
+            "search_complete",
+            "roster_complete",
+            "modes_complete",
+            "schedule_complete",
+            "calendar_complete",
+            "footpaths_complete",
+            "transfers_complete",
+            "continuations_complete",
+            "coverage_complete",
+            "minimum_confirmed",
+        )
+        if (
+            any(getattr(item, flag, None) is True for flag in complete_flags)
+            or getattr(item, "coverage", None) == "full"
+        ):
+            proof = set(getattr(item, "evidence_refs", ())) | set(getattr(item, "source_refs", ()))
+            if not proof or not proof <= verified_evidence:
+                raise ValueError("FULL_SCOPE_REQUIRES_VERIFIED_CANONICAL_EVIDENCE")
     if isinstance(inputs, UrbanInputs):
         if (
             inputs.context.city_id != profile.city_id
@@ -305,6 +327,8 @@ def validate_inputs(
                 and coverage.scope.passenger_mode in scope.modes
                 and (not scope.categories or coverage.scope.category in scope.categories)
                 and scope.completeness == "full"
+                and bool(scope.source_refs)
+                and set(scope.source_refs) <= verified_evidence
                 and scope.valid_period.start is not None
                 and scope.valid_period.end is not None
                 and scope.valid_period.start <= first_day <= last_day <= scope.valid_period.end
@@ -398,6 +422,8 @@ def validate_inputs(
                 and "road" in scope.modes
                 and not scope.categories
                 and scope.completeness == "full"
+                and bool(scope.source_refs)
+                and set(scope.source_refs) <= verified_evidence
                 and scope.valid_period.start is not None
                 and scope.valid_period.end is not None
                 and scope.valid_period.start <= first_day <= last_day <= scope.valid_period.end
