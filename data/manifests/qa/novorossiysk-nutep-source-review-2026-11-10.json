@@ -1,0 +1,100 @@
+{
+  "schema": "a2-freight-terminal-source-review-v1",
+  "review_date": "2026-11-10",
+  "acceptance_state": "research_only",
+  "bundle_id": "novorossiysk-urban-2026-11-10.2",
+  "source_manifest": "data/manifests/research/physical-approach-observations-2026-11-10.json",
+  "freight_node_id": "novorossiysk-port-way-1222501559",
+  "existing_accepted_node": {
+    "physical_coordinates": [
+      37.8164846,
+      44.7241725
+    ],
+    "access_node_id": "road:way:252675278:183.2",
+    "access_coordinates": [
+      37.8166363,
+      44.7241451
+    ],
+    "centroid_to_access_distance_m": 12.4
+  },
+  "source_facts": [
+    {
+      "source_ref": "nutep-services",
+      "location": "Terminal services section",
+      "fact": "The operator publishes container handling/storage and road/rail stuffing or stripping services."
+    },
+    {
+      "source_ref": "nutep-infrastructure",
+      "location": "Road reception section",
+      "fact": "The operator states access from Sukhumskoe Highway, distinct entrance and exit, one-way internal circulation and booked vehicle arrival slots."
+    },
+    {
+      "source_ref": "nutep-auto-rules",
+      "page": 3,
+      "sections": [
+        "2.2",
+        "2.3"
+      ],
+      "fact": "Container reception and issue are conditional on visits entered remotely by accredited participants."
+    },
+    {
+      "source_ref": "nutep-auto-rules",
+      "page": 4,
+      "sections": [
+        "3.1",
+        "3.2"
+      ],
+      "fact": "Terminal vehicle presence is recorded from entry-checkpoint driver-pass scanning to exit from the customs-control area; this is accounting scope, not an observed handling duration."
+    },
+    {
+      "source_ref": "nutep-container-contract",
+      "location": "Russian section4.2(d,f); public blank template",
+      "fact": "The template describes reefer power connection and periodic temperature checks, subject to contractual conditions. It is not a booking or shipment-specific acceptance receipt."
+    },
+    {
+      "source_ref": "nutep-traffic-plan",
+      "page": 1,
+      "fact": "The diagram identifies controlled terminal boundary crossings, internal circulation and container areas. Legend entries11/12 inconsistently pair road/rail descriptions with rail/road gate parentheticals.",
+      "gate_identity_status": "unresolved; neither symbol is assigned a confirmed automobile gate coordinate"
+    }
+  ],
+  "geometry_review": {
+    "source_refs": [
+      "nutep-osm-way-1222501559",
+      "nutep-osm-way-252675278"
+    ],
+    "source_scope": "Two newly observed live OSM API way/full responses, independent of the accepted PBF checksum.",
+    "terminal_way_version": 3,
+    "terminal_way_timestamp": "2025-12-17T08:11:24Z",
+    "road_way_version": 1,
+    "road_way_timestamp": "2013-12-19T19:20:47Z",
+    "metric_crs": "EPSG:32637",
+    "physical_node_inside_terminal_polygon": true,
+    "access_projection_inside_terminal_polygon": true,
+    "access_projection_distance_to_polygon_boundary_m": 141.561,
+    "road_way_length_m": 609.02,
+    "road_way_length_inside_terminal_m": 609.02,
+    "road_boundary_intersections": 0,
+    "tagged_gate_nodes_on_either_returned_way": 0,
+    "finding": "The accepted road projection is an internal-terminal alley point. Its12.4m offset is not a verified public-road-to-gate approach."
+  },
+  "exact_input_gaps": [
+    "A georeferenced automobile entry and exit, resolved against the conflicting traffic-plan legend and a public-road connection.",
+    "A source-backed physical route for a named industrial site or warehouse, through any controlled site gate to the verified terminal gate.",
+    "A fully specified cargo/handling/temperature/vehicle profile and evidence that this exact profile is permitted in the requested direction.",
+    "Applicable visit/accreditation preconditions; the public form does not confirm an actual admitted truck.",
+    "Observed or otherwise accepted waits, handling/transshipment times and complete-chain schedules; parking limits are not those durations.",
+    "An accepted regional truck graph/build and routing profile with the required restrictions."
+  ],
+  "decision": {
+    "accepted_node_operations_can_be_researched": true,
+    "new_compatibility_confirmed": false,
+    "public_to_terminal_gate_approach_confirmed": false,
+    "duration_seconds": null,
+    "delivery_score": null,
+    "pipeline_connection_inferred": false,
+    "bundle_published": false,
+    "execution_readiness_granted": false
+  },
+  "minimum_next_verification": "Resolve the actual automobile gates and a named site approach first; until then retain raw operational facts and unknown compatibility/times without running a fabricated complete delivery."
+}
