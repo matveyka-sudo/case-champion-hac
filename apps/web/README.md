@@ -1,34 +1,74 @@
 # Waydex frontend
 
-Техническая основа React 19 + TypeScript + Vite. Bootstrap CSS без JS; финальный дизайн подключается отдельно. Node 24.x, npm 11.x согласно командному manifest.
+Активное приложение — `apps/web/`; структурный перенос выполнен в `fix-fullstack`, постоянная ветка FRONTEND — `work/frontend`. React + TypeScript strict + Vite. Утверждённый HTML-прототип перенесён в компоненты без iframe, вставки всей страницы через innerHTML и запуска монолитного скрипта прототипа.
 
 ## Запуск
 
-`npm ci`, затем `npm run dev`. Скопируйте `.env.example` в `.env.local` при необходимости. По умолчанию `/api` проксируется на `http://127.0.0.1:8000` в dev. В production нужен same-origin reverse proxy либо `VITE_API_BASE_URL` и CORS на backend. Переменные VITE публичны: секреты сюда не класть.
+```sh
+cd apps/web # из корня репозитория
+npm ci
+npm run dev
+```
+
+Откройте адрес Vite. Для конкретного порта: `npm run dev -- --host 127.0.0.1 --port 5176 --strictPort`.
+
+`#top`, `#about`, `#features`, `#how` — лендинг; `#atlas` — атлас. Back/forward работают. Макет адаптирован к 1440/1280/768/390 px. Если приложение открыто в локальной сети, используйте соответствующий host отдельно.
+
+## Данные и ограничения
+
+Есть два явных режима: **demo** (по умолчанию) и **api**. API-путь подготовлен по опубликованному контракту; live engine/LLM ещё не проверены. Ниже описаны только ограничения демо-данных. Данные взяты из утверждённого прототипа; provenance и SHA-256 HTML — `src/mocks/source.json`. Индексы заранее подготовлены, транспортная формула в браузере не рассчитывается. Взвешивание выбранных демо-категорий и отображение агрегатов — presentation selectors над fixtures, не утверждённая методика. В режиме `pending` индекс скрывается. До интеграции backend демонстрационный режим и метки нельзя снимать.
+
+Москва: сетка, объекты, 44-минутная цепочка и согласование пересадки. Калининград: частичные данные. Новороссийск: нет пассажирской сетки; грузовой пример есть. Пассажирская пара: Москва ↔ Калининград; грузовая — Москва ↔ Новороссийск. Другие справочные пары честно показывают отсутствие демо. Baseline на 10 ноября 2026, 08:30. Другие слоты не создают фиктивных результатов. 96 положений таймлайна, автоночь 20:00–05:45 — правило дизайна, не астрономия.
+
+Google Fonts (Manrope/Unbounded) и городские тайлы OSM требуют сети. Natural Earth/world-atlas суша, фото и fixtures лежат локально. Есть attribution OSM и обработка недоступной подложки. Прототип не рассчитан на массовое использование публичного tile-сервера; production-поставщик выбирается отдельно. Фото предоставлены пользователем, права на публикацию не подтверждались. У недостающих фото сохранены оформленные заглушки из оригинала. Все библиотеки ставятся через npm, UMD/CDN-скриптов в приложении нет.
+
+## Структура
+
+- `src/pages/LandingPage.tsx`: точная композиция HTML; `features/motion.ts`: scroll/reveal и cleanup.
+- `src/pages/AtlasPage.tsx`: композиция рабочего пространства и async-запросы.
+- `src/features/state.ts`: типы, reducer, draft/applied условия, revision guard; `AtlasProvider.tsx`: провайдер.
+- `src/widgets/`: React-фильтры, Leaflet CityMap, d3 RussiaMap, карточка, легенда/таймлайн, агент.
+- `src/mocks/catalog.*`: лёгкие справочники для лендинга; `public/data/demo/` (manifest и небольшие части по городам): предрасчитанные детерминированные fixtures; `mocks/model.ts`: view models/selectors; `mocks/gateway.ts`: отменяемый async mock gateway.
+- `src/shared/`: иконки, форматирование, цвет, время.
+- `src/styles/prototype.css`: исходные токены, keyframes и адаптивность; `integration.css`: минимальные исправления интеграции React/Leaflet.
+
+Карты меняют DOM только внутри своих ref. Listeners, observers, карты, animations/timers освобождаются. Свободный ввод чата выводится безопасно как текст; подготовленные ответы представлены React-структурой. Escape/Tab и возврат фокуса поддерживаются в мобильных панелях. Таймлайн/выбор условий не запускают расчёт автоматически; revision guard и AbortSignal защищают от поздних ответов. Проверка сценария — отдельное действие; база не перезаписывается.
+
+## API-интеграция
+
+Инструкция и передача владельцам — [общая API-интеграция](../../docs/FRONTEND_INTEGRATION.md). Использовать Node 24.22.2. Для API скопировать `.env.example` в `.env.local`, указать фактический `BACKEND_PROXY_TARGET`, оставить `VITE_DATA_MODE=api`. Production reverse proxy на том же origin настраивает DevOps. Для явного разового переключения: `/?data=api#atlas` или `/?data=demo#atlas`. API-ошибка никогда не включает демо автоматически.
+
+Типы и runtime-валидация генерируются из `../../contracts/generated/openapi.json`: `npm run api:generate`; проверка актуальности — `npm run api:check`. URL prefix `/api/v1`, schema_version `2`. API-composition изолирована от fixture selectors, сохраняет стиль сайта и общие controls. Расчёты, рейтинги и эффекты сценариев в браузере не вычисляются.
+
+Подготовлены session bootstrap, реальные каталоги, четыре запроса, IANA-время, jobs/cancel, map_data, сохранённые результаты, explanation и server scenarios. HTTP E2E используют синтетические канонические DTO. Это **не подтверждение live-интеграции** с данными/engine/LLM. Формулы уже утверждены и исполняются на сервере.
 
 ## Проверки
 
-`npm run typecheck`, `npm run lint`, `npm test`, `npm run build`.
+```sh
+npm run api:check
+npm run typecheck
+npm run lint
+npm test
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
 
-## Архитектура
+E2E поднимает Vite на 5176 или использует уже работающий сервер. `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` позволяет указать установленный Chromium. Проверки не зависят от публичных OSM-тайлов: используется тестовая заглушка. Скриншоты с реальными тайлами проверяются отдельно. Unit-тесты — reducer, stale responses, отмена mock job, контрольные fixtures. E2E — навигация, темы, время, сценарий, чат, все статусы, направления, грузовые режимы и mobile.
 
-- `app`: провайдеры, error boundary, hash-маршруты `/` и `/atlas` (не требует server fallback).
-- `pages`: сборка экранов; без HTTP и расчётных формул.
-- `widgets`: крупные части экрана; карта позже монтируется здесь с cleanup MapLibre.
-- `features`: пользовательские действия, например выбор города.
-- `entities`: предметные view models и TanStack Query запросы.
-- `shared`: конфигурация, HTTP, простые UI-компоненты, стилевые токены.
+Подробности визуальной проверки — `docs/VISUAL_QA.md`. Непроверенные реальные интеграции не считаются завершёнными.
 
-Зависимости направлены сверху вниз: app → pages → widgets/features/entities → shared. Server state в TanStack Query; локальные значения формы в React. Не вводим глобальное хранилище до реальной необходимости. Данные маршрутов, индексов и сценариев считаются сервером. Не добавляем пустые слои для будущих функций.
+## Границы приложения
 
-## Контракт API
+`src/shared/` используется только Waydex. `public/` раздаётся от корня URL:
+`/assets/`, `/data/`, `/icons.svg`. Перенос каталога на диске не меняет Vite base,
+hash-маршруты, API prefix или публичные URL ресурсов.
 
-Опубликованного OpenAPI пока нет (`contracts/generated/README.md` содержит только инструкции). `entities/profile/model.ts` — временный валидируемый view model на основе `packages/contracts/specs/analysis-profile.md`, НЕ сгенерированный контракт. ID городов выводятся как ID до публикации каталога; фиктивных координат и баллов нет.
+Manifest и npm lock перенесены вместе без изменения зависимостей. Корневых npm
+workspaces нет. Генератор `scripts/generate-api.mjs` обслуживает только web;
+общий OpenAPI разрешается относительно файла скрипта. Из корня также работает:
+`node apps/web/scripts/generate-api.mjs --check`. Shared CI/layout check находится
+в корневом `scripts/check_web_layout.mjs`.
 
-После публикации схемы BACKEND: `npm run api:generate` (ожидается `../../contracts/generated/openapi.json`), затем заменить временный HTTP-адаптер на `openapi-fetch` с generated `paths`. Не редактировать generated types вручную. Версию/хэш схемы зафиксировать при интеграции. Текущий endpoint — GET `/api/v1/profiles/{id}/versions/{version}`. Результат проверяется перед отображением, запрос отменяется при размонтировании; ошибка явно отличена от отсутствия маршрута.
-
-## UI и развитие
-
-Bootstrap выбран по решению пользователя вместо Tailwind из общей архитектуры. Не активировать обе CSS-системы одновременно. Старые зависимости сохранены до согласования командой. Дизайн меняет tokens/base и UI-компоненты, сохраняя queries и API границы. Следующие модули добавляются по реальному контракту: accessibility, routes, scenarios, assistant, provenance. Для результатов показывать snapshot/profile/algorithm версии и покрытие; `no_path`, недостаток данных и ошибка — разные состояния. Markdown помощника не рендерить как произвольный HTML.
-
-Пока реализованы landing-заглушка, профиль из API, выбор ID города и область будущей карты; нет реальной карты, индексов, чата или мокового режима. Нужны backend OpenAPI и каталог городов с подтверждёнными координатами. Никакие новые схемы от имени BACKEND не утверждены.
+Сверка UI: [FRONTEND_UI_SCOPE_REVIEW](../../docs/FRONTEND_UI_SCOPE_REVIEW.md).
+Исторический visual QA и фото остаются в локальном `docs/` приложения.

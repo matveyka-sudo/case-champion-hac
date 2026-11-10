@@ -3,6 +3,7 @@
 import asyncio
 import importlib
 import json
+import logging
 from copy import deepcopy
 from decimal import Decimal
 
@@ -101,6 +102,13 @@ def content():
     )
 
 
+def selection():
+    return {
+        "findings": [{"metric_id": "travel-time", "explanation_code": "travel_time"}],
+        "template_ids": [],
+    }
+
+
 class MemoryBudget:
     """Unit-test double only. No shared durability or actual provider pricing."""
 
@@ -180,7 +188,7 @@ class Backend:
 
 def reply(data=None, calls=(), *, output_tokens=20, finish_reason="stop"):
     return module("transport").ModelReply(
-        content=json.dumps(content() if data is None else data),
+        content=json.dumps(selection() if data is None else data),
         tool_calls=list(calls),
         input_tokens=100,
         output_tokens=output_tokens,
@@ -266,42 +274,126 @@ async def test_grounded_response_is_typed_and_numbers_render_from_immutable_metr
 
 
 @pytest.mark.asyncio
+async def test_prompt_supplies_a_valid_saved_fact_json_example():
+    agent, transport, _, _ = assistant(
+        [reply()],
+        config=module().FlashConfig(api_key="synthetic-key", folder_id="synthetic-folder"),
+    )
+    assert (await explain(agent)).status == "generated"
+    messages = transport.calls[0]["messages"]
+    assert "no Markdown" in messages[0]["content"]
+    example = json.loads(messages[1]["content"])["response_example"]
+    assert example == {
+        "findings": [{"metric_id": "travel-time", "explanation_code": "saved_value"}],
+        "template_ids": [],
+    }
+    checked = module()._ModelSelection.model_validate(example)
+    module()._validate_content(
+        module()._build_content(checked, analysis(), frozenset()), analysis(), frozenset()
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("fence", ["```json\n", "```\n"])
+async def test_complete_json_code_fence_is_validated_like_plain_json(fence):
+    model_reply = reply()
+    model_reply.content = fence + model_reply.content + "\n```"
+    agent, _, _, _ = assistant([model_reply])
+    result = await explain(agent)
+    assert result.status == "generated"
+    assert result.findings[0].claims[0].value == 1800
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "change",
+    "change,category",
     [
-        "metric",
-        "value",
-        "unit",
-        "analysis",
-        "evidence",
-        "template",
-        "digits",
-        "words",
-        "unknown-field",
+        ("malformed_json", "json_invalid"),
+        ("malformed_fence", "json_invalid"),
+        ("duplicate_key", "json_duplicate_key"),
+        ("missing_field", "schema_invalid"),
+        ("unknown_field", "schema_invalid"),
+        ("incomplete", "response_incomplete"),
+        ("metric_id", "reference_invalid"),
+        ("wrong_code", "narrative_invalid"),
+        ("proposal", "proposal_invalid"),
+        ("value", "schema_invalid"),
+        ("unit", "schema_invalid"),
+        ("analysis", "schema_invalid"),
+        ("evidence", "schema_invalid"),
+        ("finding_text", "schema_invalid"),
+        ("limitation", "schema_invalid"),
     ],
 )
-async def test_fabricated_references_and_unstructured_numbers_use_template(change):
-    data = content()
-    if change == "metric":
-        data["findings"][0]["claims"][0]["metric_id"] = "invented"
-    elif change == "value":
-        data["findings"][0]["claims"][0]["value"] = 999
-    elif change == "unit":
-        data["findings"][0]["claims"][0]["unit"] = "minutes"
-    elif change == "analysis":
-        data["analysis_id"] = "another-owner"
-    elif change == "evidence":
-        data["evidence_refs"] = ["invented"]
-    elif change == "template":
-        data["proposals"] = [
-            dict(template_id="add-made-up-flight", rationale="Улучшение.", evidence_refs=[])
-        ]
-    elif change == "digits":
-        data["findings"][0]["text"] = "Сэкономим 999 минут."
-    elif change == "words":
-        data["findings"][0]["text"] = "Сэкономим сорок минут."
-    else:
+async def test_invalid_model_answers_log_only_a_safe_category(change, category, caplog):
+    data = selection()
+    model_reply = reply(data)
+    if change == "malformed_json":
+        model_reply.content = '{"private":"DO_NOT_LOG_MODEL_BODY",'
+    elif change == "malformed_fence":
+        model_reply.content = "```json\n" + model_reply.content + "\n``` extra"
+    elif change == "duplicate_key":
+        model_reply.content = model_reply.content.replace(
+            '"metric_id": "travel-time"', '"metric_id": "foreign", "metric_id": "travel-time"'
+        )
+    elif change == "missing_field":
+        data.pop("findings")
+    elif change == "unknown_field":
         data["run_scenario"] = True
+    elif change == "incomplete":
+        model_reply.finish_reason = "length"
+    elif change == "metric_id":
+        data["findings"][0]["metric_id"] = "foreign"
+    elif change == "wrong_code":
+        data["findings"][0]["explanation_code"] = "unknown"
+    elif change == "proposal":
+        data["template_ids"] = ["foreign"]
+    elif change == "value":
+        data["findings"][0]["value"] = 999
+    elif change == "unit":
+        data["findings"][0]["unit"] = "minutes"
+    elif change == "analysis":
+        data["analysis_id"] = "foreign"
+    elif change == "evidence":
+        data["evidence_refs"] = ["foreign"]
+    elif change == "finding_text":
+        data["findings"][0]["text"] = "DO_NOT_LOG_MODEL_BODY 999 минут"
+    elif change == "limitation":
+        data["limitations"] = ["DO_NOT_LOG_MODEL_BODY 999 минут"]
+    if change not in {"malformed_json", "malformed_fence", "duplicate_key"}:
+        model_reply = reply(data, finish_reason=model_reply.finish_reason)
+    agent, transport, _, _ = assistant([model_reply])
+    with caplog.at_level(logging.WARNING, logger="a2_assistant"):
+        result = await explain(agent)
+    assert result.status == "template" and result.reason_code == "INVALID_EXPLANATION"
+    assert len(transport.calls) == 1
+    assert f"category={category}" in caplog.text
+    assert "DO_NOT_LOG_MODEL_BODY" not in caplog.text
+    assert "synthetic-key" not in caplog.text
+    if category == "schema_invalid":
+        assert "error_count=" in caplog.text and "errors=" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_invalid_category_is_logged_at_default_server_warning_level(caplog):
+    data = selection()
+    data["findings"][0]["text"] = "DO_NOT_LOG_MODEL_BODY 999 минут"
+    data["DO_NOT_LOG_MODEL_BODY_UNTRUSTED_KEY"] = True
+    agent, _, _, _ = assistant([reply(data)])
+    with caplog.at_level(logging.WARNING, logger="a2_assistant"):
+        result = await explain(agent)
+    assert result.reason_code == "INVALID_EXPLANATION"
+    assert "category=schema_invalid" in caplog.text
+    assert "('findings', '0', 'text')" in caplog.text
+    assert "extra_forbidden" in caplog.text
+    assert "DO_NOT_LOG_MODEL_BODY" not in caplog.text
+    assert "<extra>" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_model_cannot_supply_facts_or_unstructured_numbers():
+    data = selection()
+    data["findings"][0]["text"] = "Сэкономим 999 минут."
     agent, _, backend, _ = assistant([reply(data)])
     result = await explain(agent)
     assert result.status == "template" and result.reason_code == "INVALID_EXPLANATION"
@@ -311,19 +403,52 @@ async def test_fabricated_references_and_unstructured_numbers_use_template(chang
 
 @pytest.mark.asyncio
 async def test_registered_template_can_be_suggested_but_never_executed():
-    data = content() | {
-        "proposals": [
-            dict(
-                template_id="coordinate-transfer",
-                rationale="Проверить согласование пересадки.",
-                evidence_refs=["evidence"],
-            )
-        ]
-    }
+    data = selection() | {"template_ids": ["coordinate-transfer"]}
     agent, _, backend, _ = assistant([reply(data)])
     result = await explain(agent)
     assert result.status == "generated" and result.proposals[0].template_id == "coordinate-transfer"
+    assert result.proposals[0].rationale == "Проверить сохранённый сценарий отдельным расчётом."
     assert backend.calls == []
+
+
+@pytest.mark.parametrize(
+    "field,category",
+    [
+        ("metric_id", "reference_invalid"),
+        ("value", "claim_mismatch"),
+        ("unit", "claim_mismatch"),
+        ("evidence_refs", "reference_invalid"),
+        ("analysis_id", "identity_mismatch"),
+    ],
+)
+def test_final_content_still_rejects_changed_facts_and_references(field, category):
+    data = content()
+    if field == "metric_id":
+        data["findings"][0]["metric_ids"] = ["foreign"]
+        data["findings"][0]["claims"][0]["metric_id"] = "foreign"
+    elif field in {"value", "unit"}:
+        data["findings"][0]["claims"][0][field] = 999 if field == "value" else "minutes"
+    elif field == "evidence_refs":
+        data["findings"][0]["evidence_refs"] = ["foreign"]
+    else:
+        data["analysis_id"] = "foreign"
+    checked = module().ExplanationContent.model_validate(data)
+    with pytest.raises(module()._ModelAnswerRejected) as error:
+        module()._validate_content(checked, analysis(), frozenset())
+    assert error.value.category == category
+
+
+def test_server_assembles_saved_claims_and_evidence_without_model_facts():
+    saved = analysis()
+    saved.metrics[0].value = 5400.25
+    selected = module()._ModelSelection.model_validate(selection())
+    built = module()._build_content(selected, saved, frozenset())
+    module()._validate_content(built, saved, frozenset())
+    assert built.analysis_id == saved.analysis_id
+    assert built.findings[0].claims[0].value == 5400.25
+    assert built.findings[0].claims[0].unit == "seconds"
+    assert built.findings[0].evidence_refs == ["evidence"]
+    assert built.evidence_refs == ["evidence"]
 
 
 @pytest.mark.asyncio
@@ -794,9 +919,7 @@ def retrieved_hit():
 
 @pytest.mark.asyncio
 async def test_only_server_retrieved_citations_extend_saved_evidence():
-    data = content()
-    data["evidence_refs"] = ["retrieved"]
-    data["findings"][0]["evidence_refs"] = ["retrieved"]
+    data = selection()
     backend = Backend(
         dict(
             status="available",
@@ -821,9 +944,9 @@ async def test_only_server_retrieved_citations_extend_saved_evidence():
     assert result.retrieved_evidence[0].evidence_id == "retrieved"
     assert str(result.retrieved_evidence[0].url) == "https://example.org/document"
     assert "1800 seconds" in module().render_explanation(result, analysis())
-    # The same ID cannot be asserted without an actual scoped server tool response.
+    # The model cannot assert a retrieved ID; the server adds it only after a scoped tool call.
     agent, _, _, _ = assistant([reply(data)])
-    assert (await explain(agent)).reason_code == "INVALID_EXPLANATION"
+    assert (await explain(agent)).retrieved_evidence == []
     data["retrieved_evidence"] = [dict(evidence_id="retrieved")]
     agent, _, _, _ = assistant([reply(data)])
     assert (await explain(agent)).reason_code == "INVALID_EXPLANATION"
@@ -866,7 +989,7 @@ async def test_retrieved_citations_remain_inside_server_scope(changes):
 async def test_model_json_rejects_duplicate_keys_instead_of_selecting_last_value():
     response = reply()
     response.content = response.content.replace(
-        '"analysis_id": "analysis"', '"analysis_id": "foreign", "analysis_id": "analysis"'
+        '"metric_id": "travel-time"', '"metric_id": "foreign", "metric_id": "travel-time"'
     )
     agent, _, _, _ = assistant([response])
     assert (await explain(agent)).reason_code == "INVALID_EXPLANATION"

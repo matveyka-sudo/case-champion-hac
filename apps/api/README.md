@@ -11,17 +11,33 @@ From the repository root:
 ```sh
 uvx --from uv==0.12.17 uv sync --frozen --all-packages --group dev
 export PYTHONPATH=packages/contracts/src:apps/api/src:packages/assistant/src
-.venv/bin/uvicorn a2_api.app:create_configured_app --factory --host 127.0.0.1 --port 8033
 ```
 
 Without a database, `/health` and `/api/v1/capabilities` work. Capabilities report actual integration readiness; published methodology does not imply accepted data. The territory catalog, snapshots and cargo profiles are supplied by a trusted synchronous `A2_REGISTRY_HOOK=module:function` returning `ProductRegistry`. The published urban scope comes from `config/product.json`; IDs and geometry come from accepted catalogs. Intercity territories are configured independently. Adding data for further regions does not require new HTTP handlers.
 
-Set `A2_DATABASE_URL`, a role-specific `A2_DATABASE_SCHEMA`, `A2_CODE_VERSION`, and trusted `A2_CALCULATION_HANDLER=module:function` together to enable the configured worker adapter. `ProductRegistry.ready_kinds` must explicitly declare integrated kinds. Optional async `A2_PREFLIGHT_HOOK(request, snapshot)` performs bounded readiness checks, never routing. Apply migrations before startup:
+Copy `.env.example` to a private `.env` in the repository root, fill its PostgreSQL credentials and set `DATABASE_URL` to the exposed Compose port. `DATABASE_SCHEMA` is optional and defaults to `a2_backend`. API, worker, Alembic and budget CLI load this file from the process working directory; process variables override it. Start PostgreSQL and apply migrations before API startup:
 
 ```sh
+docker compose up -d postgres
 .venv/bin/alembic -c apps/api/alembic.ini upgrade head
+.venv/bin/python -m a2_api.budget_cli status
+.venv/bin/python -m a2_api.budget_cli set-limit
+.venv/bin/python -m a2_api.budget_cli status
+```
+
+Start the API on loopback after migrations:
+
+```sh
+.venv/bin/uvicorn a2_api.app:create_configured_app --factory --host 127.0.0.1 --port 8033
+```
+
+The budget limit is installed only by `set-limit`, never by startup or migrations. The template keeps both live gates off. `ASSISTANT_HOOK` and `ASSISTANT_BUDGET_HOOK` configure the bundled Alice factory and durable ledger; an empty Yandex key/folder leaves the assistant in safe fallback mode. Set `A2_CODE_VERSION` and trusted `A2_CALCULATION_HANDLER=module:function` together only when a calculation adapter is ready, then start the worker separately:
+
+```sh
 .venv/bin/python -m a2_api.runtime worker
 ```
+
+`ProductRegistry.ready_kinds` must explicitly declare integrated kinds. Optional async `A2_PREFLIGHT_HOOK(request, snapshot)` performs bounded readiness checks, never routing.
 
 Worker and API must use the same database schema and code revision. Runtime SQL uses parameterized asyncpg; SQLAlchemy is used only for migrations. A single schema-specific advisory lock owns the worker. Claims are fenced, heartbeated and cancellable; calculations run in killable spawned processes. Interrupted work requires explicit retry rather than unbounded automatic reruns. Results and candidate proposals publish atomically.
 
@@ -47,9 +63,9 @@ The original user request is used for idempotency; normalized snapshot, methodol
 
 ## Assistant and providers
 
-`a2_assistant.FlashAssistant` supports the fixed read-only tool allowlist through `a2_api.tool_services.SavedTools`. The default explanation is a deterministic template. Optional trusted `A2_ASSISTANT_HOOK(service)` returns a configured `FlashAssistant`. The backend includes a PostgreSQL deployment-wide money and token ledger at migration head `0004_alice_budget`; it never installs a budget or invokes a paid API automatically. Tools expose scoped structured data and accepted document search. `EvidenceRepository` provides Russian PostgreSQL full-text retrieval with source/territory/period filters. The departure tool retains saved journeys and can include a separately labelled, partial provider observation through an explicitly injected `RaspDepartureGateway`; observations never become accepted snapshots automatically.
+`a2_assistant.FlashAssistant` supports the fixed read-only tool allowlist through `a2_api.tool_services.SavedTools`. The default explanation is a deterministic template. Optional trusted `ASSISTANT_HOOK(service)` returns a configured `FlashAssistant`. The backend includes a PostgreSQL deployment-wide money and token ledger at migration head `0004_alice_budget`; it never installs a budget or invokes a paid API automatically. Tools expose scoped structured data and accepted document search. `EvidenceRepository` provides Russian PostgreSQL full-text retrieval with source/territory/period filters. The departure tool retains saved journeys and can include a separately labelled, partial provider observation through an explicitly injected `RaspDepartureGateway`; observations never become accepted snapshots automatically.
 
-The backend-owned Alice hook is `A2_ASSISTANT_HOOK=a2_api.alice:build_assistant`; set `A2_ASSISTANT_BUDGET_HOOK=a2_api.budget_hook:build_budget` to use the bundled ledger. It reads existing Yandex settings, uses `SDKTransport` and closes it with the API lifespan. Missing key, `LLM_ENABLED=false`, unset currency authorization, absent hook or unconfigured budget keeps the endpoint on the saved-result template fallback. An operator must explicitly set the monetary and total-token ceilings; RUB prices are versioned public reference prices and do not confirm the billing account currency. See [Alice integration](docs/alice-integration.md) for CLI commands, offline checks and live rollout gates.
+The backend-owned Alice hook is `ASSISTANT_HOOK=a2_api.alice:build_assistant`; set `ASSISTANT_BUDGET_HOOK=a2_api.budget_hook:build_budget` to use the bundled ledger. It reads existing Yandex settings, uses `SDKTransport` and closes it with the API lifespan. Missing key, `LLM_ENABLED=false`, unset currency authorization, absent hook or unconfigured budget keeps the endpoint on the saved-result template fallback. An operator must explicitly install the monetary and total-token ceilings; RUB prices are versioned public reference prices and do not confirm the billing account currency. The model selects metric IDs and semantic codes; the backend assembles all values, units, evidence and narrative from the saved result. See [Alice integration](docs/alice-integration.md) for CLI commands, offline checks and live rollout gates.
 
 The separately injectable `a2_api.providers.rasp.RaspProvider` has bounded paging, retry/quota/rate limits, cache and explicit direct-only/partial coverage. It never supplies a complete multimodal index. Connecting it to ML2 ingestion or an engine adapter is an explicit integration step, not an HTTP side effect.
 
@@ -78,3 +94,179 @@ The audit adds migration `0003_evidence_search`, followed by `0004_alice_budget`
 Waydex integration: [frontend handoff](docs/frontend-integration-handoff.md) defines exact UI→API mapping, optional saved map metadata, scoped question/selection explanation body, cookies/polling and scenario flow. Latest clean frozen regression: 560 tests passed with PostgreSQL; actual frontend browser integration and production data remain separate team acceptance.
 
 Rasp response validation: echoed search codes and origin-local query date must match; station requests additionally require exact segment endpoints (city codes are checked through the echoed city scope). Conflicting duplicate service/departure identities reject the observation; identical rows deduplicate. Responses request `Accept-Encoding: identity` and reject any actual non-identity `Content-Encoding` before reading, including gzip/deflate/br and coding lists, even if upstream ignores the request header. Compression is deliberately unsupported so HTTPX cannot allocate an expanded gzip body before the cap. Uncompressed transport chunks are checked before copying or JSON parsing, without a fixed-size rechunk buffer. The default cap is 2 MiB per HTTP response, configurable by `max_response_bytes` up to 16 MiB, and applies to successful and error responses without trusting Content-Length. Timeout/cancellation closes the stream; errors contain no provider body. Observations remain partial and never become accepted snapshots.
+
+## Module boundaries after the fix-fullstack refactor
+
+The runtime stack remains FastAPI/Pydantic v2, asyncpg and parameterized raw SQL.
+SQLAlchemy is used only by Alembic. No new ORM, task queue, DTO copy or dependency
+was introduced. Existing URLs, operation IDs, cookies, security policy and status
+transitions are preserved.
+
+```text
+a2_api/
+  app.py                    stable ASGI app + configured/legacy factory imports
+  api/
+    application.py          canonical FastAPI factory, middleware, errors, health
+    dependencies.py         request-local service lookup and header type
+    bootstrap.py            configured API lifespan and trusted hooks
+    legacy.py               isolated historical HTTP surface
+    v2/
+      catalog.py            capabilities and territories
+      analyses.py           analysis submit/read
+      jobs.py               polling and cancellation
+      scenarios.py          proposals, run submission and scenario result
+      explanations.py       scoped saved-result explanation
+  services/
+    analyses.py             normalization, readiness, enqueue and saved-result access
+    scenarios.py            frozen proposal and baseline orchestration
+    jobs.py                 historical queued service/preflight adapter
+    catalog.py, legacy.py   historical metadata and unavailable service boundary
+  db/
+    connection.py           asyncpg pool, schema readiness and failure cleanup
+    rows.py                 SQL row → canonical DTO, hash and access-scope checks
+    validation.py           pure publication integrity guards, no SQL
+    repositories/
+      jobs.py               queue/cache/idempotency/claim/lease/publication/cancel
+      runs.py               immutable result reads and baseline checks
+      scenarios.py          saved proposal SQL and scenario publication checks
+      evidence.py           accepted evidence publication and Russian FTS
+      budget.py             deployment ledger SQL and reservation accounting
+  workers/
+    calculation.py          spawned CPU process, IPC size/time bounds and termination
+    runner.py               single-worker claim/heartbeat/cancel/publication lifecycle
+    cli.py                  configured worker entrypoint and signals
+  core/
+    config.py               RuntimeSettings
+    catalog.py, registry.py internal configuration and published product catalogs
+    jobs.py                 persisted job contexts and worker payload types
+    errors.py, scope.py     safe domain errors and pure territory scope extraction
+  assistant/
+    alice.py                opt-in SDK factory and deployment budget validation
+    explanations.py         saved-result/selection scope and template/model orchestration
+    tools.py                eight read-only scoped tool adapters
+    budget.py, budget_cli.py operator settings/hook and admin CLI
+  exports/
+    schemas.py              deterministic OpenAPI and JSON Schema export
+    results.py              saved legacy JSON/CSV export
+  providers/                existing Rasp HTTP boundary and departure gateway
+```
+
+### Request and transaction flow
+
+`a2_api.app:app` remains the unconfigured canonical v2 ASGI object.
+`a2_api.app:create_configured_app --factory` resolves runtime settings/hooks and
+opens the pool during lifespan. HTTP middleware retains session/CSRF/error policy;
+thematic routers obtain `request.app.state.services`, call application services
+and return canonical DTOs. Router instances hold no shared service instance.
+Multiple FastAPI applications therefore retain separate services and sessions.
+
+Application services normalize/authorize requests and call repositories; they
+contain no SQL or FastAPI Response construction. SQL row checks and publication
+integrity remain on the persistence boundary. The configured worker uses the same
+repositories and dispatches trusted calculation handlers in spawned processes.
+
+`JobRepository` is the compatible public repository surface. Its concrete
+`ScenariosRepository → RunsRepository` bases group existing operations around the
+same pool and preserve `self` dispatch, including subclass publication hooks.
+There is no nested connection acquisition introduced by this inheritance.
+
+| SQL area | Where to look | Transaction owner |
+| --- | --- | --- |
+| Replay/cache/queue | `db/repositories/jobs.py:replay/enqueue` | enqueue opens its original transaction |
+| Claim and lease | `jobs.py:claim/heartbeat/cancel/recover_orphans` | original claim/cancel transactions and conditional updates |
+| Result publication | `jobs.py:succeed` | one transaction inserts run/proposals and finishes job |
+| Saved results | `runs.py:get_run/_read_run/get_run_parameters` | original repeatable-read read transaction and optional FOR SHARE |
+| Scenario commands | `scenarios.py:get_proposal/_save_proposals/_check_scenario_inputs` | explicit save transaction or caller's publication connection |
+| Evidence | `evidence.py:publish/search` | original immutable ingestion transaction; scoped FTS reads |
+| Alice budget | `budget.py:configure_budget/reserve/record_usage/read_budget_status` | original singleton row locks and accounting transactions |
+| Pool/schema checks | `db/connection.py:open_pool` | lifespan/CLI closes pool; no application transaction hidden here |
+
+The cross-entity run INSERT deliberately stays inside `jobs.succeed`: it is part
+of atomic job publication. `_save_proposals` receives that SAME connection, not a
+new pool checkout. `_publication_connection` still uses the session owning the
+worker advisory lock; session loss aborts publication. `FOR UPDATE SKIP LOCKED`,
+lock ordering, placeholders, lease fencing, cancellation and immutable hashes are
+unchanged. There is no sessions table or independent cache table: session hashes
+and versioned cache state remain in the existing jobs/runs/proposals columns.
+
+### DTO ownership and compatibility imports
+
+Public Pydantic request/result/error schemas remain exclusively in
+`packages/contracts/src/a2_contracts/v2/`. Backend configuration models and internal
+persisted job/worker types are in `core/` and the assistant component; they are not
+copies of canonical AnalysisRequest/AnalysisResult/ScenarioResult/AcceptedData.
+`db/rows.py` maps asyncpg rows into those existing models and checks stored hashes.
+No ORM table models were created.
+
+| Previous path | Canonical implementation | Compatibility |
+| --- | --- | --- |
+| `api_v2.py` | `api/application.py`, `api/v2/*` | factory/error/header imports retained |
+| `app.py` | `api/application.py`, `api/legacy.py`, `api/bootstrap.py` | app, create_app and create_configured_app retained |
+| `analysis_service.py` | `services/analyses.py`, `services/scenarios.py`, `assistant/explanations.py` | AnalysisService and constructor/method signatures retained |
+| `services.py` | `services/__init__.py`, `services/legacy.py`, `core/errors.py` | same import name now a small package facade |
+| `job_services.py` | `services/jobs.py` | QueuedServices/Prepare retained |
+| `storage.py` | `db/repositories/*`, `db/rows.py`, `db/validation.py` | same JobRepository object and row helper imports |
+| `jobs.py` | `core/jobs.py` | same internal model/hash imports |
+| `runtime.py` | `core/config.py`, `db/connection.py`, `api/bootstrap.py`, `workers/cli.py` | CLI and factory imports retained |
+| `worker.py` | `workers/calculation.py`, `workers/runner.py` | calculate + thin Worker adapter retained |
+| `configuration.py`, `product_registry.py` | `core/catalog.py`, `services/catalog.py`, `core/registry.py` | existing types/functions retained |
+| `alice.py` | `assistant/alice.py` | thin factory adapter retains SDKTransport injection |
+| `tool_services.py`, `evidence_search.py` | `assistant/tools.py`, `db/repositories/evidence.py` | SavedTools/EvidenceRepository retained |
+| `deployment_budget.py`, `budget_hook.py`, `budget_cli.py` | `db/repositories/budget.py`, `assistant/budget.py`, `assistant/budget_cli.py` | existing hooks and CLI retained |
+| `export.py`, `run_exports.py` | `exports/schemas.py`, `exports/results.py` | schema CLI and export_run retained |
+| `providers/rasp.py`, `providers/departures.py` | same provider package | provider behavior unchanged |
+
+`worker.Worker` is intentionally a thin subclass of canonical `workers.runner.Worker`:
+its calculator delegates through the existing `a2_api.worker.calculate` seam.
+`alice.build_assistant` similarly passes the existing `a2_api.alice.SDKTransport`
+factory to the canonical implementation. Existing monkeypatch consumers continue
+to work; there are no sys.modules substitutions or duplicate implementations.
+Other tested class/function reexports preserve object identity. Old configured
+module:function hooks and calculation-handler imports remain valid.
+
+### Refactor verification
+
+Source baseline: `5311617a7634e04eec6936cc103986e3f39ec3b8` in the main PyCharm
+checkout, branch fix-fullstack. Before: Ruff/format/mypy clean; without database
+200 passed/148 skipped; on a dedicated PostgreSQL17.11 cluster,348 passed.
+The initial database attempt exposed a locally missing declared greenlet extra.
+`uv sync --frozen --all-packages --group dev` installed locked greenlet3.5.6;
+no manifest/lock update was required. Original sources were preserved before edits,
+verified against HEAD, and rerun read-only after environment repair; implementation
+work stayed in the main checkout.
+
+After: **826 passed,0 skipped** across API/contracts/assistant, including28 new
+relocation guards. The API portion is376 tests (348 original +28 guards).
+All293 schema artifacts are byte-identical, including production/legacy OpenAPI;
+canonical generated files were not rewritten. Fixtures captured185 signatures,
+47 SQL literals and57 SQL binding/transaction AST fingerprints from the original
+source, not from the refactored implementation. Signature comparison normalizes
+only relocated module prefixes, unordered frozenset repr and function addresses.
+Fresh import order tests run from another cwd; ORM/reverse dependency guards pass.
+
+Real TCP Uvicorn configured startup, health/capabilities/OpenAPI, PostgreSQL pool,
+worker `--once` on an empty disposable queue, and budget `status` smoke passed. Existing database tests include
+migration upgrade/downgrade, concurrent idempotency, cancellation, worker parent/
+lease loss, stale publication, proposal atomicity, ownership, FTS and budget.
+Frontend code stayed unchanged:36 unit/API tests, build, API freshness and21 E2E
+passed in apps/web. Verified old ignored frontend caches were removed with explicit
+allowlisted paths; no tracked frontend root remains.
+
+Run frozen setup before invoking the source checkout directly:
+
+```sh
+uv sync --frozen --all-packages --group dev
+export PYTHONPATH=.:apps/api/src:packages/contracts/src:packages/assistant/src
+# A2_TEST_DATABASE_URL must point to a dedicated disposable database.
+.venv/bin/python -m pytest apps/api/tests packages/contracts/tests packages/assistant/tests -q -o asyncio_default_fixture_loop_scope=function
+.venv/bin/ruff check apps/api/src apps/api/tests
+.venv/bin/ruff format --check apps/api/src apps/api/tests
+MYPYPATH=packages/contracts/src:apps/api/src:packages/assistant/src .venv/bin/python -m mypy --explicit-package-bases packages/contracts/src/a2_contracts apps/api/src/a2_api packages/assistant/src/a2_assistant
+.venv/bin/python -m a2_api.export --output contracts/generated --check
+```
+
+Source/PYTHONPATH deployment semantics remain unchanged because manifests still
+use package=false. Real engine/ML2 hooks, accepted data, production provider/Alice
+credentials and production E2E remain integration dependencies. This refactor does
+not enable those integrations or claim a paid live call. No new independent
+functional defect was fixed as part of the structural change.

@@ -9,16 +9,17 @@ Alembic использует SQLAlchemy и asyncpg только для мигр�
 Из корня репозитория под подготовленным окружением:
 
 ```bash
-export A2_DATABASE_URL='postgresql+asyncpg://USER:PASSWORD@HOST:PORT/DATABASE'
-export A2_DATABASE_SCHEMA='a2_backend'
+# DATABASE_URL is read from the repository-root .env; DATABASE_SCHEMA defaults to a2_backend.
 .venv/bin/alembic -c apps/api/alembic.ini upgrade head
 .venv/bin/alembic -c apps/api/alembic.ini current
 ```
 
 Не записывайте действительные учётные данные в Git или журналы. Допустимы также
 URL `postgresql://` и `postgres://`: соединение миграций использует asyncpg.
-Без URL миграция завершается ошибкой конфигурации. Автоматически читать `.env`
-или использовать другой сервер/БД она не будет.
+Без `DATABASE_URL` миграция завершается ошибкой конфигурации. При запуске из
+корня репозитория Alembic читает `.env`; переменные процесса имеют приоритет.
+Старые имена `A2_DATABASE_URL` и `A2_DATABASE_SCHEMA` временно поддерживаются,
+но конфликтующие значения отвергаются без вывода URL.
 
 При программном запуске `Config.attributes['database_url']` и
 `Config.attributes['database_schema']` имеют приоритет над переменными окружения.
