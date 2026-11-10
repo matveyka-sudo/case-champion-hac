@@ -109,3 +109,29 @@ def test_absence_marker_alone_is_insufficient_in_saved_scenario_values():
     value = absent_analysis()
     with pytest.raises(ValidationError, match="scoped complete-chain placeholder"):
         ScenarioValues.model_validate({"metrics": [], "scores": value["scores"]})
+
+
+@pytest.mark.parametrize("nested", [False, True])
+def test_absent_path_cannot_authorize_a_normal_positive_aggregate(nested):
+    value = absent_analysis(calculation="reference_ratio")
+    leaf = value["scores"][0]
+    aggregate = leaf | {
+        "score_id": "unsupported-positive-aggregate",
+        "value": 50.0,
+        "reason_code": None,
+        "calculation_kind": "aggregate",
+        "components": [{"kind": "score", "id": leaf["score_id"]}],
+    }
+    value["scores"].append(aggregate)
+    if nested:
+        value["scores"].append(
+            aggregate
+            | {
+                "score_id": "nested-aggregate",
+                "components": [{"kind": "score", "id": aggregate["score_id"]}],
+            }
+        )
+    with pytest.raises(ValidationError, match="non-absence calculation operand"):
+        AnalysisResult.model_validate(value)
+    with pytest.raises(ValidationError, match="non-absence calculation operand"):
+        ScenarioValues.model_validate({"metrics": value["metrics"], "scores": value["scores"]})
