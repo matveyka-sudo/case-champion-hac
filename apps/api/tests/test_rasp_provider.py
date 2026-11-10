@@ -422,7 +422,7 @@ async def test_legacy_host_requires_explicit_selection_and_response_urls_are_ine
     def handle(request):
         urls.append(str(request.url))
         row = segment()
-        row["thread"]["thread_method_link"] = "https://evil.example/?key=" + SECRET
+        row["thread"]["thread_method_link"] = "https://evil.example/?key=TEST_ONLY-untrusted-link"
         return httpx.Response(200, json=page([row]))
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:

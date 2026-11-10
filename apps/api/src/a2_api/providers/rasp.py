@@ -28,6 +28,7 @@ from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 from datetime import UTC, date, datetime, timedelta
 from email.utils import parsedate_to_datetime
+from itertools import chain
 from typing import Annotated, Literal, Self
 from uuid import uuid4
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -220,6 +221,49 @@ class _Segment(_WireModel):
 def _hash(value: object) -> str:
     encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
     return hashlib.sha256(encoded).hexdigest()
+
+
+def _safe_json(body: bytearray, secret: str) -> object:
+    """Reject echoes before any capture/DTO/cache, including escaped JSON strings."""
+    if secret.encode() in body:
+        raise RaspError("invalid_response")
+
+    def unique(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError
+            result[key] = value
+        return result
+
+    def finite(value: str) -> object:
+        raise ValueError
+
+    try:
+        decoded = json.loads(body, object_pairs_hook=unique, parse_constant=finite)
+    except (ValueError, RecursionError):
+        raise RaspError("invalid_response") from None
+    # Iterator frames keep traversal memory proportional to nesting depth rather
+    # than duplicating a large decoded list/dictionary in a work queue.
+    pending = [iter((decoded,))]
+    visited = 0
+    while pending:
+        try:
+            value = next(pending[-1])
+        except StopIteration:
+            pending.pop()
+            continue
+        visited += 1
+        if visited > min(len(body) + 1, 1_000_000) or len(pending) > 128:
+            raise RaspError("invalid_response")
+        if isinstance(value, str):
+            if secret in value:
+                raise RaspError("invalid_response")
+        elif isinstance(value, dict):
+            pending.append(chain(value.keys(), value.values()))
+        elif isinstance(value, list):
+            pending.append(iter(value))
+    return decoded
 
 
 class RaspProvider:
@@ -599,13 +643,8 @@ class RaspProvider:
                 continue
             if status != 200:
                 raise RaspError("upstream_error")
-            try:
-                decoded = json.loads(body)
-            except (ValueError, ValidationError):
-                raise RaspError("invalid_response") from None
+            decoded = _safe_json(body, self._key.get_secret_value())
             if self._on_page_capture is not None:
-                if self._key.get_secret_value().encode() in body:
-                    raise RaspError("invalid_response")
                 capture = PageCapture(
                     endpoint=f"https://{self._host}" + path,
                     params=tuple(sorted(params.items())),

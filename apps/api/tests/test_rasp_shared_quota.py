@@ -579,3 +579,93 @@ async def test_ledger_latency_does_not_compress_owned_client_rate_interval():
         await provider.copyright()
         await query(provider)
     assert len(times) == 2 and times[1] - times[0] >= 0.09
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("capture_enabled", [False, True])
+@pytest.mark.parametrize("escaped", [False, True])
+@pytest.mark.parametrize("location", ["text", "logo", "nested_value", "dictionary_key"])
+async def test_direct_or_escaped_credential_echo_is_rejected_before_capture_dto_and_cache(
+    database, capture_enabled, escaped, location
+):
+    pool, _, _ = database
+    await initialize(pool, already_used=499)
+    body = copyright_body()
+    if location == "text":
+        body["copyright"]["text"] = SECRET
+    elif location == "logo":
+        body["copyright"]["logo_vm"] = "TEST_ONLY-prefix" + SECRET + "-suffix"
+    elif location == "nested_value":
+        body["unrelated_source_metadata"] = [{"nested": [SECRET]}]
+    else:
+        body[SECRET] = "TEST_ONLY-value"
+    raw = json.dumps(body).encode()
+    if escaped:
+        encoded = "".join("\\u%04x" % ord(character) for character in SECRET).encode()
+        raw = raw.replace(SECRET.encode(), encoded)
+        assert SECRET.encode() not in raw
+    captures, calls = [], []
+
+    async def capture(value):
+        captures.append(value)
+
+    def handle(request):
+        calls.append(request)
+        return httpx.Response(200, content=raw)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:
+        provider = RaspProvider(
+            client,
+            api_key=SECRET,
+            wire_quota=ledger(pool),
+            on_page_capture=capture if capture_enabled else None,
+        )
+        with pytest.raises(RaspError, match="invalid_response") as error:
+            await provider.copyright()
+        assert SECRET not in str(error.value) and error.value.__cause__ is None
+        assert provider._copyright_cache is None
+        with pytest.raises(RaspError, match="quota_exceeded"):
+            await provider.copyright()
+    assert len(calls) == 1 and captures == []
+    assert await pool.fetchval("SELECT reserved_count FROM rasp_quota_days") == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("capture_enabled", [False, True])
+@pytest.mark.parametrize("first_value", ["benign", "direct_secret", "escaped_secret"])
+async def test_duplicate_json_keys_are_rejected_before_discarding_any_value(
+    database, capture_enabled, first_value
+):
+    pool, _, _ = database
+    await initialize(pool, already_used=499)
+    value = "TEST_ONLY-first" if first_value == "benign" else SECRET
+    encoded = json.dumps(value)
+    if first_value == "escaped_secret":
+        encoded = encoded.replace(
+            SECRET, "".join("\\u%04x" % ord(character) for character in SECRET)
+        )
+    raw = (
+        '{"copyright":{"url":"https://rasp.yandex.ru/","text":'
+        + encoded
+        + ',"text":"TEST_ONLY-final"}}'
+    ).encode()
+    captures = []
+
+    async def capture(value):
+        captures.append(value)
+
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(lambda request: httpx.Response(200, content=raw))
+    ) as client:
+        provider = RaspProvider(
+            client,
+            api_key=SECRET,
+            wire_quota=ledger(pool),
+            on_page_capture=capture if capture_enabled else None,
+        )
+        with pytest.raises(RaspError, match="invalid_response") as error:
+            await provider.copyright()
+        assert SECRET not in str(error.value) and error.value.__cause__ is None
+        assert provider._copyright_cache is None
+    assert captures == []
+    assert await pool.fetchval("SELECT reserved_count FROM rasp_quota_days") == 1
