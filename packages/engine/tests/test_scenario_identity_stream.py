@@ -95,3 +95,19 @@ def test_shared_network_stream_avoids_full_expanded_json_allocation() -> None:
 def test_unsupported_values_still_fail_closed(value: object) -> None:
     with pytest.raises(ValueError, match="UNSUPPORTED_SCENARIO_CANONICAL_VALUE"):
         scenario_hash(value)
+
+
+@pytest.mark.parametrize("hidden", [object(), float("nan"), float("inf"), float("-inf")])
+def test_colliding_mapping_keys_validate_overwritten_children(hidden: object) -> None:
+    value = {float("nan"): hidden, float("nan"): 1}
+    assert len(value) == 2
+    with pytest.raises(ValueError, match="UNSUPPORTED_SCENARIO_CANONICAL_VALUE"):
+        legacy_bytes(value)
+    with pytest.raises(ValueError, match="UNSUPPORTED_SCENARIO_CANONICAL_VALUE"):
+        scenario_hash(value)
+
+
+def test_colliding_mapping_keys_preserve_legacy_last_value_hash() -> None:
+    value = {float("nan"): {"overwritten": [1, 2]}, float("nan"): 1}
+    assert canonical(value) == {"nan": 1}
+    assert scenario_hash(value) == hashlib.sha256(legacy_bytes(value)).hexdigest()
