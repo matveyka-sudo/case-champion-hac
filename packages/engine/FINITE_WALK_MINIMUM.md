@@ -241,3 +241,48 @@ Run the exclusive executor with `--exact-turns` to reproduce the complete
 source-bound export, incumbent, closed-ball pair roster, exact search and final
 replay. Each run copies both checker modules and its native source/binary/compiler
 manifest, and retains every request/response and digest under a fresh run ID.
+
+## Per-alternative physical model weights
+
+`urban/walk/physical_certificate.py` consumes a source-bound ML2 receipt for every
+native endpoint alternative. It verifies source/build/profile/request/export
+identities, exact edge/percent/projection bits, complete declared rosters,
+traversability evidence, physical-to-access and access-to-native geometry endpoints,
+unrounded binary64 operand ratios and profile-derived times. Loaded normalized
+weights remain bound to their raw receipt content. Unknown alternatives cannot be
+silently dropped, and a complete declared-access roster is not a complete roster
+of real-world entrances or a complete destination category.
+
+For unequal endpoint weights, the source virtual node and absorbing terminal
+choices include each alternative's own weights **inside** exact Dijkstra. The
+zero-network-distance closed ball is conservatively enlarged to a replayed
+physical-model incumbent; nonnegative external times guarantee that every
+improving route's network prefixes remain inside it. The regression with A's
+network 1 + access 100 versus B's network 2 + access 0 correctly chooses B at 2.
+
+A smaller certificate is valid when equality of all origin weights and equality
+of all destination weights are independently verified from those complete source
+receipts. Then every model route has `T = a + T_network + b`, so the proved network
+minimum can be translated by exactly those common weights. The common-weight
+helper rejects unequal alternatives rather than assuming this property.
+
+The real north-Kaliningrad point to Khrabrovo task proved a network minimum of
+`14399050677/1048576` seconds. ML2 independently source-checked all four native
+bindings, the existing canonical projection policy, both external straight links
+and both positive projection offsets. Exact addition of the unrounded binary64
+operands gives a **declared canonical-access model** minimum of
+`7939955842630578250721/576460752303423488` seconds, approximately
+13773.627798430474 seconds (229.56046330717456 minutes).
+
+At externally accepted `H=1800` seconds, the unchanged formula has reference value
+0.4971801994143471. This proof alone does not authorize a category index: the
+approach-model policy, eligible-object catalog closure, administrative area,
+scope, population and source approval are separate obligations. Research receipts
+therefore keep `index=null`, `product_index_eligible=false` and the full physical
+minimum flag false. A partial point model must never become a full city index or
+ranking, and the school-catalog proof remains incomplete.
+
+`examples/check_physical_access.py` independently verifies the preserved native
+run and ML2 receipt into a new exclusive run directory. It records all checker
+sources and input hashes; the optional formula value is explicitly a reference
+calculation and not a product readiness flag.
