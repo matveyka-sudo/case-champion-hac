@@ -31,9 +31,9 @@ export function calculatedPoints(result: AnalysisResult, scores = result.scores)
   }).map((point, i) => ({ ...point, name: pointDisplayName(point.pointId, point.feature, i + 1) }));
   const inventoryCount = inventory.size || null;
   const denominator = inventoryCount !== null && [...totals.keys()].every((id) => inventory.has(id)) ? inventoryCount : null;
-  const cityId = "city_id" in result.request ? result.request.city_id : null;
+  const territoryId = "city_id" in result.request ? result.request.area_id || result.request.city_id : null;
   const territory = scores.filter((score) => score.subject.kind === "territory" && score.subject.category == null &&
-    (!cityId || score.subject.territory_id === cityId));
+    territoryId !== null && score.subject.territory_id === territoryId);
   return { points, denominator, inventoryCount, territoryScore: territory.length === 1 ? territory[0] : null };
 }
 export type CalculatedPointOverview = ReturnType<typeof calculatedPoints>;
