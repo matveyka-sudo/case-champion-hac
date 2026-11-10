@@ -16,10 +16,12 @@ def test_saved_walk_formula_and_completeness_preserve_claims(value, partial):
     text = core.render_explanation(answer, saved)
     assert "Индекс городской категории: I = 100 × 2^(−T/H)" in text
     assert "по классу площади города" in text
+    assert "T — подтверждённое минимальное полное время пути в принятой модели" in text
     assert "Чем дольше путь, тем ниже индекс" in text
     assert "отдельного разрешённого сценария" in text
     assert ("Предварительная оценка" in text) == partial
     assert ("а не нулевую доступность" in text) == (value is None)
+    assert ("Одного наблюдаемого маршрута недостаточно" in text) == (value is None)
     assert answer.status == "template" and answer.model_id is None
     assert answer.proposals == []
     assert answer.findings[0].score_claims[0].value == value
