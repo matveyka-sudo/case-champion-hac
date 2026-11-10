@@ -7,6 +7,11 @@ import type {
   Schemas,
   Selection,
 } from "../../api/types";
+function canonicalRequest(request: AnalysisRequest) {
+  const sort = (value: unknown): unknown => Array.isArray(value) ? value.map(sort) : value && typeof value === "object"
+    ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, child]) => [key, sort(child)])) : value;
+  return JSON.stringify(sort(request));
+}
 export interface ChatMessage {
   question: string;
   answer: Schemas["Explanation"];
@@ -29,7 +34,8 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     chat = useRef<AbortController | null>(null),
     currentResult = useRef<AnalysisResult | null>(null),
     proposalAbort = useRef<AbortController | null>(null),
-    busy = useRef(false);
+    busy = useRef(false),
+    pendingSubmission = useRef<{ fingerprint: string; key: string } | null>(null);
   useEffect(
     () => () => {
       active.current?.abort();
@@ -40,6 +46,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
   );
   const changed = () => {
     revision.current++;
+    pendingSubmission.current = null;
     active.current?.abort();
     chat.current?.abort();
     proposalAbort.current?.abort();
@@ -102,16 +109,25 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     const rev = revision.current;
     setPhase("running");
     setError(null);
+    const fingerprint = canonicalRequest(request);
+    if (pendingSubmission.current?.fingerprint !== fingerprint)
+      pendingSubmission.current = { fingerprint, key: crypto.randomUUID() };
+    const submission = pendingSubmission.current;
+    let terminalFailure = false;
     try {
       const value = await gateway.analyze(
         request,
-        crypto.randomUUID(),
+        submission.key,
         controller.signal,
         (j) => {
-          if (rev === revision.current && !controller.signal.aborted) setJob(j);
+          if (rev === revision.current && !controller.signal.aborted) {
+            terminalFailure = j.status === "failed" || j.status === "cancelled";
+            setJob(j);
+          }
         },
       );
       if (rev !== revision.current || controller.signal.aborted) return;
+      pendingSubmission.current = null;
       if (!value) {
         setPhase("cancelled");
         return;
@@ -123,6 +139,8 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
       loadProposals(value);
     } catch (e) {
       if (!controller.signal.aborted && rev === revision.current) {
+        const recoverable = e instanceof ApiError && (e.retryable || e.code === "network_error" || e.code === "RUNTIME_INPUTS_BUSY");
+        if (terminalFailure || !recoverable) pendingSubmission.current = null;
         setError(e instanceof Error ? e : new Error("Ошибка расчёта"));
         setPhase("failed");
       }
@@ -213,6 +231,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
       if (rev !== revision.current) return;
       setJob(value);
       if (value.status === "cancelled") {
+        pendingSubmission.current = null;
         active.current?.abort();
         busy.current = false;
         setPhase("cancelled");

@@ -56,6 +56,49 @@ describe("saved analysis session boundaries", () => {
     expect(result.current.phase).toBe("failed");
     expect(g.analyze.mock.calls[0][1]).not.toBe(g.analyze.mock.calls[1][1]);
   });
+  it("recovers an accepted job after a lost POST response using the same manual-retry key", async () => {
+    const g = gateway();
+    const jobs = new Set<string>();
+    let lost = true;
+    g.analyze.mockImplementation(async (_request, key) => {
+      jobs.add(key);
+      if (lost) { lost = false; throw new ApiError(0, "network_error", "Lost POST response", [], null, true); }
+      return base;
+    });
+    const { result } = renderHook(() => useAnalysisSession(g));
+    await act(() => result.current.run(base.request));
+    expect(result.current.phase).toBe("failed");
+    const samePayload = Object.fromEntries(Object.entries(base.request).reverse()) as typeof base.request;
+    await act(() => result.current.run(samePayload));
+    expect(g.analyze.mock.calls[0][1]).toBe(g.analyze.mock.calls[1][1]);
+    expect(jobs.size).toBe(1);
+    expect(result.current.result).toEqual(base);
+    await act(() => result.current.run(base.request));
+    expect(g.analyze.mock.calls[2][1]).not.toBe(g.analyze.mock.calls[1][1]);
+  });
+  it("never reuses a pending submission key for changed payloads or a user revision", async () => {
+    const g = gateway();
+    g.analyze.mockRejectedValue(new ApiError(503, "RUNTIME_INPUTS_BUSY", "Busy", [], null, true));
+    const { result } = renderHook(() => useAnalysisSession(g));
+    await act(() => result.current.run(base.request));
+    const changedRequest = { ...base.request, departure_at: "2026-11-09T09:00:00+03:00" };
+    await act(() => result.current.run(changedRequest));
+    expect(g.analyze.mock.calls[0][1]).not.toBe(g.analyze.mock.calls[1][1]);
+    act(() => result.current.changed());
+    await act(() => result.current.run(changedRequest));
+    expect(g.analyze.mock.calls[2][1]).not.toBe(g.analyze.mock.calls[1][1]);
+  });
+  it("clears a pending key after a confirmed terminal job failure even if its error is retryable", async () => {
+    const g = gateway();
+    g.analyze.mockImplementation(async (_request, _key, _signal, onJob) => {
+      onJob({ job_id: "terminal-job", request_id: "r", status: "failed", created_at: "2026-11-10T00:00:00Z", started_at: null, finished_at: "2026-11-10T00:00:01Z", analysis_id: null, scenario_run_id: null, error: null });
+      throw new ApiError(503, "worker_unavailable", "Terminal failure", [], null, true);
+    });
+    const { result } = renderHook(() => useAnalysisSession(g));
+    await act(() => result.current.run(base.request));
+    await act(() => result.current.run(base.request));
+    expect(g.analyze.mock.calls[0][1]).not.toBe(g.analyze.mock.calls[1][1]);
+  });
   it("clears a completed city context and prevents old analysis actions after reset", async () => {
     const g = gateway();
     g.explain = vi.fn();
