@@ -1056,3 +1056,30 @@ test("API: selected area never inherits the city index or its population complet
   await expect(page.getByLabel("Обзор рассчитанных точек")).toContainText("Индекс выбранной территории: не предоставлен");
   expect(mock.request).toMatchObject({ city_id: "city-2", area_id: areaId });
 });
+
+test("API: a saved route remains easy to select when every point index is unknown", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  await mockApi(page, { capabilities: scopedCapabilities(), result: legGeometryFixture(null), emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Калининград");
+  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.getByLabel("Обзор рассчитанных точек")).toContainText("Рассчитанные точки (0 из 3)");
+  const routes = page.getByLabel("Обзор рассчитанных маршрутов");
+  await routes.locator("summary").click();
+  const choice = routes.getByRole("button", { name: /Синтетический аэропорт/ });
+  await expect(choice).toContainText("10 мин · полное время");
+  await choice.focus();
+  await choice.press("Enter");
+  const card = page.locator("#apiResultCard");
+  await expect(card.locator("h3")).toHaveText("Точка · 54.50200, 20.30200");
+  await expect(card.locator("h3")).toBeFocused();
+  await expect(routes.locator("details")).toHaveJSProperty("open", false);
+  await expect(card.locator(".api-journey summary")).toContainText("геометрия участков");
+  await expect(card.locator('.api-measure b[data-score-band="unknown"]')).toHaveCount(2);
+  await expect(card.locator('.api-measure b[data-score-band="low"]')).toHaveCount(0);
+  await page.getByRole("button", { name: "Все показатели", exact: true }).click();
+  await expect(card.locator("h3")).toHaveText("Калининград");
+  await expect(card.locator(".api-measure")).toHaveCount(12);
+});
