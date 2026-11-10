@@ -1187,6 +1187,7 @@ test("API: preparation errors are human and manual retry retains the pending sub
   await page.goto("/?data=api#atlas");
   await cityRun(page);
   await expect(page.getByRole("alert")).toContainText("Сервер подготавливает данные. Повторите расчёт чуть позже.");
+  await expect(page.locator('#chat [role="alert"]')).toHaveCount(0);
   await expect(page.locator("body")).not.toContainText("RUNTIME_INPUTS_BUSY");
   await page.getByRole("button", { name: "Повторить", exact: true }).click();
   await expect.poll(() => mock.posts).toBe(2);
@@ -1209,6 +1210,10 @@ test("API: explanation transport errors stay visible inside the shared mobile ch
   await page.getByRole("button", { name: "Отправить", exact: true }).click();
   await expect(page.locator("#chat").getByRole("alert")).toHaveText("Объяснение временно недоступно");
   await expect(page.locator("#chat").getByRole("alert")).toBeVisible();
+  await expect(page.locator('.statecard[role="alert"]')).toHaveCount(0);
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  await page.getByRole("button", { name: "Новый диалог", exact: true }).click();
+  await expect(page.locator('#chat [role="alert"]')).toHaveCount(0);
   expect(mock.posts).toBe(1);
 });
 

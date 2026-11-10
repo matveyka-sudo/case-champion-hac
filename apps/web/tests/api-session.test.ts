@@ -216,6 +216,46 @@ describe("saved analysis session boundaries", () => {
     expect(result.current.chatBusy).toBe(false);
     expect(result.current.messages).toEqual([]);
   });
+  it("keeps explanation failures separate from analysis failures when asking or clearing the chat", async () => {
+    const g = gateway();
+    const explanationError = new ApiError(503, "assistant_unavailable", "Explanation unavailable");
+    const analysisError = new ApiError(503, "engine_unavailable", "Analysis unavailable");
+    g.explain = vi.fn().mockRejectedValue(explanationError);
+    const { result } = renderHook(() => useAnalysisSession(g));
+    await act(() => result.current.run(base.request));
+    await act(() => result.current.explain("Почему?", null));
+    expect(result.current.explanationError).toBe(explanationError);
+    expect(result.current.error).toBeNull();
+    expect(result.current.phase).toBe("done");
+    expect(result.current.result).toEqual(base);
+    act(() => result.current.clearExplanation());
+    expect(result.current.explanationError).toBeNull();
+    g.analyze.mockRejectedValueOnce(analysisError);
+    await act(() => result.current.run(base.request));
+    expect(result.current.error).toBe(analysisError);
+    expect(result.current.explanationError).toBeNull();
+    await act(() => result.current.explain("Почему?", null));
+    expect(result.current.error).toBe(analysisError);
+    expect(result.current.explanationError).toBe(explanationError);
+    act(() => result.current.clearExplanation());
+    expect(result.current.error).toBe(analysisError);
+    expect(result.current.explanationError).toBeNull();
+    act(() => result.current.reset());
+    expect(result.current.error).toBeNull();
+    expect(result.current.explanationError).toBeNull();
+  });
+  it("reports an explanation hash mismatch only in the chat while retaining the saved analysis", async () => {
+    const g = gateway();
+    g.explain = vi.fn().mockResolvedValue({ analysis_id: base.analysis_id, analysis_result_hash: "another-result" });
+    const { result } = renderHook(() => useAnalysisSession(g));
+    await act(() => result.current.run(base.request));
+    await act(() => result.current.explain("Почему?", null));
+    expect(result.current.explanationError).toMatchObject({ code: "analysis_mismatch" });
+    expect(result.current.error).toBeNull();
+    expect(result.current.phase).toBe("done");
+    expect(result.current.result).toEqual(base);
+    expect(result.current.messages).toEqual([]);
+  });
   it("formats destination time independently of browser time zone and preserves null connection deltas", () => {
     expect(
       timestampText("2026-11-09T09:00:00+03:00", "Europe/Kaliningrad"),

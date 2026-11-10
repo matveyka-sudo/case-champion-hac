@@ -884,7 +884,7 @@ export function ApiAtlasPage() {
         </MapViewport>
         <AgentChatView open={chatOpen} onClose={() => { setChatOpen(false); if (window.innerWidth < 1520) setFiltersCollapsed(false); }} onNewDialog={() => { setInterfaceMessages([]); session.clearExplanation(); }}
           subtitle={result ? "Объясняет по сохранённому результату" : "Помогает выбрать условия до расчёта"}
-          error={session.error ? <p role="alert">{errorText(session.error)}</p> : undefined}
+          error={session.explanationError ? <p role="alert">{errorText(session.explanationError)}</p> : undefined}
           contextLabel={result ? `${requestTitle} · ${dirty ? "прежние условия" : "сохранённый результат"}` : "Помощь по интерфейсу · расчёта ещё нет"}
           contextRows={[{ label: "Контекст", value: result ? requestTitle : "Результат ещё не получен" },
             { label: "Условия", value: result ? timestampText(result.request.departure_at, savedOrigin?.timezone) : "Текущие параметры фильтров" },
