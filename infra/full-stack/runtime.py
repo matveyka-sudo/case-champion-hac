@@ -182,6 +182,13 @@ def product_check(args):
             Path(os.environ["WAYDEX_RUNTIME_BUNDLE_PATH"]),
             os.environ["WAYDEX_RUNTIME_BUNDLE_SHA256"],
         )
+        geometry = bundle.verify_geometry(
+            Path(os.environ["WAYDEX_RUNTIME_BUNDLE_PATH"]),
+            Path(os.environ["A2_CERTIFIED_WALK_MODEL_PATH"]),
+            os.environ["A2_CERTIFIED_WALK_MODEL_SHA256"],
+        )
+        if geometry["configured"]:
+            print(json.dumps({"verified_geometry_packet": geometry}))
         proof = load_binding(registry().config_hash)
         graph = Path(os.environ["WAYDEX_GRAPH_PATH"])
         digest = graph_check(graph, real.read(proof.native_root / "artifact.json"))

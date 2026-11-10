@@ -17,6 +17,8 @@ MAX_FILE_BYTES = 128 * 1024 * 1024
 MAX_TOTAL_BYTES = 512 * 1024 * 1024
 MAX_METADATA_BYTES = 2 * 1024 * 1024
 MAX_FILES = 4096
+MAX_GEOMETRY_BYTES = 16 * 1024 * 1024
+MAX_NATIVE_SOURCE_BYTES = 128 * 1024 * 1024
 
 
 def checksum(path, limit=MAX_TOTAL_BYTES):
@@ -30,7 +32,7 @@ def checksum(path, limit=MAX_TOTAL_BYTES):
 
 
 def safe_name(name):
-    if not isinstance(name, str) or len(name) > 512 or "\\" in name:
+    if not isinstance(name, str) or len(name) > 512 or "\\" in name or "\x00" in name:
         raise ValueError("Invalid bundle path")
     path = PurePosixPath(name)
     if path.is_absolute() or ".." in path.parts or path.as_posix() != name or name == ".":
@@ -227,6 +229,161 @@ def verify(folder, expected_manifest):
     if ready["manifest_sha256"] != expected_manifest:
         raise ValueError("Runtime bundle was not completely restored")
     return len(value["files"])
+
+
+def local_packet_path(folder, name):
+    relative = safe_name(name)
+    folder = folder.resolve()
+    path = folder.joinpath(*relative.parts)
+    if (
+        not path.is_file()
+        or not path.resolve().is_relative_to(folder)
+        or any(p.is_symlink() for p in (path, *path.parents) if p.is_relative_to(folder))
+    ):
+        raise ValueError("Local packet reference is missing or linked")
+    return path
+
+
+def checked_reference(folder, reference, limit=MAX_METADATA_BYTES):
+    if (
+        not isinstance(reference, dict)
+        or set(reference) != {"path", "sha256"}
+        or not isinstance(reference["sha256"], str)
+        or re.fullmatch("[a-f0-9]{64}", reference["sha256"]) is None
+    ):
+        raise ValueError("Invalid local packet reference")
+    path = local_packet_path(folder, reference["path"])
+    if checksum(path, limit) != reference["sha256"]:
+        raise ValueError("Local packet reference changed")
+    return path
+
+
+def packet_metadata(path):
+    with path.open("rb") as source:
+        raw = source.read(MAX_METADATA_BYTES + 1)
+    if len(raw) > MAX_METADATA_BYTES:
+        raise ValueError("Packet metadata exceeds byte budget")
+    return json.loads(raw)
+
+
+def verify_geometry(folder, binding_path, expected_binding):
+    """Verify optional geometry transport; numerical/canonical checks belong to BACKEND."""
+    relative = (
+        binding_path.relative_to(folder.absolute()) if binding_path.is_absolute() else binding_path
+    )
+    folder = folder.resolve()
+    binding_path = checked_reference(
+        folder, {"path": relative.as_posix(), "sha256": expected_binding}
+    )
+    binding = packet_metadata(binding_path)
+    reference = binding.get("geometry")
+    if reference is None:
+        return {"configured": False}
+    supplement_path = checked_reference(binding_path.parent, reference)
+    supplement = packet_metadata(supplement_path)
+    if (
+        set(supplement) != {"schema_version", "receipt", "original_snapshot"}
+        or supplement["schema_version"] != "waydex-certified-walk-geometry-binding/1"
+    ):
+        raise ValueError("Unsupported optional geometry supplement")
+    receipt_path = checked_reference(supplement_path.parent, supplement["receipt"])
+    receipt = packet_metadata(receipt_path)
+    if (
+        receipt.get("schema") != "waydex-certified-walk-geometry/1"
+        or receipt.get("geometry_only") is not True
+        or receipt.get("promotes_minimum_or_coverage") is not False
+    ):
+        raise ValueError("Geometry packet cannot promote minimum or coverage")
+    indexed = receipt["files_sha256"]
+    if not isinstance(indexed, dict) or not 1 <= len(indexed) <= 64:
+        raise ValueError("Bounded geometry source inventory required")
+    total = 0
+    for name, digest in sorted(indexed.items()):
+        path = checked_reference(
+            receipt_path.parent,
+            {"path": name, "sha256": digest},
+            MAX_GEOMETRY_BYTES - total,
+        )
+        total += path.stat().st_size
+    original = packet_metadata(local_packet_path(receipt_path.parent, "proof-binding.json"))
+    core = {key: value for key, value in binding.items() if key != "geometry"}
+    if core != original or receipt["proof_binding_sha256"] != indexed["proof-binding.json"]:
+        raise ValueError("Original proof binding core was changed by geometry")
+    native_path = checked_reference(binding_path.parent, binding["native_receipt"])
+    checked_reference(binding_path.parent, binding["physical_access"])
+    native = packet_metadata(native_path)
+    source_files = receipt["source_files_sha256"]
+    if not isinstance(source_files, dict) or not 1 <= len(source_files) <= 64:
+        raise ValueError("Bounded native source inventory required")
+    if (
+        source_files != native["files_sha256"]
+        or receipt["native_receipt_sha256"] != binding["native_receipt"]["sha256"]
+        or indexed["native-receipt.json"] != receipt["native_receipt_sha256"]
+        or indexed["physical-receipt.json"] != binding["physical_access"]["sha256"]
+        or receipt["physical_receipt_sha256"] != binding["physical_access"]["sha256"]
+        or indexed["model-receipt.json"] != receipt["model_receipt_sha256"]
+        or receipt["snapshot_id"] != original["snapshot_id"]
+        or receipt["snapshot_hash"] != original["snapshot_hash"]
+        or receipt["source_scope_id"] != native["closed_turn_certificate"]["source_scope_id"]
+        or receipt["candidate_sha256"] != source_files["turn-candidate.json"]
+        or receipt["source_build_manifest_sha256"] != source_files["build-manifest.json"]
+        or receipt["builder_image_id"] != native["builder_image_id"]
+        or receipt["runtime_library_sha256"] != native["runtime_library_sha256"]
+        or any(
+            indexed[name] != source_files[name]
+            for name in (
+                "build-manifest.json",
+                "valhalla.json",
+                "walking-profile.json",
+                "turn-candidate.json",
+            )
+        )
+    ):
+        raise ValueError("Geometry packet differs from its original native source")
+    source_total = 0
+    for name, digest in sorted(source_files.items()):
+        path = checked_reference(
+            native_path.parent,
+            {"path": name, "sha256": digest},
+            MAX_NATIVE_SOURCE_BYTES - source_total,
+        )
+        source_total += path.stat().st_size
+    model = packet_metadata(local_packet_path(receipt_path.parent, "model-receipt.json"))
+    if (
+        model["native_receipt_sha256"] != receipt["native_receipt_sha256"]
+        or model["physical_receipt_sha256"] != receipt["physical_receipt_sha256"]
+    ):
+        raise ValueError("Geometry model receipt source binding changed")
+    compiler = packet_metadata(local_packet_path(receipt_path.parent, "compiler-manifest.json"))
+    if (
+        compiler["builder_image_id"] != receipt["builder_image_id"]
+        or compiler["runtime_library_sha256"] != receipt["runtime_library_sha256"]
+        or compiler["binary_sha256"] != indexed["export-certified-geometry"]
+        or compiler["source_sha256"] != indexed["export_certified_geometry.cc"]
+        or not compiler["headers_sha256"]
+        or any(indexed[name] != digest for name, digest in compiler["headers_sha256"].items())
+    ):
+        raise ValueError("Geometry compiler/header source binding changed")
+    checked_reference(supplement_path.parent, supplement["original_snapshot"], MAX_FILE_BYTES)
+    authority = packet_metadata(
+        local_packet_path(folder, "provenance/original-product-manifest.json")
+    )
+    snapshots = [
+        row for row in authority["snapshots"] if row["snapshot_id"] == original["snapshot_id"]
+    ]
+    if (
+        len(snapshots) != 1
+        or snapshots[0]["sha256"] != supplement["original_snapshot"]["sha256"]
+        or snapshots[0]["content_hash"] != original["snapshot_hash"]
+    ):
+        raise ValueError("Original snapshot file/canonical authority changed")
+    return {
+        "configured": True,
+        "receipt_sha256": supplement["receipt"]["sha256"],
+        "files": len(indexed),
+        "bytes": total,
+        "original_snapshot_sha256": supplement["original_snapshot"]["sha256"],
+    }
 
 
 def main():
