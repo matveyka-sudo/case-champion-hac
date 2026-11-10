@@ -173,3 +173,18 @@ engine-owned native source-bound verifier. It links the installed pinned
 Valhalla library and never rebuilds or changes a running graph. The package
 repository is used to install compilation tools; the resulting builder image
 and native binary hashes must be recorded for proof artifacts.
+
+```sh
+docker build -f "$release/infra/full-stack/proof-builder.Dockerfile" \
+  -t waydex-walk-proof-builder:3.5.1 "$release"
+docker run --rm --memory 2g --cpus 2 \
+  --mount "type=bind,source=$release,target=/source,readonly" \
+  --mount type=bind,source=/absolute/path/to/new/proof-output,target=/output \
+  waydex-walk-proof-builder:3.5.1 sh -ec \
+  'g++ -std=c++17 -O2 $(pkg-config --cflags libvalhalla) /source/packages/engine/native/source_bound_walk.cc -o /output/source-bound-walk $(pkg-config --libs libvalhalla)'
+```
+
+This uses the pinned `libvalhalla.a` and the builder's shared dependency
+libraries. Execute the resulting Linux binary in that same builder image;
+record `ldd`, source/binary SHA256 and the builder image ID. Compile success is
+not a route-minimum proof; follow the engine owner's actual export/replay checks.
