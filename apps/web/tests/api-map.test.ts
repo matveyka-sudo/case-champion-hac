@@ -200,6 +200,32 @@ describe("partial walk map path", () => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe("map score completeness", () => {
+  it("uses the real Moscow camera independently of data origin and preserves it on scenario changes", () => {
+    const result = decode("AnalysisResult", structuredClone(resultRaw));
+    if (result.request.analysis_kind !== "urban_passenger") throw Error("fixture");
+    result.request.city_id = "moscow";
+    result.snapshot_id = "real-source-revision";
+    const props = { result, scores: result.scores, selection: null, onSelect: vi.fn(), zoomAction: { id: 0, kind: "home" } };
+    const view = render(createElement(ApiMap, props));
+    expect(drawn.views).toEqual([{ center: [55.75, 37.62], zoom: 10 }]);
+    view.rerender(createElement(ApiMap, { ...props, scenarioView: true }));
+    expect(drawn.views).toHaveLength(1);
+  });
+  it("colors an explicit observed estimate and keeps the unknown city neutral", () => {
+    const result = decode("AnalysisResult", structuredClone(resultRaw));
+    const category = { ...result.scores[0], name: "category_index", value: null, status: "unknown" as const };
+    const point = { ...category, name: "point_index", score_id: "total", subject: { ...category.subject, category: null } };
+    const observed = { ...category, name: "observed_route_accessibility", score_id: "observed", value: 0, status: "available" as const, completeness: "partial" as const, ranking_eligible: false };
+    const city = { ...point, score_id: "city", subject: { kind: "territory" as const, territory_id: "city-1" } };
+    result.map_data = { status: "available", features: [{ entity_kind: "sample_point", entity_id: point.subject.point_id!, territory_id: "city-1", geometry: { type: "Point", coordinates: [37, 55] }, geometry_kind: "actual", source_refs: [] },
+      { entity_kind: "territory", entity_id: "city-1", territory_id: "city-1", geometry: { type: "Point", coordinates: [37.1, 55.1] }, geometry_kind: "actual", source_refs: [] }] };
+    render(createElement(ApiMap, { result, scores: [category, point, observed, city], selection: null, onSelect: vi.fn(), zoomAction: { id: 0, kind: "home" } }));
+    expect(drawn.layers[0].marker?.fillColor).toBe("#c72d44");
+    expect(drawn.layers[0].tooltip).toContain("Предварительная оценка по найденному маршруту");
+    expect(drawn.layers[0].marker?.dashArray).toBe("1 4");
+    expect(drawn.layers[1].marker?.fillColor).toBe("#8990a7");
+  });
+
   it.each([false, true])("prefers the canonical category-free point total in either candidate order (%s)", (reverse) => {
     const result = decode("AnalysisResult", structuredClone(resultRaw));
     const category = { ...result.scores[0], name: "category_index", value: 0.497, calculation_kind: null, subject: { ...result.scores[0].subject, territory_id: "city-1" } };

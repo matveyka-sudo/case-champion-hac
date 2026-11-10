@@ -24,5 +24,9 @@ test-results/
 /artifacts/*
 !/artifacts/.gitkeep
 
+# External ML2 handoff: upload separately on local/server installations.
+/ml2-handoff-*.zip
+/ml2-handoff-*/
+
 # Local JetBrains IDE settings
 .idea/

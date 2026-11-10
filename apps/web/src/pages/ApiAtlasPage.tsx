@@ -7,6 +7,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { EvidenceSources as Sources } from "../widgets/EvidenceSources";
 import { backend } from "../api/gateway";
 import { ApiError } from "../api/client";
 import type {
@@ -23,8 +24,6 @@ import {
   categoryIds,
   categoryLabels,
   isUrbanCity,
-  eligibleSnapshots,
-  resolvedSnapshotId,
   pipelineProducts,
   passengerModes,
   departureAt,
@@ -33,7 +32,6 @@ import {
 import {
   measureText,
   measureLabel,
-  safeSource,
   subjectMatches,
   timestampText,
   statusText,
@@ -41,23 +39,23 @@ import {
   trafficText,
   selectionText,
   reasonText,
-  profileLabel,
   noticeText,
-  snapshotLabel,
   lastReturnsForSelection,
   scoreBand,
 } from "../api/adapters/result";
 import { useAnalysisSession } from "../features/analysis/useAnalysisSession";
 import { scenarioJourneys } from "../api/adapters/scenario";
-import { scopeAllowsArea, scopeContainsTime, urbanScopeAvailability, type UrbanSelection } from "../api/adapters/urbanScopes";
+import { scopeContainsTime, urbanScopeAvailability, type UrbanSelection } from "../api/adapters/urbanScopes";
 import { journeyLines, segmentGeometryNotice } from "../api/adapters/journeyGeometry";
 import { urbanReadiness } from "../api/adapters/urbanReadiness";
 import { UrbanReadiness } from "../widgets/UrbanReadiness";
 import { CalculatedJourneys } from "../widgets/CalculatedJourneys";
 import { DemoModelBanner } from "../widgets/DemoModelBanner";
-import { isDemoModelSnapshot } from "../api/adapters/demoModel";
+import { demoModelWarning, isDemoModelSnapshot } from "../api/adapters/demoModel";
 import { proposalShiftText } from "../api/adapters/result";
 import { ResultHeadline } from "../widgets/ResultHeadline";
+import { ResultCardFrame, ResultCardHeader, ResultFigure, ResultCategoryTable } from "../widgets/ResultCardView";
+import { pointScorePresentation } from "../api/adapters/scorePresentation";
 import { ScenarioComparison } from "../widgets/ScenarioComparison";
 import { Select } from "../shared/Select";
 import { Icon } from "../shared/ui";
@@ -65,9 +63,8 @@ import { ApiMap } from "../widgets/ApiMap";
 import { ExplanationFinding } from "../widgets/ExplanationFinding";
 import { JourneyDetails } from "../widgets/JourneyDetails";
 import { IndexLegend } from "../widgets/IndexLegend";
-import { UrbanScopeHelp } from "../widgets/UrbanScopeHelp";
 import { CalculatedPoints } from "../widgets/CalculatedPoints";
-import { calculatedPoints, pointDisplayName } from "../api/adapters/pointOverview";
+import { calculatedPoints, routeEstimatePoints, pointDisplayName } from "../api/adapters/pointOverview";
 import { useModalFocus } from "../features/accessibility";
 import { AtlasShell } from "../widgets/AtlasShell";
 import { AtlasHeader } from "../widgets/AtlasHeader";
@@ -75,7 +72,11 @@ import { TimeDockView } from "../widgets/TimeDockView";
 import { Seg } from "../widgets/SegmentedControl";
 import { FiltersPanelView } from "../widgets/FiltersPanelView";
 import { CategoryChoices } from "../widgets/CategoryChoices";
+import { matchingCargoProfiles } from "../api/adapters/cargoBinding";
+import { ChoiceChips, TerritoryPair, CargoProfileChoices } from "../widgets/FilterControlViews";
+import { boundSnapshotId, initialSourceDraft } from "../api/adapters/sourceBinding";
 import { AgentChatView } from "../widgets/AgentChatView";
+import { MapViewport, MapCanvas, MapOverlay, MapControls, AtlasLegend, AtlasMobileSheet, AtlasStatus, StateCard } from "../widgets/AtlasMapView";
 const phaseLabels: Record<string, string> = {
   idle: "Выберите условия и запустите анализ",
   running: "Расчёт выполняется",
@@ -83,42 +84,6 @@ const phaseLabels: Record<string, string> = {
   failed: "Новый результат не получен",
   cancelled: "Задание отменено",
 };
-function Sources({ refs }: { refs: Schemas["EvidenceRef"][] }) {
-  return (
-    <details className="src">
-      <summary>Источники и условия</summary>
-      {refs.length ? (
-        refs.map((e) => (
-          <p key={e.evidence_id}>
-            {safeSource(e.url) ? (
-              <a
-                href={safeSource(e.url)}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {new URL(safeSource(e.url)!).hostname} · {e.section}
-              </a>
-            ) : (
-              e.section || "Источник без публичной ссылки"
-            )}
-            <br />
-            <small>
-              {e.observed_at
-                ? `Данные на ${new Date(e.observed_at).toLocaleDateString("ru", { timeZone: "UTC" })}`
-                : "Дата наблюдения неизвестна"}{" "}
-              · получено{" "}
-              {new Date(e.retrieved_at).toLocaleDateString("ru", {
-                timeZone: "UTC",
-              })}
-            </small>
-          </p>
-        ))
-      ) : (
-        <p>Ссылки отсутствуют в ответе.</p>
-      )}
-    </details>
-  );
-}
 function Measure({ value }: { value: Schemas["Metric"] | Schemas["Score"] }) {
   const context = [
     {
@@ -190,8 +155,14 @@ export function ApiAtlasPage() {
     [question, setQuestion] = useState(""),
     [scenarioView, setScenarioView] = useState(false),
     [theme, setTheme] = useState<"auto" | "light" | "dark">("auto"),
+    [legendOpen, setLegendOpen] = useState(false),
+    [mapMetric, setMapMetric] = useState("overall"),
+    [cargoProfile, setCargoProfile] = useState({ group: "nonfood", handling: "container", limits: {} as Record<string, boolean> }),
+    [cargoLayers, setCargoLayers] = useState<Record<string, boolean>>({ ent: true, wh: true, port: true, term: true, rail: true }),
+    [layers, setLayers] = useState({ index: true, objects: true, pop: false }),
     [zoom, setZoom] = useState({ kind: "home", id: 0 });
   const session = useAnalysisSession();
+  const draftTouched = useRef(false);
   const resultCard = useRef<HTMLElement>(null), resultTitleRef = useRef<HTMLHeadingElement>(null);
   const demoBanner = useRef<HTMLElement>(null);
   const chatInput = useRef<HTMLTextAreaElement>(null);
@@ -210,17 +181,7 @@ export function ApiAtlasPage() {
         if (alive) {
           setCaps(value);
           setCatalog([...cities, ...regions]);
-          setDraft((d) => ({
-            ...d,
-            traffic: value.default_traffic_mode,
-            cats: Object.fromEntries(
-              Object.entries(d.cats).filter(([id]) =>
-                value.categories.includes(
-                  categoryIds[id as keyof typeof categoryIds],
-                ),
-              ),
-            ),
-          }));
+          setDraft((d) => draftTouched.current ? d : initialSourceDraft({ ...d, traffic: value.default_traffic_mode }, [...cities, ...regions], value));
         }
       })
       .catch((e) => {
@@ -290,6 +251,7 @@ export function ApiAtlasPage() {
     return () => window.removeEventListener("keydown", key);
   }, []);
   const change = (patch: Partial<ApiDraft>) => {
+    draftTouched.current = true;
     const cityChanged = patch.cityId !== undefined && patch.cityId !== draft.cityId && !!draft.cityId && patch.kind === undefined;
     if (cityChanged) {
       session.reset();
@@ -306,7 +268,7 @@ export function ApiAtlasPage() {
       ...d,
       ...(cityChanged ? { areaId: "", snapshotId: "", travel: "" as const } : {}),
       ...patch,
-      ...(["kind", "level", "cityId", "originId", "destinationId", "date", "slot"]
+      ...(["kind", "level", "cityId", "originId", "destinationId", "date", "slot", "travel", "cats", "traffic", "areaId"]
         .some((key) => key in patch && patch[key as keyof ApiDraft] !== d[key as keyof ApiDraft]) && !("snapshotId" in patch)
         ? { snapshotId: "" }
         : {}),
@@ -329,7 +291,10 @@ export function ApiAtlasPage() {
   const start = () => {
     if (!caps) return;
     try {
-      const request = toRequest(draft, catalog, caps);
+      const profiles = matchingCargoProfiles(caps.cargo_profiles, cargoProfile);
+      const profileId = cargo && !draft.pipeline ? profiles.length === 1 ? profiles[0].profile_id : "" : draft.profileId;
+      if (cargo && !draft.pipeline && !profileId) throw new DraftError("profileId", "Для выбранного профиля груза нет однозначно подтверждённых данных. Выбранные параметры сохранены.");
+      const request = toRequest({ ...draft, profileId, snapshotId: boundSnapshotId(draft, catalog, caps) }, catalog, caps);
       setLocalError(null);
       setFiltersOpen(false);
       setScenarioView(false);
@@ -430,6 +395,7 @@ export function ApiAtlasPage() {
     () => result?.analysis_kind === "urban_passenger" ? calculatedPoints(result, values?.scores || []) : null,
     [result, values?.scores],
   );
+  const estimateOverview = useMemo(() => result?.analysis_kind === "urban_passenger" ? routeEstimatePoints(result, values?.scores || []) : null, [result, values?.scores]);
   const scenarioPaths = useMemo(
     () => result && scenario ? scenarioJourneys(result, scenario) : null,
     [result, scenario],
@@ -484,22 +450,23 @@ export function ApiAtlasPage() {
     );
   const headlinePointScores = shownScores.filter((score) => score.subject.kind === "sample_point" && score.subject.category == null);
   const headlineCategoryScores = shownScores.filter((score) => score.subject.kind === "sample_point" && score.subject.category != null);
-  const headlineMinimums = shownMetrics.filter((metric) => metric.name === "minimum_journey_seconds");
-  const profileOptions =
-    caps?.cargo_profiles
-      .filter((p) =>
-        !urban && draft.pipeline
-          ? p.kind === "pipeline" && !!draft.pipelineProduct &&
-            p.product === pipelineProducts[draft.pipelineProduct] &&
-            caps.pipeline_products.includes(p.product)
-          : p.kind === "delivery",
-      )
-      .map((p) => ({
-        value: p.profile_id,
-        label: profileLabel(p),
-      })) || [];
-  const snapshots = caps ? eligibleSnapshots(draft, catalog, caps) : [];
-  const snapshotId = resolvedSnapshotId(draft, snapshots);
+  const headlineMinimums = shownMetrics.filter((metric) => metric.name === "minimum_journey_seconds" && metric.status === "available" && metric.value !== null);
+  const headlineObservedTimes = shownMetrics.filter((metric) => ["best_observed_time", "best_observed_journey_seconds"].includes(metric.name) && metric.status === "available" && metric.value !== null);
+  const exactHeadlineCategories = headlineCategoryScores.filter((score) => score.name !== "observed_route_accessibility");
+  const headlineCanonicalScore = headlinePointScores.length === 1 ? headlinePointScores[0] : !headlinePointScores.length && exactHeadlineCategories.length === 1 ? exactHeadlineCategories[0] : undefined;
+  const headlineScore = result ? pointScorePresentation(result, shownScores, headlineCanonicalScore).score : undefined;
+  const categoryRows = result?.request.analysis_kind === "urban_passenger" && selection ? result.request.categories.map((category) => {
+    const candidates = shownScores.filter((score) => score.subject.kind === "sample_point" && score.subject.category === category);
+    const exact = candidates.filter((score) => score.name === "category_index");
+    const presentation = pointScorePresentation(result, candidates, exact.length === 1 ? exact[0] : undefined, category);
+    const minimum = shownMetrics.filter((metric) => metric.subject.category === category && metric.name === "minimum_journey_seconds" && metric.status === "available");
+    const observed = shownMetrics.filter((metric) => metric.subject.category === category && ["best_observed_time", "best_observed_journey_seconds"].includes(metric.name) && metric.status === "available");
+    const time = minimum.length === 1 ? minimum[0] : observed.length === 1 ? observed[0] : null;
+    const priority = result.request.analysis_kind === "urban_passenger" ? result.request.priorities[category] : undefined;
+    return { id: category, label: categoryLabels[category] + (presentation.observed ? " · предварительно" : ""), priority: priority ? ({ low: "Н", medium: "С", high: "В" } as const)[priority] : undefined,
+      time: time ? measureText(time) : "Нет данных", value: presentation.score ? measureText(presentation.score) : "Нет данных" };
+  }) : [];
+  const snapshotId = caps ? boundSnapshotId(draft, catalog, caps) : "";
   const savedDemoModel = isDemoModelSnapshot(result?.snapshot_id);
   const demoModel = isDemoModelSnapshot(snapshotId) || savedDemoModel;
   useLayoutEffect(() => {
@@ -524,7 +491,6 @@ export function ApiAtlasPage() {
   };
   const scopeState = urbanScopeAvailability(scopeSelection, publishedScopes);
   const readiness = caps && draft.kind === "urban_passenger" ? urbanReadiness(draft, catalog, caps, result, dirty) : null;
-  const scopeBlocked = scopeState.published && !!scopeState.problem;
   const categoryReason = (category: Schemas["UrbanPassengerRequest"]["categories"][number]) => {
     if (!scopeState.published) return undefined;
     if (!scopeState.traffic.some((s) => s.categories.includes(category))) return "Категория недоступна для выбранных условий.";
@@ -532,8 +498,6 @@ export function ApiAtlasPage() {
       return "Нет общего набора расчёта. Снимите несовместимые категории.";
     return undefined;
   };
-  const missingSnapshotCoverage = caps?.snapshots !== undefined && !snapshots.length;
-  const missingPassengerMode = draft.kind === "urban_passenger" && !draft.travel;
   const shownReturns = lastReturnsForSelection(
     result?.last_returns || [],
     selection,
@@ -545,486 +509,12 @@ export function ApiAtlasPage() {
       s.status === "available" &&
       s.completeness === "full",
   );
-  return (
-    <AtlasShell className={`api-atlas${demoModel ? " has-demo-model" : ""}${filtersCollapsed ? " filters-collapsed" : ""}`} label="Атлас Waydex — API"
-      header={<AtlasHeader mode={draft.kind === "urban_passenger" ? "city" : draft.kind === "intercity_passenger" ? "pax" : "cargo"}
-        title={origin?.name || "Россия · выберите город"} theme={theme} onThemeChange={setTheme}
-        onModeChange={(mode) => toggleMode(mode === "city" ? "urban_passenger" : mode === "pax" ? "intercity_passenger" : draft.kind.endsWith("cargo") ? draft.kind : "urban_cargo")}
-        onFilters={() => { setFiltersOpen(true); setChatOpen(false); }} chatOpen={chatOpen}
-        onChat={() => { const open = !chatOpen; setChatOpen(open); setFiltersOpen(false); if (window.innerWidth < 1520) setFiltersCollapsed(open); }} />} notice={      <DemoModelBanner selectedSnapshotId={snapshotId} savedSnapshotId={result?.snapshot_id} hasSavedResult={!!result} bannerRef={demoBanner} />}>
-        <FiltersPanelView id="apiFilters" collapsed={filtersCollapsed} mobileOpen={filtersOpen}
-          onClose={() => setFiltersOpen(false)} onExpand={() => setFiltersCollapsed(false)}
-          onToggle={() => { setFiltersCollapsed((value) => !value); if (filtersCollapsed && window.innerWidth < 1360) setChatOpen(false); }}
-          railIcons={!cargo && urban ? ["map-pin", draft.travel === "pt" ? "tram-front" : draft.travel === "walk" ? "footprints" : "car-front", "list-checks"] : ["sliders-horizontal"]}
-          footer={<><button className="iconbtn primary runbtn" disabled={!caps || !ready?.calculation_available || running || missingSnapshotCoverage || scopeBlocked || missingPassengerMode} onClick={start}><Icon name="play" /><span>{urban ? "Рассчитать" : "Проанализировать"}</span></button>
-            <small>{ready?.calculation_available ? "Данные проверяются для выбранных условий" : "Расчёт этого направления пока недоступен"}</small></>}>
-          {!caps && (
-            <div className="stmsg">
-              <span>
-                {bootError
-                  ? "API недоступен"
-                  : "Загрузка возможностей сервера…"}
-              </span>
-              <button
-                className="iconbtn"
-                onClick={() => {
-                  setBootError(null);
-                  setReload((v) => v + 1);
-                }}
-              >
-                Повторить
-              </button>
-            </div>
-          )}
-          {caps && (
-            <>
-              {cargo && field("Режим грузовых связей", <Seg name="Режим грузовых связей" value={urban ? "city" : "inter"}
-                items={[["city", "В городе", "building-2"], ["inter", "Между территориями", "waypoints"]]}
-                onChange={(value) => toggleMode(value === "city" ? "urban_cargo" : "intercity_cargo")} />)}
-              {!urban &&
-                field(
-                  "Масштаб",
-                  <Select
-                    label="Масштаб"
-                    value={draft.level}
-                    options={[
-                      { value: "city", label: "Города" },
-                      {
-                        value: "region",
-                        label: cargo
-                          ? "Субъекты · грузовые узлы"
-                          : "Субъекты · пассажиры через столицы",
-                      },
-                    ]}
-                    onChange={(value) =>
-                      change({
-                        level: value as ApiDraft["level"],
-                        originId: "",
-                        destinationId: "",
-                      })
-                    }
-                  />,
-                )}
-
-              {urban ? (
-                field(
-                  "Город",
-                  <>
-                    <Seg name="Город" value={draft.cityId || null} items={catalogOptions("city").filter((option) => option.value).map((option) => [option.value, option.label, undefined, false, "reason" in option ? option.reason : undefined])}
-                      onChange={(cityId) => change({ cityId, areaId: "" })} />
-                    {inline("cityId", ["city_id"])}
-                  </>,
-                )
-              ) : (
-                <>
-                  {field(
-                    "Откуда",
-                    <>
-                      <Select
-                        label="Территория А"
-                        value={draft.originId}
-                        options={catalogOptions(draft.level)}
-                        onChange={(originId) => change({ originId })}
-                      />
-                      {inline("originId", ["origin_id"])}
-                    </>,
-                  )}
-                  {field(
-                    "Куда",
-                    <>
-                      <Select
-                        label="Территория Б"
-                        value={draft.destinationId}
-                        options={catalogOptions(draft.level)}
-                        onChange={(destinationId) => change({ destinationId })}
-                      />
-                      {inline("destinationId", ["destination_id"])}
-                    </>,
-                  )}
-                </>
-              )}
-              {urban &&
-                !!caps.areas?.some((a) => a.city_id === draft.cityId) &&
-                field(
-                  "Район",
-                  <Select
-                    label="Район"
-                    value={draft.areaId}
-                    options={[
-                      { value: "", label: "Весь город", disabled: scopeState.published && !scopeState.snapshot.some((s) => s.whole_city),
-                        reason: scopeState.published && !scopeState.snapshot.some((s) => s.whole_city) ? "Для всего города запуск не зарегистрирован." : undefined },
-                      ...caps.areas
-                        .filter((a) => a.city_id === draft.cityId)
-                        .map((a) => ({ value: a.area_id, label: a.name,
-                          disabled: scopeState.published && !scopeState.snapshot.some((s) => scopeAllowsArea(s, a.area_id)),
-                          reason: scopeState.published && !scopeState.snapshot.some((s) => scopeAllowsArea(s, a.area_id)) ? "Для этого района запуск не зарегистрирован." : undefined })),
-                    ]}
-                    onChange={(areaId) => change({ areaId })}
-                  />,
-                )}
-              {scopeState.published && (
-                <UrbanScopeHelp key={draft.cityId} state={scopeState} selection={scopeSelection} draft={draft} caps={caps} catalog={catalog} onApply={change} />
-              )}
-              {!cargo &&
-                (urban
-                  ? field(
-                      "Передвижение",
-                      <><Seg name="Передвижение" value={draft.travel || null}
-                        items={([["pt", "Общ. транспорт", "tram-front"], ["walk", "Пешком", "footprints"], ["car", "Авто", "car-front"]] as const).map(([value, label, icon]) => {
-                          const disabled = scopeState.published && !scopeState.area.some((scope) => scope.passenger_modes.includes(passengerModes[value]));
-                          return [value, label, icon, disabled, disabled ? "Для выбранных города, времени и набора данных этот способ недоступен." : undefined];
-                        })} onChange={(travel) => change({ travel: travel as ApiDraft["travel"] })} />
-                        {!draft.travel && <p className="fhint">Выберите способ передвижения для выбранного города.</p>}
-                        {inline("travel", ["passenger_mode"])}</>,
-
-                    )
-                  : field(
-                      "Виды транспорта",
-                      <div className="chipset">
-                        {[
-                          ["air", "Самолёт"],
-                          ["rail", "Поезд"],
-                          ["bus", "Автобус"],
-                          ["car", "Автомобиль"],
-                          ["sea", "Судно / паром"],
-                          ["mixed", "Смешанные"],
-                        ].map(([id, label]) => (
-                          <button
-                            className="fchip"
-                            key={id}
-                            aria-pressed={draft.paxModes.includes(id)}
-                            onClick={() =>
-                              change({
-                                paxModes: draft.paxModes.includes(id)
-                                  ? draft.paxModes.filter((m) => m !== id)
-                                  : [...draft.paxModes, id],
-                              })
-                            }
-                          >
-                            {label}
-                          </button>
-                        ))}
-                        {inline("paxModes", ["passenger_modes"])}
-                      </div>,
-                    ))}
-              {!cargo &&
-                urban &&
-                field("Категории", <>
-                  <CategoryChoices items={Object.entries(categoryIds).filter(([, category]) => caps.categories.includes(category)).map(([id, category]) => ({ id, name: categoryLabels[category], reason: categoryReason(category), disabled: !draft.cats[id as keyof typeof categoryIds] && !!categoryReason(category) }))}
-                    selected={draft.cats} onToggle={(id) => { const cats = { ...draft.cats }, key = id as keyof typeof categoryIds; if (cats[key]) delete cats[key]; else cats[key] = 2; change({ cats }); }}
-                    onPriority={(id, priority) => change({ cats: { ...draft.cats, [id]: priority } })} />
-                  <div className="prio-legend"><span>Н — низкий · 1</span><span>С — средний · 2</span><span>В — высокий · 3</span></div>
-                  {inline("cats", ["categories", "priorities"])}
-                </>)}
-              {cargo && (
-                <>
-                  {!urban &&
-                    field(
-                      "Тип грузового анализа",
-                      <Select
-                        label="Тип грузового анализа"
-                        value={draft.pipeline ? "pipeline" : "delivery"}
-                        options={[
-                          { value: "delivery", label: "Перевозка / доставка" },
-                          {
-                            value: "pipeline",
-                            label: "Трубопровод · отдельно",
-                          },
-                        ]}
-                        onChange={(v) =>
-                          change({ pipeline: v === "pipeline", profileId: "" })
-                        }
-                      />,
-                    )}
-                  {draft.pipeline &&
-                    !urban &&
-                    field(
-                      "Продукт",
-                      <Select
-                        label="Продукт трубопровода"
-                        value={draft.pipelineProduct}
-                        options={[
-                          { value: "", label: "Выберите продукт" },
-                          { value: "oil", label: "Нефть" },
-                          { value: "oilprod", label: "Нефтепродукты" },
-                          { value: "gas", label: "Газ" },
-                        ].filter((p) => !p.value || caps.pipeline_products.includes(
-                          pipelineProducts[p.value as Exclude<ApiDraft["pipelineProduct"], "">],
-                        )).map((p) => ({
-                          ...p,
-                          disabled: !!p.value && !caps.cargo_profiles.some((profile) =>
-                            profile.kind === "pipeline" &&
-                            profile.product === pipelineProducts[p.value as Exclude<ApiDraft["pipelineProduct"], "">],
-                          ),
-                        }))}
-                        onChange={(v) =>
-                          change({
-                            pipelineProduct: v as ApiDraft["pipelineProduct"],
-                            profileId: "",
-                          })
-                        }
-                      />,
-                    )}
-                  {field(
-                    "Профиль груза",
-                    <>
-                      <Select
-                        label="Профиль груза"
-                        value={draft.profileId}
-                        options={[
-                          { value: "", label: "Выберите профиль груза" },
-                          ...profileOptions,
-                        ]}
-                        onChange={(profileId) => change({ profileId })}
-                      />
-                      {inline("profileId", ["cargo_profile_id"])}
-                      <p className="fhint">
-                        {draft.pipeline && !urban
-                          ? draft.pipelineProduct
-                            ? "Показаны профили выбранного продукта трубопровода."
-                            : "Сначала выберите продукт трубопровода."
-                          : "Срочность, температура и обработка определены профилем, не угадываются из вида груза."}
-                      </p>
-                    </>,
-                  )}
-                  {urban
-                    ? field(
-                        "Направление",
-                        <Select
-                          label="Направление"
-                          value={draft.direction}
-                          options={[
-                            { value: "out", label: "Отправка" },
-                            { value: "in", label: "Приём" },
-                          ]}
-                          onChange={(v) =>
-                            change({ direction: v as ApiDraft["direction"] })
-                          }
-                        />,
-                      )
-                    : !draft.pipeline &&
-                      field(
-                        "Виды грузового транспорта",
-                        <div className="chipset">
-                          {[
-                            ["road", "Авто"],
-                            ["rail", "Ж/д"],
-                            ["air", "Авиа"],
-                            ["water", "Вода"],
-                            ["mixed", "Смешанные"],
-                          ].map(([id, label]) => (
-                            <button
-                              className="fchip"
-                              key={id}
-                              aria-pressed={draft.cargoModes.includes(id)}
-                              onClick={() =>
-                                change({
-                                  cargoModes: draft.cargoModes.includes(id)
-                                    ? draft.cargoModes.filter((m) => m !== id)
-                                    : [...draft.cargoModes, id],
-                                })
-                              }
-                            >
-                              {label}
-                            </button>
-                          ))}
-                          {inline("cargoModes", ["cargo_modes"])}
-                        </div>,
-                      )}
-                </>
-              )}
-              {caps.snapshots !== undefined &&
-                field(
-                  "Набор данных",
-                  <>
-                    <Select
-                      label="Набор данных"
-                      value={snapshotId}
-                      options={[
-                        { value: "", label: "Выберите набор данных" },
-                        ...snapshots.map((s) => ({
-                          value: s.snapshot_id,
-                          label: `${isDemoModelSnapshot(s.snapshot_id) ? "ДЕМО · " : ""}${snapshotLabel(s, catalog, caps.snapshots || [])}`,
-                          disabled: scopeState.published && !scopeState.time.some((scope) => scope.snapshot_id === s.snapshot_id),
-                          reason: scopeState.published && !scopeState.time.some((scope) => scope.snapshot_id === s.snapshot_id) ? "Для этого набора и времени городской расчёт не зарегистрирован." : undefined,
-                        })),
-                      ]}
-                      onChange={(snapshotId) => change({ snapshotId })}
-                    />
-                    <details className="more api-snapshot-details"><summary>Период и область данных</summary><p className="fhint api-snapshot-hint">
-                      {!(urban ? draft.cityId : draft.originId && draft.destinationId)
-                        ? "Сначала выберите территорию или пару."
-                        : !snapshots.length
-                          ? "Нет подтверждённых данных для этих территорий и даты. Измените условия."
-                          : snapshots.length === 1
-                            ? "Единственный подходящий набор выбран автоматически."
-                            : "Есть несколько подходящих наборов. Выберите версию для расчёта."}
-                    </p>
-                    {snapshots.length === 1 && (
-                      <p className="fhint api-snapshot-coverage">
-                        {snapshotLabel(snapshots[0], catalog, caps.snapshots)}
-                      </p>
-                    )}
-                    </details>
-                    {inline("snapshotId", ["snapshot_id"])}
-                  </>,
-                )}
-
-              {readiness && <UrbanReadiness value={readiness} />}
-              <details className="more api-territory-search"><summary>Поиск по каталогу</summary>{field(
-                "Поиск территорий",
-                <>
-                  <input
-                    className="api-input"
-                    aria-label="Поиск территорий"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Название города или субъекта"
-                  />
-                  {searchError && <span role="alert">{searchError}</span>}
-                </>,
-              )}</details>
-              {field(
-                "Дорожные условия",
-                <Select
-                  label="Режим трафика"
-                  value={draft.traffic}
-                  options={caps.traffic_modes.map((v) => ({
-                    value: v,
-                    label: {
-                      static: "Без пробок",
-                      typical: "Типичные условия",
-                      live: "Текущие условия",
-                      historical: "Исторические условия",
-                    }[v],
-                    disabled: scopeState.published && !scopeState.mode.some((s) => s.traffic_modes.includes(v)),
-                    reason: scopeState.published && !scopeState.mode.some((s) => s.traffic_modes.includes(v)) ? "Для выбранного способа передвижения этот режим недоступен." : undefined,
-                  }))}
-                  onChange={(v) =>
-                    change({ traffic: v as ApiDraft["traffic"] })
-                  }
-                />,
-              )}
-            </>
-          )}
-        </FiltersPanelView>
-        <main className="at-map api-map" aria-label="Результат анализа">
-          <ApiMap
-            result={result}
-            scores={values?.scores || []}
-            selection={selection}
-            onSelect={choose}
-            zoomAction={zoom}
-            scenarioView={scenarioView}
-            journeys={visibleJourneys}
-            viewId={scenario?.run_id}
-          />
-          <div className="api-status panelc" role="status">
-            <b>
-              {dirty
-                ? "Параметры изменены — показан прежний результат"
-                : phaseLabels[phase]}
-            </b>
-            {result && (
-              <span>
-                {requestTitle} ·{" "}
-                {timestampText(
-                  result.request.departure_at,
-                  savedOrigin?.timezone,
-                )}{" "}
-                · {trafficText[result.traffic_mode]} ·{" "}
-                {statusText[result.status]}
-                {"territory_level" in result.request &&
-                result.request.territory_level === "region" &&
-                result.analysis_kind === "intercity_passenger"
-                  ? " · через столицы субъектов"
-                  : ""}
-              </span>
-            )}
-            {running && (
-              <span>
-                {session.job
-                  ? statusText[session.job.status] || "Получаю результат"
-                  : "Отправляю запрос"}
-              </span>
-            )}
-            {session.job &&
-              ["queued", "running"].includes(session.job.status) && (
-                <button
-                  className="iconbtn"
-                  onClick={() => void session.cancel()}
-                >
-                  Отменить серверное задание
-                </button>
-              )}
-          </div>
-          {uiError && (
-            <div className="api-error panelc" role="alert">
-              <b>
-                {uiError instanceof ApiError &&
-                uiError.code === "stored_result_incompatible"
-                  ? "Сохранённый результат несовместим — требуется новый расчёт"
-                  : uiError.message}
-              </b>
-              {localError && inline(localError.field)}
-            </div>
-          )}
-          {!result && !running && !uiError && (
-            <div className="api-empty panelc">
-              <Icon name="map" />
-              <h3>Выберите условия анализа</h3>
-              <p>
-                Данные появятся после расчёта. Отсутствие сведений не означает
-                низкую связанность.
-              </p>
-            </div>
-          )}
-          {result &&
-            (!result.map_data ||
-              result.map_data.status !== "available" ||
-              result.map_data.completeness === "partial" || segmentGeometry) && (
-              <div className="api-map-note">
-                {segmentGeometry ? `${segmentGeometryNotice}.` : result.map_data?.status === "available"
-                  ? "Геометрия доступна частично."
-                  : "Геометрия недоступна."}{" "}
-                Доступные показатели сохранены.
-              </div>
-            )}
-          {scenarioView && (
-            <div className="api-overlay-note">
-              {scenarioMapNotice}
-            </div>
-          )}
-          {result && !cardHidden && (
-            <section
-              ref={resultCard}
-              id="apiResultCard"
-              className="ctx panelc api-card"
-              aria-label="Выбранный объект"
-            >
-              <div className="ctx-h">
-                <div>
-                  <span className="k">
-                    {savedDemoModel ? scenarioView ? "Демонстрационный сценарий" : "Демонстрационный анализ" : scenarioView ? "Сценарий" : "Сохранённый анализ"}
-                  </span>
-                  <h3 ref={resultTitleRef} tabIndex={-1}>
-                    {selection?.entity_kind === "sample_point"
-                      ? pointOverview?.points.find((p) => p.pointId === selection.entity_id)?.name || pointDisplayName(selection.entity_id, feature)
-                      : feature?.name ||
-                      (selection
-                        ? selectionText[selection.entity_kind]
-                        : requestTitle)}
-                  </h3>
-                </div>
-                <button
-                  className="ctx-x"
-                  aria-label="Закрыть карточку"
-                  onClick={() => setCardHidden(true)}
-                >
-                  <Icon name="x" />
-                </button>
-              </div>
+  const renderResultCard = () => result && <ResultCardFrame id="apiResultCard" sectionRef={resultCard} compact={chatOpen && !filtersCollapsed && window.innerWidth < 1600}>
+              <ResultCardHeader label={savedDemoModel ? scenarioView ? "Демонстрационный сценарий" : "Демонстрационный анализ" : scenarioView ? "Сценарий" : "Сохранённый анализ"}
+                title={selection?.entity_kind === "sample_point" ? pointOverview?.points.find((point) => point.pointId === selection.entity_id)?.name || pointDisplayName(selection.entity_id, feature)
+                  : feature?.name || (selection ? selectionText[selection.entity_kind] : requestTitle)} onClose={() => setCardHidden(true)} titleRef={resultTitleRef} />
               <div className="ctx-b">
+                {!selection && <p className="fhint">Выберите точку или объект на карте для подробного результата.</p>}
                 {selection && (
                   <button
                     className="iconbtn"
@@ -1034,19 +524,23 @@ export function ApiAtlasPage() {
                   </button>
                 )}
                 <ResultHeadline score={selection?.entity_kind === "sample_point"
-                  ? headlinePointScores.length === 1 ? headlinePointScores[0] : !headlinePointScores.length && headlineCategoryScores.length === 1 ? headlineCategoryScores[0] : null
+                  ? headlineScore
                   : !selection ? pointOverview?.territoryScore : null}
-                  metric={selection && headlineMinimums.length === 1 ? headlineMinimums[0] : null}
+                  metric={selection ? headlineMinimums.length === 1 ? headlineMinimums[0] : headlineObservedTimes.length === 1 ? headlineObservedTimes[0] : null : null}
                   journey={selection && selectedJourney.length === 1 ? selectedJourney[0] : null} />
                 {scenario && <ScenarioComparison scenario={scenario} metrics={shownMetrics} scores={shownScores} selectionActive={!!selection} scenarioView={scenarioView} onViewChange={setScenarioView} />}
+                {categoryRows.length > 0 && <div className="sect"><h4>Категории и приоритеты</h4><ResultCategoryTable rows={categoryRows} overall={headlinePointScores.length === 1 ? measureText(headlinePointScores[0]) : "Нет данных"} /></div>}
+                {selection && <div className="kvs tnum"><ResultFigure title="Население точки" value={feature?.population == null ? "Неизвестно" : feature.population.toLocaleString("ru")} />
+                  <ResultFigure title="Индекс города" value={pointOverview?.territoryScore ? measureText(pointOverview.territoryScore) : "Нет данных"} /></div>}
                 {pointOverview && <CalculatedPoints overview={pointOverview} selection={selection} areaSelected={!!("area_id" in result.request && result.request.area_id)} onSelect={chooseCalculatedPoint} />}
-                {!scenarioView && <CalculatedJourneys key={result.analysis_id} result={result} onSelect={chooseCalculatedPoint} />}
+                {!!estimateOverview?.points.length && <CalculatedPoints overview={estimateOverview} estimate selection={selection} areaSelected={!!("area_id" in result.request && result.request.area_id)} onSelect={chooseCalculatedPoint} />}
+                {!scenarioView && <CalculatedJourneys key={`journey-picker-${result.analysis_id}`} result={result} onSelect={chooseCalculatedPoint} />}
                 {!shownMetrics.length && !shownScores.length && (
                   <p>
                     Для выбранного объекта нет показателей в ответе сервера.
                   </p>
                 )}
-                <ResultDetails className="api-all-measures" key={selection?.entity_id || result.analysis_id} initialOpen={!!selection || shownScores.length + shownMetrics.length <= 12} summary={`Все показатели (${shownScores.length + shownMetrics.length})`}>{() => <>
+                <ResultDetails className="api-all-measures" key={`measures-${selection?.entity_id || result.analysis_id}`} initialOpen={!!selection || shownScores.length + shownMetrics.length <= 12} summary={`Все показатели (${shownScores.length + shownMetrics.length})`}>{() => <>
                 {shownScores.map((s) => (
                   <Measure key={s.score_id} value={s} />
                 ))}
@@ -1129,18 +623,204 @@ export function ApiAtlasPage() {
                   </p>
                 ))}
                 <Sources refs={scenarioView && scenario ? scenario.evidence_refs : result.evidence_refs} />
-                <button
-                  className="iconbtn"
-                  onClick={() => {
-                    setChatOpen(true);
-                    setFiltersOpen(false);
-                  }}
-                >
-                  Спросить агента
-                </button>
+                <div className="ctx-actions"><button className="iconbtn" onClick={() => { setChatOpen(true); if (window.innerWidth < 1520) setFiltersCollapsed(true); }}><Icon name="sparkles" />Спросить агента</button></div>
               </div>
-            </section>
+            </ResultCardFrame>;
+  const moscowView = result?.request.analysis_kind === "urban_passenger" && result.request.city_id === "moscow";
+  const timeDock = (compact: boolean) => <TimeDockView date={draft.date} slot={draft.slot} timezoneLabel={origin?.timezone || "Выберите территорию"}
+    min="1900-01-01" max="2100-12-31" dateInputId={compact ? "apiMobileDate" : "apiDate"} timeInputId={compact ? "apiMobileTime" : "apiTime"} mobile={compact}
+    onDateChange={(date) => change({ date })} onSlotChange={(slot) => change({ slot })} run={start} disabled={!caps || running} highlighted={dirty} />;
+  return (
+    <AtlasShell className={demoModel ? "has-demo-model" : ""} label="Атлас Waydex — API"
+      header={<AtlasHeader mode={draft.kind === "urban_passenger" ? "city" : draft.kind === "intercity_passenger" ? "pax" : "cargo"}
+        title={origin?.name || "Россия · выберите город"} theme={theme} onThemeChange={setTheme}
+        onModeChange={(mode) => toggleMode(mode === "city" ? "urban_passenger" : mode === "pax" ? "intercity_passenger" : draft.kind.endsWith("cargo") ? draft.kind : "urban_cargo")}
+        onFilters={() => { setFiltersOpen(true); setChatOpen(false); }} chatOpen={chatOpen}
+        onChat={() => { const open = !chatOpen; setChatOpen(open); setFiltersOpen(false); if (window.innerWidth < 1520) setFiltersCollapsed(open); }} />} notice={      <DemoModelBanner selectedSnapshotId={snapshotId} savedSnapshotId={result?.snapshot_id} hasSavedResult={!!result} bannerRef={demoBanner} />}>
+        <FiltersPanelView id="apiFilters" collapsed={filtersCollapsed} mobileOpen={filtersOpen} mobile={mobile} notice={mobile && demoModel ? demoModelWarning : undefined}
+          onClose={() => setFiltersOpen(false)} onExpand={() => setFiltersCollapsed(false)}
+          onToggle={() => { setFiltersCollapsed((value) => !value); if (filtersCollapsed && window.innerWidth < 1360) setChatOpen(false); }}
+          railIcons={!cargo && urban ? ["map-pin", draft.travel === "pt" ? "tram-front" : draft.travel === "walk" ? "footprints" : "car-front", "list-checks"] : ["sliders-horizontal"]}
+          footer={<><button className="iconbtn primary runbtn" disabled={!caps || running} onClick={start}><Icon name="play" /><span>{urban ? "Рассчитать" : "Проанализировать"}</span></button>
+            <small>{ready?.calculation_available ? "Данные проверяются для выбранных условий" : "Расчёт этого направления пока недоступен"}</small></>}>
+          {!caps && (
+            <div className="stmsg">
+              <span>
+                {bootError
+                  ? "API недоступен"
+                  : "Загрузка возможностей сервера…"}
+              </span>
+              <button
+                className="iconbtn"
+                onClick={() => {
+                  setBootError(null);
+                  setReload((v) => v + 1);
+                }}
+              >
+                Повторить
+              </button>
+            </div>
           )}
+          {caps && (
+            <>
+              {cargo && field("Режим грузовых связей", <Seg name="Режим грузовых связей" value={urban ? "city" : "inter"}
+                items={[["city", "В городе", "building-2"], ["inter", "Между территориями", "waypoints"]]}
+                onChange={(value) => toggleMode(value === "city" ? "urban_cargo" : "intercity_cargo")} />)}
+              {!urban && !cargo && field("Масштаб", <Seg name="Масштаб" value={draft.level} items={[["city", "Город — город"], ["region", "Субъект — субъект"]]}
+                onChange={(value) => change({ level: value as ApiDraft["level"], originId: "", destinationId: "" })} />)}
+
+              {urban ? (
+                field(
+                  "Город",
+                  <>
+                    <Seg name="Город" value={draft.cityId || null} items={catalogOptions("city").filter((option) => option.value).map((option) => [option.value, option.label, undefined, false, "reason" in option ? option.reason : undefined])}
+                      onChange={(cityId) => change({ cityId, areaId: "" })} />
+                    {inline("cityId", ["city_id"])}
+                  </>,
+                )
+              ) : field("Направление", <><TerritoryPair origin={draft.originId} destination={draft.destinationId} options={catalogOptions(draft.level)}
+                onChange={(side, value) => change(side === "A" ? { originId: value } : { destinationId: value })}
+                onSwap={() => change({ originId: draft.destinationId, destinationId: draft.originId })} />
+                {inline("originId", ["origin_id"])}{inline("destinationId", ["destination_id"])}</>)}
+              {urban &&
+                !!caps.areas?.some((a) => a.city_id === draft.cityId) &&
+                field(
+                  "Район",
+                  <Select
+                    label="Район"
+                    value={draft.areaId}
+                    options={[
+                      { value: "", label: "Весь город" },
+                      ...caps.areas
+                        .filter((a) => a.city_id === draft.cityId)
+                        .map((a) => ({ value: a.area_id, label: a.name })),
+                    ]}
+                    onChange={(areaId) => change({ areaId })}
+                  />,
+                )}
+              {!cargo &&
+                (urban
+                  ? field(
+                      "Передвижение",
+                      <><Seg name="Передвижение" value={draft.travel || null}
+                        items={[["pt", "Общ. транспорт", "tram-front"], ["walk", "Пешком", "footprints"], ["car", "Авто", "car-front"]]}
+                        onChange={(travel) => change({ travel: travel as ApiDraft["travel"] })} />
+                        {!draft.travel && <p className="fhint">Выберите способ передвижения для выбранного города.</p>}
+                        {inline("travel", ["passenger_mode"])}</>,
+
+                    )
+                  : field("Виды транспорта", <><ChoiceChips items={[["air", "Самолёт", "plane"], ["rail", "Поезд", "train-front"], ["bus", "Автобус", "bus-front"], ["car", "Автомобиль", "car-front"], ["sea", "Судно и паром", "ship"], ["mixed", "Смешанные", "route"]]}
+                    values={Object.fromEntries(draft.paxModes.map((mode) => [mode, true]))} onChange={(id) => change({ paxModes: draft.paxModes.includes(id) ? draft.paxModes.filter((mode) => mode !== id) : [...draft.paxModes, id] })} />{inline("paxModes", ["passenger_modes"])}</>))}
+              {!cargo &&
+                urban &&
+                field("Категории", <>
+                  <CategoryChoices items={Object.entries(categoryIds).map(([id, category]) => ({ id, name: categoryLabels[category], reason: categoryReason(category) }))}
+                    selected={draft.cats} onToggle={(id) => { const cats = { ...draft.cats }, key = id as keyof typeof categoryIds; if (cats[key]) delete cats[key]; else cats[key] = 2; change({ cats }); }}
+                    onPriority={(id, priority) => change({ cats: { ...draft.cats, [id]: priority } })} />
+                  <div className="prio-legend"><span>Н — низкий · 1</span><span>С — средний · 2</span><span>В — высокий · 3</span></div>
+                  {inline("cats", ["categories", "priorities"])}
+                </>)}
+              {!cargo && urban && field("Цвет карты", <>
+                <div className="fsel"><span className="k"><Icon name="palette" /></span><Select label="Показатель, которым окрашена карта" value={mapMetric}
+                  options={[{ value: "overall", label: "Общий индекс" }, ...Object.keys(draft.cats).map((id) => ({ value: id, label: categoryLabels[categoryIds[id as keyof typeof categoryIds]] }))]} onChange={setMapMetric} /></div>
+                <p className="flabel" style={{ marginTop: 14 }}>Слои</p><ChoiceChips items={[["index", "Индекс", "grid-3x3"], ["objects", "Объекты", "map-pin"], ["pop", "Население", "users"]]}
+                  values={layers} onChange={(id) => setLayers((current) => ({ ...current, [id]: !current[id as keyof typeof layers] }))} />
+                <p className="fhint">Население — оценка источника по ячейке, не число пассажиров.</p>
+              </>)}
+              {cargo && <>
+                {urban ? field("Направление", <><Seg name="Направление" value={draft.direction} items={[["out", "Отправка", "arrow-up-right"], ["in", "Приём", "arrow-down-left"]]}
+                  onChange={(value) => change({ direction: value as ApiDraft["direction"] })} /><p className="fhint">Объект → узел и узел → объект считаются отдельно.</p>
+                  <p className="flabel" style={{ marginTop: 14 }}>Слои</p><ChoiceChips items={[["ent", "Предприятия", "factory"], ["wh", "Склады", "warehouse"], ["port", "Порты", "anchor"], ["term", "Терминалы", "container"], ["rail", "Грузовые станции", "train-front-tunnel"]]}
+                    values={cargoLayers} onChange={(key) => setCargoLayers((current) => ({ ...current, [key]: !current[key] }))} /></>)
+                : field("Виды транспорта", <ChoiceChips items={[["road", "Авто", "truck"], ["rail", "Ж/д", "train-front-tunnel"], ["air", "Воздух", "plane-takeoff"], ["water", "Вода", "anchor"], ["pipe", "Трубопровод", "droplet"]]}
+                  values={{ ...Object.fromEntries(draft.cargoModes.map((mode) => [mode, true])), pipe: draft.pipeline }} onChange={(key) => key === "pipe" ? change({ pipeline: !draft.pipeline, profileId: "" }) : change({ cargoModes: draft.cargoModes.includes(key) ? draft.cargoModes.filter((mode) => mode !== key) : [...draft.cargoModes, key] })} />)}
+                <CargoProfileChoices value={cargoProfile} onChange={(profile) => { setCargoProfile(profile); change({ profileId: "", pipeline: profile.handling === "liquid" && draft.pipeline }); }} />
+                {inline("profileId", ["cargo_profile_id"])}
+                {!urban ? field("Продукт трубопровода", <><Seg name="Продукт трубопровода" value={draft.pipelineProduct || null} items={[["oil", "Нефть", undefined, cargoProfile.handling !== "liquid" || !draft.pipeline], ["oilprod", "Нефтепродукты", undefined, cargoProfile.handling !== "liquid" || !draft.pipeline], ["gas", "Газ", undefined, cargoProfile.handling !== "liquid" || !draft.pipeline]]}
+                  onChange={(value) => { const product = value as Exclude<ApiDraft["pipelineProduct"], "">; const profiles = caps.cargo_profiles.filter((profile) => profile.kind === "pipeline" && profile.product === pipelineProducts[product]); change({ pipelineProduct: product, profileId: profiles.length === 1 ? profiles[0].profile_id : "" }); }} />
+                  <p className="fhint">Трубопровод применим к наливному грузу. Нефть, нефтепродукты и газ считаются отдельно.</p></>) : <div className="fgroup"><div className="disabled-note"><Icon name="info" />Трубопроводы учитываются только между территориями.</div></div>}
+              </>}
+              <details className="more"><summary>Источники и условия данных</summary>
+                {readiness && <UrbanReadiness value={readiness} />}
+                <p className="fhint">Набор данных определяется по городу, дате, передвижению и выбранным категориям. {scopeState.problem?.message}</p>
+                {inline("snapshotId", ["snapshot_id"])}
+              </details>
+              <details className="more api-territory-search"><summary>Поиск по каталогу</summary>{field(
+                "Поиск территорий",
+                <>
+                  <input
+                    className="api-input"
+                    aria-label="Поиск территорий"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Название города или субъекта"
+                  />
+                  {searchError && <span role="alert">{searchError}</span>}
+                </>,
+              )}</details>
+              {field(
+                "Дорожные условия",
+                <Select
+                  label="Режим трафика"
+                  value={draft.traffic}
+                  options={caps.traffic_modes.map((v) => ({
+                    value: v,
+                    label: {
+                      static: "Без пробок",
+                      typical: "Типичные условия",
+                      live: "Текущие условия",
+                      historical: "Исторические условия",
+                    }[v],
+                    disabled: scopeState.published && !scopeState.mode.some((s) => s.traffic_modes.includes(v)),
+                    reason: scopeState.published && !scopeState.mode.some((s) => s.traffic_modes.includes(v)) ? "Для выбранного способа передвижения этот режим недоступен." : undefined,
+                  }))}
+                  onChange={(v) =>
+                    change({ traffic: v as ApiDraft["traffic"] })
+                  }
+                />,
+              )}
+            </>
+          )}
+        </FiltersPanelView>
+        <MapViewport className={`${result && !cardHidden && !mobile ? "has-card" : ""} ${chatOpen && !mobile ? "chat-open" : ""} ${dirty ? "dimmed" : ""}`}><MapCanvas>
+          <ApiMap
+            result={result}
+            scores={values?.scores || []}
+            selection={selection}
+            onSelect={choose}
+            zoomAction={zoom}
+            scenarioView={scenarioView}
+            journeys={visibleJourneys}
+            viewId={scenario?.run_id}
+            category={mapMetric === "overall" ? null : categoryIds[mapMetric as keyof typeof categoryIds]} layers={layers}
+          /></MapCanvas>
+          <MapOverlay position="tl"><AtlasStatus kind={uiError ? "err" : running ? "run" : dirty || result?.status === "partial" ? "stale" : result ? "ok" : "nd"}
+            title={dirty ? "Параметры изменены — показан прежний результат" : phaseLabels[phase]}
+            subtitle={<>{result ? `${requestTitle} · ${timestampText(result.request.departure_at, savedOrigin?.timezone)} · ${trafficText[result.traffic_mode]} · ${statusText[result.status]}` : "Выберите город, передвижение и категории"}
+              {running && ` · ${session.job ? statusText[session.job.status] || "Получаю результат" : "Отправляю запрос"}`}</>}
+            actions={session.job && ["queued", "running"].includes(session.job.status) && <button className="iconbtn" onClick={() => void session.cancel()}>Отменить</button>} /></MapOverlay>
+          {uiError && <StateCard icon="cloud-off" title={uiError instanceof ApiError && uiError.code === "stored_result_incompatible" ? "Сохранённый результат несовместим — требуется новый расчёт" : "Новый результат не получен"}
+            description={uiError.message} actions={<button className="iconbtn primary" onClick={start}>Повторить</button>} />}
+          {!result && !uiError && <StateCard icon={running ? "loader-circle" : "circle-dashed"} loading={running}
+            title={running ? "Расчёт выполняется" : "Расчёт ещё не выполнялся"} description={running ? "Прежний результат сохранён. Карту можно двигать — ответ появится сам." : "Выберите город, способ передвижения и категории, затем нажмите «Рассчитать». До расчёта карта не окрашивается."}
+            actions={<button className="iconbtn primary" disabled={!caps} onClick={start}>Рассчитать</button>} />}
+          {result &&
+            (!result.map_data ||
+              result.map_data.status !== "available" ||
+              result.map_data.completeness === "partial" || segmentGeometry) && (
+              <div className="api-map-note">
+                {segmentGeometry ? `${segmentGeometryNotice}.` : result.map_data?.status === "available"
+                  ? "Геометрия доступна частично."
+                  : "Геометрия недоступна."}{" "}
+                Доступные показатели сохранены.
+              </div>
+            )}
+          {scenarioView && (
+            <div className="api-overlay-note">
+              {scenarioMapNotice}
+            </div>
+          )}
+          {result && !cardHidden && !mobile && <MapOverlay position="r">{renderResultCard()}</MapOverlay>}
           {result && cardHidden && (
             <button
               className="iconbtn panelc api-reopen"
@@ -1149,36 +829,22 @@ export function ApiAtlasPage() {
               Показать результат
             </button>
           )}
-          <div className="api-bottom">
-            {!!values?.scores.length && <div className="api-floating-legend panelc"><details open={!mobile}><summary>Шкала индекса</summary><IndexLegend /></details></div>}
-            <TimeDockView date={draft.date} slot={draft.slot} timezoneLabel={origin?.timezone || "Выберите территорию"}
-              min="1900-01-01" max="2100-12-31" dateInputId="apiDate" timeInputId="apiTime"
-              onDateChange={(date) => change({ date })} onSlotChange={(slot) => change({ slot })} run={start}
-              disabled={!ready?.calculation_available || running || missingSnapshotCoverage || scopeBlocked || missingPassengerMode}
-              highlighted={dirty} />
-            <div className="zgroup panelc">
-              {[
-                ["in", "plus", "Приблизить"],
-                ["out", "minus", "Отдалить"],
-                ...(!savedDemoModel ? [["home", "globe", "Показать Россию"]] : []),
-              ].map(([kind, icon, label]) => (
-                <button
-                  className="zbtn"
-                  key={kind}
-                  aria-label={label}
-                  onClick={() => setZoom((z) => ({ kind, id: z.id + 1 }))}
-                >
-                  <Icon name={icon} />
-                </button>
-              ))}
-              {savedDemoModel && <>
-                <button className="iconbtn" onClick={() => setZoom((z) => ({ kind: "home", id: z.id + 1 }))}>Центр Москвы</button>
-                <button className="iconbtn" disabled={!result?.map_data?.features?.some((feature) => feature.entity_kind === "sample_point" && feature.geometry_kind === "actual" && feature.geometry?.type === "Point")}
-                  onClick={() => setZoom((z) => ({ kind: "all_points", id: z.id + 1 }))}>Все точки</button>
-              </>}
-            </div>
-          </div>
-        </main>
+          <MapOverlay position="bottom">
+            <AtlasLegend title={layers.pop ? "Население ячейки" : values?.scores.some((score) => score.name === "observed_route_accessibility" && score.status === "available") ? "Предварительная оценка по найденному маршруту" : "Индекс доступности"}
+              scale={!!values?.scores.length || layers.pop} open={legendOpen} onToggle={() => setLegendOpen((value) => !value)} ticks={layers.pop ? ["меньше жителей", "больше"] : [0, 25, 50, 75, 100]}
+              note={layers.pop ? "По данным источника · неизвестное нейтрально" : "Ниже 50 · 50–<75 · 75–100"}
+              barStyle={layers.pop ? undefined : { background: "linear-gradient(to right,#c72d44 0%,#c72d44 50%,#d49520 50%,#d49520 75%,#0b8a5c 75%,#0b8a5c 100%)" }}
+              details={<IndexLegend />} items={<span><i className="sw nd" />Нет подтверждённых данных</span>} />
+            {timeDock(false)}
+            <MapControls items={[["in", "plus", "Приблизить"], ["out", "minus", "Отдалить"], ["home", "globe", moscowView ? "Центр Москвы" : "Показать Россию"],
+              ...(moscowView ? [["all_points", "locate-fixed", "Все точки"]] : [])]} onAction={(kind) => setZoom((z) => ({ kind, id: z.id + 1 }))} />
+          </MapOverlay>
+          <AtlasMobileSheet title={requestTitle} description={selection ? `${feature?.name || "Выбранная точка"}${headlineScore ? ` · ${measureLabel(headlineScore.name)} ${measureText(headlineScore)}` : ""}` : result ? `${pointOverview?.inventoryCount ?? ""} точек · выберите точку на карте` : "Для выбранных условий результата нет"}
+            tag={savedDemoModel ? <span className="badge-s">ДЕМО</span> : undefined} timeDock={timeDock(true)}
+            onFilters={() => { setFiltersOpen(true); setChatOpen(false); }} onChat={() => { setChatOpen(true); setFiltersOpen(false); }}>
+            {mobile && result && <details className="more"><summary>Результат и рассчитанные точки</summary>{!cardHidden ? renderResultCard() : <button className="iconbtn" onClick={() => setCardHidden(false)}>Показать результат</button>}</details>}
+          </AtlasMobileSheet>
+        </MapViewport>
         <AgentChatView open={chatOpen} onClose={() => { setChatOpen(false); if (window.innerWidth < 1520) setFiltersCollapsed(false); }} onNewDialog={session.clearExplanation}
           subtitle="Объясняет по сохранённому результату"
           contextLabel={result ? `${requestTitle} · ${dirty ? "прежние условия" : "сохранённый результат"}` : "Объяснение доступно после анализа"}
@@ -1250,7 +916,7 @@ export function ApiAtlasPage() {
           suggestions={["Объясни выбранную точку и ограничения результата", "Какая часть пути занимает больше всего времени?", "Какие изменения можно проверить?"]}
           onSuggestion={(value) => { setQuestion(value); chatInput.current?.focus(); }} draft={question} onDraftChange={setQuestion}
           onSend={() => { void session.explain(question, selection); setQuestion(""); }} disabled={!result} busy={session.chatBusy}
-          inputRef={chatInput} maxLength={2000} note="Числа берутся только из сохранённого расчёта. Сценарий запускается отдельно по кнопке." />
+          inputRef={chatInput} maxLength={2000} notice={mobile && demoModel ? demoModelWarning : undefined} note="Числа берутся только из сохранённого расчёта. Сценарий запускается отдельно по кнопке." />
     </AtlasShell>
   );
 }
