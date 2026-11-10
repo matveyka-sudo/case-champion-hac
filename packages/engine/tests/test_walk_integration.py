@@ -30,6 +30,7 @@ from a2_engine.urban.valhalla.codec import (
     _valhalla351_route_echo,
 )
 from a2_engine.urban.walk import WalkInputs, WalkRoutePlan
+from a2_engine.urban.walk.observed import assess_observed_walk_route
 
 FIXTURE = Path(__file__).parent / "fixtures" / "kaliningrad_walk_canonical_subset.json"
 DEPARTURE = datetime(2026, 11, 8, 12, tzinfo=UTC)
@@ -218,6 +219,151 @@ def test_full_time_counts_both_connectors_once(canonical: dict[str, Any]) -> Non
         for point in result.analysis.modes[0].points
     )
     assert not result.analysis.modes[0].ranking_eligible  # Real excluded population retained.
+
+
+def test_observed_estimate_is_separate_from_unproven_category_index(
+    canonical: dict[str, Any],
+) -> None:
+    inputs = synthetic_inputs(canonical)
+    request = plan(inputs).requests[0]
+    envelope = response(request, search_complete=False, minimum_time_evidence_refs=())
+    route = normalize_walk_response(request, envelope)
+    result = assess_observed_walk_route(
+        inputs,
+        route,
+        category="airport",
+        config=load_urban_config(),
+        rules=load_urban_journey_rules(),
+    )
+    assert not route.minimum_proven
+    assert result.observed_total_seconds == 60 + 1620 + 120
+    assert result.h_seconds.value == 1800
+    assert result.observed_route_accessibility.value == 50
+    assert result.observed_route_accessibility.reason_code == "MINIMUM_NOT_PROVEN"
+    assert result.canonical_category_index.value is None
+    assert result.canonical_category_index.reason_code == "MINIMUM_NOT_PROVEN"
+    assert not result.minimum_proven and not result.ranking_eligible
+    assert not result.certified_index_lower_bound and result.completeness == "partial"
+    assert result.projection_offset_seconds == 0
+    assert "SINGLE_FOUND_OBJECT_NOT_CATEGORY_MINIMUM" in result.limitations
+    assert "REPORTED_DURATION_NOT_CERTIFIED_UPPER_BOUND" in result.limitations
+    assert analyze(plan(inputs), [envelope]).analysis.modes[0].points[0].index.value is None
+
+
+@pytest.mark.parametrize("change", ["missing", "passability", "seconds", "zero"])
+def test_observed_estimate_never_fills_an_unknown_physical_approach(
+    canonical: dict[str, Any], change: str
+) -> None:
+    inputs = synthetic_inputs(canonical)
+    request = plan(inputs).requests[0]
+    route = normalize_walk_response(request, response(request))
+    endpoint = inputs.destination_endpoints[0]
+    assert endpoint.connector
+    changes: dict[str, Any] = {
+        "passability": {"traversable": None},
+        "seconds": {"seconds": None},
+        "zero": {"seconds": 0},
+    }
+    connector = None if change == "missing" else replace(endpoint.connector, **changes[change])
+    inputs = replace(inputs, destination_endpoints=(replace(endpoint, connector=connector),))
+    result = assess_observed_walk_route(
+        inputs,
+        route,
+        category="airport",
+        config=load_urban_config(),
+        rules=load_urban_journey_rules(),
+    )
+    assert result.observed_total_seconds is None
+    assert result.observed_route_accessibility.value is None
+    assert result.projection_offset_seconds is None
+
+
+def test_observed_quantized_endpoint_is_an_uncertain_estimate_not_a_zero_offset(
+    canonical: dict[str, Any],
+) -> None:
+    inputs = synthetic_inputs(canonical)
+
+    def quantized(endpoint: Any) -> Any:
+        correlation = endpoint.correlation
+        assert correlation
+        return replace(
+            endpoint,
+            correlation=replace(
+                correlation,
+                correlated_location=WalkCoordinate(
+                    round(correlation.source_location.lon, 6),
+                    round(correlation.source_location.lat, 6),
+                ),
+                coordinate_precision_digits=6,
+                serialization_evidence_refs=("synthetic-pinned-serialization-audit",),
+            ),
+        )
+
+    inputs = replace(
+        inputs,
+        point_endpoints=tuple(quantized(ep) for ep in inputs.point_endpoints),
+        destination_endpoints=tuple(quantized(ep) for ep in inputs.destination_endpoints),
+    )
+    request = plan(inputs).requests[0]
+    route = normalize_walk_response(request, response(request))
+    result = assess_observed_walk_route(
+        inputs,
+        route,
+        category="airport",
+        config=load_urban_config(),
+        rules=load_urban_journey_rules(),
+    )
+    assert result.observed_route_accessibility.value == 50
+    assert result.projection_offset_seconds is None
+    assert not result.complete_physical_time_confirmed
+    assert not result.certified_index_lower_bound
+    assert "COORDINATE_QUANTIZATION_UNCERTAINTY" in result.limitations
+    assert "PHYSICAL_CORRELATION_OFFSET_UNMEASURED" in result.limitations
+
+
+@pytest.mark.parametrize("eligible", [False, None])
+def test_observed_estimate_requires_an_accepted_eligible_object(
+    canonical: dict[str, Any], eligible: bool | None
+) -> None:
+    inputs = synthetic_inputs(canonical)
+    request = plan(inputs).requests[0]
+    route = normalize_walk_response(request, response(request))
+    inputs = replace(inputs, destinations=(replace(inputs.destinations[0], eligible=eligible),))
+    result = assess_observed_walk_route(
+        inputs,
+        route,
+        category="airport",
+        config=load_urban_config(),
+        rules=load_urban_journey_rules(),
+    )
+    assert result.observed_route_accessibility.value is None
+    assert result.observed_route_accessibility.reason_code == "DESTINATION_ELIGIBILITY_UNCONFIRMED"
+
+
+def test_observed_estimate_rejects_foreign_request_and_preserves_city_h(
+    canonical: dict[str, Any],
+) -> None:
+    inputs = synthetic_inputs(canonical)
+    request = plan(inputs).requests[0]
+    route = normalize_walk_response(request, response(request))
+    inputs = replace(inputs, area=replace(inputs.area, area_km2=2562.625))
+    result = assess_observed_walk_route(
+        inputs,
+        route,
+        category="airport",
+        config=load_urban_config(),
+        rules=load_urban_journey_rules(),
+    )
+    assert result.h_seconds.value == 3600
+    assert result.observed_route_accessibility.value == 100 * 2 ** (-1800 / 3600)
+    with pytest.raises(ValueError, match="OBSERVED_ROUTE_REQUEST_SOURCE_MISMATCH"):
+        assess_observed_walk_route(
+            inputs,
+            replace(route, request=replace(request, search_parameters_id="foreign-search")),
+            category="airport",
+            config=load_urban_config(),
+            rules=load_urban_journey_rules(),
+        )
 
 
 def test_legacy_destination_constructor_remains_valid() -> None:
@@ -750,6 +896,7 @@ def test_pinned_route_writer_decimal_truncation_and_signed_zero(
     actual = _valhalla351_route_echo(source)
     assert actual == expected
     if expected == 0:
+        assert actual is not None
         assert math.copysign(1, actual) == math.copysign(1, expected)
 
 
