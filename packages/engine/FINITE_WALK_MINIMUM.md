@@ -163,3 +163,30 @@ point blocks the territory score rather than renormalizing onto known points, an
 that successful JSON with missing actual endpoint evidence remains unknown. Existing
 six-decimal tests verify that best-known time survives while minimum/index stay unknown.
 No real graph minimum or real available accessibility index was independently executed.
+
+## Executed source-bound relaxation
+
+`native/source_bound_walk.cc`, `urban/walk/source_bound.py` and the executor
+`examples/audit_source_bound_walk.py` now implement the separate source-bound
+relaxation path described above. The native helper links the pinned 3.5.1 runtime
+library, reads every source tile at all hierarchy levels, inventories directed
+edges and hierarchy transitions, and obtains unrounded native correlations.
+It replays the candidate with the actual access/restriction/transition functions.
+See `native/README.md` for the exact additive binary32 objective and source
+inclusion argument; it does not claim equality with HTTP clock serialization.
+
+The real Kaliningrad pilot inventory contained 121 tiles, 132178 nodes, 300288
+directed edges and six native endpoint alternatives. Its zero-turn relaxed lower
+bound was exactly `2082035309/4194304` seconds (about 496.395900011), while native
+replay of that candidate took `2245613165/4194304` seconds (about 535.395900011).
+The 39-second gap includes actual elapsed transition costs and proves no minimum.
+These are bounds in the declared native endpoint domain. Physical lower and upper
+bounds remain null because physical entrance completeness and access-to-native
+projection offsets are unconfirmed. The category index remains null.
+
+The executor records immutable tile/source/library/binary/request/export hashes
+in an external receipt; changing a source tile or its roster aborts execution.
+Raw pilot artifacts live under
+`/Users/kirito/waydex-phase2-runtime/source-bound-walk/`, outside Git. The existing
+HTTP adapter still preserves its observed/best-known result independently and
+does not accept this relaxation receipt as a production minimum attestation.
