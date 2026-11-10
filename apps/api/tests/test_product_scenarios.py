@@ -230,6 +230,9 @@ def test_proven_loss_retains_full_scoped_placeholder_and_worsening():
     assert metric.value is None and metric.status == "not_applicable"
     assert metric.reason_code == "NO_FEASIBLE_ROUTE" and metric.completeness == "full"
     assert metric.metric_id in result.worsened_metric_ids
+    previous = next(row for row in result.before.metrics if row.metric_id == metric.metric_id)
+    assert previous.journey_id is not None
+    assert metric.journey_id is None
     assert (
         metric.subject
         == next(row for row in result.before.metrics if row.metric_id == metric.metric_id).subject
@@ -479,7 +482,7 @@ def test_added_service_requires_verified_physical_resource_and_turnaround():
     assert result.service_changes[0].service_id == document.plans[0].operation.new_run.run_id
 
 
-def intercity_case():
+def intercity_case(*, loss=False):
     from a2_api.adapters.product_inputs import IntercityInputs
     from a2_api.adapters.product_projection import project_intercity
     from a2_engine import (
@@ -489,16 +492,20 @@ def intercity_case():
         load_passenger_config,
     )
 
-    context, urban_facts, document, _, _ = make_case()
+    context, urban_facts, document, _, _ = make_case(loss=loss)
+    origin_node = "X" if loss else "S"
     module = example("intercity")
     scope, _ = module.demo_inputs()
-    common = replace(scope.comparison_scope, origin_node_ids=("S",), destination_node_ids=("D",))
+    common = replace(
+        scope.comparison_scope, origin_node_ids=(origin_node,), destination_node_ids=("D",)
+    )
     scope = replace(scope, comparison_scope=common)
     graph = module.demo_reference(scope, 1200)
     graph = replace(
         graph,
         states=tuple(
-            replace(state, node_id="S" if state.node_id == "A" else "D") for state in graph.states
+            replace(state, node_id=origin_node if state.node_id == "A" else "D")
+            for state in graph.states
         ),
     )
     reference = build_reference(graph, common)
@@ -535,7 +542,7 @@ def intercity_case():
         territory_level="city",
         origin_id=common.origin_territory_id,
         destination_id=common.destination_territory_id,
-        origin_node_ids=["S"],
+        origin_node_ids=[origin_node],
         destination_node_ids=["D"],
     )
     out.context.normalized_request.departure_at = start
@@ -702,3 +709,26 @@ def test_private_document_and_source_hashes_are_stable_across_worker_hash_seeds(
             ).strip()
         )
     assert hashes[0] == hashes[1]
+
+
+def test_intercity_loss_preserves_road_and_public_tasks_without_stale_journeys():
+    case = intercity_case(loss=True)
+    saved_bytes = case[3].model_dump_json()
+    result, _ = run(case)
+    losses = {row.after_id: row for row in result.deltas if row.outcome == "lost_connection"}
+    for group in ("road", "public"):
+        for suffix, expected_before in (("path", 600), ("wait", 180), ("total", 780)):
+            identifier = "intercity-" + group + "-" + suffix
+            old = next(row for row in result.before.metrics if row.metric_id == identifier)
+            new = next(row for row in result.after.metrics if row.metric_id == identifier)
+            assert old.value == expected_before and old.journey_id is not None
+            assert new.value is None and new.status == "not_applicable"
+            assert new.reason_code == "NO_FEASIBLE_ROUTE" and new.completeness == "full"
+            assert new.journey_id is None and new.subject == old.subject
+            assert identifier in losses and losses[identifier].delta is None
+            assert identifier in result.worsened_metric_ids
+        score_id = "intercity-" + group
+        score = next(row for row in result.after.scores if row.score_id == score_id)
+        assert score_id in losses and score.value == 0 and score.components == []
+    assert result.status == "partial"
+    assert case[3].model_dump_json() == saved_bytes

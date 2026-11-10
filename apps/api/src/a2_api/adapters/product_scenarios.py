@@ -405,6 +405,7 @@ def calculate(
                     "status": "not_applicable" if isinstance(previous, Metric) else "available",
                     "reason_code": "NO_FEASIBLE_ROUTE",
                     "completeness": "full",
+                    **({"journey_id": None} if isinstance(previous, Metric) else {}),
                 }
             )
     if ("metric", "accepted-dated-service-runs") in old:
