@@ -157,6 +157,22 @@ export function reasonText(code: string | null | undefined) {
           "Привязка к уличной сети для расчёта не подтверждена.",
         WALK_CONNECTOR_TIME_0_1_SECOND_PRECISION:
           "Время исходных пеших подходов задано с шагом 0,1 секунды.",
+        SAME_EXACT_STOP_TRANSFER_180S_IS_CONSUMER_MODEL:
+          "Для пересадки на той же остановке в модели принято 3 минуты.",
+        WHOLE_EXECUTION_HYPOTHETICAL_SHIFT_MINUS360:
+          "Весь рейс в модельном эксперименте сдвигается на 6 минут раньше.",
+        RESOURCE_FEASIBILITY_UNVERIFIED:
+          "Ресурсы для выполнения изменения не подтверждены.",
+        NO_OBSERVED_PASSENGER_DEMAND:
+          "Данные о фактическом пассажирском спросе отсутствуют.",
+        GLOBAL_MINIMUM_AND_CITY_INDEX_UNPROVEN:
+          "Глобальное минимальное время и индекс города не подтверждены.",
+        INFRASTRUCTURE_AND_CALENDAR_UNVERIFIED:
+          "Инфраструктура и календарь движения для сценария не подтверждены.",
+        RESOURCE_COVERAGE_UNVERIFIED:
+          "Полнота сведений о ресурсах для сценария не подтверждена.",
+        USE_PROVEN_CATEGORY_INDEX:
+          "Предварительная оценка здесь неприменима; используйте подтверждённый индекс категории.",
         WALKING_SPEED_MODEL_5_KMH:
           "Для пешего маршрута принята модельная скорость 5 км/ч.",
       } as Record<string, string>

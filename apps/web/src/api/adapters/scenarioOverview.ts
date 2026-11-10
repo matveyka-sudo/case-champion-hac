@@ -35,6 +35,13 @@ export function scenarioOverview(result: Result, metrics: Schemas['Metric'][], s
     if (name === 'category_index') return 2;
     return row.delta.outcome === 'worsened' || row.delta.outcome === 'lost_connection' ? 3 : 4;
   };
-  rows.sort((a, b) => rank(a) - rank(b));
+  const numeric = (measure: Measure | undefined): measure is Measure & { value: number } =>
+    measure?.status === 'available' && measure.value !== null && Number.isFinite(measure.value);
+  const numericRank = (row: typeof rows[number]) => {
+    if (numeric(row.before) && numeric(row.after)) return row.before.value !== row.after.value ? 0 : 1;
+    return numeric(row.before) || numeric(row.after) ? 2 : 3;
+  };
+  // Order supplied values for presentation only; preserve the server's proof/outcome/delta.
+  rows.sort((a, b) => numericRank(a) - numericRank(b) || rank(a) - rank(b));
   return { rows, hasPoints, improvedPoints: improved.size, worsenedPoints: worsened.size, improvedEffects, worsenedEffects, unknownEffects: unknown, totalEffects: result.deltas.length };
 }

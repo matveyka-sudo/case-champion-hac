@@ -40,7 +40,6 @@ import {
   trafficText,
   selectionText,
   reasonText,
-  noticeText,
   noticeTexts,
   lastReturnsForSelection,
   scoreBand,
@@ -966,8 +965,8 @@ export function ApiAtlasPage() {
                     ? "Модельный эксперимент, реализуемость не подтверждена"
                     : "Реализуемость подтверждена"}
                 </p>
-                {p.assumptions.filter((text) => !/^(scenario-document:|scenario-plan:)/i.test(text)).map((t, i) => (
-                  <p key={i}>{noticeText(t)}</p>
+                {noticeTexts(p.assumptions.filter((text) => !/^(scenario-document:|scenario-plan:)/i.test(text))).map((text, i) => (
+                  <p key={i}>{text}</p>
                 ))}
                 {p.assumptions.some((text) => /^(scenario-document:|scenario-plan:)/i.test(text)) && <details className="more"><summary>Источники сценария</summary>
                   {p.assumptions.filter((text) => /^(scenario-document:|scenario-plan:)/i.test(text)).map((text, index) => <p key={index}>{text}</p>)}

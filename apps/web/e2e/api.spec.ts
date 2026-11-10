@@ -1186,6 +1186,44 @@ test("API: synthetic saved proposal shows its exact two-minute shift before the 
   expect(mock.requests.filter((request) => request.url.endsWith("/runs"))).toHaveLength(1);
 });
 
+test("API: scenario assumptions remain distinct and supplied numeric comparisons precede unknown minima", async ({ page }) => {
+  // Synthetic protocol fixture; actual server deltas are never derived in the browser.
+  const sourceScenario = structuredClone(scenario) as Schemas["ScenarioResult"];
+  const sourceProposal = structuredClone(proposal) as Schemas["ScenarioProposal"];
+  const before = sourceScenario.before.metrics[0];
+  const known = { ...before, metric_id: "known-route", name: "best_observed_time", value: 5595.143, status: "available" as const };
+  const unknown = Array.from({ length: 8 }, (_, index) => ({ ...before, metric_id: `unknown-${index}`, name: "minimum_journey_seconds", value: null, status: "unknown" as const }));
+  const values = [...unknown, known];
+  await mockApi(page, {
+    scenarioProposal: { ...sourceProposal, fixed_parameters: { ...sourceProposal.fixed_parameters, shift_seconds: -360 }, assumptions: [
+      "SAME_EXACT_STOP_TRANSFER_180S_IS_CONSUMER_MODEL", "WHOLE_EXECUTION_HYPOTHETICAL_SHIFT_MINUS360", "RESOURCE_FEASIBILITY_UNVERIFIED", "NO_OBSERVED_PASSENGER_DEMAND", "GLOBAL_MINIMUM_AND_CITY_INDEX_UNPROVEN",
+      "FUTURE_ASSUMPTION_ONE", "FUTURE_ASSUMPTION_TWO", "scenario-document:synthetic-document", "scenario-plan:synthetic-plan",
+    ] },
+    scenarioResult: { before: { metrics: values, scores: [] }, after: { metrics: [...unknown, { ...known, value: 5235.143 }], scores: [] },
+      deltas: values.map(metric => ({ ...sourceScenario.deltas[0], effect_id: metric.metric_id, kind: "metric", before_id: metric.metric_id, after_id: metric.metric_id, outcome: "unknown", delta: null })),
+    },
+  });
+  await page.goto("/?data=api#atlas");
+  await cityRun(page);
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
+  const proposed = page.locator(".proposal");
+  await expect(proposed).toContainText("Для пересадки на той же остановке в модели принято 3 минуты.");
+  await expect(proposed).toContainText("Весь рейс в модельном эксперименте сдвигается на 6 минут раньше.");
+  await expect(proposed.getByText("Для результата указано дополнительное ограничение.", { exact: true })).toHaveCount(1);
+  await proposed.getByText("Источники сценария", { exact: true }).click();
+  await expect(proposed.getByText("scenario-document:synthetic-document", { exact: true })).toBeVisible();
+  await expect(proposed.getByText("scenario-plan:synthetic-plan", { exact: true })).toBeVisible();
+  await proposed.getByRole("button", { name: "Проверить сценарий", exact: true }).click();
+  const comparison = page.getByLabel("Сравнение до / после");
+  await expect(comparison.locator(".api-comparison-row").first()).toContainText("93,3 мин");
+  await expect(comparison.locator(".api-comparison-row").first()).toContainText("87,3 мин");
+  await expect(comparison.locator(".api-comparison-row").first()).toContainText("Эффект неизвестен · Без численной разности");
+  await comparison.getByRole("button", { name: "Ещё показатели (3)", exact: true }).click();
+  await expect(comparison.locator(".api-comparison-row")).toHaveCount(9);
+  await expect(comparison).toContainText("Неизвестных изменений показателей во всём сценарии: 9");
+});
+
 
 test("API: shared card and map distinguish an observed zero estimate from unknown canonical totals", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
