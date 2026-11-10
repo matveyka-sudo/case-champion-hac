@@ -265,3 +265,104 @@ def test_profile_scope_and_route_budget_refuse_unsupported_requests(
         runtime.select(request_for(snapshot, passenger_mode="public_transport"), snapshot)
     with pytest.raises(DomainError, match="RUNTIME_INPUTS_UNAVAILABLE"):
         runtime.select(request_for(snapshot, departure_at="2027-01-01T00:00:00Z"), snapshot)
+
+
+def real_partial_school_inputs():
+    """Read accepted real facts; no external routing or provider calls."""
+    from a2_data_pipeline.contract_v2 import load_accepted_data
+
+    snapshot = load_accepted_data("kaliningrad-urban-2026-11-10.3")
+    config = ProductRegistry()
+    raw = prepare_walk_inputs(
+        snapshot.model_dump(mode="json"),
+        city_id="kaliningrad",
+        departure_at=datetime(2026, 11, 10, tzinfo=UTC),
+        methodology_version=config.methodology.version,
+        config_hash=config.config_hash,
+        search_parameters_id="TEST_ONLY-readiness",
+    )
+    coverage = tuple(
+        UrbanCoverage(
+            UrbanSearchScope(raw.context, p.point_id, "school", "walk", 14400),
+            False,
+            False,
+            p.source_refs,
+            frozenset(d.destination_id for d in raw.destinations if "school" in d.categories),
+        )
+        for p in raw.points
+    )
+    facts = UrbanInputs(
+        kind="urban_passenger",
+        context=raw.context,
+        points=raw.points,
+        destinations=raw.destinations,
+        coverage=coverage,
+        area=raw.area,
+        population_coverage=replace(raw.population_coverage, complete=False),
+    )
+    profile = Profile(
+        profile_id="TEST_ONLY-real-partial",
+        analysis_kind="urban_passenger",
+        city_id="kaliningrad",
+        passenger_modes=["walk"],
+        categories=["school"],
+        valid_from="2026-11-10T00:00:00Z",
+        valid_to="2026-11-11T00:00:00Z",
+        snapshot_id=snapshot.snapshot_id,
+        snapshot_hash=canonical_hash(snapshot.model_dump(mode="json")),
+        graph_fingerprint="0" * 64,
+        routing_profile_fingerprint="0" * 64,
+        max_route_pairs=10000,
+    )
+    return snapshot, facts, profile
+
+
+def bind_fingerprints(profile, facts):
+    graph, costing = input_fingerprints(profile, facts, ProductRegistry())
+    return profile.model_copy(
+        update={"graph_fingerprint": graph, "routing_profile_fingerprint": costing}
+    )
+
+
+def test_all_accepted_real_school_ids_do_not_prove_full_source_catalog():
+    snapshot, facts, profile = real_partial_school_inputs()
+    assert len(facts.coverage[0].catalog_destination_ids) == 77
+    facts = facts.model_copy(
+        update={"coverage": tuple(replace(c, catalog_complete=True) for c in facts.coverage)}
+    )
+    with pytest.raises(ValueError, match="PARTIAL_SOURCE_COVERAGE"):
+        validate_inputs(bind_fingerprints(profile, facts), facts, snapshot, ProductRegistry())
+
+
+def test_all_accepted_real_points_do_not_erase_excluded_positive_population():
+    snapshot, facts, profile = real_partial_school_inputs()
+    assert facts.population_coverage.excluded_population > 0
+    facts = facts.model_copy(
+        update={"population_coverage": replace(facts.population_coverage, complete=True)}
+    )
+    with pytest.raises(ValueError, match="EXCLUDED_OR_UNKNOWN_POPULATION"):
+        validate_inputs(bind_fingerprints(profile, facts), facts, snapshot, ProductRegistry())
+
+
+def test_serving_object_outside_city_is_bound_by_source_scope(transport_facts):
+    snapshot, facts, profile = transport_facts
+    original = snapshot.destinations[0]
+    external = original.model_copy(update={"territory_id": "TEST_ONLY-external-territory"})
+    canonical = snapshot.model_copy(
+        update={
+            "destinations": [external],
+            "coverage_by_mode_date_category": [
+                scope.model_copy(update={"completeness": "full"})
+                for scope in snapshot.coverage_by_mode_date_category
+            ],
+        }
+    )
+    destination = replace(facts.destinations[0], territory_id=external.territory_id)
+    facts = facts.model_copy(
+        update={
+            "destinations": (destination,),
+            "coverage": tuple(replace(c, catalog_complete=True) for c in facts.coverage),
+        }
+    )
+    profile = profile.model_copy(update={"valid_to": datetime(2026, 11, 30, 20, tzinfo=UTC)})
+    validate_inputs(bind_fingerprints(profile, facts), facts, canonical, ProductRegistry())

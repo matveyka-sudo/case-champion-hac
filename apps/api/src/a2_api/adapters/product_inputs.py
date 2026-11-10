@@ -66,6 +66,7 @@ class IntercityInputs(ContractModel):
     frequency_end_at: Timestamp
     readiness: tuple[BoardingReadiness, ...] = ()
     car: AcceptedIntercityCar | None = None
+    car_departure_at: Timestamp | None = None
     resource_limit: int | None = Field(default=None, gt=0)
 
 

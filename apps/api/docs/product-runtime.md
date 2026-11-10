@@ -73,6 +73,16 @@ Pipeline observations also retain accepted endpoint, direction and quantity fact
 Static observed chains require an explicit accepted static model and validity.
 Truck receipts cannot be retimed without an independently accepted invariance
 proof: changed departure is unavailable rather than receiving a fabricated receipt.
+Accepted intercity car facts carry their source-bound `car_departure_at`; a car-only
+request uses the public reference/car calculation and cannot silently retime that
+observation. A public-only request neither calculates nor returns the car.
+
+Complete catalog coverage requires a matching canonical full source scope for the
+entire profile validity, mode and category with its evidence. Accepted destination
+IDs alone do not establish a complete source catalog. Serving objects outside the
+city boundary remain eligible under that source scope. Population completeness is
+checked against all original cells, including positive or unknown excluded weights;
+the accepted point list cannot erase those weights.
 
 Each input file is bounded to 32 MiB; all manifest, snapshot and supplemental
 bytes together are bounded to 64 MiB before JSON decoding. Duplicate keys,

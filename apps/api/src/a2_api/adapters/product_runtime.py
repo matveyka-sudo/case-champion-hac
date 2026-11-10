@@ -5,8 +5,11 @@ import json
 import os
 from collections.abc import Iterator
 from dataclasses import dataclass, fields, is_dataclass
+from datetime import timedelta
+from math import fsum
 from pathlib import Path
 from typing import Any, Literal
+from zoneinfo import ZoneInfo
 
 from a2_contracts.common import canonical_hash
 from a2_contracts.v2.api import AreaOption, Capabilities, TerritoryOption
@@ -260,14 +263,50 @@ def validate_inputs(
             for point in snapshot.sample_points
             if point.territory_id == profile.city_id
         }
-        if inputs.population_coverage.complete and selected_points != original_points:
-            raise ValueError("PARTIAL_POINT_SAMPLE_CANNOT_CLAIM_FULL_POPULATION")
+        selected_cells = {point.cell_id for point in inputs.points}
+        relevant_cells = [
+            cell for cell in snapshot.population_cells if cell.territory_id == profile.city_id
+        ]
+        omitted_cells = [cell for cell in relevant_cells if cell.cell_id not in selected_cells]
+        excluded_population = (
+            None
+            if any(cell.population is None for cell in omitted_cells)
+            else fsum(cell.population for cell in omitted_cells if cell.population is not None)
+        )
+        if (
+            inputs.population_coverage.excluded_population != excluded_population
+            or inputs.population_coverage.point_ids != frozenset(selected_points)
+        ):
+            raise ValueError("RUNTIME_ORIGINAL_POPULATION_BASIS_MISMATCH")
+        if inputs.population_coverage.complete and (
+            selected_points != original_points
+            or excluded_population != 0
+            or any(cell.population is None for cell in relevant_cells)
+        ):
+            raise ValueError("EXCLUDED_OR_UNKNOWN_POPULATION_CANNOT_CLAIM_COMPLETE")
+        zone = ZoneInfo(snapshot.timezone)
+        first_day = profile.valid_from.astimezone(zone).date()
+        last_day = (profile.valid_to - timedelta(microseconds=1)).astimezone(zone).date()
         for coverage in inputs.coverage:
             expected_destinations = {
                 row.destination_id
                 for row in snapshot.destinations
-                if coverage.scope.category in row.categories and row.territory_id == profile.city_id
+                if coverage.scope.category in row.categories
             }
+            full_source_scopes = [
+                scope
+                for scope in snapshot.coverage_by_mode_date_category
+                if profile.city_id in scope.territory_ids
+                and coverage.scope.passenger_mode in scope.modes
+                and (not scope.categories or coverage.scope.category in scope.categories)
+                and scope.completeness == "full"
+                and scope.valid_period.start is not None
+                and scope.valid_period.end is not None
+                and scope.valid_period.start <= first_day <= last_day <= scope.valid_period.end
+                and set(scope.source_refs) <= set(coverage.evidence_refs)
+            ]
+            if coverage.catalog_complete and not full_source_scopes:
+                raise ValueError("PARTIAL_SOURCE_COVERAGE_CANNOT_CLAIM_COMPLETE_CATALOG")
             if (
                 coverage.catalog_complete
                 and coverage.catalog_destination_ids != expected_destinations
@@ -463,6 +502,26 @@ class Runtime:
             ):
                 raise unavailable("STATIC_TRUCK_OBSERVATION_DEPARTURE_OR_INVARIANCE_UNAVAILABLE")
         if isinstance(inputs, IntercityInputs) and isinstance(request, IntercityPassengerRequest):
+            wants_car = request.passenger_modes is None or "private_car" in request.passenger_modes
+            if (
+                wants_car
+                and inputs.car is not None
+                and (
+                    inputs.car_departure_at != request.departure_at
+                    or inputs.car.traffic_mode != request.traffic_mode
+                )
+            ):
+                if request.passenger_modes == ["private_car"]:
+                    raise unavailable("ACCEPTED_CAR_OBSERVATION_DEPARTURE_UNAVAILABLE")
+            if request.passenger_modes == ["private_car"]:
+                if inputs.car is None:
+                    raise unavailable("ACCEPTED_PRIVATE_CAR_INPUTS_UNAVAILABLE")
+                if request.origin_node_ids is not None and (
+                    inputs.car.origin_node_id not in request.origin_node_ids
+                    or inputs.car.destination_node_id not in (request.destination_node_ids or ())
+                ):
+                    raise unavailable("ACCEPTED_PRIVATE_CAR_BOUNDARY_UNAVAILABLE")
+                return profile, inputs
             if request.passenger_modes is not None and (
                 "mixed" in request.passenger_modes
                 or not set(request.passenger_modes) & set(inputs.scope.applicable_modes)

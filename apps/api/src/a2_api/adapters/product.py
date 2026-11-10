@@ -16,6 +16,7 @@ from a2_contracts.v2.requests import (
 from a2_contracts.v2.results import AnalysisResult, EvidenceRef, SubjectRef
 from a2_engine import (
     MetricResult,
+    ReferenceComparison,
     UrbanTransitNetwork,
     analyze_intercity_cargo,
     analyze_intercity_passenger,
@@ -23,12 +24,14 @@ from a2_engine import (
     analyze_urban_candidates,
     analyze_urban_cargo,
     build_reference,
+    intercity_car_index,
     load_cargo_delivery_rules,
     load_freight_config,
     load_intercity_passenger_rules,
     load_passenger_config,
     load_urban_config,
     load_urban_journey_rules,
+    reference_time_from_result,
     search_urban_transit,
 )
 
@@ -41,6 +44,7 @@ from a2_api.adapters.product_inputs import (
 )
 from a2_api.adapters.product_projection import (
     Projection,
+    project_car,
     project_delivery,
     project_intercity,
     project_pipeline,
@@ -229,12 +233,47 @@ def calculate(claim: ClaimedJob) -> AnalysisResult:
                 destination_node_ids=tuple(request.destination_node_ids or ()),
             )
         scope = replace(inputs.scope, comparison_scope=reference_scope)
-        if request.passenger_modes is not None:
+        if request.passenger_modes is not None and request.passenger_modes != ["private_car"]:
             applicable = tuple(
                 mode for mode in scope.applicable_modes if mode in request.passenger_modes
             )
             scope = replace(scope, applicable_modes=applicable)
         reference = build_reference(inputs.reference_graph, reference_scope)
+        accepted_car = (
+            inputs.car
+            if (
+                (request.passenger_modes is None or "private_car" in request.passenger_modes)
+                and inputs.car_departure_at == request.departure_at
+                and inputs.car is not None
+                and inputs.car.traffic_mode == request.traffic_mode
+                and (
+                    request.origin_node_ids is None
+                    or (
+                        inputs.car.origin_node_id in request.origin_node_ids
+                        and inputs.car.destination_node_id in (request.destination_node_ids or ())
+                    )
+                )
+            )
+            else None
+        )
+        if request.passenger_modes == ["private_car"]:
+            assert accepted_car is not None
+            passenger_config = load_passenger_config()
+            scalar = reference_time_from_result(
+                reference,
+                ReferenceComparison(
+                    accepted_car.comparison_scope,
+                    accepted_car.origin_node_id,
+                    accepted_car.destination_node_id,
+                    accepted_car.traffic_mode,
+                ),
+                config=passenger_config,
+            )
+            car_result = intercity_car_index(
+                accepted_car.chain_id, accepted_car.path_seconds, scalar, config=passenger_config
+            )
+            project_car(out, car_result, accepted_car, reference)
+            return out.finish()
         passenger_analysis = analyze_intercity_passenger(
             scope,
             request.departure_at,
@@ -247,10 +286,28 @@ def calculate(claim: ClaimedJob) -> AnalysisResult:
             frequency_start_at=inputs.frequency_start_at,
             frequency_end_at=inputs.frequency_end_at,
             readiness=inputs.readiness,
-            car=inputs.car,
+            car=accepted_car,
             resource_limit=inputs.resource_limit,
         )
-        project_intercity(out, passenger_analysis, reference)
+        project_intercity(out, passenger_analysis, reference, accepted_car)
+        if (
+            request.passenger_modes is not None
+            and "private_car" in request.passenger_modes
+            and accepted_car is None
+        ):
+            out.score(
+                "private-car-index",
+                "private_car_index",
+                MetricResult(None, "unknown", "ACCEPTED_CAR_OBSERVATION_DEPARTURE_UNAVAILABLE"),
+                SubjectRef(
+                    kind="city_pair",
+                    origin_id=request.origin_id,
+                    destination_id=request.destination_id,
+                    mode="private_car",
+                ),
+                (),
+                kind="reference_ratio",
+            )
     elif isinstance(inputs, UrbanCargoInputs):
         assert isinstance(request, UrbanCargoRequest)
         if not profile.static_observations:

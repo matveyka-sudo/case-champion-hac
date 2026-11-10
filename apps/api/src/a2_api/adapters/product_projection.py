@@ -1,6 +1,7 @@
 """Canonical DTO projection of public ML1 results; no domain formula lives here."""
 
 from dataclasses import asdict
+from datetime import timedelta
 from typing import Any, Literal
 
 from a2_contracts.common import canonical_hash
@@ -325,9 +326,7 @@ def project_urban(out: Projection, analysis: Any) -> None:
     out.limitations.update(analysis.limitations)
 
 
-def project_intercity(out: Projection, analysis: Any, reference: Any) -> None:
-    request = out.context.normalized_request
-    assert isinstance(request, IntercityPassengerRequest)
+def project_reference(out: Projection, reference: Any) -> None:
     out.references.append(
         ReferenceResult(
             reference_id=reference.reference_id,
@@ -346,6 +345,91 @@ def project_intercity(out: Projection, analysis: Any, reference: Any) -> None:
             calibration_evidence=list(reference.evidence_refs),
         )
     )
+
+
+def project_car(out: Projection, result: Any, accepted: Any, reference: Any) -> None:
+    request = out.context.normalized_request
+    assert isinstance(request, IntercityPassengerRequest)
+    if not out.references:
+        project_reference(out, reference)
+    subject = SubjectRef(
+        kind="city_pair",
+        origin_id=request.origin_id,
+        destination_id=request.destination_id,
+        mode="private_car",
+    )
+    arrival = request.departure_at + timedelta(seconds=accepted.path_seconds)
+    full = accepted.complete and result.completeness == "full"
+    out.journeys.append(
+        JourneyResult(
+            journey_id=accepted.chain_id,
+            scope="intercity",
+            origin_node_id=accepted.origin_node_id,
+            destination_node_id=accepted.destination_node_id,
+            requested_departure_at=request.departure_at,
+            departure_at=request.departure_at,
+            arrival_at=arrival,
+            total_seconds=accepted.path_seconds,
+            initial_wait_seconds=0,
+            path_seconds=accepted.path_seconds,
+            total_wait_seconds=0,
+            legs=[
+                Leg(
+                    mode="private_car",
+                    kind="ride",
+                    from_node_id=accepted.origin_node_id,
+                    to_node_id=accepted.destination_node_id,
+                    start_at=request.departure_at,
+                    end_at=arrival,
+                    duration_seconds=accepted.path_seconds,
+                    service_id=None,
+                    evidence_refs=list(accepted.evidence_refs),
+                )
+            ],
+            geometry=None,
+            geometry_kind="none",
+            status="available",
+            reason_code=None,
+            snapshot_id=out.context.snapshot_id,
+            completeness="full" if accepted.complete else "partial",
+            traffic_mode=request.traffic_mode,
+            time_kind="complete_chain",
+            reference_id=reference.reference_id,
+            destination_object_id=None,
+            evidence_refs=list(accepted.evidence_refs),
+        )
+    )
+    raw = out.metric(
+        "private-car-path",
+        "private_car_path_seconds",
+        known(accepted.path_seconds),
+        subject,
+        accepted.evidence_refs,
+        full=accepted.complete,
+        journey_id=accepted.chain_id,
+        time_kind="complete_chain",
+    )
+    out.score(
+        "private-car-index",
+        "private_car_index",
+        result.path_index,
+        subject,
+        accepted.evidence_refs,
+        full=full,
+        metrics=(raw,),
+        kind="reference_ratio",
+        reference_ids=(reference.reference_id,),
+        ranking=full,
+    )
+    out.limitations.update(result.diagnostics)
+
+
+def project_intercity(
+    out: Projection, analysis: Any, reference: Any, accepted_car: Any = None
+) -> None:
+    request = out.context.normalized_request
+    assert isinstance(request, IntercityPassengerRequest)
+    project_reference(out, reference)
     mode_map = {binding.transport_type: binding.mode for binding in analysis.transport_modes}
     mode_map.update({"physical:" + mode: mode for mode in mode_map.values()})
     for candidate in analysis.candidates:
@@ -393,6 +477,11 @@ def project_intercity(out: Projection, analysis: Any, reference: Any) -> None:
             )
         )
     for group in (*analysis.by_mode, analysis.public):
+        if request.passenger_modes is not None and group.category not in (
+            *request.passenger_modes,
+            "public",
+        ):
+            continue
         subject = SubjectRef(
             kind="city_pair",
             origin_id=request.origin_id,
@@ -463,6 +552,11 @@ def project_intercity(out: Projection, analysis: Any, reference: Any) -> None:
             ranking=analysis.full_ranking_eligible,
         )
     for frequency in analysis.frequency:
+        if request.passenger_modes is not None and frequency.category not in (
+            *request.passenger_modes,
+            "public",
+        ):
+            continue
         subject = SubjectRef(
             kind="city_pair", origin_id=request.origin_id, destination_id=request.destination_id
         )
@@ -476,6 +570,8 @@ def project_intercity(out: Projection, analysis: Any, reference: Any) -> None:
             full=frequency.complete,
         )
     out.limitations.update(analysis.reasons)
+    if analysis.car is not None and accepted_car is not None:
+        project_car(out, analysis.car, accepted_car, reference)
 
 
 def project_urban_cargo(out: Projection, analysis: Any) -> None:
