@@ -1012,3 +1012,362 @@ async def test_question_context_is_passed_as_untrusted_input_and_cannot_add_acti
     assert payload["untrusted_question_context"]["selection"]["entity_id"] == "point"
     assert "запусти сценарий" in payload["untrusted_question_context"]["question"]
     assert not backend.calls
+
+
+def many_metrics():
+    saved = analysis().model_dump(mode="json")
+    prototype = saved["metrics"][0]
+    saved["metrics"] = [
+        prototype
+        | {
+            "metric_id": f"time-{index}",
+            "value": float(index),
+            "subject": {"kind": "sample_point", "point_id": f"point-{index}"},
+        }
+        for index in range(25)
+    ]
+    return AnalysisResult.model_validate(saved)
+
+
+async def explain_saved(agent, saved, *, point=None):
+    from a2_contracts.v2.assistant import ExplanationRequest
+
+    return await agent.explain(
+        saved,
+        access_scope=scope(),
+        registered_template_ids=set(),
+        request_id="focused-request",
+        context=ExplanationRequest(
+            selection=None if point is None else {"entity_kind": "sample_point", "entity_id": point}
+        ),
+    )
+
+
+@pytest.mark.asyncio
+async def test_selected_metric_after_first_twenty_is_grounded_and_presented_to_model():
+    data = selection()
+    data["findings"][0]["metric_id"] = "time-24"
+    agent, transport, _, _ = assistant([reply(data)])
+    saved = many_metrics()
+    answer = await explain_saved(agent, saved, point="point-24")
+    assert answer.status == "generated"
+    assert answer.findings[0].claims[0].value == 24
+    assert answer.findings[0].metric_ids == ["time-24"]
+    payload = json.loads(transport.calls[0]["messages"][1]["content"])
+    assert [m["metric_id"] for m in payload["saved_facts"]["metrics"]] == ["time-24"]
+    assert payload["response_example"]["findings"][0]["metric_id"] == "time-24"
+    module().render_explanation(answer, saved)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("disabled", [True, False])
+async def test_disabled_or_failed_model_fallback_keeps_selected_subject(disabled):
+    agent, transport, _, _ = assistant(
+        [] if disabled else [reply({"findings": []})],
+        config=module().FlashConfig() if disabled else None,
+    )
+    answer = await explain_saved(agent, many_metrics(), point="point-24")
+    assert answer.status == "template"
+    assert [f.metric_ids for f in answer.findings] == [["time-24"]]
+    assert len(transport.calls) == (0 if disabled else 1)
+
+
+@pytest.mark.asyncio
+async def test_unrelated_existing_metric_requires_explicit_scoped_retrieval():
+    data = selection()
+    data["findings"][0]["metric_id"] = "time-24"
+    agent, _, _, _ = assistant([reply(data)])
+    answer = await explain_saved(agent, many_metrics())
+    assert answer.reason_code == "INVALID_EXPLANATION"
+    agent, _, backend, _ = assistant(
+        [
+            reply(
+                calls=[
+                    tool(
+                        "get_metric_details",
+                        {
+                            "analysis_id": "analysis",
+                            "metric_id": "time-24",
+                        },
+                    )
+                ],
+                finish_reason="tool_calls",
+            ),
+            reply(data),
+        ]
+    )
+    answer = await explain_saved(agent, many_metrics())
+    assert answer.status == "generated"
+    assert answer.findings[0].claims[0].value == 24
+    assert len(backend.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_tool_cannot_authorize_a_metric_absent_from_saved_analysis():
+    data = selection()
+    data["findings"][0]["metric_id"] = "invented"
+    agent, _, _, _ = assistant(
+        [
+            reply(
+                calls=[
+                    tool(
+                        "get_metric_details",
+                        {
+                            "analysis_id": "analysis",
+                            "metric_id": "invented",
+                        },
+                    )
+                ],
+                finish_reason="tool_calls",
+            ),
+            reply(data),
+        ],
+        backend=Backend({"metric_id": "invented", "value": 999}),
+    )
+    assert (await explain_saved(agent, many_metrics())).reason_code == "INVALID_EXPLANATION"
+
+
+@pytest.mark.asyncio
+async def test_selected_entity_without_metrics_does_not_substitute_another_entity():
+    agent, transport, _, _ = assistant([])
+    answer = await explain_saved(agent, many_metrics(), point="no-metric")
+    assert answer.reason_code == "NO_SELECTED_METRICS"
+    assert not answer.findings and not transport.calls
+
+
+def test_selected_cell_uses_saved_point_link_and_evidence_after_first_fifty():
+    from a2_contracts.v2.assistant import ExplanationRequest
+
+    saved = many_metrics().model_dump(mode="json")
+    original = saved["evidence_refs"][0]
+    saved["evidence_refs"] = [
+        original | {"evidence_id": f"evidence-{index}"} for index in range(51)
+    ] + [original]
+    saved["map_data"] = {
+        "status": "available",
+        "completeness": "partial",
+        "reason_code": None,
+        "features": [
+            {
+                "entity_kind": "sample_point",
+                "entity_id": "point-24",
+                "territory_id": "city",
+                "point_id": "point-24",
+                "cell_id": "cell",
+                "geometry": None,
+                "geometry_kind": "none",
+                "reason_code": "NO_GEOMETRY",
+                "source_refs": ["evidence"],
+            },
+            {
+                "entity_kind": "cell",
+                "entity_id": "cell",
+                "territory_id": "city",
+                "point_id": "point-24",
+                "cell_id": "cell",
+                "geometry": None,
+                "geometry_kind": "none",
+                "reason_code": "NO_GEOMETRY",
+                "source_refs": ["evidence"],
+            },
+        ],
+    }
+    checked = AnalysisResult.model_validate(saved)
+    answer = module().template_explanation(
+        checked,
+        "request",
+        "DISABLED",
+        context=ExplanationRequest(selection={"entity_kind": "cell", "entity_id": "cell"}),
+    )
+    assert answer.findings[0].metric_ids == ["time-24"]
+    assert answer.evidence_refs == ["evidence"]
+    selected = module()._ModelSelection.model_validate(
+        {
+            "findings": [{"metric_id": "time-24", "explanation_code": "saved_value"}],
+        }
+    )
+    generated = module()._build_content(selected, checked, frozenset())
+    assert generated.findings[0].evidence_refs == ["evidence"]
+
+
+def score_analysis(*, value=25.0, partial=False):
+    saved = analysis().model_dump(mode="json")
+    saved["status"] = "partial" if partial or value is None else "available"
+    saved["metrics"] = []
+    saved["scores"] = [
+        {
+            "score_id": "accessibility",
+            "name": "Индекс доступности",
+            "value": value,
+            "status": "unknown" if value is None else "available",
+            "completeness": "partial" if partial or value is None else "full",
+            "methodology_version": "a2-methodology-v3",
+            "reason_code": "INCOMPLETE_INPUTS" if value is None else None,
+            "components": [],
+            "evidence_refs": ["evidence"],
+            "subject": {"kind": "sample_point", "point_id": "point"},
+            "ranking_eligible": not partial and value is not None,
+        }
+    ]
+    return AnalysisResult.model_validate(saved)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("value,partial", [(25.0, False), (0.0, False), (25.0, True), (None, True)])
+async def test_score_only_result_explanation_preserves_value_and_completeness(value, partial):
+    saved = score_analysis(value=value, partial=partial)
+    answer_data = {
+        "findings": [
+            {
+                "score_id": "accessibility",
+                "explanation_code": "unknown" if value is None else "saved_value",
+            }
+        ]
+    }
+    agent, transport, _, _ = assistant([reply(answer_data)])
+    answer = await explain_saved(agent, saved, point="point")
+    assert answer.status == "generated"
+    finding = answer.findings[0]
+    assert finding.metric_ids == [] and finding.claims == []
+    assert finding.score_ids == ["accessibility"] and finding.score_claims[0].value == value
+    assert answer.evidence_refs == ["evidence"]
+    text = module().render_explanation(answer, saved)
+    assert ("нет данных" if value is None else f"{value:g} из 100") in text
+    if partial and value is not None:
+        assert "полнота данных ограничена" in text
+    payload = json.loads(transport.calls[0]["messages"][1]["content"])
+    assert payload["saved_facts"]["scores"][0]["completeness"] == saved.scores[0].completeness
+    assert payload["response_example"]["findings"][0]["score_id"] == "accessibility"
+
+
+@pytest.mark.asyncio
+async def test_disabled_assistant_explains_saved_scores_without_model():
+    saved = score_analysis(partial=True)
+    agent, transport, _, _ = assistant([], config=module().FlashConfig())
+    answer = await explain_saved(agent, saved, point="point")
+    assert answer.status == "template" and not transport.calls
+    assert answer.findings[0].score_claims[0].value == 25.0
+    assert "полнота данных ограничена" in module().render_explanation(answer, saved)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "finding",
+    [
+        {"score_id": "foreign", "explanation_code": "saved_value"},
+        {
+            "score_id": "accessibility",
+            "metric_id": "accessibility",
+            "explanation_code": "saved_value",
+        },
+        {"metric_id": "accessibility", "explanation_code": "saved_value"},
+        {"score_id": "accessibility", "explanation_code": "travel_time"},
+        {"score_id": "accessibility", "explanation_code": "saved_value", "value": 100},
+    ],
+)
+async def test_model_cannot_forge_score_values_or_reference_kinds(finding):
+    agent, _, _, _ = assistant([reply({"findings": [finding]})])
+    answer = await explain_saved(agent, score_analysis(), point="point")
+    assert answer.reason_code == "INVALID_EXPLANATION"
+    assert answer.findings[0].score_claims[0].value == 25.0
+
+
+def test_score_claim_contract_and_renderer_reject_unbound_or_forged_values():
+    from a2_contracts.v2.assistant import Finding
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        Finding(text="test", metric_ids=[], claims=[], evidence_refs=[], score_ids=[])
+    with pytest.raises(ValidationError):
+        Finding(
+            text="test",
+            metric_ids=[],
+            claims=[],
+            evidence_refs=[],
+            score_ids=["score"],
+            score_claims=[{"score_id": "foreign", "value": 25.0}],
+        )
+    saved = score_analysis()
+    explanation = module().template_explanation(saved, "request", "DISABLED")
+    explanation.findings[0].score_claims[0].value = 100.0
+    with pytest.raises(ValueError, match="claim_mismatch"):
+        module().render_explanation(explanation, saved)
+
+
+@pytest.mark.asyncio
+async def test_score_selection_after_first_twenty_uses_saved_subject():
+    saved = score_analysis().model_dump(mode="json")
+    prototype = saved["scores"][0]
+    saved["scores"] = [
+        prototype
+        | {
+            "score_id": f"score-{index}",
+            "subject": {"kind": "sample_point", "point_id": f"point-{index}"},
+        }
+        for index in range(25)
+    ]
+    agent, _, _, _ = assistant(
+        [
+            reply(
+                {
+                    "findings": [
+                        {
+                            "score_id": "score-24",
+                            "explanation_code": "saved_value",
+                        }
+                    ]
+                }
+            )
+        ]
+    )
+    answer = await explain_saved(agent, AnalysisResult.model_validate(saved), point="point-24")
+    assert answer.status == "generated"
+    assert answer.findings[0].score_ids == ["score-24"]
+
+
+def test_mutable_template_cannot_remove_partial_score_limitation():
+    saved = score_analysis(partial=True)
+    explanation = module().template_explanation(saved, "request", "DISABLED")
+    explanation.findings[0].text = "Индекс доступности подтверждён полностью."
+    with pytest.raises(ValueError, match="narrative_invalid"):
+        module().render_explanation(explanation, saved)
+
+
+@pytest.mark.asyncio
+async def test_mixed_citywide_facts_fit_existing_model_budget():
+    saved = many_metrics().model_dump(mode="json")
+    prototype = score_analysis().model_dump(mode="json")["scores"][0]
+    saved["scores"] = [
+        prototype
+        | {
+            "score_id": f"score-{index}",
+            "subject": {"kind": "sample_point", "point_id": f"point-{index}"},
+        }
+        for index in range(25)
+    ]
+    agent, transport, _, _ = assistant(
+        [
+            reply(
+                {
+                    "findings": [
+                        {
+                            "score_id": "score-0",
+                            "explanation_code": "saved_value",
+                        }
+                    ]
+                }
+            )
+        ]
+    )
+    answer = await explain_saved(agent, AnalysisResult.model_validate(saved))
+    assert answer.status == "generated" and len(transport.calls) == 1
+    payload = json.loads(transport.calls[0]["messages"][1]["content"])
+    facts = payload["saved_facts"]
+    assert facts["metrics"] and facts["scores"]
+    assert len(facts["metrics"]) + len(facts["scores"]) <= 20
+    encoded = (
+        module()
+        ._json({"messages": transport.calls[0]["messages"], "tools": transport.calls[0]["tools"]})
+        .encode()
+    )
+    assert len(encoded) + 1024 <= agent.config.max_input_tokens

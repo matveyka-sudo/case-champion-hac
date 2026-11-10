@@ -1,0 +1,21 @@
+{
+  "schema_version": "waydex-local-artifacts/1",
+  "artifacts": [
+    {
+      "artifact_id": "mos-ground-transport-gtfs-20261110",
+      "kind": "gtfs",
+      "handoff_path": "gtfs/mos_ground_transport.gtfs-20261110.gtfs-repair-v1.zip",
+      "target_path": "processed/gtfs/mos_ground_transport.gtfs-20261110.gtfs-repair-v1.zip",
+      "sha256": "681afec73b21f8538a675194c95595093dbde03e95cfd72df0b4ef1f4114b2bc",
+      "verification_path": "manifests/timetables/mos-ground-transport-gtfs-20261110.json"
+    },
+    {
+      "artifact_id": "rasp-bindings-2026-11-09.1",
+      "kind": "internal_rasp_bindings",
+      "handoff_path": "rasp/rasp-bindings-2026-11-09.1",
+      "target_path": "processed/yandex_rasp/rasp-bindings-2026-11-09.1",
+      "sha256": "bc12decf35208b4c68424c9bd9a9259a0ff521104a5f06c2c68a1bf1611c54b5",
+      "verification_path": "manifests/qa/rasp-bindings-2026-11-09.1.json"
+    }
+  ]
+}

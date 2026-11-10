@@ -1,0 +1,29 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "score_id": {
+      "minLength": 1,
+      "title": "Score Id",
+      "type": "string"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Value"
+    }
+  },
+  "required": [
+    "score_id",
+    "value"
+  ],
+  "title": "ScoreClaim",
+  "type": "object"
+}
