@@ -33,12 +33,26 @@ from a2_contracts.v2.assistant import (
     ScoreClaim,
 )
 from a2_contracts.v2.requests import UrbanPassengerRequest
-from a2_contracts.v2.results import AnalysisResult, EvidenceRef, Score
+from a2_contracts.v2.results import AnalysisResult, EvidenceRef, Metric, Score
 from a2_contracts.v2.retrieval import EvidenceSearchResult
-from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    JsonValue,
+    TypeAdapter,
+    ValidationError,
+    model_validator,
+)
 from pydantic_core import ErrorDetails
 
 from .focus import focused_metrics, focused_scores
+from .narrative import (
+    ANSWER_MODES,
+    AnswerMode,
+    conversational_finding,
+    verified_conversational_finding,
+)
 from .tools import AccessScope, ToolBackend, ToolRejected, tool_definitions, validate_tool
 from .transport import FlashConfig, ModelFailure, ModelReply, ModelTransport
 
@@ -141,6 +155,7 @@ class _FindingSelection(BaseModel):
 
 class _ModelSelection(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
+    answer_mode: AnswerMode | None = None
     findings: list[_FindingSelection] = Field(min_length=1, max_length=20)
     template_ids: list[Annotated[str, Field(min_length=1, max_length=200)]] = Field(
         default_factory=list, max_length=10
@@ -206,6 +221,26 @@ def _json(value: object) -> str:
     return json.dumps(
         value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False
     )
+
+
+def _fact(value: Metric | Score) -> dict[str, object]:
+    result: dict[str, object] = {
+        "metric_id" if isinstance(value, Metric) else "score_id": (
+            value.metric_id if isinstance(value, Metric) else value.score_id
+        ),
+        "name": value.name,
+        "status": value.status,
+        "completeness": value.completeness,
+        "reason_code": value.reason_code,
+        "required_explanation_code": "saved_value" if value.status == "available" else value.status,
+        "subject": value.subject.model_dump(mode="json", exclude_none=True),
+    }
+    if isinstance(value, Metric):
+        result["unit"] = value.unit
+        result["journey_saved"] = value.journey_id is not None
+    else:
+        result["ranking_eligible"] = value.ranking_eligible
+    return result
 
 
 def _unique_object(pairs: list[tuple[str, JsonValue]]) -> dict[str, JsonValue]:
@@ -308,6 +343,18 @@ def _build_content(
         or not set(selection.template_ids) <= templates
     ):
         raise _ModelAnswerRejected("proposal_invalid")
+    if selection.answer_mode is not None:
+        if len(findings) > 3:
+            raise _ModelAnswerRejected("schema_invalid")
+        findings = [
+            conversational_finding(
+                selection.answer_mode,
+                saved,
+                [identifier for finding in findings for identifier in finding.metric_ids],
+                [identifier for finding in findings for identifier in finding.score_ids],
+                has_proposal=bool(selection.template_ids),
+            )
+        ]
     try:
         return ExplanationContent(
             analysis_id=saved.analysis_id,
@@ -323,7 +370,13 @@ def _build_content(
             evidence_refs=list(dict.fromkeys(cited))[:50],
             limitations=[
                 "Объяснение ограничено сохранёнными данными.",
-                *_urban_passenger_notes(saved),
+                *(
+                    _urban_passenger_notes(saved)
+                    if selection.answer_mode is None
+                    else _urban_passenger_notes(saved)[:1]
+                    if selection.answer_mode == "methodology"
+                    else []
+                ),
                 *(
                     ["Реализуемость сценария требует отдельной проверки."]
                     if selection.template_ids
@@ -373,6 +426,8 @@ def _validate_content(
             score = scores.get(score_claim.score_id)
             if score is None or score_claim.value != score.value:
                 raise _ModelAnswerRejected("claim_mismatch")
+        if verified_conversational_finding(finding, saved, has_proposal=bool(content.proposals)):
+            continue
         if not check_text and finding.score_ids:
             if (
                 len(finding.score_ids) != 1
@@ -609,6 +664,17 @@ class FlashAssistant:
         assert self.transport is not None and self.budget is not None
         initial_metrics = focused_metrics(saved, context)
         initial_scores = focused_scores(saved, context)
+        if (
+            context is not None
+            and context.selection is not None
+            and context.selection.entity_kind != "territory"
+        ):
+            initial_scores.sort(
+                key=lambda score: (score.subject.category is not None, score.status != "available")
+            )
+            initial_metrics.sort(
+                key=lambda metric: (metric.journey_id is None, metric.status != "available")
+            )
         # One bounded context, not twenty metrics plus twenty scores. Keep both
         # kinds discoverable without silently increasing the deployment budget.
         if initial_metrics and initial_scores:
@@ -617,35 +683,16 @@ class FlashAssistant:
         allowed_metrics = {metric.metric_id for metric in initial_metrics}
         allowed_scores = {score.score_id for score in initial_scores}
         saved_metric_ids = {metric.metric_id for metric in saved.metrics}
-        facts = {
-            "metrics": [
-                {
-                    "metric_id": metric.metric_id,
-                    "name": metric.name,
-                    "status": metric.status,
-                    "unit": metric.unit,
-                    "completeness": metric.completeness,
-                    "reason_code": metric.reason_code,
-                    "required_explanation_code": "saved_value"
-                    if metric.status == "available"
-                    else metric.status,
-                }
-                for metric in initial_metrics
-            ],
-            "scores": [
-                {
-                    "score_id": score.score_id,
-                    "name": score.name,
-                    "status": score.status,
-                    "completeness": score.completeness,
-                    "reason_code": score.reason_code,
-                    "ranking_eligible": score.ranking_eligible,
-                    "required_explanation_code": "saved_value"
-                    if score.status == "available"
-                    else score.status,
-                }
-                for score in initial_scores
-            ],
+        metric_facts = [_fact(metric) for metric in initial_metrics]
+        score_facts = [_fact(score) for score in initial_scores]
+        facts: dict[str, object] = {
+            "analysis_id": saved.analysis_id,
+            "analysis_result_hash": saved.result_hash,
+            "snapshot_id": saved.snapshot_id,
+            "territory_ids": sorted(scope.territory_ids),
+            "source_ids": sorted(scope.source_ids)[:20],
+            "metrics": metric_facts,
+            "scores": score_facts,
             "registered_template_ids": sorted(templates),
         }
         user_payload: dict[str, object] = {
@@ -666,6 +713,7 @@ class FlashAssistant:
                     }
                 ],
                 "template_ids": [],
+                **({"answer_mode": "explain"} if context is not None and context.question else {}),
             }
         elif initial_scores:
             score = initial_scores[0]
@@ -679,17 +727,27 @@ class FlashAssistant:
                     }
                 ],
                 "template_ids": [],
+                **({"answer_mode": "explain"} if context is not None and context.question else {}),
             }
         output_instructions = (
             "Return exactly one JSON object, no Markdown, code fences, or text outside JSON. "
-            "Select one to five relevant saved metrics or scores. For each, give exactly one of "
-            "metric_id or score_id, and explanation_code. Never identify a score as a metric. "
+            "Interpret the freeform question using answer_mode: explain=why, methodology=formula/H, "
+            "journey=which leg, coverage=unknown/limits, improve=saved scenario, compare=two facts, "
+            "help=how to use, unsupported=missing facts/new calculations/prices/blame. "
+            "Select one to three relevant facts, two for compare; never dump all facts. "
+            "Each finding has exactly one metric_id OR score_id plus explanation_code. "
             "COPY explanation_code EXACTLY from required_explanation_code on each selected saved fact. "
-            "This applies to BOTH metrics and scores, including preliminary numeric scores. "
             "Never use completeness, reason_code, a display label, or invented wording as explanation_code. "
-            "Give template_ids only from registered_template_ids, or []. "
-            "Do not write analysis_id, values, units, evidence, prose, or claims. "
-            "The server adds all facts and sentences. The response_example is valid for the first metric. "
+            "template_ids must be registered and relevant to improvement, otherwise []. "
+            + (
+                "For comparison beyond this subset, get_analysis accepts a saved entity selection; "
+                "never use another analysis. "
+                if self.config.tools_enabled
+                else "Tools are disabled: if the second fact is absent, select only the known fact "
+                "with compare mode to explain the missing comparison. "
+            )
+            + "For journey questions select a linked time metric. Do not infer causes or promise effects. "
+            "No values, units, evidence, prose or claims: the server adds them. Follow response_example. "
         )
         messages: list[dict[str, JsonValue]] = [
             {
@@ -699,7 +757,7 @@ class FlashAssistant:
                 + output_instructions
                 + _json(
                     {
-                        "schema": _ModelSelection.model_json_schema(),
+                        "answer_modes": ANSWER_MODES,
                         "explanation_codes": sorted(_FINDING_CODES),
                     }
                 ),
@@ -710,6 +768,20 @@ class FlashAssistant:
             },
         ]
         definitions = tool_definitions() if self.config.tools_enabled else []
+        # Keep richer question context within the existing reservation, leaving
+        # room for a compact read-only lookup rather than increasing the budget.
+        while (
+            len(_json({"messages": messages, "tools": definitions}).encode()) + 2200
+            > self.config.max_input_tokens
+        ):
+            candidates = [rows for rows in (metric_facts, score_facts) if len(rows) > 1]
+            if not candidates:
+                break
+            max(candidates, key=len).pop()
+            user_payload["facts_truncated"] = True
+            messages[1]["content"] = _json(user_payload)
+        allowed_metrics = {str(row["metric_id"]) for row in metric_facts}
+        allowed_scores = {str(row["score_id"]) for row in score_facts}
         model_calls = 0
         tools_used = 0
         output_remaining = self.config.max_output_tokens
@@ -879,10 +951,70 @@ class FlashAssistant:
                                     retrieved.setdefault(ref.evidence_id, ref)
                                     if len(retrieved) > 50:
                                         raise ValueError("Too many retrieved evidence references")
+                            exposed_metrics: set[str] = set()
+                            exposed_scores: set[str] = set()
+                            if (
+                                name == "get_analysis"
+                                and isinstance(data, dict)
+                                and data.get("analysis_id") == saved.analysis_id
+                                and data.get("result_hash") == saved.result_hash
+                            ):
+                                compact: dict[str, object] = {
+                                    "analysis_id": saved.analysis_id,
+                                    "result_hash": saved.result_hash,
+                                    "truncated": bool(data.get("truncated", False)),
+                                }
+                                for key, saved_items, identifier in (
+                                    ("metrics", saved.metrics, "metric_id"),
+                                    ("scores", saved.scores, "score_id"),
+                                ):
+                                    rows = data.get(key, [])
+                                    if not isinstance(rows, list) or len(rows) > 20:
+                                        raise ValueError("Invalid saved lookup inventory")
+                                    ids = {
+                                        row[identifier]
+                                        for row in rows
+                                        if isinstance(row, dict)
+                                        and isinstance(row.get(identifier), str)
+                                    }
+                                    compact[key] = [
+                                        _fact(item)
+                                        for item in saved_items
+                                        if getattr(item, identifier) in ids
+                                    ][:10]
+                                # Truncate references before authorizing them, never
+                                # authorize invisible data from a large tool result.
+                                while (
+                                    len(
+                                        _json({"messages": messages, "tools": definitions}).encode()
+                                    )
+                                    + len(_json(compact).encode())
+                                    + 1400
+                                    > self.config.max_input_tokens
+                                ):
+                                    lists = [
+                                        candidate_rows
+                                        for key in ("metrics", "scores")
+                                        if isinstance((candidate_rows := compact[key]), list)
+                                        and candidate_rows
+                                    ]
+                                    if not lists:
+                                        break
+                                    max(lists, key=len).pop()
+                                    compact["truncated"] = True
+                                metrics_data, scores_data = compact["metrics"], compact["scores"]
+                                assert isinstance(metrics_data, list) and isinstance(
+                                    scores_data, list
+                                )
+                                exposed_metrics = {str(row["metric_id"]) for row in metrics_data}
+                                exposed_scores = {str(row["score_id"]) for row in scores_data}
+                                data = TypeAdapter(JsonValue).validate_python(compact)
                             encoded = _json({"untrusted_tool_data": data})
                             if len(encoded.encode()) > 12000:
                                 raise ValueError("Tool payload too large")
                             cache[fingerprint] = encoded
+                            allowed_metrics.update(exposed_metrics)
+                            allowed_scores.update(exposed_scores)
                             if name == "get_metric_details":
                                 metric_id = args.get("metric_id")
                                 if isinstance(metric_id, str) and metric_id in saved_metric_ids:
