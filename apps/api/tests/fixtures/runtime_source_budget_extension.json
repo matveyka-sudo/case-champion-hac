@@ -1,0 +1,5 @@
+{
+  "signatures": {
+    "a2_api.core.config:RuntimeSettings": "(*, contract_version: Literal['2', 'legacy'] = '2', registry_hook: str | None = None, assistant_hook: str | None = None, secure_cookies: bool = False, database_url: str | None = None, database_schema: Annotated[str, _PydanticGeneralMetadata(pattern='^[a-z][a-z0-9_]{0,62}$')] = 'a2_backend', catalog_path: pathlib.Path | None = None, code_version: str | None = None, preflight_hook: str | None = None, calculation_handler: str | None = None, job_timeout_seconds: Annotated[float, Gt(gt=0), Le(le=600)] = 600, worker_poll_seconds: Annotated[float, Gt(gt=0), Le(le=60)] = 0.5, worker_result_decoded_mib: Annotated[int, Ge(ge=16), Le(le=32)] = 16, runtime_source_budget_mib: Annotated[int, Ge(ge=96), Le(le=128)] = 96) -> None"
+  }
+}

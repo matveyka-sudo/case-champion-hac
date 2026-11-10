@@ -40,12 +40,23 @@ equal ML2's pure `project_walk_connectors` projection. A retained ID cannot hide
 changed population, coordinates, traversability, time, category or source graph.
 No request supplies normalized metrics or arbitrary connector data.
 
-Startup verification has a cumulative **96 MiB** document/source budget. This
+Startup verification defaults to a cumulative **96 MiB** document/source budget. This
 covers the roughly 78 MB current three-city input inventory, including producer
 files, and retains the **32 MiB** individual document limit. Hashing producer files
 uses bounded streaming before model parsing. It does not authorize a larger OD
 execution. Resource tests measure fresh-process wall time and peak RSS separately
 from serialized bytes.
+
+The reviewed four-profile composition adds the original accepted Moscow public
+transport snapshot and its inputs/scenario. Its designated validation reads total
+**119,152,261 bytes**, of which **119,150,933 bytes** are unique content; duplicate
+content accounts for only 1,328 bytes. The operator must explicitly configure
+`A2_RUNTIME_SOURCE_BUDGET_MIB=128` for this deployment. The hard ceiling is 128 MiB,
+the default remains 96 MiB, and the individual runtime JSON limit remains 32 MiB.
+Product loading, standalone walk validation and inventory rechecks use the same
+validated policy. No hash, path or provenance check is omitted. The measured
+physical read total is **333,914,886 bytes**, including additional semantic bundle
+parsing and implementation fingerprint reads; the allowance is not a disk-I/O cap.
 
 The preserved macOS Python 3.12 test measurement for three `TEST_ONLY` deployment
 artifacts over real Kaliningrad `.2`, Moscow `.3` and Novorossiysk `.2` source

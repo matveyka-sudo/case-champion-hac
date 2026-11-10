@@ -31,8 +31,9 @@ from a2_engine.urban.valhalla.models import (
 from pydantic import Field, HttpUrl, TypeAdapter
 
 from a2_api.adapters import walk_pilot
-from a2_api.adapters.product_runtime import MAX_RUNTIME_BYTES, FileRef, read_document
+from a2_api.adapters.product_runtime import FileRef, read_document
 from a2_api.core.registry import ProductRegistry
+from a2_api.core.runtime_budget import runtime_source_budget_bytes
 from a2_api.core.walk_observations import observation_directory
 
 if TYPE_CHECKING:
@@ -130,6 +131,9 @@ def executor_fingerprint() -> str:
         "a2_contracts.v2.scenarios",
         "a2_api.adapters.walk_input_inventory",
         "a2_api.core.batches",
+        "a2_api.core.runtime_budget",
+        "a2_api.core.config",
+        "a2_api.core.env_settings",
         "a2_api.core.walk_route_artifacts",
         "a2_api.workers.checkpoint_channel",
         "a2_api.workers.calculation",
@@ -173,7 +177,8 @@ def validate_approval_sources(
 ) -> BundleData:
     """Keep legacy and per-profile approvals on one graph/provenance validator."""
     binding = approval.routing_binding
-    _, graph = _read(root, binding.graph_manifest, budget or [MAX_RUNTIME_BYTES], 8 * 1024 * 1024)
+    remaining = budget if budget is not None else [runtime_source_budget_bytes()]
+    _, graph = _read(root, binding.graph_manifest, remaining, 8 * 1024 * 1024)
     if not isinstance(graph, dict):
         raise ValueError("WALK_GRAPH_MANIFEST_REQUIRED")
     if graph_out is not None:
@@ -210,7 +215,6 @@ def validate_approval_sources(
         or datetime.now(UTC) >= approval.valid_until
     ):
         raise ValueError("WALK_BATCH_ACTUAL_BUILD_PROFILE_OR_VALIDITY_MISMATCH")
-    remaining = budget if budget is not None else [MAX_RUNTIME_BYTES]
     source_root = (bundles_dir() / runtime.bundle_id).resolve()
     with (source_root / "manifest.json").open("rb") as source:
         header = source.read(1024 * 1024 + 1)
@@ -254,7 +258,7 @@ def load_binding(
 ) -> BoundWalkBinding:
     from a2_api.adapters.walk_batches import Approval
 
-    remaining = budget if budget is not None else [MAX_RUNTIME_BYTES]
+    remaining = budget if budget is not None else [runtime_source_budget_bytes()]
     path, value = _read(root, reference, remaining, 256 * 1024)
     binding = WalkBinding.model_validate(value)
     _, value = _read(path.parent, binding.artifact, remaining, walk_pilot.MAX_ARTIFACT_BYTES)
