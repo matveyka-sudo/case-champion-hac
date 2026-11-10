@@ -3018,6 +3018,14 @@
           "after": {
             "$ref": "#/components/schemas/ScenarioValues"
           },
+          "after_journeys": {
+            "items": {
+              "$ref": "#/components/schemas/JourneyResult"
+            },
+            "maxItems": 10000,
+            "title": "After Journeys",
+            "type": "array"
+          },
           "assumptions": {
             "items": {
               "minLength": 1,

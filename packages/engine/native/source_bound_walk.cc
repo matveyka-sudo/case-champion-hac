@@ -170,6 +170,44 @@ int main(int argc, char** argv) {
     boost::property_tree::ptree candidate;
     std::istringstream candidate_stream(read(argv[3]));
     boost::property_tree::read_json(candidate_stream, candidate);
+    if (auto pairs = candidate.get_child_optional("turn_pairs")) {
+      auto scope = candidate.get<std::string>("scope_id");
+      auto plan = candidate.get<std::string>("plan_sha256");
+      auto hex = [](const std::string& text) {
+        return text.size() == 64 && text.find_first_not_of("0123456789abcdef") == std::string::npos;
+      };
+      if (!hex(scope) || !hex(plan)) throw std::runtime_error("SHA256 scope and plan required");
+      std::cout << "{\"kind\":\"turn_pairs_header\",\"scope_id\":\"" << scope
+        << "\",\"plan_sha256\":\"" << plan << "\"}\n";
+      uint64_t count = 0;
+      for (auto& row : *pairs) {
+        GraphId predecessor_id(row.second.get<uint64_t>("from")), edge_id(row.second.get<uint64_t>("to"));
+        auto predecessor_tile = reader.GetGraphTile(predecessor_id);
+        auto predecessor_edge = predecessor_tile->directededge(predecessor_id);
+        auto tile = reader.GetGraphTile(edge_id);
+        auto edge = tile->directededge(edge_id);
+        auto node_id = GraphId(starts.at(edge_id.value));
+        auto node = tile->node(node_id);
+        bool connected = predecessor_edge->endnode() == node_id;
+        if (!connected) {
+          auto end_tile = reader.GetGraphTile(predecessor_edge->endnode());
+          auto end_node = end_tile->node(predecessor_edge->endnode());
+          for (uint32_t j = 0; j < end_node->transition_count(); ++j)
+            connected |= end_tile->transition(end_node->transition_index() + j)->endnode() == node_id;
+        }
+        if (!connected || !retained(predecessor_edge, cost) || !retained(edge, cost))
+          throw std::runtime_error("turn pair outside actual adjacency");
+        EdgeLabel label(kInvalidLabel, predecessor_id, predecessor_edge, Cost{}, 0,
+                        sif::TravelMode::kPedestrian, 0, kInvalidRestriction,
+                        false, false, InternalTurn::kNoTurn);
+        auto seconds = cost->TransitionCost(edge, node, label).secs;
+        std::cout << "{\"kind\":\"turn_pair\",\"from\":" << predecessor_id.value
+          << ",\"to\":" << edge_id.value << ",\"seconds_bits\":" << bits(seconds) << "}\n";
+        ++count;
+      }
+      std::cout << "{\"kind\":\"turn_pairs_footer\",\"pairs\":" << count << "}\n";
+      return 0;
+    }
     std::vector<EdgeLabel> labels;
     uint32_t distance = 0;
     uint32_t replayed_rows = 0;

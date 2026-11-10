@@ -18,6 +18,13 @@ from a2_engine.urban.walk.source_bound import (
     load_native_walk_export,
     solve_native_walk_relaxation,
 )
+from a2_engine.urban.walk.turn_certificate import (
+    check_native_turn_minimum,
+    load_native_turn_weights,
+    make_native_turn_incumbent,
+    plan_native_turn_pairs,
+    solve_native_turn_plan,
+)
 
 PINNED_IMAGE = "sha256:4ac3d13d1019f9a130e9e6b6924c16ea55da0fa51e3653039152e33ad4095661"
 SOURCE_HASHES = {
@@ -106,6 +113,7 @@ def execute(args: argparse.Namespace, output: Path) -> None:
         (package / "native/source_bound_walk.cc", "source_bound_walk.cc"),
         (Path(__file__), "audit_source_bound_walk.py"),
         (package / "src/a2_engine/urban/walk/source_bound.py", "source_bound.py"),
+        (package / "src/a2_engine/urban/walk/turn_certificate.py", "turn_certificate.py"),
         (args.artifact, "artifact.json"),
         (graph_dir / "valhalla.json", "valhalla.json"),
         (graph_dir / "walking-profile.json", "walking-profile.json"),
@@ -209,6 +217,66 @@ def execute(args: argparse.Namespace, output: Path) -> None:
         origin_connector_seconds=Fraction(str(connectors[0]["seconds"])),
         destination_connector_seconds=Fraction(str(connectors[1]["seconds"])),
     )
+    turn_certificate = None
+    if args.exact_turns and replay_run.returncode == 0:
+        binding = {
+            name: digest(output / name)
+            for name in (
+                "export.jsonl",
+                "request.json",
+                "valhalla.json",
+                "walking-profile.json",
+                "build-manifest.json",
+                "source-bound-walk",
+                "artifact.json",
+            )
+        }
+        binding["library_sha256"] = library_hashes[0]
+        binding["builder_image_id"] = builder_id
+        scope_id = hashlib.sha256(json.dumps(binding, sort_keys=True).encode()).hexdigest()
+        incumbent = make_native_turn_incumbent(graph, scope_id, candidate, replay_run.stdout)
+        plan = plan_native_turn_pairs(graph, scope_id, incumbent)
+        write_new(output / "turn-plan.json", plan.request_json())
+        with (
+            (output / "turn-weights.jsonl").open("x") as stream,
+            (output / "turn-weights.stderr").open("x") as errors,
+        ):
+            subprocess.run(
+                base + ["/proof/turn-plan.json"], stdout=stream, stderr=errors, check=True
+            )
+        weights = load_native_turn_weights(
+            (output / "turn-weights.jsonl").read_text(),
+            plan,
+            expected_sha256=digest(output / "turn-weights.jsonl"),
+        )
+        exact_candidate = solve_native_turn_plan(graph, plan, weights)
+        write_new(output / "turn-candidate.json", exact_candidate.replay_json())
+        exact_replay = subprocess.run(
+            base + ["/proof/turn-candidate.json"], capture_output=True, text=True
+        )
+        write_new(output / "turn-replay.jsonl", exact_replay.stdout)
+        write_new(output / "turn-replay.stderr", exact_replay.stderr)
+        exact_result = (
+            check_native_turn_minimum(exact_candidate, exact_replay.stdout)
+            if exact_replay.returncode == 0
+            else None
+        )
+        if exact_result is not None:
+            result = exact_result
+        turn_certificate = {
+            "source_binding": binding,
+            "source_scope_id": scope_id,
+            "plan_sha256": plan.fingerprint,
+            "ball_nodes": len(plan.ball_nodes),
+            "state_edges": len(plan.state_edges),
+            "turn_pairs": len(plan.pairs),
+            "weights_sha256": weights.content_sha256,
+            "incumbent_upper_seconds": str(incumbent.upper_seconds),
+            "optimum": asdict(exact_candidate),
+            "optimum_replay_exit_code": exact_replay.returncode,
+            "result": asdict(exact_result) if exact_result else None,
+        }
+    validate_graph_inputs(graph_dir, artifact)
     receipt = {
         "git_commit": subprocess.check_output(
             ["git", "-C", str(package.parents[1]), "rev-parse", "HEAD"], text=True
@@ -227,6 +295,7 @@ def execute(args: argparse.Namespace, output: Path) -> None:
         "native_endpoint_inventory": [asdict(endpoint) for endpoint in graph.endpoints],
         "native_replay_exit_code": replay_run.returncode,
         "result": asdict(result),
+        "closed_turn_certificate": turn_certificate,
         "network_lower_seconds_approx": float(result.network_lower_seconds),
         "network_upper_seconds_approx": (
             float(result.network_upper_seconds)
@@ -274,6 +343,7 @@ def main() -> None:
     parser.add_argument("--artifact", type=Path, required=True)
     parser.add_argument("--builder-image", default="waydex-walk-proof-builder:3.5.1")
     parser.add_argument("--run-id")
+    parser.add_argument("--exact-turns", action="store_true")
     run_audit(parser.parse_args())
 
 
