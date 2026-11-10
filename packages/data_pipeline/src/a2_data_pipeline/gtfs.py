@@ -1,4 +1,4 @@
-"""GTFS audit and repair (rule set ``gtfs-repair-v1``).
+"""GTFS audit and repair (rule set ``gtfs-repair-v2``).
 
 The repair never invents data: it keeps the standard GTFS columns, drops rows
 that break a reference or an order rule, and reports every loss by reason.
@@ -13,8 +13,12 @@ that break a reference or an order rule, and reports every loss by reason.
 - routes, stops and services that no trip uses are kept (they are harmless) and
   counted.
 
-Calendar exceptions cannot be repaired: a feed without ``calendar_dates`` has
-no holidays, which the report states. The output archive is deterministic
+Calendar exceptions (``calendar_dates.txt``) are kept and applied: an exception
+of type 2 removes the service on that date, type 1 adds it (also for a service
+that exists only in ``calendar_dates``). Rows with an invalid date or type, or a
+second row for the same service and date, are dropped and counted. A feed without
+``calendar_dates`` has no holidays, which the report states. (``gtfs-repair-v1``
+dropped the file; for a feed without it both versions write the same archive.) The output archive is deterministic
 (sorted rows, fixed timestamps), so a rebuild from the same raw has the same
 sha256.
 
@@ -39,7 +43,7 @@ from typing import Any
 from .manifest import load_dataset_manifest
 from .paths import processed_dir, raw_dir, repo_root
 
-REPAIR_VERSION = "gtfs-repair-v1"
+REPAIR_VERSION = "gtfs-repair-v2"
 COLUMNS = {
     "agency.txt": ("agency_id", "agency_name", "agency_url", "agency_timezone"),
     "calendar.txt": (
@@ -58,7 +62,9 @@ COLUMNS = {
     "stops.txt": ("stop_id", "stop_name", "stop_lat", "stop_lon"),
     "trips.txt": ("route_id", "service_id", "trip_id", "trip_headsign", "direction_id"),
     "stop_times.txt": ("trip_id", "arrival_time", "departure_time", "stop_id", "stop_sequence"),
+    "calendar_dates.txt": ("service_id", "date", "exception_type"),
 }
+OPTIONAL_FILES = {"calendar_dates.txt"}
 WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 ROUTE_TYPES = {"0": "tram", "1": "subway", "2": "rail", "3": "bus", "4": "ferry", "5": "cable_tram"}
 FIXED_TIME = (2026, 1, 1, 0, 0, 0)
@@ -113,17 +119,36 @@ def _coordinate(lat: str, lon: str) -> bool:
         return False
 
 
-def service_days(service: dict[str, str], start: date, end: date) -> int:
-    """Days of ``start..end`` on which a calendar service runs (no exceptions known)."""
+def service_dates(
+    service: dict[str, str] | None,
+    exceptions: dict[date, str],
+    start: date,
+    end: date,
+) -> set[date]:
+    """Dates of ``start..end`` on which a service runs: the calendar, then its exceptions."""
 
-    first, last = _date(service["start_date"]), _date(service["end_date"])
-    if first is None or last is None:
-        return 0
-    day, count = max(first, start), 0
-    while day <= min(last, end):
-        count += service[WEEKDAYS[day.weekday()]] == "1"
-        day += timedelta(days=1)
-    return count
+    dates: set[date] = set()
+    if service is not None:
+        first, last = _date(service["start_date"]), _date(service["end_date"])
+        if first is not None and last is not None:
+            day = max(first, start)
+            while day <= min(last, end):
+                if service[WEEKDAYS[day.weekday()]] == "1":
+                    dates.add(day)
+                day += timedelta(days=1)
+    for day, kind in exceptions.items():
+        if start <= day <= end:
+            if kind == "1":
+                dates.add(day)
+            else:
+                dates.discard(day)
+    return dates
+
+
+def service_days(service: dict[str, str], start: date, end: date) -> int:
+    """Days of ``start..end`` on which a calendar service runs, without exceptions."""
+
+    return len(service_dates(service, {}, start, end))
 
 
 def repair(raw_zip: Path, out_zip: Path, window: tuple[date, date]) -> dict[str, Any]:  # noqa: C901 - one pass per file, kept together on purpose
@@ -131,7 +156,7 @@ def repair(raw_zip: Path, out_zip: Path, window: tuple[date, date]) -> dict[str,
     dropped_columns: dict[str, list[str]] = {}
     with zipfile.ZipFile(raw_zip) as archive:
         names = set(archive.namelist())
-        missing_files = sorted(n for n in COLUMNS if n not in names)
+        missing_files = sorted(n for n in COLUMNS if n not in names and n not in OPTIONAL_FILES)
         if missing_files:
             raise ValueError(f"required GTFS files missing: {missing_files}")
         agencies = {a["agency_id"]: a for a in _records(archive, "agency.txt", dropped_columns)}
@@ -145,6 +170,18 @@ def repair(raw_zip: Path, out_zip: Path, window: tuple[date, date]) -> dict[str,
                 losses.add("calendar_duplicate_service")
             else:
                 services[service["service_id"]] = service
+        exceptions: dict[str, dict[date, str]] = {}
+        has_exceptions = "calendar_dates.txt" in names
+        if has_exceptions:
+            for row in _records(archive, "calendar_dates.txt", dropped_columns):
+                day = _date(row["date"])
+                if not row["service_id"] or day is None or row["exception_type"] not in {"1", "2"}:
+                    losses.add("calendar_date_invalid")
+                elif day in exceptions.get(row["service_id"], {}):
+                    losses.add("calendar_date_duplicate")
+                else:
+                    exceptions.setdefault(row["service_id"], {})[day] = row["exception_type"]
+        known_services = set(services) | set(exceptions)
         routes: dict[str, dict[str, str]] = {}
         for route in _records(archive, "routes.txt", dropped_columns):
             if route["route_type"] not in ROUTE_TYPES:
@@ -167,7 +204,7 @@ def repair(raw_zip: Path, out_zip: Path, window: tuple[date, date]) -> dict[str,
         for trip in _records(archive, "trips.txt", dropped_columns):
             if trip["route_id"] not in routes:
                 losses.add("trip_unknown_route")
-            elif trip["service_id"] not in services:
+            elif trip["service_id"] not in known_services:
                 losses.add("trip_unknown_service")
             elif trip["trip_id"] in trips:
                 losses.add("trip_duplicate")
@@ -209,9 +246,21 @@ def repair(raw_zip: Path, out_zip: Path, window: tuple[date, date]) -> dict[str,
     used_routes = {t["route_id"] for t in kept_trips.values()}
     used_services = {t["service_id"] for t in kept_trips.values()}
     used_stops = {e[3] for trip_events in kept.values() for e in trip_events}
-    _write(out_zip, agencies, services, routes, stops, kept_trips, kept)
+    _write(
+        out_zip,
+        agencies,
+        services,
+        routes,
+        stops,
+        kept_trips,
+        kept,
+        exceptions if has_exceptions else None,
+    )
     start, end = window
-    active_services = {s for s in used_services if service_days(services[s], start, end) > 0}
+    running_dates = {
+        s: service_dates(services.get(s), exceptions.get(s, {}), start, end) for s in used_services
+    }
+    active_services = {s for s, dates in running_dates.items() if dates}
     active_trips = [t for t in kept_trips.values() if t["service_id"] in active_services]
     digest = hashlib.sha256(out_zip.read_bytes()).hexdigest()
     return {
@@ -220,6 +269,9 @@ def repair(raw_zip: Path, out_zip: Path, window: tuple[date, date]) -> dict[str,
         "input_rows": {
             "agency": len(agencies),
             "calendar": len(services) + losses.counts.get("calendar_invalid_service", 0),
+            "calendar_dates": sum(len(v) for v in exceptions.values())
+            + losses.counts.get("calendar_date_invalid", 0)
+            + losses.counts.get("calendar_date_duplicate", 0),
             "routes": len(routes),
             "stops": len(stops) + losses.counts.get("stop_without_coordinates", 0),
             "trips": len(trips)
@@ -232,6 +284,7 @@ def repair(raw_zip: Path, out_zip: Path, window: tuple[date, date]) -> dict[str,
         "output_rows": {
             "agency": len(agencies),
             "calendar": len(services),
+            "calendar_dates": sum(len(v) for v in exceptions.values()),
             "routes": len(routes),
             "stops": len(stops),
             "trips": len(kept),
@@ -242,23 +295,41 @@ def repair(raw_zip: Path, out_zip: Path, window: tuple[date, date]) -> dict[str,
         "unused": {
             "routes": len(routes) - len(used_routes),
             "stops": len(stops) - len(used_stops),
-            "services": len(services) - len(used_services),
+            "services": len(known_services) - len(used_services),
         },
         "modes": _count(ROUTE_TYPES[routes[r]["route_type"]] for r in used_routes),
         "window": {
             "from": start.isoformat(),
             "to": end.isoformat(),
             "services_running": len(active_services),
+            "exceptions_in_window": {
+                "added": sum(
+                    1
+                    for s in used_services
+                    for d, k in exceptions.get(s, {}).items()
+                    if start <= d <= end and k == "1"
+                ),
+                "removed": sum(
+                    1
+                    for s in used_services
+                    for d, k in exceptions.get(s, {}).items()
+                    if start <= d <= end and k == "2"
+                ),
+            },
             "trips_running": len(active_trips),
             "routes_running": len({t["route_id"] for t in active_trips}),
             "modes_running": _count(
                 ROUTE_TYPES[routes[r]["route_type"]] for r in {t["route_id"] for t in active_trips}
             ),
         },
-        "service_end_years": _count(services[s]["end_date"][:4] for s in used_services),
+        "service_end_years": _count(
+            services[s]["end_date"][:4] for s in used_services if s in services
+        ),
         "unrepaired": {
             "agencies_without_url": sum(1 for a in agencies.values() if not a["agency_url"]),
-            "calendar_dates": "absent: holidays and other exceptions are unknown",
+            "calendar_dates": "kept and applied"
+            if has_exceptions
+            else "absent: holidays and other exceptions are unknown",
             "shapes": "absent",
         },
     }
@@ -291,6 +362,7 @@ def _write(
     stops: dict[str, dict[str, str]],
     trips: dict[str, dict[str, str]],
     events: dict[str, list[tuple[int, int, int, str]]],
+    exceptions: dict[str, dict[date, str]] | None = None,
 ) -> None:
     def table(name: str, rows: dict[str, dict[str, str]]) -> bytes:
         columns = COLUMNS[name]
@@ -309,6 +381,15 @@ def _write(
         "trips.txt": table("trips.txt", trips),
         "stop_times.txt": _csv(COLUMNS["stop_times.txt"], list(stop_times)),
     }
+    if exceptions is not None:  # written only when the feed has the file: same bytes otherwise
+        files["calendar_dates.txt"] = _csv(
+            COLUMNS["calendar_dates.txt"],
+            [
+                (service_id, day.strftime("%Y%m%d"), kind)
+                for service_id in sorted(exceptions)
+                for day, kind in sorted(exceptions[service_id].items())
+            ],
+        )
     out_zip.parent.mkdir(parents=True, exist_ok=True)
     partial = out_zip.with_name(out_zip.name + ".part")
     with zipfile.ZipFile(partial, "w", compression=zipfile.ZIP_DEFLATED) as archive:

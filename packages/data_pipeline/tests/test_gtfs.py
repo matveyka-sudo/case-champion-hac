@@ -1,4 +1,4 @@
-"""GTFS repair rules (gtfs-repair-v1) on a synthetic feed."""
+"""GTFS repair rules (gtfs-repair-v2) on a synthetic feed."""
 
 import csv
 import hashlib
@@ -107,3 +107,54 @@ def test_service_days_without_exceptions() -> None:
     service = {d: "1" if d in {"saturday", "sunday"} else "0" for d in gtfs.WEEKDAYS}
     service |= {"start_date": "20261101", "end_date": "20261130"}
     assert gtfs.service_days(service, *WINDOW) == 9  # Nov 2026: five Sundays, four Saturdays
+
+
+def test_calendar_exceptions_are_kept_and_applied(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A trip cancelled on 9 November must not run that day after the repair."""
+
+    monkeypatch.setattr(gtfs, "repo_root", lambda: tmp_path)
+    feed = dict(FEED)
+    feed["calendar_dates.txt"] = (
+        "service_id,date,exception_type\n"
+        "WK,20261109,2\n"  # Monday 9 November: WK is cancelled
+        "EXTRA,20261110,1\n"  # a service that exists only as an exception
+        "WK,20261109,1\n"  # a second row for the same date: dropped
+        "WK,2026-11-11,2\n"  # an invalid date: dropped
+    )
+    feed["trips.txt"] = FEED["trips.txt"] + "R2,EXTRA,T6,,0\n"
+    feed["stop_times.txt"] = (
+        FEED["stop_times.txt"] + "T6,07:00:00,07:00:00,S1,1,\nT6,07:10:00,07:10:00,S2,2,\n"
+    )
+    raw = tmp_path / "raw.zip"
+    with zipfile.ZipFile(raw, "w") as archive:
+        for name, text in feed.items():
+            archive.writestr(name, text)
+    monday = (date(2026, 11, 9), date(2026, 11, 9))
+    report = gtfs.repair(raw, tmp_path / "out.zip", monday)
+    assert report["window"]["trips_running"] == 0  # T1 runs on WK, cancelled that day
+    assert report["window"]["exceptions_in_window"] == {"added": 0, "removed": 1}
+    assert report["losses"]["calendar_date_duplicate"] == 1
+    assert report["losses"]["calendar_date_invalid"] == 1
+    assert report["unrepaired"]["calendar_dates"] == "kept and applied"
+    rows = read(tmp_path / "out.zip", "calendar_dates.txt")
+    assert {(r["service_id"], r["date"], r["exception_type"]) for r in rows} == {
+        ("WK", "20261109", "2"),
+        ("EXTRA", "20261110", "1"),
+    }
+    tuesday = gtfs.repair(raw, tmp_path / "out2.zip", (date(2026, 11, 10), date(2026, 11, 10)))
+    # WK runs on Tuesday, and the exception-only service adds T6
+    assert tuesday["window"]["trips_running"] == 2
+    assert "T6" in {t["trip_id"] for t in read(tmp_path / "out2.zip", "trips.txt")}
+
+
+def test_feed_without_exceptions_writes_the_same_archive(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(gtfs, "repo_root", lambda: tmp_path)
+    raw = write_feed(tmp_path / "raw.zip")
+    report = gtfs.repair(raw, tmp_path / "out.zip", WINDOW)
+    with zipfile.ZipFile(tmp_path / "out.zip") as archive:
+        assert "calendar_dates.txt" not in archive.namelist()
+    assert report["unrepaired"]["calendar_dates"].startswith("absent")

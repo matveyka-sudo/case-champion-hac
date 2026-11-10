@@ -194,6 +194,12 @@ def service_overlaps(repaired_zip: Path, window: tuple[date, date]) -> dict[str,
             return list(reader)
 
         services = {s["service_id"]: s for s in rows("calendar.txt")}
+        exceptions: dict[str, dict[date, str]] = {}
+        if "calendar_dates.txt" in archive.namelist():
+            for row in rows("calendar_dates.txt"):
+                stamp = row["date"]
+                day_of = date(int(stamp[:4]), int(stamp[4:6]), int(stamp[6:8]))
+                exceptions.setdefault(row["service_id"], {})[day_of] = row["exception_type"]
         trips = rows("trips.txt")
         first: dict[str, str] = {}
         reader = csv.DictReader(io.TextIOWrapper(archive.open("stop_times.txt"), encoding="utf-8"))
@@ -206,18 +212,15 @@ def service_overlaps(repaired_zip: Path, window: tuple[date, date]) -> dict[str,
         by_group.setdefault(key, {}).setdefault(trip["service_id"], set()).add(
             first.get(trip["trip_id"], "")
         )
+    dates = {
+        s: gtfs.service_dates(services.get(s), exceptions.get(s, {}), window[0], window[1])
+        for s in {s for g in by_group.values() for s in g}
+    }
     overlapping: dict[tuple[str, str], tuple[str, str]] = {}
     day = window[0]
     while day <= window[1]:
-        stamp = day.strftime("%Y%m%d")
-        flag = WEEKDAYS[day.weekday()]
         for key, by_service in by_group.items():
-            running = sorted(
-                s
-                for s in by_service
-                if services[s][flag] == "1"
-                and services[s]["start_date"] <= stamp <= services[s]["end_date"]
-            )
+            running = sorted(s for s in by_service if day in dates[s])
             if len(running) > 1:
                 overlapping.setdefault(key, (running[0], running[1]))
         day += timedelta(days=1)
