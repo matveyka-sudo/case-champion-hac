@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import type { AnalysisResult } from "../src/api/types";
+import type { AnalysisResult, Schemas, Territory } from "../src/api/types";
 import capabilities from "../tests/fixtures/api/capabilities.json" with { type: "json" };
 import territories from "../tests/fixtures/api/territories.json" with { type: "json" };
 import urban from "../tests/fixtures/api/urban_passenger.json" with { type: "json" };
@@ -29,6 +29,9 @@ async function mockApi(
     running?: boolean;
     emptyProposals?: boolean;
     samplePopulation?: number | null;
+    capabilities?: Schemas["Capabilities"];
+    territories?: Territory[];
+    result?: Partial<AnalysisResult>;
   } = {},
 ) {
   let request: unknown = null,
@@ -77,9 +80,9 @@ async function mockApi(
       body: sent,
       key: r.headers()["idempotency-key"],
     });
-    if (path.endsWith("/capabilities")) body = capabilities;
+    if (path.endsWith("/capabilities")) body = options.capabilities || capabilities;
     else if (path.endsWith("/territories"))
-      body = territories.filter(
+      body = (options.territories || territories).filter(
         (t) => t.level === url.searchParams.get("level"),
       );
     else if (path === "/api/v1/analyses") {
@@ -116,6 +119,7 @@ async function mockApi(
           ...structuredClone(fixtures[kind]),
           request: sent,
           ...(kind === "urban_passenger" ? { map_data: base.map_data } : {}),
+          ...options.result,
         } as AnalysisResult;
         status = 202;
         body = {
@@ -463,4 +467,135 @@ test("API: pending extras keep the index, absent geometry and a failed rerun pre
   await expect(page.locator(".api-card")).toContainText("50 из 100");
   await expect(page.getByRole("status")).toContainText("прежний результат");
   await expect(page.locator("body")).not.toContainText("44 мин");
+});
+
+test("API: urban choices follow capabilities while intercity retains the national catalog", async ({ page }) => {
+  const extra = { ...territories[0], territory_id: "city-extra", name: "Казань" } as Territory;
+  const mock = await mockApi(page, { territories: [...territories, extra] as Territory[], emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await page.getByRole("combobox", { name: "Город", exact: true }).click();
+  await expect(page.getByRole("option", { name: "Казань", exact: true })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Пассажирские связи", exact: true }).click();
+  await page.getByRole("combobox", { name: "Территория А", exact: true }).click();
+  await expect(page.getByRole("option", { name: "Казань", exact: true })).toBeVisible();
+  expect(mock.posts).toBe(0);
+});
+
+test("API: overlapping snapshots require a choice, send its identity and clear stale choices", async ({ page }) => {
+  const c = structuredClone(capabilities) as Schemas["Capabilities"];
+  c.snapshots = ["version-A-same-tail", "version-B-same-tail"].map((id) => ({
+    ...c.snapshots![0], snapshot_id: id,
+  }));
+  c.snapshots.push({ ...c.snapshots[0], snapshot_id: "unknown-dates", valid_from: null });
+  c.snapshots.push({ ...c.snapshots[0], snapshot_id: "wrong-geography", territory_ids: ["city-2"] });
+  const mock = await mockApi(page, { capabilities: c, emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Москва");
+  await expect(page.getByRole("combobox", { name: "Набор данных", exact: true })).toContainText("Выберите набор данных");
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.locator("#apiFilters")).toContainText("Выберите один из доступных наборов");
+  expect(mock.posts).toBe(0);
+  await page.getByRole("combobox", { name: "Набор данных", exact: true }).click();
+  await expect(page.getByRole("option")).toHaveCount(3);
+  await page.getByRole("option").filter({ hasText: "версия A-same-tail" }).click();
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  expect(mock.request).toMatchObject({ snapshot_id: "version-A-same-tail" });
+  await choose(page, "Город", "Калининград");
+  await expect(page.getByRole("combobox", { name: "Набор данных", exact: true })).toContainText("Выберите набор данных");
+  await expect(page.getByRole("status")).toContainText("прежний результат");
+  expect(mock.posts).toBe(1);
+});
+
+test("API: unknown snapshot dates cannot be submitted and sole coverage is visible without another step", async ({ page }) => {
+  await mockApi(page, { emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Москва");
+  await expect(page.locator(".api-snapshot-hint")).toContainText("выбран автоматически");
+  await expect(page.locator(".api-snapshot-coverage")).toContainText("01.01.1900–31.12.2100");
+  await cityRun(page);
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  const c = structuredClone(capabilities) as Schemas["Capabilities"];
+  c.snapshots![0].valid_to = null;
+  await page.route("**/api/v1/capabilities", (route) => route.fulfill({ json: c }));
+  await page.reload();
+  await choose(page, "Город", "Москва");
+  await expect(page.locator(".api-snapshot-hint")).toContainText("Нет подтверждённых данных");
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
+});
+
+test("API: pipeline profile choices track the chosen product and reset on product changes", async ({ page }) => {
+  const c = structuredClone(capabilities) as Schemas["Capabilities"];
+  c.cargo_profiles.push({ kind: "pipeline", product: "gas", profile_id: "pipe-gas" });
+  const mock = await mockApi(page, { capabilities: c, emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await page.getByRole("button", { name: "Грузовые связи", exact: true }).click();
+  await choose(page, "Территория А", "Москва");
+  await choose(page, "Территория Б", "Калининград");
+  await choose(page, "Тип грузового анализа", "Трубопровод · отдельно");
+  await choose(page, "Продукт трубопровода", "Нефть");
+  await page.getByRole("combobox", { name: "Профиль груза", exact: true }).click();
+  await expect(page.getByRole("option", { name: "Газ", exact: true })).toHaveCount(0);
+  await page.getByRole("option", { name: "Нефть", exact: true }).click();
+  await choose(page, "Продукт трубопровода", "Газ");
+  await expect(page.getByRole("combobox", { name: "Профиль груза", exact: true })).toContainText("Выберите профиль груза");
+  await choose(page, "Профиль груза", "Газ");
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  expect(mock.request).toMatchObject({ cargo_profile_id: "pipe-gas", pipeline_product: "gas" });
+});
+
+test("API: selected point and destination scope return times and partial map assessments stay identified", async ({ page }) => {
+  const data = structuredClone(urban) as AnalysisResult;
+  const destinationMetric = {
+    ...data.metrics[0], metric_id: "destination-time", name: "Synthetic destination time",
+    subject: { kind: "category" as const, destination_id: "school-a", category: "school" as const },
+  };
+  data.metrics.push(destinationMetric);
+  data.scores[0].completeness = "partial";
+  data.map_data = { status: "available", completeness: "full", features: [
+    ["sample_point", "demo-point", "Выбранная точка", 37],
+    ["sample_point", "other-point", "Другая точка", 37.01],
+    ["destination", "school-a", "Школа А", 37.02],
+    ["destination", "school-b", "Школа Б", 37.03],
+  ].map(([kind, id, name, longitude]) => ({
+    entity_kind: kind as "sample_point" | "destination", entity_id: id as string, name: name as string, territory_id: "city-1",
+    geometry: { type: "Point" as const, coordinates: [longitude as number, 55] },
+    geometry_kind: "actual" as const, source_refs: [],
+  })) };
+  data.last_returns = [
+    ["demo-point", "school-a", "18:00"],
+    ["other-point", "school-a", "19:00"],
+    ["demo-point", "school-b", "20:00"],
+  ].map(([point, destination, time]) => ({
+    point_id: point, destination_object_id: destination, leave_at: `2026-11-09T${time}:00+03:00`,
+    first_departure_at: null, arrival_at: null, service_date: "2026-11-09", timezone: "Europe/Moscow",
+    status: "available", journey_id: null, reason_code: null, evidence_refs: [],
+  }));
+  await mockApi(page, { result: data, emptyProposals: true });
+  await page.route("**/explanation", (route) => route.fulfill({ json: {
+    analysis_id: data.analysis_id, analysis_result_hash: data.result_hash,
+    status: "template", model_id: null, reason_code: null, request_id: "synthetic-explanation",
+    findings: [{ text: "Синтетический контекст для проверки выбора.", metric_ids: ["demo-time", "destination-time"], claims: [], evidence_refs: [] }],
+    evidence_refs: [], proposals: [], limitations: [],
+  } }));
+  await page.goto("/?data=api#atlas");
+  await cityRun(page);
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.getByLabel("Условные обозначения карты")).toContainText("частичная оценка");
+  await page.getByRole("button", { name: "Агент", exact: true }).click();
+  await page.getByLabel("Вопрос агенту").fill("Покажи контекст");
+  await page.getByRole("button", { name: "Отправить", exact: true }).click();
+  await page.getByRole("button", { name: "Synthetic elapsed travel time: 30 мин", exact: true }).click();
+  await page.getByText("Дополнительные показатели", { exact: true }).click();
+  await expect(page.locator(".api-card")).toContainText("18:00");
+  await expect(page.locator(".api-card")).toContainText("20:00");
+  await expect(page.locator(".api-card")).not.toContainText("19:00");
+  await expect(page.locator(".api-card")).toContainText("Частичная оценка");
+  await page.getByRole("button", { name: "Synthetic destination time: 30 мин", exact: true }).click();
+  await expect(page.locator(".api-card")).toContainText("18:00");
+  await expect(page.locator(".api-card")).toContainText("19:00");
+  await expect(page.locator(".api-card")).not.toContainText("20:00");
+  await expect(page.locator(".api-card")).toContainText("Выбранная точка → Школа А");
 });
