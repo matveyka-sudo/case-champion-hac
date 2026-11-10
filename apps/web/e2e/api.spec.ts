@@ -511,7 +511,8 @@ test("API: overlapping snapshots require a choice, send its identity and clear s
   expect(mock.request).toMatchObject({ snapshot_id: "version-A-same-tail" });
   await choose(page, "Город", "Калининград");
   await expect(page.getByRole("combobox", { name: "Набор данных", exact: true })).toContainText("Выберите набор данных");
-  await expect(page.getByRole("status")).toContainText("прежний результат");
+  await expect(page.locator("#apiResultCard")).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Выберите способ передвижения");
   expect(mock.posts).toBe(1);
 });
 
@@ -901,4 +902,72 @@ test("API: calculated point reveals its partial walk route with a separate round
   await expect(card).not.toContainText("MODEL_TIMELINE_MICROSECOND_PRECISION");
   await expect(card).not.toContainText("PINNED_TILE_SHAPE_6_DECIMAL_ENCODING");
   expect(mock.posts).toBe(1);
+});
+
+test("API: city inspection clears the completed city's route and requires fresh scope selections", async ({ page }) => {
+  // Synthetic three-city inventory; no additional production profile is asserted.
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const c = scopedCapabilities([{ ...airportScope(), whole_city: false, area_ids: ["synthetic-k-area"] }]);
+  const third = { ...territories[0], territory_id: "synthetic-city-3", name: "Новороссийск" } as Territory;
+  c.areas = [{ area_id: "synthetic-k-area", city_id: "city-2", name: "Синтетический район К" },
+    { area_id: "synthetic-m-area", city_id: "city-1", name: "Синтетический район М" }];
+  c.snapshots![0].territory_ids.push(third.territory_id);
+  c.snapshots!.push({ ...c.snapshots![0], snapshot_id: "synthetic-other-version" });
+  const mock = await mockApi(page, { capabilities: c, territories: [...territories, third] as Territory[], result: partialWalkGeometryFixture(), emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Калининград");
+  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  await expect(page.getByRole("combobox", { name: "Район", exact: true })).toContainText("Синтетический район К");
+  const date = await page.locator("#apiDate").textContent();
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator("#apiResultCard .api-journey")).toHaveCount(1);
+  await choose(page, "Город", "Москва");
+  await expect(page.locator("#apiResultCard")).toHaveCount(0);
+  await expect(page.locator(".api-journey")).toHaveCount(0);
+  await expect(page.getByRole("status")).not.toContainText("Калининград");
+  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Выберите способ передвижения");
+  await expect(page.getByRole("combobox", { name: "Набор данных", exact: true })).toContainText("Выберите набор данных");
+  await expect(page.getByRole("combobox", { name: "Район", exact: true })).toContainText("Весь город");
+  await expect(page.locator("#apiDate")).toHaveText(date || "");
+  await expect(page.getByRole("slider", { name: "Время отправления, шаг 15 минут" })).toHaveValue("34");
+  await expect(page.locator(".tz")).toHaveText("Europe/Moscow");
+  await expect(page.getByLabel("Доступность городского расчёта")).toContainText("Для выбранного города нет зарегистрированного расчёта.");
+  await expect(page.getByRole("button", { name: "Использовать доступные параметры", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
+  await choose(page, "Город", "Новороссийск");
+  await expect(page.getByLabel("Доступность городского расчёта")).toContainText("нет зарегистрированного расчёта");
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
+  await choose(page, "Город", "Калининград");
+  await expect(page.locator("#apiResultCard")).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Выберите способ передвижения");
+  await expect(page.getByRole("combobox", { name: "Набор данных", exact: true })).toContainText("Выберите набор данных");
+  await expect(page.getByRole("combobox", { name: "Район", exact: true })).toContainText("Весь город");
+  await expect(page.locator(".tz")).toHaveText("Europe/Kaliningrad");
+  expect(mock.posts).toBe(1);
+});
+
+test("API: changing city during a job discards its local context without borrowing another city's preset", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const c = scopedCapabilities([airportScope(), { ...airportScope(), scope_id: "synthetic-m-walk", city_id: "city-1" }]);
+  const mock = await mockApi(page, { capabilities: c, running: true, emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Калининград");
+  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.getByRole("button", { name: "Отменить серверное задание", exact: true })).toBeVisible();
+  await choose(page, "Город", "Москва");
+  await expect(page.getByRole("button", { name: "Отменить серверное задание", exact: true })).toHaveCount(0);
+  await expect(page.locator("#apiResultCard")).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Выберите способ передвижения");
+  await expect(page.locator(".api-scope-preview").first()).toContainText("Период");
+  await page.getByRole("combobox", { name: "Доступный набор параметров", exact: true }).click();
+  await expect(page.getByRole("option").filter({ hasText: "Москва" })).toHaveCount(1);
+  await expect(page.getByRole("option").filter({ hasText: "Калининград" })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await choose(page, "Город", "Калининград");
+  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Выберите способ передвижения");
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
+  expect(mock.posts).toBe(1);
+  expect(mock.requests.some((request) => request.url.endsWith("/cancel"))).toBe(false);
 });
