@@ -32,6 +32,7 @@ from a2_contracts.v2.assistant import (
     ScenarioSuggestion,
     ScoreClaim,
 )
+from a2_contracts.v2.requests import UrbanPassengerRequest
 from a2_contracts.v2.results import AnalysisResult, EvidenceRef, Score
 from a2_contracts.v2.retrieval import EvidenceSearchResult
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError, model_validator
@@ -79,6 +80,46 @@ _FINDING_CODES = {
     "methodology_pending": ("Методика расчёта показателя ещё не готова.", "methodology_pending"),
 }
 _FINDING_TEXT["Методика расчёта показателя ещё не готова."] = "methodology_pending"
+
+_URBAN_FORMULA_NOTE = (
+    "Индекс городской категории: I = 100 × 2^(−T/H). "
+    "T — сохранённое время пути, H — норматив по классу площади города; "
+    "они выражаются в одинаковых единицах. Чем дольше путь, тем ниже индекс."
+)
+_URBAN_PARTIAL_NOTE = (
+    "Предварительная оценка относится к принятой модели: полнота данных ограничена. "
+    "Она не подтверждает полноту всех физических путей города."
+)
+_URBAN_UNKNOWN_NOTE = (
+    "Неизвестный индекс означает недостаток подтверждённых данных, а не нулевую доступность."
+)
+_URBAN_SCENARIO_NOTE = (
+    "Численный эффект улучшения требует отдельного разрешённого сценария "
+    "и его исходных данных. Объяснение не запускает такой расчёт."
+)
+
+
+def _urban_walk_notes(
+    saved: AnalysisResult, context: ExplanationRequest | None = None
+) -> list[str]:
+    if (
+        not isinstance(saved.request, UrbanPassengerRequest)
+        or saved.request.passenger_mode != "walk"
+    ):
+        return []
+    scores = focused_scores(saved, context)
+    metrics = focused_metrics(saved, context)
+    if not scores and not metrics:
+        return []
+    notes = [_URBAN_FORMULA_NOTE]
+    if any(score.completeness != "full" for score in scores) or any(
+        metric.completeness != "full" for metric in metrics
+    ):
+        notes.append(_URBAN_PARTIAL_NOTE)
+    if any(score.status == "unknown" for score in scores):
+        notes.append(_URBAN_UNKNOWN_NOTE)
+    notes.append(_URBAN_SCENARIO_NOTE)
+    return notes
 
 
 class _FindingSelection(BaseModel):
@@ -280,6 +321,7 @@ def _build_content(
             evidence_refs=list(dict.fromkeys(cited))[:50],
             limitations=[
                 "Объяснение ограничено сохранёнными данными.",
+                *_urban_walk_notes(saved),
                 *(
                     ["Реализуемость сценария требует отдельной проверки."]
                     if selection.template_ids
@@ -369,7 +411,9 @@ def _validate_content(
             raise _ModelAnswerRejected("proposal_invalid")
         if check_text and proposal.rationale not in _PROPOSAL_TEXT:
             raise _ModelAnswerRejected("proposal_invalid")
-    if check_text and any(text not in _LIMITATION_TEXT for text in content.limitations):
+    # The extra wording is server-owned and applicable only to this saved result.
+    approved_limitations = _LIMITATION_TEXT | frozenset(_urban_walk_notes(saved))
+    if check_text and any(text not in approved_limitations for text in content.limitations):
         raise _ModelAnswerRejected("limitation_invalid")
 
 
@@ -390,6 +434,7 @@ def template_explanation(
 ) -> Explanation:
     scores = focused_scores(saved, context)
     metrics = focused_metrics(saved, context)
+    notes = _urban_walk_notes(saved, context)
     # A large score inventory must not consume every slot before saved times.
     score_limit = min(len(scores), 10) if metrics else 20
     metric_limit = 20 - min(len(scores), score_limit)
@@ -431,7 +476,8 @@ def template_explanation(
             :50
         ],
         limitations=[
-            *(text[:1000] for text in saved.limitations[:18]),
+            *(text[:1000] for text in saved.limitations[: 18 - len(notes)]),
+            *notes,
             "Объяснение показывает выбранные сохранённые показатели; "
             "остальные доступны в результате анализа.",
             "Шаблонное объяснение сохранённого результата; численные данные взяты из расчёта.",
