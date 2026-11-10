@@ -36,9 +36,16 @@ class Leg(ContractModel):
     duration_seconds: NonNegative
     service_id: Identifier | None
     evidence_refs: list[Identifier]
+    geometry: LineGeometry | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="Actual geometry of this movement leg only; does not establish approach or whole-journey geometry.",
+    )
 
     @model_validator(mode="after")
     def elapsed_time(self) -> Self:
+        if self.geometry is not None and self.kind not in {"walk", "ride"}:
+            raise ValueError("Only movement legs may have actual geometry")
         if not isclose(
             (utc(self.end_at) - utc(self.start_at)).total_seconds(),
             self.duration_seconds,

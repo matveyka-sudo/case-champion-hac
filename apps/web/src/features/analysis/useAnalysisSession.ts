@@ -54,6 +54,12 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     setError(null);
     setWarning("");
   };
+  const reset = () => {
+    changed();
+    currentResult.current = null;
+    setResult(null);
+    setDirty(false);
+  };
   const loadProposals = (value: AnalysisResult) => {
     const controller = new AbortController();
     proposalAbort.current?.abort();
@@ -270,6 +276,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     chatBusy,
     dirty,
     changed,
+    reset,
     run,
     runScenario,
     cancel,

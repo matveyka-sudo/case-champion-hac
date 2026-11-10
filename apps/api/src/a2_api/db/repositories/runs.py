@@ -18,6 +18,8 @@ from pydantic import JsonValue
 
 from a2_api.core.errors import DomainError
 from a2_api.core.jobs import JobKind, JobRequest, V2JobContext, cache_fingerprint, request_hash
+from a2_api.core.private_sources import PrivateSourceBinding
+from a2_api.db.repositories.private_sources import PrivateSourceRepository
 from a2_api.db.rows import RunResult, _check_scope, _proposal_from_row, _run_from_row
 from a2_api.db.validation import _check_submission, _operation_hash, _validate_scenario_semantics
 
@@ -28,15 +30,24 @@ class RunsRepository:
 
     _validate_scenario_semantics = staticmethod(_validate_scenario_semantics)
 
+    async def private_source_bindings(
+        self, run_id: str, scope: str
+    ) -> tuple[PrivateSourceBinding, ...]:
+        return await PrivateSourceRepository(self.pool).read_access(run_id, scope)
+
     async def get_run(self, run_id: str, scope: str | None = None) -> RunResult:
         async with self.pool.acquire() as connection:
             async with connection.transaction(isolation="repeatable_read", readonly=True):
-                return await self._read_run(connection, run_id, scope)
+                result = await self._read_run(connection, run_id, scope)
+        await PrivateSourceRepository(self.pool).read_access(
+            run_id, scope, expected_hash=result.result_hash
+        )
+        return result
 
     async def get_run_parameters(
         self, run_id: str, scope: str | None = None
     ) -> dict[str, JsonValue]:
-        await self.get_run(run_id, scope)
+        result = await self.get_run(run_id, scope)
         payload = await self.pool.fetchval(
             "SELECT payload FROM jobs WHERE run_id=$1 AND status='succeeded' "
             "AND access_scope IS NOT DISTINCT FROM $2 ORDER BY finished_at LIMIT 1",
@@ -45,6 +56,9 @@ class RunsRepository:
         )
         if payload is None:
             raise DomainError(404, "unknown_id", "Run input parameters not found")
+        await PrivateSourceRepository(self.pool).read_access(
+            run_id, scope, expected_hash=result.result_hash
+        )
         return cast(dict[str, JsonValue], json.loads(payload))
 
     async def _check_saved_baselines(self, result: Comparison) -> None:
@@ -128,6 +142,7 @@ class RunsRepository:
             raise DomainError(404, "unknown_id", "Run not found")
         _check_scope(row, scope)
         result = _run_from_row(row)
+        await PrivateSourceRepository.run_bindings(connection, row, scope)
         if not isinstance(result, ScenarioResult):
             return result
         try:
@@ -140,6 +155,12 @@ class RunsRepository:
             if baseline_row["result_kind"] != "analysis_v2":
                 raise ValueError("Invalid baseline kind")
             baseline = _run_from_row(baseline_row)
+            baseline_bindings = await PrivateSourceRepository.run_bindings(
+                connection, baseline_row, scope
+            )
+            scenario_bindings = await PrivateSourceRepository.run_bindings(connection, row, scope)
+            if baseline_bindings != scenario_bindings:
+                raise ValueError("Scenario private source binding differs from baseline")
             if not isinstance(baseline, AnalysisResult):
                 raise ValueError("Invalid baseline")
             proposal_row = await connection.fetchrow(

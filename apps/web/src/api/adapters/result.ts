@@ -108,6 +108,10 @@ export function reasonText(code: string | null | undefined) {
           "Показано найденное время пути. Минимальное время не подтверждено.",
         CANONICAL_ACCESS_MODEL:
           "Оценка для выбранной точки по модели принятых пеших подходов. Полный рейтинг города не рассчитан.",
+        MODEL_TIMELINE_MICROSECOND_PRECISION:
+          "Время маршрута округлено для отображения; точность расчёта индекса сохранена.",
+        PINNED_TILE_SHAPE_6_DECIMAL_ENCODING:
+          "Координаты линии округлены источником.",
         PARTIAL_APPROACH_MODEL_COVERAGE:
           "Модель охватывает только часть пеших подходов.",
         POINT_ONLY_SCOPE: "Рассчитана только выбранная точка.",

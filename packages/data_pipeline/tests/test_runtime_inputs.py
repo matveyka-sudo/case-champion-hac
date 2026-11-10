@@ -10,9 +10,28 @@ import pytest
 from a2_data_pipeline.runtime_inputs import (
     DEFAULT_MANIFEST,
     artifact_manifest,
+    coverage_inventory,
     inspect_artifacts,
     restore_handoff,
 )
+
+
+def test_default_inventory_uses_corrected_airport_and_education_scopes() -> None:
+    inventory = coverage_inventory()
+    moscow = next(r for r in inventory["cities"] if r["bundle_id"].startswith("moscow-urban-"))
+    assert moscow["bundle_id"] == "moscow-urban-2026-11-10.4"
+    scopes = [c for c in moscow["source_coverage"] if c["category"] == "airport"]
+    assert len(scopes) == 1
+    assert scopes[0]["status"] == "partial" and scopes[0]["confirmed_absence"] is False
+    assert scopes[0]["valid_from"] == "2026-11-01"
+    assert scopes[0]["valid_to"] == "2026-11-30"
+    assert moscow["destinations"]["airport"] == 4
+    assert moscow["destinations"]["college_university"] == 441
+    novorossiysk = next(
+        r for r in inventory["cities"] if r["bundle_id"].startswith("novorossiysk-urban-")
+    )
+    assert novorossiysk["bundle_id"] == "novorossiysk-urban-2026-11-10.3"
+    assert novorossiysk["destinations"]["school"] == 24
 
 
 def write_json(path: Path, value: Any) -> str:

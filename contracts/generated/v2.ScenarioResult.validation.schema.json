@@ -359,6 +359,18 @@
           "title": "From Node Id",
           "type": "string"
         },
+        "geometry": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineGeometry"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Actual geometry of this movement leg only; does not establish approach or whole-journey geometry."
+        },
         "kind": {
           "enum": [
             "walk",

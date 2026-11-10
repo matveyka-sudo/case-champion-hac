@@ -1,5 +1,64 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Latest continuation — three mandatory cities and source corrections
+
+Goal ACTIVE; user explicitly requires Moscow, Kaliningrad and Novorossiysk in
+parallel through one shared urban pipeline. Root before this note a7397e0,
+integration/full-product-20261110. No dev merge. DraftPR29 remains open/draft.
+Published1e67d67 has six successful CI checks; later local integrations below
+are not covered by that CI head. Detailed city inventory is at the top of
+ACCEPTANCE_MATRIX.md; it distinguishes source counts from verified route coverage.
+
+Integrated after independent review:
+- Certified geometry3704f1d and transport732f3f6: root49 actual-artifact tests PASS;
+  exact index operand untouched, separate rounded display Journey. Frontend223e52b
+  explains precision; actual changed Chromium case passed.
+- Moscow conservative .3 correction3171c07, pure connector helper01da36d and
+  inventory selector6abdbf5. Root3/9/13 focused tests PASS. All old factual rows
+  preserved; old .2-derived c894 timetable remains inactive and must not be retagged.
+- afdd2dc city reset: root7 Chromium cases PASS13.4s, owner110 unit/build/static
+  checks PASS. City change removes old result/map/job context and filters presets;
+  no new capabilities are fabricated.
+- Private-source4a032+fdc9+b92: reviewer found multigrant-read race and later
+  private-model egress after revoke. Both reproduced and fixed; all private LLM
+  transmission now disabled even with opt-in. Public Alice unchanged. Root91
+  integrated PG/migration/module/scenario/focus tests PASS15.84s. Private Step2 HOLD.
+- Graph source binding95e379a: operator-only snapshot/source/graph refs and exact
+  exhaustive tiles; old Kaliningrad verifier unchanged. Root46 infra tests PASS.
+- Classifierfc7e4da: reject negated state/nonstate legal forms first. Root31 tests
+  PASS; independently rehashed official observed ZIP and seven exact institutional
+  records. Five Moscow college objects and one Nov school need new quarantine
+  revisions; no old snapshot mutation. Two ПК50 objects have separate changed
+  current-record uncertainty. Medical source adapters were not re-retrieved.
+
+Real new-city evidence:
+- Moscow exact central261107 PBF884829631B, SHAd28d118c...b77f2 restored outsideGit.
+  Bounded standard osmium1.16.0 smart extraction/build approved after ML1 window;
+  preserve restrictions, parent/extract hashes, and explicit outside-path unknown.
+- Nov exact south261107 PBF317285835B SHAe867508d...a57da; graph manifestd2f41ce0...
+  independently rehashed by root:1126tiles/326987664B. Build84.614s,2.236GB peak,
+  no OOM under4GiB cgroup. Endpoint127.0.0.1:8028 isolated from5190/91/92.
+  Root actual route replay to officially verified school17:582.215network seconds,
+  responseb285179b...888a4,29.7ms. Adapter-rounded approaches yield601.315s,
+  unrounded exploratory length/speed yields601.295s; do not mix receipts. Null
+  index, no minimum proof. Final .3 binding and actual browser E2E still pending.
+- K n6068 adjacent-source/native proof and new physical proof completed by ML1;
+  root replay pending. Exact reported total14353.058459449967s, research indexnull.
+  Source builder RSS1.565GB but Darwin footprint2.240GB exceeded2GiB: record the
+  resource exception, never label this run a clean total-memory-cap pass.
+
+Current ownership: BACKEND product_runtime/product/walk_runtime/batches and
+  test_module_boundaries.py; finishing generic per-profile bindings with96MiB
+  cumulative source-verified startup budget (actual three-city inputs~78MiB),
+  unchanged32MiB document/4096pair/16MiB checkpoint caps. Must measure peakRSS.
+ML2 ownership_revision.py/.4Moscow/.3Nov corrections; no GTFS retagging.
+DEVOPS Moscow standard-tool/extract/build and final corrected runtime artifacts.
+SCENARIOS only additive optional omitted Leg.geometry contract/evidence checks;
+  no private-provider Step2. Network leg geometry must not masquerade as a full
+  physical Journey; frontend segmented rendering follows reviewed contract.
+ML1 freezing adjacent physical proof; root/reviewer replays before eligibility.
+Root public readiness DTO/projection is reserved but not implemented yet.
+
 ## Latest continuation — Draft PR29 and calculated-point UI acceptance
 
 Goal ACTIVE. Root candidate72a624830604887b12d19c3c47f5e290616a04b0 before this

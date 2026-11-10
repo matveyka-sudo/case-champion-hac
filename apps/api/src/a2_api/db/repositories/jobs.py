@@ -34,6 +34,7 @@ from a2_api.core.jobs import (
     cache_fingerprint,
     request_hash,
 )
+from a2_api.db.repositories.private_sources import PrivateSourceRepository
 from a2_api.db.repositories.scenarios import ScenariosRepository
 from a2_api.db.rows import (
     RunResult,
@@ -113,6 +114,10 @@ class JobRepository(ScenariosRepository):
         schema_version = "2" if isinstance(context, V2JobContext) else "1"
         async with self.pool.acquire() as connection:
             async with connection.transaction():
+                if isinstance(context, V2JobContext) and context.private_source_bindings:
+                    await PrivateSourceRepository.check(
+                        connection, context.private_source_bindings, context.access_scope
+                    )
                 if isinstance(context, V2JobContext) and isinstance(request, ScenarioRunRequest):
                     await self._check_scenario_inputs(connection, request, context)
                 cached_row = await connection.fetchrow(
@@ -285,16 +290,36 @@ class JobRepository(ScenariosRepository):
                         if isinstance(saved, ProfileResult)
                         else "comparison"
                     )
-                    await connection.execute(
-                        "INSERT INTO runs(run_id,result_kind,payload,result_hash,schema_version,access_scope) "
-                        "VALUES($1,$2,$3::jsonb,$4,$5,$6)",
-                        run_id,
-                        result_kind,
-                        saved.model_dump_json(),
-                        saved.result_hash,
-                        "2" if isinstance(claim.context, V2JobContext) else "1",
-                        owner,
-                    )
+                    if (
+                        isinstance(claim.context, V2JobContext)
+                        and claim.context.private_source_bindings
+                    ):
+                        await connection.execute(
+                            "INSERT INTO runs(run_id,result_kind,payload,result_hash,schema_version,access_scope,private_source_bindings) "
+                            "VALUES($1,$2,$3::jsonb,$4,'2',$5,$6::jsonb)",
+                            run_id,
+                            result_kind,
+                            saved.model_dump_json(),
+                            saved.result_hash,
+                            owner,
+                            json.dumps(
+                                [
+                                    b.model_dump(mode="json")
+                                    for b in claim.context.private_source_bindings
+                                ]
+                            ),
+                        )
+                    else:
+                        await connection.execute(
+                            "INSERT INTO runs(run_id,result_kind,payload,result_hash,schema_version,access_scope) "
+                            "VALUES($1,$2,$3::jsonb,$4,$5,$6)",
+                            run_id,
+                            result_kind,
+                            saved.model_dump_json(),
+                            saved.result_hash,
+                            "2" if isinstance(claim.context, V2JobContext) else "1",
+                            owner,
+                        )
                     if proposals:
                         if not isinstance(saved, AnalysisResult) or owner is None:
                             raise DomainError(
@@ -313,6 +338,11 @@ class JobRepository(ScenariosRepository):
                         ]
                         await self._save_proposals(connection, rebound, owner)
                     if (
+                        isinstance(claim.context, V2JobContext)
+                        and claim.context.private_source_bindings
+                    ):
+                        await PrivateSourceRepository.publish_fence(connection, claim, run_id)
+                    elif (
                         isinstance(claim.context, V2JobContext)
                         and claim.context.batch_execution is not None
                     ):
@@ -352,6 +382,7 @@ class JobRepository(ScenariosRepository):
                 return job
 
     async def heartbeat(self, claim: ClaimedJob) -> bool:
+        await PrivateSourceRepository(self.pool).remaining(claim.context)
         updated = await self.pool.fetchval(
             "UPDATE jobs SET heartbeat_at=now(),lease_expires_at=now()+"
             "$3::double precision*interval '1 second' WHERE job_id=$1 AND claim_token=$2 AND status='running' "

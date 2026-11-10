@@ -31,6 +31,26 @@ SCENARIO_SCOPE_EXTENSION = json.loads(
 RASP_QUOTA_EXTENSION = json.loads(
     (Path(__file__).parent / "fixtures/rasp_quota_extension.json").read_text()
 )
+PRIVATE_SOURCES_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/private_sources_extension.json").read_text()
+)
+WALK_RUNTIME_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/walk_runtime_extension.json").read_text()
+)
+
+
+def private_sources_counter(expected, kind):
+    assert set(PRIVATE_SOURCES_EXTENSION["modules"]) == {
+        "db/repositories/private_sources.py",
+        "db/repositories/jobs.py",
+        "db/repositories/runs.py",
+        "db/repositories/scenarios.py",
+    }
+    removed = collections.Counter(PRIVATE_SOURCES_EXTENSION["removed_" + kind])
+    assert removed <= expected
+    expected.subtract(removed)
+    expected.update(PRIVATE_SOURCES_EXTENSION["added_" + kind])
+    return +expected
 
 
 def scenario_scope_counter(expected, kind):
@@ -116,6 +136,15 @@ def normalize_signature(value):
 
 
 def test_all_185_existing_signatures_and_defaults():
+    assert WALK_RUNTIME_EXTENSION["module"] == "adapters/walk_runtime.py"
+    assert set(WALK_RUNTIME_EXTENSION["signatures"]) == {
+        "a2_api.adapters.walk_runtime:load_binding",
+        "a2_api.adapters.walk_batches:load_approval",
+        "a2_api.adapters.walk_batches:preflight",
+        "a2_api.adapters.walk_batches:calculate",
+        "a2_api.core.walk_observations:observation_directory",
+    }
+    assert set(PRIVATE_SOURCES_EXTENSION["signatures"]) == {"a2_api.core.jobs:V2JobContext"}
     assert set(BATCH_EXTENSION["signatures"]) == {
         "a2_api.core.jobs:V2JobContext",
         "a2_api.services.analyses:AnalysisService",
@@ -138,6 +167,8 @@ def test_all_185_existing_signatures_and_defaults():
         | BATCH_EXTENSION["signatures"]
         | SCENARIO_SCOPE_EXTENSION["signatures"]
         | RASP_QUOTA_EXTENSION["signatures"]
+        | PRIVATE_SOURCES_EXTENSION["signatures"]
+        | WALK_RUNTIME_EXTENSION["signatures"]
     ).items():
         module, qualified = path.split(":")
         obj = importlib.import_module(module)
@@ -188,6 +219,16 @@ def test_exported_artifacts_match_baseline_and_approved_contract_extensions(tmp_
     assert set(scopes_extension["added"]).isdisjoint(expected)
     expected.update(scopes_extension["replaced"])
     expected.update(scopes_extension["added"])
+    leg_extension = json.loads(
+        (ROOT / "packages/contracts/tests/fixtures/leg_geometry_schema_extension.json").read_text()
+    )
+    assert leg_extension["added"] == {}
+    assert set(leg_extension["replaced"]) == {"manifest.json", "openapi.json"} | {
+        f"v2.{model}.{mode}.schema.json"
+        for model in ("Leg", "JourneyResult", "AnalysisResult", "ScenarioResult")
+        for mode in ("serialization", "validation")
+    }
+    expected.update(leg_extension["replaced"])
     assert actual == expected
 
 
@@ -211,10 +252,13 @@ def test_sql_literals_unchanged_and_confined_to_database_layer():
             "db/repositories/scenarios.py"
         }
     assert RASP_QUOTA_EXTENSION["module"] == "db/repositories/rasp_quota.py"
-    assert collections.Counter(strings) == scenario_scope_counter(
-        collections.Counter(BASELINE["sql_literals"])
-        + collections.Counter(BATCH_EXTENSION["sql_literals"])
-        + collections.Counter(RASP_QUOTA_EXTENSION["sql_literals"]),
+    assert collections.Counter(strings) == private_sources_counter(
+        scenario_scope_counter(
+            collections.Counter(BASELINE["sql_literals"])
+            + collections.Counter(BATCH_EXTENSION["sql_literals"])
+            + collections.Counter(RASP_QUOTA_EXTENSION["sql_literals"]),
+            "sql_literals",
+        ),
         "sql_literals",
     )
 
@@ -354,9 +398,12 @@ def test_sql_parameter_binding_and_transaction_options_unchanged():
                 hashes.append(
                     hashlib.sha256(ast.dump(node, include_attributes=False).encode()).hexdigest()
                 )
-    assert collections.Counter(hashes) == scenario_scope_counter(
-        collections.Counter(BASELINE["sql_call_hashes"])
-        + collections.Counter(BATCH_EXTENSION["sql_call_hashes"])
-        + collections.Counter(RASP_QUOTA_EXTENSION["sql_call_hashes"]),
+    assert collections.Counter(hashes) == private_sources_counter(
+        scenario_scope_counter(
+            collections.Counter(BASELINE["sql_call_hashes"])
+            + collections.Counter(BATCH_EXTENSION["sql_call_hashes"])
+            + collections.Counter(RASP_QUOTA_EXTENSION["sql_call_hashes"]),
+            "sql_call_hashes",
+        ),
         "sql_call_hashes",
     )

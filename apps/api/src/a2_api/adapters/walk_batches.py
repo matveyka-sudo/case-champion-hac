@@ -3,14 +3,13 @@
 import asyncio
 import os
 from dataclasses import replace
-from datetime import UTC, datetime
 from pathlib import Path
-from typing import Literal, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 import httpx
 from a2_contracts.common import canonical_hash
 from a2_contracts.v2.api import TerritoryOption
-from a2_contracts.v2.base import ContractModel, Identifier, Timestamp
+from a2_contracts.v2.base import Category, ContractModel, Identifier, Timestamp
 from a2_contracts.v2.dataset import AcceptedData
 from a2_contracts.v2.requests import AnalysisRequest, UrbanPassengerRequest
 from a2_contracts.v2.results import AnalysisResult, EvidenceRef
@@ -26,7 +25,7 @@ from a2_engine import (
     plan_walk_routes,
     prepare_walk_inputs,
 )
-from pydantic import Field, TypeAdapter
+from pydantic import Field, TypeAdapter, field_validator
 
 from a2_api.adapters import walk_pilot
 from a2_api.adapters.product_projection import Projection, project_urban
@@ -43,6 +42,9 @@ from a2_api.core.errors import DomainError
 from a2_api.core.jobs import ClaimedJob, V2JobContext
 from a2_api.core.registry import ProductRegistry
 from a2_api.workers.checkpoint_channel import CheckpointChannel
+
+if TYPE_CHECKING:
+    from a2_api.adapters.walk_runtime import BoundWalkBinding
 
 
 class RoutingBinding(ContractModel):
@@ -73,7 +75,7 @@ class Approval(ContractModel):
     runtime_artifact_hash: str = Field(pattern="^[a-f0-9]{64}$")
     routing_binding: RoutingBinding
     city_id: Identifier
-    categories: list[Literal["school"]] = Field(min_length=1, max_length=1)
+    categories: list[Category] = Field(min_length=1, max_length=9)
     pairs: list[PhysicalPair] = Field(min_length=1, max_length=4096)
     batch_size: int = Field(ge=1, le=16)
     max_attempts: int = Field(ge=1, le=3)
@@ -82,12 +84,35 @@ class Approval(ContractModel):
     observation_retention_seconds: int = Field(ge=1, le=2592000)
     valid_until: Timestamp
 
+    @field_validator("categories")
+    @classmethod
+    def canonical_categories(cls, categories: list[Category]) -> list[Category]:
+        if categories != sorted(set(categories)):
+            raise ValueError("APPROVED_CATEGORIES_MUST_BE_UNIQUE_AND_SORTED")
+        return categories
+
 
 def _unavailable(reason: str) -> DomainError:
     return DomainError(503, "engine_unavailable", reason, retryable=True)
 
 
-def load_approval() -> tuple[Approval, str, walk_pilot.Runtime]:
+def load_approval(
+    *, bound: "BoundWalkBinding | None" = None, snapshot: AcceptedData | None = None
+) -> tuple[Approval, str, walk_pilot.Runtime]:
+    from a2_api.adapters.walk_runtime import load_binding, validate_approval_sources
+
+    if bound is not None:
+        if snapshot is None:
+            raise _unavailable("BOUND_WALK_SNAPSHOT_REQUIRED")
+        try:
+            current = load_binding(
+                bound.root, bound.reference, snapshot=snapshot, scope=bound.scope
+            )
+            if current.executor_fingerprint != bound.executor_fingerprint:
+                raise ValueError("WALK_EXECUTOR_IMPLEMENTATION_CHANGED")
+            return current.approval, current.approval_sha256, current.runtime
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            raise _unavailable("WALK_BATCH_APPROVAL_OR_BINDING_UNAVAILABLE") from exc
     path = os.environ.get("A2_WALK_BATCH_APPROVAL_PATH", "")
     digest = os.environ.get("A2_WALK_BATCH_APPROVAL_SHA256", "")
     if not path or len(digest) != 64:
@@ -98,46 +123,7 @@ def load_approval() -> tuple[Approval, str, walk_pilot.Runtime]:
         if len(pairs) != len(approval.pairs):
             raise ValueError("DUPLICATE_APPROVED_PHYSICAL_PAIR")
         runtime = walk_pilot.load_runtime(approved_pairs=pairs)
-        binding = approval.routing_binding
-        graph_path = (Path(path).parent / binding.graph_manifest.path).resolve()
-        if not graph_path.is_relative_to(Path(path).parent.resolve()):
-            raise ValueError("GRAPH_MANIFEST_OUTSIDE_APPROVAL_DIRECTORY")
-        graph = read_document(graph_path, binding.graph_manifest.sha256)
-        tiles = graph.get("files", [])
-        if (
-            not isinstance(tiles, list)
-            or not tiles
-            or any(
-                not isinstance(row, dict)
-                or not str(row.get("path", "")).startswith("tiles/")
-                or len(str(row.get("sha256", ""))) != 64
-                or not isinstance(row.get("bytes"), int)
-                or row["bytes"] <= 0
-                for row in tiles
-            )
-            or len({row["path"] for row in tiles}) != len(tiles)
-            or binding.tile_manifest_sha256
-            != canonical_hash(sorted(tiles, key=lambda row: row["path"]))
-            or binding.source_pbf_sha256 != graph.get("source_sha256")
-            or binding.build_configuration_hash != graph.get("config_sha256")
-            or binding.build_image_digest
-            not in (graph.get("image_id"), *graph.get("image_repo_digests", []))
-        ):
-            raise ValueError("ACTUAL_ROUTING_BUILD_MANIFEST_BINDING_MISMATCH")
-        if (
-            runtime.digest != approval.runtime_artifact_hash
-            or runtime.bundle_id != approval.snapshot_id
-            or binding.runtime_build_id != runtime.build.build_id
-            or binding.source_graph_version != runtime.build.source_graph_version
-            or binding.endpoint_url.rstrip("/") != runtime.endpoint_url
-            or binding.profile_fingerprint != runtime.build.profile_hash
-            or not runtime.build.graph_version.endswith(binding.graph_manifest.sha256)
-            or datetime.now(UTC) >= approval.valid_until
-        ):
-            raise ValueError("WALK_BATCH_ACTUAL_BUILD_PROFILE_OR_VALIDITY_MISMATCH")
-        bundle = load_bundle(runtime.bundle_id)
-        if canonical_hash(bundle.manifest.model_dump(mode="json")) != approval.bundle_manifest_hash:
-            raise ValueError("ACCEPTED_BUNDLE_MANIFEST_CHANGED")
+        validate_approval_sources(approval, runtime, root=Path(path).parent)
         return approval, digest, runtime
     except (OSError, ValueError, TypeError, KeyError) as exc:
         raise _unavailable("WALK_BATCH_APPROVAL_OR_BINDING_UNAVAILABLE") from exc
@@ -155,15 +141,22 @@ def registry() -> ProductRegistry:
 
 
 def _prepare(
-    request: AnalysisRequest, snapshot: AcceptedData
+    request: AnalysisRequest,
+    snapshot: AcceptedData,
+    *,
+    bound: "BoundWalkBinding | None" = None,
 ) -> tuple[BatchPlan, WalkRoutePlan, walk_pilot.Runtime]:
-    approval, digest, runtime = load_approval()
+    approval, digest, runtime = load_approval(bound=bound, snapshot=snapshot)
     if not isinstance(request, UrbanPassengerRequest) or (
         request.city_id != approval.city_id
         or request.passenger_mode != "walk"
         or request.traffic_mode != "static"
-        or request.categories != approval.categories
+        or not set(request.categories) <= set(approval.categories)
         or request.area_id is not None
+        or (
+            bound is not None
+            and not bound.scope.valid_from <= request.departure_at < bound.scope.valid_to
+        )
     ):
         raise _unavailable("REQUEST_OUTSIDE_APPROVED_WALK_BATCH_SCOPE")
     if (
@@ -172,7 +165,7 @@ def _prepare(
     ):
         raise _unavailable("APPROVED_WALK_SNAPSHOT_CHANGED")
     code = RuntimeSettings().code_version or ""
-    if digest not in code or runtime.digest not in code:
+    if bound is None and (digest not in code or runtime.digest not in code):
         raise _unavailable("WALK_BATCH_CODE_IDENTITY_MISMATCH")
     current = ProductRegistry()
     inputs = prepare_walk_inputs(
@@ -181,12 +174,25 @@ def _prepare(
         departure_at=request.departure_at,
         methodology_version=current.methodology.version,
         config_hash=current.config_hash,
-        search_parameters_id="waydex-walk-batches-" + digest,
+        search_parameters_id=(
+            "waydex-walk-batches-" + digest
+            if bound is None
+            else "waydex-bound-walk-" + bound.binding_sha256 + ":" + bound.executor_fingerprint
+        ),
         build=runtime.build,
         connectors=runtime.connectors,
         correlations=runtime.correlations,
     )
-    approved = {(p.point_id, p.destination_id) for p in approval.pairs}
+    selected_destinations = {
+        d.destination_id
+        for d in snapshot.destinations
+        if set(d.categories) & set(request.categories)
+    }
+    approved = {
+        (p.point_id, p.destination_id)
+        for p in approval.pairs
+        if p.destination_id in selected_destinations
+    }
     # Keep the full canonical catalog for final unknown/completeness semantics,
     # but ask the public planner only about explicitly approved physical pairs.
     # No city-wide Cartesian request inventory is materialized in preflight.
@@ -206,7 +212,7 @@ def _prepare(
         issues.extend(part.issues)
     plan = WalkRoutePlan(
         inputs,
-        tuple(sorted(runtime.point_ids)),
+        tuple(sorted({point for point, _ in approved})),
         tuple(sorted(request.categories)),
         tuple(requests),
         tuple(issues),
@@ -218,7 +224,9 @@ def _prepare(
     if not pairs:
         raise _unavailable("NO_APPROVED_PHYSICAL_PAIR_HAS_CONFIRMED_CONNECTORS")
     batch = BatchPlan(
-        schema_version="waydex-walk-execution/1",
+        schema_version="waydex-walk-execution/1" if bound is None else "waydex-walk-execution/2",
+        runtime_binding_hash=bound.binding_sha256 if bound is not None else None,
+        executor_fingerprint=bound.executor_fingerprint if bound is not None else None,
         snapshot_id=snapshot.snapshot_id,
         snapshot_hash=approval.snapshot_hash,
         bundle_manifest_hash=approval.bundle_manifest_hash,
@@ -242,23 +250,39 @@ def _prepare(
     return batch, plan, runtime
 
 
-async def preflight(request: AnalysisRequest, snapshot: AcceptedData) -> BatchPlan:
+async def preflight(
+    request: AnalysisRequest,
+    snapshot: AcceptedData,
+    *,
+    bound: "BoundWalkBinding | None" = None,
+) -> BatchPlan:
     # Provider readiness is checked only after the parent's fenced attempt has
     # reserved its call budget. Repeated HTTP submissions cannot spend free calls.
-    batch, _, _ = await asyncio.to_thread(_prepare, request, snapshot)
+    batch, _, _ = await asyncio.to_thread(_prepare, request, snapshot, bound=bound)
     return batch
 
 
-def calculate(claim: ClaimedJob, channel: CheckpointChannel) -> AnalysisResult:
+def calculate(
+    claim: ClaimedJob,
+    channel: CheckpointChannel,
+    *,
+    bound: "BoundWalkBinding | None" = None,
+    snapshot: AcceptedData | None = None,
+) -> AnalysisResult:
     if not isinstance(claim.context, V2JobContext) or claim.context.batch_execution is None:
         raise _unavailable("SAVED_WALK_BATCH_EXECUTION_REQUIRED")
     context = claim.context
+    if bound is not None and context.code_version != RuntimeSettings().code_version:
+        raise _unavailable("BOUND_WALK_SAVED_CODE_IDENTITY_CHANGED")
     execution = context.batch_execution
     assert execution is not None
     request = context.normalized_request
     assert isinstance(request, UrbanPassengerRequest)
-    snapshot = cast(AcceptedData, load_accepted_data(context.snapshot_id))
-    batch, plan, runtime = _prepare(context.normalized_request, snapshot)
+    if snapshot is None:
+        if bound is not None:
+            raise _unavailable("BOUND_WALK_SNAPSHOT_REQUIRED")
+        snapshot = cast(AcceptedData, load_accepted_data(context.snapshot_id))
+    batch, plan, runtime = _prepare(context.normalized_request, snapshot, bound=bound)
     if batch.model_dump(mode="json") != execution.model_dump(
         mode="json", exclude={"access_scope", "context_fingerprint"}
     ):
@@ -270,7 +294,7 @@ def calculate(claim: ClaimedJob, channel: CheckpointChannel) -> AnalysisResult:
         for batch_id, pairs in execution.batches:
             if batch_id in completed:
                 continue
-            load_approval()
+            load_approval(bound=bound, snapshot=snapshot)
             walk_pilot.check_status(runtime)
             observations = []
             for pair in pairs:
@@ -296,7 +320,7 @@ def calculate(claim: ClaimedJob, channel: CheckpointChannel) -> AnalysisResult:
             )
             channel.commit(checkpoint)
             completed[batch_id] = checkpoint
-    load_approval()
+    load_approval(bound=bound, snapshot=snapshot)
     walk_pilot.check_status(runtime)
     responses = [
         o.envelope for batch_id, _ in execution.batches for o in completed[batch_id].observations
@@ -334,4 +358,6 @@ def calculate(claim: ClaimedJob, channel: CheckpointChannel) -> AnalysisResult:
     output = Projection(context, list(evidence.values()))
     project_urban(output, calculated.analysis)
     output.limitations.update({"APPROVED_PARTIAL_OD_EXECUTION", "MINIMUM_TIME_UNPROVEN"})
+    if bound is not None:
+        output.limitations.add("WALK_CONNECTOR_TIME_0_1_SECOND_PRECISION")
     return output.finish()

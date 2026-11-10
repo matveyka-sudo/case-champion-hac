@@ -3,15 +3,14 @@
 import asyncio
 import hashlib
 import json
-import os
 from dataclasses import asdict
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from a2_api.core.batches import MAX_CHECKPOINT_BYTES, BatchCheckpoint, BatchExecution
 from a2_api.core.errors import DomainError
 from a2_api.core.jobs import ClaimedJob, V2JobContext
+from a2_api.core.walk_observations import observation_directory
 from a2_api.db.rows import json_text
 
 if TYPE_CHECKING:
@@ -28,7 +27,7 @@ def validate_raw_files(
     checkpoint.validate_inventory(execution)
     if now >= execution.valid_until:
         raise ValueError("OD_EXECUTION_EXPIRED")
-    folder = Path(os.environ["A2_WALK_PILOT_EVIDENCE_DIR"]).resolve()
+    folder = observation_directory(legacy=execution.schema_version == "waydex-walk-execution/1")
     planned = {pair.pair_id: pair for _, pairs in execution.batches for pair in pairs}
     for observation in checkpoint.observations:
         envelope = observation.envelope

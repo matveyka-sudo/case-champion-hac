@@ -1,0 +1,683 @@
+{
+  "format": "a2-ml2-bundle",
+  "schema_version": 2,
+  "bundle_id": "novorossiysk-urban-2026-11-10.3",
+  "created_at": "2026-11-10T18:06:16.207378Z",
+  "parser_version": "ml2-urban-0.2.0",
+  "acceptance_state": "accepted",
+  "accepted_by": "ML2 exact-record ownership correction; no new source promotion",
+  "accepted_at": "2026-11-10T18:06:16.207378Z",
+  "synthetic": false,
+  "geographic_scope": [
+    "novorossiysk"
+  ],
+  "valid_from": "2026-11-01",
+  "valid_to": "2026-11-30",
+  "timezone": "Europe/Moscow",
+  "grids": [
+    {
+      "grid_id": "novorossiysk-utm37n-1km-v1",
+      "city_id": "novorossiysk",
+      "crs": "EPSG:32637",
+      "spacing_m": 1000,
+      "origin_x": 0.0,
+      "origin_y": 0.0,
+      "version": 1
+    }
+  ],
+  "graph_version": "osm_geofabrik.south-fed-district-261107:osm-walk-network-v1:main-component",
+  "road_graph_version": "osm_geofabrik.south-fed-district-261107:osm-road-network-v1:main-component",
+  "timetables": [],
+  "source_versions": [
+    {
+      "source_id": "osm_geofabrik",
+      "dataset_id": "osm_geofabrik.south-fed-district-261107",
+      "retrieved_at": "2026-11-08T19:17:34.676135Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "e867508d9240743dea215f130dcfe441a0a53980558b7d5002db91a6b87a57da",
+        "size_bytes": 317285835
+      },
+      "license": {
+        "name": "ODbL-1.0",
+        "url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "status": "permitted",
+        "attribution": "© OpenStreetMap contributors"
+      },
+      "publication_date": "2026-11-07"
+    },
+    {
+      "source_id": "ghsl_pop",
+      "dataset_id": "ghsl_pop.e2025-r2023a-100m-r4c22",
+      "retrieved_at": "2026-11-08T19:18:17.022985Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "ab535d4ecdf555f1a8dc5e2f9fa5c23aaa5bf45a5ea7273510710d3b2f099483",
+        "size_bytes": 18663953
+      },
+      "license": {
+        "name": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "status": "permitted",
+        "attribution": "Schiavina M. et al., GHS-POP R2023A, European Commission JRC"
+      },
+      "publication_date": "2023-04-01"
+    },
+    {
+      "source_id": "ourairports",
+      "dataset_id": "ourairports.airports-20261108",
+      "retrieved_at": "2026-11-08T13:42:04.183446Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "5754df21f25cb08d2def8a80b3eb609ddc52a4217afa8eb48280b6428c06e78f",
+        "size_bytes": 12758284
+      },
+      "license": {
+        "name": "Public Domain",
+        "url": "https://ourairports.com/data/",
+        "status": "permitted",
+        "attribution": null
+      },
+      "publication_date": null
+    },
+    {
+      "source_id": "admnvrsk_health",
+      "dataset_id": "admnvrsk_health.20261108",
+      "retrieved_at": "2026-11-08T19:24:00.513972Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "f0def1ae51224e389a6f11d7b53576bdffcb70f5d85806b868368a08596c0c1e",
+        "size_bytes": 175256
+      },
+      "license": {
+        "name": "Общедоступная официальная информация ОМСУ: используются только факты (ст. 1259 ГК РФ, 8-ФЗ)",
+        "url": "https://admnvrsk.ru/",
+        "status": "permitted",
+        "attribution": "Администрация МО г. Новороссийск, admnvrsk.ru"
+      },
+      "publication_date": null
+    },
+    {
+      "source_id": "nvr_gorono",
+      "dataset_id": "nvr_gorono.dou-20261109",
+      "retrieved_at": "2026-11-09T10:21:50.991338Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "1c05a455c1636c24a26e9c18e80d73a9ebf29006bcaf3fd4f3e5dd1140e2026a",
+        "size_bytes": 102708
+      },
+      "license": {
+        "name": "Общедоступная официальная информация ОМСУ: используются только факты (ст. 1259 ГК РФ, 8-ФЗ)",
+        "url": "https://gorono.ru/",
+        "status": "permitted",
+        "attribution": "Управление образования МО г. Новороссийск, gorono.ru"
+      },
+      "publication_date": null
+    },
+    {
+      "source_id": "obrnadzor_accreditation",
+      "dataset_id": "obrnadzor_accreditation.20261108",
+      "retrieved_at": "2026-11-08T15:47:36.873635Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "116ecc476619a89de6d2aea2b9eec9802e9f341374bb52cb5cd9bbc862d91bc6",
+        "size_bytes": 352506550
+      },
+      "license": {
+        "name": "Открытые данные федерального органа исполнительной власти: используются только факты (ст. 1259 ГК РФ)",
+        "url": "https://isga.obrnadzor.gov.ru/",
+        "status": "permitted",
+        "attribution": "Рособрнадзор, ИС ГА"
+      },
+      "publication_date": "2026-11-08"
+    },
+    {
+      "source_id": "rosmorport",
+      "dataset_id": "rosmorport.seaports-novorossiysk-20261108",
+      "retrieved_at": "2026-11-08T19:40:38.141524Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "b66300669b2675eb30b9a60cb9c14672da5c2cf6f5029d84a54f04cb015521b6",
+        "size_bytes": 1359306
+      },
+      "license": {
+        "name": "Используются только факты: перечень операторов и характеристики порта (ст. 1259 ГК РФ)",
+        "url": "https://www.rosmorport.ru/",
+        "status": "permitted",
+        "attribution": "ФГУП «Росморпорт», rosmorport.ru"
+      },
+      "publication_date": null
+    }
+  ],
+  "files": {
+    "evidence": {
+      "path": "evidence.json",
+      "sha256": "f2136ca4da1853dd5bcaa9a362b672995cd7bf5d1b8a0a248abf18816fb83a28",
+      "rows": 1530
+    },
+    "territories": {
+      "path": "territories.json",
+      "sha256": "c4d75a44d9bde9e4e7e041a35c5a28ed999e251a442eb4bd125f4cc49a731570",
+      "rows": 5
+    },
+    "population_cells": {
+      "path": "population_cells.json",
+      "sha256": "2fad9b3a6df7f5348c3fcf67d68463e23a28c4020e04b26f50b0e5b4359b335c",
+      "rows": 968
+    },
+    "sample_points": {
+      "path": "sample_points.json",
+      "sha256": "73b5e93112983473a0ac83d23a88a9b42124906c2033f472733fa78f6a9b7916",
+      "rows": 409
+    },
+    "destinations": {
+      "path": "destinations.json",
+      "sha256": "578a6f98ba026fc9d63a09ffeebdfd2ee867e7328835caa1ad6c3c5d71881de6",
+      "rows": 206
+    },
+    "category_ownership": {
+      "path": "category_ownership.json",
+      "sha256": "573a15d63cca4ce6583d5115c6bf60eb8f32fafe7ff5a1019c1a36d08210d181",
+      "rows": 206
+    },
+    "access_nodes": {
+      "path": "access_nodes.json",
+      "sha256": "8b69833518174b8cb907a39ce813326bc49b8ed60e9e9af8365d5476e8543c71",
+      "rows": 710
+    },
+    "freight_nodes": {
+      "path": "freight_nodes.json",
+      "sha256": "5688edc74cbda9e1f6afd240b8cb7ecabd04d461f879ffbb15949b8da9c8a55a",
+      "rows": 11
+    },
+    "freight_sites": {
+      "path": "freight_sites.json",
+      "sha256": "f12afaf33ed3a6514e248e886c314cf0f015dd769569214d01dff2c666182bcd",
+      "rows": 86
+    },
+    "walk_connectors": {
+      "path": "walk_connectors.json",
+      "sha256": "f3559ebbcbd954392ab6957ce510cc6789608c87167ce1354d5e93f3de26e7d2",
+      "rows": 615
+    },
+    "qa_report": {
+      "path": "qa_report.json",
+      "sha256": "e0fa0f23db84cb3bf567e7f430f1d2118a78564e02207714de932a7250efa669",
+      "rows": 25
+    }
+  },
+  "coverage": [
+    {
+      "collection": "territories",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "complete",
+      "confirmed_absence": false,
+      "reason": "Городской округ и 4 района(ов) из OSM",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.south-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "population_cells",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "complete",
+      "confirmed_absence": false,
+      "reason": "Все ячейки сетки 1 км, пересекающие границу; население GHSL по центроидам пикселей",
+      "evidence_ids": [
+        "ghsl:ghsl_pop.e2025-r2023a-100m-r4c22",
+        "osm:dataset:osm_geofabrik.south-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "sample_points",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "complete",
+      "confirmed_absence": false,
+      "reason": "По одной точке на ячейку со зданием; исключённые ячейки с причиной и населением в QA",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.south-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "access_nodes",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": null,
+      "mode": "walk",
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "complete",
+      "confirmed_absence": false,
+      "reason": "Вход на главную связную компоненту пешеходной сети OSM v1 у каждой точки и объекта",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.south-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "novorossiysk",
+      "category": "adult_polyclinic",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Городские поликлиники по перечню учреждений здравоохранения на сайте администрации (ОПФ ГБУЗ … МЗ КК); головные адреса, не все отделения",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.south-fed-district-261107",
+        "admnvrsk_health:dataset:admnvrsk_health.20261108"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "novorossiysk",
+      "category": "child_polyclinic",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Городские поликлиники по перечню учреждений здравоохранения на сайте администрации (ОПФ ГБУЗ … МЗ КК); головные адреса, не все отделения",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.south-fed-district-261107",
+        "admnvrsk_health:dataset:admnvrsk_health.20261108"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "novorossiysk",
+      "category": "kindergarten",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Муниципальные детсады по перечню учредителя (Управление образования, gorono.ru), адрес учреждения; другие корпуса и частные детсады не подтверждены",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.south-fed-district-261107",
+        "nvr_gorono:dataset:nvr_gorono.dou-20261109"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "novorossiysk",
+      "category": "school",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Государственные и муниципальные школы по реестру аккредитации; только адрес организации, другие корпуса не подтверждены",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.south-fed-district-261107",
+        "obrnadzor_accreditation:dataset:obrnadzor_accreditation.20261108"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "novorossiysk",
+      "category": "college_university",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Государственные колледжи и вузы по реестру аккредитации Рособрнадзора; корпуса — по названиям в OSM; частные, ведомственные и неаккредитованные не входят",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.south-fed-district-261107",
+        "obrnadzor_accreditation:dataset:obrnadzor_accreditation.20261108"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "novorossiysk",
+      "category": "rail_terminal",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.south-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "novorossiysk",
+      "category": "bus_terminal",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.south-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "novorossiysk",
+      "category": "airport",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Аэродромы с IATA в 60 км по OurAirports; регулярность рейсов не проверена по расписаниям (ограничения полётов на юге России)",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.south-fed-district-261107",
+        "ourairports:dataset:ourairports.airports-20261108"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "novorossiysk",
+      "category": "shopping_center",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.south-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "category_ownership",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Подтверждены реестрами: adult_polyclinic, child_polyclinic, college_university, kindergarten, school",
+      "evidence_ids": [
+        "admnvrsk_health:dataset:admnvrsk_health.20261108",
+        "nvr_gorono:dataset:nvr_gorono.dou-20261109",
+        "obrnadzor_accreditation:dataset:obrnadzor_accreditation.20261108"
+      ]
+    },
+    {
+      "collection": "access_nodes",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": null,
+      "mode": "road",
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "complete",
+      "confirmed_absence": false,
+      "reason": "Вход на главную связную компоненту дорожной сети OSM v1 (грузовой подъезд) у каждого грузового узла и площадки",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.south-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "freight_nodes",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": "port",
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Портовые территории OSM и объекты со словом «порт» в названии в границе города; морской порт Новороссийск (рег. № Ч-1) по Росморпорту; перечень операторов на странице скрыт в разметке, объекты только по нему в карантине; подписанные объекты в OSM есть у 2 из 9 операторов",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.south-fed-district-261107",
+        "rosmorport:dataset:rosmorport.seaports-novorossiysk-20261108"
+      ]
+    },
+    {
+      "collection": "freight_nodes",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": "pipeline_terminal",
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Терминалы магистральных трубопроводов по названиям OSM (КТК, Шесхарис, ПНБ); реестра операторов нет",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.south-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "freight_nodes",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": "rail_terminal",
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "unknown",
+      "confirmed_absence": false,
+      "reason": "Ж/д станции OSM в карантине: грузовые операции не подтверждены открытым реестром",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.south-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "freight_nodes",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": "logistics_terminal",
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Логистические центры не собраны; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "freight_nodes",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": "airport",
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Грузовые аэропорты не собраны; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "freight_sites",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Промзоны OSM от 0,5 га, склады и производственные здания от 1000 м² вне промзон и узлов (freight-osm-rules-v2); реестра предприятий нет, веса равные",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.south-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "freight_compatibility",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "unknown",
+      "confirmed_absence": false,
+      "reason": "Совместимость груза, услуги и подъезда не подтверждена открытыми данными операторов; строки не созданы",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.south-fed-district-261107",
+        "rosmorport:dataset:rosmorport.seaports-novorossiysk-20261108"
+      ]
+    },
+    {
+      "collection": "pipeline_connections",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Только межгород; соединения и направления не собраны, терминалы города — в freight_nodes",
+      "evidence_ids": []
+    },
+    {
+      "collection": "stops",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "trips",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "stop_times",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "calendars",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "transfers",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "reference_edges",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "minimum_transfers",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "traffic_profiles",
+      "city_id": "novorossiysk",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    }
+  ],
+  "qa_report": "qa_report.json",
+  "limitations": [
+    "Границы — OSM (relation городского округа), не официальный реестр границ МО",
+    "Население — модельная оценка GHSL R2023A эпохи 2025, не перепись",
+    "Поликлиники, детсады, школы, колледжи и вузы приняты только по официальным реестрам; объекты OSM без записи реестра — в карантине",
+    "Ж/д вокзалы, автовокзалы и ТЦ отобраны правилами OSM v1 без сверки со справочником",
+    "Вход на граф — проекция на пешеходную сеть OSM v1, не размеченный вход здания",
+    "Период применимости 01–30.11.2026 заявлен ML2 для снимка OSM от 07.11.2026",
+    "Расписания в этот bundle не входят",
+    "Грузовые узлы: порт — портовые территории OSM и объекты со словом «порт» в названии в границе города с зарегистрированным морским портом; объекты, найденные только по скрытому в разметке перечню операторов Росморпорта, в карантине; нефтяные терминалы — по названиям OSM; ж/д станции в карантине: грузовые операции не подтверждены",
+    "Узлы за границей города (терминалы порта в соседних муниципалитетах) не включены",
+    "Грузовые площадки — промзоны и склады OSM по правилам freight-osm-rules-v2, равные веса; реестра предприятий и объёмов нет",
+    "Совместимость груза, услуги и подъезда неизвестна; въезд — проекция внутренней точки контура на дорожную сеть OSM v1, не размеченные ворота; ограничения массы не учтены",
+    "Связи точек и объектов с пешеходной сетью проверены геометрией (walk-connector-geometry-v2); пересечение здания, воды, железной дороги или магистрали оставляет связь unknown; секунды — по скорости принятого пешеходного профиля",
+    "Ownership correction: 1 originally accepted public objects quarantined using exact historical individual registry hashes; legal-form classifier fc7e4da. Raw observed registry is not substituted for the historical source version.",
+    "No new municipal/state institution, full category roster or route minimum is established by this revision.",
+    "All original coverage scopes are preserved; no new full-category or index claim."
+  ]
+}

@@ -60,10 +60,17 @@ from a2_api.core.config import RuntimeSettings
 from a2_api.core.errors import DomainError
 from a2_api.core.jobs import CalculationOutput, ClaimedJob, V2JobContext
 from a2_api.core.registry import ProductRegistry
+from a2_api.core.runtime_admission import run_heavy
 from a2_api.workers.checkpoint_channel import CheckpointChannel
 
 
 async def preflight(request: AnalysisRequest, snapshot: AcceptedData) -> BatchPlan | None:
+    # One reservation covers every validation stage. The owning thread waits for
+    # the inner async adapter and its executor to finish even if HTTP times out.
+    return await run_heavy(lambda: asyncio.run(_preflight(request, snapshot)))
+
+
+async def _preflight(request: AnalysisRequest, snapshot: AcceptedData) -> BatchPlan | None:
     runtime = await asyncio.to_thread(load_runtime)
     if runtime.digest not in (RuntimeSettings().code_version or ""):
         raise DomainError(409, "incompatible_versions", "Product runtime code identity differs")
@@ -75,7 +82,9 @@ async def preflight(request: AnalysisRequest, snapshot: AcceptedData) -> BatchPl
     elif profile.executor == "walk_batches":
         from a2_api.adapters import walk_batches
 
-        return await walk_batches.preflight(request, snapshot)
+        return await walk_batches.preflight(
+            request, snapshot, bound=runtime.walk_bindings.get(profile.profile_id)
+        )
     elif profile.executor == "certified_walk_model":
         from a2_api.adapters import certified_walk_model
 
@@ -131,7 +140,9 @@ def calculate(
             raise unavailable("FENCED_CHECKPOINT_CHANNEL_REQUIRED")
         from a2_api.adapters import walk_batches
 
-        return walk_batches.calculate(claim, channel)
+        return walk_batches.calculate(
+            claim, channel, bound=runtime.walk_bindings.get(profile.profile_id), snapshot=snapshot
+        )
     if profile.executor == "certified_walk_model":
         from a2_api.adapters import certified_walk_model
 

@@ -51,6 +51,9 @@ import {
 import { useAnalysisSession } from "../features/analysis/useAnalysisSession";
 import { scenarioJourneys } from "../api/adapters/scenario";
 import { scopeAllowsArea, scopeContainsTime, urbanScopeAvailability, type UrbanSelection } from "../api/adapters/urbanScopes";
+import { journeyLines, segmentGeometryNotice } from "../api/adapters/journeyGeometry";
+import { urbanReadiness } from "../api/adapters/urbanReadiness";
+import { UrbanReadiness } from "../widgets/UrbanReadiness";
 import { Select } from "../shared/Select";
 import { DatePicker } from "../shared/DatePicker";
 import { Icon, Wordmark } from "../shared/ui";
@@ -276,13 +279,21 @@ export function ApiAtlasPage() {
     return () => window.removeEventListener("keydown", key);
   }, []);
   const change = (patch: Partial<ApiDraft>) => {
-    session.changed();
+    const cityChanged = patch.cityId !== undefined && patch.cityId !== draft.cityId && !!draft.cityId && patch.kind === undefined;
+    if (cityChanged) {
+      session.reset();
+      setCardHidden(false);
+      setSearch("");
+      setSearchError("");
+      setZoom((z) => ({ kind: "home", id: z.id + 1 }));
+    } else session.changed();
     setLocalError(null);
     setSelection(null);
     setScenarioView(false);
     setQuestion("");
     setDraft((d) => ({
       ...d,
+      ...(cityChanged ? { areaId: "", snapshotId: "", travel: "" as const } : {}),
       ...patch,
       ...(["kind", "level", "cityId", "originId", "destinationId", "date", "slot"]
         .some((key) => key in patch && patch[key as keyof ApiDraft] !== d[key as keyof ApiDraft]) && !("snapshotId" in patch)
@@ -367,7 +378,7 @@ export function ApiAtlasPage() {
             ? "Для этого города нет зарегистрированного расчёта."
             : !publishedScopes.some((s) => s.city_id === t.territory_id && scopeContainsTime(s, scopeDeparture(t.territory_id)))
               ? "Для выбранной даты и времени расчёт недоступен." : undefined;
-        return { value: t.territory_id, label: t.name, disabled: !!reason, reason };
+        return { value: t.territory_id, label: t.name, reason };
       }),
   ];
   const origin = catalog.find(
@@ -411,12 +422,13 @@ export function ApiAtlasPage() {
     [result, scenario],
   );
   const visibleJourneys = scenarioView ? scenarioPaths?.journeys || [] : result?.journeys || [];
-  const scenarioGeometryCount = scenarioPaths?.journeys.filter((j) => j.geometry !== null).length || 0;
+  const segmentGeometry = visibleJourneys.some((j) => journeyLines(j).some((part) => part.segment));
+  const scenarioGeometryCount = scenarioPaths?.journeys.filter((j) => journeyLines(j).length > 0).length || 0;
   const scenarioMapNotice = !scenarioPaths?.journeys.length
     ? "Пути сценария не предоставлены. Показаны объекты исходного анализа."
     : !scenarioGeometryCount
       ? "Геометрия путей сценария не предоставлена. Показаны объекты исходного анализа; сведения о путях — в карточке."
-      : scenarioGeometryCount < scenarioPaths.journeys.length || scenarioPaths.missingJourneyIds.length
+      : segmentGeometry || scenarioGeometryCount < scenarioPaths.journeys.length || scenarioPaths.missingJourneyIds.length
         ? "Часть геометрии путей сценария не предоставлена. Показаны только полученные линии; объекты — из исходного анализа."
         : "Показаны пути сценария; объекты — из исходного анализа.";
   const shownMetrics =
@@ -480,10 +492,11 @@ export function ApiAtlasPage() {
   };
   const scopeSelection: UrbanSelection = {
     cityId: draft.cityId, snapshotId, areaId: draft.areaId, departureAt: scopeDeparture(draft.cityId),
-    mode: passengerModes[draft.travel], traffic: draft.traffic,
+    mode: draft.travel ? passengerModes[draft.travel] : "", traffic: draft.traffic,
     categories: Object.keys(draft.cats).flatMap((id) => categoryIds[id as keyof typeof categoryIds] || []),
   };
   const scopeState = urbanScopeAvailability(scopeSelection, publishedScopes);
+  const readiness = caps && draft.kind === "urban_passenger" ? urbanReadiness(draft, catalog, caps, result, dirty) : null;
   const scopeBlocked = scopeState.published && !!scopeState.problem;
   const categoryReason = (category: Schemas["UrbanPassengerRequest"]["categories"][number]) => {
     if (!scopeState.published) return undefined;
@@ -493,6 +506,7 @@ export function ApiAtlasPage() {
     return undefined;
   };
   const missingSnapshotCoverage = caps?.snapshots !== undefined && !snapshots.length;
+  const missingPassengerMode = draft.kind === "urban_passenger" && !draft.travel;
   const shownReturns = lastReturnsForSelection(
     result?.last_returns || [],
     selection,
@@ -732,8 +746,9 @@ export function ApiAtlasPage() {
                   </>,
                 )}
               {scopeState.published && (
-                <UrbanScopeHelp state={scopeState} selection={scopeSelection} draft={draft} caps={caps} catalog={catalog} onApply={change} />
+                <UrbanScopeHelp key={draft.cityId} state={scopeState} selection={scopeSelection} draft={draft} caps={caps} catalog={catalog} onApply={change} />
               )}
+              {readiness && <UrbanReadiness value={readiness} />}
               {!cargo &&
                 (urban
                   ? field(
@@ -742,12 +757,13 @@ export function ApiAtlasPage() {
                         label="Передвижение"
                         value={draft.travel}
                         options={[
+                          { value: "", label: "Выберите способ передвижения" },
                           { value: "pt", label: "Общественный транспорт" },
                           { value: "walk", label: "Пешком" },
                           { value: "car", label: "Личный автомобиль" },
                         ].map((option) => ({ ...option,
-                          disabled: scopeState.published && !scopeState.area.some((s) => s.passenger_modes.includes(passengerModes[option.value as ApiDraft["travel"]])),
-                          reason: scopeState.published && !scopeState.area.some((s) => s.passenger_modes.includes(passengerModes[option.value as ApiDraft["travel"]])) ? "Для выбранных города, времени и набора данных этот способ недоступен." : undefined,
+                          disabled: !!option.value && scopeState.published && !scopeState.area.some((s) => s.passenger_modes.includes(passengerModes[option.value as keyof typeof passengerModes])),
+                          reason: option.value && scopeState.published && !scopeState.area.some((s) => s.passenger_modes.includes(passengerModes[option.value as keyof typeof passengerModes])) ? "Для выбранных города, времени и набора данных этот способ недоступен." : undefined,
                         }))}
                         onChange={(travel) =>
                           change({ travel: travel as ApiDraft["travel"] })
@@ -988,7 +1004,7 @@ export function ApiAtlasPage() {
               </p>
               <button
                 className="iconbtn primary"
-                disabled={!ready?.calculation_available || running || missingSnapshotCoverage || scopeBlocked}
+                disabled={!ready?.calculation_available || running || missingSnapshotCoverage || scopeBlocked || missingPassengerMode}
                 onClick={start}
               >
                 <Icon name="play" />
@@ -1071,9 +1087,9 @@ export function ApiAtlasPage() {
           {result &&
             (!result.map_data ||
               result.map_data.status !== "available" ||
-              result.map_data.completeness === "partial") && (
+              result.map_data.completeness === "partial" || segmentGeometry) && (
               <div className="api-map-note">
-                {result.map_data?.status === "available"
+                {segmentGeometry ? `${segmentGeometryNotice}.` : result.map_data?.status === "available"
                   ? "Геометрия доступна частично."
                   : "Геометрия недоступна."}{" "}
                 Доступные показатели сохранены.
@@ -1299,7 +1315,7 @@ export function ApiAtlasPage() {
               </div>
               <button
                 className="iconbtn primary"
-                disabled={!ready?.calculation_available || running || missingSnapshotCoverage || scopeBlocked}
+                disabled={!ready?.calculation_available || running || missingSnapshotCoverage || scopeBlocked || missingPassengerMode}
                 onClick={start}
               >
                 Рассчитать

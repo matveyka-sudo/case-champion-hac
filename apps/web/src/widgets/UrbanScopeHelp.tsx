@@ -14,7 +14,7 @@ export function UrbanScopeHelp({ state, selection, draft, caps, catalog, onApply
   onApply: (patch: Partial<ApiDraft>) => void;
 }) {
   const [chosenId, setChosenId] = useState("");
-  const scopes = caps.urban_passenger_scopes || [];
+  const scopes = (caps.urban_passenger_scopes || []).filter((scope) => !selection.cityId || scope.city_id === selection.cityId);
   if (!state.published) return null;
   const effectiveId = scopes.some((s) => s.scope_id === chosenId) ? chosenId
     : scopes.length === 1 ? scopes[0].scope_id : "";

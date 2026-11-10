@@ -1,0 +1,11 @@
+{
+  "approval": "Integration architect approved additive per-profile immutable walk bindings and private BatchPlan/2; original /1 serialization, SQL and canonical public DTOs unchanged.",
+  "module": "adapters/walk_runtime.py",
+  "signatures": {
+    "a2_api.adapters.walk_batches:calculate": "(claim: a2_api.core.jobs.ClaimedJob, channel: a2_api.workers.checkpoint_channel.CheckpointChannel, *, bound: 'BoundWalkBinding | None' = None, snapshot: a2_contracts.v2.dataset.AcceptedData | None = None) -> a2_contracts.v2.results.AnalysisResult",
+    "a2_api.adapters.walk_batches:load_approval": "(*, bound: 'BoundWalkBinding | None' = None, snapshot: a2_contracts.v2.dataset.AcceptedData | None = None) -> tuple[a2_api.adapters.walk_batches.Approval, str, a2_api.adapters.walk_pilot.Runtime]",
+    "a2_api.adapters.walk_batches:preflight": "(request: Annotated[a2_contracts.v2.requests.UrbanPassengerRequest | a2_contracts.v2.requests.IntercityPassengerRequest | a2_contracts.v2.requests.UrbanCargoRequest | a2_contracts.v2.requests.IntercityCargoRequest, FieldInfo(annotation=NoneType, required=True, discriminator='analysis_kind')], snapshot: a2_contracts.v2.dataset.AcceptedData, *, bound: 'BoundWalkBinding | None' = None) -> a2_api.core.batches.BatchPlan",
+    "a2_api.adapters.walk_runtime:load_binding": "(root: 'Path', reference: 'FileRef', *, snapshot: 'AcceptedData', scope: 'WalkProfileScope', budget: 'list[int] | None' = None) -> 'BoundWalkBinding'",
+    "a2_api.core.walk_observations:observation_directory": "(*, legacy: bool = False) -> pathlib.Path"
+  }
+}

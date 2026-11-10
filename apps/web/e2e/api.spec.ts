@@ -12,6 +12,8 @@ import { scenarioRouteFixture } from "../tests/fixtures/scenario-routes";
 import { returnContextFixture } from "../tests/fixtures/return-context";
 import { airportScope, scopedCapabilities } from "../tests/fixtures/urban-scopes";
 import { pointOverviewFixture } from "../tests/fixtures/point-overview";
+import { partialWalkGeometryFixture } from "../tests/fixtures/partial-walk-geometry";
+import { legGeometryFixture } from "../tests/fixtures/leg-geometry";
 const fixtures = {
   urban_passenger: urban,
   intercity_passenger: pax,
@@ -510,7 +512,8 @@ test("API: overlapping snapshots require a choice, send its identity and clear s
   expect(mock.request).toMatchObject({ snapshot_id: "version-A-same-tail" });
   await choose(page, "Город", "Калининград");
   await expect(page.getByRole("combobox", { name: "Набор данных", exact: true })).toContainText("Выберите набор данных");
-  await expect(page.getByRole("status")).toContainText("прежний результат");
+  await expect(page.locator("#apiResultCard")).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Выберите способ передвижения");
   expect(mock.posts).toBe(1);
 });
 
@@ -866,4 +869,190 @@ test("API: partial point inventory never presents the one known point as complet
   await expect(overview).toContainText("Индекс города: Нет данных");
   await expect(overview.getByRole("button", { name: /Точка · 54.71500, 20.51500/ })).toContainText("0,5 из 100");
   expect(mock.posts).toBe(1);
+});
+
+test("API: calculated point reveals its partial walk route with a separate rounded display timeline", async ({ page }) => {
+  // Synthetic protocol evidence; this does not prove a production route or index.
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const data = partialWalkGeometryFixture();
+  const mock = await mockApi(page, { result: data, emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Калининград");
+  await choose(page, "Передвижение", "Пешком");
+  for (const name of ["Взрослые поликлиники", "Школы", "ТЦ"]) await page.getByRole("checkbox", { name, exact: true }).uncheck();
+  await page.getByRole("checkbox", { name: "Аэропорты", exact: true }).check();
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  const card = page.locator("#apiResultCard");
+  const overview = page.getByLabel("Обзор рассчитанных точек");
+  await expect(overview.locator("summary")).toHaveText("Рассчитанные точки (1 из 3)");
+  await overview.locator("summary").click();
+  await overview.getByRole("button", { name: /Точка · 54.50200, 20.30200/ }).click();
+  await expect(card.locator("h3")).toHaveText("Точка · 54.50200, 20.30200");
+  await expect(card.locator("h3")).toBeFocused();
+  await expect(overview).toContainText("Индекс города: Нет данных");
+  await expect(card).toContainText("0,5 из 100");
+  const route = card.locator(".api-journey");
+  await expect(route).toHaveCount(1);
+  await expect(route.locator("summary")).toHaveText("Путь · Данные доступны · геометрия источника · частичные данные");
+  await route.locator("summary").click();
+  await expect(route).toContainText("Синтетический аэропорт · 10 мин");
+  await expect(route).toContainText("Пеший участок · Пешком · 10 мин");
+  await expect(card).toContainText("Время маршрута округлено для отображения; точность расчёта индекса сохранена.");
+  await expect(card).toContainText("Координаты линии округлены источником.");
+  await expect(card).not.toContainText("MODEL_TIMELINE_MICROSECOND_PRECISION");
+  await expect(card).not.toContainText("PINNED_TILE_SHAPE_6_DECIMAL_ENCODING");
+  expect(mock.posts).toBe(1);
+});
+
+test("API: city inspection clears the completed city's route and requires fresh scope selections", async ({ page }) => {
+  // Synthetic three-city inventory; no additional production profile is asserted.
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const c = scopedCapabilities([{ ...airportScope(), whole_city: false, area_ids: ["synthetic-k-area"] }]);
+  const third = { ...territories[0], territory_id: "synthetic-city-3", name: "Новороссийск" } as Territory;
+  c.areas = [{ area_id: "synthetic-k-area", city_id: "city-2", name: "Синтетический район К" },
+    { area_id: "synthetic-m-area", city_id: "city-1", name: "Синтетический район М" }];
+  c.snapshots![0].territory_ids.push(third.territory_id);
+  c.snapshots!.push({ ...c.snapshots![0], snapshot_id: "synthetic-other-version" });
+  const mock = await mockApi(page, { capabilities: c, territories: [...territories, third] as Territory[], result: partialWalkGeometryFixture(), emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Калининград");
+  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  await expect(page.getByRole("combobox", { name: "Район", exact: true })).toContainText("Синтетический район К");
+  const date = await page.locator("#apiDate").textContent();
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(page.locator("#apiResultCard .api-journey")).toHaveCount(1);
+  await choose(page, "Город", "Москва");
+  await expect(page.locator("#apiResultCard")).toHaveCount(0);
+  await expect(page.locator(".api-journey")).toHaveCount(0);
+  await expect(page.getByRole("status")).not.toContainText("Калининград");
+  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Выберите способ передвижения");
+  await expect(page.getByRole("combobox", { name: "Набор данных", exact: true })).toContainText("Выберите набор данных");
+  await expect(page.getByRole("combobox", { name: "Район", exact: true })).toContainText("Весь город");
+  await expect(page.locator("#apiDate")).toHaveText(date || "");
+  await expect(page.getByRole("slider", { name: "Время отправления, шаг 15 минут" })).toHaveValue("34");
+  await expect(page.locator(".tz")).toHaveText("Europe/Moscow");
+  await expect(page.getByLabel("Доступность городского расчёта")).toContainText("Для выбранного города нет зарегистрированного расчёта.");
+  await expect(page.getByRole("button", { name: "Использовать доступные параметры", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
+  await choose(page, "Город", "Новороссийск");
+  await expect(page.getByLabel("Доступность городского расчёта")).toContainText("нет зарегистрированного расчёта");
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
+  await choose(page, "Город", "Калининград");
+  await expect(page.locator("#apiResultCard")).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Выберите способ передвижения");
+  await expect(page.getByRole("combobox", { name: "Набор данных", exact: true })).toContainText("Выберите набор данных");
+  await expect(page.getByRole("combobox", { name: "Район", exact: true })).toContainText("Весь город");
+  await expect(page.locator(".tz")).toHaveText("Europe/Kaliningrad");
+  expect(mock.posts).toBe(1);
+});
+
+test("API: changing city during a job discards its local context without borrowing another city's preset", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const c = scopedCapabilities([airportScope(), { ...airportScope(), scope_id: "synthetic-m-walk", city_id: "city-1" }]);
+  const mock = await mockApi(page, { capabilities: c, running: true, emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Калининград");
+  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.getByRole("button", { name: "Отменить серверное задание", exact: true })).toBeVisible();
+  await choose(page, "Город", "Москва");
+  await expect(page.getByRole("button", { name: "Отменить серверное задание", exact: true })).toHaveCount(0);
+  await expect(page.locator("#apiResultCard")).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Выберите способ передвижения");
+  await expect(page.locator(".api-scope-preview").first()).toContainText("Период");
+  await page.getByRole("combobox", { name: "Доступный набор параметров", exact: true }).click();
+  await expect(page.getByRole("option").filter({ hasText: "Москва" })).toHaveCount(1);
+  await expect(page.getByRole("option").filter({ hasText: "Калининград" })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await choose(page, "Город", "Калининград");
+  await expect(page.getByRole("combobox", { name: "Передвижение", exact: true })).toContainText("Выберите способ передвижения");
+  await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
+  expect(mock.posts).toBe(1);
+  expect(mock.requests.some((request) => request.url.endsWith("/cancel"))).toBe(false);
+});
+
+test("API: disjoint movement segments retain partial-route labels and clear on city change", async ({ page }) => {
+  // Synthetic missing approaches and gap: only two supplied network segments exist.
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const mock = await mockApi(page, { capabilities: scopedCapabilities(), result: legGeometryFixture(), emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Калининград");
+  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  const note = page.locator(".api-map-note");
+  await expect(note).toContainText("Показан участок маршрута; геометрия подходов не подтверждена");
+  const overview = page.getByLabel("Обзор рассчитанных точек");
+  await expect(overview).toContainText("Индекс города: Нет данных");
+  await overview.locator("summary").click();
+  await overview.getByRole("button", { name: /Точка · 54.50200, 20.30200/ }).click();
+  const card = page.locator("#apiResultCard"), route = card.locator(".api-journey");
+  await expect(card).toContainText("0,5 из 100");
+  await expect(route.locator("summary")).toHaveText("Путь · Данные доступны · геометрия участков · частичные данные");
+  await route.locator("summary").click();
+  await expect(route).toContainText("Показан участок маршрута; геометрия подходов не подтверждена");
+  await expect(route.locator("li")).toHaveCount(5);
+  await expect(route).toContainText("Синтетический аэропорт · 10 мин");
+  await expect(route).not.toContainText("геометрия источника");
+  await choose(page, "Город", "Москва");
+  await expect(card).toHaveCount(0);
+  await expect(note).toHaveCount(0);
+  await expect(page.getByRole("status")).not.toContainText("Калининград");
+  expect(mock.posts).toBe(1);
+});
+
+test("API: readiness separates registered inputs from matching point zero and unknown city completeness", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const mock = await mockApi(page, { capabilities: scopedCapabilities(), result: legGeometryFixture(0), emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Калининград");
+  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  const readiness = page.getByLabel("Готовность выбранных условий");
+  await expect(readiness).toContainText("Подходящий набор опубликован");
+  await expect(readiness).toContainText("Параметры запуска зарегистрированы");
+  await expect(readiness).toContainText("Полнота данных о населении не подтверждена");
+  await expect(readiness).toContainText("Полнота каталога не подтверждена");
+  await expect(readiness).toContainText("Для этих условий результат ещё не получен");
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  await expect(readiness).toContainText("Рассчитано точек: 1 из 3");
+  await expect(readiness.locator('b[data-score-band="low"]')).toHaveText("0 из 100");
+  await expect(readiness.locator('b[data-score-band="unknown"]')).toHaveText("Нет данных");
+  await page.getByRole("slider", { name: "Время отправления, шаг 15 минут" }).fill("35");
+  await expect(page.getByRole("status")).toContainText("прежний результат");
+  await expect(readiness).toContainText("Для этих условий результат ещё не получен");
+  await expect(readiness).not.toContainText("Рассчитано точек");
+  await expect(readiness.locator("b[data-score-band]")).toHaveCount(0);
+  await choose(page, "Город", "Москва");
+  await expect(readiness).toContainText("Готовность · Москва");
+  await expect(readiness).toContainText("Для выбранных условий запуск не зарегистрирован");
+  await expect(readiness).not.toContainText("Рассчитано точек");
+  await expect(readiness.locator("b[data-score-band]")).toHaveCount(0);
+  expect(mock.posts).toBe(1);
+});
+
+test("API: selected area never inherits the city index or its population completeness", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const areaId = "synthetic-area";
+  const c = scopedCapabilities([{ ...airportScope(), whole_city: false, area_ids: [areaId] }]);
+  c.areas = [{ area_id: areaId, city_id: "city-2", name: "Синтетический район" }];
+  const data = legGeometryFixture(0);
+  const city = data.scores.find((score) => score.name === "territory_index")!;
+  city.value = 85; city.status = "available";
+  city.aggregation_basis = { unit: "persons", population: 1000, coverage: 1, year: 2025, population_method: "synthetic", unknown_positive_weight: false };
+  const mock = await mockApi(page, { capabilities: c, result: data, emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Калининград");
+  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  const readiness = page.getByLabel("Готовность выбранных условий");
+  await expect(readiness).toContainText("Индекс выбранной территории");
+  await expect(readiness).toContainText("Не предоставлен.");
+  await expect(readiness).not.toContainText("85 из 100");
+  await expect(readiness).toContainText("Полнота данных о населении не подтверждена");
+  await expect(page.getByLabel("Обзор рассчитанных точек")).toContainText("Индекс выбранной территории: не предоставлен");
+  expect(mock.request).toMatchObject({ city_id: "city-2", area_id: areaId });
 });

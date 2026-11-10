@@ -56,6 +56,49 @@ describe("saved analysis session boundaries", () => {
     expect(result.current.phase).toBe("failed");
     expect(g.analyze.mock.calls[0][1]).not.toBe(g.analyze.mock.calls[1][1]);
   });
+  it("clears a completed city context and prevents old analysis actions after reset", async () => {
+    const g = gateway();
+    g.explain = vi.fn();
+    g.scenario = vi.fn();
+    const { result } = renderHook(() => useAnalysisSession(g));
+    await act(() => result.current.run(base.request));
+    act(() => result.current.reset());
+    expect(result.current).toMatchObject({ result: null, scenario: null, job: null, phase: "idle", dirty: false,
+      proposals: [], messages: [], chatBusy: false, error: null, warning: "" });
+    await act(() => result.current.explain("Почему?", null));
+    await act(() => result.current.runScenario(proposal));
+    expect(g.explain).not.toHaveBeenCalled();
+    expect(g.scenario).not.toHaveBeenCalled();
+  });
+  it("rejects the first city's late result and progress after an A → B → A reset sequence", async () => {
+    let finish!: (v: typeof base) => void;
+    const g = gateway();
+    g.analyze.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
+    const { result } = renderHook(() => useAnalysisSession(g));
+    let first!: Promise<void>;
+    act(() => { first = result.current.run(base.request); });
+    const firstSignal = g.analyze.mock.calls[0][2];
+    const firstProgress = g.analyze.mock.calls[0][3];
+    act(() => result.current.reset());
+    expect(firstSignal.aborted).toBe(true);
+    const cityB = structuredClone(base);
+    if ("city_id" in cityB.request) cityB.request.city_id = "city-2";
+    g.analyze.mockResolvedValueOnce(cityB);
+    await act(() => result.current.run(cityB.request));
+    expect(result.current.result?.request).toEqual(cityB.request);
+    act(() => result.current.reset());
+    const latestA = { ...base, analysis_id: "latest-city-a" };
+    g.analyze.mockResolvedValueOnce(latestA);
+    await act(() => result.current.run(base.request));
+    await act(async () => {
+      firstProgress({ job_id: "old-city-a-job", status: "running", request_id: "r" });
+      finish({ ...base, analysis_id: "stale-city-a" });
+      await first;
+    });
+    expect(result.current.result?.analysis_id).toBe("latest-city-a");
+    expect(result.current.job).toBeNull();
+    expect(result.current.phase).toBe("done");
+  });
   it("blocks non-editable scenario proposals and keeps baseline immutable after an allowed run", async () => {
     const g = gateway();
     g.scenario = vi

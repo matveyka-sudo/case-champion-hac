@@ -64,8 +64,8 @@ from .osm import ensure_extract, file_sha256
 from .osm_national import _entities
 from .paths import data_dir, processed_dir, raw_dir
 from .store import BUNDLE_COLLECTIONS, load_bundle, publish_bundle
+from .walk_projection import CONNECTOR_RULES, project_walk_connectors
 
-CONNECTOR_RULES = "walk-connector-geometry-v2"
 STOP_RULES = "transit-stops-v1"
 MAX_CONNECTOR_M = 500.0
 STOP_ACCESS_M = 150.0
@@ -631,35 +631,16 @@ def walk_connectors(
     build's ``walking_speed``); unknown connectors keep ``seconds=None``.
     """
 
+    # Preserve the public wrapper's validation-before-load behavior.
     if not 0.5 <= walking_speed_kmh <= 25 or not speed_evidence_refs:
         raise ValueError("an accepted walking speed with evidence is required")
     data = load_bundle(bundle_id, root=root)
-    nodes = {n.access_node_id: n for n in data.access_nodes}
-    places = {
-        **{("point", p.point_id): (p.lon, p.lat) for p in data.sample_points},
-        **{("destination", d.destination_id): (d.lon, d.lat) for d in data.destinations},
-    }
-    rows = []
-    for c in data.walk_connectors:
-        lon, lat = places[(c.entity_kind, c.entity_id)]
-        node = nodes[c.access_node_id]
-        rows.append(
-            {
-                "snapshot_id": bundle_id,
-                "source_graph_version": data.manifest.graph_version,
-                "physical_node_id": c.physical_node_id,
-                "access_node_id": c.access_node_id,
-                "physical_location": {"lon": lon, "lat": lat},
-                "access_location": {"lon": node.lon, "lat": node.lat},
-                "seconds": round(c.length_m / (walking_speed_kmh / 3.6), 1)
-                if c.traversable
-                else None,
-                "traversable": c.traversable,
-                "time_basis": f"{CONNECTOR_RULES}:straight_line_length/{profile_version}",
-                "evidence_refs": [*c.evidence_ids, *speed_evidence_refs],
-            }
-        )
-    return rows
+    return project_walk_connectors(
+        data,
+        walking_speed_kmh=walking_speed_kmh,
+        speed_evidence_refs=speed_evidence_refs,
+        profile_version=profile_version,
+    )
 
 
 def main() -> None:
