@@ -86,6 +86,9 @@ def test_absence_dependency_compares_expanded_leaves_instead_of_group_spelling()
         time_kind="complete_chain",
     )
     validate_score_dependencies([metric], [absent], evidence_resolver=resolver)
+    with pytest.raises(ValueError, match="owning resolver"):
+        validate_score_dependencies([metric], [absent])
+    validate_score_dependencies([metric], [absent], allow_deferred_groups=True)
     absent.evidence_refs = ["leaf-A"]
     with pytest.raises(ValueError, match="placeholder"):
         validate_score_dependencies([metric], [absent], evidence_resolver=resolver)

@@ -250,7 +250,11 @@ def _absence_score(score: Score) -> bool:
 
 
 def validate_score_dependencies(
-    metrics: list[Metric], scores: list[Score], *, evidence_resolver: EvidenceResolver | None = None
+    metrics: list[Metric],
+    scores: list[Score],
+    *,
+    evidence_resolver: EvidenceResolver | None = None,
+    allow_deferred_groups: bool = False,
 ) -> None:
     """Shared analysis/scenario invariants, without computing any domain formula."""
     metric_map = {metric.metric_id: metric for metric in metrics}
@@ -269,7 +273,9 @@ def validate_score_dependencies(
         ):
             # ScenarioValues has no evidence inventory. Its enclosing canonical
             # ScenarioResult repeats this check with the validated resolver.
-            return True
+            if allow_deferred_groups:
+                return True
+            raise ValueError("Grouped score evidence requires its owning resolver")
         return set(metric.source_refs) <= set(score.evidence_refs)
 
     def visit(identifier: str) -> None:

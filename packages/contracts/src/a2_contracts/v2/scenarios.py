@@ -144,7 +144,7 @@ class ScenarioValues(ContractModel):
         scores = {s.score_id for s in self.scores}
         if len(scores) != len(self.scores):
             raise ValueError("Duplicate score identity in scenario values")
-        validate_score_dependencies(self.metrics, self.scores)
+        validate_score_dependencies(self.metrics, self.scores, allow_deferred_groups=True)
         return self
 
 
