@@ -97,6 +97,31 @@ jobs:
       - name: Validate PostgreSQL Compose configuration
         run: docker compose --env-file .env.example config --quiet
 
+  frontend-browser:
+    name: Chromium UI checks with API fixtures
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: apps/web
+    env:
+      CI: "true"
+      VITE_DATA_MODE: api
+      PLAYWRIGHT_WEB_PORT: "5176"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Install locked frontend dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install Chromium revision selected by the locked Playwright package
+        run: npx --no-install playwright install chromium --with-deps
+      - name: Run fixture-backed API browser suite
+        run: npm run test:e2e -- api.spec.ts --browser=chromium --workers=1 --retries=0 --forbid-only --run-agents=none --global-timeout=300000
+
   backend:
     name: Backend checks with PostgreSQL
     needs: environment
