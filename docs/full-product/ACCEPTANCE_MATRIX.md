@@ -11,15 +11,15 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 
 | Task | Owner / branch | Status | Delivery and independent acceptance |
 |---|---|---|---|
-| Dynamic dispatcher, all four kinds and pipeline | BACKEND / work/full-backend | CHANGES_REQUIRED | Initial hooks integrated; independent review found cargo roster/area, dated-candidate replay and unverified completeness evidence defects. Corrections remain under review; no complete-data promotion |
-| Map/form/snapshot correctness | FRONTEND / work/full-frontend | RUNNING | Urban city guard, explicit snapshot selection, pipeline product binding, partial map, selected last returns; browser tests |
-| Actual graph minimum bounds | ML1 / work/full-ml1 | INTEGRATED | 34a04a8 independently reviewed and integrated; root repeated exact graph-bound calculation and 26 tests. Network gap remains 6 seconds; physical proof remains false. Tighter turn-state solver is a separate RUNNING task |
-| External data restoration and normalized inputs | ML2 / work/full-ml2 | INTEGRATED | Checksum restore and bounded GTFS adapter integrated; root replayed real Moscow route. Further source research 7ca61d3 in REVIEW; two candidate school-campus promotions being verified for a new immutable bundle |
+| Dynamic dispatcher, all four kinds and pipeline | BACKEND / work/full-backend | INTEGRATED | Corrections through4d3e4e9 reviewed: cargo roster/area, dated candidate and canonical timetable source binding, verified completeness evidence; root24 focused tests PASS. Real profiles beyond pilot remain separate acceptance gates |
+| Map/form/snapshot correctness | FRONTEND / work/full-frontend | INTEGRATED | Throughd340170: scoped numeric indices, approved colors, zero/null, partial map, snapshot/product guards, selected returns, published scenario paths. Root20 API browser tests PASS39.0s; synthetic UI evidence only |
+| Actual graph minimum bounds | ML1 / work/full-ml1 | INTEGRATED | 14c2bd6+5701b75 reviewed. Exact network and designated canonical-access model minima reproduced independently; root1029 tests PASS. Full physical entrance completeness remains unproved; limited point projection still RUNNING |
+| External data restoration and normalized inputs | ML2 / work/full-ml2 | INTEGRATED | Through3b8c26f, immutable .5:79 accepted/51 quarantined schools,216 unchanged points; airport official roster full onlyNov10. Explicit .3→.5 physical compatibility, root271 ML2 tests PASS |
 | Isolated API-mode stack | DEVOPS / work/full-devops | INTEGRATED | Clean fee4112d stack on 5191; root performed real browser request, job polling and saved result retrieval. Archive/remote source guards and explicit infrastructure/package CI checks integrated |
 | Independent reliability review | reviewer / read-only baseline | RUNNING | Reproducible defects with tests, then review delivered commits |
-| Selection-aware grounded Alice | root / integration branch | INTEGRATED | a220985 + 140da8c + ef826f7 reviewed; selected metrics/scores use saved facts, combined bounded context, null/zero preserved. Frontend score claim rendering remains pending; no new paid calls |
-| Bounded resumable OD executor | BACKEND / work/full-backend | RUNNING | Private models/repository/IPC in isolated worktree; not enabled or accepted. Durable checkpoints/cache identity, fenced retries, cancel/deadline, deterministic atomic publication remain acceptance gates |
-| Saved baseline scenario integration | SCENARIOS / work/full-scenarios | RUNNING | Separate sixth Sol ultra executor owns new adapter modules only; private source-bound document and pure bridge implemented, tests/review/runtime hooks still pending |
+| Selection-aware grounded Alice | root / integration branch | INTEGRATED | a220985+140da8c+ef826f7+c30d0cd reviewed; saved metric/score facts, bounded context, null/zero and partial preserved. Actual browser saved score-only explanation test PASS; no new paid calls |
+| Bounded resumable OD executor | BACKEND / work/full-backend | CHANGES_REQUIRED | b069beb integrated for testing, root58 realPG/HTTP/migration/module controls PASS. Reviewer reproduced final-publication expiry gap, stale cache reuse and unreserved preflight/status calls; owner fixes pending acceptance. No production batch enabled |
+| Saved baseline scenario integration | SCENARIOS / work/full-scenarios | RUNNING | Engine bridge and trusted endpoint scope/publication wiring in owner worktree; actual PG new/lost/worsening controls underway. Canonical after_journeys+frontend integrated; runtime hooks and root acceptance still pending |
 
 Six child threads were simultaneously active after runtime reconfiguration;
 all were requested as gpt-6.1-sol / ultra. Runtime supplies seven slots including
@@ -46,6 +46,23 @@ lower bound 514.484144449234 seconds, feasible upper 520.484144449234 seconds.
 The check took 3.213 seconds; this measures hash/export checking and the Python
 bound calculation, not a fresh native graph export. Physical bounds remain null,
 and no numerical index is established. The raw receipt and graph stay outside Git.
+
+The later5701b75 proof supersedes those exploratory bounds for the airport pair.
+Root independently replayed the final native turn-state export plus physical
+receipt at6983eb8: exact total7939955842630578250721/576460752303423488 =
+13773.627798430474 seconds; 11.8713s wall, peak831799296 bytes RSS on macOS.
+Preserved output: external `root-proof-replays/runs/airport-resource-check-2/receipt.json`.
+The existing formula with H1800 gives0.4971801994143471 as a reference calculation;
+raw research proof deliberately keeps product_index_eligible=false/index=null.
+Production eligibility requires the separate .5 compatibility/officialNov10 closure
+and canonical-access model projection currently being implemented. Full physical
+entrance minimum and city ranking are not established. Certified97-edge path differs
+from the ordinary actor92-edge path: do not borrow the latter's route geometry.
+
+At6983eb8 the root independently executed20 public API browser tests, all PASS in
+39.0s. Captured `apps/web/test-results/api-partial-point-index.png` demonstrates
+synthetic72.5 point index in amber beside a null city aggregate with explicit partial
+labels. This is UI acceptance, not real numerical E2E; live5191 still has fee4112d.
 
 ## Product gates
 
@@ -94,7 +111,7 @@ jobs, UI, data restore, scenario wiring and route proof work continue.
 |---|---|---|
 | PRODUCT_FUNCTIONAL_READY | partial | One real partial chain; full dispatcher/batches/scenario deployment still open |
 | REAL_DATA_COVERAGE_READY | partial | Real Kaliningrad bundle and accepted source artifacts; city catalog/connectors incomplete |
-| NUMERICAL_INDEX_READY | no | Actual pilot minimum and complete population/object scope not proved |
+| NUMERICAL_INDEX_READY | partial | Exact limited canonical-access model proof and existing formula independently reproduced; source-bound product projection, saved numeric result and real UI replay remain pending. City/district aggregate remains null |
 | NATIONWIDE_COVERAGE_READY | no | National catalog/bindings do not prove national accepted routing/operation coverage |
 
 No dev merge is authorized. Acceptance requires reviewing final diffs and replaying
