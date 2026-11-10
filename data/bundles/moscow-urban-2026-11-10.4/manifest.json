@@ -1,0 +1,817 @@
+{
+  "format": "a2-ml2-bundle",
+  "schema_version": 2,
+  "bundle_id": "moscow-urban-2026-11-10.4",
+  "created_at": "2026-11-10T18:06:13.687001Z",
+  "parser_version": "ml2-urban-0.2.0",
+  "acceptance_state": "accepted",
+  "accepted_by": "ML2 exact-record ownership correction; no new source promotion",
+  "accepted_at": "2026-11-10T18:06:13.687001Z",
+  "synthetic": false,
+  "geographic_scope": [
+    "moscow"
+  ],
+  "valid_from": "2026-11-01",
+  "valid_to": "2026-11-30",
+  "timezone": "Europe/Moscow",
+  "grids": [
+    {
+      "grid_id": "moscow-utm37n-1km-v1",
+      "city_id": "moscow",
+      "crs": "EPSG:32637",
+      "spacing_m": 1000,
+      "origin_x": 0.0,
+      "origin_y": 0.0,
+      "version": 1
+    }
+  ],
+  "graph_version": "osm_geofabrik.central-fed-district-261107:osm-walk-network-v1:main-component",
+  "road_graph_version": "osm_geofabrik.central-fed-district-261107:osm-road-network-v1:main-component",
+  "timetables": [
+    {
+      "timetable_id": "mos-ground-transport-gtfs-20261110",
+      "format": "gtfs",
+      "path": "processed/gtfs/mos_ground_transport.gtfs-20261110.gtfs-repair-v1.zip",
+      "sha256": "681afec73b21f8538a675194c95595093dbde03e95cfd72df0b4ef1f4114b2bc",
+      "dataset_ids": [
+        "mos_ground_transport.60663-20260504",
+        "mos_ground_transport.60662-20261005",
+        "mos_ground_transport.60664-20261005",
+        "mos_ground_transport.60665-20261005",
+        "mos_ground_transport.60666-20261005",
+        "mos_ground_transport.60661-20261023"
+      ],
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "unknown_dates": [
+        "2026-11-04"
+      ],
+      "modes": [
+        "bus",
+        "tram",
+        "cable_tram"
+      ],
+      "qa_report": "data/manifests/qa/mos_ground_transport.gtfs-20261110.json",
+      "limitations": [
+        "Только наземный транспорт: метро, МЦД и электричек нет",
+        "Нет calendar_dates: 4 ноября (праздник) — сервис неизвестен",
+        "Наборы из разных релизов: 5,3 млн строк времени по остановкам без рейса отброшены",
+        "У 9 направлений две версии расписания с одинаковыми отправлениями: частоту считать по уникальным отправлениям"
+      ]
+    }
+  ],
+  "source_versions": [
+    {
+      "source_id": "osm_geofabrik",
+      "dataset_id": "osm_geofabrik.central-fed-district-261107",
+      "retrieved_at": "2026-11-08T20:44:13.056842Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "d28d118c9269138ae33ea6561d4e29e492bd9954e6dd088f80b7a3b1372b77f2",
+        "size_bytes": 884829631
+      },
+      "license": {
+        "name": "ODbL-1.0",
+        "url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "status": "permitted",
+        "attribution": "© OpenStreetMap contributors"
+      },
+      "publication_date": "2026-11-07"
+    },
+    {
+      "source_id": "ghsl_pop",
+      "dataset_id": "ghsl_pop.e2025-r2023a-100m-r3c21",
+      "retrieved_at": "2026-11-08T20:43:58.174941Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "31605219ef3125f41f5ed016fe3fe99985d6ea1e1cad601f44b9650eed1413d2",
+        "size_bytes": 25487186
+      },
+      "license": {
+        "name": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "status": "permitted",
+        "attribution": "Schiavina M. et al., GHS-POP R2023A, European Commission JRC"
+      },
+      "publication_date": "2023-04-01"
+    },
+    {
+      "source_id": "ourairports",
+      "dataset_id": "ourairports.airports-20261108",
+      "retrieved_at": "2026-11-08T13:42:04.183446Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "5754df21f25cb08d2def8a80b3eb609ddc52a4217afa8eb48280b6428c06e78f",
+        "size_bytes": 12758284
+      },
+      "license": {
+        "name": "Public Domain",
+        "url": "https://ourairports.com/data/",
+        "status": "permitted",
+        "attribution": null
+      },
+      "publication_date": null
+    },
+    {
+      "source_id": "mgfoms_med_org",
+      "dataset_id": "mgfoms_med_org.20261108",
+      "retrieved_at": "2026-11-08T20:46:10.485465Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "18ca95c06f275b9256dbf61481c3dd4d4f6a9c7c49b0fec6aada753a074d17c0",
+        "size_bytes": 2838103
+      },
+      "license": {
+        "name": "Общедоступная официальная информация государственного учреждения: используются только факты (ст. 1259 ГК РФ)",
+        "url": "https://www.mgfoms.ru/",
+        "status": "permitted",
+        "attribution": "МГФОМС, mgfoms.ru"
+      },
+      "publication_date": null
+    },
+    {
+      "source_id": "obrnadzor_accreditation",
+      "dataset_id": "obrnadzor_accreditation.20261108",
+      "retrieved_at": "2026-11-08T15:47:36.873635Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "116ecc476619a89de6d2aea2b9eec9802e9f341374bb52cb5cd9bbc862d91bc6",
+        "size_bytes": 352506550
+      },
+      "license": {
+        "name": "Открытые данные федерального органа исполнительной власти: используются только факты (ст. 1259 ГК РФ)",
+        "url": "https://isga.obrnadzor.gov.ru/",
+        "status": "permitted",
+        "attribution": "Рособрнадзор, ИС ГА"
+      },
+      "publication_date": "2026-11-08"
+    },
+    {
+      "source_id": "mos_ground_transport",
+      "dataset_id": "mos_ground_transport.60663-20260504",
+      "retrieved_at": "2026-11-09T20:46:27Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "2f23c19f89addf9f6bbb4fa9d51b8cee5de034d9b84905ea61f9a25005d72d40",
+        "size_bytes": 440
+      },
+      "license": {
+        "name": "Открытые данные Правительства Москвы (data.mos.ru), Методические рекомендации по публикации открытых данных v3.0; лицензия в паспорте не указана — общедоступная информация (149-ФЗ, ст. 7), источник указывается",
+        "url": "https://data.mos.ru/",
+        "status": "permitted",
+        "attribution": "Департамент транспорта и развития дорожно-транспортной инфраструктуры города Москвы, data.mos.ru"
+      },
+      "publication_date": "2026-05-04"
+    },
+    {
+      "source_id": "mos_ground_transport",
+      "dataset_id": "mos_ground_transport.60662-20261005",
+      "retrieved_at": "2026-11-09T20:46:06Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "85f5e1241854b3b1c012ae4ab78d2cf3400020147135b2984970dddf2c012199",
+        "size_bytes": 655461
+      },
+      "license": {
+        "name": "Открытые данные Правительства Москвы (data.mos.ru), Методические рекомендации по публикации открытых данных v3.0; лицензия в паспорте не указана — общедоступная информация (149-ФЗ, ст. 7), источник указывается",
+        "url": "https://data.mos.ru/",
+        "status": "permitted",
+        "attribution": "Департамент транспорта и развития дорожно-транспортной инфраструктуры города Москвы, data.mos.ru"
+      },
+      "publication_date": "2026-10-05"
+    },
+    {
+      "source_id": "mos_ground_transport",
+      "dataset_id": "mos_ground_transport.60664-20261005",
+      "retrieved_at": "2026-11-09T20:46:02Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "2e90d587d7d1ccc63717c63f2eb51ba243d507bda34e7b2eeabc23eb2b2de7d4",
+        "size_bytes": 24612
+      },
+      "license": {
+        "name": "Открытые данные Правительства Москвы (data.mos.ru), Методические рекомендации по публикации открытых данных v3.0; лицензия в паспорте не указана — общедоступная информация (149-ФЗ, ст. 7), источник указывается",
+        "url": "https://data.mos.ru/",
+        "status": "permitted",
+        "attribution": "Департамент транспорта и развития дорожно-транспортной инфраструктуры города Москвы, data.mos.ru"
+      },
+      "publication_date": "2026-10-05"
+    },
+    {
+      "source_id": "mos_ground_transport",
+      "dataset_id": "mos_ground_transport.60665-20261005",
+      "retrieved_at": "2026-11-09T20:46:23Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "d43604a6aa024838cd4db6e06d9b7e28f8d04932ac92da6cbb7b8592ff9b0fb3",
+        "size_bytes": 1349323
+      },
+      "license": {
+        "name": "Открытые данные Правительства Москвы (data.mos.ru), Методические рекомендации по публикации открытых данных v3.0; лицензия в паспорте не указана — общедоступная информация (149-ФЗ, ст. 7), источник указывается",
+        "url": "https://data.mos.ru/",
+        "status": "permitted",
+        "attribution": "Департамент транспорта и развития дорожно-транспортной инфраструктуры города Москвы, data.mos.ru"
+      },
+      "publication_date": "2026-10-05"
+    },
+    {
+      "source_id": "mos_ground_transport",
+      "dataset_id": "mos_ground_transport.60666-20261005",
+      "retrieved_at": "2026-11-09T20:45:59Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "c2e462715926986340ee795eeefecff963c3e7ae6fbfa6309de1c469f0a2d069",
+        "size_bytes": 15483
+      },
+      "license": {
+        "name": "Открытые данные Правительства Москвы (data.mos.ru), Методические рекомендации по публикации открытых данных v3.0; лицензия в паспорте не указана — общедоступная информация (149-ФЗ, ст. 7), источник указывается",
+        "url": "https://data.mos.ru/",
+        "status": "permitted",
+        "attribution": "Департамент транспорта и развития дорожно-транспортной инфраструктуры города Москвы, data.mos.ru"
+      },
+      "publication_date": "2026-10-05"
+    },
+    {
+      "source_id": "mos_ground_transport",
+      "dataset_id": "mos_ground_transport.60661-20261023",
+      "retrieved_at": "2026-11-09T20:47:02Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "dfa4230968f16270b751d707a826a23a882685fa6bbaf69a659ccf928e2bebea",
+        "size_bytes": 144495574
+      },
+      "license": {
+        "name": "Открытые данные Правительства Москвы (data.mos.ru), Методические рекомендации по публикации открытых данных v3.0; лицензия в паспорте не указана — общедоступная информация (149-ФЗ, ст. 7), источник указывается",
+        "url": "https://data.mos.ru/",
+        "status": "permitted",
+        "attribution": "Департамент транспорта и развития дорожно-транспортной инфраструктуры города Москвы, data.mos.ru"
+      },
+      "publication_date": "2026-10-23"
+    }
+  ],
+  "files": {
+    "evidence": {
+      "path": "evidence.json",
+      "sha256": "065dde007d445f38aaba9c545387cf8872c14a659bb53e04a2667bf92c8ea2a4",
+      "rows": 39834
+    },
+    "territories": {
+      "path": "territories.json",
+      "sha256": "b8d6cb2970455c2a4652b70f773e59ef83f3df04faca806fac25b0fd55238236",
+      "rows": 13
+    },
+    "population_cells": {
+      "path": "population_cells.json",
+      "sha256": "755e5734efa97ef61b367fee45e0cbfa1156a0e6aa85b3b3e50e22db9d3fab48",
+      "rows": 2931
+    },
+    "sample_points": {
+      "path": "sample_points.json",
+      "sha256": "81477f8d585c82c5c1e88c72b858bb65550772c58bb36ca25e6116de49be98a8",
+      "rows": 2361
+    },
+    "destinations": {
+      "path": "destinations.json",
+      "sha256": "7f66bcb4361fd19882c3b6ece86e125b78864fd95749ab7158c7a855b6062bef",
+      "rows": 9622
+    },
+    "category_ownership": {
+      "path": "category_ownership.json",
+      "sha256": "de0289c397e79d557ae5b28338b0e1a7a0ceb5bbe3264845505ecb13024ea0d6",
+      "rows": 9622
+    },
+    "access_nodes": {
+      "path": "access_nodes.json",
+      "sha256": "9169bafd044d8a6522d599b8cebd441a1de31929aafba161eaf92738cef59614",
+      "rows": 27919
+    },
+    "freight_nodes": {
+      "path": "freight_nodes.json",
+      "sha256": "6e798dcc7db2dd53b48aefa7a884f2d0b8126426257d52266352f3bdf6e56a3a",
+      "rows": 70
+    },
+    "freight_sites": {
+      "path": "freight_sites.json",
+      "sha256": "fc6bd8b7a898de085d2822ca8dfe69ef3bbe740af52b8d72791f9a69d8f192a0",
+      "rows": 2222
+    },
+    "walk_connectors": {
+      "path": "walk_connectors.json",
+      "sha256": "0336ecf935cdc4b3ff971db86f84be8e90f94665dd17bdcd022efcc08b3581c3",
+      "rows": 11983
+    },
+    "transit_stops": {
+      "path": "transit_stops.json",
+      "sha256": "6bd1918a5504733b573957860e95b14a06446d9e23739c508a12114e8f287538",
+      "rows": 13785
+    },
+    "qa_report": {
+      "path": "qa_report.json",
+      "sha256": "d570416725eedec30e4981abb2f5ce06d677663b45e1cc7992623a3708a48d98",
+      "rows": 25
+    }
+  },
+  "coverage": [
+    {
+      "collection": "territories",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "complete",
+      "confirmed_absence": false,
+      "reason": "Городской округ и 12 района(ов) из OSM",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "population_cells",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "complete",
+      "confirmed_absence": false,
+      "reason": "Все ячейки сетки 1 км, пересекающие границу; население GHSL по центроидам пикселей",
+      "evidence_ids": [
+        "ghsl:ghsl_pop.e2025-r2023a-100m-r3c21",
+        "osm:dataset:osm_geofabrik.central-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "sample_points",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "complete",
+      "confirmed_absence": false,
+      "reason": "По одной точке на ячейку со зданием; исключённые ячейки с причиной и населением в QA",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "access_nodes",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": "walk",
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "complete",
+      "confirmed_absence": false,
+      "reason": "Вход на главную связную компоненту пешеходной сети OSM v1 у каждой точки и объекта",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "moscow",
+      "category": "adult_polyclinic",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Поликлиники с прикреплением, подведомственные ДЗМ, по справочнику МГФОМС с координатами фонда; ведомственные и частные не входят",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107",
+        "mgfoms_med_org:dataset:mgfoms_med_org.20261108"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "moscow",
+      "category": "child_polyclinic",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Поликлиники с прикреплением, подведомственные ДЗМ, по справочнику МГФОМС с координатами фонда; ведомственные и частные не входят",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107",
+        "mgfoms_med_org:dataset:mgfoms_med_org.20261108"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "moscow",
+      "category": "kindergarten",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Только дошкольные отделения государственных школ, названные в OSM по номеру школы; отдельные детсады не подтверждены",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107",
+        "obrnadzor_accreditation:dataset:obrnadzor_accreditation.20261108"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "moscow",
+      "category": "school",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Государственные школы по реестру аккредитации: адрес организации и корпуса OSM с номером этой школы в названии (до 5 км); корпуса без номера не подтверждены",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107",
+        "obrnadzor_accreditation:dataset:obrnadzor_accreditation.20261108"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "moscow",
+      "category": "college_university",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Государственные колледжи и вузы по реестру аккредитации Рособрнадзора; корпуса — по названиям в OSM; частные, ведомственные и неаккредитованные не входят",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107",
+        "obrnadzor_accreditation:dataset:obrnadzor_accreditation.20261108"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "moscow",
+      "category": "rail_terminal",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "moscow",
+      "category": "bus_terminal",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "moscow",
+      "category": "airport",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "IATA и регулярное сообщение OurAirports в радиусе60км подтверждают кандидатов, но не полный официальный перечень пассажирских аэропортов, обслуживающих Москву, включая объекты за границей и за радиусом выгрузки. Официальное исчерпывающее основание и его применимость к датам01–30.11.2026 не подтверждены; полнота категории, ближайший объект по всей категории и индекс unknown.",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107",
+        "ourairports:dataset:ourairports.airports-20261108"
+      ]
+    },
+    {
+      "collection": "destinations",
+      "city_id": "moscow",
+      "category": "shopping_center",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Правила osm-category-rules-v1 по OSM в 10 км от границы; сверки со справочником нет",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "category_ownership",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Подтверждены реестрами: adult_polyclinic, child_polyclinic, college_university, kindergarten, school",
+      "evidence_ids": [
+        "mgfoms_med_org:dataset:mgfoms_med_org.20261108",
+        "obrnadzor_accreditation:dataset:obrnadzor_accreditation.20261108"
+      ]
+    },
+    {
+      "collection": "access_nodes",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": "road",
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "complete",
+      "confirmed_absence": false,
+      "reason": "Вход на главную связную компоненту дорожной сети OSM v1 (грузовой подъезд) у каждого грузового узла и площадки",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "freight_nodes",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": "port",
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "unknown",
+      "confirmed_absence": false,
+      "reason": "Портовые территории OSM без записи о морском порте: в карантине",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "freight_nodes",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": "pipeline_terminal",
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "unknown",
+      "confirmed_absence": false,
+      "reason": "Терминалы магистральных трубопроводов по правилам OSM не найдены; отсутствие не подтверждено",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "freight_nodes",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": "rail_terminal",
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "unknown",
+      "confirmed_absence": false,
+      "reason": "Ж/д станции OSM в карантине: грузовые операции не подтверждены открытым реестром",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "freight_nodes",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": "logistics_terminal",
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Логистические центры не собраны; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "freight_nodes",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": "airport",
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Грузовые аэропорты не собраны; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "freight_sites",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Промзоны OSM от 0,5 га, склады и производственные здания от 1000 м² вне промзон и узлов (freight-osm-rules-v2); реестра предприятий нет, веса равные",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "freight_compatibility",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "unknown",
+      "confirmed_absence": false,
+      "reason": "Совместимость груза, услуги и подъезда не подтверждена открытыми данными операторов; строки не созданы",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107"
+      ]
+    },
+    {
+      "collection": "pipeline_connections",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Только межгород; соединения и направления не собраны, терминалы города — в freight_nodes",
+      "evidence_ids": []
+    },
+    {
+      "collection": "stops",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "trips",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "stop_times",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "calendars",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "transfers",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "reference_edges",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "minimum_transfers",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "traffic_profiles",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": null,
+      "valid_to": null,
+      "status": "not_collected",
+      "confirmed_absence": false,
+      "reason": "Не входит в этот bundle; пустой список не означает отсутствие",
+      "evidence_ids": []
+    },
+    {
+      "collection": "stops",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": "public_transport",
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Официальный GTFS наземного транспорта data.mos.ru (gtfs-repair-v1): автобус и трамвай; без метро, МЦД, электричек и исключений календаря",
+      "evidence_ids": [
+        "gtfs:mos-ground-transport-gtfs-20261110"
+      ]
+    },
+    {
+      "collection": "trips",
+      "city_id": "moscow",
+      "category": null,
+      "freight_kind": null,
+      "mode": "public_transport",
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "Официальный GTFS наземного транспорта data.mos.ru (gtfs-repair-v1): автобус и трамвай; без метро, МЦД, электричек и исключений календаря",
+      "evidence_ids": [
+        "gtfs:mos-ground-transport-gtfs-20261110"
+      ]
+    }
+  ],
+  "qa_report": "qa_report.json",
+  "limitations": [
+    "Границы — OSM (relation городского округа), не официальный реестр границ МО",
+    "Население — модельная оценка GHSL R2023A эпохи 2025, не перепись",
+    "Поликлиники, детсады, школы, колледжи и вузы приняты только по официальным реестрам; объекты OSM без записи реестра — в карантине",
+    "Ж/д вокзалы, автовокзалы и ТЦ отобраны правилами OSM v1 без сверки со справочником",
+    "Вход на граф — проекция на пешеходную сеть OSM v1, не размеченный вход здания",
+    "Период применимости 01–30.11.2026 заявлен ML2 для снимка OSM от 07.11.2026",
+    "Грузовые узлы: порт — портовые территории OSM и объекты со словом «порт» в названии в границе города с зарегистрированным морским портом; объекты, найденные только по скрытому в разметке перечню операторов Росморпорта, в карантине; нефтяные терминалы — по названиям OSM; ж/д станции в карантине: грузовые операции не подтверждены",
+    "Узлы за границей города (терминалы порта в соседних муниципалитетах) не включены",
+    "Грузовые площадки — промзоны и склады OSM по правилам freight-osm-rules-v2, равные веса; реестра предприятий и объёмов нет",
+    "Совместимость груза, услуги и подъезда неизвестна; въезд — проекция внутренней точки контура на дорожную сеть OSM v1, не размеченные ворота; ограничения массы не учтены",
+    "Связи точек и объектов с пешеходной сетью проверены геометрией (walk-connector-geometry-v2); пересечение здания, воды, железной дороги или магистрали оставляет связь unknown; секунды — по скорости принятого пешеходного профиля",
+    "Расписания: наземный транспорт Москвы — официальный GTFS data.mos.ru вне bundle (манифест timetables, sha256); метро, МЦД и электричек нет; 4 ноября — unknown",
+    "Revision .3: airport roster partial for01–30Nov2026. OurAirports/IATA and60km proximity do not prove an exhaustive officially city-serving roster; no minimum/index readiness follows.",
+    "All destination identities/statuses, source versions, physical geometry, population, grids, approaches, other category coverage and timetable references are unchanged.",
+    "Ownership correction: 5 originally accepted public objects quarantined using exact historical individual registry hashes; legal-form classifier fc7e4da. Raw observed registry is not substituted for the historical source version.",
+    "Uncertain RosNOU physical institutional identity is not assigned the linked registry institution's private ownership.",
+    "PK50 org15a60264-0f9e-6fd8-205d-dd9f4619f6e2 current record hash differs: two historical accepted objects preserved without a new10Nov2026 ownership/completeness/index admission."
+  ]
+}
