@@ -57,15 +57,16 @@ test("real walk: browser → scoped PostgreSQL job → worker → partial saved 
 
   await expect(page.getByRole("status")).toContainText("Результат получен", { timeout: 40_000 });
   const card = page.locator(".api-card");
-  await expect(card).toContainText("Время найденного пути");
-  await expect(card).toContainText("9,1 мин");
-  await expect(card).toContainText("Минимальное время не подтверждено");
-  await expect(card).toContainText("модельная скорость 5 км/ч");
-  await expect(card).toContainText("не участвует в полном рейтинге");
-  await expect(card).not.toContainText("Для результата указано дополнительное ограничение");
-  await expect(card).not.toContainText("urban_h_seconds");
-  await expect(card).not.toContainText("best_observed_journey_seconds");
-  await expect(card).not.toContainText("urban_accessibility_index");
+  const observedTime = card.locator(".api-measure").filter({ hasText: "Время найденного пути" });
+  await expect(observedTime).toHaveCount(1);
+  await expect(observedTime).toContainText("9,1 мин");
+  await expect(card.getByText("Минимальное время не подтверждено", { exact: false }).first()).toBeVisible();
+  await expect(card.getByText("модельная скорость 5 км/ч", { exact: false })).toBeVisible();
+  await expect(card.getByText("не участвует в полном рейтинге", { exact: false })).toBeVisible();
+  await expect(card.getByText("Для результата указано дополнительное ограничение", { exact: false })).toHaveCount(0);
+  for (const rawName of ["urban_h_seconds", "best_observed_journey_seconds", "urban_accessibility_index"]) {
+    await expect(card.locator(".api-measure").filter({ hasText: rawName })).toHaveCount(0);
+  }
 
   const jobResponse = await context.request.get(`/api/v1/jobs/${accepted.job_id}`);
   expect(jobResponse.status()).toBe(200);
@@ -105,7 +106,8 @@ test("real walk: browser → scoped PostgreSQL job → worker → partial saved 
   await testInfo.attach("real-walk-desktop", { path: testInfo.outputPath("real-walk-desktop.png"), contentType: "image/png" });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(card).toBeVisible();
-  await expect(card).toContainText("Время найденного пути");
+  await expect(observedTime).toHaveCount(1);
+  await observedTime.scrollIntoViewIfNeeded();
   await expect(page.locator("body")).toHaveJSProperty("scrollWidth", 390);
   await page.screenshot({ path: testInfo.outputPath("real-walk-mobile.png"), fullPage: true });
   await testInfo.attach("real-walk-mobile", { path: testInfo.outputPath("real-walk-mobile.png"), contentType: "image/png" });
