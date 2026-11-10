@@ -11,8 +11,9 @@ codeshare identity resolution, freight or network-completeness assertion.
 Multiple requested types use documented all-types search plus local filtering;
 the search documentation does not promise comma-separated transport filters.
 An empty response never proves no route. Cached responses are expiring provider
-observations, not accepted immutable bundles. Credentials and quota are supplied
-explicitly by the operator; quotas are per instance, not shared across workers.
+observations, not accepted immutable bundles. Credentials and the shared durable
+quota guard are supplied explicitly by the operator. The local request counter is
+only an additional per-instance ceiling, never daily authorization.
 Rate/TTL defaults are conservative engineering settings, not tariff claims.
 The caller owns AsyncClient lifetime and must not install request-logging hooks
 that disclose Authorization headers. No URLs from response data are followed.
@@ -28,6 +29,7 @@ from collections.abc import Awaitable, Callable
 from datetime import UTC, date, datetime, timedelta
 from email.utils import parsedate_to_datetime
 from typing import Annotated, Literal, Self
+from uuid import uuid4
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import httpx
@@ -36,12 +38,21 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    HttpUrl,
     JsonValue,
     SecretStr,
     ValidationError,
     field_validator,
     model_validator,
 )
+
+from a2_api.core.rasp_quota import (
+    AttemptPermit,
+    WireAttemptQuota,
+    credential_fingerprint,
+    request_fingerprint,
+)
+from a2_api.providers.rasp_capture import CaptureCallback, PageCapture
 
 Host = Literal["api.rasp.yandex-net.ru", "api.rasp.yandex.net"]
 Transport = Literal["plane", "train", "suburban", "bus", "water", "helicopter"]
@@ -50,6 +61,7 @@ ErrorCode = Literal[
     "disabled",
     "invalid_request",
     "quota_exceeded",
+    "quota_unavailable",
     "timeout",
     "rate_limited",
     "upstream_error",
@@ -143,6 +155,19 @@ class RaspDepartures(_DTO):
     completed_dates: list[date]
 
 
+class RaspCopyright(_DTO):
+    """Provider metadata only. HTML logo strings are never executed or followed."""
+
+    url: HttpUrl
+    text: Annotated[str, Field(min_length=1, max_length=8192)]
+    logo_vm: Annotated[str, Field(max_length=8192)] | None = None
+    logo_vd: Annotated[str, Field(max_length=8192)] | None = None
+    logo_hy: Annotated[str, Field(max_length=8192)] | None = None
+    logo_hd: Annotated[str, Field(max_length=8192)] | None = None
+    logo_vy: Annotated[str, Field(max_length=8192)] | None = None
+    logo_hm: Annotated[str, Field(max_length=8192)] | None = None
+
+
 class _WireModel(BaseModel):
     # Upstream adds unrelated fields (prices, logos, carrier contacts). They are
     # neither persisted nor fetched, and are not part of our public own DTOs.
@@ -216,6 +241,8 @@ class RaspProvider:
         max_response_bytes: int = 2 * 1024 * 1024,
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        wire_quota: WireAttemptQuota | None = None,
+        on_page_capture: CaptureCallback | None = None,
     ) -> None:
         if host not in ("api.rasp.yandex-net.ru", "api.rasp.yandex.net"):
             raise ValueError("Unsupported provider host")
@@ -241,6 +268,9 @@ class RaspProvider:
         if key and any(character.isspace() for character in key):
             raise ValueError("Invalid provider credential")
         self._key = SecretStr(key) if key else None
+        self._credential_fingerprint = credential_fingerprint(key) if key else None
+        self._wire_quota = wire_quota
+        self._on_page_capture = on_page_capture
         self._client, self._host = client, host
         self._url = f"https://{host}/v3.0/search/"
         self._timeout, self._operation_timeout = timeout_seconds, operation_timeout_seconds
@@ -254,6 +284,7 @@ class RaspProvider:
         self._rate_lock = asyncio.Lock()
         self._semaphore = asyncio.Semaphore(max_concurrency)
         self._cache: OrderedDict[str, tuple[float, RaspDepartures]] = OrderedDict()
+        self._copyright_cache: tuple[float, RaspCopyright] | None = None
 
     async def intercity_departures(
         self,
@@ -455,13 +486,41 @@ class RaspProvider:
             self._next_request = self._clock() + self._interval
 
     async def _request(self, params: dict[str, str]) -> _Page:
+        try:
+            return _Page.model_validate(await self._request_json("/v3.0/search/", params))
+        except (ValueError, ValidationError):
+            raise RaspError("invalid_response") from None
+
+    async def copyright(self) -> RaspCopyright:
+        """Copyright is a real API request and consumes the same shared allowance."""
+        if self._key is None:
+            raise RaspError("disabled")
+        cached = self._copyright_cache
+        if cached is not None and cached[0] > self._clock():
+            return cached[1].model_copy(deep=True)
+        try:
+            async with asyncio.timeout(self._operation_timeout):
+                body = await self._request_json("/v3.0/copyright/", {"format": "json"})
+            if not isinstance(body, dict):
+                raise ValueError
+            result = RaspCopyright.model_validate(body["copyright"])
+        except (ValueError, ValidationError, KeyError):
+            raise RaspError("invalid_response") from None
+        except TimeoutError:
+            raise RaspError("timeout", retryable=True) from None
+        self._copyright_cache = self._clock() + self._ttl, result.model_copy(deep=True)
+        return result
+
+    async def _request_json(self, path: str, params: dict[str, str]) -> object:
         assert self._key is not None
+        if path not in {"/v3.0/search/", "/v3.0/copyright/"}:
+            raise RaspError("invalid_request")
         for attempt in range(3):
             async with self._semaphore:
                 await self._admit()
                 request = self._client.build_request(
                     "GET",
-                    self._url,
+                    f"https://{self._host}" + path,
                     params=params,
                     headers={
                         "Authorization": self._key.get_secret_value(),
@@ -472,9 +531,33 @@ class RaspProvider:
                 if (
                     request.url.scheme != "https"
                     or request.url.host != self._host
-                    or (request.url.path != "/v3.0/search/" or dict(request.url.params) != params)
+                    or request.url.path != path
+                    or sorted(request.url.params.multi_items()) != sorted(params.items())
                 ):
                     raise RaspError("invalid_request")
+                if self._wire_quota is None or not self._wire_quota.durable:
+                    raise RaspError("quota_unavailable")
+                assert self._credential_fingerprint is not None
+                attempt_id = str(uuid4())
+                try:
+                    permit = await self._wire_quota.reserve_attempt(
+                        attempt_id=attempt_id,
+                        credential_fingerprint=self._credential_fingerprint,
+                        request_fingerprint=request_fingerprint(self._host, path, params),
+                        max_wire_seconds=self._timeout,
+                    )
+                except Exception:
+                    raise RaspError("quota_unavailable") from None
+                if permit is None:
+                    raise RaspError("quota_exceeded")
+                if (
+                    not isinstance(permit, AttemptPermit)
+                    or permit.reservation_id != attempt_id
+                    or not permit.usable()
+                ):
+                    raise RaspError("quota_unavailable")
+                # Ledger latency must not shorten the next local rate interval.
+                self._next_request = max(self._next_request, self._clock() + self._interval)
                 try:
                     async with asyncio.timeout(self._timeout):
                         response = await self._client.send(
@@ -517,9 +600,25 @@ class RaspProvider:
             if status != 200:
                 raise RaspError("upstream_error")
             try:
-                return _Page.model_validate(json.loads(body))
+                decoded = json.loads(body)
             except (ValueError, ValidationError):
                 raise RaspError("invalid_response") from None
+            if self._on_page_capture is not None:
+                if self._key.get_secret_value().encode() in body:
+                    raise RaspError("invalid_response")
+                capture = PageCapture(
+                    endpoint=f"https://{self._host}" + path,
+                    params=tuple(sorted(params.items())),
+                    raw_json=bytes(body),
+                    fetched_at=datetime.now(UTC),
+                    reservation_id=permit.reservation_id,
+                    request_fingerprint=request_fingerprint(self._host, path, params),
+                )
+                try:
+                    await self._on_page_capture(capture)
+                except Exception:
+                    raise RaspError("invalid_response") from None
+            return decoded
         raise AssertionError("Unreachable retry state")
 
     @staticmethod

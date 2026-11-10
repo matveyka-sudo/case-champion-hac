@@ -28,6 +28,9 @@ BATCH_EXTENSION = json.loads(
 SCENARIO_SCOPE_EXTENSION = json.loads(
     (Path(__file__).parent / "fixtures/scenario_scope_extension.json").read_text()
 )
+RASP_QUOTA_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/rasp_quota_extension.json").read_text()
+)
 
 
 def scenario_scope_counter(expected, kind):
@@ -123,10 +126,18 @@ def test_all_185_existing_signatures_and_defaults():
         "a2_api.db.scenario_journeys:scenario_journeys",
         "a2_api.db.repositories.jobs:JobRepository._validate_scenario_semantics",
     }
+    assert set(RASP_QUOTA_EXTENSION["signatures"]) == {
+        "a2_api.providers.rasp:RaspError",
+        "a2_api.providers.rasp:RaspError.__init__",
+        "a2_api.providers.rasp:RaspIssue",
+        "a2_api.providers.rasp:RaspProvider",
+        "a2_api.providers.rasp:RaspProvider.__init__",
+    }
     for path, signature in (
         BASELINE["signatures"]
         | BATCH_EXTENSION["signatures"]
         | SCENARIO_SCOPE_EXTENSION["signatures"]
+        | RASP_QUOTA_EXTENSION["signatures"]
     ).items():
         module, qualified = path.split(":")
         obj = importlib.import_module(module)
@@ -195,9 +206,15 @@ def test_sql_literals_unchanged_and_confined_to_database_layer():
         strings.extend(found)
     assert BATCH_EXTENSION["module"] == "db/repositories/checkpoints.py"
     assert SCENARIO_SCOPE_EXTENSION["module"] == "db/repositories/runs.py"
+    if "additional_modules" in SCENARIO_SCOPE_EXTENSION:
+        assert set(SCENARIO_SCOPE_EXTENSION["additional_modules"]) == {
+            "db/repositories/scenarios.py"
+        }
+    assert RASP_QUOTA_EXTENSION["module"] == "db/repositories/rasp_quota.py"
     assert collections.Counter(strings) == scenario_scope_counter(
         collections.Counter(BASELINE["sql_literals"])
-        + collections.Counter(BATCH_EXTENSION["sql_literals"]),
+        + collections.Counter(BATCH_EXTENSION["sql_literals"])
+        + collections.Counter(RASP_QUOTA_EXTENSION["sql_literals"]),
         "sql_literals",
     )
 
@@ -339,6 +356,7 @@ def test_sql_parameter_binding_and_transaction_options_unchanged():
                 )
     assert collections.Counter(hashes) == scenario_scope_counter(
         collections.Counter(BASELINE["sql_call_hashes"])
-        + collections.Counter(BATCH_EXTENSION["sql_call_hashes"]),
+        + collections.Counter(BATCH_EXTENSION["sql_call_hashes"])
+        + collections.Counter(RASP_QUOTA_EXTENSION["sql_call_hashes"]),
         "sql_call_hashes",
     )

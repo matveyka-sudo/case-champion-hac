@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 
 import httpx
 import pytest
+from rasp_quota_helpers import TestOnlyQuota
 
 START = datetime(2026, 11, 10, 8, 30, tzinfo=UTC)
 SECRET = "synthetic-private-key"
@@ -52,6 +53,7 @@ def page(rows=(), *, total=None, offset=0, limit=100, intervals=(), request=None
 
 
 def provider(client, **options):
+    options.setdefault("wire_quota", TestOnlyQuota())
     return module().RaspProvider(client, api_key=SECRET, **options)
 
 
@@ -67,7 +69,7 @@ async def test_missing_key_is_disabled_without_http():
         pytest.fail("Disabled provider performed HTTP")
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(no_http)) as client:
-        adapter = module().RaspProvider(client, api_key=None)
+        adapter = module().RaspProvider(client, api_key=None, wire_quota=TestOnlyQuota())
         with pytest.raises(module().RaspError) as error:
             await query(adapter)
         assert error.value.code == "disabled"
