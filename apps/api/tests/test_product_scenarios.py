@@ -247,8 +247,8 @@ def test_unknown_positive_population_never_reports_exact_affected_count():
     assert any(row.outcome == "unknown" and row.delta is None for row in result.deltas)
 
 
-def partial_timetable_case():
-    context, facts, document, baseline, _ = make_case()
+def partial_timetable_case(*, unknown_population=False):
+    context, facts, document, baseline, _ = make_case(unknown_population=unknown_population)
     table = replace(
         facts.timetable,
         scope=replace(
@@ -305,7 +305,11 @@ def test_partial_timetable_keeps_known_route_times_without_proven_minimum_saving
         for row in result.deltas
         if row.before_id in times
     )
-    assert all(score.value is None and not score.ranking_eligible for score in result.after.scores)
+    assert all(
+        score.value is None and not score.ranking_eligible
+        for score in result.after.scores
+        if score.name != "observed_route_accessibility"
+    )
 
 
 @pytest.mark.asyncio
@@ -1168,7 +1172,7 @@ def test_changed_point_time_kind_or_unit_cannot_bypass_chain_proof_and_keep_full
     assert all(
         score.value > 0 and score.completeness == "full"
         for score in forged.after.scores
-        if score.subject.point_id == "p1"
+        if score.subject.point_id == "p1" and score.name != "observed_route_accessibility"
     )
     with pytest.raises(DomainError, match="time task identity"):
         _validate_scenario_semantics(
@@ -1474,10 +1478,15 @@ def test_numeric_partial_aggregate_can_keep_partial_known_operands_in_complete_i
         claim, baseline=baseline, inputs=facts, document=document, profile_id=document.profile_id
     )
     payload = result.model_dump(mode="json")
+    observed_ids = {
+        row["score_id"]
+        for row in payload["after"]["scores"]
+        if row["name"] == "observed_route_accessibility"
+    }
     for score in payload["after"]["scores"]:
         score.update(completeness="partial", ranking_eligible=False)
     for effect in payload["deltas"]:
-        if effect["kind"] == "score":
+        if effect["kind"] == "score" and effect["after_id"] not in observed_ids:
             effect.update(outcome="unknown", delta=None, reason_code="INCOMPARABLE_SCOPE")
     payload["status"] = "partial"
     partial = ScenarioResult.model_validate(payload)
@@ -1502,6 +1511,8 @@ def test_mixed_known_positive_and_proven_absent_category_remain_numeric(complete
     )
     payload = result.model_dump(mode="json")
     for score in payload["after"]["scores"]:
+        if score["name"] == "observed_route_accessibility":
+            continue
         if score["subject"]["category"] == "school":
             assert score["value"] == 0 and score["reason_code"] == "NO_FEASIBLE_ROUTE"
             assert not score["components"] and score["completeness"] == "full"
@@ -1513,6 +1524,7 @@ def test_mixed_known_positive_and_proven_absent_category_remain_numeric(complete
             row["score_id"]
             for row in payload["after"]["scores"]
             if row["reason_code"] == "NO_FEASIBLE_ROUTE"
+            or row["name"] == "observed_route_accessibility"
         }
         for effect in payload["deltas"]:
             if effect["kind"] == "score" and effect["after_id"] not in zero_ids:
@@ -1579,10 +1591,15 @@ def test_partial_label_cannot_invent_numeric_index_from_unknown_or_altered_immut
         if effect["after_id"] == changed:
             effect.update(outcome="unknown", delta=None, reason_code="INCOMPARABLE_SCOPE")
     if attack == "area_scale":
+        observed_ids = {
+            row["score_id"]
+            for row in payload["after"]["scores"]
+            if row["name"] == "observed_route_accessibility"
+        }
         for score in payload["after"]["scores"]:
             score.update(completeness="partial", ranking_eligible=False)
         for effect in payload["deltas"]:
-            if effect["kind"] == "score":
+            if effect["kind"] == "score" and effect["after_id"] not in observed_ids:
                 effect.update(outcome="unknown", delta=None, reason_code="INCOMPARABLE_SCOPE")
     payload["status"] = "partial"
     forged = ScenarioResult.model_validate(payload)

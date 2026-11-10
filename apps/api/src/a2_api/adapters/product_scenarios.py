@@ -71,8 +71,11 @@ def _project(
     computation: ScenarioComputation,
 ) -> Projection:
     out = Projection(context, _evidence(baseline, document))
+    observed_score_ids = frozenset(
+        score.score_id for score in baseline.scores if score.name == "observed_route_accessibility"
+    )
     for row in computation.urban:
-        project_urban(out, row.analysis)
+        project_urban(out, row.analysis, observed_score_ids=observed_score_ids)
     jobs = {row.job_id: row for row in document.inputs.intercity}
     for identity, intercity_result in computation.intercity:
         job = jobs[identity]
@@ -277,6 +280,8 @@ def _proposal(
         else []
     )
     limitations = set(feasibility.reasons)
+    if any(score.name == "observed_route_accessibility" for score in baseline.scores):
+        limitations.add("HYPOTHETICAL_SCENARIO_ROUTE_ESTIMATE")
     if DEMO_LIMITATIONS <= prepared.before.limitations:
         limitations.update(DEMO_LIMITATIONS)
     if feasibility.state == "unverified" and not turnaround_refs:

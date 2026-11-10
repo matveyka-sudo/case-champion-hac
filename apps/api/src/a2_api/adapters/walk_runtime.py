@@ -123,6 +123,7 @@ def executor_fingerprint() -> str:
         "a2_api.adapters.walk_batches",
         "a2_api.adapters.walk_observed",
         "a2_api.adapters.walk_map",
+        "a2_api.adapters.urban_map",
         "a2_api.adapters.walk_map_sources",
         "a2_api.adapters.result_evidence",
         "a2_api.adapters.evidence_groups",

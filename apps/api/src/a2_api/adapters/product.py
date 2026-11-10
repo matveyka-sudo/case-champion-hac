@@ -425,6 +425,11 @@ def calculate(
         raise unavailable("RUNTIME_TRANSPORT_INPUTS_REQUIRED")
     from a2_api.adapters.product_scenario_runtime import finish_analysis
 
+    if isinstance(inputs, UrbanInputs):
+        from a2_api.adapters.urban_map import accepted_urban_map
+
+        assert isinstance(request, UrbanPassengerRequest)
+        out.map_data = accepted_urban_map(snapshot, request)
     result = out.finish()
     if profile.demo_transport is not None:
         from a2_api.adapters.demo_map import attach_demo_result

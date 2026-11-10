@@ -197,6 +197,7 @@ async def test_bound_walk_compacts_only_after_map_attachment(tmp_path, monkeypat
     [
         "a2_api.adapters.result_evidence",
         "a2_api.adapters.evidence_groups",
+        "a2_api.adapters.urban_map",
         "a2_contracts.v2.evidence",
         "a2_contracts.v2.results",
         "a2_contracts.v2.scenarios",
