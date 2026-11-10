@@ -1,0 +1,26 @@
+# Explicit generated transport model only; production profiles keep their validators.
+services:
+  runtime-check:
+    environment:
+      A2_DEMO_TRANSPORT_ENABLED: "true"
+    mem_limit: 2g
+    memswap_limit: 2g
+
+  migrate:
+    environment:
+      A2_DEMO_TRANSPORT_ENABLED: "true"
+
+  api:
+    environment:
+      A2_DEMO_TRANSPORT_ENABLED: "true"
+    env_file:
+      - path: ${WAYDEX_ASSISTANT_ENV_FILE:?}
+        format: raw
+    mem_limit: 2g
+    memswap_limit: 2g
+
+  worker:
+    environment:
+      A2_DEMO_TRANSPORT_ENABLED: "true"
+    mem_limit: 2g
+    memswap_limit: 2g
