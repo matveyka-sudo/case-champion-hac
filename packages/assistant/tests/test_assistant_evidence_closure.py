@@ -25,6 +25,32 @@ def group(leaves):
     return EvidenceGroup(group_id="evidence-group:" + canonical_hash(leaves), evidence_ids=leaves)
 
 
+def test_repeated_group_citations_expand_once_and_keep_legacy_leaf_order(monkeypatch):
+    from a2_assistant.evidence import leaf_references
+    from a2_contracts.v2.evidence import EvidenceResolver
+
+    leaves = [f"leaf-{index:04}" for index in range(4096)]
+    grouped = group(leaves)
+    resolver = EvidenceResolver([*leaves, "outside"], [grouped])
+    original_expand = resolver.expand
+    calls = []
+
+    def counted(refs):
+        calls.append(tuple(refs))
+        return original_expand(calls[-1])
+
+    monkeypatch.setattr(resolver, "expand", counted)
+    refs = ["outside", *([grouped.group_id] * 4000), leaves[0]]
+    assert leaf_references(refs, resolver) == ["outside", *leaves]
+    assert calls == [(grouped.group_id,)]
+    assert leaf_references(["outside", leaves[0], "outside"], resolver) == [
+        "outside",
+        leaves[0],
+        "outside",
+    ]
+    assert original_expand([grouped.group_id] * 4000) == frozenset(leaves)
+
+
 def grouped_saved(kind="metric", members=2, *, value=25.0):
     raw = (
         analysis() if kind == "metric" else score_analysis(value=value, partial=True)
