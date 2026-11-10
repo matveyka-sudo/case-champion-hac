@@ -442,6 +442,10 @@ export function ApiAtlasPage() {
       ) || [];
   const ready = caps?.analyses.find((a) => a.analysis_kind === draft.kind);
   const running = phase === "running";
+  const runLabel = urban ? "Рассчитать" : "Проанализировать";
+  const draftInstructions = !cargo
+    ? urban ? "Выберите город, передвижение и категории" : "Выберите территории и виды транспорта"
+    : urban ? "Выберите город, направление и профиль груза" : "Выберите территории и параметры грузовой связи";
   const requestTitle = result ? resultTitle(result, catalog) : origin?.name || "Россия";
   const toggleMode = (kind: AnalysisKind) =>
     change({
@@ -655,7 +659,7 @@ export function ApiAtlasPage() {
           onClose={() => setFiltersOpen(false)} onExpand={() => setFiltersCollapsed(false)}
           onToggle={() => { setFiltersCollapsed((value) => !value); if (filtersCollapsed && window.innerWidth < 1360) setChatOpen(false); }}
           railIcons={!cargo && urban ? ["map-pin", draft.travel === "pt" ? "tram-front" : draft.travel === "walk" ? "footprints" : "car-front", "list-checks"] : ["sliders-horizontal"]}
-          footer={<><button className="iconbtn primary runbtn" disabled={!caps || running} onClick={start}><Icon name="play" /><span>{urban ? "Рассчитать" : "Проанализировать"}</span></button>
+          footer={<><button className="iconbtn primary runbtn" disabled={!caps || running} onClick={start}><Icon name="play" /><span>{runLabel}</span></button>
             <small>{ready?.calculation_available ? "Данные проверяются для выбранных условий" : "Расчёт этого направления пока недоступен"}</small></>}>
           {!caps && (
             <div className="stmsg">
@@ -810,14 +814,14 @@ export function ApiAtlasPage() {
           /></MapCanvas>
           <MapOverlay position="tl"><AtlasStatus kind={uiError ? "err" : running ? "run" : dirty || result?.status === "partial" ? "stale" : result ? "ok" : "nd"}
             title={dirty ? "Параметры изменены — показан прежний результат" : phaseLabels[phase]}
-            subtitle={<>{result ? `${requestTitle} · ${timestampText(result.request.departure_at, savedOrigin?.timezone)} · ${trafficText[result.traffic_mode]} · ${statusText[result.status]}` : "Выберите город, передвижение и категории"}
+            subtitle={<>{result ? `${requestTitle} · ${timestampText(result.request.departure_at, savedOrigin?.timezone)} · ${trafficText[result.traffic_mode]} · ${statusText[result.status]}` : draftInstructions}
               {running && ` · ${session.job ? statusText[session.job.status] || "Получаю результат" : "Отправляю запрос"}`}</>}
             actions={session.job && ["queued", "running"].includes(session.job.status) && <button className="iconbtn" onClick={() => void session.cancel()}>Отменить</button>} /></MapOverlay>
           {uiError && <StateCard role="alert" icon="cloud-off" title={uiError instanceof ApiError && uiError.code === "stored_result_incompatible" ? "Сохранённый результат несовместим — требуется новый расчёт" : "Новый результат не получен"}
             description={errorText(uiError)} actions={<button className="iconbtn primary" onClick={start}>Повторить</button>} />}
           {!result && !uiError && <StateCard icon={running ? "loader-circle" : "circle-dashed"} loading={running}
-            title={running ? "Расчёт выполняется" : "Расчёт ещё не выполнялся"} description={running ? "Прежний результат сохранён. Карту можно двигать — ответ появится сам." : "Выберите город, способ передвижения и категории, затем нажмите «Рассчитать». До расчёта карта не окрашивается."}
-            actions={<button className="iconbtn primary" disabled={!caps} onClick={start}>Рассчитать</button>} />}
+            title={running ? "Расчёт выполняется" : "Расчёт ещё не выполнялся"} description={running ? "Карту можно двигать — результат появится после завершения расчёта." : `${draftInstructions}, затем нажмите «${runLabel}». До расчёта карта не окрашивается.`}
+            actions={<button className="iconbtn primary" disabled={!caps} onClick={start}>{runLabel}</button>} />}
           {result &&
             (!result.map_data ||
               result.map_data.status !== "available" ||
