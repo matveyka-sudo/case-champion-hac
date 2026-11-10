@@ -286,3 +286,34 @@ ranking, and the school-catalog proof remains incomplete.
 run and ML2 receipt into a new exclusive run directory. It records all checker
 sources and input hashes; the optional formula value is explicitly a reference
 calculation and not a product readiness flag.
+
+## Explicit target-snapshot point projection
+
+`urban/walk/canonical_point.py` provides `load_reviewed_common_access_model` for
+registered exact-hash reviewed native/physical receipts, and
+`project_canonical_airport_point` for a compatible accepted snapshot. Full native
+proof replay remains the offline authority; a caller-supplied hash/boolean cannot
+register a proof. Deployment verifies the recorded immutable files and pins the
+reviewed receipt digests. The fast loader checks those digests, source scopes,
+native endpoint roster, all geometry/time operands, common-weight obligation and
+exact combined total. It does not make HTTP or paid-service calls.
+
+The point projection keeps the routing proof's original `.3` identity and derives
+an explicit `.5` context through the independent compatibility receipt. It checks
+the exact target canonical content hash, original native build/artifact identity,
+source PBF/graph/profile, selected physical/access coordinates and policy replay,
+original cell population, administrative area, and independently accepted official
+airport catalog references. A complete one-airport roster applies only to the
+observed local date, 10 November 2026; other dates retain the best-known model
+time and unknown category/point indices. A second unproved destination also blocks
+the nearest-category score. Missing selected categories block the overall point
+score rather than being dropped.
+
+It calls the existing `select_h_seconds`, `category_index` and `point_index`
+functions, converts the exact time to binary64 once, and returns a partial point
+result with `CANONICAL_ACCESS_MODEL`. City index stays null, ranking stays false,
+the other 215 points remain uncomputed, and geometry is null because the ordinary
+actor route differs from the certified 97-edge path. The model profile binds the
+target/source compatibility, approach policy, official source manifest, physical
+receipt, native source scope, target content, configuration/parameters, local
+observation day and selected categories. No original artifact is relabelled.
