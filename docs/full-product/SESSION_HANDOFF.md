@@ -1,5 +1,54 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Latest continuation — numerical browser acceptance and runtime scopes
+
+This section supersedes older status below. Goal remains ACTIVE; no dev merge.
+Root candidate before this note: b7aa963, branch integration/full-product-20261110.
+
+- Real root browser5192 job46c9aba0-cdd2-499d-8ac0-48df59f7b453 succeeded;
+  analysis5bf81f85-5787-495b-bee0-8bbc8d4e04a0, saved hash
+  b28fa99fab0123d0c0cfb46dfcdd55e21cb68258a7940dadd5bc76d3c40baefe.
+  Root clicked northpoint on map and visually inspected0.5 red,229.6min,partial,
+  population661.234. Saved API exact0.4971801994143471, citynull. Fresh owning
+  session GET after DEVOPS restart matches. Evidence root-certified-analysis.json
+  and root-certified-ui.png outside Git. Runtime still clean8fc49fe, not latest code.
+- DEVOPSdf33d0a integrated, independent code review of evidence. Six services
+  healthy; dump/restore+restart confirmed. Post-root cgroup peak1009315840B,
+  limit1073741824B, zeroOOM. Private189-file archive restored, no remote upload.
+- Engine1045PASS5.87s; ML2271PASS12.81s. Prior pending sessions completed.
+- SCENARIOS681bc848 integrated, root80PASS, but reviewer new P1: full point score
+  may omit an unknown selected category. Owner fixing complete operand inventory
+  (also territory positive-population points); not accepted. Runtime hooks WIP.
+- Rootcdf1bad+91d7824: UrbanPassengerScope DTO/generated schemas/pure
+  product_capabilities.urban_passenger_scopes(runtime, certified_service_date=None).
+  None legacy vs[] registered none; no completeness claim, one matching scope.
+  Scope windows are profile/snapshot/proof-day intersection with local timezone.
+  11scope+421contract+41module/scope checks PASS, Ruff/mypy PASS. Runtime hook
+  owned by SCENARIOS, frontend implementation owned by concurrency_frontend.
+  Root reserves bootstrap AnalysisService registered_template_ids hook later.
+- Rootb7aa963 assistant bounded overview fixes live433-score result omitting its
+  only numeric point and citynull.99assistant+1API focus PASS; actual saved-result
+  offline replay+renderer PASS without mutation/calls. Reviewer currently checks
+  scopes and assistant. Real UI had template/DISABLED, no external AI credentials.
+- BACKEND quota in progress: shared central account/day allowance<=500, explicit
+  already_used/operator baseline, retries and copyright count, no auto-reset or
+  app-DB fallback. Owns test_module_boundaries.py again after root91d7824;
+  private0006 and migration head fixture pending. Nested quota audit consumes slot.
+- ML2 private expiring Rasp observation normalization implemented in owner tree,
+  synthetic tests only, no real requests/data accepted. Key and known quota absent.
+  Official cache/attribution limitations preserved; no invented lifetime or license.
+- FRONTEND mergescdf1bad then scopes UI/tests, preserves user draft, explicit
+  preset action only, exactly1 matching profile, no cross-profile category unions.
+  Also localizing raw metric names seen in actual UI. Agent work not yet accepted.
+- GitHub freshly checked PR26/27 OPEN/DRAFT/CLEAN fiveSUCCESS each; dev unchanged
+  91ed5262b62c16afa3ca619f8140c43917cf8325. Current integration still unpublished.
+
+Next: accept scenario omission fix, integrate runtime scopes/templates hooks and
+frontend; independently review quota/ingestion, full backend/PG/static/current
+frontend checks, clean final rebuild and actual browser rerun. Keep full product
+scope: non-walk real data, physical entrance completeness, city indices and public
+artifact restoration remain unmet; independent engineering continues.
+
 ## Latest continuation — 18:28 MSK (supersedes all older sections)
 
 Goal remains ACTIVE. Root candidate HEAD before this note is
