@@ -377,8 +377,9 @@ def load_binding(
         raise ValueError("WALK_GRAPH_OR_CANONICAL_SNAPSHOT_DIFFERS_FROM_IMMUTABLE_SOURCE")
     from a2_data_pipeline.walk_projection import project_walk_connectors
 
+    connector_adapter = TypeAdapter(WalkConnector)
     expected = {
-        row["physical_node_id"]: TypeAdapter(WalkConnector).validate_python(row)
+        row["physical_node_id"]: connector_adapter.validate_python(row)
         for row in project_walk_connectors(
             bundle,
             walking_speed_kmh=5,
