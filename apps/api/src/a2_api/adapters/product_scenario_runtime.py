@@ -23,7 +23,11 @@ from a2_api.adapters.product_inputs import (
     IntercityInputs,
     UrbanInputs,
 )
-from a2_api.adapters.product_scenario_inputs import ScenarioDocument, source_inputs_hash
+from a2_api.adapters.product_scenario_inputs import (
+    ScenarioDocument,
+    document_matches_request,
+    source_inputs_hash,
+)
 from a2_api.core.config import RuntimeSettings
 from a2_api.core.errors import DomainError
 from a2_api.core.jobs import CalculationOutput, ClaimedJob, V2JobContext
@@ -66,7 +70,7 @@ def load_profile_documents(
     snapshot_hash = canonical_hash(snapshot.model_dump(mode="json"))
     inputs_hash = source_inputs_hash(inputs)
     documents = []
-    seen: set[str] = set()
+    seen: list[AnalysisRequest] = []
     for reference in references:
         path = (root / reference.path).resolve()
         if not path.is_relative_to(root.resolve()):
@@ -81,7 +85,7 @@ def load_profile_documents(
             or request is None
             or request.analysis_kind != inputs.kind
             or request.methodology != current.methodology
-            or document.request_hash in seen
+            or request in seen
             or not request_allowed(request)
         ):
             raise ValueError("SCENARIO_CATALOG_SOURCE_BINDING_MISMATCH")
@@ -128,7 +132,7 @@ def load_profile_documents(
                 or not plan.feasibility.blocks
             ):
                 raise ValueError("SCENARIO_ADDITIONAL_EXECUTION_RESOURCE_BINDINGS_REQUIRED")
-        seen.add(document.request_hash)
+        seen.append(request)
         documents.append(document)
     return tuple(documents)
 
@@ -169,8 +173,11 @@ def finish_analysis(
         raise DomainError(422, "unsupported_scenario", "SCENARIO_ANALYSIS_CONTEXT_REQUIRED")
     if not documents:
         return _limited(analysis, "SCENARIO_DOCUMENT_UNAVAILABLE")
-    request_hash = canonical_hash(claim.context.normalized_request.model_dump(mode="json"))
-    matches = [document for document in documents if document.request_hash == request_hash]
+    matches = [
+        document
+        for document in documents
+        if document_matches_request(document, claim.context.normalized_request)
+    ]
     if not matches:
         return analysis
     if len(matches) != 1:
@@ -227,11 +234,10 @@ def calculate_saved(
     context = claim.context
     assert context.scenario_proposal is not None
     document_ids = set(context.scenario_proposal.assumptions)
-    request_hash = canonical_hash(context.normalized_request.model_dump(mode="json"))
     matches = [
         document
         for document in documents
-        if document.request_hash == request_hash
+        if document_matches_request(document, context.normalized_request)
         and "scenario-document:" + canonical_hash(document.model_dump(mode="json")) in document_ids
     ]
     if len(matches) != 1:

@@ -3,6 +3,7 @@
 import asyncio
 import json
 from dataclasses import replace
+from datetime import timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -17,7 +18,7 @@ from a2_api.adapters.product_runtime import (
     load_runtime,
     registry,
 )
-from a2_api.adapters.product_scenario_inputs import ScenarioDocument
+from a2_api.adapters.product_scenario_inputs import ScenarioDocument, validate_source
 from a2_api.core.errors import DomainError
 from a2_api.core.jobs import CalculationOutput
 from a2_api.core.registry import ProductRegistry
@@ -28,7 +29,7 @@ from a2_contracts.v2.scenarios import ScenarioRunOptions
 from test_product_runtime import transport_facts as transport_facts
 from test_product_runtime import write_document
 from test_product_scenario_publication import queued_case
-from test_product_scenarios import delivery_case, with_claim
+from test_product_scenarios import delivery_case, intercity_case, make_case, with_claim
 
 ROOT = Path(__file__).resolve().parents[3]
 
@@ -135,12 +136,38 @@ def test_catalog_source_binding_is_validated_without_calculating(tmp_path, monke
 
 
 @pytest.mark.parametrize(
-    "attack", ["bytes", "path", "budget", "request", "source", "scope", "site", "evidence"]
+    "attack",
+    [
+        "bytes",
+        "path",
+        "budget",
+        "request",
+        "request_hash",
+        "request_offset",
+        "naive_request",
+        "source",
+        "scope",
+        "site",
+        "evidence",
+    ],
 )
 def test_mutated_or_unbound_catalog_is_rejected(tmp_path, attack):
     snapshot, (_, facts, document, _, _) = bound_case()
     if attack == "request":
         document = document.model_copy(update={"normalized_request": None})
+    elif attack == "request_hash":
+        document = document.model_copy(update={"request_hash": "f" * 64})
+    elif attack in {"request_offset", "naive_request"}:
+        request = document.normalized_request
+        departure = (
+            request.departure_at.replace(tzinfo=None)
+            if attack == "naive_request"
+            else request.departure_at.astimezone(timezone(timedelta(hours=3)))
+        )
+        # Even equivalent request semantics cannot rewrite a signed document.
+        document = document.model_copy(
+            update={"normalized_request": request.model_copy(update={"departure_at": departure})}
+        )
     elif attack == "source":
         document = document.model_copy(update={"source_inputs_hash": "f" * 64})
     elif attack == "site":
@@ -199,6 +226,125 @@ def test_only_worker_verified_proposals_are_published_and_bad_optional_plan_pres
     assert limited.result_hash == canonical_hash(
         limited.model_dump(mode="json", exclude={"result_hash"})
     )
+
+
+@pytest.mark.parametrize("factory", [make_case, intercity_case, delivery_case])
+@pytest.mark.parametrize("offset_hours", [3, -7])
+def test_offset_equivalent_request_generates_and_recalculates_same_saved_before(
+    monkeypatch, factory, offset_hours
+):
+    context, facts, document, baseline, frozen = factory()
+    document = ScenarioDocument.model_validate(
+        document.model_dump(mode="json")
+        | {"normalized_request": context.normalized_request.model_dump(mode="json")}
+    )
+    claim, _, _, _, _ = with_claim((context, facts, document, baseline, frozen))
+    request = context.normalized_request.model_copy(
+        update={
+            "departure_at": context.normalized_request.departure_at.astimezone(
+                timezone(timedelta(hours=offset_hours))
+            )
+        }
+    )
+    assert request == document.normalized_request
+    assert canonical_hash(request.model_dump(mode="json")) != document.request_hash
+    document_bytes, baseline_bytes = document.model_dump_json(), baseline.model_dump_json()
+    context = claim.context.model_copy(update={"normalized_request": request})
+    analysis_claim = claim.model_copy(
+        update={
+            "kind": "analysis",
+            "request": request,
+            "context": context.model_copy(update={"scenario_proposal": None}),
+        }
+    )
+    output = runtime.finish_analysis(
+        analysis_claim,
+        baseline,
+        facts,
+        profile_id=document.profile_id,
+        documents=(document,),
+        configured=True,
+    )
+    assert isinstance(output, CalculationOutput) and len(output.proposals) == 1
+    assert "scenario-document:" + canonical_hash(document.model_dump(mode="json")) in (
+        output.proposals[0].assumptions
+    )
+
+    async def saved_baseline(_):
+        return baseline
+
+    monkeypatch.setattr(runtime, "_saved_baseline", saved_baseline)
+    result = runtime.calculate_saved(
+        claim.model_copy(update={"context": context}),
+        facts,
+        profile_id=document.profile_id,
+        documents=(document,),
+    )
+    assert result.before.metrics == baseline.metrics and result.before.scores == baseline.scores
+    assert baseline.model_dump_json() == baseline_bytes
+    assert document.model_dump_json() == document_bytes
+
+
+@pytest.mark.parametrize("change", ["instant", "date", "priority", "snapshot"])
+def test_semantic_request_matching_keeps_changed_scope_rejected(change):
+    context, facts, document, baseline, _ = make_case()
+    document = ScenarioDocument.model_validate(
+        document.model_dump(mode="json")
+        | {"normalized_request": context.normalized_request.model_dump(mode="json")}
+    )
+    request = context.normalized_request.model_copy(deep=True)
+    if change in {"instant", "date"}:
+        request.departure_at += timedelta(minutes=15) if change == "instant" else timedelta(days=1)
+    elif change == "priority":
+        category = request.categories[0]
+        request.priorities[category] = "high" if request.priorities[category] != "high" else "low"
+    else:
+        request.snapshot_id = "TEST_ONLY-other-snapshot"
+    context = context.model_copy(update={"normalized_request": request})
+    with pytest.raises(ValueError, match="SCENARIO_SOURCE_BINDING_MISMATCH"):
+        validate_source(document, context, facts, profile_id=document.profile_id)
+    claim, _, _, _, _ = with_claim(make_case())
+    output = runtime.finish_analysis(
+        claim.model_copy(update={"kind": "analysis", "request": request, "context": context}),
+        baseline,
+        facts,
+        profile_id=document.profile_id,
+        documents=(document,),
+        configured=True,
+    )
+    assert output is baseline
+
+
+def test_catalog_rejects_duplicate_requests_with_equivalent_offsets(tmp_path):
+    snapshot, (context, facts, document, _, _) = bound_case()
+    first = catalog(tmp_path, document)
+    request = context.normalized_request.model_copy(
+        update={
+            "departure_at": context.normalized_request.departure_at.astimezone(
+                timezone(timedelta(hours=3))
+            )
+        }
+    )
+    equivalent = ScenarioDocument.model_validate(
+        document.model_dump(mode="json")
+        | {
+            "normalized_request": request.model_dump(mode="json"),
+            "request_hash": canonical_hash(request.model_dump(mode="json")),
+        }
+    )
+    second = FileRef.model_validate(
+        write_document(tmp_path / "TEST_ONLY-equivalent.json", equivalent.model_dump(mode="json"))
+    )
+    with pytest.raises(ValueError, match="SCENARIO_CATALOG_SOURCE_BINDING_MISMATCH"):
+        runtime.load_profile_documents(
+            tmp_path,
+            [first, second],
+            profile_id=document.profile_id,
+            snapshot=snapshot,
+            inputs=facts,
+            budget=[1024 * 1024],
+            request_allowed=lambda request: request == document.normalized_request,
+        )
 
 
 @pytest.mark.asyncio
@@ -367,14 +513,20 @@ def configure_cargo(tmp_path, monkeypatch):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("offset_hours", [0, 3, -7])
 async def test_product_saved_analysis_proposal_and_scenario_full_cycle(
-    database, tmp_path, monkeypatch
+    database, tmp_path, monkeypatch, offset_hours
 ):
     from a2_api.db.repositories.jobs import JobRepository
     from a2_api.services.analyses import AnalysisService
 
     pool, schema, url = database
     snapshot, request = configure_cargo(tmp_path, monkeypatch)
+    request = request.model_copy(
+        update={
+            "departure_at": request.departure_at.astimezone(timezone(timedelta(hours=offset_hours)))
+        }
+    )
     monkeypatch.setenv("A2_DATABASE_URL", url)
     monkeypatch.setenv("A2_DATABASE_SCHEMA", schema)
     loaded = load_runtime()
@@ -422,8 +574,9 @@ async def test_product_saved_analysis_proposal_and_scenario_full_cycle(
     assert (await service.job(scenario.job_id, "TEST_ONLY-scope")).status == "succeeded"
 
 
+@pytest.mark.parametrize("offset_hours", [0, 3])
 def test_configured_http_and_spawned_worker_publish_saved_product_scenario(
-    database_sync_config, tmp_path, monkeypatch
+    database_sync_config, tmp_path, monkeypatch, offset_hours
 ):
     from a2_api.api.bootstrap import build_app
     from a2_api.core.config import RuntimeSettings
@@ -434,6 +587,11 @@ def test_configured_http_and_spawned_worker_publish_saved_product_scenario(
 
     url, schema = database_sync_config
     _, request = configure_cargo(tmp_path, monkeypatch)
+    request = request.model_copy(
+        update={
+            "departure_at": request.departure_at.astimezone(timezone(timedelta(hours=offset_hours)))
+        }
+    )
     monkeypatch.setenv("A2_DATABASE_URL", url)
     monkeypatch.setenv("A2_DATABASE_SCHEMA", schema)
     monkeypatch.setenv("A2_REGISTRY_HOOK", "a2_api.adapters.product:registry")
