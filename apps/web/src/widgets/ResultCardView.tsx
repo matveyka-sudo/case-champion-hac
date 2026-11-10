@@ -16,12 +16,12 @@ export function ResultPrimary({ time, score, pending, caption, qualification }: 
     <span className="bigcap">{caption}</span>
   </div>{qualification && <p className="fhint">{qualification}</p>}</>;
 }
-export interface RouteSegmentView { kind: string; minutes: number; label: string; valueText?: string }
+export interface RouteSegmentView { kind: string; minutes: number; label: string; valueText?: string; barText?: string }
 const segmentColors: Record<string, string> = { walk: "#8C93BD", wait: "#B4A4FF", ride: "#2F5BFF", ride2: "#7A52FF", xfer: "#5D6390", hot: "#7A52FF" };
 export function RouteBreakdown({ segments }: { segments: RouteSegmentView[] }) {
   return <><div className="mbar" role="img" aria-label={segments.map((segment) => `${segment.label} ${segment.valueText ?? segment.minutes} мин`).join(", ")}>
     {segments.map((segment, index) => <span key={index} className={`s ${segment.kind}`} style={{ "--m": segment.minutes } as CSSProperties}
-      title={`${segment.label} · ${segment.valueText ?? segment.minutes} мин`}>{segment.minutes >= 4 ? segment.valueText ?? segment.minutes : ""}</span>)}
+      title={`${segment.label} · ${segment.valueText ?? segment.minutes} мин`}>{segment.minutes >= 4 ? segment.barText ?? segment.valueText ?? segment.minutes : ""}</span>)}
   </div><div className="mlist tnum">{segments.map((segment, index) => <Fragment key={index}>
     <i className={`k mbar-${segment.kind}`} style={{ background: segmentColors[segment.kind] }} />
     <span className={segment.kind === "hot" ? "hot" : ""}>{segment.label}</span><b className={segment.kind === "hot" ? "hot" : ""}>{segment.valueText ?? segment.minutes} мин</b>

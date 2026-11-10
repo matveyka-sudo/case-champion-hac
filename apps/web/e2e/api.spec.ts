@@ -870,7 +870,8 @@ for (const mobile of [false, true]) test(`API: calculated point overview reveals
   await expect(card.locator(".api-measure")).toHaveCount(3);
   await expect(card).toContainText("Индекс точки");
   await expect(card).toContainText("229,6 мин");
-  await expect(overview).toContainText("Индекс города: Нет данных");
+  await expect(overview).not.toContainText("Индекс города:");
+  await expect(card.getByText("Индекс города", { exact: true })).toHaveCount(1);
   await expect(card).not.toContainText("synthetic-point");
   await expect(page.getByRole("slider", { name: "Время отправления, шаг 15 минут" })).toHaveValue("34");
   expect(mock.posts).toBe(1);
@@ -909,6 +910,7 @@ test("API: calculated point reveals its partial walk route with a separate round
   // Synthetic protocol evidence; this does not prove a production route or index.
   await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
   const data = partialWalkGeometryFixture();
+  data.limitations.push("CONNECTOR_UNCONFIRMED", "FUTURE_LIMITATION_ONE", "FUTURE_LIMITATION_TWO");
   const mock = await mockApi(page, { result: data, emptyProposals: true });
   await page.goto("/?data=api#atlas");
   await choose(page, "Город", "Калининград");
@@ -924,7 +926,12 @@ test("API: calculated point reveals its partial walk route with a separate round
   await overview.getByRole("button", { name: /Точка · 54.50200, 20.30200/ }).click();
   await expect(card.locator("h3")).toHaveText("Точка · 54.50200, 20.30200");
   await expect(card.locator("h3")).toBeFocused();
-  await expect(overview).toContainText("Индекс города: Нет данных");
+  await expect(overview).not.toContainText("Индекс города:");
+  await expect(card.getByText("Индекс города", { exact: true })).toHaveCount(1);
+  await expect(card.getByText("До объекта: Синтетический аэропорт", { exact: true })).toBeVisible();
+  await expect(card.locator(".mbar")).toHaveText("10 мин");
+  await expect(card.getByText("Для результата указано дополнительное ограничение.", { exact: true })).toHaveCount(1);
+  await expect(card).toContainText("Подход между физической точкой или объектом и уличной сетью не подтверждён.");
   await expect(card).toContainText("0,5 из 100");
   const route = card.locator(".api-journey");
   await expect(route).toHaveCount(1);

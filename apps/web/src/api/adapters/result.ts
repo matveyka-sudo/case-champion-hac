@@ -137,6 +137,26 @@ export function reasonText(code: string | null | undefined) {
           "Пилотный расчёт охватывает одну точку и часть школ, а не весь город.",
         TAU_UNAVAILABLE:
           "Порог времени для подсчёта доступных объектов не рассчитан.",
+        APPROVED_PARTIAL_OD_EXECUTION:
+          "Рассчитана только часть пар «точка — объект».",
+        CONNECTOR_UNCONFIRMED:
+          "Подход между физической точкой или объектом и уличной сетью не подтверждён.",
+        COORDINATE_QUANTIZATION_UNCERTAINTY:
+          "Округление координат вносит неопределённость в положение точки.",
+        NOT_A_CITY_RANKING:
+          "Результат не является полным рейтингом города.",
+        OBSERVED_ROUTE_ESTIMATE:
+          "Оценка рассчитана по найденному маршруту.",
+        PHYSICAL_CORRELATION_OFFSET_UNMEASURED:
+          "Смещение между исходным узлом доступа и привязкой маршрута к сети не измерено.",
+        REPORTED_DURATION_NOT_CERTIFIED_UPPER_BOUND:
+          "Найденное время не подтверждено как верхняя граница полного времени пути.",
+        SINGLE_FOUND_OBJECT_NOT_CATEGORY_MINIMUM:
+          "Маршрут к одному найденному объекту не подтверждает минимум по всей категории.",
+        VALHALLA_CORRELATION_UNAVAILABLE:
+          "Привязка к уличной сети для расчёта не подтверждена.",
+        WALK_CONNECTOR_TIME_0_1_SECOND_PRECISION:
+          "Время исходных пеших подходов задано с шагом 0,1 секунды.",
         WALKING_SPEED_MODEL_5_KMH:
           "Для пешего маршрута принята модельная скорость 5 км/ч.",
       } as Record<string, string>
@@ -326,6 +346,10 @@ export function noticeText(value: string) {
       ? "Для результата указано дополнительное ограничение."
       : value)
   );
+}
+
+export function noticeTexts(values: readonly string[]) {
+  return [...new Set(values.map(noticeText))];
 }
 
 export function errorText(error: { message: string; code?: string }) {
