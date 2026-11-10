@@ -396,3 +396,24 @@ def test_empty_inventory_cannot_claim_validation() -> None:
     pinned = inventory.WalkInputInventory((), EXECUTOR, NOW + timedelta(hours=1))
     with pytest.raises(ValueError, match="IDENTITY_REQUIRED"):
         pinned.assert_current(executor_fingerprint=EXECUTOR, now=NOW)
+
+
+def test_reviewed_legacy_original_graph_needs_no_invented_source_pin(
+    inputs: ValidatedInputs,
+) -> None:
+    inputs.graph.pop("source_manifest_sha256")
+    inputs.refresh_graph()
+    pinned = inputs.capture()
+    # These files were never references of the approved legacy graph.
+    (inputs.root.parent / "registered/source.json").write_text("unreferenced")
+    (inputs.root / "graph/source-manifest.json").write_text("unreferenced")
+    pinned.assert_current(executor_fingerprint=EXECUTOR, now=NOW)
+    assert not any(pin.parts[-1] == "source-manifest.json" for pin in pinned.pins)
+
+
+def test_derived_graph_cannot_use_legacy_missing_source_pin(inputs: ValidatedInputs) -> None:
+    inputs.derive()
+    inputs.graph.pop("source_manifest_sha256")
+    inputs.refresh_graph()
+    with pytest.raises(ValueError, match="SOURCE_MANIFEST_PIN_REQUIRED"):
+        inputs.capture()
