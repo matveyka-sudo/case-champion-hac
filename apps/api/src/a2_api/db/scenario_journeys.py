@@ -8,14 +8,86 @@ from math import isclose
 
 from a2_contracts.common import utc
 from a2_contracts.v2.journeys import JourneyResult
-from a2_contracts.v2.requests import IntercityBase
+from a2_contracts.v2.requests import IntercityBase, UrbanPassengerRequest
 from a2_contracts.v2.results import AnalysisResult, validate_reference_applicability
 from a2_contracts.v2.scenarios import ScenarioResult
 
 from a2_api.core.errors import DomainError
+from a2_api.core.scenario_scope import ScenarioEndpointScope
 
 
-def scenario_journeys(result: ScenarioResult, baseline: AnalysisResult) -> dict[str, JourneyResult]:
+def _urban_journey(
+    journey: JourneyResult,
+    baseline: AnalysisResult,
+    endpoint_scope: ScenarioEndpointScope | None,
+) -> None:
+    request = baseline.request
+    if not isinstance(request, UrbanPassengerRequest) or endpoint_scope is None:
+        raise DomainError(
+            409, "incompatible_versions", "Scenario urban endpoint scope is unavailable"
+        )
+    if (
+        endpoint_scope.snapshot_id != baseline.snapshot_id
+        or endpoint_scope.city_id != request.city_id
+    ):
+        raise DomainError(409, "incompatible_versions", "Scenario urban endpoint scope differs")
+    point, destination = journey.point_id, journey.destination_object_id
+    if (
+        point is None
+        or destination is None
+        or point not in endpoint_scope.point_origins
+        or destination not in endpoint_scope.destination_nodes
+        or journey.origin_node_id != endpoint_scope.point_origins[point]
+        or journey.destination_node_id != endpoint_scope.destination_nodes[destination]
+        or not set(request.categories) & set(endpoint_scope.destination_categories[destination])
+        or journey.reference_id is not None
+    ):
+        raise DomainError(409, "incompatible_versions", "Scenario urban endpoint binding differs")
+    # These are the public urban engine's mode families; physical service modes
+    # still require accepted input bindings before the calculation is queued.
+    allowed_modes = {
+        "walk": {"walk"},
+        "public_transport": {"walk", "public_transport", "rail", "water"},
+        "private_car": {"walk", "private_car"},
+    }[request.passenger_mode]
+    if any(
+        leg.mode not in allowed_modes
+        or leg.kind not in {"walk", "ride", "wait_initial", "wait_transfer"}
+        or (leg.kind == "walk") != (leg.mode == "walk")
+        or (request.passenger_mode == "walk" and leg.kind != "walk")
+        for leg in journey.legs
+    ):
+        raise DomainError(409, "incompatible_versions", "Scenario urban passenger mode differs")
+    if not journey.legs:
+        raise DomainError(
+            409, "incompatible_versions", "Scenario urban endpoint chain is unavailable"
+        )
+    origin_access = endpoint_scope.point_access_nodes[point]
+    destination_access = endpoint_scope.destination_access_nodes[destination]
+    first, last = journey.legs[0], journey.legs[-1]
+    if (
+        journey.origin_node_id != origin_access
+        and (
+            first.kind != "walk"
+            or first.from_node_id != journey.origin_node_id
+            or first.to_node_id != origin_access
+        )
+        or journey.destination_node_id != destination_access
+        and (
+            last.kind != "walk"
+            or last.from_node_id != destination_access
+            or last.to_node_id != journey.destination_node_id
+        )
+    ):
+        raise DomainError(409, "incompatible_versions", "Scenario urban physical connector differs")
+
+
+def scenario_journeys(
+    result: ScenarioResult,
+    baseline: AnalysisResult,
+    *,
+    endpoint_scope: ScenarioEndpointScope | None = None,
+) -> dict[str, JourneyResult]:
     """Resolve new chains without allowing a baseline identity to be overwritten."""
     journeys = {journey.journey_id: journey for journey in baseline.journeys}
     references = {reference.reference_id: reference for reference in baseline.references}
@@ -39,6 +111,8 @@ def scenario_journeys(result: ScenarioResult, baseline: AnalysisResult) -> dict[
             != ("intercity" if baseline.analysis_kind.startswith("intercity_") else "urban")
         ):
             raise DomainError(409, "incompatible_versions", "Scenario journey task differs")
+        if journey.scope == "urban":
+            _urban_journey(journey, baseline, endpoint_scope)
         if journey.reference_id is not None:
             reference = references.get(journey.reference_id)
             if reference is None:
@@ -68,10 +142,56 @@ def scenario_journeys(result: ScenarioResult, baseline: AnalysisResult) -> dict[
         "minimum_journey_seconds": "total_seconds",
         "best_known_journey_seconds": "total_seconds",
     }
+    old_metrics = {metric.metric_id: metric for metric in baseline.metrics}
+    renamed = {
+        effect.after_id: effect.before_id
+        for effect in result.deltas
+        if effect.kind == "metric" and effect.after_id and effect.before_id
+    }
     for metric in result.after.metrics:
-        if metric.journey_id not in new_ids:
+        urban = isinstance(baseline.request, UrbanPassengerRequest)
+        if metric.journey_id not in new_ids and not urban:
             continue
-        journey = journeys[metric.journey_id]
+        resolved_journey = journeys.get(metric.journey_id or "")
+        if resolved_journey is None:
+            numeric_point_chain = (
+                urban
+                and metric.subject.kind == "sample_point"
+                and metric.unit == "seconds"
+                and metric.status == "available"
+                and metric.value is not None
+            )
+            previous_unbound = old_metrics.get(renamed.get(metric.metric_id, metric.metric_id))
+            legacy_binding = (
+                previous_unbound is not None
+                and previous_unbound.status == "available"
+                and previous_unbound.value is not None
+                and previous_unbound.journey_id == metric.journey_id
+                and previous_unbound.subject == metric.subject
+                and (previous_unbound.name, previous_unbound.unit, previous_unbound.time_kind)
+                == (metric.name, metric.unit, metric.time_kind)
+            )
+            if numeric_point_chain and (endpoint_scope is not None or not legacy_binding):
+                raise DomainError(
+                    409, "incompatible_versions", "Scenario urban journey proof is unavailable"
+                )
+            continue
+        journey = resolved_journey
+        if urban:
+            if endpoint_scope is not None:
+                _urban_journey(journey, baseline, endpoint_scope)
+            else:
+                previous = old_metrics.get(renamed.get(metric.metric_id, metric.metric_id))
+                if (
+                    previous is None
+                    or previous.journey_id != metric.journey_id
+                    or previous.subject != metric.subject
+                    or (previous.name, previous.unit, previous.time_kind)
+                    != (metric.name, metric.unit, metric.time_kind)
+                ):
+                    raise DomainError(
+                        409, "incompatible_versions", "Scenario urban endpoint scope is unavailable"
+                    )
         measure = measures.get(metric.name)
         expected = getattr(journey, measure) if measure is not None else None
         if (
@@ -87,6 +207,18 @@ def scenario_journeys(result: ScenarioResult, baseline: AnalysisResult) -> dict[
             raise DomainError(409, "incompatible_versions", "Scenario raw time differs from chain")
         if metric.subject.kind == "sample_point" and metric.subject.point_id != journey.point_id:
             raise DomainError(409, "incompatible_versions", "Scenario journey point differs")
+        if isinstance(baseline.request, UrbanPassengerRequest) and endpoint_scope is not None:
+            if (
+                metric.subject.kind != "sample_point"
+                or metric.subject.territory_id != baseline.request.city_id
+                or metric.subject.mode != baseline.request.passenger_mode
+                or metric.subject.category not in baseline.request.categories
+                or metric.subject.category
+                not in endpoint_scope.destination_categories[journey.destination_object_id or ""]
+            ):
+                raise DomainError(
+                    409, "incompatible_versions", "Scenario urban category task differs"
+                )
         if isinstance(baseline.request, IntercityBase) and (
             metric.subject.origin_id != baseline.request.origin_id
             or metric.subject.destination_id != baseline.request.destination_id

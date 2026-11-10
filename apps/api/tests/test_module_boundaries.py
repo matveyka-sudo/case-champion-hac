@@ -25,6 +25,20 @@ BASELINE = json.loads((Path(__file__).parent / "fixtures/refactor_baseline.json"
 BATCH_EXTENSION = json.loads(
     (Path(__file__).parent / "fixtures/od_checkpoint_extension.json").read_text()
 )
+SCENARIO_SCOPE_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/scenario_scope_extension.json").read_text()
+)
+
+
+def scenario_scope_counter(expected, kind):
+    removed = collections.Counter(SCENARIO_SCOPE_EXTENSION["removed_" + kind])
+    added = collections.Counter(SCENARIO_SCOPE_EXTENSION["added_" + kind])
+    assert removed <= expected
+    expected.subtract(removed)
+    expected.update(added)
+    return +expected
+
+
 RETIRED_ROOT_MODULES = frozenset(
     "alice analysis_service api_v2 app budget_cli budget_hook configuration "
     "deployment_budget env_settings evidence_search export job_services jobs "
@@ -104,7 +118,16 @@ def test_all_185_existing_signatures_and_defaults():
         "a2_api.services.analyses:AnalysisService",
         "a2_api.services.analyses:AnalysisService.__init__",
     }
-    for path, signature in (BASELINE["signatures"] | BATCH_EXTENSION["signatures"]).items():
+    assert set(SCENARIO_SCOPE_EXTENSION["signatures"]) == {
+        "a2_api.db.validation:_validate_scenario_semantics",
+        "a2_api.db.scenario_journeys:scenario_journeys",
+        "a2_api.db.repositories.jobs:JobRepository._validate_scenario_semantics",
+    }
+    for path, signature in (
+        BASELINE["signatures"]
+        | BATCH_EXTENSION["signatures"]
+        | SCENARIO_SCOPE_EXTENSION["signatures"]
+    ).items():
         module, qualified = path.split(":")
         obj = importlib.import_module(module)
         for name in qualified.split("."):
@@ -159,9 +182,12 @@ def test_sql_literals_unchanged_and_confined_to_database_layer():
             assert path.is_relative_to(SOURCE / "db"), path
         strings.extend(found)
     assert BATCH_EXTENSION["module"] == "db/repositories/checkpoints.py"
-    assert collections.Counter(strings) == collections.Counter(
-        BASELINE["sql_literals"]
-    ) + collections.Counter(BATCH_EXTENSION["sql_literals"])
+    assert SCENARIO_SCOPE_EXTENSION["module"] == "db/repositories/runs.py"
+    assert collections.Counter(strings) == scenario_scope_counter(
+        collections.Counter(BASELINE["sql_literals"])
+        + collections.Counter(BATCH_EXTENSION["sql_literals"]),
+        "sql_literals",
+    )
 
 
 @pytest.mark.parametrize(
@@ -299,6 +325,8 @@ def test_sql_parameter_binding_and_transaction_options_unchanged():
                 hashes.append(
                     hashlib.sha256(ast.dump(node, include_attributes=False).encode()).hexdigest()
                 )
-    assert collections.Counter(hashes) == collections.Counter(
-        BASELINE["sql_call_hashes"]
-    ) + collections.Counter(BATCH_EXTENSION["sql_call_hashes"])
+    assert collections.Counter(hashes) == scenario_scope_counter(
+        collections.Counter(BASELINE["sql_call_hashes"])
+        + collections.Counter(BATCH_EXTENSION["sql_call_hashes"]),
+        "sql_call_hashes",
+    )

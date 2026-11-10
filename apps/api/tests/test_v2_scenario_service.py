@@ -3,6 +3,7 @@
 import pytest
 from a2_api.core.jobs import V2JobContext
 from a2_contracts.api import JobAccepted
+from a2_contracts.common import canonical_hash
 from a2_contracts.v2.scenarios import ScenarioProposal, ScenarioRunOptions
 from test_v2_tools import ScopedSavedService
 
@@ -64,6 +65,9 @@ async def test_registered_versioned_template_runs_without_matching_operation_enu
         limitations=["TURNAROUND_UNVERIFIED"],
     )
     repository = ProposalRepository(saved, proposal)
+    repository.context.snapshot_hash = canonical_hash(
+        service.registry.snapshots[saved.snapshot_id].model_dump(mode="json")
+    )
     service.repository = repository
     service.code_version = "demo-code"
     service.engine_enabled = True

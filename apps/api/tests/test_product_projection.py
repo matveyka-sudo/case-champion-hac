@@ -165,3 +165,151 @@ def test_public_engine_results_project_to_valid_canonical_dto(kind):
             and metric.completeness == "full"
             for metric in absent
         )
+
+
+def test_proven_absent_intercity_tasks_keep_raw_placeholders_without_ratio_numbers():
+    module = example("intercity")
+    result = module.run_demo()
+    out = projection(
+        "intercity_passenger",
+        module.PROOF,
+        territory_level="city",
+        origin_id="city-A",
+        destination_id="city-B",
+    )
+    project_intercity(
+        out,
+        result,
+        build_reference(module.demo_reference(result.scope), result.scope.comparison_scope),
+    )
+    saved = out.finish()
+    absent = next(row for row in saved.scores if row.score_id == "intercity-mixed")
+    assert absent.value == 0 and absent.reason_code == "NO_FEASIBLE_ROUTE"
+    assert absent.components == [] and absent.reference_ids == []
+    for suffix in ("path", "wait", "total"):
+        raw = next(row for row in saved.metrics if row.metric_id == "intercity-mixed-" + suffix)
+        assert (
+            raw.value is None
+            and raw.status == "not_applicable"
+            and raw.reason_code == "NO_FEASIBLE_ROUTE"
+        )
+        assert raw.completeness == "full" and raw.source_refs
+    assert all(
+        row.value is None
+        for row in saved.scores
+        if row.score_id in ("intercity-mixed-path-score", "intercity-mixed-wait-score")
+    )
+
+
+def test_absent_and_unknown_cargo_tasks_remain_distinct():
+    from dataclasses import replace
+
+    from a2_engine import analyze_intercity_cargo, load_cargo_delivery_rules, load_freight_config
+
+    module = example("delivery")
+    scope, states, _, readiness = module.demo_inputs()
+    for complete in (True, False):
+        result = analyze_intercity_cargo(
+            replace(scope, services_complete=complete),
+            module.START,
+            module.PROFILE,
+            states,
+            (),
+            readiness,
+            config=load_freight_config(),
+            rules=load_cargo_delivery_rules(),
+        )
+        out = projection(
+            "intercity_cargo",
+            module.PROOF,
+            territory_level="city",
+            origin_id=scope.origin_territory_id,
+            destination_id=scope.destination_territory_id,
+            cargo_profile_id=module.PROFILE.profile_id,
+            cargo_transport="multimodal",
+        )
+        project_delivery(out, result)
+        saved = out.finish()
+        raw = next(row for row in saved.metrics if row.metric_id == "delivery-overall-time")
+        score = next(row for row in saved.scores if row.score_id == "delivery-overall")
+        assert raw.value is None
+        if complete:
+            assert raw.status == "not_applicable" and raw.reason_code == "NO_FEASIBLE_ROUTE"
+            assert score.value == 0 and score.components == [] and score.reference_ids == []
+        else:
+            assert raw.status == "unknown" and raw.reason_code == "DELIVERY_WINNER_UNKNOWN"
+            assert score.value is None and score.status == "unknown"
+
+
+@pytest.mark.parametrize("excluded,missing_point", [(70, False), (None, False), (0, True)])
+def test_territory_basis_cannot_claim_full_when_original_population_is_excluded(
+    excluded, missing_point
+):
+    from dataclasses import replace
+
+    module = example("scenario")
+    inputs, _, _ = module.demo_inputs()
+    job = inputs.urban[0]
+    coverage = replace(
+        job.population_coverage,
+        excluded_population=excluded,
+        point_ids=frozenset() if missing_point else job.population_coverage.point_ids,
+    )
+    inputs = replace(inputs, urban=(replace(job, population_coverage=coverage),))
+    analysis = create_scenario_baseline(inputs).before.urban[0].analysis
+    out = projection(
+        "urban_passenger",
+        module.PROOF,
+        city_id=analysis.context.city_id,
+        passenger_mode="public_transport",
+        categories=list(analysis.selected_categories),
+        priorities=dict(analysis.selected_categories),
+    )
+    out.context.normalized_request.departure_at = analysis.context.requested_departure_at
+    project_urban(out, analysis)
+    saved = out.finish()
+    territory = next(
+        row for row in saved.scores if row.score_id == "urban-territory-public_transport"
+    )
+    assert territory.aggregation_basis.coverage == 0
+    assert territory.aggregation_basis.unknown_positive_weight
+    assert territory.value is None and not territory.ranking_eligible
+
+
+def test_incomplete_intercity_schedule_does_not_become_proven_absence():
+    from dataclasses import replace
+
+    from a2_engine import (
+        analyze_intercity_passenger,
+        load_intercity_passenger_rules,
+        load_passenger_config,
+    )
+
+    module = example("intercity")
+    scope, table = module.demo_inputs()
+    table = replace(table, scope=replace(table.scope, schedule_complete=False), runs=())
+    reference = build_reference(module.demo_reference(scope), scope.comparison_scope)
+    result = analyze_intercity_passenger(
+        scope,
+        module.START,
+        table,
+        (),
+        (),
+        reference,
+        config=load_passenger_config(),
+        rules=load_intercity_passenger_rules(),
+        frequency_start_at=module.START,
+        frequency_end_at=table.scope.end_at,
+    )
+    out = projection(
+        "intercity_passenger",
+        module.PROOF,
+        territory_level="city",
+        origin_id="city-A",
+        destination_id="city-B",
+    )
+    project_intercity(out, result, reference)
+    saved = out.finish()
+    assert all(row.status == "unknown" and row.value is None for row in saved.metrics)
+    assert all(row.status == "unknown" and row.value is None for row in saved.scores)
+    assert not any(row.reason_code == "NO_FEASIBLE_ROUTE" for row in saved.metrics)

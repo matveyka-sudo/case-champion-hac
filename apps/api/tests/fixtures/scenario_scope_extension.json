@@ -1,0 +1,23 @@
+{
+  "added_sql_call_hashes": {
+    "7a1147e5d33e3f02b1dc1d37b9c79cd93a9d1570f40c02f7e7fa64ae053fac48": 1,
+    "af41cd91d54f95582a01341470ab723dfaff02c47e2f0b597ad3bd5196c1e071": 1
+  },
+  "added_sql_literals": {
+    "SELECT * FROM jobs WHERE run_id=$1 AND kind=$2 AND status='succeeded' AND schema_version='2' AND access_scope=$3 ORDER BY finished_at,job_id LIMIT 1": 1,
+    "SELECT payload FROM jobs WHERE run_id=$1 AND status='succeeded' AND access_scope IS NOT DISTINCT FROM $2 ORDER BY finished_at LIMIT 1": 1
+  },
+  "approval": "Approved immutable scenario endpoint scope wiring: same-transaction scoped succeeded-job context proofs and scoped parameter reads; historical refactor baseline unchanged. V2JobContext additive fields remain covered by od_checkpoint_extension.json.",
+  "module": "db/repositories/runs.py",
+  "removed_sql_call_hashes": {
+    "94cac534abd71b02e4760cefca598220caebf8f9e0358fbb7f60dfd1d8b21f0f": 1
+  },
+  "removed_sql_literals": {
+    "SELECT payload FROM jobs WHERE run_id=$1 AND status='succeeded' ORDER BY finished_at LIMIT 1": 1
+  },
+  "signatures": {
+    "a2_api.db.repositories.jobs:JobRepository._validate_scenario_semantics": "(result: a2_contracts.v2.scenarios.ScenarioResult, baseline: a2_contracts.v2.results.AnalysisResult, command: a2_contracts.v2.scenarios.ScenarioProposal, *, endpoint_scope: a2_api.core.scenario_scope.ScenarioEndpointScope | None = None, expected_snapshot_hash: str | None = None) -> None",
+    "a2_api.db.scenario_journeys:scenario_journeys": "(result: a2_contracts.v2.scenarios.ScenarioResult, baseline: a2_contracts.v2.results.AnalysisResult, *, endpoint_scope: a2_api.core.scenario_scope.ScenarioEndpointScope | None = None) -> dict[str, a2_contracts.v2.journeys.JourneyResult]",
+    "a2_api.db.validation:_validate_scenario_semantics": "(result: a2_contracts.v2.scenarios.ScenarioResult, baseline: a2_contracts.v2.results.AnalysisResult, command: a2_contracts.v2.scenarios.ScenarioProposal, *, endpoint_scope: a2_api.core.scenario_scope.ScenarioEndpointScope | None = None, expected_snapshot_hash: str | None = None) -> None"
+  }
+}

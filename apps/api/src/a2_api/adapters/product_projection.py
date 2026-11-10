@@ -312,13 +312,19 @@ def project_urban(out: Projection, analysis: Any) -> None:
         populations = [point.point.population for point in mode.points]
         population = sum(populations) if all(p is not None for p in populations) else None
         coverage = analysis.population_coverage
+        population_full = (
+            coverage.complete
+            and coverage.excluded_population == 0
+            and coverage.point_ids == frozenset(point.point.point_id for point in mode.points)
+            and population is not None
+        )
         basis = PopulationBasis(
             population=population,
             population_method="accepted_original_cell_weights",
             year=None,
-            coverage=1 if coverage.complete else 0,
+            coverage=1 if population_full else 0,
             unit="persons",
-            unknown_positive_weight=population is None or not coverage.complete,
+            unknown_positive_weight=not population_full,
         )
         out.score(
             "urban-territory-" + mode.passenger_mode,
@@ -432,6 +438,17 @@ def project_car(out: Projection, result: Any, accepted: Any, reference: Any) -> 
     out.limitations.update(result.diagnostics)
 
 
+def _confirmed_missing_metrics(out: Projection, identities: tuple[str, ...]) -> None:
+    """Project the public solver's proven absence into canonical raw tasks."""
+    selected = set(identities)
+    out.metrics[:] = [
+        metric.model_copy(update={"reason_code": "NO_FEASIBLE_ROUTE"})
+        if metric.metric_id in selected
+        else metric
+        for metric in out.metrics
+    ]
+
+
 def project_intercity(
     out: Projection, analysis: Any, reference: Any, accepted_car: Any = None
 ) -> None:
@@ -485,11 +502,6 @@ def project_intercity(
             )
         )
     for group in (*analysis.by_mode, analysis.public):
-        if request.passenger_modes is not None and group.category not in (
-            *request.passenger_modes,
-            "public",
-        ):
-            continue
         subject = SubjectRef(
             kind="city_pair",
             origin_id=request.origin_id,
@@ -499,12 +511,92 @@ def project_intercity(
         c = group.best_known
         prefix = "intercity-" + group.category
         if c is None:
+            routes = [
+                candidate
+                for candidate in analysis.candidates
+                if group.category == "public" or candidate.category == group.category
+            ]
+            absent = (
+                analysis.timetable_complete
+                and analysis.modes_complete
+                and analysis.search.interrupted is False
+                and not routes
+            )
+            reason = "NO_FEASIBLE_ROUTE" if absent else "INDEX_WINNER_UNAVAILABLE"
+            raw = MetricResult(
+                None,
+                "not_applicable" if absent else "unknown",
+                "CONFIRMED_UNREACHABLE" if absent else reason,
+            )
+            path_metric = out.metric(
+                prefix + "-path",
+                "path_seconds",
+                raw,
+                subject,
+                analysis.evidence_refs,
+                full=absent,
+                time_kind="complete_chain",
+            )
+            wait_metric = out.metric(
+                prefix + "-wait",
+                "initial_wait_seconds",
+                raw,
+                subject,
+                analysis.evidence_refs,
+                full=absent,
+            )
+            out.metric(
+                prefix + "-total",
+                "total_seconds",
+                raw,
+                subject,
+                analysis.evidence_refs,
+                full=absent,
+                time_kind="complete_chain",
+            )
+            if absent:
+                _confirmed_missing_metrics(
+                    out, (prefix + "-path", prefix + "-wait", prefix + "-total")
+                )
+            # A proven missing path has no path/wait ratio. Keep both tasks
+            # represented without inventing numeric component indices.
+            component = MetricResult(
+                None,
+                "not_applicable" if absent else "unknown",
+                "INDEX_NOT_APPLICABLE_WITHOUT_ROUTE" if absent else reason,
+            )
+            path_score = out.score(
+                prefix + "-path-score",
+                "path_index",
+                component,
+                subject,
+                analysis.evidence_refs,
+                full=absent,
+                metrics=(path_metric,),
+                kind="reference_ratio",
+                reference_ids=(reference.reference_id,),
+            )
+            wait_score = out.score(
+                prefix + "-wait-score",
+                "waiting_index",
+                component,
+                subject,
+                analysis.evidence_refs,
+                full=absent,
+                metrics=(wait_metric,),
+                kind="initial_wait",
+            )
             out.score(
                 prefix,
                 "passenger_index",
-                MetricResult(None, "unknown", "INDEX_WINNER_UNAVAILABLE"),
+                MetricResult(0, "available", reason)
+                if absent
+                else MetricResult(None, "unknown", reason),
                 subject,
                 analysis.evidence_refs,
+                full=absent,
+                scores=() if absent else (path_score, wait_score),
+                kind="aggregate",
             )
             continue
         full = group.optimum_proven and c.chain_complete and c.evaluation.completeness == "full"
@@ -570,11 +662,6 @@ def project_intercity(
             ranking=analysis.full_ranking_eligible,
         )
     for frequency in analysis.frequency:
-        if request.passenger_modes is not None and frequency.category not in (
-            *request.passenger_modes,
-            "public",
-        ):
-            continue
         subject = SubjectRef(
             kind="city_pair", origin_id=request.origin_id, destination_id=request.destination_id
         )
@@ -670,20 +757,42 @@ def project_delivery(out: Projection, analysis: Any) -> None:
         prefix = "delivery-" + group.category
         path = group.best_known
         if path is None:
+            absent = group.optimum_proven
+            reason = "NO_FEASIBLE_ROUTE" if absent else "DELIVERY_WINNER_UNKNOWN"
+            missing_time = MetricResult(
+                None,
+                "not_applicable" if absent else "unknown",
+                "CONFIRMED_UNREACHABLE" if absent else reason,
+            )
             out.metric(
                 prefix + "-time",
                 "complete_delivery_seconds",
-                known(None, "DELIVERY_WINNER_UNKNOWN"),
+                missing_time,
                 subject,
                 analysis.evidence_refs,
+                full=absent,
                 time_kind="complete_chain",
             )
+            out.metric(
+                prefix + "-movement",
+                "movement_seconds",
+                missing_time,
+                subject,
+                analysis.evidence_refs,
+                full=absent,
+                time_kind="movement",
+            )
+            if absent:
+                _confirmed_missing_metrics(out, (prefix + "-time", prefix + "-movement"))
             out.score(
                 prefix,
                 "delivery_index",
-                known(None, "DELIVERY_WINNER_UNKNOWN"),
+                MetricResult(0, "available", reason)
+                if absent
+                else MetricResult(None, "unknown", reason),
                 subject,
                 analysis.evidence_refs,
+                full=absent,
                 kind="delivery_deadline",
             )
             continue

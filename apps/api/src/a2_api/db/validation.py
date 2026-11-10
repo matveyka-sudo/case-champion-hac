@@ -27,6 +27,7 @@ from a2_api.core.jobs import (
     JobKind,
     JobRequest,
 )
+from a2_api.core.scenario_scope import ScenarioEndpointScope
 from a2_api.db.rows import RunResult
 from a2_api.db.scenario_journeys import scenario_journeys
 
@@ -127,7 +128,12 @@ def _check_submission(
 
 
 def _validate_scenario_semantics(
-    result: ScenarioResult, baseline: AnalysisResult, command: ScenarioProposal
+    result: ScenarioResult,
+    baseline: AnalysisResult,
+    command: ScenarioProposal,
+    *,
+    endpoint_scope: ScenarioEndpointScope | None = None,
+    expected_snapshot_hash: str | None = None,
 ) -> None:
     if (
         result.versions != baseline.versions
@@ -136,6 +142,12 @@ def _validate_scenario_semantics(
         or command.baseline_result_hash != baseline.result_hash
     ):
         raise DomainError(409, "incompatible_versions", "Scenario baseline versions/hash differ")
+    if endpoint_scope is not None and (
+        expected_snapshot_hash is None or endpoint_scope.snapshot_hash != expected_snapshot_hash
+    ):
+        raise DomainError(
+            409, "incompatible_versions", "Scenario endpoint scope source hash differs"
+        )
     try:
         validate_score_dependencies(result.after.metrics, result.after.scores)
         validate_score_context(result.after.metrics, result.after.scores, baseline.analysis_kind)
@@ -148,7 +160,8 @@ def _validate_scenario_semantics(
     after_metrics = {item.metric_id: item for item in result.after.metrics}
     baseline_scores = {item.score_id: item for item in baseline.scores}
     frozen_journeys = {item.journey_id: item for item in baseline.journeys}
-    journeys = scenario_journeys(result, baseline)
+    journeys = scenario_journeys(result, baseline, endpoint_scope=endpoint_scope)
+    after_journey_ids = {journey.journey_id for journey in result.after_journeys}
     renamed = {
         effect.after_id: effect.before_id
         for effect in result.deltas
@@ -232,7 +245,17 @@ def _validate_scenario_semantics(
             frozen_journey = (
                 frozen_journeys.get(previous.journey_id or "") if previous is not None else None
             )
-            if supplied_journey is not None and frozen_journey is not None:
+            source_bound_urban = (
+                endpoint_scope is not None
+                and baseline.analysis_kind == "urban_passenger"
+                and supplied_journey is not None
+                and supplied_journey.journey_id in after_journey_ids
+            )
+            if (
+                supplied_journey is not None
+                and frozen_journey is not None
+                and not source_bound_urban
+            ):
                 frozen_reference = references.get(frozen_journey.reference_id or "")
                 origins = (
                     frozen_reference.boundary_node_sets.origin_node_ids
@@ -254,7 +277,13 @@ def _validate_scenario_semantics(
             # Check both: a changed journey ID cannot replace the original
             # task's frozen reference, even with another complete baseline journey.
             dependency_journeys = [
-                item for item in (frozen_journey, supplied_journey) if item is not None
+                item
+                for item in (
+                    (supplied_journey,)
+                    if source_bound_urban
+                    else (frozen_journey, supplied_journey)
+                )
+                if item is not None
             ]
             if full and score.calculation_kind == "initial_wait" and not dependency_journeys:
                 raise DomainError(
