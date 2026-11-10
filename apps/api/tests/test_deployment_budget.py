@@ -242,7 +242,7 @@ async def test_guarded_downgrade_preserves_configured_ledger(database):
     assert await reserve(ledger(pool), "saved")
     with pytest.raises(RuntimeError, match="budget"):
         await asyncio.to_thread(migrate, url, schema, "0003_evidence_search", True)
-    assert await pool.fetchval("SELECT version_num FROM alembic_version") == "0004_alice_budget"
+    assert await pool.fetchval("SELECT version_num FROM alembic_version") == "0005_od_checkpoints"
     assert (await ledger(pool).status()).held_amount == Decimal("0.3")
 
 
