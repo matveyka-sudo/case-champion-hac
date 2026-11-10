@@ -25,6 +25,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     >(null),
     [phase, setPhase] = useState("idle"),
     [error, setError] = useState<Error | null>(null),
+    [explanationError, setExplanationError] = useState<Error | null>(null),
     [warning, setWarning] = useState(""),
     [messages, setMessages] = useState<ChatMessage[]>([]),
     [chatBusy, setChatBusy] = useState(false),
@@ -59,6 +60,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     setMessages([]);
     setChatBusy(false);
     setError(null);
+    setExplanationError(null);
     setWarning("");
   };
   const reset = () => {
@@ -99,6 +101,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     active.current?.abort();
     chat.current?.abort();
     setChatBusy(false);
+    setExplanationError(null);
     setMessages([]);
     setScenario(null);
     setProposals([]);
@@ -245,6 +248,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     chat.current?.abort();
     setMessages([]);
     setChatBusy(false);
+    setExplanationError(null);
   };
   const explain = async (question: string, selection: Selection | null) => {
     const base = currentResult.current;
@@ -255,7 +259,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     chat.current = controller;
     const rev = revision.current;
     setChatBusy(true);
-    setError(null);
+    setExplanationError(null);
     try {
       const answer = await gateway.explain(
         base.analysis_id,
@@ -271,7 +275,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
         answer.analysis_id !== base.analysis_id ||
         answer.analysis_result_hash !== base.result_hash
       ) {
-        setError(
+        setExplanationError(
           new ApiError(
             409,
             "analysis_mismatch",
@@ -283,7 +287,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
       setMessages((m) => [...m, { question: q, answer }]);
     } catch (e) {
       if (!controller.signal.aborted && rev === revision.current)
-        setError(e instanceof Error ? e : new Error("Объяснение недоступно"));
+        setExplanationError(e instanceof Error ? e : new Error("Объяснение недоступно"));
     } finally {
       if (chat.current === controller) setChatBusy(false);
     }
@@ -295,6 +299,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     job,
     phase,
     error,
+    explanationError,
     warning,
     messages,
     chatBusy,
