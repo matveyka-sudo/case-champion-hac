@@ -861,6 +861,7 @@ export function ApiAtlasPage() {
         </MapViewport>
         <AgentChatView open={chatOpen} onClose={() => { setChatOpen(false); if (window.innerWidth < 1520) setFiltersCollapsed(false); }} onNewDialog={session.clearExplanation}
           subtitle="Объясняет по сохранённому результату"
+          error={session.error ? <p role="alert">{errorText(session.error)}</p> : undefined}
           contextLabel={result ? `${requestTitle} · ${dirty ? "прежние условия" : "сохранённый результат"}` : "Объяснение доступно после анализа"}
           contextRows={[{ label: "Контекст", value: result ? requestTitle : "Результат ещё не получен" },
             { label: "Условия", value: result ? timestampText(result.request.departure_at, savedOrigin?.timezone) : "Не выбраны" },
