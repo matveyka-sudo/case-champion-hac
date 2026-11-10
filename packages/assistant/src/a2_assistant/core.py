@@ -759,7 +759,7 @@ class FlashAssistant:
                     logger.info(
                         "assistant_model_error request_id=%s model=%s code=%s status=%s elapsed_ms=%s",
                         request_id,
-                        self.config.model_uri,
+                        self.config.model_id,
                         exc.code,
                         exc.status_code,
                         round((time.monotonic() - call_started) * 1000),
@@ -784,7 +784,7 @@ class FlashAssistant:
                 logger.info(
                     "assistant_model request_id=%s model=%s input_tokens=%s output_tokens=%s elapsed_ms=%s",
                     request_id,
-                    self.config.model_uri,
+                    self.config.model_id,
                     reply.input_tokens,
                     reply.output_tokens,
                     round((time.monotonic() - call_started) * 1000),

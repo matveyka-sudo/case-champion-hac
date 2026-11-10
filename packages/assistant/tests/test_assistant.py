@@ -834,6 +834,18 @@ async def test_logs_exclude_provider_bodies_credentials_and_source_text(caplog):
         result = await explain(agent)
     assert result.status == "template" and "request_id=request" in caplog.text
     assert secret not in caplog.text and "synthetic-key" not in caplog.text
+    assert "synthetic-folder" not in caplog.text and "gpt://" not in caplog.text
+    assert "model=aliceai-llm-flash code=provider_error status=400" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_success_telemetry_omits_private_model_uri(caplog):
+    agent, _, _, _ = assistant([reply(selection())])
+    with caplog.at_level(logging.INFO, logger="a2_assistant"):
+        result = await explain(agent)
+    assert result.status == "generated"
+    assert "assistant_model request_id=request model=aliceai-llm-flash" in caplog.text
+    assert "synthetic-folder" not in caplog.text and "gpt://" not in caplog.text
 
 
 @pytest.mark.asyncio
