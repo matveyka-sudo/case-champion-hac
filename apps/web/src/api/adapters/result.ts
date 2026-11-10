@@ -157,6 +157,8 @@ export function reasonText(code: string | null | undefined) {
           "Привязка к уличной сети для расчёта не подтверждена.",
         WALK_CONNECTOR_TIME_0_1_SECOND_PRECISION:
           "Время исходных пеших подходов задано с шагом 0,1 секунды.",
+        NONZERO_APPROACH_ZERO_TIME:
+          "Время пешего подхода округлено до нуля; полное время маршрута не подтверждено.",
         SAME_EXACT_STOP_TRANSFER_180S_IS_CONSUMER_MODEL:
           "Для пересадки на той же остановке в модели принято 3 минуты.",
         WHOLE_EXECUTION_HYPOTHETICAL_SHIFT_MINUS360:
