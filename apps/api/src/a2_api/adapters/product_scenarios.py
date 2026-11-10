@@ -33,6 +33,7 @@ from a2_engine import (
     validate_scenario_result,
 )
 
+from a2_api.adapters.demo_transport import DEMO_LIMITATIONS
 from a2_api.adapters.product_inputs import EngineInputs
 from a2_api.adapters.product_projection import (
     Projection,
@@ -78,6 +79,17 @@ def _project(
         project_intercity(out, intercity_result, job.reference, job.car)
     for _, cargo_result in computation.cargo:
         project_delivery(out, cargo_result)
+    # The admitted synthetic model uses the same numerical projection, but its
+    # saved scores must remain excluded from real-city rankings on both sides.
+    # A prefix alone cannot select this policy: the immutable saved result and
+    # every hash-pinned server plan must carry the explicit demo declarations.
+    if (
+        baseline.snapshot_id.startswith("demo-moscow-")
+        and DEMO_LIMITATIONS <= set(baseline.limitations)
+        and all(DEMO_LIMITATIONS <= set(plan.assumptions) for plan in document.plans)
+    ):
+        out.scores = [score.model_copy(update={"ranking_eligible": False}) for score in out.scores]
+        out.limitations.update(DEMO_LIMITATIONS)
     return out
 
 
@@ -265,6 +277,8 @@ def _proposal(
         else []
     )
     limitations = set(feasibility.reasons)
+    if DEMO_LIMITATIONS <= prepared.before.limitations:
+        limitations.update(DEMO_LIMITATIONS)
     if feasibility.state == "unverified" and not turnaround_refs:
         limitations.add("TURNAROUND_UNVERIFIED")
     proposal = ScenarioProposal(

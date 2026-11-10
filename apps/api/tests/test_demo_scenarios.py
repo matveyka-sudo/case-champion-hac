@@ -1,10 +1,16 @@
 """Explicit synthetic-demo plans use the existing production scenario bridge."""
 
+from dataclasses import replace
+
 import pytest
 from a2_api.adapters import product_scenarios as bridge
 from a2_api.adapters.demo_scenarios import build_demo_scenarios
+from a2_api.adapters.demo_transport import DEMO_LIMITATIONS
+from a2_api.adapters.product_inputs import UrbanInputs
 from a2_api.adapters.product_scenario_inputs import ScenarioDocument
+from a2_api.core.jobs import V2JobContext
 from a2_contracts.common import canonical_hash
+from a2_contracts.v2.results import AnalysisResult
 from test_product_scenarios import make_case, with_claim
 
 
@@ -63,3 +69,71 @@ def test_demo_generator_does_not_authorize_infeasible_shift():
 
     with pytest.raises(DomainError):
         bridge.propose(context, inputs, document, baseline, profile_id=document.profile_id)
+
+
+def _demo_snapshot_ids(value, run_ids=None):
+    if isinstance(value, dict):
+        return {
+            key: "demo-moscow-TEST_ONLY"
+            if key == "snapshot_id"
+            else _demo_snapshot_ids(item, run_ids)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_demo_snapshot_ids(item, run_ids) for item in value]
+    if isinstance(value, str) and run_ids:
+        return run_ids.get(value, value)
+    return value
+
+
+def test_demo_saved_nonranking_policy_is_exact_on_both_scenario_sides():
+    context, inputs, source, baseline, frozen = make_case()
+    run_ids = {
+        run.run_id: replace(run, snapshot_id="demo-moscow-TEST_ONLY").run_id
+        for run in inputs.timetable.runs
+    }
+    context = V2JobContext.model_validate(_demo_snapshot_ids(context.model_dump(mode="json")))
+    inputs = UrbanInputs.model_validate(_demo_snapshot_ids(inputs.model_dump(mode="json"), run_ids))
+    payload = _demo_snapshot_ids(baseline.model_dump(mode="json"))
+    payload["limitations"] = sorted(set(payload["limitations"]) | DEMO_LIMITATIONS)
+    for score in payload["scores"]:
+        score["ranking_eligible"] = False
+    baseline = AnalysisResult.model_validate(payload)
+    baseline.result_hash = canonical_hash(baseline.model_dump(mode="json", exclude={"result_hash"}))
+    table = source.inputs.timetables[0]
+    operation = source.plans[0].operation
+    document = build_demo_scenarios(
+        context,
+        inputs,
+        profile_id=source.profile_id,
+        incoming_run_id=run_ids[operation.incoming_execution_id],
+        outgoing_run_id=run_ids[operation.execution_id],
+        shift_seconds=(180,),
+        transport_modes=table.transport_modes,
+        physical_services=tuple(
+            replace(row, run_ids=tuple(run_ids[r] for r in row.run_ids))
+            for row in table.physical_services
+        ),
+        evidence_refs=operation.evidence_refs,
+    )
+    immutable = baseline.model_dump_json()
+    claim, *_ = with_claim((context, inputs, document, baseline, frozen))
+    result = bridge.calculate(
+        claim, baseline=baseline, inputs=inputs, document=document, profile_id=document.profile_id
+    )
+    assert result.before.scores == baseline.scores
+    assert all(
+        not score.ranking_eligible for score in [*result.before.scores, *result.after.scores]
+    )
+    assert DEMO_LIMITATIONS <= set(result.limitations)
+    assert DEMO_LIMITATIONS <= set(result.assumptions)
+    assert baseline.model_dump_json() == immutable
+    # A prefix without the immutable declaration cannot weaken before equivalence.
+    unlabelled = baseline.model_copy(update={"limitations": []})
+    unlabelled.result_hash = canonical_hash(
+        unlabelled.model_dump(mode="json", exclude={"result_hash"})
+    )
+    from a2_api.core.errors import DomainError
+
+    with pytest.raises(DomainError, match="SCENARIO_RECOMPUTED_BASELINE_DIFFERS"):
+        bridge.propose(context, inputs, document, unlabelled, profile_id=document.profile_id)
