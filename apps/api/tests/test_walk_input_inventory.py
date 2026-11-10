@@ -307,9 +307,9 @@ def test_streamed_read_detects_atomic_replacement(
 
 def test_exact_cumulative_byte_boundary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     pinned = _inventory_for(tmp_path, b"12345678")
-    monkeypatch.setattr(inventory, "MAX_RUNTIME_BYTES", 8)
+    monkeypatch.setattr(inventory, "runtime_source_budget_bytes", lambda: 8)
     pinned.assert_current(executor_fingerprint=EXECUTOR, now=NOW)
-    monkeypatch.setattr(inventory, "MAX_RUNTIME_BYTES", 7)
+    monkeypatch.setattr(inventory, "runtime_source_budget_bytes", lambda: 7)
     with pytest.raises(ValueError, match="BYTE_BUDGET"):
         pinned.assert_current(executor_fingerprint=EXECUTOR, now=NOW)
 

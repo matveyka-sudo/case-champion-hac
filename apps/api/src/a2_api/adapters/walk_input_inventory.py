@@ -20,7 +20,8 @@ from a2_data_pipeline.bundle import BundleManifest
 from a2_data_pipeline.manifest import dataset_manifest_path
 from a2_data_pipeline.paths import bundles_dir
 
-from a2_api.adapters.product_runtime import MAX_DOCUMENT_BYTES, MAX_RUNTIME_BYTES
+from a2_api.adapters.product_runtime import MAX_DOCUMENT_BYTES
+from a2_api.core.runtime_budget import runtime_source_budget_bytes
 
 if TYPE_CHECKING:
     from a2_data_pipeline.bundle import BundleData
@@ -80,7 +81,7 @@ class _Reader:
             raise ValueError("WALK_INPUT_TIMEOUT_INVALID")
         self.started = time.monotonic()
         self.deadline = self.started + timeout_seconds
-        self.remaining = MAX_RUNTIME_BYTES
+        self.remaining = runtime_source_budget_bytes()
 
     def check_time(self) -> None:
         if time.monotonic() >= self.deadline:

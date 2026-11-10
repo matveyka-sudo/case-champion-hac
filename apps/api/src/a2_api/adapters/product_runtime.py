@@ -42,9 +42,10 @@ from a2_api.adapters.product_scenario_inputs import ScenarioDocument
 from a2_api.adapters.timetable_source import verify_timetable_source
 from a2_api.core.errors import DomainError
 from a2_api.core.registry import ProductRegistry
+from a2_api.core.runtime_budget import DEFAULT_RUNTIME_SOURCE_BYTES, runtime_source_budget_bytes
 
 MAX_DOCUMENT_BYTES = 32 * 1024 * 1024
-MAX_RUNTIME_BYTES = 96 * 1024 * 1024
+MAX_RUNTIME_BYTES = DEFAULT_RUNTIME_SOURCE_BYTES
 PROFILE_FAILURE_CODES = frozenset(
     {
         "RUNTIME_PROFILE_SNAPSHOT_HASH_MISMATCH",
@@ -736,7 +737,7 @@ def load_runtime() -> Runtime:
         raise unavailable("HASH_PINNED_PRODUCT_RUNTIME_REQUIRED")
     try:
         source = Path(path)
-        budget = [MAX_RUNTIME_BYTES]
+        budget = [runtime_source_budget_bytes()]
         manifest = Manifest.model_validate(read_document(source, digest, budget))
         snapshots = {}
         for ref in manifest.snapshots:
