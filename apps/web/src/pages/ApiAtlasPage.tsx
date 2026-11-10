@@ -51,6 +51,7 @@ import {
 import { useAnalysisSession } from "../features/analysis/useAnalysisSession";
 import { scenarioJourneys } from "../api/adapters/scenario";
 import { scopeAllowsArea, scopeContainsTime, urbanScopeAvailability, type UrbanSelection } from "../api/adapters/urbanScopes";
+import { journeyLines, segmentGeometryNotice } from "../api/adapters/journeyGeometry";
 import { Select } from "../shared/Select";
 import { DatePicker } from "../shared/DatePicker";
 import { Icon, Wordmark } from "../shared/ui";
@@ -419,12 +420,13 @@ export function ApiAtlasPage() {
     [result, scenario],
   );
   const visibleJourneys = scenarioView ? scenarioPaths?.journeys || [] : result?.journeys || [];
-  const scenarioGeometryCount = scenarioPaths?.journeys.filter((j) => j.geometry !== null).length || 0;
+  const segmentGeometry = visibleJourneys.some((j) => journeyLines(j).some((part) => part.segment));
+  const scenarioGeometryCount = scenarioPaths?.journeys.filter((j) => journeyLines(j).length > 0).length || 0;
   const scenarioMapNotice = !scenarioPaths?.journeys.length
     ? "Пути сценария не предоставлены. Показаны объекты исходного анализа."
     : !scenarioGeometryCount
       ? "Геометрия путей сценария не предоставлена. Показаны объекты исходного анализа; сведения о путях — в карточке."
-      : scenarioGeometryCount < scenarioPaths.journeys.length || scenarioPaths.missingJourneyIds.length
+      : segmentGeometry || scenarioGeometryCount < scenarioPaths.journeys.length || scenarioPaths.missingJourneyIds.length
         ? "Часть геометрии путей сценария не предоставлена. Показаны только полученные линии; объекты — из исходного анализа."
         : "Показаны пути сценария; объекты — из исходного анализа.";
   const shownMetrics =
@@ -1081,9 +1083,9 @@ export function ApiAtlasPage() {
           {result &&
             (!result.map_data ||
               result.map_data.status !== "available" ||
-              result.map_data.completeness === "partial") && (
+              result.map_data.completeness === "partial" || segmentGeometry) && (
               <div className="api-map-note">
-                {result.map_data?.status === "available"
+                {segmentGeometry ? `${segmentGeometryNotice}.` : result.map_data?.status === "available"
                   ? "Геометрия доступна частично."
                   : "Геометрия недоступна."}{" "}
                 Доступные показатели сохранены.

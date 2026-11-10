@@ -13,6 +13,7 @@ import { returnContextFixture } from "../tests/fixtures/return-context";
 import { airportScope, scopedCapabilities } from "../tests/fixtures/urban-scopes";
 import { pointOverviewFixture } from "../tests/fixtures/point-overview";
 import { partialWalkGeometryFixture } from "../tests/fixtures/partial-walk-geometry";
+import { legGeometryFixture } from "../tests/fixtures/leg-geometry";
 const fixtures = {
   urban_passenger: urban,
   intercity_passenger: pax,
@@ -970,4 +971,34 @@ test("API: changing city during a job discards its local context without borrowi
   await expect(page.getByRole("button", { name: "Рассчитать", exact: true }).first()).toBeDisabled();
   expect(mock.posts).toBe(1);
   expect(mock.requests.some((request) => request.url.endsWith("/cancel"))).toBe(false);
+});
+
+test("API: disjoint movement segments retain partial-route labels and clear on city change", async ({ page }) => {
+  // Synthetic missing approaches and gap: only two supplied network segments exist.
+  await page.clock.setFixedTime(new Date("2026-11-10T08:00:00Z"));
+  const mock = await mockApi(page, { capabilities: scopedCapabilities(), result: legGeometryFixture(), emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await choose(page, "Город", "Калининград");
+  await page.getByRole("button", { name: "Использовать доступные параметры", exact: true }).click();
+  await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
+  await expect(page.getByRole("status")).toContainText("Результат получен");
+  const note = page.locator(".api-map-note");
+  await expect(note).toContainText("Показан участок маршрута; геометрия подходов не подтверждена");
+  const overview = page.getByLabel("Обзор рассчитанных точек");
+  await expect(overview).toContainText("Индекс города: Нет данных");
+  await overview.locator("summary").click();
+  await overview.getByRole("button", { name: /Точка · 54.50200, 20.30200/ }).click();
+  const card = page.locator("#apiResultCard"), route = card.locator(".api-journey");
+  await expect(card).toContainText("0,5 из 100");
+  await expect(route.locator("summary")).toHaveText("Путь · Данные доступны · геометрия участков · частичные данные");
+  await route.locator("summary").click();
+  await expect(route).toContainText("Показан участок маршрута; геометрия подходов не подтверждена");
+  await expect(route.locator("li")).toHaveCount(5);
+  await expect(route).toContainText("Синтетический аэропорт · 10 мин");
+  await expect(route).not.toContainText("геометрия источника");
+  await choose(page, "Город", "Москва");
+  await expect(card).toHaveCount(0);
+  await expect(note).toHaveCount(0);
+  await expect(page.getByRole("status")).not.toContainText("Калининград");
+  expect(mock.posts).toBe(1);
 });
