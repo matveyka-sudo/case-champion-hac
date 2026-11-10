@@ -87,6 +87,12 @@ def scenario_hash(value: object) -> str:
             # canonical() sorts original keys before converting to strings; a
             # collision retains the last value. Final JSON sorts string keys.
             normalized = {str(key): child for key, child in sorted(item.items())}
+            if len(normalized) != len(item):
+                # Legacy canonicalization validates even overwritten children,
+                # in original-key order. Preserve that rare collision path.
+                validated = canonical(item)
+                assert isinstance(validated, dict)
+                normalized = validated
             yield b"{"
             for index, key in enumerate(sorted(normalized)):
                 if index:
