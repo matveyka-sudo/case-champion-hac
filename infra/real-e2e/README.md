@@ -3,10 +3,10 @@
 These commands reproduce the real, bounded `kaliningrad-urban-2026-11-10.2`
 point → school calculation. Use an integrated checkout containing the walk API
 adapter and the engine's explicit six-decimal correlation support. Python 3.12,
-Docker and the installed workspace packages are required:
+uv 0.12.17, Docker and the installed workspace packages are required:
 
 ```sh
-uv sync --frozen --all-packages --all-groups
+uv sync --frozen --all-packages --group dev
 export A2_DATA_DIR="$PWD/data"
 export WAYDEX_RUNTIME="$(mktemp -d "${TMPDIR:-/tmp}/waydex-real-e2e.XXXXXX")"
 ```
