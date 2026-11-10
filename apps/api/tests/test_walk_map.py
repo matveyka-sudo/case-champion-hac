@@ -267,7 +267,7 @@ def test_changed_snapshot_population_is_not_silently_projected(configured):
 
 
 def test_duplicate_canonical_destination_references_are_deduplicated(configured):
-    before, snapshot, calculated, names = calculate(configured)
+    snapshot, calculated, before, names = calculate(configured)
     raw = snapshot.model_dump(mode="json")
     for destination in raw["destinations"]:
         destination["source_refs"] = destination["source_refs"] * 2
