@@ -4,8 +4,11 @@ from a2_api.core.errors import DomainError
 
 
 def test_large_catalog_selects_only_the_requested_category():
-    catalog = [PhysicalPair(point_id=f"p-{i}", destination_id=category)
-               for i in range(3000) for category in ("school", "clinic")]
+    catalog = [
+        PhysicalPair(point_id=f"p-{i}", destination_id=category)
+        for i in range(3000)
+        for category in ("school", "clinic")
+    ]
     selected = selected_pairs(catalog, {"school"})
     assert len(selected) == 3000
     assert {target for _, target in selected} == {"school"}
