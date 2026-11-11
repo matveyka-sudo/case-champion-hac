@@ -1,5 +1,44 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Publication fixes integrated — 2026-11-11 03:35 MSK
+
+Integration source `e5e067e1b4d2a9021ddfa1d91bf918957a94a203` includes two
+independently checked corrections. It is a release candidate, not yet the live
+source. Production remains1839 on5193 until the final-image gates pass.
+
+- `09a073c`: raw checkpoint validation runs outside job-row write locks;
+  short transactions recheck the complete captured inventory, scope, claim,
+  execution and fresh expiry. Worker heartbeat, cancellation and the original
+  hard deadline remain active through atomic publication. Root55 real-PG tests
+  passed; independent reviewer44 focused PG tests plus3 additional cancellation
+  checks passed. The original e472 incident was reproduced RED with actual88
+  saved checkpoints, then GREEN using the actual Worker, spawned23,985,971-byte
+  result and PostgreSQL publication in62.723s. No routes were recomputed for
+  this diagnosis. The final Linux image must still pass this database boundary
+  at1CPU/2GiB with the original10s query timeout and30s lease.
+- `180d0ac`: persisted scenario run IDs are UUID5 of the durable job ID, while
+  physical engine IDs and calculations remain unchanged. Root32 scenario PG
+  tests passed before integration;40 combined scenario/worker tests passed on
+  e5. This corrects actual UI scenario job24b63712-b9f5-4037-834c-655ac579cff2,
+  which failed with `Run identity already published`. Its saved baseline
+  dbc2e51b-2434-461d-94ba-57eae4eaaad1 remains unchanged:5595.143s and34.051579
+  observed-route estimate, with canonical indices null.
+
+Distinct private Kaliningrad router now runs at valhalla-kaliningrad:8002,
+512MiB cap, pinned121 tiles, Valhalla3.5.1/tileset1794312452. One bounded status
+call passed; no new route was calculated. Deployment evidence is outside Git:
+`devops/kaliningrad-router-deployment-20261111-v1/`. New K profile activation
+still requires fresh binding/executor/source approval.
+
+ML2 independently verified original and checkout ZIP hashes, all6 internal
+checksums, installed GTFS/Rasp bindings, current165-file archive and all3 graph
+closures. The archive alone does not restore graphs or current deployment
+settings. A sanitized four-profile restoration recipe is being implemented in
+an isolated branch. Optional persisted batch progress is also a separate next
+delivery, with opt-in GET semantics so existing strict clients keep working.
+Neither delivery is included in e5. PT name binding224da53 remains pending.
+No additional paid Alice or Yandex calls; no merge into dev.
+
 ## Live 1839 and confirmed parent-lock incident — 2026-11-11 03:15 MSK
 
 Live5193 now runs `1839d8b894f8c069c367e67db052140fcfa5e8bb`; root activation

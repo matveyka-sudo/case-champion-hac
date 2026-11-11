@@ -9,7 +9,28 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 
 ## Three-city priority — 2026-11-10 continuation
 
-### Current gate update — 2026-11-11, full campaign / scenario
+### Current gate update — 2026-11-11, publication repair
+
+- Live5193 remains1839. Candidate e5e067e integrates independently reviewed
+  parent checkpoint/heartbeat fencing09a073c and scenario identity180d0ac.
+  Root55 checkpoint/worker PG checks,32 scenario PG checks, and40 integrated
+  scenario/worker checks passed. Final-image real-PG publication and fresh UI
+  acceptance are still required; prior stub-finalize gates were insufficient.
+- Moscow walk1401 has88 persisted checkpoints and1394 valid reduced journeys;
+  failed production jobe472 is preserved. Saved-data actual Worker+PG replay
+  now publishes exactly in62.723s. This is replay evidence, not a new UI success.
+- Moscow PT baseline dbc2e51b succeeds on1839 with5595.143s and34.051579
+  observed-route estimate. Its new scenario failed due to a run-ID collision;
+  the candidate fixes that collision without changing any metric or engine ID.
+- Separate K router is running with pinned121tiles and one successful status
+  probe; no expanded K route or numerical result follows from startup alone.
+- ML2 archive/local install/165-file runtime/three graph closures independently
+  verify. Current-stack server restoration instructions and opt-in persisted
+  batch progress are active independent deliveries, not yet integrated.
+- All city indices remain unknown. Existing bounded K point-model proof and
+  observed-route estimates retain their original scope and completeness limits.
+
+### Previous gate update — 2026-11-11, full campaign / scenario
 
 - Live release d085256 preserves the immutable four-profile input closure.
 - Moscow walk1401: all88 checkpoints/1401 observations persisted, but final
