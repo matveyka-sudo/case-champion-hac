@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { BackendGateway, backend } from "../../api/gateway";
 import { ApiError } from "../../api/client";
+import { parseSavedPointer } from "./savedPointer";
 import type {
   AnalysisRequest,
   AnalysisResult,
@@ -95,7 +96,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
           );
       });
   };
-  const run = async (request: AnalysisRequest) => {
+  const run = async (request: AnalysisRequest, navigate?: (kind: "job" | "analysis", id: string) => void) => {
     if (busy.current) return;
     busy.current = true;
     active.current?.abort();
@@ -118,6 +119,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
       pendingSubmission.current = { fingerprint, key: crypto.randomUUID() };
     const submission = pendingSubmission.current;
     let terminalFailure = false;
+    let accepted = false;
     try {
       const value = await gateway.analyze(
         request,
@@ -125,6 +127,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
         controller.signal,
         (j) => {
           if (rev === revision.current && !controller.signal.aborted) {
+            if (!accepted) { accepted = true; navigate?.("job", j.job_id); }
             terminalFailure = j.status === "failed" || j.status === "cancelled";
             setJob(j);
           }
@@ -136,6 +139,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
         setPhase("cancelled");
         return;
       }
+      navigate?.("analysis", value.analysis_id);
       currentResult.current = value;
       setResult(value);
       setDirty(false);
@@ -152,6 +156,52 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
       if (active.current === controller) {
         busy.current = false;
       }
+    }
+  };
+  const restore = async (hash: string, isCurrent = () => true): Promise<AnalysisResult | null> => {
+    reset();
+    const rev = revision.current;
+    const controller = new AbortController();
+    active.current = controller;
+    busy.current = true;
+    const current = () => rev === revision.current && !controller.signal.aborted && isCurrent();
+    try {
+      const pointer = parseSavedPointer(hash);
+      if (!pointer) return null;
+      setPhase("running");
+      let id = pointer.id;
+      if (pointer.kind === "job") {
+        const initial = await gateway.job(id, controller.signal);
+        if (initial.job_id !== id) throw new ApiError(0, "invalid_response", "Ответ относится к другому заданию");
+        const completed = await gateway.wait(initial, controller.signal, (j) => {
+          if (current()) setJob(j);
+        });
+        if (!current()) return null;
+        if (completed.status === "cancelled") { setPhase("cancelled"); return null; }
+        if (!completed.analysis_id || completed.scenario_run_id)
+          throw new ApiError(0, "invalid_saved_pointer", "Эта ссылка не относится к заданию анализа.");
+        id = completed.analysis_id;
+      }
+      const value = await gateway.result(id, controller.signal);
+      if (!current()) return null;
+      if (value.analysis_id !== id) throw new ApiError(0, "invalid_response", "Ответ относится к другому анализу");
+      currentResult.current = value;
+      setResult(value);
+      setDirty(false);
+      setPhase("done");
+      loadProposals(value);
+      return value;
+    } catch (e) {
+      if (current()) {
+        const unavailable = e instanceof ApiError && [404, 410].includes(e.status);
+        setError(unavailable ? new ApiError(e.status, e.code, e.status === 410
+          ? "Срок доступа к сохранённому расчёту истёк."
+          : "Сохранённый расчёт недоступен в этой сессии.") : e instanceof Error ? e : new Error("Не удалось открыть сохранённый расчёт"));
+        setPhase("failed");
+      }
+      return null;
+    } finally {
+      if (active.current === controller) busy.current = false;
     }
   };
   const runScenario = async (proposal: Schemas["ScenarioProposal"]) => {
@@ -309,6 +359,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     changed,
     reset,
     run,
+    restore,
     runScenario,
     cancel,
     explain,

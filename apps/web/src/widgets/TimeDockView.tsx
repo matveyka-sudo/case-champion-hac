@@ -6,7 +6,10 @@ export function TimeDockView({ run, mobile = false, date, slot, timezoneLabel, m
   onDateChange: (date: string) => void; onSlotChange: (slot: number) => void; disabled?: boolean; highlighted?: boolean;
   runLabel?: string; dateInputId?: string; timeInputId?: string;
 }) {
-  const fill = (slot / 95) * 100;
+  const validSlot = Number.isInteger(slot) && slot >= 0 && slot <= 95;
+  const shownSlot = validSlot ? slot : 0;
+  const shownTime = validSlot ? timeLabel(slot) : "Выберите время";
+  const fill = (shownSlot / 95) * 100;
   const set = (t: number) =>
     onSlotChange(Math.max(0, Math.min(95, t)));
   const id = mobile ? "M" : "";
@@ -32,9 +35,9 @@ export function TimeDockView({ run, mobile = false, date, slot, timezoneLabel, m
       <div className="td-slider">
         <span
           className="td-now tnum"
-          style={{ left: `calc(${fill}% + ${11 - (slot / 95) * 22}px)` }}
+          style={{ left: `calc(${fill}% + ${11 - (shownSlot / 95) * 22}px)` }}
         >
-          {timeLabel(slot)}
+          {shownTime}
         </span>
         <span
           className="td-night"
@@ -49,10 +52,10 @@ export function TimeDockView({ run, mobile = false, date, slot, timezoneLabel, m
           min="0"
           max="95"
           step="1"
-          value={slot}
+          value={shownSlot}
           id={timeInputId || `timeIn${id}`}
           aria-label="Время отправления, шаг 15 минут"
-          aria-valuetext={`${timeLabel(slot)}, ${timezoneLabel}`}
+          aria-valuetext={`${shownTime}, ${timezoneLabel}`}
           style={css({ "--fill": `${fill}%` })}
           onChange={(e) => set(+e.target.value)}
           onKeyDown={(e) => {
