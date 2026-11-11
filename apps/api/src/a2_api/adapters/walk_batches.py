@@ -117,7 +117,7 @@ def _unavailable(reason: str) -> DomainError:
 def selected_pairs(pairs: list[PhysicalPair], destinations: set[str]) -> set[tuple[str, str]]:
     selected = {(p.point_id, p.destination_id) for p in pairs if p.destination_id in destinations}
     if len(selected) > MAX_EXECUTION_PAIRS:
-        raise DomainError(422, "analysis_too_large", "WALK_BATCH_PAIR_BUDGET_EXCEEDED")
+        raise DomainError(422, "budget_exceeded", "WALK_BATCH_PAIR_BUDGET_EXCEEDED")
     return selected
 
 
@@ -291,7 +291,7 @@ def _prepare(
         valid_until=approval.valid_until,
     )
     if len(batch.model_dump_json().encode()) > 8 * 1024 * 1024:
-        raise DomainError(422, "analysis_too_large", "WALK_BATCH_MANIFEST_BYTE_BUDGET_EXCEEDED")
+        raise DomainError(422, "budget_exceeded", "WALK_BATCH_MANIFEST_BYTE_BUDGET_EXCEEDED")
     return batch, plan, runtime
 
 
