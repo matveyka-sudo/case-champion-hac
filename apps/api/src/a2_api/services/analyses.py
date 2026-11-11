@@ -22,7 +22,8 @@ from a2_contracts.v2.scenarios import (
 from a2_api.assistant.explanations import explain as _explain
 from a2_api.core.batches import BatchExecution, BatchPlan
 from a2_api.core.errors import DomainError, unavailable
-from a2_api.core.jobs import V2JobContext, batch_context_fingerprint
+from a2_api.core.job_admission import Admission
+from a2_api.core.jobs import V2JobContext, batch_context_fingerprint, request_hash
 from a2_api.core.registry import ProductRegistry
 from a2_api.core.scope import territory_ids as territory_ids
 from a2_api.db.repositories.jobs import JobRepository
@@ -53,6 +54,7 @@ class AnalysisService:
         self.preflight = preflight
         self.assistant = assistant
         self.registered_template_ids = registered_template_ids
+        self._admission: Admission[JobAccepted] = Admission()
 
     def capabilities(self) -> Capabilities:
         result = self.registry.capabilities()
@@ -92,6 +94,24 @@ class AnalysisService:
         replay = await repository.replay("analysis", request, scoped_key, scope=scope)
         if replay is not None:
             return JobAccepted(job_id=replay.job_id, status=replay.status, request_id=request_id)
+        accepted = await self._admission.run(
+            (scope, scoped_key),
+            request_hash(request),
+            lambda: self._admit(repository, request, scoped_key, request_id, scope),
+        )
+        return accepted.model_copy(update={"request_id": request_id})
+
+    async def close_admission(self) -> None:
+        await self._admission.close()
+
+    async def _admit(
+        self,
+        repository: JobRepository,
+        request: AnalysisRequest,
+        scoped_key: str,
+        request_id: str,
+        scope: str,
+    ) -> JobAccepted:
         self._engine(request.analysis_kind)
         normalized = self.registry.normalize(request)
         snapshot = self.registry.resolve_snapshot(normalized)
