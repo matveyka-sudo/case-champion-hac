@@ -7,6 +7,8 @@ to the public engine, never client-supplied metrics, scores or executable hooks.
 from typing import Annotated, Literal
 
 from a2_contracts.v2.base import ContractModel, Timestamp
+from a2_contracts.v2.journeys import LineGeometry
+from a2_contracts.v2.requests import IntercityPassengerRequest
 from a2_engine import (
     AcceptedIntercityCar,
     BoardingReadiness,
@@ -71,7 +73,21 @@ class IntercityInputs(ContractModel):
     readiness: tuple[BoardingReadiness, ...] = ()
     car: AcceptedIntercityCar | None = None
     car_departure_at: Timestamp | None = None
+    car_geometry: LineGeometry | None = None
     resource_limit: int | None = Field(default=None, gt=0)
+
+
+def car_observation_matches(
+    inputs: IntercityInputs, request: IntercityPassengerRequest, *, static_observations: bool
+) -> bool:
+    return (
+        inputs.car is not None
+        and inputs.car.traffic_mode == request.traffic_mode
+        and (
+            inputs.car_departure_at == request.departure_at
+            or (static_observations and request.traffic_mode == "static")
+        )
+    )
 
 
 class UrbanCargoInputs(ContractModel):

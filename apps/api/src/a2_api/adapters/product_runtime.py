@@ -37,6 +37,7 @@ from a2_api.adapters.product_inputs import (
     UrbanCargoInputs,
     UrbanInputs,
     candidate_is_static,
+    car_observation_matches,
 )
 from a2_api.adapters.product_scenario_inputs import ScenarioDocument
 from a2_api.adapters.timetable_source import verify_timetable_source
@@ -441,6 +442,25 @@ def validate_inputs(
         if "public_transport" in profile.passenger_modes and inputs.timetable is None:
             raise ValueError("DATED_TIMETABLE_REQUIRED_FOR_PUBLIC_TRANSPORT")
     elif isinstance(inputs, IntercityInputs):
+        if inputs.car_geometry is not None:
+            if inputs.car is None or not set(inputs.car_geometry.evidence_refs) <= set(
+                inputs.car.evidence_refs
+            ):
+                raise ValueError("CAR_GEOMETRY_OBSERVATION_EVIDENCE_MISMATCH")
+            car_access_nodes = {node.node_id: node for node in snapshot.access_nodes}
+            for identity, coordinate in zip(
+                (inputs.car.origin_node_id, inputs.car.destination_node_id),
+                (inputs.car_geometry.coordinates[0], inputs.car_geometry.coordinates[-1]),
+                strict=True,
+            ):
+                car_access = car_access_nodes.get(identity)
+                if car_access is None or any(
+                    abs(a - b) > 0.0000005
+                    for a, b in zip(
+                        coordinate, (car_access.location.lon, car_access.location.lat), strict=True
+                    )
+                ):
+                    raise ValueError("CAR_GEOMETRY_ENDPOINT_MISMATCH")
         verify_timetable_source(
             snapshot,
             inputs.timetable,
@@ -700,9 +720,8 @@ class Runtime:
             if (
                 wants_car
                 and inputs.car is not None
-                and (
-                    inputs.car_departure_at != request.departure_at
-                    or inputs.car.traffic_mode != request.traffic_mode
+                and not car_observation_matches(
+                    inputs, request, static_observations=profile.static_observations
                 )
             ):
                 if request.passenger_modes == ["private_car"]:

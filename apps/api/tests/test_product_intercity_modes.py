@@ -11,6 +11,7 @@ from a2_api.core.errors import DomainError
 from a2_api.core.registry import ProductRegistry
 from a2_contracts.common import canonical_hash
 from a2_contracts.v2.dataset import AcceptedData
+from a2_contracts.v2.journeys import LineGeometry
 from a2_contracts.v2.requests import IntercityPassengerRequest
 from a2_contracts.v2.results import EvidenceRef
 from a2_engine import AcceptedIntercityCar
@@ -149,3 +150,34 @@ def test_private_car_observation_cannot_be_retimed(configured_intercity):
     changed = request(module, ["private_car"], offset=15)
     with pytest.raises(DomainError, match="CAR_OBSERVATION_DEPARTURE"):
         runtime.select(changed, snapshot)
+
+
+def test_explicit_static_car_observation_supports_selected_departure(configured_intercity):
+    module, snapshot, runtime = configured_intercity
+    key = next(iter(runtime.profiles))
+    profile, inputs = runtime.profiles[key]
+    runtime.profiles[key] = (profile.model_copy(update={"static_observations": True}), inputs)
+    changed = request(module, ["private_car"], offset=15)
+    runtime.select(changed, snapshot)
+    result = product.calculate(claim_for(snapshot, changed))
+    assert result.journeys[0].departure_at == changed.departure_at
+    assert result.journeys[0].total_seconds == inputs.car.path_seconds
+    assert result.journeys[0].initial_wait_seconds == 0
+    with pytest.raises(DomainError):
+        runtime.select(changed.model_copy(update={"traffic_mode": "live"}), snapshot)
+
+
+def test_car_geometry_survives_projection_without_changing_time(configured_intercity):
+    module, snapshot, runtime = configured_intercity
+    key = next(iter(runtime.profiles))
+    profile, inputs = runtime.profiles[key]
+    geometry = LineGeometry(
+        type="LineString",
+        coordinates=[(37.0, 55.0), (38.0, 54.0)],
+        evidence_refs=list(module.PROOF),
+    )
+    runtime.profiles[key] = (profile, inputs.model_copy(update={"car_geometry": geometry}))
+    result = product.calculate(claim_for(snapshot, request(module, ["private_car"])))
+    assert result.journeys[0].geometry == geometry
+    assert result.journeys[0].geometry_kind == "actual"
+    assert result.journeys[0].total_seconds == 3600

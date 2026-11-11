@@ -10,6 +10,7 @@ from a2_contracts.v2.journeys import (
     CountResult,
     JourneyResult,
     Leg,
+    LineGeometry,
     ReferenceResult,
 )
 from a2_contracts.v2.map_data import AnalysisMapData
@@ -408,7 +409,14 @@ def project_reference(out: Projection, reference: Any) -> None:
     )
 
 
-def project_car(out: Projection, result: Any, accepted: Any, reference: Any) -> None:
+def project_car(
+    out: Projection,
+    result: Any,
+    accepted: Any,
+    reference: Any,
+    *,
+    geometry: LineGeometry | None = None,
+) -> None:
     request = out.context.normalized_request
     assert isinstance(request, IntercityPassengerRequest)
     if not out.references:
@@ -447,8 +455,8 @@ def project_car(out: Projection, result: Any, accepted: Any, reference: Any) -> 
                     evidence_refs=list(accepted.evidence_refs),
                 )
             ],
-            geometry=None,
-            geometry_kind="none",
+            geometry=geometry,
+            geometry_kind="actual" if geometry is not None else "none",
             status="available",
             reason_code=None,
             snapshot_id=out.context.snapshot_id,
@@ -752,6 +760,30 @@ def project_urban_cargo(out: Projection, analysis: Any) -> None:
                 :24
             ]
             route = site.best_known_route
+            # Known road movement remains useful when compatibility or the
+            # catalogue minimum is unknown. It is not access or delivery time
+            # and must never become an input to an accessibility score.
+            for observed in site.observed_routes:
+                if observed.network_seconds is None:
+                    continue
+                node_id = observed.to_id if request.direction == "outbound" else observed.from_id
+                out.metric(
+                    "cargo-network-" + canonical_hash([prefix, observed.route_id])[:24],
+                    "observed_truck_network_seconds",
+                    MetricResult(
+                        observed.network_seconds, "available", "TRUCK_NETWORK_ONLY_NOT_DELIVERY"
+                    ),
+                    SubjectRef(
+                        kind="freight_site",
+                        territory_id=request.city_id,
+                        site_id=site.site_id,
+                        node_id=node_id,
+                        mode="road",
+                    ),
+                    observed.evidence_refs,
+                    time_kind="movement",
+                )
+                out.limitations.add("TRUCK_NETWORK_ONLY_NOT_DELIVERY")
             raw = out.metric(
                 "cargo-time-" + prefix,
                 "minimum_truck_access_seconds",

@@ -71,6 +71,7 @@ export function measureLabel(name: string) {
     unique_physical_departures: "Число уникальных отправлений",
     accepted_dated_service_runs: "Учтённые рейсы",
     minimum_truck_access_seconds: "Время грузового доступа",
+    observed_truck_network_seconds: "Дорожный участок грузового маршрута",
     cargo_site_index: "Индекс грузового доступа площадки",
     cargo_access_index: "Индекс грузового доступа территории",
     complete_delivery_seconds: "Полное время доставки",
@@ -91,6 +92,8 @@ export function reasonText(code: string | null | undefined) {
         PROVIDER_UNAVAILABLE: "Источник временно недоступен",
         ENGINE_UNAVAILABLE: "Расчётный модуль временно недоступен",
         MAP_DATA_UNAVAILABLE: "Геометрия недоступна",
+        TRUCK_NETWORK_ONLY_NOT_DELIVERY: "Известно время движения по дорожной сети. Оно не подтверждает грузовой подъезд, совместимость или полное время доставки.",
+        FREIGHT_LOCATIONS_ONLY: "Показаны принятые физические площадки и узлы. Их наличие на карте не подтверждает грузовую связь.",
         PENDING: "Дополнительный показатель вычисляется",
         TURNAROUND_UNVERIFIED:
           "Оборот транспорта и ресурсы для изменения рейса не подтверждены.",

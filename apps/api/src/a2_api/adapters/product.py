@@ -43,6 +43,7 @@ from a2_api.adapters.product_inputs import (
     UrbanCargoInputs,
     UrbanInputs,
     candidate_is_static,
+    car_observation_matches,
 )
 from a2_api.adapters.product_projection import (
     Projection,
@@ -294,7 +295,9 @@ def calculate(
             inputs.car
             if (
                 (request.passenger_modes is None or "private_car" in request.passenger_modes)
-                and inputs.car_departure_at == request.departure_at
+                and car_observation_matches(
+                    inputs, request, static_observations=profile.static_observations
+                )
                 and inputs.car is not None
                 and inputs.car.traffic_mode == request.traffic_mode
                 and (
@@ -323,7 +326,7 @@ def calculate(
             car_result = intercity_car_index(
                 accepted_car.chain_id, accepted_car.path_seconds, scalar, config=passenger_config
             )
-            project_car(out, car_result, accepted_car, reference)
+            project_car(out, car_result, accepted_car, reference, geometry=inputs.car_geometry)
             return out.finish()
         passenger_analysis = analyze_intercity_passenger(
             scope,
@@ -430,6 +433,11 @@ def calculate(
 
         assert isinstance(request, UrbanPassengerRequest)
         out.map_data = accepted_urban_map(snapshot, request)
+    elif isinstance(inputs, UrbanCargoInputs):
+        from a2_api.adapters.cargo_map import accepted_cargo_map
+
+        assert isinstance(request, UrbanCargoRequest)
+        out.map_data = accepted_cargo_map(snapshot, request, inputs)
     result = out.finish()
     if profile.demo_transport is not None:
         from a2_api.adapters.demo_map import attach_demo_result
