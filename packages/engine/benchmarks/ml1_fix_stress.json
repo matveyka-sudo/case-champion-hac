@@ -1,0 +1,199 @@
+{
+  "base_sha": "9557ee5d67e1883dd076cb5f6ad532b51fe44588",
+  "python": "3.12.13",
+  "host_model": "MacBookPro17,1",
+  "protocol": "Three fresh processes, first calculation cold, three repeats per process warm (9), separate tracemalloc run. Preparation measured separately. No API/network/DB/UI.",
+  "caveat": "A short unrelated demo test overlapped cargo allocation tracing and OD phase; retain all extrema, no deployment SLA inference.",
+  "before": [
+    {
+      "case": "timetable_303",
+      "cold_calculation_seconds": {
+        "max": 0.7892947079963051,
+        "median": 0.7889509170199744,
+        "min": 0.7843842500005849
+      },
+      "counts": {
+        "expanded_states": 305
+      },
+      "peak_python_bytes": 1052465,
+      "prepare_seconds": {
+        "max": 0.012077041959855705,
+        "median": 0.010333792015444487,
+        "min": 0.010199417010881007
+      },
+      "result_sha256": "0c9de31fb7d95be634320f8e7032a891cbdeb4593dd7ddb64f564b8a558812e6",
+      "warm_calculation_seconds": {
+        "max": 0.7991050000418909,
+        "median": 0.7918714170227759,
+        "min": 0.790792457992211
+      }
+    },
+    {
+      "case": "intercity_240",
+      "cold_calculation_seconds": {
+        "max": 0.4629453750094399,
+        "median": 0.46291541698155925,
+        "min": 0.46079433301929384
+      },
+      "counts": {
+        "candidates": 309,
+        "expanded_states": 6858
+      },
+      "peak_python_bytes": 7771481,
+      "prepare_seconds": {
+        "max": 0.008443291008006781,
+        "median": 0.008319958054926246,
+        "min": 0.008245166973210871
+      },
+      "result_sha256": "ebb18f1d4a623003ae4fa3dd1564c5470502541c6463ad9d18a7ed18e700dd96",
+      "warm_calculation_seconds": {
+        "max": 0.4752230409649201,
+        "median": 0.45958345802500844,
+        "min": 0.45623412501299754
+      }
+    },
+    {
+      "case": "cargo_32",
+      "cold_calculation_seconds": {
+        "max": 0.568586667010095,
+        "median": 0.5670547500485554,
+        "min": 0.5638499589986168
+      },
+      "counts": {
+        "candidates": 1024,
+        "expanded_states": 1122
+      },
+      "peak_python_bytes": 3757505,
+      "prepare_seconds": {
+        "max": 0.004050625022500753,
+        "median": 0.0028266659937798977,
+        "min": 0.002811333048157394
+      },
+      "result_sha256": "16e6f3d22c34541fcbb5db354891e86afe0672363b5626584209c20cf0f4cfa0",
+      "warm_calculation_seconds": {
+        "max": 0.5766675000195391,
+        "median": 0.5690599590307102,
+        "min": 0.5657012920128182
+      }
+    },
+    {
+      "case": "od_32",
+      "cold_calculation_seconds": {
+        "max": 0.6558824160019867,
+        "median": 0.6542702920269221,
+        "min": 0.6535256669740193
+      },
+      "counts": {
+        "directed_pair_slices": 27776
+      },
+      "peak_python_bytes": 16739907,
+      "prepare_seconds": {
+        "max": 2.2909953258931637e-06,
+        "median": 2.249958924949169e-06,
+        "min": 2.00001522898674e-06
+      },
+      "result_sha256": "74a791051a5371a0a0275a23c1335afe9a6073844c75666ffc63ba07e6707b13",
+      "warm_calculation_seconds": {
+        "max": 0.6761904580052942,
+        "median": 0.6443902920000255,
+        "min": 0.6384929170017131
+      }
+    }
+  ],
+  "after": [
+    {
+      "case": "timetable_303",
+      "cold_calculation_seconds": {
+        "max": 0.19772308296523988,
+        "median": 0.19766770798014477,
+        "min": 0.19704241602448747
+      },
+      "counts": {
+        "expanded_states": 305
+      },
+      "peak_python_bytes": 949414,
+      "prepare_seconds": {
+        "max": 0.008168915985152125,
+        "median": 0.008096625038888305,
+        "min": 0.008018209016881883
+      },
+      "result_sha256": "0c9de31fb7d95be634320f8e7032a891cbdeb4593dd7ddb64f564b8a558812e6",
+      "warm_calculation_seconds": {
+        "max": 0.19969108299119398,
+        "median": 0.19701516698114574,
+        "min": 0.19585558405378833
+      }
+    },
+    {
+      "case": "intercity_240",
+      "cold_calculation_seconds": {
+        "max": 0.2587355420109816,
+        "median": 0.2579332090099342,
+        "min": 0.2511376669863239
+      },
+      "counts": {
+        "candidates": 309,
+        "expanded_states": 6858
+      },
+      "peak_python_bytes": 7802794,
+      "prepare_seconds": {
+        "max": 0.006740792014170438,
+        "median": 0.006543207971844822,
+        "min": 0.0064645829843357205
+      },
+      "result_sha256": "ebb18f1d4a623003ae4fa3dd1564c5470502541c6463ad9d18a7ed18e700dd96",
+      "warm_calculation_seconds": {
+        "max": 0.2614980830112472,
+        "median": 0.2556281670113094,
+        "min": 0.24763637501746416
+      }
+    },
+    {
+      "case": "cargo_32",
+      "cold_calculation_seconds": {
+        "max": 0.2817450000438839,
+        "median": 0.2813071660348214,
+        "min": 0.28082033299142495
+      },
+      "counts": {
+        "candidates": 1024,
+        "expanded_states": 1122
+      },
+      "peak_python_bytes": 3427567,
+      "prepare_seconds": {
+        "max": 0.0030334999901242554,
+        "median": 0.0027205419610254467,
+        "min": 0.0026917500072158873
+      },
+      "result_sha256": "16e6f3d22c34541fcbb5db354891e86afe0672363b5626584209c20cf0f4cfa0",
+      "warm_calculation_seconds": {
+        "max": 0.2869519169908017,
+        "median": 0.2838322499883361,
+        "min": 0.2780244169989601
+      }
+    },
+    {
+      "case": "od_32",
+      "cold_calculation_seconds": {
+        "max": 0.3448770419927314,
+        "median": 0.3344255840056576,
+        "min": 0.33133287500822917
+      },
+      "counts": {
+        "directed_pair_slices": 27776
+      },
+      "peak_python_bytes": 16730302,
+      "prepare_seconds": {
+        "max": 2.5840126909315586e-06,
+        "median": 2.2919848561286926e-06,
+        "min": 2.2090389393270016e-06
+      },
+      "result_sha256": "74a791051a5371a0a0275a23c1335afe9a6073844c75666ffc63ba07e6707b13",
+      "warm_calculation_seconds": {
+        "max": 0.597955625038594,
+        "median": 0.3400947909685783,
+        "min": 0.3292483749683015
+      }
+    }
+  ]
+}

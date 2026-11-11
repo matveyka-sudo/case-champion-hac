@@ -2652,6 +2652,15 @@ horizon и правилами. `frequency_search` хранится отдель�
 к каждому поиску. Наличие score100 не завершает перечисление отправлений.
 Частота не зависит от доступности A и не вводит штраф в индекс.
 
+Недопустимое завершение с неположительным T_path сохраняет режимы цепочки и
+время первой посадки. Оно делает частоту неполной только для соответствующего
+вида (или mixed), public union и периода, содержащего эту первую посадку.
+Ошибка вне периода либо в другом виде не скрывает подтверждённую частоту.
+Общий семидневный выбор сохраняет NONPOSITIVE_PASSENGER_PATH и partial;
+неполнота самого источника, неизвестные виды и resource limit по-прежнему
+ограничивают весь соответствующий поиск. Позднее положительное завершение
+того же первого отправления остаётся кандидатом.
+
 Результат раздельно хранит known admissible candidates (`chain_complete`),
 physical_boardings_confirmed, scalar PassengerResult completeness, A completeness,
 timetable_complete, modes_complete, public/by_mode optimum_proven,
@@ -3038,6 +3047,9 @@ network/job ID, конкретный execution ID, service date, stop sequence/a
   сдвигает её departure и все последующие arrival/departure. Существующий validator
   отвергает отрицательную стоянку, нарушенный порядок и интервалы. Принятые физические
   aliases меняются вместе, все их копии в анализируемой области согласованы.
+  В пределах snapshot, service date и physical identity подтверждённые виды
+  транспорта, stop pattern и active должны совпадать во всех выгрузках.
+  Неизвестный вид остаётся неизвестным и не скрывает конфликт двух известных.
 - `coordinate_transfer`, cargo: явный CargoExecution связывает дату и принадлежащие
   ему CargoAction; сдвигаются scheduled departure actions конкретного execution.
   Новый поиск должен доказать реальную цепь incoming→outgoing, включая обработку,
@@ -3049,6 +3061,13 @@ network/job ID, конкретный execution ID, service date, stop sequence/a
   принимает её только при `feasibility=feasible`. Сам по себе большой headway
   доказательством не является. Run-specific transfer permissions не клонируются
   по догадке: нужны применимые уже принятые generic rules.
+  Если другая выгрузка использует иное принятое название транспорта, новая копия
+  получает это локальное название и детерминированный alias ID. Объявленный ID
+  сохраняется в целевой выгрузке; physical identity общая. Все изменённые aliases
+  перечислены в overlay. Покрытие ресурсов распространяется на них только при
+  совпадающем расписании и подтверждённых calendar/event evidence каждой копии.
+  Синтетические метки нормализации не могут присвоить неизвестной записи вид из
+  другой группы или изменить смысл исходной метки поставщика.
 
 Обработка грузов с изменением duration, создание терминалов, изменение truck road
 inputs, трубопроводов и cargo additional departure отклоняются: отдельных
@@ -3229,3 +3248,13 @@ best-known route time is retained, while minimum-time and unreachable proofs are
 disabled for the uncertain endpoints. A complete city score is not implied.
 Executors must retain the pinned serializer source, build, raw locate/route
 request and response hashes, and resolve their evidence IDs to real artifacts.
+
+## ML1 fix delivery, 2026-11-11
+
+[ML1_FIX_REPORT.md](ML1_FIX_REPORT.md) records the isolated `ml1-fix` delivery,
+confirmed routing/resource defects, exact performance changes, verification and
+owner handoffs. [DEMO.md](DEMO.md) contains the finite synthetic 24-baseline /
+21-row scenario matrix: 18 real recalculations and three unsupported urban cargo
+mutations. It also distinguishes those independent controls from the separately
+verified ML2 PR #34 inputs. Reproducible commands and raw benchmark/result files
+are linked there; synthetic acceptance does not certify real-city or UI E2E results.
