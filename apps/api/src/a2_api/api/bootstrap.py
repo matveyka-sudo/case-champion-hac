@@ -137,6 +137,7 @@ def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
             try:
                 yield
             finally:
+                await active_service.close_admission()
                 await close_assistant(active_service)
         finally:
             await pool.close()
