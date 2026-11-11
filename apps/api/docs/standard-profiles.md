@@ -1,6 +1,6 @@
 # Standard analysis queue
 
-`python -m a2_api.precompute` derives standard requests from the same verified
+`python -m a2_api.services.precompute` derives standard requests from the same verified
 runtime used by API and worker. It has no city names or pair-specific handlers.
 Urban categories are separate jobs. Intercity directions come from registered
 profiles; car observations do not create bus schedules. Cargo and pipeline
@@ -11,12 +11,12 @@ Use the installed backend environment and the same `A2_PRODUCT_RUNTIME_PATH`,
 the running API. Planning performs runtime validation but no route calculation:
 
 ```sh
-python -m a2_api.precompute plan \
+python -m a2_api.services.precompute plan \
   --departure-at 2026-11-11T12:00:00+03:00 \
   --deployment-version "$A2_CODE_VERSION" \
   --output /private/waydex/standard-plan.json
 
-python -m a2_api.precompute run \
+python -m a2_api.services.precompute run \
   --plan /private/waydex/standard-plan.json \
   --base-url http://127.0.0.1:5193/api/v1/ \
   --state /private/waydex/standard-state.json \

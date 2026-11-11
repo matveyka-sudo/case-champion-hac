@@ -1,0 +1,8 @@
+{
+  "manifest.json": "355824e61d116588be5ffb5e600cbdaebc3565c3a0472c5840c35d99f87b46ac",
+  "openapi.json": "2a7e46913c8330e37dc31dec9e9d2a28caa2cef5cb01ff7248ec4090c67f9ae2",
+  "v2.Capabilities.serialization.schema.json": "f36dd90c5bb6f7a4436b05f31a73ac5f477f99be98a961d75b6e814a8b535f1b",
+  "v2.Capabilities.validation.schema.json": "f36dd90c5bb6f7a4436b05f31a73ac5f477f99be98a961d75b6e814a8b535f1b",
+  "v2.SnapshotAvailability.serialization.schema.json": "eab430d5645c0730eb3a773e1931255d755a8996751ac319036b26bcb550267a",
+  "v2.SnapshotAvailability.validation.schema.json": "eab430d5645c0730eb3a773e1931255d755a8996751ac319036b26bcb550267a"
+}

@@ -16,7 +16,7 @@ from a2_contracts.v2.api import JobAccepted, JobView
 from a2_contracts.v2.requests import parse_analysis_request
 
 from a2_api.adapters.product_runtime import load_runtime
-from a2_api.standard_profiles import standard_plan
+from a2_api.adapters.standard_profiles import standard_plan
 
 TERMINAL = frozenset({"succeeded", "failed", "cancelled"})
 

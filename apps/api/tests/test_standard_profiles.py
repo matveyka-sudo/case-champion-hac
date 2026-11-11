@@ -6,8 +6,8 @@ from datetime import UTC, datetime
 import httpx
 import pytest
 from a2_api.adapters.product_runtime import Manifest, Profile, Runtime
-from a2_api.precompute import execute
-from a2_api.standard_profiles import standard_plan
+from a2_api.adapters.standard_profiles import standard_plan
+from a2_api.services.precompute import execute
 
 AT = datetime(2026, 11, 11, 12, tzinfo=UTC)
 
@@ -150,7 +150,7 @@ def test_pending_checkpoint_resumes_without_resubmission(tmp_path, monkeypatch):
     from itertools import count
 
     ticks = count()
-    monkeypatch.setattr("a2_api.precompute.time.monotonic", lambda: next(ticks))
+    monkeypatch.setattr("a2_api.services.precompute.time.monotonic", lambda: next(ticks))
     plan = standard_plan(runtime(), AT, "TEST_ONLY-version")
     plan["requests"] = plan["requests"][:1]
     status = "running"
