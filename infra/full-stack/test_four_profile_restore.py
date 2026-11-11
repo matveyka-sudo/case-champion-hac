@@ -40,6 +40,49 @@ class GraphTransferTests(unittest.TestCase):
         self.assertEqual((output / transfer.MARKER).read_bytes(), transfer.encoded(self.manifest))
         self.assertEqual(transfer.inventory(copied.parent), self.manifest["groups"]["graphs/test"])
 
+    def release_pins(self):
+        return {
+            "schema_version": "waydex-runtime-transfer-pins/1",
+            "product_sha256": "a" * 64,
+            "bundle_sha256": "b" * 64,
+            "groups": {name: [1, 20, "c" * 64] for name in transfer.ARGUMENTS},
+            "bindings": {name: "d" * 64 for name in transfer.BINDINGS},
+            "router_tileset_metadata": {
+                city: 1700000000 for city in ("moscow", "novorossiysk", "kaliningrad")
+            },
+        }
+
+    def test_new_release_requires_exact_pin_document_hash_without_changing_legacy_pins(self):
+        pins = self.release_pins()
+        path = self.root / "release.json"
+        raw = transfer.encoded(pins)
+        path.write_bytes(raw)
+        digest = hashlib.sha256(raw).hexdigest()
+        original = dict(transfer.PINS)
+        self.assertEqual(transfer.load_release(path, digest), pins)
+        self.assertEqual(transfer.PINS, original)
+        path.write_bytes(raw + b" ")
+        with self.assertRaisesRegex(ValueError, "SHA256 differs"):
+            transfer.load_release(path, digest)
+
+    def test_release_cannot_expand_graph_scope_or_remove_resource_bounds(self):
+        for changed in ("extra", "bytes", "timestamp", "hash"):
+            with self.subTest(changed=changed):
+                pins = self.release_pins()
+                if changed == "extra":
+                    pins["groups"]["../outside"] = [1, 1, "a" * 64]
+                elif changed == "bytes":
+                    pins["groups"]["graphs/moscow"][1] = 6 * 1024**3
+                elif changed == "timestamp":
+                    pins["router_tileset_metadata"]["kaliningrad"] = True
+                else:
+                    pins["bundle_sha256"] = "unverified"
+                raw = transfer.encoded(pins)
+                path = self.root / "bad-release.json"
+                path.write_bytes(raw)
+                with self.assertRaises(ValueError):
+                    transfer.load_release(path, hashlib.sha256(raw).hexdigest())
+
     def test_changed_source_leaves_no_completion_record(self):
         (self.source / "tile.gph").write_bytes(b"changed source")
         output = self.root / "transfer"

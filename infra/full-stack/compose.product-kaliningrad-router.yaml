@@ -1,0 +1,62 @@
+# Local Kaliningrad router for accepted walk and truck observations.
+# Apply after compose.product.yaml and compose.product-urban-walk.yaml.
+x-kaliningrad-graph: &kaliningrad-graph
+  type: bind
+  source: ${WAYDEX_KALININGRAD_TRUCK_GRAPH_DIR:?}
+  target: /data
+  read_only: true
+  bind: {create_host_path: false}
+
+services:
+  graph-check-kaliningrad:
+    image: waydex-full-api:${WAYDEX_REVISION:?}
+    command: [/app/.venv/bin/python, infra/full-stack/runtime.py, graph-check]
+    init: true
+    read_only: true
+    tmpfs: ["/tmp:size=64m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    memswap_limit: 512m
+    cpus: 1
+    pids_limit: 64
+    environment:
+      WAYDEX_PARENT_ARTIFACT_PATH: /runtime/kaliningrad/native/artifact.json
+      WAYDEX_PARENT_SHA256: ${WAYDEX_KALININGRAD_PARENT_SHA256:?}
+      WAYDEX_GRAPH_PATH: /data
+    volumes:
+      - *kaliningrad-graph
+      - type: bind
+        source: ${WAYDEX_DEPLOYMENT_DIR:?}
+        target: /runtime
+        read_only: true
+        bind: {create_host_path: false}
+    logging: {driver: json-file, options: {max-size: 10m, max-file: "3"}}
+    restart: "no"
+
+  valhalla-kaliningrad:
+    image: ghcr.io/valhalla/valhalla@sha256:4ac3d13d1019f9a130e9e6b6924c16ea55da0fa51e3653039152e33ad4095661
+    command: [valhalla_service, /data/valhalla.json, "1"]
+    init: true
+    read_only: true
+    tmpfs: ["/tmp:size=64m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes: [*kaliningrad-graph]
+    depends_on:
+      graph-check-kaliningrad: {condition: service_completed_successfully}
+    healthcheck:
+      test: [CMD, python3, -c, "from urllib.request import urlopen; urlopen('http://127.0.0.1:8002/status', timeout=2).read()"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    mem_limit: 1g
+    memswap_limit: 1g
+    cpus: 2
+    pids_limit: 128
+    logging: {driver: json-file, options: {max-size: 10m, max-file: "3"}}
+    restart: unless-stopped
+
+  runtime-check:
+    depends_on:
+      valhalla-kaliningrad: {condition: service_healthy}

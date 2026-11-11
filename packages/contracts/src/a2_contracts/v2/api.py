@@ -17,8 +17,9 @@ from .base import (
     TerritoryLevel,
     Timestamp,
     TrafficMode,
+    VersionRefs,
 )
-from .requests import CargoProfile
+from .requests import CargoProfile, UrbanPassengerRequest
 
 
 class ErrorDetail(ContractModel):
@@ -38,6 +39,48 @@ class JobAccepted(ContractModel):
     status: Literal["queued", "running", "succeeded", "failed", "cancelled"]
     request_id: Identifier
     poll_after_seconds: Annotated[int, Field(strict=True, ge=1)] = 2
+
+
+class AnalysisGroupItem(ContractModel):
+    category: Category
+    attempt: Annotated[int, Field(strict=True, ge=1, le=3)]
+    status: Literal["pending", "queued", "running", "succeeded", "failed", "cancelled"]
+    job_id: Identifier | None
+    analysis_id: Identifier | None
+    error: ErrorDetail | None = None
+
+    @model_validator(mode="after")
+    def coherent_item(self) -> Self:
+        if self.job_id is None and self.status not in ("pending", "failed"):
+            raise ValueError("Unadmitted group items are pending or failed")
+        if self.status == "pending" and self.job_id is not None:
+            raise ValueError("Pending group item already has a job")
+        if self.status == "failed" and self.job_id is None and self.error is None:
+            raise ValueError("Failed admission requires an error")
+        if (self.status == "succeeded") != (self.analysis_id is not None):
+            raise ValueError("Only successful group items reference a saved analysis")
+        return self
+
+
+class AnalysisGroupView(ContractModel):
+    """Separate category results, not a combined index or coverage assertion."""
+
+    group_id: Identifier
+    request: UrbanPassengerRequest
+    versions: VersionRefs
+    status: Literal["queued", "running", "succeeded", "failed", "cancelled"]
+    items: list[AnalysisGroupItem] = Field(min_length=1, max_length=9)
+    error: ErrorDetail | None
+    request_id: Identifier
+    poll_after_seconds: Annotated[int, Field(strict=True, ge=1)] = 2
+
+    @model_validator(mode="after")
+    def coherent_group(self) -> Self:
+        if [item.category for item in self.items] != self.request.categories:
+            raise ValueError("Group categories must match the immutable request")
+        if self.status == "succeeded" and any(item.status != "succeeded" for item in self.items):
+            raise ValueError("Successful group requires every category result")
+        return self
 
 
 class BatchProgress(ContractModel):
@@ -141,6 +184,9 @@ class SnapshotAvailability(ContractModel):
     valid_to: date | None
     graph_version: Identifier
     calendar_version: Identifier
+    analysis_kinds: list[AnalysisKind] | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
 
 class UrbanPassengerScope(ContractModel):

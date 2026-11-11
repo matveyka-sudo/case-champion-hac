@@ -1,0 +1,12 @@
+# Three-city inventory and directed truck observations add input documents.
+# Explicit source budget; per-file, job, worker and HTTP limits remain in force.
+services:
+  api:
+    environment:
+      A2_RUNTIME_SOURCE_BUDGET_MIB: "160"
+  worker:
+    environment:
+      A2_RUNTIME_SOURCE_BUDGET_MIB: "160"
+  runtime-check:
+    environment:
+      A2_RUNTIME_SOURCE_BUDGET_MIB: "160"

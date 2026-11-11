@@ -5,11 +5,13 @@ from datetime import timedelta
 from typing import Any, Literal
 
 from a2_contracts.common import canonical_hash
+from a2_contracts.v2.evidence import EVIDENCE_GROUP_PREFIX, MAX_GROUP_MEMBERS, EvidenceGroup
 from a2_contracts.v2.journeys import (
     BoundaryNodeSets,
     CountResult,
     JourneyResult,
     Leg,
+    LineGeometry,
     ReferenceResult,
 )
 from a2_contracts.v2.map_data import AnalysisMapData
@@ -38,6 +40,7 @@ class Projection:
     def __init__(self, context: V2JobContext, evidence: list[EvidenceRef]) -> None:
         self.context = context
         self.evidence = evidence
+        self.evidence_groups: list[EvidenceGroup] = []
         self.metrics: list[Metric] = []
         self.scores: list[Score] = []
         self.journeys: list[JourneyResult] = []
@@ -45,6 +48,23 @@ class Projection:
         self.counts: list[CountResult] = []
         self.map_data = AnalysisMapData()
         self.limitations: set[str] = set()
+
+    def shared_evidence(self, refs: tuple[str, ...]) -> tuple[str, ...]:
+        """Factor a repeated catalogue before constructing thousands of DTO rows."""
+        if len(refs) < 32:
+            return refs
+        identities = sorted(set(refs))
+        result = []
+        for start in range(0, len(identities), MAX_GROUP_MEMBERS):
+            members = identities[start : start + MAX_GROUP_MEMBERS]
+            if len(members) == 1:
+                result.extend(members)
+                continue
+            group_id = EVIDENCE_GROUP_PREFIX + canonical_hash(members)
+            if not any(group.group_id == group_id for group in self.evidence_groups):
+                self.evidence_groups.append(EvidenceGroup(group_id=group_id, evidence_ids=members))
+            result.append(group_id)
+        return tuple(result)
 
     def metric(
         self,
@@ -138,6 +158,7 @@ class Projection:
             metrics=self.metrics,
             scores=self.scores,
             evidence_refs=self.evidence,
+            evidence_groups=self.evidence_groups,
             limitations=sorted(self.limitations),
             versions=self.context.versions,
             journeys=self.journeys,
@@ -408,7 +429,14 @@ def project_reference(out: Projection, reference: Any) -> None:
     )
 
 
-def project_car(out: Projection, result: Any, accepted: Any, reference: Any) -> None:
+def project_car(
+    out: Projection,
+    result: Any,
+    accepted: Any,
+    reference: Any,
+    *,
+    geometry: LineGeometry | None = None,
+) -> None:
     request = out.context.normalized_request
     assert isinstance(request, IntercityPassengerRequest)
     if not out.references:
@@ -447,8 +475,8 @@ def project_car(out: Projection, result: Any, accepted: Any, reference: Any) -> 
                     evidence_refs=list(accepted.evidence_refs),
                 )
             ],
-            geometry=None,
-            geometry_kind="none",
+            geometry=geometry,
+            geometry_kind="actual" if geometry is not None else "none",
             status="available",
             reason_code=None,
             snapshot_id=out.context.snapshot_id,
@@ -494,6 +522,63 @@ def _confirmed_missing_metrics(out: Projection, identities: tuple[str, ...]) -> 
         else metric
         for metric in out.metrics
     ]
+
+
+def project_missing_public_timetable(out: Projection, reference: Any) -> None:
+    """Represent absent source coverage, never confirmed absence of a service."""
+    request = out.context.normalized_request
+    assert isinstance(request, IntercityPassengerRequest)
+    if not out.references:
+        project_reference(out, reference)
+    modes = request.passenger_modes or ["road", "rail", "air", "water"]
+    selected: list[Literal["road", "rail", "air", "water", "mixed", "public_transport"]] = [
+        mode for mode in modes if mode != "private_car"
+    ]
+    selected.append("public_transport")
+    reason = "INTERCITY_SCHEDULES_UNAVAILABLE"
+    raw = MetricResult(None, "unknown", reason)
+    for mode in selected:
+        subject = SubjectRef(
+            kind="city_pair",
+            origin_id=request.origin_id,
+            destination_id=request.destination_id,
+            mode=mode,
+        )
+        prefix = "intercity-" + mode
+        path = out.metric(
+            prefix + "-path", "path_seconds", raw, subject, (), time_kind="complete_chain"
+        )
+        wait = out.metric(prefix + "-wait", "initial_wait_seconds", raw, subject, ())
+        out.metric(prefix + "-total", "total_seconds", raw, subject, (), time_kind="complete_chain")
+        path_score = out.score(
+            prefix + "-path-score",
+            "path_index",
+            raw,
+            subject,
+            (),
+            metrics=(path,),
+            kind="reference_ratio",
+            reference_ids=(reference.reference_id,),
+        )
+        wait_score = out.score(
+            prefix + "-wait-score",
+            "waiting_index",
+            raw,
+            subject,
+            (),
+            metrics=(wait,),
+            kind="initial_wait",
+        )
+        out.score(
+            prefix,
+            "passenger_index",
+            raw,
+            subject,
+            (),
+            scores=(path_score, wait_score),
+            kind="aggregate",
+        )
+    out.limitations.add(reason)
 
 
 def project_intercity(
@@ -730,12 +815,13 @@ def project_urban_cargo(out: Projection, analysis: Any) -> None:
     request = out.context.normalized_request
     assert isinstance(request, UrbanCargoRequest)
     territory = SubjectRef(kind="territory", territory_id=request.city_id, mode="road")
+    shared_refs = out.shared_evidence(analysis.evidence_refs)
     h = out.metric(
         "cargo-h",
         "urban_h_seconds",
         analysis.h_seconds,
         territory,
-        analysis.evidence_refs,
+        shared_refs,
         full=analysis.h_seconds.value is not None,
     )
     for group in analysis.by_type:
@@ -752,12 +838,36 @@ def project_urban_cargo(out: Projection, analysis: Any) -> None:
                 :24
             ]
             route = site.best_known_route
+            # Known road movement remains useful when compatibility or the
+            # catalogue minimum is unknown. It is not access or delivery time
+            # and must never become an input to an accessibility score.
+            for observed in site.observed_routes:
+                if observed.network_seconds is None:
+                    continue
+                node_id = observed.to_id if request.direction == "outbound" else observed.from_id
+                out.metric(
+                    "cargo-network-" + canonical_hash([prefix, observed.route_id])[:24],
+                    "observed_truck_network_seconds",
+                    MetricResult(
+                        observed.network_seconds, "available", "TRUCK_NETWORK_ONLY_NOT_DELIVERY"
+                    ),
+                    SubjectRef(
+                        kind="freight_site",
+                        territory_id=request.city_id,
+                        site_id=site.site_id,
+                        node_id=node_id,
+                        mode="road",
+                    ),
+                    observed.evidence_refs,
+                    time_kind="movement",
+                )
+                out.limitations.add("TRUCK_NETWORK_ONLY_NOT_DELIVERY")
             raw = out.metric(
                 "cargo-time-" + prefix,
                 "minimum_truck_access_seconds",
                 known(route.seconds if route else None, "MINIMUM_TIME_UNPROVEN"),
                 subject,
-                analysis.evidence_refs,
+                shared_refs,
                 full=site.minimum_proven,
                 time_kind="movement",
             )
@@ -767,7 +877,7 @@ def project_urban_cargo(out: Projection, analysis: Any) -> None:
                     "cargo_site_index",
                     site.evaluation.index,
                     subject,
-                    analysis.evidence_refs,
+                    shared_refs,
                     full=site.minimum_proven,
                     metrics=(raw, h),
                 )
@@ -783,7 +893,7 @@ def project_urban_cargo(out: Projection, analysis: Any) -> None:
             "cargo_access_index",
             group.index,
             territory,
-            analysis.evidence_refs,
+            shared_refs,
             full=group.full_ranking_eligible,
             scores=tuple(site_scores),
             basis=basis,

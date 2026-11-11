@@ -45,7 +45,7 @@ def test_actual_product_output_keeps_model_labels_map_and_source_population(
         scenario_documents={},
     )
     monkeypatch.setenv("A2_CODE_VERSION", "TEST_ONLY")
-    monkeypatch.setattr(product, "load_runtime", lambda: runtime)
+    monkeypatch.setattr(product, "load_runtime", lambda **kwargs: runtime)
     result = product.calculate(claim_for(snapshot, request_for(snapshot)))
     assert DEMO_LIMITATIONS <= set(result.limitations)
     assert all(not score.ranking_eligible for score in result.scores)

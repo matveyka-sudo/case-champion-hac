@@ -474,6 +474,7 @@ export function ApiAtlasPage() {
   );
   const visibleJourneys = scenarioView ? scenarioPaths?.journeys || [] : result?.journeys || [];
   const segmentGeometry = visibleJourneys.some((j) => journeyLines(j).some((part) => part.segment));
+  const hasRouteGeometry = visibleJourneys.some((j) => journeyLines(j).length > 0);
   const scenarioGeometryCount = scenarioPaths?.journeys.filter((j) => journeyLines(j).length > 0).length || 0;
   const scenarioMapNotice = !scenarioPaths?.journeys.length
     ? "Пути сценария не предоставлены. Показаны объекты исходного анализа."
@@ -929,7 +930,7 @@ export function ApiAtlasPage() {
               result.map_data.status !== "available" ||
               result.map_data.completeness === "partial" || segmentGeometry) && (
               <div className="api-map-note">
-                {segmentGeometry ? "Геометрия маршрутов доступна частично." : result.map_data?.status === "available"
+                {segmentGeometry ? "Геометрия маршрутов доступна частично." : hasRouteGeometry ? "Показана геометрия маршрута. Объекты территории доступны не полностью." : result.map_data?.status === "available"
                   ? "Геометрия доступна частично."
                   : "Геометрия недоступна."}{" "}
                 Доступные показатели сохранены.
@@ -951,7 +952,7 @@ export function ApiAtlasPage() {
           )}
           <MapOverlay position="bottom">
             <AtlasLegend title={layers.pop ? "Население ячейки" : values?.scores.some((score) => score.name === "observed_route_accessibility" && score.status === "available") ? "Предварительная оценка по найденному маршруту" : "Индекс доступности"}
-              scale={!!values?.scores.length || layers.pop} open={legendOpen} onToggle={() => setLegendOpen((value) => !value)} ticks={layers.pop ? ["меньше жителей", "больше"] : [0, 25, 50, 75, 100]}
+              scale={!!values?.scores.some((score) => score.status === "available" && score.value != null) || layers.pop} open={legendOpen} onToggle={() => setLegendOpen((value) => !value)} ticks={layers.pop ? ["меньше жителей", "больше"] : [0, 25, 50, 75, 100]}
               note={layers.pop ? "По данным источника · неизвестное нейтрально" : "Ниже 50 · 50–<75 · 75–100"}
               barStyle={layers.pop ? undefined : { background: "linear-gradient(to right,#c72d44 0%,#c72d44 50%,#d49520 50%,#d49520 75%,#0b8a5c 75%,#0b8a5c 100%)" }}
               details={<IndexLegend />} items={<span><i className="sw nd" />Нет подтверждённых данных</span>} />

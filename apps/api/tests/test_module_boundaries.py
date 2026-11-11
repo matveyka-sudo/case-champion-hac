@@ -356,6 +356,15 @@ def test_exported_artifacts_match_baseline_and_approved_contract_extensions(tmp_
     assert set(progress_extension["added"]).isdisjoint(expected)
     expected.update(progress_extension["replaced"])
     expected.update(progress_extension["added"])
+    snapshot_kinds_extension = json.loads(
+        (Path(__file__).parent / "fixtures/snapshot_analysis_kinds_extension.json").read_text()
+    )
+    assert set(snapshot_kinds_extension) == {"manifest.json", "openapi.json"} | {
+        f"v2.{model}.{mode}.schema.json"
+        for model in ("Capabilities", "SnapshotAvailability")
+        for mode in ("serialization", "validation")
+    }
+    expected.update(snapshot_kinds_extension)
     assert actual == expected
 
 

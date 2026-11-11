@@ -43,12 +43,14 @@ from a2_api.adapters.product_inputs import (
     UrbanCargoInputs,
     UrbanInputs,
     candidate_is_static,
+    car_observation_matches,
 )
 from a2_api.adapters.product_projection import (
     Projection,
     project_car,
     project_delivery,
     project_intercity,
+    project_missing_public_timetable,
     project_pipeline,
     project_urban,
     project_urban_cargo,
@@ -71,7 +73,9 @@ async def preflight(request: AnalysisRequest, snapshot: AcceptedData) -> BatchPl
 
 
 async def _preflight(request: AnalysisRequest, snapshot: AcceptedData) -> BatchPlan | None:
-    runtime = await asyncio.to_thread(load_runtime)
+    runtime = await asyncio.to_thread(
+        load_runtime, request=request, snapshot_id=snapshot.snapshot_id
+    )
     if runtime.digest not in (RuntimeSettings().code_version or ""):
         raise DomainError(409, "incompatible_versions", "Product runtime code identity differs")
     profile, inputs = runtime.select(request, snapshot)
@@ -102,7 +106,7 @@ def calculate(
             422, "unsupported_scenario", "Product handler requires a canonical calculation job"
         )
     context = claim.context
-    runtime = load_runtime()
+    runtime = load_runtime(request=context.normalized_request, snapshot_id=context.snapshot_id)
     snapshot = runtime.snapshots.get(context.snapshot_id)
     current = ProductRegistry()
     if (
@@ -162,6 +166,15 @@ def calculate(
         if row.evidence_id in evidence and evidence[row.evidence_id] != row:
             raise DomainError(409, "incompatible_versions", "Runtime evidence identity collision")
         evidence[row.evidence_id] = row
+    if profile.truck_routing is not None:
+        from a2_api.adapters.truck_runtime import hydrate_routes
+
+        assert isinstance(inputs, UrbanCargoInputs)
+        inputs, observations = hydrate_routes(profile, inputs, snapshot, context)
+        for row in observations:
+            if row.evidence_id in evidence and evidence[row.evidence_id] != row:
+                raise DomainError(409, "incompatible_versions", "Truck evidence identity collision")
+            evidence[row.evidence_id] = row
     out = Projection(context, list(evidence.values()))
     if isinstance(inputs, UrbanInputs):
         assert isinstance(request, UrbanPassengerRequest)
@@ -284,7 +297,11 @@ def calculate(
                 destination_node_ids=tuple(request.destination_node_ids or ()),
             )
         scope = replace(inputs.scope, comparison_scope=reference_scope)
-        if request.passenger_modes is not None and request.passenger_modes != ["private_car"]:
+        if (
+            not inputs.public_timetable_unavailable
+            and request.passenger_modes is not None
+            and request.passenger_modes != ["private_car"]
+        ):
             applicable = tuple(
                 mode for mode in scope.applicable_modes if mode in request.passenger_modes
             )
@@ -294,7 +311,9 @@ def calculate(
             inputs.car
             if (
                 (request.passenger_modes is None or "private_car" in request.passenger_modes)
-                and inputs.car_departure_at == request.departure_at
+                and car_observation_matches(
+                    inputs, request, static_observations=profile.static_observations
+                )
                 and inputs.car is not None
                 and inputs.car.traffic_mode == request.traffic_mode
                 and (
@@ -307,7 +326,9 @@ def calculate(
             )
             else None
         )
-        if request.passenger_modes == ["private_car"]:
+        if request.passenger_modes == ["private_car"] or (
+            inputs.public_timetable_unavailable and accepted_car is not None
+        ):
             assert accepted_car is not None
             passenger_config = load_passenger_config()
             scalar = reference_time_from_result(
@@ -323,7 +344,27 @@ def calculate(
             car_result = intercity_car_index(
                 accepted_car.chain_id, accepted_car.path_seconds, scalar, config=passenger_config
             )
-            project_car(out, car_result, accepted_car, reference)
+            project_car(out, car_result, accepted_car, reference, geometry=inputs.car_geometry)
+            if request.passenger_modes == ["private_car"]:
+                return out.finish()
+        if inputs.public_timetable_unavailable:
+            project_missing_public_timetable(out, reference)
+            if (
+                request.passenger_modes is None or "private_car" in request.passenger_modes
+            ) and accepted_car is None:
+                out.score(
+                    "private-car-index",
+                    "private_car_index",
+                    MetricResult(None, "unknown", "ACCEPTED_CAR_OBSERVATION_DEPARTURE_UNAVAILABLE"),
+                    SubjectRef(
+                        kind="city_pair",
+                        origin_id=request.origin_id,
+                        destination_id=request.destination_id,
+                        mode="private_car",
+                    ),
+                    (),
+                    kind="reference_ratio",
+                )
             return out.finish()
         passenger_analysis = analyze_intercity_passenger(
             scope,
@@ -365,7 +406,9 @@ def calculate(
             raise unavailable("ACCEPTED_STATIC_TRUCK_OBSERVATION_PROOF_REQUIRED")
         routes = tuple(replace(route, requested_at=request.departure_at) for route in inputs.routes)
         selected = tuple(
-            request.freight_node_types or sorted({node.analysis_type for node in inputs.nodes})
+            request.freight_node_types
+            or sorted({node.analysis_type for node in inputs.nodes})
+            or ("port", "rail_freight_station", "terminal", "logistics_center")
         )
         urban_cargo_analysis = analyze_urban_cargo(
             inputs.profile,
@@ -430,6 +473,11 @@ def calculate(
 
         assert isinstance(request, UrbanPassengerRequest)
         out.map_data = accepted_urban_map(snapshot, request)
+    elif isinstance(inputs, UrbanCargoInputs):
+        from a2_api.adapters.cargo_map import accepted_cargo_map
+
+        assert isinstance(request, UrbanCargoRequest)
+        out.map_data = accepted_cargo_map(snapshot, request, inputs)
     result = out.finish()
     if profile.demo_transport is not None:
         from a2_api.adapters.demo_map import attach_demo_result

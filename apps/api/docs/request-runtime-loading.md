@@ -1,0 +1,76 @@
+# Loading inputs for a user request
+
+Startup `registry()` still validates the full hash-pinned product manifest,
+snapshots, profiles, graph bindings and scenario documents. A request previously
+repeated this full load in API preflight and again in the worker, even when it
+selected only one city and one freight profile.
+
+`load_runtime(request=..., snapshot_id=...)` now reads the pinned manifest and
+loads the selected snapshot and every matching profile, using the same predicate
+as final dispatch. It does not select the first match: overlaps remain errors.
+Selected file bytes, hashes, evidence, graph bindings and semantic checks are
+validated anew. No mutable parsed-object cache or timestamp shortcut is used.
+Global manifest identity uniqueness is still checked. Unrelated source files are
+not opened in this request path; full-release readiness remains the startup gate.
+
+Profiles with scenario documents retain the full loader. Their documents can
+validate requests at times other than the baseline, so limiting their overlap
+checks to the baseline's matching profiles would be incorrect. This optimization
+does not yet accelerate those profiles.
+
+On 2026-11-11, the real 33-profile, eight-snapshot runtime was measured in separate
+containers using the same image/environment and read-only dataset mounts, with
+network access disabled. The candidate mounted only the changed adapter source.
+No routing or database operation was included in these loader measurements:
+
+| Selected cargo city | Full loader, seconds | Scoped loader, seconds |
+| --- | ---: | ---: |
+| Novorossiysk | 11.998 | 0.152 |
+| Kaliningrad | 11.276 | 0.051 |
+| Moscow | 13.397 | 0.191 |
+
+Each scoped load read one snapshot and one profile; selected profile identities
+matched the full loads. These are single-run engineering measurements on the
+local Docker host, not latency percentiles or whole-job performance claims.
+Regression tests exercise the actual preflight/worker call sites, changed selected
+bytes after prior admission, scoped/full result equality, overlapping profiles,
+duplicate manifest identities and inconsistent snapshot selection.
+
+The built source `3a694e24d5ad8a76bdd7eeb80a8d603b7f332b2c` then passed
+the full 33-profile/three-router startup check in the isolated restored stack.
+An actual React click received HTTP 202 in 142 ms and created PostgreSQL job
+`fb49d87b-3259-484e-9ed1-6074affa97f3`. The worker calculated 172 Novorossiysk
+truck network times in 22.540 s, publishing analysis
+`44058c5f-0048-4548-aff5-e5bdccc45f9b`. Metric names, subjects and values exactly
+matched the preceding release's real run. Canonical validation, byte-identical
+repeat GET and unrelated-session 404 passed; strict indices remained null.
+This is one real browser replay, not a throughput or nationwide readiness test.
+
+## Missing intercity schedules
+
+The follow-up browser check exposed a separate, pre-existing integration gap:
+the road-observation dataset has no accepted public timetable, but a public-mode
+request reached the scheduled engine with placeholder versions. Job
+`d588f960-7d9b-4fe7-a2c8-c797c6b28984` failed without publishing a result.
+
+An empty timetable with no mode bindings or physical services and explicitly
+incomplete schedule coverage now produces unknown public-mode metrics and scores.
+It does not prove that a service is absent. A selected valid car observation is
+still evaluated by the existing car engine; an unselected car is never substituted
+for a bus or train. Nonempty and complete timetables retain their existing engine
+validation. Four regression cases reproduced the exception before this fix,
+covering public-only, car-plus-public and default selection. The frontend adds a
+plain-language explanation in its existing limitation list.
+
+Built source `e5f8bf52f7ce207315c05b924833564992d236d9` was replayed through
+React, API, PostgreSQL and the worker on the restored stack. Public-only request
+job `7507a468-7309-46a3-b7eb-6f177befe1dd` completed in 1.070 s and saved
+unknown analysis `b5c58f64-9240-440d-9cb1-00779539443f` with no journeys or
+invented times. Adding the car mode created job
+`691954e1-7949-4a08-8e2c-cae5e1b14773`, which completed in 1.716 s and saved
+partial analysis `e8f2a01e-1627-4e0b-b718-6d45c4541133`. It retained the
+prepared 71510.406-second Moscow-to-Novorossiysk car observation and actual
+route geometry alongside unknown public-mode values. Every index remained null.
+Both results passed canonical validation, identical repeat GET and foreign-session
+404. These tests made zero new routing/provider calls and do not establish
+on-demand intercity routing or accepted public schedules.

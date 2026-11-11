@@ -4,7 +4,7 @@ import importlib
 import inspect
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from fastapi import FastAPI
 
@@ -15,6 +15,9 @@ from a2_api.db.repositories.jobs import JobRepository
 from a2_api.services.catalog import CatalogServices
 from a2_api.services.jobs import Prepare, QueuedServices
 from a2_api.services.legacy import Services
+
+if TYPE_CHECKING:
+    from a2_api.services.analyses import AnalysisService
 
 
 def load_prepare(settings: RuntimeSettings) -> Prepare | None:
@@ -63,21 +66,17 @@ def build_legacy_app(settings: RuntimeSettings | None = None) -> FastAPI:
     return create_app(metadata, lifespan=lifespan)
 
 
-def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
-    """Canonical default; legacy deployment requires explicit operator selection."""
-    from a2_assistant import FlashAssistant
+def configured_hook(path: str) -> object:
+    module, name = path.split(":", 1)
+    return getattr(importlib.import_module(module), name)
 
-    from a2_api.api.application import create_app
+
+def build_analysis_service(
+    config: RuntimeSettings, repository: JobRepository | None = None
+) -> "AnalysisService":
+    """Shared API/worker registry and admission configuration; no assistant side effects."""
     from a2_api.core.registry import ProductRegistry
     from a2_api.services.analyses import DEFAULT_TEMPLATES, AnalysisService, Preflight
-
-    config = settings if settings is not None else RuntimeSettings()
-    if config.contract_version == "legacy":
-        return build_legacy_app(config)
-
-    def configured_hook(path: str) -> object:
-        module, name = path.split(":", 1)
-        return getattr(importlib.import_module(module), name)
 
     registry = ProductRegistry()
     if config.registry_hook:
@@ -94,16 +93,39 @@ def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
     if bool(config.calculation_handler) != bool(config.code_version):
         raise ValueError("Configure calculation handler and code version together")
 
+    return AnalysisService(
+        registry,
+        repository,
+        code_version=config.code_version,
+        engine_enabled=bool(config.calculation_handler),
+        preflight=preflight,
+        registered_template_ids=getattr(registry, "scenario_template_ids", DEFAULT_TEMPLATES),
+    )
+
+
+def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
+    """Canonical default; legacy deployment requires explicit operator selection."""
+    from a2_assistant import FlashAssistant
+
+    from a2_api.api.application import create_app
+    from a2_api.services.analyses import AnalysisService
+
+    config = settings if settings is not None else RuntimeSettings()
+    if config.contract_version == "legacy":
+        return build_legacy_app(config)
+
+    configured = build_analysis_service(config)
+
     def service(
         repository: JobRepository | None = None, *, configure_assistant: bool = True
     ) -> AnalysisService:
         result = AnalysisService(
-            registry,
+            configured.registry,
             repository,
             code_version=config.code_version,
             engine_enabled=bool(config.calculation_handler),
-            preflight=preflight,
-            registered_template_ids=getattr(registry, "scenario_template_ids", DEFAULT_TEMPLATES),
+            preflight=configured.preflight,
+            registered_template_ids=configured.registered_template_ids,
         )
         if config.assistant_hook and configure_assistant:
             factory = cast(

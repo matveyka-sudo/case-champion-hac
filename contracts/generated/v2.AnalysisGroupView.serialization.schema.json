@@ -1,0 +1,444 @@
+{
+  "$defs": {
+    "AnalysisGroupItem": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Analysis Id"
+        },
+        "attempt": {
+          "maximum": 3,
+          "minimum": 1,
+          "title": "Attempt",
+          "type": "integer"
+        },
+        "category": {
+          "enum": [
+            "adult_polyclinic",
+            "child_polyclinic",
+            "kindergarten",
+            "school",
+            "college_university",
+            "rail_terminal",
+            "bus_terminal",
+            "airport",
+            "shopping_center"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ErrorDetail"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "job_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Job Id"
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "queued",
+            "running",
+            "succeeded",
+            "failed",
+            "cancelled"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "category",
+        "attempt",
+        "status",
+        "job_id",
+        "analysis_id"
+      ],
+      "title": "AnalysisGroupItem",
+      "type": "object"
+    },
+    "ErrorDetail": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "field_errors": {
+          "items": {
+            "$ref": "#/$defs/FieldError"
+          },
+          "title": "Field Errors",
+          "type": "array"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "request_id": {
+          "minLength": 1,
+          "title": "Request Id",
+          "type": "string"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "field_errors",
+        "request_id",
+        "retryable"
+      ],
+      "title": "ErrorDetail",
+      "type": "object"
+    },
+    "FieldError": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "location": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Location",
+          "type": "array"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "location",
+        "code",
+        "message"
+      ],
+      "title": "FieldError",
+      "type": "object"
+    },
+    "MethodologyRef": {
+      "additionalProperties": false,
+      "properties": {
+        "config_hash": {
+          "minLength": 1,
+          "title": "Config Hash",
+          "type": "string"
+        },
+        "reference_profile": {
+          "const": "edge-calibrated-v1",
+          "default": "edge-calibrated-v1",
+          "title": "Reference Profile",
+          "type": "string"
+        },
+        "version": {
+          "const": "a2-methodology-v3",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "config_hash"
+      ],
+      "title": "MethodologyRef",
+      "type": "object"
+    },
+    "UrbanPassengerRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis_kind": {
+          "const": "urban_passenger",
+          "title": "Analysis Kind",
+          "type": "string"
+        },
+        "area_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Area Id"
+        },
+        "categories": {
+          "items": {
+            "enum": [
+              "adult_polyclinic",
+              "child_polyclinic",
+              "kindergarten",
+              "school",
+              "college_university",
+              "rail_terminal",
+              "bus_terminal",
+              "airport",
+              "shopping_center"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Categories",
+          "type": "array"
+        },
+        "city_id": {
+          "minLength": 1,
+          "title": "City Id",
+          "type": "string"
+        },
+        "departure_at": {
+          "format": "date-time",
+          "title": "Departure At",
+          "type": "string"
+        },
+        "methodology": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MethodologyRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "passenger_mode": {
+          "enum": [
+            "walk",
+            "public_transport",
+            "private_car"
+          ],
+          "title": "Passenger Mode",
+          "type": "string"
+        },
+        "priorities": {
+          "additionalProperties": {
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "type": "string"
+          },
+          "propertyNames": {
+            "enum": [
+              "adult_polyclinic",
+              "child_polyclinic",
+              "kindergarten",
+              "school",
+              "college_university",
+              "rail_terminal",
+              "bus_terminal",
+              "airport",
+              "shopping_center"
+            ]
+          },
+          "title": "Priorities",
+          "type": "object"
+        },
+        "schema_version": {
+          "const": "2",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Snapshot Id"
+        },
+        "traffic_mode": {
+          "enum": [
+            "static",
+            "typical",
+            "live",
+            "historical"
+          ],
+          "title": "Traffic Mode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "departure_at",
+        "traffic_mode",
+        "city_id",
+        "analysis_kind",
+        "passenger_mode",
+        "categories",
+        "priorities"
+      ],
+      "title": "UrbanPassengerRequest",
+      "type": "object"
+    },
+    "VersionRefs": {
+      "additionalProperties": false,
+      "properties": {
+        "calendar_version": {
+          "minLength": 1,
+          "title": "Calendar Version",
+          "type": "string"
+        },
+        "code_version": {
+          "minLength": 1,
+          "title": "Code Version",
+          "type": "string"
+        },
+        "config_hash": {
+          "minLength": 1,
+          "title": "Config Hash",
+          "type": "string"
+        },
+        "graph_version": {
+          "minLength": 1,
+          "title": "Graph Version",
+          "type": "string"
+        },
+        "methodology_version": {
+          "const": "a2-methodology-v3",
+          "title": "Methodology Version",
+          "type": "string"
+        },
+        "population_version": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Population Version"
+        },
+        "snapshot_id": {
+          "minLength": 1,
+          "title": "Snapshot Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "snapshot_id",
+        "graph_version",
+        "calendar_version",
+        "population_version",
+        "methodology_version",
+        "config_hash",
+        "code_version"
+      ],
+      "title": "VersionRefs",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Separate category results, not a combined index or coverage assertion.",
+  "properties": {
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ErrorDetail"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "group_id": {
+      "minLength": 1,
+      "title": "Group Id",
+      "type": "string"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/AnalysisGroupItem"
+      },
+      "maxItems": 9,
+      "minItems": 1,
+      "title": "Items",
+      "type": "array"
+    },
+    "poll_after_seconds": {
+      "default": 2,
+      "minimum": 1,
+      "title": "Poll After Seconds",
+      "type": "integer"
+    },
+    "request": {
+      "$ref": "#/$defs/UrbanPassengerRequest"
+    },
+    "request_id": {
+      "minLength": 1,
+      "title": "Request Id",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "queued",
+        "running",
+        "succeeded",
+        "failed",
+        "cancelled"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "versions": {
+      "$ref": "#/$defs/VersionRefs"
+    }
+  },
+  "required": [
+    "group_id",
+    "request",
+    "versions",
+    "status",
+    "items",
+    "error",
+    "request_id"
+  ],
+  "title": "AnalysisGroupView",
+  "type": "object"
+}

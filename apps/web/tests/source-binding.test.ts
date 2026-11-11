@@ -9,6 +9,15 @@ import territoryRows from "./fixtures/api/territories.json";
 import { airportScope } from "./fixtures/urban-scopes";
 describe("source binding behind the original controls", () => {
   const catalog = territoryRows.map((row) => decode("TerritoryOption", row));
+  it("selects executable cargo data without confusing it with a passenger snapshot", () => {
+    const caps = decode("Capabilities", structuredClone(capabilities));
+    caps.snapshots![0].analysis_kinds = ["urban_passenger"];
+    caps.snapshots!.push({ ...caps.snapshots![0], snapshot_id: "cargo-inputs", analysis_kinds: ["urban_cargo"] });
+    const draft = { ...initialDraft(), kind: "urban_cargo" as const, cityId: "city-2", date: "2026-11-10" };
+    expect(boundSnapshotId(draft, catalog, caps)).toBe("cargo-inputs");
+    caps.snapshots![1].analysis_kinds = [];
+    expect(boundSnapshotId(draft, catalog, caps)).toBe("");
+  });
   it("binds only one complete matching scope and never picks the latest overlapping snapshot", () => {
     const caps = decode("Capabilities", structuredClone(capabilities));
     caps.snapshots!.push({ ...caps.snapshots![0], snapshot_id: "another-version" });

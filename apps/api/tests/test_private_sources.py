@@ -406,7 +406,7 @@ async def test_initialized_private_history_blocks_migration_downgrade(database):
     with pytest.raises(RuntimeError, match="Private source evidence and retention history"):
         await asyncio.to_thread(migrate, url, schema, "0006_rasp_quota", True)
     assert await pool.fetchval("SELECT count(*) FROM private_source_episodes") == 1
-    assert await pool.fetchval("SELECT version_num FROM alembic_version") == "0007_private_sources"
+    assert await pool.fetchval("SELECT version_num FROM alembic_version") == "0008_analysis_groups"
 
 
 @pytest.mark.asyncio

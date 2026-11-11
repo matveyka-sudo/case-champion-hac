@@ -25,6 +25,8 @@ async def open_pool(settings: RuntimeSettings) -> asyncpg.Pool:
             or await pool.fetchval("SELECT to_regclass('evidence_chunks')") is None
             or await pool.fetchval("SELECT to_regclass('assistant_budget')") is None
             or await pool.fetchval("SELECT to_regclass('assistant_reservations')") is None
+            or await pool.fetchval("SELECT to_regclass('analysis_groups')") is None
+            or await pool.fetchval("SELECT to_regclass('analysis_group_items')") is None
         ):
             raise ValueError("Apply backend Alembic migrations before starting API/worker")
     except BaseException:

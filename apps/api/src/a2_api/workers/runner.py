@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from collections.abc import Awaitable, Callable
 from uuid import uuid4
 
 from a2_contracts.api import ErrorDetail
@@ -26,6 +27,7 @@ class Worker:
         code_version: str,
         timeout_seconds: float = 600,
         decoded_result_bytes: int = DEFAULT_RESULT_BYTES,
+        dispatch_groups: Callable[[], Awaitable[bool]] | None = None,
     ) -> None:
         if not 0 < timeout_seconds <= 600:
             raise ValueError("Job hard timeout must be positive and <=600 seconds")
@@ -36,6 +38,7 @@ class Worker:
         self.timeout_seconds = timeout_seconds
         self.code_version = code_version
         self.decoded_result_bytes = validate_decoded_limit(decoded_result_bytes)
+        self.dispatch_groups = dispatch_groups
 
     async def run_once(self) -> bool:
         lease_lost = asyncio.Event()
@@ -45,9 +48,10 @@ class Worker:
                     503, "engine_unavailable", "Another worker owns this database schema"
                 )
             await self.repository.recover_orphans()
+            dispatched = await self.dispatch_groups() if self.dispatch_groups is not None else False
             claim = await self.repository.claim(str(uuid4()))
             if claim is None:
-                return False
+                return dispatched
             logger.info("job_started job_id=%s trace_id=%s", claim.job.job_id, claim.job.trace_id)
             try:
                 if claim.context.code_version != self.code_version:

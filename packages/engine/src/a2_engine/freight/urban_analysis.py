@@ -199,6 +199,11 @@ def analyze_urban_cargo(
             start_at=at,
             end_at=end,
         )
+        if route.status == "reachable" and route.seconds is None:
+            # A road observation does not bound the complete arrival time. A
+            # time-scoped compatibility receipt cannot certify unknown access.
+            state = "unknown"
+            proven = False
         pairs.setdefault((site_id, node_id), []).append((route, proven, state))
         evidence.update(route.evidence_refs + route.compatibility.evidence_refs)
     ids(tuple(r.route_id for r in routes), required=False)
@@ -228,6 +233,8 @@ def analyze_urban_cargo(
                     reasons.add("CARGO_PAIR_ROUTE_UNKNOWN")
                 for route, proven, state in data:
                     observed.append(route)
+                    if route.status == "reachable" and route.seconds is None:
+                        reasons.add("TRUCK_ACCESS_UNKNOWN")
                     if state == "forbidden":
                         continue
                     if state == "unknown":

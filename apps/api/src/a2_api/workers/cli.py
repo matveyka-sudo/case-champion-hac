@@ -14,19 +14,31 @@ async def run_worker(settings: RuntimeSettings, once: bool = False) -> None:
     if not settings.calculation_handler or not settings.code_version:
         raise ValueError("Worker requires A2_CALCULATION_HANDLER and A2_CODE_VERSION")
     pool = await open_pool(settings)
+    service = None
     try:
+        repository = JobRepository(pool)
+        dispatch_groups = None
+        if settings.contract_version != "legacy":
+            from a2_api.api.bootstrap import build_analysis_service
+            from a2_api.services.analysis_groups import AnalysisGroupService
+
+            service = build_analysis_service(settings, repository)
+            dispatch_groups = AnalysisGroupService(service).dispatch_once
         worker = Worker(
-            JobRepository(pool),
+            repository,
             handler=settings.calculation_handler,
             code_version=settings.code_version,
             timeout_seconds=settings.job_timeout_seconds,
             decoded_result_bytes=settings.worker_result_decoded_mib * 1024 * 1024,
+            dispatch_groups=dispatch_groups,
         )
         if once:
             await worker.run_once()
         else:
             await worker.run_forever(settings.worker_poll_seconds)
     finally:
+        if service is not None:
+            await service.close_admission()
         await pool.close()
 
 

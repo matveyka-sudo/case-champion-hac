@@ -124,7 +124,7 @@ def partial_runtime(tmp_path, monkeypatch, transport_facts):
     )
     validate_inputs(profile, facts, snapshot, ProductRegistry())
     runtime.profiles[profile.profile_id] = profile, facts
-    monkeypatch.setattr(product, "load_runtime", lambda: runtime)
+    monkeypatch.setattr(product, "load_runtime", lambda **kwargs: runtime)
     return runtime, snapshot, facts, profile
 
 

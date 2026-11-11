@@ -5,7 +5,7 @@ import json
 import os
 from collections.abc import Iterator
 from dataclasses import dataclass, field, fields, is_dataclass, replace
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from math import fsum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
@@ -37,12 +37,14 @@ from a2_api.adapters.product_inputs import (
     UrbanCargoInputs,
     UrbanInputs,
     candidate_is_static,
+    car_observation_matches,
 )
 from a2_api.adapters.product_scenario_inputs import ScenarioDocument
 from a2_api.adapters.timetable_source import verify_timetable_source
 from a2_api.core.errors import DomainError
 from a2_api.core.registry import ProductRegistry
 from a2_api.core.runtime_budget import DEFAULT_RUNTIME_SOURCE_BYTES, runtime_source_budget_bytes
+from a2_api.core.truck_routing import TruckRoutingBinding
 
 MAX_DOCUMENT_BYTES = 32 * 1024 * 1024
 MAX_RUNTIME_BYTES = DEFAULT_RUNTIME_SOURCE_BYTES
@@ -122,6 +124,9 @@ class Profile(ContractModel):
     scenarios: list[FileRef] = Field(default_factory=list, max_length=16)
     evidence: list[EvidenceRef] = Field(default_factory=list)
     static_observations: bool = False
+    truck_routing: TruckRoutingBinding | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
     max_route_pairs: int = Field(gt=0, le=100000)
 
 
@@ -188,6 +193,11 @@ def input_fingerprints(
             "traffic_modes": profile.traffic_modes,
             "static_observations": profile.static_observations,
             "passenger_modes": profile.passenger_modes,
+            **(
+                {"truck_routing": profile.truck_routing.model_dump(mode="json")}
+                if profile.truck_routing
+                else {}
+            ),
         }
     )
     return graph, costing
@@ -216,6 +226,12 @@ def validate_inputs(
     demo_transport: Any = None,
 ) -> None:
     expected_kind = "pipeline" if profile.cargo_transport == "pipeline" else profile.analysis_kind
+    if profile.truck_routing is not None:
+        from a2_api.adapters.truck_runtime import validate_binding
+
+        if not isinstance(inputs, UrbanCargoInputs):
+            raise ValueError("TRUCK_EXECUTOR_REQUIRES_CARGO_INPUTS")
+        validate_binding(profile, inputs, snapshot)
     if inputs.kind != expected_kind:
         raise ValueError("RUNTIME_INPUT_KIND_MISMATCH")
     if (profile.graph_fingerprint, profile.routing_profile_fingerprint) != input_fingerprints(
@@ -441,6 +457,25 @@ def validate_inputs(
         if "public_transport" in profile.passenger_modes and inputs.timetable is None:
             raise ValueError("DATED_TIMETABLE_REQUIRED_FOR_PUBLIC_TRANSPORT")
     elif isinstance(inputs, IntercityInputs):
+        if inputs.car_geometry is not None:
+            if inputs.car is None or not set(inputs.car_geometry.evidence_refs) <= set(
+                inputs.car.evidence_refs
+            ):
+                raise ValueError("CAR_GEOMETRY_OBSERVATION_EVIDENCE_MISMATCH")
+            car_access_nodes = {node.node_id: node for node in snapshot.access_nodes}
+            for identity, coordinate in zip(
+                (inputs.car.origin_node_id, inputs.car.destination_node_id),
+                (inputs.car_geometry.coordinates[0], inputs.car_geometry.coordinates[-1]),
+                strict=True,
+            ):
+                car_access = car_access_nodes.get(identity)
+                if car_access is None or any(
+                    abs(a - b) > 0.0000005
+                    for a, b in zip(
+                        coordinate, (car_access.location.lon, car_access.location.lat), strict=True
+                    )
+                ):
+                    raise ValueError("CAR_GEOMETRY_ENDPOINT_MISMATCH")
         verify_timetable_source(
             snapshot,
             inputs.timetable,
@@ -609,6 +644,44 @@ def validate_inputs(
             raise ValueError("RUNTIME_CARGO_PROFILE_CONTENT_MISMATCH")
 
 
+def profile_matches(profile: Profile, request: AnalysisRequest, snapshot_id: str) -> bool:
+    """One predicate for source loading and final dispatch; retain every overlap."""
+    if (
+        profile.analysis_kind != request.analysis_kind
+        or profile.snapshot_id != snapshot_id
+        or request.traffic_mode not in profile.traffic_modes
+        or not profile.valid_from <= request.departure_at < profile.valid_to
+    ):
+        return False
+    if isinstance(request, UrbanPassengerRequest):
+        match = (
+            request.city_id == profile.city_id
+            and request.passenger_mode in profile.passenger_modes
+            and set(request.categories) <= set(profile.categories)
+            and request.area_id is None
+        )
+    elif isinstance(request, UrbanCargoRequest):
+        match = (
+            request.city_id == profile.city_id
+            and request.cargo_profile_id == profile.cargo_profile_id
+            and request.direction == profile.direction
+            and request.area_id is None
+        )
+    else:
+        match = (
+            request.origin_id == profile.origin_id
+            and request.destination_id == profile.destination_id
+            and request.territory_level == profile.territory_level
+        )
+        if isinstance(request, IntercityCargoRequest):
+            match = match and (
+                request.cargo_profile_id == profile.cargo_profile_id
+                and request.cargo_transport == profile.cargo_transport
+                and request.pipeline_product == profile.pipeline_product
+            )
+    return match
+
+
 @dataclass(frozen=True)
 class Runtime:
     digest: str
@@ -624,43 +697,11 @@ class Runtime:
     def select(
         self, request: AnalysisRequest, snapshot: AcceptedData
     ) -> tuple[Profile, EngineInputs | None]:
-        matches = []
-        for profile, inputs in self.profiles.values():
-            if (
-                profile.analysis_kind != request.analysis_kind
-                or profile.snapshot_id != snapshot.snapshot_id
-                or request.traffic_mode not in profile.traffic_modes
-                or not profile.valid_from <= request.departure_at < profile.valid_to
-            ):
-                continue
-            if isinstance(request, UrbanPassengerRequest):
-                match = (
-                    request.city_id == profile.city_id
-                    and request.passenger_mode in profile.passenger_modes
-                    and set(request.categories) <= set(profile.categories)
-                    and request.area_id is None
-                )
-            elif isinstance(request, UrbanCargoRequest):
-                match = (
-                    request.city_id == profile.city_id
-                    and request.cargo_profile_id == profile.cargo_profile_id
-                    and request.direction == profile.direction
-                    and request.area_id is None
-                )
-            else:
-                match = (
-                    request.origin_id == profile.origin_id
-                    and request.destination_id == profile.destination_id
-                    and request.territory_level == profile.territory_level
-                )
-                if isinstance(request, IntercityCargoRequest):
-                    match = match and (
-                        request.cargo_profile_id == profile.cargo_profile_id
-                        and request.cargo_transport == profile.cargo_transport
-                        and request.pipeline_product == profile.pipeline_product
-                    )
-            if match:
-                matches.append((profile, inputs))
+        matches = [
+            (profile, inputs)
+            for profile, inputs in self.profiles.values()
+            if profile_matches(profile, request, snapshot.snapshot_id)
+        ]
         if not matches:
             raise unavailable("RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST")
         if len(matches) != 1:
@@ -691,8 +732,9 @@ class Runtime:
             if pair_count > profile.max_route_pairs:
                 raise unavailable("APPROVED_ROUTE_PAIR_BUDGET_EXCEEDED")
         if isinstance(inputs, UrbanCargoInputs):
-            if not profile.static_observations or any(
-                route.requested_at != request.departure_at for route in inputs.routes
+            if not profile.static_observations or (
+                inputs.receipts
+                and any(route.requested_at != request.departure_at for route in inputs.routes)
             ):
                 raise unavailable("STATIC_TRUCK_OBSERVATION_DEPARTURE_OR_INVARIANCE_UNAVAILABLE")
         if isinstance(inputs, IntercityInputs) and isinstance(request, IntercityPassengerRequest):
@@ -700,9 +742,8 @@ class Runtime:
             if (
                 wants_car
                 and inputs.car is not None
-                and (
-                    inputs.car_departure_at != request.departure_at
-                    or inputs.car.traffic_mode != request.traffic_mode
+                and not car_observation_matches(
+                    inputs, request, static_observations=profile.static_observations
                 )
             ):
                 if request.passenger_modes == ["private_car"]:
@@ -715,6 +756,10 @@ class Runtime:
                     or inputs.car.destination_node_id not in (request.destination_node_ids or ())
                 ):
                     raise unavailable("ACCEPTED_PRIVATE_CAR_BOUNDARY_UNAVAILABLE")
+                return profile, inputs
+            if inputs.public_timetable_unavailable:
+                # Preserve the user's mode selection as unknown rather than run
+                # a scheduled solver on the placeholder of a car-only dataset.
                 return profile, inputs
             if request.passenger_modes is not None and (
                 "mixed" in request.passenger_modes
@@ -730,7 +775,18 @@ class Runtime:
         return profile, inputs
 
 
-def load_runtime() -> Runtime:
+def load_runtime(
+    *, request: AnalysisRequest | None = None, snapshot_id: str | None = None
+) -> Runtime:
+    """Validate all sources at startup, or only a request's dependency closure.
+
+    The manifest and selected bytes are always hash-checked anew. This is not a
+    parsed-object cache: selected file changes cannot hide behind a prior load.
+    """
+    if (request is None) != (snapshot_id is None):
+        raise ValueError("RUNTIME_REQUEST_AND_SNAPSHOT_REQUIRED_TOGETHER")
+    if request is not None and request.snapshot_id not in (None, snapshot_id):
+        raise unavailable("RUNTIME_REQUEST_SNAPSHOT_MISMATCH")
     path = os.environ.get("A2_PRODUCT_RUNTIME_PATH", "")
     digest = os.environ.get("A2_PRODUCT_RUNTIME_SHA256", "")
     if not path or len(digest) != 64:
@@ -739,8 +795,26 @@ def load_runtime() -> Runtime:
         source = Path(path)
         budget = [runtime_source_budget_bytes()]
         manifest = Manifest.model_validate(read_document(source, digest, budget))
+        snapshot_ids = [ref.snapshot_id for ref in manifest.snapshots]
+        profile_ids = [profile.profile_id for profile in manifest.profiles]
+        if len(set(snapshot_ids)) != len(snapshot_ids) or len(set(profile_ids)) != len(profile_ids):
+            raise ValueError("DUPLICATE_RUNTIME_IDENTITY")
+        if snapshot_id is not None and snapshot_id not in snapshot_ids:
+            raise ValueError("RUNTIME_REQUEST_SNAPSHOT_UNAVAILABLE")
+        selected_profiles = [
+            profile
+            for profile in manifest.profiles
+            if request is None or profile_matches(profile, request, str(snapshot_id))
+        ]
+        if request is not None and any(profile.scenarios for profile in selected_profiles):
+            # Scenario documents validate requests at other times as well. Keep
+            # their existing whole-catalogue overlap checks until that dependency
+            # set can be bounded independently of the baseline request.
+            return load_runtime()
         snapshots = {}
         for ref in manifest.snapshots:
+            if snapshot_id is not None and ref.snapshot_id != snapshot_id:
+                continue
             snapshot = AcceptedData.model_validate(_referenced(source.parent, ref, budget))
             if (
                 snapshot.snapshot_id != ref.snapshot_id
@@ -761,7 +835,7 @@ def load_runtime() -> Runtime:
         certified_proof = None
         walk_bindings = {}
         failures = {}
-        for profile in manifest.profiles:
+        for profile in selected_profiles:
             key = profile.profile_id
             if key in seen:
                 raise ValueError("DUPLICATE_RUNTIME_REQUEST_PROFILE")
@@ -773,6 +847,8 @@ def load_runtime() -> Runtime:
                 if profile.valid_from >= profile.valid_to:
                     raise ValueError("RUNTIME_PROFILE_VALIDITY_REQUIRED")
                 inputs = None
+                if profile.truck_routing is not None and profile.executor != "accepted_inputs":
+                    raise ValueError("TRUCK_EXECUTOR_REQUIRES_CARGO_INPUTS")
                 if profile.walk_binding is not None and profile.executor != "walk_batches":
                     raise ValueError("WALK_BINDING_REQUIRES_BATCH_EXECUTOR")
                 if profile.executor == "accepted_inputs":
@@ -924,10 +1000,27 @@ def load_runtime() -> Runtime:
 class RuntimeRegistry(ProductRegistry):
     scenario_template_ids: frozenset[str] = frozenset()
     urban_passenger_scopes: list[UrbanPassengerScope] = []
+    snapshot_analysis_kinds: dict[str, list[AnalysisKind]] | None = None
+    truck_cache_expiry_by_snapshot: dict[str, datetime] = {}
+
+    def required_cache_valid_until(
+        self, request: AnalysisRequest, snapshot: AcceptedData
+    ) -> datetime | None:
+        expiry = super().required_cache_valid_until(request, snapshot)
+        truck_expiry = self.truck_cache_expiry_by_snapshot.get(snapshot.snapshot_id)
+        if request.analysis_kind == "urban_cargo" and truck_expiry is not None:
+            # Provider failures must not become indefinitely cached unknown results.
+            # Positive individual routes remain reusable in the worker artifact cache.
+            limit = min(truck_expiry, datetime.now(UTC) + timedelta(minutes=5))
+            return min(expiry, limit) if expiry is not None else limit
+        return expiry
 
     def capabilities(self) -> Capabilities:
         result = super().capabilities()
         result.urban_passenger_scopes = list(self.urban_passenger_scopes)
+        if self.snapshot_analysis_kinds is not None:
+            for snapshot in result.snapshots or []:
+                snapshot.analysis_kinds = self.snapshot_analysis_kinds.get(snapshot.snapshot_id, [])
         for item in result.analyses:
             if not item.calculation_available:
                 item.reason_code = "RUNTIME_INPUTS_UNAVAILABLE"
@@ -952,4 +1045,22 @@ def registry() -> ProductRegistry:
 
     result.scenario_template_ids = template_ids(runtime.scenario_documents)
     result.urban_passenger_scopes = runtime.urban_passenger_scopes
+    result.snapshot_analysis_kinds = {
+        snapshot_id: sorted(
+            {p.analysis_kind for p, _ in runtime.profiles.values() if p.snapshot_id == snapshot_id}
+        )
+        for snapshot_id in runtime.snapshots
+    }
+    for profile, _ in runtime.profiles.values():
+        if profile.truck_routing is not None:
+            # Install an instance-owned mapping, never mutate the class default.
+            result.truck_cache_expiry_by_snapshot = {
+                **result.truck_cache_expiry_by_snapshot,
+                profile.snapshot_id: min(
+                    result.truck_cache_expiry_by_snapshot.get(
+                        profile.snapshot_id, profile.valid_to
+                    ),
+                    profile.valid_to,
+                ),
+            }
     return result

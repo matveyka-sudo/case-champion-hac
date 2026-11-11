@@ -3,7 +3,7 @@
 from a2_contracts.v2.api import ErrorEnvelope
 from fastapi import APIRouter
 
-from a2_api.api.v2 import analyses, catalog, explanations, jobs, scenarios
+from a2_api.api.v2 import analyses, analysis_groups, catalog, explanations, jobs, scenarios
 
 
 def build_router() -> APIRouter:
@@ -13,6 +13,7 @@ def build_router() -> APIRouter:
     )
     router.include_router(catalog.router)
     router.include_router(analyses.router)
+    router.include_router(analysis_groups.router)
     router.include_router(jobs.router)
     router.include_router(explanations.router)
     router.include_router(scenarios.router)

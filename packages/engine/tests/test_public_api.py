@@ -21,7 +21,7 @@ SOURCE = Path(__file__).resolve().parents[1] / "src"
 
 
 def historical_signature(obj: Any) -> inspect.Signature:
-    """Check every old parameter while permitting only the reviewed correlation additions."""
+    """Check old parameters with narrowly verified, backwards-compatible extensions."""
     signature = inspect.signature(obj)
     if obj is a2_engine.ValhallaCorrelation:
         signature = signature.replace(
@@ -31,7 +31,26 @@ def historical_signature(obj: Any) -> inspect.Signature:
                 if name not in {"coordinate_precision_digits", "serialization_evidence_refs"}
             ]
         )
+    if obj is a2_engine.TruckRoute:
+        signature = signature.replace(
+            parameters=[
+                p.replace(annotation=historical_type("TruckRoute", name, p.annotation))
+                for name, p in signature.parameters.items()
+            ]
+        )
     return signature
+
+
+def historical_type(name: str, field_name: str, annotation: Any) -> Any:
+    # Missing physical approaches now remain unknown. All previously accepted
+    # float inputs, field order, defaults and other annotations must stay intact.
+    if name == "TruckRoute" and field_name in {
+        "origin_access_seconds",
+        "destination_access_seconds",
+    }:
+        assert annotation == float | None
+        return float
+    return annotation
 
 
 def historical_field(name: str, field_name: str) -> bool:
@@ -1017,7 +1036,7 @@ def test_all_141_pre_structure_signatures_fields_and_defaults() -> None:
             metadata = [
                 {
                     "name": f.name,
-                    "type": normalize(str(f.type)),
+                    "type": normalize(str(historical_type(name, f.name, f.type))),
                     "default": "<required>" if f.default is MISSING else normalize(repr(f.default)),
                     "factory": "<none>"
                     if f.default_factory is MISSING
@@ -1103,7 +1122,7 @@ def test_previous_exports_signatures_fields_and_defaults(count: int) -> None:
             [
                 [
                     f.name,
-                    str(f.type),
+                    str(historical_type(name, f.name, f.type)),
                     repr(f.default) if f.default is not MISSING else "<required>",
                     repr(f.default_factory) if f.default_factory is not MISSING else "<none>",
                     f.init,

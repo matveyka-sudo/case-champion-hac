@@ -20,6 +20,7 @@ from a2_contracts.v2.scenarios import (
 )
 
 from a2_api.assistant.explanations import explain as _explain
+from a2_api.core.analysis_groups import GroupAdmission
 from a2_api.core.batches import BatchExecution, BatchPlan
 from a2_api.core.errors import DomainError, unavailable
 from a2_api.core.job_admission import Admission
@@ -87,17 +88,27 @@ class AnalysisService:
         return canonical_hash({"scope": scope, "key": key})
 
     async def analyse(
-        self, request: AnalysisRequest, key: str, request_id: str, scope: str
+        self,
+        request: AnalysisRequest,
+        key: str,
+        request_id: str,
+        scope: str,
+        *,
+        group: GroupAdmission | None = None,
     ) -> JobAccepted:
         repository = self._repository()
-        scoped_key = self._key(key, scope)
+        scoped_key = (
+            self._key(key, scope)
+            if group is None
+            else canonical_hash({"scope": scope, "group_admission": vars(group)})
+        )
         replay = await repository.replay("analysis", request, scoped_key, scope=scope)
         if replay is not None:
             return JobAccepted(job_id=replay.job_id, status=replay.status, request_id=request_id)
         accepted = await self._admission.run(
             (scope, scoped_key),
             request_hash(request),
-            lambda: self._admit(repository, request, scoped_key, request_id, scope),
+            lambda: self._admit(repository, request, scoped_key, request_id, scope, group=group),
         )
         return accepted.model_copy(update={"request_id": request_id})
 
@@ -111,6 +122,8 @@ class AnalysisService:
         scoped_key: str,
         request_id: str,
         scope: str,
+        *,
+        group: GroupAdmission | None = None,
     ) -> JobAccepted:
         # An outer replay can return a captured miss after the previous producer
         # has committed and released its slot. Recheck after reserving this one.
@@ -167,9 +180,14 @@ class AnalysisService:
                     "batch_execution": execution.model_dump(mode="json"),
                 }
             )
-        accepted = await repository.enqueue(
-            "analysis", request, context, scoped_key, request_id, scope=scope
-        )
+        if group is None:
+            accepted = await repository.enqueue(
+                "analysis", request, context, scoped_key, request_id, scope=scope
+            )
+        else:
+            accepted = await repository.enqueue(
+                "analysis", request, context, scoped_key, request_id, scope=scope, group=group
+            )
         return JobAccepted(job_id=accepted.job_id, status=accepted.status, request_id=request_id)
 
     async def job(self, job_id: str, scope: str, *, include_progress: bool = False) -> JobView:
