@@ -1,0 +1,42 @@
+# Apply after product, urban-walk and novorossiysk-walk. No provider credentials.
+# Kaliningrad replays its native certificate; only Moscow/Novorossiysk use routers.
+x-fourprofile-environment: &fourprofile-environment
+  A2_WORKER_RESULT_DECODED_MIB: "32"
+  A2_RUNTIME_SOURCE_BUDGET_MIB: "128"
+  A2_JOB_TIMEOUT_SECONDS: "600"
+  A2_DEMO_TRANSPORT_ENABLED: "false"
+  LLM_ENABLED: "false"
+  ALICE_BILLING_CURRENCY_CONFIRMED: "false"
+  A2_CODE_VERSION: full-${WAYDEX_REVISION:?}-${WAYDEX_PRODUCT_SHA256:?}-${WAYDEX_CERTIFIED_SHA256:?}-${WAYDEX_WALK_EXECUTOR_SHA256:?}
+  A2_CERTIFIED_WALK_MODEL_PATH: /runtime/kaliningrad/proof-binding.json
+  A2_CERTIFIED_WALK_MODEL_SHA256: ${WAYDEX_CERTIFIED_SHA256:?}
+  WAYDEX_RUNTIME_BUNDLE_PATH: /runtime
+  WAYDEX_RUNTIME_BUNDLE_SHA256: ${WAYDEX_BUNDLE_MANIFEST_SHA256:?}
+  WAYDEX_GRAPH_PATH: /certified-graph
+  WAYDEX_GRAPH_BINDING_PATH: ""
+  WAYDEX_GRAPH_BINDING_SHA256: ""
+
+services:
+  runtime-check:
+    environment: *fourprofile-environment
+    mem_limit: 2g
+    memswap_limit: 2g
+    volumes:
+      - type: bind
+        source: ${WAYDEX_KALININGRAD_GRAPH_DIR:?}
+        target: /certified-graph
+        read_only: true
+        bind: {create_host_path: false}
+
+  migrate:
+    environment: *fourprofile-environment
+
+  api:
+    environment: *fourprofile-environment
+    mem_limit: 2g
+    memswap_limit: 2g
+
+  worker:
+    environment: *fourprofile-environment
+    mem_limit: 2g
+    memswap_limit: 2g
