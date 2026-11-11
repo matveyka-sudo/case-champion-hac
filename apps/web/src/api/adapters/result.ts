@@ -377,6 +377,7 @@ export function noticeTexts(values: readonly string[]) {
 
 export function errorText(error: { message: string; code?: string }) {
   if (error.code?.toUpperCase() === "RUNTIME_INPUTS_BUSY") return "Сервер подготавливает данные. Повторите расчёт чуть позже.";
+  if (error.code === "incompatible_versions") return "Версии сохранённого расчёта и текущего вычислителя несовместимы. Для нового сценария пересчитайте базу с выбранными условиями. Сохранённый результат не изменён.";
   if (error.message === "Выберите один из доступных наборов данных") return "Для выбранных условий данные пока не определены однозначно. Измените условия или повторите расчёт позже.";
   return error.message;
 }

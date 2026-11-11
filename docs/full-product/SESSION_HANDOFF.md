@@ -1,5 +1,13 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Latest delivery and priority — 2026-11-11
+
+See [delivery evidence and remaining work](DELIVERY_20261111.md). Live backend
+is b1dab1a; all six checks on that revision passed. The user now authorizes the
+reviewed merge into dev and prioritizes working categories in three cities,
+intercity, cargo and Alice over further proof research. Preserve the main README.
+Older checkpoints below are historical. Subagents are currently usage-limited.
+
 ## Current checkpoint — 2026-11-11, after source47a8 deployment
 
 This section supersedes historical live-source and concurrency statements below.

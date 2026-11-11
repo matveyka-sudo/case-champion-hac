@@ -1324,6 +1324,27 @@ test("API: preparation errors are human and manual retry retains the pending sub
 });
 
 
+test("API: scenario version conflict retains baseline and only explicitly recalculates it", async ({ page }) => {
+  const mock = await mockApi(page);
+  let scenarioPosts = 0;
+  await page.route("**/scenarios/*/runs", async (route) => {
+    scenarioPosts += 1;
+    await route.fulfill({ status: 409, json: { error: { code: "incompatible_versions", message: "Scenario requires its baseline engine revision", field_errors: [], request_id: "synthetic-version-conflict", retryable: false } } });
+  });
+  await page.goto("/?data=api#atlas");
+  await cityRun(page);
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
+  await page.getByRole("button", { name: "Проверить сценарий", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("Сохранённый результат не изменён");
+  await expect(page.locator("#apiResultCard")).toContainText("30 мин");
+  expect(mock.posts).toBe(1);
+  expect(scenarioPosts).toBe(1);
+  await page.getByRole("button", { name: "Пересчитать базу", exact: true }).click();
+  await expect.poll(() => mock.posts).toBe(2);
+  expect(scenarioPosts).toBe(1);
+});
+
 test("API: explanation transport errors stay visible inside the shared mobile chat", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const mock = await mockApi(page, { emptyProposals: true });
