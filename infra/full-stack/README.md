@@ -179,8 +179,11 @@ Copy [`demo.env.example`](demo.env.example) outside Git. Set the checkout path,
 exact source commit, restored demo directory, reviewed manifest hash and a new
 database password (`openssl rand -hex 32`). Keep the directory readable by
 container UID 10001 and the environment file at mode 600. Keep the demo
-project name and port distinct from the real stack. Leave the assistant
-environment at `/dev/null` for the provider-free demo.
+project name and port distinct from the real stack. Define any variables
+referenced by the deployment settings in the same file. Leave the assistant
+environment at `/dev/null` for the provider-free demo. The wrapper uses
+`python3` (3.9 or newer) on the host to read the project name and validate the
+HTTP port.
 
 ```sh
 demo_env=/absolute/path/to/private/demo.env
@@ -192,7 +195,13 @@ demo up -d --no-build --wait
 demo ps -a
 ```
 
-The wrapper applies the generated-demo overlay after the base product file.
+Pass the same private environment file to each command, including `demo down`.
+The wrapper resolves the required project name and single TCP port with
+Compose using only `PATH`, `HOME` and `DOCKER_CONFIG` from the host environment.
+It then sets the resolved name and port for the Compose command and clears
+shell exports for the deployment settings in the example. The command uses
+the active Docker context and applies the generated-demo overlay after the
+base product file.
 Runtime validation and migrations must succeed before the API and worker
 start. The browser uses the same-origin web proxy. On a VM, forward the
 loopback port from the reviewer's machine, for example
