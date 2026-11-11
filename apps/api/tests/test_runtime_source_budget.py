@@ -24,11 +24,13 @@ def test_source_policy_defaults_to_96_and_explicitly_accepts_128(monkeypatch):
     assert walk_input_inventory._Reader(1).remaining == DEFAULT_RUNTIME_SOURCE_BYTES
     monkeypatch.setenv("A2_RUNTIME_SOURCE_BUDGET_MIB", "128")
     assert RuntimeSettings(_env_file=None).runtime_source_budget_mib == 128
-    assert runtime_source_budget_bytes() == MAX_RUNTIME_SOURCE_BYTES == 128 * 1024 * 1024
+    assert runtime_source_budget_bytes() == 128 * 1024 * 1024
+    monkeypatch.setenv("A2_RUNTIME_SOURCE_BUDGET_MIB", "160")
+    assert runtime_source_budget_bytes() == MAX_RUNTIME_SOURCE_BYTES == 160 * 1024 * 1024
     assert walk_input_inventory._Reader(1).remaining == MAX_RUNTIME_SOURCE_BYTES
 
 
-@pytest.mark.parametrize("value", ["0", "95", "129", "192", "128.5", "NaN", "invalid"])
+@pytest.mark.parametrize("value", ["0", "95", "161", "192", "128.5", "NaN", "invalid"])
 def test_invalid_source_policy_fails_closed_before_reads(monkeypatch, value):
     monkeypatch.setenv("A2_RUNTIME_SOURCE_BUDGET_MIB", value)
     with pytest.raises(ValidationError):
