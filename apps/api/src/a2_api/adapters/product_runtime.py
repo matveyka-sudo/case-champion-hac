@@ -711,8 +711,9 @@ class Runtime:
             if pair_count > profile.max_route_pairs:
                 raise unavailable("APPROVED_ROUTE_PAIR_BUDGET_EXCEEDED")
         if isinstance(inputs, UrbanCargoInputs):
-            if not profile.static_observations or any(
-                route.requested_at != request.departure_at for route in inputs.routes
+            if not profile.static_observations or (
+                inputs.receipts
+                and any(route.requested_at != request.departure_at for route in inputs.routes)
             ):
                 raise unavailable("STATIC_TRUCK_OBSERVATION_DEPARTURE_OR_INVARIANCE_UNAVAILABLE")
         if isinstance(inputs, IntercityInputs) and isinstance(request, IntercityPassengerRequest):
@@ -943,10 +944,14 @@ def load_runtime() -> Runtime:
 class RuntimeRegistry(ProductRegistry):
     scenario_template_ids: frozenset[str] = frozenset()
     urban_passenger_scopes: list[UrbanPassengerScope] = []
+    snapshot_analysis_kinds: dict[str, list[AnalysisKind]] | None = None
 
     def capabilities(self) -> Capabilities:
         result = super().capabilities()
         result.urban_passenger_scopes = list(self.urban_passenger_scopes)
+        if self.snapshot_analysis_kinds is not None:
+            for snapshot in result.snapshots or []:
+                snapshot.analysis_kinds = self.snapshot_analysis_kinds.get(snapshot.snapshot_id, [])
         for item in result.analyses:
             if not item.calculation_available:
                 item.reason_code = "RUNTIME_INPUTS_UNAVAILABLE"
@@ -971,4 +976,10 @@ def registry() -> ProductRegistry:
 
     result.scenario_template_ids = template_ids(runtime.scenario_documents)
     result.urban_passenger_scopes = runtime.urban_passenger_scopes
+    result.snapshot_analysis_kinds = {
+        snapshot_id: sorted(
+            {p.analysis_kind for p, _ in runtime.profiles.values() if p.snapshot_id == snapshot_id}
+        )
+        for snapshot_id in runtime.snapshots
+    }
     return result

@@ -116,6 +116,7 @@ export function eligibleSnapshots(
     );
     return (caps.snapshots || []).filter(
       (s) =>
+        (s.analysis_kinds == null || s.analysis_kinds.includes(d.kind)) &&
         s.valid_from !== null &&
         s.valid_to !== null &&
         ids.every((id) => s.territory_ids.includes(id)) &&

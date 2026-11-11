@@ -368,7 +368,9 @@ def calculate(
             raise unavailable("ACCEPTED_STATIC_TRUCK_OBSERVATION_PROOF_REQUIRED")
         routes = tuple(replace(route, requested_at=request.departure_at) for route in inputs.routes)
         selected = tuple(
-            request.freight_node_types or sorted({node.analysis_type for node in inputs.nodes})
+            request.freight_node_types
+            or sorted({node.analysis_type for node in inputs.nodes})
+            or ("port", "rail_freight_station", "terminal", "logistics_center")
         )
         urban_cargo_analysis = analyze_urban_cargo(
             inputs.profile,

@@ -86,3 +86,84 @@ def test_cargo_map_keeps_real_site_coordinates_without_population(transport_fact
         assert feature.source_refs == sorted(set(site.source_refs))
     with pytest.raises(ValueError, match="SCOPE_MISMATCH"):
         accepted_cargo_map(snapshot, request.model_copy(update={"city_id": "other-city"}), facts)
+
+
+def test_inventory_without_accepted_nodes_returns_unknown_instead_of_failing(
+    transport_facts, monkeypatch
+):
+    from a2_api.adapters import product
+    from a2_api.adapters.product_runtime import Manifest, Runtime
+    from a2_contracts.v2.requests import UrbanCargoRequest
+    from test_product_runtime import claim_for
+
+    snapshot, inputs, profile, registry = cargo_inputs(transport_facts)
+    profile = profile.model_copy(update={"static_observations": True})
+    runtime = Runtime(
+        "d" * 64,
+        Manifest(
+            schema_version="waydex-product-runtime/1",
+            snapshots=[],
+            territories=[],
+            profiles=[profile],
+        ),
+        {snapshot.snapshot_id: snapshot},
+        {profile.profile_id: (profile, inputs)},
+        frozenset(),
+    )
+    monkeypatch.setattr(product, "load_runtime", lambda: runtime)
+    monkeypatch.setenv("A2_CODE_VERSION", "TEST_ONLY-" + runtime.digest)
+    request = UrbanCargoRequest(
+        schema_version="2",
+        analysis_kind="urban_cargo",
+        city_id="city-1",
+        departure_at=profile.valid_from,
+        traffic_mode="static",
+        snapshot_id=snapshot.snapshot_id,
+        cargo_profile_id=inputs.profile.profile_id,
+        direction="outbound",
+        methodology=registry.methodology,
+    )
+    result = product.calculate(claim_for(snapshot, request))
+    assert result.map_data.features
+    assert result.scores and all(score.value is None for score in result.scores)
+    assert not result.journeys
+
+
+def test_static_road_facts_can_retime_but_minimum_receipts_cannot(transport_facts):
+    from a2_api.adapters.product_runtime import Manifest, Runtime
+    from a2_api.core.errors import DomainError
+    from a2_contracts.v2.requests import UrbanCargoRequest
+
+    snapshot, inputs, profile, _ = cargo_inputs(transport_facts)
+    route, receipt = example("urban_cargo").truck("site1", "port", 1200)
+    inputs = inputs.model_copy(update={"routes": (route,)})
+    profile = profile.model_copy(update={"static_observations": True})
+    runtime = Runtime(
+        "d" * 64,
+        Manifest(
+            schema_version="waydex-product-runtime/1",
+            snapshots=[],
+            territories=[],
+            profiles=[profile],
+        ),
+        {snapshot.snapshot_id: snapshot},
+        {profile.profile_id: (profile, inputs)},
+        frozenset(),
+    )
+    request = UrbanCargoRequest(
+        schema_version="2",
+        analysis_kind="urban_cargo",
+        city_id="city-1",
+        departure_at=profile.valid_from,
+        traffic_mode="static",
+        snapshot_id=snapshot.snapshot_id,
+        cargo_profile_id=inputs.profile.profile_id,
+        direction="outbound",
+    )
+    assert runtime.select(request, snapshot)[0] == profile
+    runtime.profiles[profile.profile_id] = (
+        profile,
+        inputs.model_copy(update={"receipts": (receipt,)}),
+    )
+    with pytest.raises(DomainError, match="STATIC_TRUCK"):
+        runtime.select(request, snapshot)

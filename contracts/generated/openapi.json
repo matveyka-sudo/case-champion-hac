@@ -3614,6 +3614,26 @@
         "additionalProperties": false,
         "description": "Accepted snapshot metadata, not proof of full route or mode coverage.",
         "properties": {
+          "analysis_kinds": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "urban_passenger",
+                    "intercity_passenger",
+                    "urban_cargo",
+                    "intercity_cargo"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Kinds"
+          },
           "calendar_version": {
             "minLength": 1,
             "title": "Calendar Version",

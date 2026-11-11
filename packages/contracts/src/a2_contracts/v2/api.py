@@ -141,6 +141,9 @@ class SnapshotAvailability(ContractModel):
     valid_to: date | None
     graph_version: Identifier
     calendar_version: Identifier
+    analysis_kinds: list[AnalysisKind] | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
 
 class UrbanPassengerScope(ContractModel):
