@@ -61,6 +61,8 @@ SHA256 принятого ZIP:
 API-ключ. Для запуска полного стека дополнительно восстановите routing artifacts
 по [инструкции восстановления](infra/full-stack/RESTORE.md) и используйте
 [инструкцию запуска](infra/full-stack/README.md). Все эти данные остаются вне Git.
+Для текущего runtime из 165 файлов и четырёх профилей используйте отдельную
+[инструкцию восстановления со всеми графами](infra/full-stack/FOUR_PROFILE_RESTORE.md).
 
 ## Запуск frontend и PostgreSQL
 
