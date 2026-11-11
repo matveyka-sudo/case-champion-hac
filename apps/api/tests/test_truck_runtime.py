@@ -239,7 +239,7 @@ def configure_worker(binding, transport_facts, monkeypatch):
         {profile.profile_id: (profile, inputs)},
         frozenset(),
     )
-    monkeypatch.setattr(product, "load_runtime", lambda: runtime)
+    monkeypatch.setattr(product, "load_runtime", lambda **kwargs: runtime)
     monkeypatch.setenv("A2_CODE_VERSION", "TEST_ONLY-" + runtime.digest)
     request = UrbanCargoRequest(
         schema_version="2",

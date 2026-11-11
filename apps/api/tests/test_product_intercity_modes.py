@@ -94,7 +94,7 @@ def configured_intercity(monkeypatch):
         frozenset(),
     )
     monkeypatch.setenv("A2_CODE_VERSION", "TEST_ONLY-" + runtime.digest)
-    monkeypatch.setattr(product, "load_runtime", lambda: runtime)
+    monkeypatch.setattr(product, "load_runtime", lambda **kwargs: runtime)
     return module, snapshot, runtime
 
 

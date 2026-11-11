@@ -72,7 +72,9 @@ async def preflight(request: AnalysisRequest, snapshot: AcceptedData) -> BatchPl
 
 
 async def _preflight(request: AnalysisRequest, snapshot: AcceptedData) -> BatchPlan | None:
-    runtime = await asyncio.to_thread(load_runtime)
+    runtime = await asyncio.to_thread(
+        load_runtime, request=request, snapshot_id=snapshot.snapshot_id
+    )
     if runtime.digest not in (RuntimeSettings().code_version or ""):
         raise DomainError(409, "incompatible_versions", "Product runtime code identity differs")
     profile, inputs = runtime.select(request, snapshot)
@@ -103,7 +105,7 @@ def calculate(
             422, "unsupported_scenario", "Product handler requires a canonical calculation job"
         )
     context = claim.context
-    runtime = load_runtime()
+    runtime = load_runtime(request=context.normalized_request, snapshot_id=context.snapshot_id)
     snapshot = runtime.snapshots.get(context.snapshot_id)
     current = ProductRegistry()
     if (
