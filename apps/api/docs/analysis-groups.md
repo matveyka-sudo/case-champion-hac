@@ -63,3 +63,41 @@ Frontend group controls and a real multi-category browser replay are not yet
 connected by this backend delivery. Existing single-analysis endpoints and UI stay
 available. Do not describe the server API alone as a completed one-click UI flow,
 and do not average child category/city scores to invent an overall index.
+
+## Real HTTP/worker replay, 2026-11-11
+
+Source `3d225a2c41776c045b8eefe53ef9e60796f41942` was built into API/web images
+and started on the isolated restored stack. Startup took 84.925 seconds; migration
+0008 and the full 33-profile/three-router readiness checks passed. The existing
+main stand was not replaced. No paid provider or Alice call was made.
+
+One HTTP request selected `adult_polyclinic` and `child_polyclinic` for
+`novorossiysk-urban-2026-11-10.3`, walk/static, departure
+`2026-11-11T08:30:00+03:00`. Group
+`9493a577-7dc1-433e-b294-3275456f66be` was admitted in 0.125 seconds.
+Polling observed the first job running with the second pending, then the first
+succeeded with the second running, then both succeeded. Total observation time
+was 46.525 seconds.
+
+| Category | Worker job | Saved analysis | Worker seconds | Real journeys |
+| --- | --- | --- | ---: | ---: |
+| Adult polyclinics | `7f0fcb44-be68-44ba-890a-b5993c012b8c` | `59bb3d09-ddd3-40cd-b934-868795b94c28` | 21.492 | 303 |
+| Child polyclinics | `715dcfc7-37f7-45f8-a285-39ca774b8b8b` | `c7dcece7-4b52-4c10-a5eb-26f0fd975375` | 21.090 | 303 |
+
+Both results passed canonical validation, exact group-version matching,
+byte-identical repeated GET and foreign-session 404. The adult response is
+7,270,017 bytes, SHA-256
+`7bf0becc33f7b4656ceec290baad30b3130e7846d02334e166d33939b80a2b4b`;
+the child response is 7,574,297 bytes, SHA-256
+`0e1cb5260b2e50d4080150d159afa61f81cbecf120619a4ab57c1f133234a0e9`.
+Each contains 303 numeric `observed_route_accessibility` estimates, marked partial,
+`MINIMUM_NOT_PROVEN` and `ranking_eligible=false`; another 106 such estimates are
+unknown. Category, point and territory indices remain null. This is real local
+Valhalla/ML1/HTTP/PostgreSQL orchestration evidence, not a grouped React user flow,
+complete-city rating or proof of a global route minimum.
+
+Final focused backend/PostgreSQL verification: 54 passed, including 15 group
+tests. Earlier related admission/private-source/quota/budget checks: 127 passed.
+Ruff/format, mypy across 136 source files, schema regeneration/check and React
+TypeScript/production build passed. Independent agent review remains unavailable
+because the existing reviewer hit the account usage limit.
