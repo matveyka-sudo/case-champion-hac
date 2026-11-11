@@ -109,7 +109,7 @@ npm run test:e2e
 
 Старые regular/medical и коридор Калининград–Зеленоградск–Балтийск архивированы в docs/archive/2026-11-06. Рабочие ветки не удаляются; участники вливают обновления origin/dev по docs/OWNERSHIP.md.
 
-## Расположение frontend
+### Расположение frontend
 
 Единственный web npm-пакет: `apps/web/package.json` и его `package-lock.json`;
 корневых npm workspaces нет. `src/`, `public/`, `tests/`, `e2e/`, Vite/TS и
