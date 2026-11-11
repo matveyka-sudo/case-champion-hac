@@ -149,6 +149,7 @@ def verify_sources(runtime, sources):
         groups[group] = rows
     checker = load_module("four_profile_runtime", ROOT / "infra/full-stack/runtime.py")
     graph_manifests = {}
+    router_tileset_metadata = {}
     saved = {
         key: os.environ.get(key)
         for key in ("WAYDEX_GRAPH_BINDING_PATH", "WAYDEX_GRAPH_BINDING_SHA256")
@@ -169,9 +170,21 @@ def verify_sources(runtime, sources):
                     if city == "moscow"
                     else sources["bindings/novorossiysk"] / "parent-artifact.json"
                 )
-            graph_manifests[city] = checker.graph_check(
-                sources[f"graphs/{city}"], json.loads(parent.read_bytes())
-            )
+            artifact = json.loads(parent.read_bytes())
+            graph_manifests[city] = checker.graph_check(sources[f"graphs/{city}"], artifact)
+            if city != "kaliningrad":
+                # Valhalla 3.5.1 /status uses tile_dir's mtime, not tile bytes.
+                # Capture the source value and require its existing bound status.
+                # N's graph-check parent is build-only; the pinned runtime owns status.
+                status_artifact = json.loads((runtime / city / "artifact.json").read_bytes())
+                tiles = checked_path(sources[f"graphs/{city}"] / "tiles")
+                seconds = tiles.stat().st_mtime_ns // 10**9
+                if seconds != status_artifact["status_expectation"]["tileset_last_modified"]:
+                    raise ValueError("Source tile directory differs from the bound build status")
+                router_tileset_metadata[f"graphs/{city}"] = {
+                    "path": "tiles",
+                    "mtime_seconds": seconds,
+                }
     finally:
         for key, value in saved.items():
             if value is None:
@@ -179,17 +192,31 @@ def verify_sources(runtime, sources):
             else:
                 os.environ[key] = value
     return {
-        "schema_version": "waydex-four-profile-graph-transfer/1",
+        "schema_version": "waydex-four-profile-graph-transfer/2",
         "groups": groups,
         "graph_manifests": graph_manifests,
+        "router_tileset_metadata": router_tileset_metadata,
     }
 
 
 def copy_sources(sources, manifest, output):
+    if manifest.get("schema_version") != "waydex-four-profile-graph-transfer/2":
+        raise ValueError("Graph transfer requires the checked v2 metadata receipt")
     output = checked_path(output)
     roots = [checked_path(p) for p in sources.values()]
     if output.exists() or any(output.is_relative_to(p) for p in roots):
         raise ValueError("Graph transfer destination must be new and outside its sources")
+    metadata = manifest["router_tileset_metadata"]
+    for group, row in metadata.items():
+        if (
+            group not in manifest["groups"]
+            or row["path"] != "tiles"
+            or type(row["mtime_seconds"]) is not int
+            or row["mtime_seconds"] < 0
+            or not checked_path(sources[group] / "tiles").is_dir()
+            or (sources[group] / "tiles").stat().st_mtime_ns // 10**9 != row["mtime_seconds"]
+        ):
+            raise ValueError("Router tile directory metadata changed before copying")
     output.mkdir(mode=0o700)
     for group, rows in manifest["groups"].items():
         for row in rows:
@@ -200,6 +227,16 @@ def copy_sources(sources, manifest, output):
             if actual != {k: row[k] for k in ("bytes", "sha256", "executable")}:
                 raise ValueError("Graph transport source changed while copying")
             target.chmod(0o555 if row["executable"] else 0o444)
+    # Creating descendants changes directory mtimes. Restore only the actor's
+    # observable whole-second metadata after the entire tree has been copied.
+    for group, row in metadata.items():
+        source = checked_path(sources[group] / "tiles")
+        if source.stat().st_mtime_ns // 10**9 != row["mtime_seconds"]:
+            raise ValueError("Router tile directory metadata changed while copying")
+        target = checked_path(output / group / "tiles")
+        os.utime(target, ns=(target.stat().st_atime_ns, row["mtime_seconds"] * 10**9))
+        if target.stat().st_mtime_ns // 10**9 != row["mtime_seconds"]:
+            raise ValueError("Destination cannot preserve router tile directory metadata")
     # This marker is published last. Failed partial transfers cannot verify.
     with (output / MARKER).open("xb") as target:
         target.write(encoded(manifest))
@@ -219,6 +256,7 @@ def summary(manifest):
         "HTTP_calls": 0,
         "SQL_calls": 0,
         "graph_manifests": manifest["graph_manifests"],
+        "router_tileset_metadata": manifest["router_tileset_metadata"],
     }
 
 
