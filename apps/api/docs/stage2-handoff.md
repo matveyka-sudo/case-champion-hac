@@ -44,10 +44,12 @@ Schema names are validated before connecting. API lifespan opens/closes a bounde
 from a2_api.core.jobs import ClaimedJob, JobContext, JobKind, JobRequest
 from a2_contracts import ProfileResult, Comparison
 
+
 async def prepare(kind: JobKind, request: JobRequest) -> JobContext:
     # Resolve accepted №5 bundle and registered №2/№4 profile/task configuration.
     # Validate IDs, periods, scenario commands and input limits; no CPU routing.
     ...
+
 
 def calculate(claim: ClaimedJob) -> ProfileResult | Comparison:
     # Load exactly the saved immutable inputs, verify hashes, invoke №4 functions.

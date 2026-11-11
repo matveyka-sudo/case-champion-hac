@@ -3,7 +3,7 @@
 import hashlib
 import json
 import os
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field, fields, is_dataclass, replace
 from datetime import UTC, datetime, timedelta
 from math import fsum
@@ -33,6 +33,7 @@ from a2_contracts.v2.results import EvidenceRef
 from a2_engine import scenario_hash
 from pydantic import Field
 
+from a2_api.adapters.demo_transport import DEMO_SOURCE, verify_demo_snapshot
 from a2_api.adapters.product_inputs import (
     INPUT_ADAPTER,
     DeliveryInputs,
@@ -715,6 +716,16 @@ def profile_matches(profile: Profile, request: AnalysisRequest, snapshot_id: str
     return match
 
 
+def requires_preset(profile: Profile, snapshot: AcceptedData | None) -> bool:
+    # A receipt-only timetable has its own closed input scope. Model profiles
+    # without that receipt need an exact preset even when the flag is omitted.
+    return profile.demo_model or (
+        profile.demo_transport is None
+        and snapshot is not None
+        and DEMO_SOURCE in snapshot.source_versions
+    )
+
+
 @dataclass(frozen=True)
 class Runtime:
     digest: str
@@ -744,7 +755,9 @@ class Runtime:
         if len(matches) != 1:
             raise unavailable("RUNTIME_PROFILE_SCOPE_AMBIGUOUS")
         profile, inputs = matches[0]
-        if profile.demo_model and not any(p.request == request for p in self.manifest.presets):
+        if requires_preset(profile, snapshot) and not any(
+            p.request == request for p in self.manifest.presets
+        ):
             raise unsupported_request(self.manifest.presets)
         if isinstance(inputs, UrbanInputs) and isinstance(request, UrbanPassengerRequest):
             destinations = [
@@ -880,12 +893,14 @@ def load_runtime(
                 snapshot = snapshots[profile.snapshot_id]
                 if profile.city_id is not None and profile.city_id not in snapshot.geographic_scope:
                     raise ValueError("RUNTIME_PROFILE_CITY_SNAPSHOT_MISMATCH")
-                if profile.demo_model:
-                    from a2_api.adapters.demo_transport import verify_demo_snapshot
-
-                    verify_demo_snapshot(snapshot)
                 if canonical_hash(snapshot.model_dump(mode="json")) != profile.snapshot_hash:
                     raise ValueError("RUNTIME_PROFILE_SNAPSHOT_HASH_MISMATCH")
+                if (
+                    DEMO_SOURCE in snapshot.source_versions
+                    or profile.demo_model
+                    or profile.demo_transport is not None
+                ):
+                    verify_demo_snapshot(snapshot)
                 if profile.valid_from >= profile.valid_to:
                     raise ValueError("RUNTIME_PROFILE_VALIDITY_REQUIRED")
                 inputs = None
@@ -893,6 +908,8 @@ def load_runtime(
                     raise ValueError("TRUCK_EXECUTOR_REQUIRES_CARGO_INPUTS")
                 if profile.walk_binding is not None and profile.executor != "walk_batches":
                     raise ValueError("WALK_BINDING_REQUIRES_BATCH_EXECUTOR")
+                if profile.demo_transport is not None and profile.executor != "accepted_inputs":
+                    raise ValueError("DEMO_TRANSPORT_REQUIRES_ACCEPTED_INPUTS")
                 if profile.executor == "accepted_inputs":
                     if profile.inputs is None:
                         raise ValueError("RUNTIME_SUPPLEMENT_REQUIRED")
@@ -1060,6 +1077,17 @@ class RuntimeRegistry(ProductRegistry):
     def resolve_snapshot(self, request: AnalysisRequest) -> AcceptedData:
         if request.snapshot_id is not None and request.snapshot_id not in self.snapshots:
             return super().resolve_snapshot(request)
+        identity = self._profile_snapshot_id(request, self.declared_presets)
+        return super().resolve_snapshot(request.model_copy(update={"snapshot_id": identity}))
+
+    def validate_group_child(self, request: UrbanPassengerRequest) -> None:
+        # Published presets have already passed runtime selection. A declaration
+        # alone can still be unusable, for example with overlapping child profiles.
+        self._profile_snapshot_id(request, self.analysis_presets)
+
+    def _profile_snapshot_id(
+        self, request: AnalysisRequest, presets: Sequence[AnalysisPreset]
+    ) -> str:
         matches = [
             profile
             for profile in self.runtime_profiles
@@ -1074,14 +1102,15 @@ class RuntimeRegistry(ProductRegistry):
                 409, "incompatible_versions", "SELECT_EXPLICIT_SNAPSHOT_FROM_CAPABILITIES"
             )
         identity = next(iter(identities))
-        if any(profile.demo_model for profile in matches) and not any(
+        snapshot = self.snapshots.get(identity)
+        if any(requires_preset(profile, snapshot) for profile in matches) and not any(
             preset.request == request.model_copy(update={"snapshot_id": identity})
-            for preset in self.declared_presets
+            for preset in presets
         ):
             raise unsupported_request(self.analysis_presets)
         if not any(profile.profile_id in self.ready_profile_ids for profile in matches):
             raise unavailable("RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST")
-        return super().resolve_snapshot(request.model_copy(update={"snapshot_id": identity}))
+        return identity
 
     def required_cache_valid_until(
         self, request: AnalysisRequest, snapshot: AcceptedData

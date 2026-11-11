@@ -47,6 +47,41 @@
 кнопку только по имени типа анализа: использовать `scenario_operations` пресета
 и фактически полученные предложения.
 
+## Обязательное обновление клиента для PR #35
+
+Проверено на `dev` `232642e` и backend PR #35: существующие клиентские схемы
+отвергают HTTP capabilities с `analysis_presets`, грузовое предложение и результат
+с `handling_changes`. FRONTEND должен перегенерировать
+`apps/web/src/api/generated/schema.ts` и `validation.json` командой
+`node apps/web/scripts/generate-api.mjs` из актуального backend OpenAPI.
+Ослаблять AJV или вручную удалять новые поля из ответа нельзя. Отдельная проверка
+схем после генерации принимает все четыре сохранённых DTO: capabilities, baseline,
+предложение и результат грузового сценария; это не проверка готовности интерфейса.
+
+- `apps/web/src/pages/ApiAtlasPage.tsx` и `src/api/adapters/request.ts`:
+  выбирать опубликованный `analysis_presets[].request` и отправлять его без
+  изменений через `/analyses`. Свободный запрос для обычных данных сохранить.
+  Полный пресет не разбивать через `/analysis-groups`, если дочерние запросы не
+  опубликованы отдельно: backend теперь возвращает синхронный 422
+  `ANALYSIS_GROUP_CATEGORY_REQUEST_UNSUPPORTED`, без создания группы/jobs.
+- `apps/web/src/pages/ApiAtlasPage.tsx` и `src/widgets/ScenarioComparison.tsx`:
+  `reduce_handling_wait` — изменение длительности обработки, а не дополнительное
+  отправление. Показывать поля `handling_changes`, ресурс и before/after из DTO;
+  пустые `service_ids`/`service_changes` и нулевой `shift_seconds` здесь допустимы.
+- `apps/web/src/api/adapters/demoModel.ts` и `src/api/adapters/result.ts`:
+  выводить понятные метки `DEMO_SYNTHETIC_TRANSPORT_MODEL` и
+  `NOT_A_REAL_CITY_RANKING` для всех модельных снимков, включая межгородские и
+  трубопроводные. Не определять синтетику только по префиксу `demo-moscow-`.
+  `ranking_eligible=false`, partial, unknown и null должны оставаться видимыми.
+
+Regression gate FRONTEND: фактические DTO проходят строгий decoder; запрос
+выбранного пресета совпадает с серверным целиком; грузовой сценарий отображает
+обработку и правильные единицы; все пять опубликованных модельных snapshots
+имеют маркировку, обычный профиль её не получает. Проверить также пустой список
+пресетов. Выполнить API-generation check, typecheck, lint, unit tests, build и
+браузерную цепочку API mode → preset → baseline → cargo scenario. Обновление
+клиента выполняет FRONTEND; backend-исправления сами по себе не закрывают этот P1.
+
 24 baseline и 21 before/after, браузерные цепочки и холодное время проверяются
 после поставки данных и нужного engine интерфейса. Подготовка DTO и контрактные
 примеры не подтверждают прохождение этой матрицы.

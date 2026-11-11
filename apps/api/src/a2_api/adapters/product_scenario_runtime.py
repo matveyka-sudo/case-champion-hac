@@ -17,6 +17,7 @@ from a2_contracts.v2.results import AnalysisResult
 from a2_contracts.v2.scenarios import ScenarioResult, ScenarioRunRequest
 
 from a2_api.adapters import product_scenarios as bridge
+from a2_api.adapters.demo_transport import DEMO_LIMITATIONS
 from a2_api.adapters.product_inputs import (
     DeliveryInputs,
     EngineInputs,
@@ -240,6 +241,7 @@ def calculate_saved(
     *,
     profile_id: str,
     documents: Sequence[ScenarioCatalogDocument],
+    synthetic: bool = False,
 ) -> ScenarioResult:
     if (
         claim.kind != "scenario"
@@ -261,6 +263,13 @@ def calculate_saved(
         raise DomainError(409, "incompatible_versions", "SAVED_SCENARIO_DOCUMENT_UNAVAILABLE")
     # This synchronous hook runs in the isolated spawned calculation process.
     baseline = asyncio.run(_saved_baseline(claim))
+    baseline_is_synthetic = DEMO_LIMITATIONS <= set(baseline.limitations)
+    if synthetic != baseline_is_synthetic or (
+        synthetic and any(score.ranking_eligible for score in baseline.scores)
+    ):
+        raise DomainError(
+            409, "incompatible_versions", "SCENARIO_SAVED_BASELINE_PROVENANCE_DIFFERS"
+        )
     return bridge.calculate(
         claim, baseline=baseline, inputs=inputs, document=matches[0], profile_id=profile_id
     )

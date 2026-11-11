@@ -88,13 +88,9 @@ def _project(
         project_intercity(out, intercity_result, job.reference, job.car)
     for _, cargo_result in computation.cargo:
         project_delivery(out, cargo_result)
-    # The admitted synthetic model uses the same numerical projection, but its
-    # saved scores must remain excluded from real-city rankings on both sides.
-    # A prefix alone cannot select this policy: the immutable saved result and
-    # every hash-pinned server plan must carry the explicit demo declarations.
-    if DEMO_LIMITATIONS <= set(baseline.limitations) and all(
-        DEMO_LIMITATIONS <= set(plan.assumptions) for plan in document.plans
-    ):
+    # Product analysis derives these labels from the verified snapshot, and
+    # saved scenario dispatch rechecks the baseline against that provenance.
+    if DEMO_LIMITATIONS <= set(baseline.limitations):
         out.scores = [score.model_copy(update={"ranking_eligible": False}) for score in out.scores]
         out.limitations.update(DEMO_LIMITATIONS)
     return out

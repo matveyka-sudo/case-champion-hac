@@ -49,6 +49,9 @@ RESULT_TRANSPORT_EXTENSION = json.loads(
 RUNTIME_SOURCE_BUDGET_EXTENSION = json.loads(
     (Path(__file__).parent / "fixtures/runtime_source_budget_extension.json").read_text()
 )
+ANALYSIS_GROUPS_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/analysis_groups_extension.json").read_text()
+)
 
 
 def private_sources_counter(expected, kind):
@@ -94,9 +97,17 @@ def approved_sql_counter(kind):
         kind,
     )
     assert JOB_PROGRESS_EXTENSION["module"] == "db/repositories/job_progress.py"
-    return checkpoint_publication_counter(expected, kind) + collections.Counter(
+    expected = checkpoint_publication_counter(expected, kind) + collections.Counter(
         JOB_PROGRESS_EXTENSION[kind]
     )
+    assert set(ANALYSIS_GROUPS_EXTENSION["sql_by_module"]) == {
+        "db/connection.py",
+        "db/repositories/analysis_groups.py",
+        "db/repositories/jobs.py",
+    }
+    for extension in ANALYSIS_GROUPS_EXTENSION["sql_by_module"].values():
+        expected.update(extension[kind])
+    return expected
 
 
 def sql_literals(tree):
@@ -222,6 +233,12 @@ def normalize_signature(value):
 
 
 def test_all_185_existing_signatures_and_defaults():
+    assert set(ANALYSIS_GROUPS_EXTENSION["signatures"]) == {
+        "a2_api.workers.runner:Worker",
+        "a2_api.workers.runner:Worker.__init__",
+        "a2_api.db.repositories.jobs:JobRepository.enqueue",
+        "a2_api.services.analyses:AnalysisService.analyse",
+    }
     assert set(JOB_PROGRESS_EXTENSION["signatures"]) == {
         "a2_api.services.analyses:AnalysisService.job",
         "a2_api.services.analyses:AnalysisService._view",
@@ -271,6 +288,7 @@ def test_all_185_existing_signatures_and_defaults():
         | RESULT_TRANSPORT_EXTENSION["signatures"]
         | RUNTIME_SOURCE_BUDGET_EXTENSION["signatures"]
         | JOB_PROGRESS_EXTENSION["signatures"]
+        | ANALYSIS_GROUPS_EXTENSION["signatures"]
     ).items():
         module, qualified = path.split(":")
         obj = importlib.import_module(module)
@@ -365,6 +383,16 @@ def test_exported_artifacts_match_baseline_and_approved_contract_extensions(tmp_
         for mode in ("serialization", "validation")
     }
     expected.update(snapshot_kinds_extension)
+    analysis_groups = ANALYSIS_GROUPS_EXTENSION["schemas"]
+    assert set(analysis_groups["replaced"]) == {"manifest.json", "openapi.json"}
+    assert set(analysis_groups["added"]) == {
+        f"v2.{model}.{mode}.schema.json"
+        for model in ("AnalysisGroupItem", "AnalysisGroupView")
+        for mode in ("serialization", "validation")
+    }
+    assert set(analysis_groups["added"]).isdisjoint(expected)
+    expected.update(analysis_groups["replaced"])
+    expected.update(analysis_groups["added"])
     demo_extension = json.loads(
         (Path(__file__).parent / "fixtures/backend_demo_schema_extension.json").read_text()
     )
@@ -528,6 +556,19 @@ def test_sql_parameter_binding_and_transaction_options_unchanged():
     assert collections.Counter(hashes) == approved_sql_counter("sql_call_hashes")
 
 
+def test_analysis_group_sql_extensions_remain_in_reviewed_modules():
+    for module, extension in ANALYSIS_GROUPS_EXTENSION["sql_by_module"].items():
+        tree = ast.parse((SOURCE / module).read_text())
+        for kind, actual in (
+            ("sql_literals", sql_literals(tree)),
+            ("sql_call_hashes", sql_call_hashes(tree)),
+        ):
+            approved = collections.Counter(extension[kind])
+            assert approved <= collections.Counter(actual), module
+            if module == "db/repositories/analysis_groups.py":
+                assert approved == collections.Counter(actual)
+
+
 @pytest.mark.parametrize("module", ["checkpoints", "job_progress"])
 def test_reviewed_sql_extensions_remain_in_their_owned_modules(module):
     tree = ast.parse((SOURCE / f"db/repositories/{module}.py").read_text())
@@ -568,6 +609,18 @@ def test_reviewed_sql_extensions_remain_in_their_owned_modules(module):
 @pytest.mark.parametrize(
     ("module", "before", "after", "kind"),
     [
+        (
+            "analysis_groups",
+            "WHERE group_id=$1 AND access_scope=$2",
+            "WHERE group_id=$1",
+            "sql_literals",
+        ),
+        (
+            "analysis_groups",
+            "connection.transaction()",
+            'connection.transaction(isolation="serializable")',
+            "sql_call_hashes",
+        ),
         (
             "checkpoints",
             "WHERE access_scope=$1 AND execution_identity=$2 FOR UPDATE",

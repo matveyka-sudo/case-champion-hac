@@ -36,6 +36,8 @@ from a2_engine import (
     search_urban_transit,
 )
 
+from a2_api.adapters.demo_map import attach_demo_result
+from a2_api.adapters.demo_transport import DEMO_SOURCE
 from a2_api.adapters.product_inputs import (
     DeliveryInputs,
     IntercityInputs,
@@ -122,6 +124,11 @@ def calculate(
         raise DomainError(409, "incompatible_versions", "Queued product inputs or runtime changed")
     request = context.normalized_request
     profile, inputs = runtime.select(request, snapshot)
+    synthetic = DEMO_SOURCE in snapshot.source_versions
+
+    def finalize(result: AnalysisResult) -> AnalysisResult:
+        return attach_demo_result(result, snapshot) if synthetic else result
+
     if claim.kind == "scenario":
         if profile.executor != "accepted_inputs" or inputs is None:
             raise DomainError(
@@ -134,23 +141,29 @@ def calculate(
             inputs,
             profile_id=profile.profile_id,
             documents=runtime.scenario_documents.get(profile.profile_id, ()),
+            synthetic=synthetic,
         )
     if profile.executor == "walk_pilot":
         from a2_api.adapters import walk_pilot
 
-        return walk_pilot.calculate(claim)
+        return finalize(walk_pilot.calculate(claim))
     if profile.executor == "walk_batches":
         if channel is None:
             raise unavailable("FENCED_CHECKPOINT_CHANNEL_REQUIRED")
         from a2_api.adapters import walk_batches
 
-        return walk_batches.calculate(
-            claim, channel, bound=runtime.walk_bindings.get(profile.profile_id), snapshot=snapshot
+        return finalize(
+            walk_batches.calculate(
+                claim,
+                channel,
+                bound=runtime.walk_bindings.get(profile.profile_id),
+                snapshot=snapshot,
+            )
         )
     if profile.executor == "certified_walk_model":
         from a2_api.adapters import certified_walk_model
 
-        return certified_walk_model.calculate(claim)
+        return finalize(certified_walk_model.calculate(claim))
     evidence = {
         row.evidence_id: EvidenceRef(
             evidence_id=row.evidence_id,
@@ -346,7 +359,7 @@ def calculate(
             )
             project_car(out, car_result, accepted_car, reference, geometry=inputs.car_geometry)
             if request.passenger_modes == ["private_car"]:
-                return out.finish()
+                return finalize(out.finish())
         if inputs.public_timetable_unavailable:
             project_missing_public_timetable(out, reference)
             if (
@@ -365,7 +378,7 @@ def calculate(
                     (),
                     kind="reference_ratio",
                 )
-            return out.finish()
+            return finalize(out.finish())
         passenger_analysis = analyze_intercity_passenger(
             scope,
             request.departure_at,
@@ -478,11 +491,7 @@ def calculate(
 
         assert isinstance(request, UrbanCargoRequest)
         out.map_data = accepted_cargo_map(snapshot, request, inputs)
-    result = out.finish()
-    if profile.demo_transport is not None or profile.demo_model:
-        from a2_api.adapters.demo_map import attach_demo_result
-
-        result = attach_demo_result(result, snapshot)
+    result = finalize(out.finish())
     if isinstance(inputs, UrbanInputs) and inputs.timetable is not None:
         from a2_api.adapters.evidence_groups import pack_analysis_evidence
         from a2_api.adapters.result_evidence import compact_result_evidence
