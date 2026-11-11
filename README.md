@@ -2,8 +2,16 @@
 
 ## Материалы для экспертов
 
-- Презентация Waydex в двух форматах — [PDF](artifacts/waydex-presentation.pdf) и [HTML](artifacts/waydex-presentation.html).
-- Папка для презентации и видеодемо — [Яндекс Диск](https://disk.yandex.ru/d/ibvnvsoX1HYCjg).
+[Материалы Waydex на Яндекс Диске](https://disk.yandex.ru/d/ibvnvsoX1HYCjg)
+
+| Материал | Где найти |
+| --- | --- |
+| Презентация PDF | `презентации/презентация.pdf` |
+| Запись демонстрации | `демо.mov` |
+| Формулы расчёта | `FORMULAS.md` в корне папки |
+| Реестр источников данных | `SOURCE_REGISTRY.md` в корне папки |
+| Проверенные функции и ограничения | [Матрица приёмки](docs/full-product/ACCEPTANCE_MATRIX.md) |
+
 - Рабочая версия проекта — [код в ветке `dev`](https://github.com/matveyka-sudo/case-champion-hac/tree/dev).
 - После локального запуска откройте атлас по адресу Vite с `/?data=demo#atlas`. [Инструкция по запуску](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/apps/web/README.md#запуск)
 - Методика и примеры расчётов — [формулы индексов](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/docs/FORMULAS.md) и [расчётное ядро](https://github.com/matveyka-sudo/case-champion-hac/tree/dev/packages/engine).
