@@ -14,6 +14,12 @@ export class BackendGateway {
       key,
       signal,
     });
+  submitGroup = (request: Schemas["UrbanPassengerRequest"], key: string, signal?: AbortSignal) =>
+    this.client.request("/analysis-groups", "AnalysisGroupView", { body: request, key, signal });
+  group = (id: string, signal?: AbortSignal) =>
+    this.client.request("/analysis-groups/" + encodeURIComponent(id), "AnalysisGroupView", { signal });
+  updateGroup = (id: string, action: "cancel" | "retry", key?: string) =>
+    this.client.request("/analysis-groups/" + encodeURIComponent(id) + "/" + action, "AnalysisGroupView", { body: {}, key });
   job = (id: string, signal?: AbortSignal) =>
     this.client.request("/jobs/" + encodeURIComponent(id) + "?include_progress=true", "JobView", {
       signal,

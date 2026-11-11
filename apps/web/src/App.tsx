@@ -12,7 +12,9 @@ import { atlasLocation, subscribeAtlasLocation } from "./features/analysis/saved
 const dataMode = new URLSearchParams(window.location.search).get("data") || import.meta.env.VITE_DATA_MODE || "demo";
 const AtlasPage = lazy(() => dataMode === "api"
   ? import("./pages/ApiAtlasPage").then(m => ({default:m.ApiAtlasPage}))
-  : import("./pages/AtlasPage").then(m => ({default:m.AtlasPage})),
+  : dataMode === "training"
+    ? import("./pages/TrainingAtlasPage").then(m => ({default:m.TrainingAtlasPage}))
+    : import("./pages/AtlasPage").then(m => ({default:m.AtlasPage})),
 );
 import { AtlasProvider } from "./features/AtlasProvider";
 class Boundary extends Component<{ children: ReactNode }, { error: boolean }> {

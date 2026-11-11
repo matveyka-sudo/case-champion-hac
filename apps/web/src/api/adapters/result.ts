@@ -71,7 +71,7 @@ export function measureLabel(name: string) {
     unique_physical_departures: "Число уникальных отправлений",
     accepted_dated_service_runs: "Учтённые рейсы",
     minimum_truck_access_seconds: "Время грузового доступа",
-    observed_truck_network_seconds: "Дорожный участок грузового маршрута",
+    observed_truck_network_seconds: "Время движения грузовика по сети",
     cargo_site_index: "Индекс грузового доступа площадки",
     cargo_access_index: "Индекс грузового доступа территории",
     complete_delivery_seconds: "Полное время доставки",
@@ -388,7 +388,7 @@ export function noticeTexts(values: readonly string[]) {
 export function errorText(error: { message: string; code?: string }) {
   if (["WALK_BATCH_MANIFEST_BYTE_BUDGET_EXCEEDED", "WALK_BATCH_PAIR_BUDGET_EXCEEDED"].includes(error.message)) return "Для одного расчёта выбрано слишком много объектов. Запустите категории по отдельности или меньшими группами — сохранённые результаты останутся доступны.";
   if (error.message === "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST") return "Для выбранного сочетания условий расчёт пока не подключён. Выберите другую категорию или способ передвижения.";
-  if (error.code?.toUpperCase() === "RUNTIME_INPUTS_BUSY") return "Сервер подготавливает данные. Повторите расчёт чуть позже.";
+  if (error.message === "RUNTIME_INPUTS_BUSY" || error.code?.toUpperCase() === "RUNTIME_INPUTS_BUSY") return "Сервер подготавливает данные. Повторите расчёт чуть позже.";
   if (error.code === "incompatible_versions") return "Версии сохранённого расчёта и текущего вычислителя несовместимы. Для нового сценария пересчитайте базу с выбранными условиями. Сохранённый результат не изменён.";
   if (error.message === "Выберите один из доступных наборов данных") return "Для выбранных условий данные пока не определены однозначно. Измените условия или повторите расчёт позже.";
   return error.message;

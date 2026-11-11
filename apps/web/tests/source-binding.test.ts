@@ -1,7 +1,7 @@
 import type { CargoProfileChoice } from "../src/widgets/FilterControlViews";
 import { describe, expect, it } from "vitest";
 import { decode } from "../src/api/validation";
-import { boundSnapshotId, initialSourceDraft } from "../src/api/adapters/sourceBinding";
+import { boundSnapshotId, clinicPreset, initialSourceDraft } from "../src/api/adapters/sourceBinding";
 import { matchingCargoProfiles } from "../src/api/adapters/cargoBinding";
 import { initialDraft } from "../src/api/adapters/request";
 import capabilities from "./fixtures/api/capabilities.json";
@@ -40,6 +40,26 @@ describe("source binding behind the original controls", () => {
     expect(initialSourceDraft({ ...draft, cityId: "city-2" }, cities, caps).cityId).toBe("city-2");
     caps.urban_passenger_scopes.push({ ...caps.urban_passenger_scopes[0], scope_id: "ambiguous" });
     expect(initialSourceDraft(draft, cities, caps)).toBe(draft);
+  });
+  it("applies the explicit clinic preset only when the city and mode are registered", () => {
+    const caps = decode("Capabilities", structuredClone(capabilities));
+    const city = catalog.find((territory) => territory.territory_id === "city-2")!;
+    caps.urban_passenger_scopes = [{
+      ...airportScope(),
+      valid_from: "2026-11-11T00:00:00Z",
+      valid_to: "2026-11-12T00:00:00Z",
+      categories: ["adult_polyclinic"],
+    }];
+    const draft = { ...initialDraft(), cityId: city.territory_id, date: "2026-11-25", slot: 90 };
+    expect(clinicPreset(draft, city, catalog, caps, "walk")).toMatchObject({
+      cityId: city.territory_id, date: "2026-11-11", slot: 34, travel: "walk", cats: { c01: 3 },
+    });
+    expect(clinicPreset(draft, city, catalog, caps, "pt")).toBeNull();
+    caps.urban_passenger_scopes.push({
+      ...caps.urban_passenger_scopes[0], scope_id: "transit-scope", passenger_modes: ["public_transport"],
+    });
+    expect(clinicPreset(draft, city, catalog, caps, "pt")).toMatchObject({ travel: "pt", slot: 35 });
+    expect(draft.slot).toBe(90);
   });
   it("matches cargo choices exactly without conflating raw material, perishable goods, or temperature", () => {
     const profiles = decode("Capabilities", capabilities).cargo_profiles;

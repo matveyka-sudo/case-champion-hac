@@ -1,0 +1,865 @@
+{
+  "version": "ml1-synthetic-v1",
+  "seed": 20261109,
+  "revision": "525659e",
+  "examples": [
+    {
+      "id": "urban:moscow",
+      "inputSha256": "eea82b4280a84da75341081ed99b3633c3cfce030d97f503999fbd5f3b9c86bf",
+      "times": [],
+      "total": 3600.0,
+      "index": 50.0,
+      "mode": "walk",
+      "categories": {
+        "adult_polyclinic": {
+          "total": 3600.0,
+          "index": 50.0
+        },
+        "airport": {
+          "total": 3810.0,
+          "index": 48.01864725255021
+        },
+        "bus_terminal": {
+          "total": 3780.0,
+          "index": 48.296816446242275
+        },
+        "child_polyclinic": {
+          "total": 3630.0,
+          "index": 49.71202119087737
+        },
+        "college_university": {
+          "total": 3720.0,
+          "index": 48.857998421712296
+        },
+        "kindergarten": {
+          "total": 3660.0,
+          "index": 49.425701017644805
+        },
+        "rail_terminal": {
+          "total": 3750.0,
+          "index": 48.576597057680296
+        },
+        "school": {
+          "total": 3690.0,
+          "index": 49.14102992726256
+        },
+        "shopping_center": {
+          "total": 3840.0,
+          "index": 47.74208019552083
+        }
+      },
+      "scenario": null
+    },
+    {
+      "id": "urban:moscow",
+      "inputSha256": "eea82b4280a84da75341081ed99b3633c3cfce030d97f503999fbd5f3b9c86bf",
+      "times": [],
+      "total": 2640.0,
+      "index": 60.15125180410583,
+      "mode": "public_transport",
+      "categories": {
+        "adult_polyclinic": {
+          "total": 2640.0,
+          "index": 60.15125180410583
+        },
+        "airport": {
+          "total": 2850.0,
+          "index": 57.76763484361365
+        },
+        "bus_terminal": {
+          "total": 2820.0,
+          "index": 58.10227934789198
+        },
+        "child_polyclinic": {
+          "total": 2670.0,
+          "index": 59.80480608687019
+        },
+        "college_university": {
+          "total": 2760.0,
+          "index": 58.77739531418044
+        },
+        "kindergarten": {
+          "total": 2700.0,
+          "index": 59.46035575013605
+        },
+        "rail_terminal": {
+          "total": 2790.0,
+          "index": 58.43886242806228
+        },
+        "school": {
+          "total": 2730.0,
+          "index": 59.11788930135741
+        },
+        "shopping_center": {
+          "total": 2880.0,
+          "index": 57.43491774985174
+        }
+      },
+      "scenario": {
+        "adult_polyclinic": {
+          "total": 2160.0,
+          "index": 65.9753955386447
+        },
+        "airport": {
+          "total": 2370.0,
+          "index": 63.36098491435311
+        },
+        "bus_terminal": {
+          "total": 2340.0,
+          "index": 63.72803136596311
+        },
+        "child_polyclinic": {
+          "total": 2190.0,
+          "index": 65.59540522187244
+        },
+        "college_university": {
+          "total": 2280.0,
+          "index": 64.46851542197895
+        },
+        "kindergarten": {
+          "total": 2220.0,
+          "index": 65.21760348827821
+        },
+        "rail_terminal": {
+          "total": 2310.0,
+          "index": 64.09720409603644
+        },
+        "school": {
+          "total": 2250.0,
+          "index": 64.84197773255048
+        },
+        "shopping_center": {
+          "total": 2400.0,
+          "index": 62.99605249474366
+        }
+      }
+    },
+    {
+      "id": "urban:moscow",
+      "inputSha256": "8c62e16708396ac03aacdb9356966910fe2dc7fbf7579538b73a02ae14df6c34",
+      "times": [],
+      "total": 630.0,
+      "index": 88.57675191023606,
+      "mode": "private_car",
+      "categories": {
+        "adult_polyclinic": {
+          "total": 630.0,
+          "index": 88.57675191023606
+        },
+        "airport": {
+          "total": 1050.0,
+          "index": 81.69577266205499
+        },
+        "bus_terminal": {
+          "total": 990.0,
+          "index": 82.64503181542116
+        },
+        "child_polyclinic": {
+          "total": 690.0,
+          "index": 87.55936114058852
+        },
+        "college_university": {
+          "total": 870.0,
+          "index": 84.57676786314485
+        },
+        "kindergarten": {
+          "total": 750.0,
+          "index": 86.5536561006143
+        },
+        "rail_terminal": {
+          "total": 930.0,
+          "index": 83.60532082885094
+        },
+        "school": {
+          "total": 810.0,
+          "index": 85.55950256826021
+        },
+        "shopping_center": {
+          "total": 1110.0,
+          "index": 80.7574166800042
+        }
+      },
+      "scenario": null
+    },
+    {
+      "id": "urban:kaliningrad",
+      "inputSha256": "5f3a8c17f6c243493d83d27064b8862afe3b6090a6b9f7279c13bbe4f8f0afd3",
+      "times": [],
+      "total": 3660.0,
+      "index": 24.42899921085615,
+      "mode": "walk",
+      "categories": {
+        "adult_polyclinic": {
+          "total": 3660.0,
+          "index": 24.42899921085615
+        },
+        "airport": {
+          "total": 3870.0,
+          "index": 22.531261565270757
+        },
+        "bus_terminal": {
+          "total": 3840.0,
+          "index": 22.79306221395542
+        },
+        "child_polyclinic": {
+          "total": 3690.0,
+          "index": 24.148408223121145
+        },
+        "college_university": {
+          "total": 3780.0,
+          "index": 23.325824788420185
+        },
+        "kindergarten": {
+          "total": 3720.0,
+          "index": 23.87104009776041
+        },
+        "rail_terminal": {
+          "total": 3810.0,
+          "index": 23.05790483964848
+        },
+        "school": {
+          "total": 3750.0,
+          "index": 23.596857817042334
+        },
+        "shopping_center": {
+          "total": 3900.0,
+          "index": 22.272467953508485
+        }
+      },
+      "scenario": null
+    },
+    {
+      "id": "urban:kaliningrad",
+      "inputSha256": "5f3a8c17f6c243493d83d27064b8862afe3b6090a6b9f7279c13bbe4f8f0afd3",
+      "times": [],
+      "total": 2700.0,
+      "index": 35.35533905932738,
+      "mode": "public_transport",
+      "categories": {
+        "adult_polyclinic": {
+          "total": 2700.0,
+          "index": 35.35533905932738
+        },
+        "airport": {
+          "total": 2910.0,
+          "index": 32.60880174413911
+        },
+        "bus_terminal": {
+          "total": 2880.0,
+          "index": 32.98769776932235
+        },
+        "child_polyclinic": {
+          "total": 2730.0,
+          "index": 34.949248354475486
+        },
+        "college_university": {
+          "total": 2820.0,
+          "index": 33.75874865420475
+        },
+        "kindergarten": {
+          "total": 2760.0,
+          "index": 34.5478219991944
+        },
+        "rail_terminal": {
+          "total": 2850.0,
+          "index": 33.370996354250856
+        },
+        "school": {
+          "total": 2790.0,
+          "index": 34.151006418859886
+        },
+        "shopping_center": {
+          "total": 2940.0,
+          "index": 32.234257710989475
+        }
+      },
+      "scenario": {
+        "adult_polyclinic": {
+          "total": 2220.0,
+          "index": 42.533358047542784
+        },
+        "airport": {
+          "total": 2430.0,
+          "index": 39.22920489483753
+        },
+        "bus_terminal": {
+          "total": 2400.0,
+          "index": 39.68502629920499
+        },
+        "child_polyclinic": {
+          "total": 2250.0,
+          "index": 42.044820762685724
+        },
+        "college_university": {
+          "total": 2340.0,
+          "index": 40.612619817811776
+        },
+        "kindergarten": {
+          "total": 2280.0,
+          "index": 41.56189480713939
+        },
+        "rail_terminal": {
+          "total": 2370.0,
+          "index": 40.14614409316882
+        },
+        "school": {
+          "total": 2310.0,
+          "index": 41.084515729289514
+        },
+        "shopping_center": {
+          "total": 2460.0,
+          "index": 38.778619045843364
+        }
+      }
+    },
+    {
+      "id": "urban:kaliningrad",
+      "inputSha256": "42c75377bfd9350331a44b77252f1a8fad9d1d889f8a0cda9037786cd9220bd8",
+      "times": [],
+      "total": 690.0,
+      "index": 76.66641723348002,
+      "mode": "private_car",
+      "categories": {
+        "adult_polyclinic": {
+          "total": 690.0,
+          "index": 76.66641723348002
+        },
+        "airport": {
+          "total": 1110.0,
+          "index": 65.21760348827821
+        },
+        "bus_terminal": {
+          "total": 1050.0,
+          "index": 66.74199270850171
+        },
+        "child_polyclinic": {
+          "total": 750.0,
+          "index": 74.91535384383408
+        },
+        "college_university": {
+          "total": 930.0,
+          "index": 69.89849670895096
+        },
+        "kindergarten": {
+          "total": 810.0,
+          "index": 73.20428479728128
+        },
+        "rail_terminal": {
+          "total": 990.0,
+          "index": 68.30201283771977
+        },
+        "school": {
+          "total": 870.0,
+          "index": 71.53229662176291
+        },
+        "shopping_center": {
+          "total": 1170.0,
+          "index": 63.72803136596311
+        }
+      },
+      "scenario": null
+    },
+    {
+      "id": "urban:novorossiysk",
+      "inputSha256": "3e70cb04999e73e8f181d22fd214f826be0129a5d547a190e545b1be7919d0d4",
+      "times": [],
+      "total": 3720.0,
+      "index": 34.151006418859886,
+      "mode": "walk",
+      "categories": {
+        "adult_polyclinic": {
+          "total": 3720.0,
+          "index": 34.151006418859886
+        },
+        "airport": {
+          "total": 3930.0,
+          "index": 32.14129583095188
+        },
+        "bus_terminal": {
+          "total": 3900.0,
+          "index": 32.42098886627524
+        },
+        "child_polyclinic": {
+          "total": 3750.0,
+          "index": 33.856388673422316
+        },
+        "college_university": {
+          "total": 3840.0,
+          "index": 32.98769776932235
+        },
+        "kindergarten": {
+          "total": 3780.0,
+          "index": 33.56431256950659
+        },
+        "rail_terminal": {
+          "total": 3870.0,
+          "index": 32.70311578585827
+        },
+        "school": {
+          "total": 3810.0,
+          "index": 33.274756180593585
+        },
+        "shopping_center": {
+          "total": 3960.0,
+          "index": 31.864015682981556
+        }
+      },
+      "scenario": null
+    },
+    {
+      "id": "urban:novorossiysk",
+      "inputSha256": "3e70cb04999e73e8f181d22fd214f826be0129a5d547a190e545b1be7919d0d4",
+      "times": [],
+      "total": 2760.0,
+      "index": 45.062523130541514,
+      "mode": "public_transport",
+      "categories": {
+        "adult_polyclinic": {
+          "total": 2760.0,
+          "index": 45.062523130541514
+        },
+        "airport": {
+          "total": 2970.0,
+          "index": 42.41069411143285
+        },
+        "bus_terminal": {
+          "total": 2940.0,
+          "index": 42.77975128413011
+        },
+        "child_polyclinic": {
+          "total": 2790.0,
+          "index": 44.673772684782556
+        },
+        "college_university": {
+          "total": 2880.0,
+          "index": 43.527528164806206
+        },
+        "kindergarten": {
+          "total": 2820.0,
+          "index": 44.28837595511803
+        },
+        "rail_terminal": {
+          "total": 2910.0,
+          "index": 43.152019986361914
+        },
+        "school": {
+          "total": 2850.0,
+          "index": 43.90630400933249
+        },
+        "shopping_center": {
+          "total": 3000.0,
+          "index": 42.044820762685724
+        }
+      },
+      "scenario": {
+        "adult_polyclinic": {
+          "total": 2280.0,
+          "index": 51.76324619206888
+        },
+        "airport": {
+          "total": 2490.0,
+          "index": 48.71709456008535
+        },
+        "bus_terminal": {
+          "total": 2460.0,
+          "index": 49.14102992726256
+        },
+        "child_polyclinic": {
+          "total": 2310.0,
+          "index": 51.3166891945212
+        },
+        "college_university": {
+          "total": 2400.0,
+          "index": 50.0
+        },
+        "kindergarten": {
+          "total": 2340.0,
+          "index": 50.873984605134325
+        },
+        "rail_terminal": {
+          "total": 2430.0,
+          "index": 49.56865437313311
+        },
+        "school": {
+          "total": 2370.0,
+          "index": 50.43509918951995
+        },
+        "shopping_center": {
+          "total": 2520.0,
+          "index": 48.296816446242275
+        }
+      }
+    },
+    {
+      "id": "urban:novorossiysk",
+      "inputSha256": "562414e03715940bb1203f4513de1aef90519491b743100a079107fc1661f249",
+      "times": [],
+      "total": 750.0,
+      "index": 80.5245165974627,
+      "mode": "private_car",
+      "categories": {
+        "adult_polyclinic": {
+          "total": 750.0,
+          "index": 80.5245165974627
+        },
+        "airport": {
+          "total": 1170.0,
+          "index": 71.32600129345141
+        },
+        "bus_terminal": {
+          "total": 1110.0,
+          "index": 72.57275783497676
+        },
+        "child_polyclinic": {
+          "total": 810.0,
+          "index": 79.1411535998853
+        },
+        "college_university": {
+          "total": 990.0,
+          "index": 75.13203061298593
+        },
+        "kindergarten": {
+          "total": 870.0,
+          "index": 77.78155595060093
+        },
+        "rail_terminal": {
+          "total": 1050.0,
+          "index": 73.84130729697496
+        },
+        "school": {
+          "total": 930.0,
+          "index": 76.44531537515053
+        },
+        "shopping_center": {
+          "total": 1230.0,
+          "index": 70.10066328306927
+        }
+      },
+      "scenario": null
+    },
+    {
+      "id": "urban-cargo:moscow",
+      "inputSha256": "c7e936e9a94ba9dd2e2cf66df817949ca9699460030b5213dced014d1775f0e8",
+      "times": [
+        {
+          "label": "Выезд со склада",
+          "seconds": 60.0
+        },
+        {
+          "label": "Движение по сети",
+          "seconds": 900.0
+        },
+        {
+          "label": "Подъезд к узлу",
+          "seconds": 90.0
+        }
+      ],
+      "total": 1050.0,
+      "index": 81.69577266205499
+    },
+    {
+      "id": "urban-cargo:kaliningrad",
+      "inputSha256": "8b6bfb05100ab101cc1b657d04bb34f8795962ebfd5d6a287db22ea6125ffbc9",
+      "times": [
+        {
+          "label": "Выезд со склада",
+          "seconds": 60.0
+        },
+        {
+          "label": "Движение по сети",
+          "seconds": 1020.0
+        },
+        {
+          "label": "Подъезд к узлу",
+          "seconds": 90.0
+        }
+      ],
+      "total": 1170.0,
+      "index": 63.72803136596311
+    },
+    {
+      "id": "urban-cargo:novorossiysk",
+      "inputSha256": "99cbc7b12018e3fda1b61fbf386e8dcf5ac2623e6d275d6ef7c620f7697b85d3",
+      "times": [
+        {
+          "label": "Выезд со склада",
+          "seconds": 60.0
+        },
+        {
+          "label": "Движение по сети",
+          "seconds": 1140.0
+        },
+        {
+          "label": "Подъезд к узлу",
+          "seconds": 90.0
+        }
+      ],
+      "total": 1290.0,
+      "index": 68.89637584628524
+    },
+    {
+      "id": "passenger:moscow:kaliningrad",
+      "inputSha256": "c3f3cbcf41f24f64a38bba29dcce6a97df4381a33ef1db1f6d86de41ed038f44",
+      "times": [
+        {
+          "label": "Первое ожидание",
+          "seconds": 1920.0
+        },
+        {
+          "label": "Движение",
+          "seconds": 9720.0
+        },
+        {
+          "label": "Ожидание пересадки",
+          "seconds": 2460.0
+        }
+      ],
+      "total": 14100.0,
+      "index": 86.59887532391078
+    },
+    {
+      "id": "passenger:moscow:novorossiysk",
+      "inputSha256": "4e177df7ba609228b1a99afd49486e4e876ab25c341a25e31a93e52d87ba6137",
+      "times": [
+        {
+          "label": "Первое ожидание",
+          "seconds": 2040.0
+        },
+        {
+          "label": "Движение",
+          "seconds": 10440.0
+        },
+        {
+          "label": "Ожидание пересадки",
+          "seconds": 2520.0
+        }
+      ],
+      "total": 15000.0,
+      "index": 87.01794524000957
+    },
+    {
+      "id": "passenger:kaliningrad:moscow",
+      "inputSha256": "226df9953b111b40bb7d2c369bd60b78ee2aa13998580d35994f3e25496abc1d",
+      "times": [
+        {
+          "label": "Первое ожидание",
+          "seconds": 2160.0
+        },
+        {
+          "label": "Движение",
+          "seconds": 11160.0
+        },
+        {
+          "label": "Ожидание пересадки",
+          "seconds": 2580.0
+        }
+      ],
+      "total": 15900.0,
+      "index": 87.37673177008186
+    },
+    {
+      "id": "passenger:kaliningrad:novorossiysk",
+      "inputSha256": "171ab5242f6cb6e546cb952f487ac0f931e0def8fae7b97c6638eb55c34ba3b9",
+      "times": [
+        {
+          "label": "Первое ожидание",
+          "seconds": 2400.0
+        },
+        {
+          "label": "Движение",
+          "seconds": 12600.0
+        },
+        {
+          "label": "Ожидание пересадки",
+          "seconds": 2700.0
+        }
+      ],
+      "total": 17700.0,
+      "index": 87.95183320014802
+    },
+    {
+      "id": "passenger:novorossiysk:moscow",
+      "inputSha256": "969ea64ce3341beee2c092144ec8958c370c94a06b0e10bcba321bebe6d5afc0",
+      "times": [
+        {
+          "label": "Первое ожидание",
+          "seconds": 2520.0
+        },
+        {
+          "label": "Движение",
+          "seconds": 13320.0
+        },
+        {
+          "label": "Ожидание пересадки",
+          "seconds": 2760.0
+        }
+      ],
+      "total": 18600.0,
+      "index": 88.18250433052201
+    },
+    {
+      "id": "passenger:novorossiysk:kaliningrad",
+      "inputSha256": "d1e749acc43cc7f1773abbc26a1ef48b755e63646b42c4b603b2cd0c34abb7d6",
+      "times": [
+        {
+          "label": "Первое ожидание",
+          "seconds": 2640.0
+        },
+        {
+          "label": "Движение",
+          "seconds": 14040.0
+        },
+        {
+          "label": "Ожидание пересадки",
+          "seconds": 2820.0
+        }
+      ],
+      "total": 19500.0,
+      "index": 88.38253267230198
+    },
+    {
+      "id": "delivery:moscow:kaliningrad",
+      "inputSha256": "067c58750277c8c51af9b58043db5344d695e1152130c51771434636005aaa83",
+      "times": [
+        {
+          "label": "Ожидание отправления",
+          "seconds": 3600.0
+        },
+        {
+          "label": "Движение",
+          "seconds": 59400.0
+        },
+        {
+          "label": "Ожидание пересадки",
+          "seconds": 7200.0
+        },
+        {
+          "label": "Обработка, включая перегрузку",
+          "seconds": 18300.0
+        }
+      ],
+      "total": 88500.0,
+      "index": 49.164689764457535
+    },
+    {
+      "id": "delivery:moscow:novorossiysk",
+      "inputSha256": "e63dc2ec9288a4c2e6a706e1c4cb06878836f594f4ee4b3cbea4aa78b727a4dc",
+      "times": [
+        {
+          "label": "Ожидание отправления",
+          "seconds": 3600.0
+        },
+        {
+          "label": "Движение",
+          "seconds": 61200.0
+        },
+        {
+          "label": "Ожидание пересадки",
+          "seconds": 7200.0
+        },
+        {
+          "label": "Обработка, включая перегрузку",
+          "seconds": 18600.0
+        }
+      ],
+      "total": 90600.0,
+      "index": 78.48359124907273
+    },
+    {
+      "id": "delivery:kaliningrad:moscow",
+      "inputSha256": "2860d81546ca811e7b55b21fc7057d0828b2fbafd4ecea6cc57c6f864fee1860",
+      "times": [
+        {
+          "label": "Ожидание отправления",
+          "seconds": 3600.0
+        },
+        {
+          "label": "Движение",
+          "seconds": 63000.0
+        },
+        {
+          "label": "Ожидание пересадки",
+          "seconds": 7200.0
+        },
+        {
+          "label": "Обработка, включая перегрузку",
+          "seconds": 18900.0
+        }
+      ],
+      "total": 92700.0,
+      "index": 97.62954990403091
+    },
+    {
+      "id": "delivery:kaliningrad:novorossiysk",
+      "inputSha256": "a6972db10482d46181ed6ca6446b6e4960fcbb639d05966bc0370f89c0dd5522",
+      "times": [
+        {
+          "label": "Ожидание отправления",
+          "seconds": 3600.0
+        },
+        {
+          "label": "Движение",
+          "seconds": 66600.0
+        },
+        {
+          "label": "Ожидание пересадки",
+          "seconds": 7200.0
+        },
+        {
+          "label": "Обработка, включая перегрузку",
+          "seconds": 19500.0
+        }
+      ],
+      "total": 96900.0,
+      "index": 77.17242830722311
+    },
+    {
+      "id": "delivery:novorossiysk:moscow",
+      "inputSha256": "f9abe9d3eb42e5f0ad399f83350142bcaa45f51a4738de98541e0a5fade9294c",
+      "times": [
+        {
+          "label": "Ожидание отправления",
+          "seconds": 3600.0
+        },
+        {
+          "label": "Движение",
+          "seconds": 68400.0
+        },
+        {
+          "label": "Ожидание пересадки",
+          "seconds": 7200.0
+        },
+        {
+          "label": "Обработка, включая перегрузку",
+          "seconds": 19800.0
+        }
+      ],
+      "total": 99000.0,
+      "index": 97.47050568955828
+    },
+    {
+      "id": "delivery:novorossiysk:kaliningrad",
+      "inputSha256": "ee1d606c9490e7f478d0e40bd1c0398ec1339812bdc4294e15a14bd6ca42caa6",
+      "times": [
+        {
+          "label": "Ожидание отправления",
+          "seconds": 3600.0
+        },
+        {
+          "label": "Движение",
+          "seconds": 70200.0
+        },
+        {
+          "label": "Ожидание пересадки",
+          "seconds": 7200.0
+        },
+        {
+          "label": "Обработка, включая перегрузку",
+          "seconds": 20100.0
+        }
+      ],
+      "total": 101100.0,
+      "index": 44.437855800388846
+    }
+  ]
+}

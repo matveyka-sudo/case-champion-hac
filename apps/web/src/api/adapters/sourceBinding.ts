@@ -1,6 +1,6 @@
 import type { Schemas, Territory } from "../types";
 import { categoryIds, departureAt, eligibleSnapshots, passengerModes, resolvedSnapshotId, type ApiDraft } from "./request";
-import { scopePreset, urbanScopeAvailability, type UrbanSelection } from "./urbanScopes";
+import { scopeContainsTime, scopePreset, urbanScopeAvailability, type UrbanSelection } from "./urbanScopes";
 
 export function boundSnapshotId(draft: ApiDraft, catalog: Territory[], caps: Schemas["Capabilities"]) {
   const snapshots = eligibleSnapshots(draft, catalog, caps);
@@ -23,18 +23,39 @@ export function boundSnapshotId(draft: ApiDraft, catalog: Territory[], caps: Sch
 export function initialSourceDraft(draft: ApiDraft, catalog: Territory[], caps: Schemas["Capabilities"]): ApiDraft {
   if (draft.cityId || draft.kind !== "urban_passenger") return draft;
   const city = catalog.find((place) => place.level === "city" && place.territory_id === "moscow");
-  if (!city) return draft;
+  return city ? clinicPreset(draft, city, catalog, caps, "walk", draft.date, draft.slot) || draft : draft;
+}
+
+const pilotDate = "2026-11-11";
+const pilotSlot = 34;
+const transitScenarioSlot = 35; // The accepted Moscow scenario is bound to 08:45 local time.
+
+export function clinicPreset(draft: ApiDraft, city: Territory, catalog: Territory[], caps: Schemas["Capabilities"], travel: "walk" | "pt", date = pilotDate, slot = travel === "pt" ? transitScenarioSlot : pilotSlot): ApiDraft | null {
+  if (!caps.categories.includes("adult_polyclinic") || !caps.traffic_modes.includes("static")) return null;
+  const mode = passengerModes[travel];
   const scopes = caps.urban_passenger_scopes || [];
-  const candidates = scopes.filter((scope) => scope.city_id === city.territory_id && scope.passenger_modes.includes("walk") &&
-    scope.categories.includes("adult_polyclinic") && scope.whole_city && scope.traffic_modes.includes(caps.default_traffic_mode));
-  if (candidates.length !== 1) return draft;
-  let departure: string | null = null;
-  try { departure = departureAt(draft.date, draft.slot, city.timezone); } catch { /* invalid local draft remains source-checked */ }
-  const selection: UrbanSelection = { cityId: city.territory_id, snapshotId: candidates[0].snapshot_id,
-    departureAt: departure, areaId: "", mode: "walk", traffic: caps.default_traffic_mode, categories: ["adult_polyclinic"] };
-  const preset = scopePreset(candidates[0], selection, scopes, catalog, caps.areas || []);
-  if (!preset || preset.selection.mode !== "walk" || preset.selection.categories.length !== 1 || preset.selection.categories[0] !== "adult_polyclinic") return draft;
+  const candidates = scopes.filter((scope) => scope.city_id === city.territory_id && scope.passenger_modes.includes(mode) &&
+    scope.categories.includes("adult_polyclinic") && scope.whole_city && scope.traffic_modes.includes("static"));
+  if (!candidates.length) return null;
+  let departure: string;
+  try { departure = departureAt(date, slot, city.timezone); } catch { return null; }
+  const atRequestedTime = candidates.filter((scope) => scopeContainsTime(scope, departure));
+  const scope = atRequestedTime.length === 1 ? atRequestedTime[0] : candidates.length === 1 ? candidates[0] : null;
+  if (!scope) return null;
+  const selection: UrbanSelection = { cityId: city.territory_id, snapshotId: scope.snapshot_id,
+    departureAt: departure, areaId: "", mode, traffic: "static", categories: ["adult_polyclinic"] };
+  const preset = scopePreset(scope, selection, scopes, catalog, caps.areas || []);
+  if (!preset || preset.selection.mode !== mode || preset.selection.traffic !== "static" ||
+    preset.selection.categories.length !== 1 || preset.selection.categories[0] !== "adult_polyclinic") return null;
   const next: ApiDraft = { ...draft, cityId: city.territory_id, snapshotId: preset.selection.snapshotId,
-    date: preset.date, slot: preset.slot, travel: "walk", traffic: preset.selection.traffic, areaId: "", cats: { c01: 3 } };
-  return eligibleSnapshots(next, catalog, caps).some((snapshot) => snapshot.snapshot_id === next.snapshotId) ? next : draft;
+    date: preset.date, slot: preset.slot, travel, traffic: "static", areaId: "", cats: { c01: 3 } };
+  return eligibleSnapshots(next, catalog, caps).some((snapshot) => snapshot.snapshot_id === next.snapshotId) ? next : null;
+}
+
+export function staticPilotPreset(draft: ApiDraft, catalog: Territory[], caps: Schemas["Capabilities"]): ApiDraft | null {
+  if (!caps.traffic_modes.includes("static")) return null;
+  const next: ApiDraft = { ...draft, date: pilotDate, slot: pilotSlot, traffic: "static", snapshotId: "",
+    ...(draft.kind === "intercity_passenger" ? { paxModes: ["car"] } : {}) };
+  const [snapshot, ...others] = eligibleSnapshots(next, catalog, caps);
+  return snapshot && !others.length ? { ...next, snapshotId: snapshot.snapshot_id } : null;
 }

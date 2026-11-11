@@ -245,7 +245,7 @@ test("scenario job resumes GET polling and requires both scenario and baseline b
   const mock = await fixture(page, { running: true });
   await page.goto("/?data=api#atlas?scenario_job=scenario-job");
   await expect.poll(() => mock.jobs).toBeGreaterThanOrEqual(2);
-  await expect(page.locator(".status")).toContainText("Расчёт выполняется");
+  await expect(page.locator(".status")).toContainText("Вычисляется");
   await expect(page.locator(".status")).not.toContainText("пакет");
   await expect(page).toHaveURL(/scenario_job=scenario-job$/);
   await expect(page.locator("#apiResultCard")).toHaveCount(0);
