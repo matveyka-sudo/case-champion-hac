@@ -9,7 +9,21 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 
 ## Three-city priority — 2026-11-10 continuation
 
-### Current gate update — 2026-11-11, publication repair
+### Current gate update — 2026-11-11, real Moscow campaign success
+
+- e5e067e is LIVE on5193. Actual React-created job1f246d5e succeeds and saves
+  analysis6664f4e0:88 checkpoints/1401 pairs,1394 valid journeys/194 clinics,
+  all2361 source points preserved. Admission10.179s; worker293.365s;
+  peak1.848GB, no OOM. Root canonical/repeat GET/foreign404 checks pass.
+- Preliminary observed-route colors:391 red,487 amber,516 green,967 unknown.
+  All canonical/city indices remain null. Successful computation is separate
+  from proof of a full-time minimum, catalog completeness or city coverage.
+- UI displays the result, but all-route purple overlays obscure score colors;
+  a narrowly scoped frontend overview/selection repair is RUNNING.
+- Current-source PT scenario replay remains pending. Progress and clean
+  four-profile restoration are separate reviewed deliveries in progress.
+
+### Previous gate update — 2026-11-11, publication repair
 
 - Live5193 remains1839. Candidate e5e067e integrates independently reviewed
   parent checkpoint/heartbeat fencing09a073c and scenario identity180d0ac.

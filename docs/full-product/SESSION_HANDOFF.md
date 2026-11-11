@@ -1,5 +1,38 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## First complete Moscow campaign through React — 2026-11-11 03:46 MSK
+
+Live5193 is now e5e067e1b4d2a9021ddfa1d91bf918957a94a203. Root activation
+took48.017s; protected services and all volumes stayed unchanged. Final-image
+Worker+real-PG replay passed at1CPU/2GiB,10s query timeout/30s lease, with
+882,487,296B cgroup peak. The initial container test failed in its migration
+harness before reaching Worker; corrected v2 passed and both receipts remain.
+
+Root submitted a NEW Moscow/walk/adult-polyclinic request through React, not a
+fixture or manual SQL job. Job1f246d5e-afae-4ea1-8578-e03777ba94ab succeeded;
+saved analysis6664f4e0-0749-4dba-a176-f33225bf60fc has result hash
+4ab16ac3ac21fbb951357a86abf2d671a84e7e86c16fcd60bf62d4f04ee81837.
+One POST admitted in10.179s; worker293.364917s;88 checkpoints/1401 pairs;
+worker peak1,847,713,792B, zero OOM. The page displayed the saved result without
+JavaScript errors. Root independently validated canonical DTO, equal repeat GET,
+foreign-session404, all2361 accepted point IDs, and exact route-time agreement
+with the earlier independent saved-observation replay.
+
+Published1394 valid journeys reach194 distinct clinics. Observed-route scores:
+391 red,487 amber,516 green,967 unknown. Both rounded-zero approaches remain
+unknown. All canonical indices remain null; no city or district minimum/rating
+was gained. API response25,563,052B. Evidence and screenshot:
+`root-fourprofile-ui-187158e3-20261111/moscow-full-e5e067e-*` outside Git.
+
+Visual review found that drawing all1394 purple paths obscures the map's score
+colors. FRONTEND owns a separate overview/selected-route correction preserving
+the prototype design, unknown points and full result inventory. Persisted
+progress frontend24274bf is ready with schema dependency8e609d4; backend final
+delivery/review are pending. Four-profile restoration4c0e576 is under review;
+its documented offline checker must include a writable observation directory.
+Moscow PT/scenario replay on e5 is the next live acceptance step. No extra paid
+Alice or Rasp calls, no dev merge, no full-product completion claim.
+
 ## Publication fixes integrated — 2026-11-11 03:35 MSK
 
 Integration source `e5e067e1b4d2a9021ddfa1d91bf918957a94a203` includes two
