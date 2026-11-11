@@ -100,6 +100,11 @@ docker compose --env-file .env.example exec -T postgres psql -X -v ON_ERROR_STOP
 ## Работа команды
 
 У каждой роли своя постоянная ветка `work/<role>`. Общая ветка `dev` служит для интеграции через PR, `main` хранит проверенные версии. Точные ветки, границы ролей и порядок синхронизации описаны в [правилах командной работы](docs/OWNERSHIP.md).
+Для миграций в этом примере задайте `A2_DATABASE_URL=postgresql://a2:a2_local_dev@127.0.0.1:55433/a2` и следуйте [инструкции API](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/apps/api/README.md#run). На Apple Silicon для этого образа нужна эмуляция `linux/amd64` в Docker Desktop.
+
+## Работа команды
+
+У каждой роли своя постоянная ветка `work/<role>`. Общая ветка `dev` служит для интеграции через PR, `main` хранит проверенные версии. Точные ветки, границы ролей и порядок синхронизации описаны в [правилах командной работы](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/docs/OWNERSHIP.md).
 
 На одном компьютере откройте отдельный worktree своей роли и выполняйте команды установки выше в нём. На другом компьютере создайте свой клон и выберите опубликованную ветку роли. Пример для FRONTEND.
 
@@ -145,3 +150,40 @@ npm run test:e2e
 Из корня `node scripts/check_web_layout.mjs` проверяет отсутствие tracked `frontend/`,
 согласованность web manifest/lock, пути CI и актуальность generated API.
 Web-команды и proxy: [apps/web/README.md](apps/web/README.md).
+Замените `work/frontend` своей веткой из таблицы ролей. Окружение устанавливается в рабочем каталоге участника. Перед работой прочитайте корневой `AGENTS.md`, локальные инструкции и стартовую задачу. [FRONTEND](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/docs/tasks/frontend.md) · [DEVOPS](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/docs/tasks/devops.md) · [BACKEND](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/docs/tasks/backend.md) · [ML1](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/docs/tasks/ml1.md) · [ML2](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/docs/tasks/ml2.md). Claude Code начинает с `CLAUDE.md`.
+
+- [Архитектура](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/docs/ARCHITECTURE.md) описывает зависимости и переход к импортируемым Python-пакетам.
+- [Спецификации](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/packages/contracts/specs/README.md) определяют общие поля и смысл статусов.
+- [Данные](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/docs/DATA.md) описывают доступные материалы и пробелы расписаний.
+- [План расчёта и оценки ИИ](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/docs/ML_PLAN.md) фиксирует принятые решения и их владельцев.
+- [Приёмка](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/docs/ACCEPTANCE.md) разделяет проверки окружения и будущие проверки продукта.
+- [Указатель источников](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/docs/reference/README.md) отделяет исходное ТЗ от финальной постановки 08.11.2026 и материалов организатора/исторического исследования.
+
+## Проверка постановки
+```bash
+python3 scripts/check_product_config.py
+cd apps/web
+npm ci
+npm run build
+npm run lint
+npm run api:check
+npm run typecheck
+npm test
+npm run test:e2e
+```
+
+Старые regular/medical и коридор Калининград–Зеленоградск–Балтийск архивированы в docs/archive/2026-11-06. Рабочие ветки не удаляются; участники вливают обновления origin/dev по docs/OWNERSHIP.md.
+
+## Расположение frontend
+
+Единственный web npm-пакет: `apps/web/package.json` и его `package-lock.json`;
+корневых npm workspaces нет. `src/`, `public/`, `tests/`, `e2e/`, Vite/TS и
+локальный генератор относятся к приложению. Общие DTO/OpenAPI остаются в
+`packages/contracts/` и `contracts/generated/`, CI — в `.github/workflows/`,
+инфраструктура — в `infra/`. Общие документы: [API-handoff](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/docs/FRONTEND_INTEGRATION.md)
+и [сверка UI с ТЗ](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/docs/FRONTEND_UI_SCOPE_REVIEW.md). Фото и visual QA — в `apps/web/docs/`.
+
+Старый scaffold сохранён в Git history и [архивном описании](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/docs/archive/2026-11-09/web-scaffold.md).
+Из корня `node scripts/check_web_layout.mjs` проверяет отсутствие tracked `frontend/`,
+согласованность web manifest/lock, пути CI и актуальность generated API.
+Web-команды и proxy: [apps/web/README.md](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/apps/web/README.md).
