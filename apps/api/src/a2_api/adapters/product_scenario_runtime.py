@@ -24,8 +24,9 @@ from a2_api.adapters.product_inputs import (
     UrbanInputs,
 )
 from a2_api.adapters.product_scenario_inputs import (
-    ScenarioDocument,
+    ScenarioCatalogDocument,
     document_matches_request,
+    parse_scenario_document,
     source_inputs_hash,
 )
 from a2_api.core.config import RuntimeSettings
@@ -53,7 +54,7 @@ def load_profile_documents(
     inputs: EngineInputs,
     budget: list[int],
     request_allowed: Callable[[AnalysisRequest], bool],
-) -> tuple[ScenarioDocument, ...]:
+) -> tuple[ScenarioCatalogDocument, ...]:
     """Validate source/catalog identities without calculating routes or feasibility.
 
     Actual fixed-operation validation and exact before equivalence happen only in
@@ -69,13 +70,13 @@ def load_profile_documents(
     current = ProductRegistry()
     snapshot_hash = canonical_hash(snapshot.model_dump(mode="json"))
     inputs_hash = source_inputs_hash(inputs)
-    documents = []
+    documents: list[ScenarioCatalogDocument] = []
     seen: list[AnalysisRequest] = []
     for reference in references:
         path = (root / reference.path).resolve()
         if not path.is_relative_to(root.resolve()):
             raise ValueError("SCENARIO_REFERENCE_OUTSIDE_MANIFEST_DIRECTORY")
-        document = ScenarioDocument.model_validate(read_document(path, reference.sha256, budget))
+        document = parse_scenario_document(read_document(path, reference.sha256, budget))
         request = document.normalized_request
         if (
             document.profile_id != profile_id
@@ -92,6 +93,22 @@ def load_profile_documents(
         known_evidence = {row.evidence_id for row in snapshot.evidence} | {
             row.evidence_id for row in document.evidence_refs
         }
+        from a2_api.adapters.cargo_scenarios import CargoScenarioDocument, validate_plan_inputs
+
+        if isinstance(document, CargoScenarioDocument):
+            validate_plan_inputs(document, inputs)
+            verified_evidence = {row.evidence_id for row in snapshot.evidence if row.verified}
+            if any(
+                not set((*plan.demand_evidence, *plan.resource_evidence)) <= verified_evidence
+                for plan in document.plans
+            ) or any(
+                not set(resource.evidence_refs) <= verified_evidence
+                for resource in document.resources
+            ):
+                raise ValueError("CARGO_HANDLING_VERIFIED_CANONICAL_EVIDENCE_REQUIRED")
+            seen.append(request)
+            documents.append(document)
+            continue
         for item in _walk(document):
             if hasattr(item, "snapshot_id") and item.snapshot_id != snapshot.snapshot_id:
                 raise ValueError("SCENARIO_DOCUMENT_SNAPSHOT_MISMATCH")
@@ -137,7 +154,7 @@ def load_profile_documents(
     return tuple(documents)
 
 
-def template_ids(documents: dict[str, tuple[ScenarioDocument, ...]]) -> frozenset[str]:
+def template_ids(documents: dict[str, tuple[ScenarioCatalogDocument, ...]]) -> frozenset[str]:
     return frozenset(
         plan.template_id
         for group in documents.values()
@@ -164,7 +181,7 @@ def finish_analysis(
     inputs: EngineInputs,
     *,
     profile_id: str,
-    documents: Sequence[ScenarioDocument],
+    documents: Sequence[ScenarioCatalogDocument],
     configured: bool,
 ) -> AnalysisResult | CalculationOutput:
     if not configured:
@@ -222,7 +239,7 @@ def calculate_saved(
     inputs: EngineInputs,
     *,
     profile_id: str,
-    documents: Sequence[ScenarioDocument],
+    documents: Sequence[ScenarioCatalogDocument],
 ) -> ScenarioResult:
     if (
         claim.kind != "scenario"

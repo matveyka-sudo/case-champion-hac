@@ -463,6 +463,8 @@ def test_validated_binding_rechecks_pinned_bytes_without_reparsing_sources(tmp_p
 async def test_approved_category_subset_is_dynamic_and_foreign_category_is_unavailable(
     tmp_path, monkeypatch
 ):
+    from a2_api.core.errors import DomainError
+
     entry = city_profile(tmp_path, SNAPSHOTS[0], ("kindergarten", "school"))
     configure(tmp_path, monkeypatch, [entry])
     for category in ("kindergarten", "school"):
@@ -473,8 +475,10 @@ async def test_approved_category_subset_is_dynamic_and_foreign_category_is_unava
             for d in entry["snapshot"].destinations
             if category in d.categories and d.destination_id in entry["artifact"]["destination_ids"]
         }
-    with pytest.raises(Exception, match="RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST"):
+    with pytest.raises(DomainError, match="REQUEST_OUTSIDE_SUPPORTED_PRESETS") as unsupported:
         await product.preflight(request_for(entry, ("airport",)), entry["snapshot"])
+    assert unsupported.value.status_code == 422
+    assert not unsupported.value.retryable
     with pytest.raises(ValueError, match="UNIQUE_AND_SORTED"):
         walk_batches.Approval.model_validate(
             {**entry["approval"], "categories": ["school", "school"]}

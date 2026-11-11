@@ -5,7 +5,7 @@ from a2_contracts.common import canonical_hash
 from a2_contracts.results import ProfileResult
 from a2_contracts.scenarios import Comparison, ScenarioRequest
 from a2_contracts.v2.evidence import EvidenceResolver
-from a2_contracts.v2.requests import RequestBase
+from a2_contracts.v2.requests import IntercityCargoRequest, RequestBase
 from a2_contracts.v2.results import (
     AnalysisResult,
     _absence_score,
@@ -136,6 +136,12 @@ def _validate_scenario_semantics(
     endpoint_scope: ScenarioEndpointScope | None = None,
     expected_snapshot_hash: str | None = None,
 ) -> None:
+    if command.operation_type == "reduce_handling_wait" and (
+        baseline.analysis_kind != "intercity_cargo"
+        or not isinstance(baseline.request, IntercityCargoRequest)
+        or baseline.request.cargo_transport != "multimodal"
+    ):
+        raise DomainError(422, "unsupported_scenario", "CARGO_HANDLING_CONTEXT_UNSUPPORTED")
     if (
         result.versions != baseline.versions
         or command.versions != baseline.versions
@@ -361,6 +367,7 @@ def _validate_scenario_semantics(
     actual = {change.service_id: change.shift_seconds for change in result.service_changes}
     if (
         actual != expected
+        or result.handling_changes != command.fixed_parameters.handling_changes
         or result.feasibility != command.feasibility
         or result.editable_local_graph != command.editable_local_graph
         or result.turnaround_evidence != command.fixed_parameters.turnaround_evidence

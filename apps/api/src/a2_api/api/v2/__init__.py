@@ -4,12 +4,23 @@ from a2_contracts.v2.api import ErrorEnvelope
 from fastapi import APIRouter
 
 from a2_api.api.v2 import analyses, analysis_groups, catalog, explanations, jobs, scenarios
+from a2_api.api.v2.examples import ERROR_EXAMPLES
 
 
 def build_router() -> APIRouter:
     router = APIRouter(
         prefix="/api/v1",
-        responses={code: {"model": ErrorEnvelope} for code in (403, 404, 409, 422, 429, 500, 503)},
+        responses={
+            code: {
+                "model": ErrorEnvelope,
+                **(
+                    {"content": {"application/json": {"examples": ERROR_EXAMPLES[code]}}}
+                    if code in ERROR_EXAMPLES
+                    else {}
+                ),
+            }
+            for code in (403, 404, 409, 422, 429, 500, 503)
+        },
     )
     router.include_router(catalog.router)
     router.include_router(analyses.router)

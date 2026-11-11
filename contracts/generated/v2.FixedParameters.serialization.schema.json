@@ -1,4 +1,64 @@
 {
+  "$defs": {
+    "CargoHandlingChange": {
+      "additionalProperties": false,
+      "description": "A fixed processing-duration input and the resource window permitting it.",
+      "properties": {
+        "action_id": {
+          "minLength": 1,
+          "title": "Action Id",
+          "type": "string"
+        },
+        "after_seconds": {
+          "minimum": 0,
+          "title": "After Seconds",
+          "type": "number"
+        },
+        "before_seconds": {
+          "minimum": 0,
+          "title": "Before Seconds",
+          "type": "number"
+        },
+        "resource_id": {
+          "minLength": 1,
+          "title": "Resource Id",
+          "type": "string"
+        },
+        "resource_units_after": {
+          "minimum": 1,
+          "title": "Resource Units After",
+          "type": "integer"
+        },
+        "resource_units_before": {
+          "minimum": 1,
+          "title": "Resource Units Before",
+          "type": "integer"
+        },
+        "valid_from": {
+          "format": "date-time",
+          "title": "Valid From",
+          "type": "string"
+        },
+        "valid_to": {
+          "format": "date-time",
+          "title": "Valid To",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_id",
+        "before_seconds",
+        "after_seconds",
+        "resource_id",
+        "resource_units_before",
+        "resource_units_after",
+        "valid_from",
+        "valid_to"
+      ],
+      "title": "CargoHandlingChange",
+      "type": "object"
+    }
+  },
   "additionalProperties": false,
   "properties": {
     "demand_evidence": {
@@ -7,6 +67,14 @@
         "type": "string"
       },
       "title": "Demand Evidence",
+      "type": "array"
+    },
+    "handling_changes": {
+      "items": {
+        "$ref": "#/$defs/CargoHandlingChange"
+      },
+      "maxItems": 16,
+      "title": "Handling Changes",
       "type": "array"
     },
     "resource_constraints": {
@@ -30,7 +98,6 @@
         "minLength": 1,
         "type": "string"
       },
-      "minItems": 1,
       "title": "Service Ids",
       "type": "array"
     },

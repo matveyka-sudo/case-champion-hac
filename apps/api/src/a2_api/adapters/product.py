@@ -479,7 +479,7 @@ def calculate(
         assert isinstance(request, UrbanCargoRequest)
         out.map_data = accepted_cargo_map(snapshot, request, inputs)
     result = out.finish()
-    if profile.demo_transport is not None:
+    if profile.demo_transport is not None or profile.demo_model:
         from a2_api.adapters.demo_map import attach_demo_result
 
         result = attach_demo_result(result, snapshot)

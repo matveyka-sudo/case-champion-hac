@@ -365,6 +365,23 @@ def test_exported_artifacts_match_baseline_and_approved_contract_extensions(tmp_
         for mode in ("serialization", "validation")
     }
     expected.update(snapshot_kinds_extension)
+    demo_extension = json.loads(
+        (Path(__file__).parent / "fixtures/backend_demo_schema_extension.json").read_text()
+    )
+    assert set(demo_extension["replaced"]) == {"manifest.json", "openapi.json"} | {
+        f"v2.{model}.{mode}.schema.json"
+        for model in ("Capabilities", "FixedParameters", "ScenarioProposal", "ScenarioResult")
+        for mode in ("serialization", "validation")
+    }
+    assert set(demo_extension["added"]) == {
+        f"v2.{model}.{mode}.schema.json"
+        for model in ("AnalysisPreset", "CargoHandlingChange")
+        for mode in ("serialization", "validation")
+    }
+    assert set(demo_extension["replaced"]) <= expected.keys()
+    assert set(demo_extension["added"]).isdisjoint(expected)
+    expected.update(demo_extension["replaced"])
+    expected.update(demo_extension["added"])
     assert actual == expected
 
 

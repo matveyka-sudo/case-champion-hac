@@ -12,7 +12,13 @@ from typing import TYPE_CHECKING, Any, Literal
 from zoneinfo import ZoneInfo
 
 from a2_contracts.common import canonical_hash
-from a2_contracts.v2.api import AreaOption, Capabilities, TerritoryOption, UrbanPassengerScope
+from a2_contracts.v2.api import (
+    AnalysisPreset,
+    AreaOption,
+    Capabilities,
+    TerritoryOption,
+    UrbanPassengerScope,
+)
 from a2_contracts.v2.base import AnalysisKind, ContractModel, Identifier, Timestamp, TrafficMode
 from a2_contracts.v2.dataset import AcceptedData
 from a2_contracts.v2.requests import (
@@ -39,7 +45,7 @@ from a2_api.adapters.product_inputs import (
     candidate_is_static,
     car_observation_matches,
 )
-from a2_api.adapters.product_scenario_inputs import ScenarioDocument
+from a2_api.adapters.product_scenario_inputs import ScenarioCatalogDocument
 from a2_api.adapters.timetable_source import verify_timetable_source
 from a2_api.core.errors import DomainError
 from a2_api.core.registry import ProductRegistry
@@ -121,6 +127,7 @@ class Profile(ContractModel):
     inputs: FileRef | None = None
     walk_binding: FileRef | None = Field(default=None, exclude_if=lambda value: value is None)
     demo_transport: FileRef | None = Field(default=None, exclude_if=lambda value: value is None)
+    demo_model: bool = Field(default=False, exclude_if=lambda value: value is False, strict=True)
     scenarios: list[FileRef] = Field(default_factory=list, max_length=16)
     evidence: list[EvidenceRef] = Field(default_factory=list)
     static_observations: bool = False
@@ -138,10 +145,29 @@ class Manifest(ContractModel):
     cargo_profiles: list[CargoProfile] = Field(default_factory=list, max_length=128)
     profiles: list[Profile] = Field(max_length=128)
     national_catalog_complete: bool = False
+    presets: list[AnalysisPreset] = Field(default_factory=list, max_length=128)
 
 
 def unavailable(reason: str) -> DomainError:
     return DomainError(503, "data_unavailable", reason, retryable=True)
+
+
+def unsupported_request(presets: list[AnalysisPreset]) -> DomainError:
+    from a2_contracts.api import FieldError
+
+    return DomainError(
+        422,
+        "invalid_request",
+        "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+        field_errors=[
+            FieldError(
+                location=["request"],
+                code="SUPPORTED_PRESETS",
+                message="Select capabilities.analysis_presets: "
+                + ", ".join(p.preset_id for p in presets),
+            )
+        ],
+    )
 
 
 def _unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -476,12 +502,19 @@ def validate_inputs(
                     )
                 ):
                     raise ValueError("CAR_GEOMETRY_ENDPOINT_MISMATCH")
-        verify_timetable_source(
-            snapshot,
-            inputs.timetable,
-            inputs.timetable_service_clock,
-            {binding.transport_type: binding.mode for binding in inputs.transport_modes},
-        )
+        if demo_transport is not None:
+            from a2_api.adapters.demo_transport import verify_demo_model
+
+            verify_demo_model(
+                snapshot, inputs.timetable, inputs.timetable_service_clock, demo_transport
+            )
+        else:
+            verify_timetable_source(
+                snapshot,
+                inputs.timetable,
+                inputs.timetable_service_clock,
+                {binding.transport_type: binding.mode for binding in inputs.transport_modes},
+            )
         scope = inputs.scope.comparison_scope
         if (scope.origin_territory_id, scope.destination_territory_id) != (
             profile.origin_id,
@@ -689,7 +722,7 @@ class Runtime:
     snapshots: dict[str, AcceptedData]
     profiles: dict[str, tuple[Profile, EngineInputs | None]]
     unavailable_kinds: frozenset[str]
-    scenario_documents: dict[str, tuple[ScenarioDocument, ...]] = field(default_factory=dict)
+    scenario_documents: dict[str, tuple[ScenarioCatalogDocument, ...]] = field(default_factory=dict)
     urban_passenger_scopes: list[UrbanPassengerScope] = field(default_factory=list)
     walk_bindings: dict[str, "BoundWalkBinding"] = field(default_factory=dict)
     profile_failures: dict[str, str] = field(default_factory=dict)
@@ -703,10 +736,16 @@ class Runtime:
             if profile_matches(profile, request, snapshot.snapshot_id)
         ]
         if not matches:
-            raise unavailable("RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST")
+            if any(
+                profile_matches(p, request, snapshot.snapshot_id) for p in self.manifest.profiles
+            ):
+                raise unavailable("RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST")
+            raise unsupported_request(self.manifest.presets)
         if len(matches) != 1:
             raise unavailable("RUNTIME_PROFILE_SCOPE_AMBIGUOUS")
         profile, inputs = matches[0]
+        if profile.demo_model and not any(p.request == request for p in self.manifest.presets):
+            raise unsupported_request(self.manifest.presets)
         if isinstance(inputs, UrbanInputs) and isinstance(request, UrbanPassengerRequest):
             destinations = [
                 d for d in inputs.destinations if set(request.categories) & d.categories
@@ -797,6 +836,8 @@ def load_runtime(
         manifest = Manifest.model_validate(read_document(source, digest, budget))
         snapshot_ids = [ref.snapshot_id for ref in manifest.snapshots]
         profile_ids = [profile.profile_id for profile in manifest.profiles]
+        if len({p.preset_id for p in manifest.presets}) != len(manifest.presets):
+            raise ValueError("DUPLICATE_RUNTIME_PRESET_IDENTITY")
         if len(set(snapshot_ids)) != len(snapshot_ids) or len(set(profile_ids)) != len(profile_ids):
             raise ValueError("DUPLICATE_RUNTIME_IDENTITY")
         if snapshot_id is not None and snapshot_id not in snapshot_ids:
@@ -806,11 +847,6 @@ def load_runtime(
             for profile in manifest.profiles
             if request is None or profile_matches(profile, request, str(snapshot_id))
         ]
-        if request is not None and any(profile.scenarios for profile in selected_profiles):
-            # Scenario documents validate requests at other times as well. Keep
-            # their existing whole-catalogue overlap checks until that dependency
-            # set can be bounded independently of the baseline request.
-            return load_runtime()
         snapshots = {}
         for ref in manifest.snapshots:
             if snapshot_id is not None and ref.snapshot_id != snapshot_id:
@@ -842,6 +878,12 @@ def load_runtime(
             seen.add(key)
             try:
                 snapshot = snapshots[profile.snapshot_id]
+                if profile.city_id is not None and profile.city_id not in snapshot.geographic_scope:
+                    raise ValueError("RUNTIME_PROFILE_CITY_SNAPSHOT_MISMATCH")
+                if profile.demo_model:
+                    from a2_api.adapters.demo_transport import verify_demo_snapshot
+
+                    verify_demo_snapshot(snapshot)
                 if canonical_hash(snapshot.model_dump(mode="json")) != profile.snapshot_hash:
                     raise ValueError("RUNTIME_PROFILE_SNAPSHOT_HASH_MISMATCH")
                 if profile.valid_from >= profile.valid_to:
@@ -861,7 +903,10 @@ def load_runtime(
                     if profile.demo_transport is not None:
                         from a2_api.adapters.demo_transport import DemoTransportReceipt
 
-                        if not isinstance(inputs, UrbanInputs) or inputs.timetable is None:
+                        if (
+                            not isinstance(inputs, (UrbanInputs, IntercityInputs))
+                            or inputs.timetable is None
+                        ):
                             raise ValueError("DEMO_TRANSPORT_REQUIRES_URBAN_TIMETABLE")
                         demo_receipt = DemoTransportReceipt.model_validate(
                             _referenced(source.parent, profile.demo_transport, budget)
@@ -975,7 +1020,12 @@ def load_runtime(
                     inputs=inputs,
                     budget=budget,
                     request_allowed=lambda request: (
-                        product_runtime.select(request, snapshot)[0].profile_id == key
+                        [
+                            p.profile_id
+                            for p in manifest.profiles
+                            if profile_matches(p, request, snapshot.snapshot_id)
+                        ]
+                        == [key]
                     ),
                 )
             except (OSError, ValueError, TypeError, KeyError, DomainError):
@@ -1002,6 +1052,36 @@ class RuntimeRegistry(ProductRegistry):
     urban_passenger_scopes: list[UrbanPassengerScope] = []
     snapshot_analysis_kinds: dict[str, list[AnalysisKind]] | None = None
     truck_cache_expiry_by_snapshot: dict[str, datetime] = {}
+    runtime_profiles: tuple[Profile, ...] = ()
+    analysis_presets: list[AnalysisPreset] = []
+    declared_presets: tuple[AnalysisPreset, ...] = ()
+    ready_profile_ids: frozenset[str] = frozenset()
+
+    def resolve_snapshot(self, request: AnalysisRequest) -> AcceptedData:
+        if request.snapshot_id is not None and request.snapshot_id not in self.snapshots:
+            return super().resolve_snapshot(request)
+        matches = [
+            profile
+            for profile in self.runtime_profiles
+            if (request.snapshot_id is None or request.snapshot_id == profile.snapshot_id)
+            and profile_matches(profile, request, profile.snapshot_id)
+        ]
+        if not matches:
+            raise unsupported_request(self.analysis_presets)
+        identities = {profile.snapshot_id for profile in matches}
+        if len(identities) != 1:
+            raise DomainError(
+                409, "incompatible_versions", "SELECT_EXPLICIT_SNAPSHOT_FROM_CAPABILITIES"
+            )
+        identity = next(iter(identities))
+        if any(profile.demo_model for profile in matches) and not any(
+            preset.request == request.model_copy(update={"snapshot_id": identity})
+            for preset in self.declared_presets
+        ):
+            raise unsupported_request(self.analysis_presets)
+        if not any(profile.profile_id in self.ready_profile_ids for profile in matches):
+            raise unavailable("RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST")
+        return super().resolve_snapshot(request.model_copy(update={"snapshot_id": identity}))
 
     def required_cache_valid_until(
         self, request: AnalysisRequest, snapshot: AcceptedData
@@ -1018,6 +1098,7 @@ class RuntimeRegistry(ProductRegistry):
     def capabilities(self) -> Capabilities:
         result = super().capabilities()
         result.urban_passenger_scopes = list(self.urban_passenger_scopes)
+        result.analysis_presets = list(self.analysis_presets)
         if self.snapshot_analysis_kinds is not None:
             for snapshot in result.snapshots or []:
                 snapshot.analysis_kinds = self.snapshot_analysis_kinds.get(snapshot.snapshot_id, [])
@@ -1045,6 +1126,12 @@ def registry() -> ProductRegistry:
 
     result.scenario_template_ids = template_ids(runtime.scenario_documents)
     result.urban_passenger_scopes = runtime.urban_passenger_scopes
+    from a2_api.adapters.product_capabilities import analysis_presets
+
+    result.analysis_presets = analysis_presets(runtime)
+    result.runtime_profiles = tuple(runtime.manifest.profiles)
+    result.declared_presets = tuple(runtime.manifest.presets)
+    result.ready_profile_ids = frozenset(runtime.profiles)
     result.snapshot_analysis_kinds = {
         snapshot_id: sorted(
             {p.analysis_kind for p, _ in runtime.profiles.values() if p.snapshot_id == snapshot_id}

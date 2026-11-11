@@ -10,7 +10,14 @@ from typing import Annotated, Literal, Self
 from pydantic import Field, StrictBool, model_validator
 
 from a2_contracts.common import canonical_hash
-from a2_contracts.v2.base import ContractModel, Count, Identifier, NonNegative, VersionRefs
+from a2_contracts.v2.base import (
+    ContractModel,
+    Count,
+    Identifier,
+    NonNegative,
+    Timestamp,
+    VersionRefs,
+)
 from a2_contracts.v2.evidence import MAX_EVIDENCE_GROUPS, EvidenceGroup, EvidenceResolver
 from a2_contracts.v2.journeys import JourneyResult
 from a2_contracts.v2.results import EvidenceRef, Metric, Score, validate_score_dependencies
@@ -60,13 +67,39 @@ class ScenarioRunRequest(ScenarioRunOptions):
     baseline_analysis_id: Identifier
 
 
+class CargoHandlingChange(ContractModel):
+    """A fixed processing-duration input and the resource window permitting it."""
+
+    action_id: Identifier
+    before_seconds: NonNegative
+    after_seconds: NonNegative
+    resource_id: Identifier
+    resource_units_before: int = Field(strict=True, ge=1)
+    resource_units_after: int = Field(strict=True, ge=1)
+    valid_from: Timestamp
+    valid_to: Timestamp
+
+    @model_validator(mode="after")
+    def resource_backed_reduction(self) -> Self:
+        if self.after_seconds >= self.before_seconds:
+            raise ValueError("Handling experiment requires a positive duration reduction")
+        if self.resource_units_after <= self.resource_units_before:
+            raise ValueError("Handling reduction requires explicitly added compatible resources")
+        if self.valid_from >= self.valid_to:
+            raise ValueError("Handling resources require a finite availability window")
+        return self
+
+
 class FixedParameters(ContractModel):
-    service_ids: list[Identifier] = Field(min_length=1)
+    service_ids: list[Identifier]
     shift_seconds: int = Field(strict=True)
     demand_evidence: list[Identifier]
     resource_evidence: list[Identifier]
     turnaround_evidence: list[Identifier]
     resource_constraints: list[Identifier]
+    handling_changes: list[CargoHandlingChange] = Field(
+        default_factory=list, max_length=16, exclude_if=lambda value: not value
+    )
 
     @model_validator(mode="after")
     def unique_services(self) -> Self:
@@ -80,7 +113,7 @@ class ScenarioProposal(ContractModel):
     scenario_id: Identifier
     baseline_analysis_id: Identifier
     template_id: Identifier
-    operation_type: Literal["coordinate_transfer", "additional_departure"]
+    operation_type: Literal["coordinate_transfer", "additional_departure", "reduce_handling_wait"]
     fixed_parameters: FixedParameters
     evidence_refs: list[EvidenceRef]
     evidence_groups: list[EvidenceGroup] = Field(
@@ -106,6 +139,23 @@ class ScenarioProposal(ContractModel):
             ],
             self.evidence_groups,
         )
+        if self.operation_type == "reduce_handling_wait":
+            if (
+                not params.handling_changes
+                or params.service_ids
+                or params.shift_seconds != 0
+                or params.turnaround_evidence
+                or not params.demand_evidence
+                or not params.resource_evidence
+                or self.feasibility != "verified"
+                or not self.editable_local_graph
+                or len({change.action_id for change in params.handling_changes})
+                != len(params.handling_changes)
+            ):
+                raise ValueError("Handling experiments require fixed actions, demand and resources")
+            return self
+        if params.handling_changes or not params.service_ids:
+            raise ValueError("Schedule experiments require services and cannot change handling")
         if self.operation_type == "additional_departure" and (
             not params.demand_evidence or not params.resource_evidence
         ):
@@ -459,7 +509,10 @@ class ScenarioResult(ContractModel):
     affected_sites: Count | None
     worsened_metric_ids: list[Identifier]
     feasibility: Feasibility
-    service_changes: list[ServiceChange] = Field(min_length=1)
+    service_changes: list[ServiceChange]
+    handling_changes: list[CargoHandlingChange] = Field(
+        default_factory=list, max_length=16, exclude_if=lambda value: not value
+    )
     versions: VersionRefs
     overlay_graph_id: Identifier
     baseline_result_hash: Identifier
@@ -481,6 +534,16 @@ class ScenarioResult(ContractModel):
 
     @model_validator(mode="after")
     def comparable_effects(self) -> Self:
+        if self.handling_changes:
+            if (
+                self.service_changes
+                or self.feasibility != "verified"
+                or not self.resource_evidence
+                or self.turnaround_evidence
+            ):
+                raise ValueError("Handling effects require resource proof without schedule changes")
+        elif not self.service_changes:
+            raise ValueError("Schedule effects require at least one service change")
         items: list[Metric | Score] = [
             *self.before.metrics,
             *self.before.scores,
@@ -498,13 +561,14 @@ class ScenarioResult(ContractModel):
             raise ValueError("Computed scenario requires a separate editable graph overlay")
         if self.affected_population is not None and self.affected_sites is not None:
             raise ValueError("Affected residents and physical sites are separate populations")
-        _check_feasibility(
-            self.feasibility,
-            self.turnaround_evidence,
-            self.resource_evidence,
-            self.editable_local_graph,
-            self.limitations,
-        )
+        if not self.handling_changes:
+            _check_feasibility(
+                self.feasibility,
+                self.turnaround_evidence,
+                self.resource_evidence,
+                self.editable_local_graph,
+                self.limitations,
+            )
         refs = [*self.turnaround_evidence, *self.resource_evidence]
         for values in (self.before, self.after):
             refs.extend(ref for metric in values.metrics for ref in metric.source_refs)

@@ -1,0 +1,21 @@
+{
+  "description": "Backend demo presets, handling scenario DTOs and HTTP examples; delta from dev 9557ee5, not data acceptance.",
+  "replaced": {
+    "manifest.json": "002a07801748c454156232efe0e4e611b4cf05b75ded303230dd22f68401e2a3",
+    "openapi.json": "81747303772e8949e8336f21c0110da66bd1e1ec043ac3c45d898df1b2f7260c",
+    "v2.Capabilities.serialization.schema.json": "e70071e36bda07457f9850a3e7e9323cff39eaf96319fc9459522eb1dee64d82",
+    "v2.Capabilities.validation.schema.json": "e70071e36bda07457f9850a3e7e9323cff39eaf96319fc9459522eb1dee64d82",
+    "v2.FixedParameters.serialization.schema.json": "144f871df0eb919d98888aa2a1a6f141b493d6f00e37416bedd1f5dc8287990d",
+    "v2.FixedParameters.validation.schema.json": "144f871df0eb919d98888aa2a1a6f141b493d6f00e37416bedd1f5dc8287990d",
+    "v2.ScenarioProposal.serialization.schema.json": "6e5b0f3bf52dbc60db40d1f3c816b405ece402e3c9e5243d08813ac09b274d0d",
+    "v2.ScenarioProposal.validation.schema.json": "6e5b0f3bf52dbc60db40d1f3c816b405ece402e3c9e5243d08813ac09b274d0d",
+    "v2.ScenarioResult.serialization.schema.json": "c0921683b45f9c67c4633c9f1496184077c4659f47d009259482e565b500971f",
+    "v2.ScenarioResult.validation.schema.json": "c0921683b45f9c67c4633c9f1496184077c4659f47d009259482e565b500971f"
+  },
+  "added": {
+    "v2.AnalysisPreset.serialization.schema.json": "eb7e6a0634b6b06608060ccade9942a21b5f43cf62a533a96f9fca1dd061d3b4",
+    "v2.AnalysisPreset.validation.schema.json": "eb7e6a0634b6b06608060ccade9942a21b5f43cf62a533a96f9fca1dd061d3b4",
+    "v2.CargoHandlingChange.serialization.schema.json": "c911432c7f1014a1c480166bc48232a3e7e4abeb22be0a83bc24cb337f0f6579",
+    "v2.CargoHandlingChange.validation.schema.json": "c911432c7f1014a1c480166bc48232a3e7e4abeb22be0a83bc24cb337f0f6579"
+  }
+}

@@ -5,7 +5,7 @@ import logging
 from collections.abc import Awaitable, Callable
 from uuid import uuid4
 
-from a2_contracts.api import ErrorDetail
+from a2_contracts.api import ErrorDetail, FieldError
 
 from a2_api.core.errors import DomainError
 from a2_api.core.jobs import CalculationOutput, ClaimedJob, V2JobContext
@@ -16,6 +16,21 @@ from a2_api.workers.calculation import HandlerOutput, calculate, calculate_batch
 from a2_api.workers.result_transport import DEFAULT_RESULT_BYTES, validate_decoded_limit
 
 logger = logging.getLogger("a2_api.workers.runner")
+
+
+def _with_stage(error: DomainError, stage: str) -> DomainError:
+    if any(field.location[:1] == ["worker"] for field in error.field_errors):
+        return error
+    return DomainError(
+        error.status_code,
+        error.code,
+        error.message,
+        retryable=error.retryable,
+        field_errors=[
+            *error.field_errors,
+            FieldError(location=["worker", stage], code=error.code, message=error.message),
+        ],
+    )
 
 
 class Worker:
@@ -53,14 +68,18 @@ class Worker:
             if claim is None:
                 return dispatched
             logger.info("job_started job_id=%s trace_id=%s", claim.job.job_id, claim.job.trace_id)
+            stage = "preflight"
             try:
                 if claim.context.code_version != self.code_version:
                     raise DomainError(
-                        409, "incompatible_versions", "Queued job requires another code version"
+                        409,
+                        "incompatible_versions",
+                        "Queued job requires another code version. Recalculate the baseline.",
                     )
                 remaining = await PrivateSourceRepository(self.repository.pool).remaining(
                     claim.context
                 )
+                stage = "calculation"
                 if remaining is None:
                     await self._calculate_with_lease(claim, lease_lost)
                 else:
@@ -77,7 +96,13 @@ class Worker:
                 error = ErrorDetail(
                     code="engine_unavailable",
                     message="Worker shut down; explicit retry required",
-                    field_errors=[],
+                    field_errors=[
+                        FieldError(
+                            location=["worker", stage],
+                            code="engine_unavailable",
+                            message="Worker shut down; explicit retry required",
+                        )
+                    ],
                     retryable=True,
                     trace_id=claim.job.trace_id,
                 )
@@ -89,6 +114,7 @@ class Worker:
                     if isinstance(exc, DomainError)
                     else DomainError(503, "engine_unavailable", "Calculation failed")
                 )
+                domain = _with_stage(domain, stage)
                 await self.repository.fail(
                     claim,
                     ErrorDetail(
@@ -128,10 +154,20 @@ class Worker:
     async def _calculate_with_lease(self, claim: ClaimedJob, lost: asyncio.Event) -> HandlerOutput:
         async def calculate_and_publish() -> HandlerOutput:
             result = await self._calculate(claim, self.handler, self.timeout_seconds)
-            if isinstance(result, CalculationOutput):
-                await self.repository.succeed(claim, result.analysis, proposals=result.proposals)
-            else:
-                await self.repository.succeed(claim, result)
+            try:
+                if isinstance(result, CalculationOutput):
+                    await self.repository.succeed(
+                        claim, result.analysis, proposals=result.proposals
+                    )
+                else:
+                    await self.repository.succeed(claim, result)
+            except Exception as exc:
+                domain = (
+                    exc
+                    if isinstance(exc, DomainError)
+                    else DomainError(503, "engine_unavailable", "Result publication failed")
+                )
+                raise _with_stage(domain, "publication") from exc
             return result
 
         calculation = asyncio.create_task(calculate_and_publish())

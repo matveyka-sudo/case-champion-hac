@@ -6,7 +6,7 @@ from uuid import NAMESPACE_URL, uuid5
 
 import asyncpg  # type: ignore[import-untyped]
 from a2_contracts.common import canonical_hash
-from a2_contracts.v2.requests import RequestBase
+from a2_contracts.v2.requests import IntercityCargoRequest, RequestBase
 from a2_contracts.v2.results import (
     AnalysisResult,
 )
@@ -228,6 +228,12 @@ class ScenariosRepository(RunsRepository):
             baseline = await self._read_run(connection, proposal.baseline_analysis_id, scope)
             if not isinstance(baseline, AnalysisResult):
                 raise DomainError(404, "unknown_id", "Analysis not found")
+            if proposal.operation_type == "reduce_handling_wait" and (
+                baseline.analysis_kind != "intercity_cargo"
+                or not isinstance(baseline.request, IntercityCargoRequest)
+                or baseline.request.cargo_transport != "multimodal"
+            ):
+                raise DomainError(422, "unsupported_scenario", "CARGO_HANDLING_CONTEXT_UNSUPPORTED")
             if (
                 proposal.versions != baseline.versions
                 or proposal.baseline_result_hash != baseline.result_hash

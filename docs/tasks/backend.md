@@ -1,5 +1,41 @@
 # BACKEND
 
+## 11.11.2026 — подготовка demo API, данные ещё не приняты
+
+Ветка `work/backend`, база `dev` на `9557ee5`. Изменения только в области BACKEND.
+
+- Допуск synthetic snapshot больше не зависит от `demo-moscow-`: нужны явный
+  флаг, source/evidence, точные hash/receipt и зарегистрированный профиль.
+  Сохранены timetable/canonical проверки; тесты отвергают подмены и real/demo mix.
+- В capabilities добавлены точные versioned `analysis_presets`; выбирается один
+  snapshot по профилю. Неподдерживаемые фильтры — 422 без retry; сбой входов
+  зарегистрированного запроса — 503 с retry. Сценарный запрос не читает чужие
+  snapshots. Операции публикуются только по загруженным документам своего запроса.
+- `reduce_handling_wait` пересчитывает intercity multimodal cargo публичным
+  engine по frozen документу. Ресурс обязан иметь hash-pinned факт с совместимыми
+  профилем/действием, количеством, окном и verified evidence. Pipeline запрещён
+  при сохранении предложения и публикации результата. Городская обработка ждёт
+  интерфейса ML1; ресурсный документ — предметного согласования ML1/ML2.
+- Обновлены OpenAPI и validation/serialization schemas. Марии передать
+  `apps/api/docs/frontend-demo-handoff.md`, `packages/contracts/specs/scenario.md`
+  и `contracts/generated`. Success/partial/unsupported/retry приведены в OpenAPI;
+  null в partial сохраняется. Ошибка worker содержит этап и код причины.
+
+Проверки: **774 passed** в целевом прогоне API/cargo/demo/runtime/worker/export
+и всех `packages/contracts/tests`, с отдельной PostgreSQL; отдельно исправленный
+walk category regression **1 passed**. Ruff PASS, strict mypy **138 files PASS**,
+`python -m a2_api.exports.schemas --output contracts/generated --check` PASS,
+валидация всех OpenAPI analysis/error examples PASS.
+
+`test_module_boundaries.py`: **33 passed, 4 failed**; те же четыре падения
+воспроизведены на чистом `9557ee5`: старые signature/schema/SQL inventories не
+учитывают уже существующие analysis groups. Свои изменения схем зарегистрированы
+отдельной extension fixture; старые SQL/signature эталоны не переписывались.
+
+По указанию пользователя полный прогон и матрица **24/21** выполняются после
+получения данных Максима и недостающего расчёта Матвея. Сейчас они не приняты,
+живой трёхгородской стенд и его время выполнения не объявляются проверенными.
+
 Ветка work/backend. Пути: apps/api/, packages/contracts/, packages/assistant/.
 
 Источник: ../PRODUCT_SPEC.md; контракты ../../packages/contracts/specs/README.md.

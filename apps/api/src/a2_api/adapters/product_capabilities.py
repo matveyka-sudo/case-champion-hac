@@ -4,10 +4,62 @@ from datetime import UTC, date, datetime, time, timedelta
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
-from a2_contracts.v2.api import UrbanPassengerScope
+from a2_contracts.v2.api import AnalysisPreset, UrbanPassengerScope
+from a2_contracts.v2.base import TrafficMode
+from a2_contracts.v2.requests import UrbanPassengerRequest
+
+from a2_api.adapters.product_scenario_inputs import ScenarioPlan, document_matches_request
+from a2_api.core.errors import DomainError
+from a2_api.core.registry import ProductRegistry
 
 if TYPE_CHECKING:
     from a2_api.adapters.product_runtime import Runtime
+
+
+def analysis_presets(runtime: "Runtime") -> list[AnalysisPreset]:
+    traffic: set[TrafficMode] = {"static"}
+    for profile, _ in runtime.profiles.values():
+        traffic.update(profile.traffic_modes)
+    registry = ProductRegistry(
+        territories=runtime.manifest.territories,
+        areas=runtime.manifest.areas,
+        snapshots=list(runtime.snapshots.values()),
+        cargo_profiles=runtime.manifest.cargo_profiles,
+        supported_traffic=sorted(traffic),
+    )
+    result = []
+    for preset in runtime.manifest.presets:
+        snapshot = runtime.snapshots.get(preset.request.snapshot_id or "")
+        if snapshot is None:
+            continue
+        try:
+            if registry.normalize(preset.request) != preset.request:
+                continue
+            registry.resolve_snapshot(preset.request)
+            profile, _ = runtime.select(preset.request, snapshot)
+        except DomainError:
+            continue
+        operations = {
+            plan.operation.template_id if isinstance(plan, ScenarioPlan) else plan.operation_type
+            for document in runtime.scenario_documents.get(profile.profile_id, ())
+            if document_matches_request(document, preset.request)
+            for plan in document.plans
+        }
+        if (
+            isinstance(preset.request, UrbanPassengerRequest)
+            and preset.request.passenger_mode != "public_transport"
+        ):
+            operations.clear()
+        result.append(
+            preset.model_copy(
+                update={
+                    "scenario_operations": [
+                        op for op in preset.scenario_operations if op in operations
+                    ],
+                }
+            )
+        )
+    return result
 
 
 def urban_passenger_scopes(
