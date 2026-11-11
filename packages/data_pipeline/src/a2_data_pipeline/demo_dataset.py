@@ -1,8 +1,8 @@
-"""Versioned SYNTHETIC demo dataset: three cities and six directed pairs (``waydex-demo-rules-v1``).
+"""Versioned SYNTHETIC demo dataset: three cities and six directed pairs.
 
 Real inputs are read and pinned: the accepted city bundles in ``data/bundles`` (their
 AcceptedData content hashes must equal the handoff runtime manifest), the intercity node
-directory, and a small extract of the handoff ``runtime.tar.gz`` (road and truck
+directory, and a digest-pinned extract of the handoff ``runtime.tar.gz`` (road and truck
 observations). Everything else is a model value from one seeded generator. Every model
 row carries ``origin`` and DEMO evidence, and ``fields.json`` gives generator, seed, unit
 and template source for every field. No real trip is drawn where a trip is a model.
@@ -31,10 +31,12 @@ from zoneinfo import ZoneInfo
 from a2_data_pipeline import contract_v2, store
 from a2_data_pipeline.paths import bundles_dir, repo_root
 
-DATASET_ID = "waydex-demo-2026-11-11.1"
-RULES_VERSION = "waydex-demo-rules-v1"
+DATASET_VERSION = "2026-11-11.2"
+DATASET_ID = f"waydex-demo-{DATASET_VERSION}"
+RULES_VERSION = "waydex-demo-rules-v2"
 SEED = 20261111
 SERVICE_DATE = date(2026, 11, 11)
+SERVICE_MIDNIGHT_UTC = datetime.combine(SERVICE_DATE, time(), UTC)
 LOCAL_TIME = time(8, 30)
 GENERATED_AT = "2026-11-11T00:00:00Z"
 DEMO_SOURCE = "DEMO_SYNTHETIC_TRANSPORT_MODEL"
@@ -42,6 +44,8 @@ LIMITATIONS = ("DEMO_SYNTHETIC_TRANSPORT_MODEL", "NOT_A_REAL_CITY_RANKING")
 CLOCK = "local_service_midnight_v1"
 REPO_URL = f"https://github.com/matveyka-sudo/case-champion-hac/tree/dev/data/demo/{DATASET_ID}"
 EXTRACT_FORMAT = "waydex-demo-runtime-extract/1"
+# Exact bytes of the published normalized extract from the original .1 revision.
+EXTRACT_SHA256 = "4715c88cb57be67f9cfa8d96fdb9713224ce0546950c9a996ea21a4c9ec90bce"
 MODULE = "a2_data_pipeline.demo_dataset"
 
 # the handoff package of 2026-11-11 (START-HERE.md, release-pins.json, artifact-receipt.json)
@@ -144,6 +148,14 @@ def _file_sha(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _verify_extract(data: bytes) -> None:
+    digest = _sha(data)
+    if digest != EXTRACT_SHA256:
+        raise ValueError(
+            f"runtime extract sha256 {digest} differs from the pinned normalized extract"
+        )
+
+
 def _rng(*key: object) -> random.Random:
     digest = _sha(":".join(str(k) for k in (SEED, *key)).encode())
     return random.Random(int(digest[:16], 16))
@@ -172,6 +184,10 @@ def _road_s(meters: float, kmh: float, detour: float = CAR_DETOUR) -> int:
 
 def _at(tz: str, seconds: int, day: date = SERVICE_DATE) -> datetime:
     return datetime.combine(day, time(0), ZoneInfo(tz)) + timedelta(seconds=seconds)
+
+
+def _utc_from_service_offset(seconds: int) -> str:
+    return (SERVICE_MIDNIGHT_UTC + timedelta(seconds=seconds)).isoformat()
 
 
 def _clock(seconds: int) -> str:
@@ -378,8 +394,10 @@ def extract(archive: Path, out: Path) -> dict[str, Any]:
             "cities": cargo_templates,
         },
     }
+    normalized = (json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=1) + "\n").encode()
+    _verify_extract(normalized)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=1) + "\n")
+    out.write_bytes(normalized)
     return payload
 
 
@@ -446,12 +464,12 @@ class _Copier:
         self.refs: set[str] = set()
         self.node_ids: set[str] = set()
 
-    def take(self, row: dict[str, Any]) -> dict[str, Any]:
+    def take(self, row: dict[str, Any], *, copy_access_node: bool = True) -> dict[str, Any]:
         self.refs.update(row.get("source_refs", ()))
         for key in ("geometry",):
             if isinstance(row.get(key), dict):
                 self.refs.update(row[key].get("source_refs", ()))
-        if "access_node_id" in row:
+        if copy_access_node and "access_node_id" in row:
             self.node_ids.add(row["access_node_id"])
         return row
 
@@ -547,7 +565,7 @@ def _city_part(city: str, ext: dict[str, Any], bundle_root: Path | None) -> dict
     cfg = CITIES[city]
     tz = str(cfg["tz"])
     real = _real_snapshot(city, ext, bundle_root)
-    snapshot_id = f"demo-{city}-2026-11-11.1"
+    snapshot_id = f"demo-{city}-{DATASET_VERSION}"
     road_nodes = {n["node_id"]: n for n in ext["road"]["access_nodes"]}
     centre = road_nodes[str(cfg["centre"])]["location"]
     copier = _Copier(real)
@@ -558,6 +576,7 @@ def _city_part(city: str, ext: dict[str, Any], bundle_root: Path | None) -> dict
             "schedule",
             "calendar",
             "footpaths",
+            "physical_endpoints",
             "transfers",
             "stops",
             "destinations",
@@ -570,17 +589,51 @@ def _city_part(city: str, ext: dict[str, Any], bundle_root: Path | None) -> dict
         )
     }
 
+    # A projected street node can be shared by distinct entities. The finite demo graph
+    # uses a dedicated model access node at each entity's physical position instead.
+    endpoint_ref = proof["physical_endpoints"]["evidence_id"]
+    endpoint_nodes: list[dict[str, Any]] = []
+    endpoint_links: list[tuple[str, str, str]] = []
+    physical_nodes: dict[str, str] = {}
+
+    def attach_endpoint(row: dict[str, Any], role: str) -> dict[str, Any]:
+        identity = row[f"{role}_id"]
+        physical = f"physical:{role}:{identity}"
+        access = f"demo-{city}-access:{role}:{identity}"
+        physical_nodes[access] = physical
+        for node_id, kind in ((physical, "demo_physical_endpoint"), (access, "demo_access_node")):
+            endpoint_nodes.append(
+                {
+                    "node_id": node_id,
+                    "kind": kind,
+                    "location": row["location"],
+                    "territory_id": city,
+                    "source_refs": [endpoint_ref],
+                }
+            )
+        origin, target = (physical, access) if role == "point" else (access, physical)
+        endpoint_links.append((physical, origin, target))
+        return row | {"access_node_id": access, "source_refs": [*row["source_refs"], endpoint_ref]}
+
     # origins: six real sample points of the most populated cells near the centre
     origins = _origins(real, centre, float(cfg["radius_m"]))
     cells = [copier.take(o["cell"]) for o in origins]
-    points = [copier.take(o["point"]) for o in origins]
+    points = [
+        attach_endpoint(copier.take(o["point"], copy_access_node=False), "point")
+        | {"access_distance_m": 0}
+        for o in origins
+    ]
 
     # destinations: two per category, real where the accepted snapshot has them
     real_dest, picked, models = _destinations(city, real, centre)
     destinations = []
     for row in real_dest:
         keep = [c for c in row["categories"] if c in picked[row["destination_id"]]]
-        destinations.append(copier.take(row | {"categories": keep}))
+        destinations.append(
+            attach_endpoint(
+                copier.take(row | {"categories": keep}, copy_access_node=False), "destination"
+            )
+        )
     selected = {(d["destination_id"], c) for d in destinations for c in d["categories"]}
     ownership = [
         copier.take(o)
@@ -595,17 +648,18 @@ def _city_part(city: str, ext: dict[str, Any], bundle_root: Path | None) -> dict
     ]
     for model in models:
         node = model["node"]
-        copier.node_ids.add(node["node_id"])
         destinations.append(
-            {
-                "destination_id": model["destination_id"],
-                "territory_id": city,
-                "location": node["location"],
-                "categories": [model["category"]],
-                "access_node_id": node["node_id"],
-                "object_identity": model["object_identity"],
-                "source_refs": [proof["destinations"]["evidence_id"]],
-            }
+            attach_endpoint(
+                {
+                    "destination_id": model["destination_id"],
+                    "territory_id": city,
+                    "location": node["location"],
+                    "categories": [model["category"]],
+                    "object_identity": model["object_identity"],
+                    "source_refs": [proof["destinations"]["evidence_id"]],
+                },
+                "destination",
+            )
         )
         if model["category"] in PUBLIC:
             registry_id = f"demo-model-registry:{model['destination_id']}"
@@ -1025,7 +1079,7 @@ def _city_part(city: str, ext: dict[str, Any], bundle_root: Path | None) -> dict
                 )
 
     # assemble the contract snapshot
-    access_nodes = copier.access_nodes() + stop_nodes
+    access_nodes = copier.access_nodes() + stop_nodes + endpoint_nodes
     evidence = (
         copier.evidence_rows()
         + sorted(
@@ -1149,6 +1203,24 @@ def _city_part(city: str, ext: dict[str, Any], bundle_root: Path | None) -> dict
                     fp_ref,
                 )
             )
+    footpaths.extend(
+        engine.TimetableFootpath(
+            edge["edge_id"],
+            edge["from_node_id"],
+            edge["to_node_id"],
+            edge["running_time_seconds"],
+            True,
+            (*fp_ref, *edge["source_refs"]),
+        )
+        for edge in edges
+        if edge["mode"] == "walk"
+    )
+    footpaths.extend(
+        engine.TimetableFootpath(
+            f"demo-{city}-endpoint:{physical}", origin, target, 0.0, True, (endpoint_ref,)
+        )
+        for physical, origin, target in endpoint_links
+    )
     rules = [
         engine.TimetableTransfer(
             m["minimum_id"],
@@ -1171,7 +1243,7 @@ def _city_part(city: str, ext: dict[str, Any], bundle_root: Path | None) -> dict
         f"{snapshot_id}:transfers",
         tz,
         _at(tz, 6 * 3600),
-        _at(tz, 13 * 3600),
+        _at(tz, 24 * 3600),  # One model service day, including long walks after the final run.
         frozenset(nodes),
         True,
         True,
@@ -1204,15 +1276,10 @@ def _city_part(city: str, ext: dict[str, Any], bundle_root: Path | None) -> dict
         out = {}
         for p in points:
             for d in destinations:
-                if (
-                    p["access_node_id"] == d["access_node_id"]
-                    or not {p["access_node_id"], d["access_node_id"]} <= scope.node_ids
-                ):
-                    continue  # same node, or no footpath within the model limit
                 res = engine.solve_timetable(
                     variant,
-                    p["access_node_id"],
-                    d["access_node_id"],
+                    physical_nodes[p["access_node_id"]],
+                    physical_nodes[d["access_node_id"]],
                     _at(tz, READY_S),
                     max_wait_seconds=3600,
                 )
@@ -1418,6 +1485,8 @@ def _city_part(city: str, ext: dict[str, Any], bundle_root: Path | None) -> dict
                 "lat": p["location"]["lat"],
                 "lon": p["location"]["lon"],
                 "access_node_id": p["access_node_id"],
+                "physical_node_id": physical_nodes[p["access_node_id"]],
+                "access_node_origin": "synthetic",
                 "population_persons": c["population"],
                 "population_year": c["population_year"],
                 "origin": "real",
@@ -1431,6 +1500,8 @@ def _city_part(city: str, ext: dict[str, Any], bundle_root: Path | None) -> dict
                 "lat": d["location"]["lat"],
                 "lon": d["location"]["lon"],
                 "access_node_id": d["access_node_id"],
+                "physical_node_id": physical_nodes[d["access_node_id"]],
+                "access_node_origin": "synthetic",
                 "object_identity": d["object_identity"],
                 "origin": "synthetic" if d["destination_id"] in model_dest_ids else "real",
                 "limitation": "MODEL_POINT_NO_REAL_OBJECT"
@@ -1482,14 +1553,14 @@ def _city_part(city: str, ext: dict[str, Any], bundle_root: Path | None) -> dict
         ],
         "transfers": [
             {
-                "rule_id": r.rule_id,
-                "from_node_id": r.from_node_id,
-                "to_node_id": r.to_node_id,
-                "minimum_seconds": r.minimum_seconds,
-                "walk_s": hub_walk,
+                "rule_id": m["minimum_id"],
+                "from_node_id": t["from_node_id"],
+                "to_node_id": t["to_node_id"],
+                "minimum_seconds": m["seconds"],
+                "walk_s": t["seconds"],
                 "origin": "synthetic",
             }
-            for r in table.transfers
+            for t, m in zip(transfers, minimums, strict=True)
         ],
         "walk_edges": walk_rows,
         "car_edges": car_rows,
@@ -1602,7 +1673,7 @@ def _pair_key(a: str, b: str) -> str:
 def _intercity_part(
     ext: dict[str, Any], cities: dict[str, dict[str, Any]], directory_root: Path | None
 ) -> dict[str, Any]:
-    snapshot_id = "demo-intercity-2026-11-11.1"
+    snapshot_id = f"demo-intercity-{DATASET_VERSION}"
     root = directory_root or (repo_root() / "data" / "directories")
     directory = root / INTERCITY_DIRECTORY
     nodes_raw = (directory / "nodes.json").read_bytes()
@@ -1615,6 +1686,7 @@ def _intercity_part(
             "schedule",
             "calendar",
             "transfers",
+            "departure_planning",
             "demand",
             "resource",
             "turnaround",
@@ -1735,8 +1807,8 @@ def _intercity_part(
     def access_s(city: str, node_id: str) -> int:
         return _road_s(_dist(centre[city], loc[node_id]), ROAD_ACCESS_KMH)
 
-    def utc_s(city: str, seconds: int) -> int:
-        return int((_at(tz[city], seconds) - _at("UTC", 0)).total_seconds())
+    def utc_offset_s(city: str, seconds: int) -> int:
+        return int((_at(tz[city], seconds) - SERVICE_MIDNIGHT_UTC).total_seconds())
 
     def leg_options(
         mode: str, a: str, b: str, extra: list[dict[str, Any]] | None = None
@@ -1744,8 +1816,8 @@ def _intercity_part(
         rows = by_leg.get((mode, a, b), []) + (extra or [])
         return sorted(
             (
-                utc_s(a, r["stop_times"][0]["departure_seconds"]),
-                utc_s(a, r["stop_times"][1]["arrival_seconds"]),
+                utc_offset_s(a, r["stop_times"][0]["departure_seconds"]),
+                utc_offset_s(a, r["stop_times"][1]["arrival_seconds"]),
                 r["trip_id"],
             )
             for r in rows
@@ -1755,11 +1827,12 @@ def _intercity_part(
         a: str, b: str, plan: str, overrides: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         overrides = overrides or {}
-        ready = utc_s(a, READY_S)
+        ready = utc_offset_s(a, READY_S)
+        transfer = {}
+        legs: tuple[tuple[int, int, str], ...]
         if plan == "air_via_moscow":
-            first_node = IC_NODES[a]["air"]
-            earliest = ready + access_s(a, first_node) + PROCESS_S["air"]
-            leg1 = next(o for o in leg_options("air", a, "moscow") if o[0] >= earliest)
+            start_node, end_node = IC_NODES[a]["air"], IC_NODES[b]["air"]
+            leg1 = next(o for o in leg_options("air", a, "moscow") if o[0] >= ready)
             leg2_opts = leg_options("air", "moscow", b, overrides.get("extra"))
             if "shift" in overrides:
                 trip, shift = overrides["shift"]
@@ -1768,20 +1841,27 @@ def _intercity_part(
                     for d, ar, t in leg2_opts
                 )
             leg2 = next(o for o in leg2_opts if o[0] >= leg1[1] + MCT_AIR_S)
-            end = leg2[1] + access_s(b, IC_NODES[b]["air"])
-            return {
-                "trips": [leg1[2], leg2[2]],
-                "initial_wait_s": leg1[0] - earliest,
-                "transfer_wait_s": leg2[0] - leg1[1],
-                "transfer_slack_s": leg2[0] - leg1[1] - MCT_AIR_S,
-                "total_s": end - ready,
+            legs = (leg1, leg2)
+            transfer_wait = leg2[0] - leg1[1]
+            transfer = {
+                "transfer_wait_s": transfer_wait,
+                "transfer_slack_s": transfer_wait - MCT_AIR_S,
             }
-        node = node_for(plan, a, b)
-        earliest = ready + access_s(a, node) + PROCESS_S[plan]
-        options = leg_options(plan, a, b, overrides.get("extra"))
-        leg = next(o for o in options if o[0] >= earliest)
-        end = leg[1] + access_s(b, node_for(plan, b, a))
-        return {"trips": [leg[2]], "initial_wait_s": leg[0] - earliest, "total_s": end - ready}
+        else:
+            start_node, end_node = node_for(plan, a, b), node_for(plan, b, a)
+            options = leg_options(plan, a, b, overrides.get("extra"))
+            legs = (next(o for o in options if o[0] >= ready),)
+        departure, arrival = legs[0][0], legs[-1][1]
+        return {
+            "trips": [leg[2] for leg in legs],
+            "from_node_id": start_node,
+            "to_node_id": end_node,
+            "departure_utc": _utc_from_service_offset(departure),
+            "arrival_utc": _utc_from_service_offset(arrival),
+            "initial_wait_s": departure - ready,
+            "path_s": arrival - departure,
+            "total_s": arrival - ready,
+        } | transfer
 
     pairs_out, comparisons_ic = [], []
     for a, b in PAIRS:
@@ -1791,8 +1871,10 @@ def _intercity_part(
             mode = plan
             template = next(r for r in by_leg[(mode, a, b)] if r["trip_id"] == base["trips"][0])
             node = node_for(mode, a, b)
-            earliest_local = READY_S + access_s(a, node) + PROCESS_S[mode]
-            new_dep = _up(earliest_local + 900, 300)
+            # Preserve the synthetic extra-slot design as a separate planning assumption.
+            city_access = access_s(a, node)
+            pre_boarding = PROCESS_S[mode]
+            new_dep = _up(READY_S + city_access + pre_boarding + 900, 300)
             shift = new_dep - template["stop_times"][0]["departure_seconds"]
             new_trip = f"demo-ic-{mode}-{_pair_key(a, b)}-{_hhmm(new_dep)}-extra"
             extra = {
@@ -1814,6 +1896,14 @@ def _intercity_part(
                 "template_trip_id": template["trip_id"],
                 "shift_seconds": shift,
                 "new_trip_id": new_trip,
+                "synthetic_departure_planning": {
+                    "city_centre_to_origin_node_s": city_access,
+                    "pre_boarding_s": pre_boarding,
+                    "slot_margin_s": 900,
+                    "slot_rounding_s": 300,
+                    "origin": "synthetic",
+                    "evidence_id": proof["departure_planning"]["evidence_id"],
+                },
                 "demand": {
                     "window_local": [
                         _clock(READY_S),
@@ -1965,29 +2055,29 @@ def _intercity_part(
         handling_origin = _up(rng.uniform(7200, 10800), 600)
         transship = _up(rng.uniform(18000, 25200), 600)
         run = _up(dist / speed_kmh[mode] * 3600, 600)
-        deps = [utc_s(a, d * 86400 + _sec(c)) for d, c in departures[(mode, a, b)]]
+        deps = [utc_offset_s(a, d * 86400 + _sec(c)) for d, c in departures[(mode, a, b)]]
 
         def total(extra_dep: int | None = None, transship_s: int = transship) -> dict[str, Any]:
-            ready = utc_s(a, READY_S) + first_mile + handling_origin
+            ready = utc_offset_s(a, READY_S) + first_mile + handling_origin
             options = sorted(deps + ([extra_dep] if extra_dep is not None else []))
             dep = next(d for d in options if d >= ready)
             end = dep + run + transship_s + last_mile
             return {
-                "departure_utc": datetime.fromtimestamp(dep, UTC).isoformat(),
+                "departure_utc": _utc_from_service_offset(dep),
                 "wait_s": dep - ready,
                 "transshipment_s": transship_s,
-                "total_s": end - utc_s(a, READY_S),
+                "total_s": end - utc_offset_s(a, READY_S),
             }
 
         change: dict[str, Any]
         base = total()
         if operation == "add_compatible_departure":
-            ready = utc_s(a, READY_S) + first_mile + handling_origin
+            ready = utc_offset_s(a, READY_S) + first_mile + handling_origin
             extra_dep = _up(ready + 1800, 1800)
             after = total(extra_dep=extra_dep)
             change = {
                 "new_departure_id": f"demo-icf-{mode}-{_pair_key(a, b)}-extra",
-                "departure_utc": datetime.fromtimestamp(extra_dep, UTC).isoformat(),
+                "departure_utc": _utc_from_service_offset(extra_dep),
                 "demand": {
                     "teu": rng.randint(36, 60),
                     "evidence_id": proof["demand"]["evidence_id"],
@@ -2233,7 +2323,7 @@ def _intercity_part(
 
 
 def _pipeline_part(city_part: dict[str, Any]) -> dict[str, Any]:
-    snapshot_id = "demo-pipeline-2026-11-11.1"
+    snapshot_id = f"demo-pipeline-{DATASET_VERSION}"
     real = city_part["real"]
     proof = _evidence("pipeline", "network")
     terminals = sorted(
@@ -2541,6 +2631,7 @@ def _matrix(
                 "delta": {
                     "initial_wait_s": cmp["before"]["initial_wait_s"]
                     - cmp["after"]["initial_wait_s"],
+                    "path_s": cmp["before"]["path_s"] - cmp["after"]["path_s"],
                     "transfer_wait_s": cmp["before"].get("transfer_wait_s", 0)
                     - cmp["after"].get("transfer_wait_s", 0),
                     "total_s": cmp["before"]["total_s"] - cmp["after"]["total_s"],
@@ -2810,7 +2901,13 @@ def _qa(
                 for a, b in zip(st, st[1:], strict=False)
             )
     for part in cities.values():
-        positive &= all(f.seconds and f.seconds > 0 for f in part["timetable"].footpaths)
+        endpoint_prefix = f"demo-{part['city']}-endpoint:"
+        positive &= all(
+            f.seconds == 0
+            if f.path_id.startswith(endpoint_prefix)
+            else bool(f.seconds and f.seconds > 0)
+            for f in part["timetable"].footpaths
+        )
         positive &= all(
             m["base_wait_s"] > 0 and m["handling_s"] > 0 for m in part["model"]["freight_nodes"]
         )
@@ -2890,8 +2987,10 @@ def _qa(
         "in_city walk/car",
     )
     pt_ok = True
+    walk_ok = True
     for part in cities.values():
         pt, ck = part["model"]["public_transport"], part["checks"]["public_transport"]
+        walk_ok &= ck["od_reached_base"] == ck["od_total"]
         pt_ok &= (
             pt["problem_transfer"]["slack_s"]
             < 0
@@ -2903,6 +3002,7 @@ def _qa(
             for op in ("coordinate_transfer", "additional_departure")
         )
         pt_ok &= pt["extra_departure_slot"]["new_trip_id"] in ck["additional_departure"]["trip_ids"]
+    check("pt_walk_fallback_covers_model_od", walk_ok, "all finite model origin/destination pairs")
     check(
         "pt_problem_transfer_missed_then_fixed",
         pt_ok,
@@ -2976,8 +3076,8 @@ def _coverage(cities: dict[str, dict[str, Any]], ic: dict[str, Any]) -> list[dic
                 "mode": "public_transport",
                 "status": "model",
                 "real": f"stop positions: {CITIES[city]['stops']}",
-                "synthetic": f"2 routes, {len({r['trip_id'] for r in t['stop_times']})} trips, {len(t['footpaths'])} footpaths, 2 transfer rules",
-                "note": f"OD reached {reach['od_reached_base']}/{reach['od_total']}",
+                "synthetic": f"2 routes, {len({r['trip_id'] for r in t['stop_times']})} trips, {len(t['footpaths'])} footpaths, {len(t['transfers'])} transfer rules",
+                "note": f"model OD reached {reach['od_reached_base']}/{reach['od_total']}; direct walk included",
             }
         )
         nodes = t["freight_nodes"]
@@ -3082,6 +3182,14 @@ def _fields() -> list[dict[str, Any]]:
             "GHSL R2023A E2025 100 m via population_cells",
         ),
         f(
+            "origins/destinations",
+            "access_node_id,physical_node_id",
+            "identifier",
+            "synthetic",
+            "_city_part",
+            "dedicated model nodes at each origin or destination location; zero-second boundary link",
+        ),
+        f(
             "destinations",
             "location",
             "EPSG:4326",
@@ -3126,8 +3234,16 @@ def _fields() -> list[dict[str, Any]]:
             "seconds",
             "s",
             "synthetic",
-            "_walk_s",
-            f"straight*{WALK_DETOUR} at {WALK_KMH} km/h (accepted walking profile), <= {FOOTPATH_LIMIT_M} m",
+            "_city_part",
+            f"approach/egress within {FOOTPATH_LIMIT_M} m; transfer and direct OD walk at {WALK_KMH} km/h with detour {WALK_DETOUR}; co-located boundary link 0 s",
+        ),
+        f(
+            "transfers",
+            "walk_s",
+            "s",
+            "synthetic",
+            "_city_part",
+            "snapshot transfer walking seconds; 0 at the same stop",
         ),
         f(
             "transfers",
@@ -3239,12 +3355,28 @@ def _fields() -> list[dict[str, Any]]:
             f"air: great-circle/{AIR_KMH} km/h + {AIR_TAXI_S} s; rail/bus: real road length / 62-70 km/h or 68 km/h",
         ),
         f(
-            "intercity_access",
-            "access_s",
+            "synthetic_departure_planning",
+            "city_centre_to_origin_node_s,pre_boarding_s,slot_margin_s,slot_rounding_s",
             "s",
             "synthetic",
             "_intercity_part",
-            f"centre -> node straight*{CAR_DETOUR} at {ROAD_ACCESS_KMH} km/h + process {PROCESS_S}",
+            f"extra-slot planning only: centre -> node straight*{CAR_DETOUR} at {ROAD_ACCESS_KMH} km/h + process {PROCESS_S}",
+        ),
+        f(
+            "intercity_passenger_control",
+            "initial_wait_s,path_s,total_s",
+            "s",
+            "synthetic",
+            "_intercity_part",
+            "chosen moment to first departure; first departure to terminal arrival including transfer; sum of both",
+        ),
+        f(
+            "intercity_passenger_control/intercity_cargo_control",
+            "departure_utc,arrival_utc (passenger only)",
+            "ISO 8601 UTC",
+            "synthetic",
+            "_utc_from_service_offset",
+            "local model timetable converted relative to service-date UTC midnight",
         ),
         f(
             "intercity_demand",
@@ -3355,6 +3487,7 @@ def build(
     out_dir = out_dir or base / DATASET_ID
     extract_path = extract_path or base / "inputs" / "waydex-handoff-2026-11-11-extract.json"
     ext_bytes = extract_path.read_bytes()
+    _verify_extract(ext_bytes)
     ext = json.loads(ext_bytes)
     if (
         ext.get("format") != EXTRACT_FORMAT
@@ -3460,7 +3593,7 @@ def build(
             {
                 "kind": "runtime_extract",
                 "path": "data/demo/inputs/waydex-handoff-2026-11-11-extract.json",
-                "sha256": _sha(ext_bytes),
+                "sha256": EXTRACT_SHA256,
                 "archive_sha256": ext["archive_sha256"],
                 "member_sha256": ext["member_sha256"],
             },
@@ -3538,7 +3671,7 @@ def build(
         },
         "qa": {"passed": all(q["passed"] for q in qa), "checks": [q["check_id"] for q in qa]},
         "api_notes": [
-            "DemoTransportReceipt and demo map/scenario guards accept only snapshot ids starting with demo-moscow-; demo-kaliningrad- and demo-novorossiysk- need the same opt-in (BACKEND)",
+            "Receipts match canonical dated services for all three cities. Admission of a synthetic receipt is controlled by the backend deployment.",
             "scenarios v2 operation_type is coordinate_transfer | additional_departure for urban public transport; intercity passenger and cargo operations need a contract and engine change",
             "A2_DEMO_TRANSPORT_ENABLED=true on a separately labelled stand only",
         ],
@@ -3613,12 +3746,16 @@ def _readme(
         "Межгород: узлы из каталога `russia-intercity-nodes-2026-11-09.2` (реальные), дорожные наблюдения Valhalla freeflow для 4 направлений (реальные),",
         "Калининград↔Новороссийск — наблюдения нет (лимит провайдера 1500 км), показывается причина. Все расписания самолётов, поездов, автобусов,",
         "грузовые цепочки и трубопровод — модель. Таблица применимости: `tables/intercity/applicability.json`, сводка: `coverage.md`.",
+        "Нормализованная выжимка исходной поставки проверяется по закреплённому SHA-256 до чтения наблюдений. Пересборка использует выжимку из репозитория.",
+        "Пассажирские контроли показывают `initial_wait_s` от среза до отправления, `path_s` от отправления до конечного узла и их сумму `total_s`.",
+        "Подвоз от центра и предпосадочное время приведены только в `synthetic_departure_planning` для выбора времени добавляемого рейса.",
         "",
         "## Файлы",
         "",
         "- `manifest.json` — для Искандера: 3 города, 6 пар, снимки (id, sha256, content hash), receipts, 24 пресета, входы 21 сравнения, реальные версии и суммы.",
-        "- `snapshots/*.json` — AcceptedData v2 (`demo-<город>-2026-11-11.1`, `demo-intercity-…`, `demo-pipeline-…`).",
-        "- `receipts/*-transport.json` — `waydex-demo-closed-transport/1`: закрытая модель расписания (рейсы, события, подходы, пересадки) с evidence на каждый ряд.",
+        f"- `snapshots/*.json` — AcceptedData v2 (`demo-<город>-{DATASET_VERSION}`, `demo-intercity-…`, `demo-pipeline-…`).",
+        "- `receipts/*-transport.json` — `waydex-demo-closed-transport/1`: конечная модель рейсов, подходов, пересадок и прямых пеших дуг между всеми парами точек и объектов выборки.",
+        "  Синтетические узлы доступа привязаны к каждой физической точке и объекту отдельно. Полнота относится к этой модели и её календарному дню.",
         "- `tables/<город>/*.csv`, `tables/intercity/*`, `control/*.json` — для Матвея: исходные таблицы и контрольные входы/ожидаемые значения обеих операций.",
         "- `presets.json` — для Марии: пресеты, которые будет отдавать API (подписи, дата/время, операции, ограничения).",
         "- `coverage.csv` / `coverage.md` — наличие по каждому городу и направлению; `fields.json` — генератор, seed, единица и шаблон каждого поля.",

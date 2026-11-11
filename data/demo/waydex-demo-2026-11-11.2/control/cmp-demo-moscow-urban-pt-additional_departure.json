@@ -1,0 +1,146 @@
+{
+ "after": {
+  "initial_wait_s": 290.0,
+  "reasons": [],
+  "state": "reachable",
+  "total_s": 3590.0,
+  "transfer_wait_s": 70.0,
+  "transfers": 1,
+  "trip_ids": [
+   "demo-moscow-trip-A-0840",
+   "demo-moscow-trip-B-0915-extra"
+  ]
+ },
+ "before": {
+  "initial_wait_s": 290.0,
+  "reasons": [],
+  "state": "reachable",
+  "total_s": 4040.0,
+  "transfer_wait_s": 140.0,
+  "transfers": 1,
+  "trip_ids": [
+   "demo-moscow-trip-A-0840",
+   "demo-moscow-trip-B-0922"
+  ]
+ },
+ "comparison_id": "cmp-demo-moscow-urban-pt-additional_departure",
+ "contract_status": "scenario_contract_v2",
+ "created_ids": [
+  "demo-moscow-trip-B-0915-extra"
+ ],
+ "delta": {
+  "sign": "before_minus_after",
+  "total_s": 450.0,
+  "waiting_s": 70.0
+ },
+ "expected_by": "a2_engine.solve_timetable(max_wait_seconds=3600), departure 08:30 local",
+ "fixed_parameters": {
+  "demand_evidence": [
+   "demo-model:moscow:demand"
+  ],
+  "resource_constraints": [
+   "demo-moscow-vehicle-B-reserve-1"
+  ],
+  "resource_evidence": [
+   "demo-model:moscow:resource"
+  ],
+  "service_ids": [
+   "demo-moscow-svc-B-0907"
+  ],
+  "shift_seconds": 450,
+  "turnaround_evidence": [
+   "demo-model:moscow:turnaround"
+  ]
+ },
+ "ids": {
+  "after": [
+   "moscow-utm37n-1km-v1-e416-n6175-p",
+   "moscow-kindergarten-node-5332088797",
+   "demo-moscow-transfer-A4-B1",
+   "demo-moscow-svc-B-0907",
+   "demo-moscow-trip-B-0915-extra"
+  ],
+  "before": [
+   "moscow-utm37n-1km-v1-e416-n6175-p",
+   "moscow-kindergarten-node-5332088797",
+   "demo-moscow-transfer-A4-B1",
+   "demo-moscow-svc-B-0907"
+  ]
+ },
+ "model_inputs": {
+  "demand": {
+   "capacity_persons_per_hour": 320,
+   "catchment_population_persons": 125380.312,
+   "demand_persons_per_hour": 328,
+   "evidence_id": "demo-model:moscow:demand",
+   "load_factor": 1.026,
+   "route_id": "demo-moscow-route-B",
+   "window_local": [
+    "08:00",
+    "09:00"
+   ]
+  },
+  "extra_departure_slot": {
+   "departure_local": "09:15",
+   "new_trip_id": "demo-moscow-trip-B-0915-extra",
+   "shift_s": 450,
+   "template_trip_id": "demo-moscow-trip-B-0907"
+  },
+  "problem_transfer": {
+   "arrival_local": "09:04",
+   "arriving_trip_id": "demo-moscow-trip-A-0840",
+   "base_wait_s": 900,
+   "from_stop": "demo-moscow-stop-A4",
+   "min_change_s": 60,
+   "minimum_id": "demo-moscow-minimum-A4-B1",
+   "next_trip_id": "demo-moscow-trip-B-0922",
+   "planned_departure_local": "09:07",
+   "planned_trip_id": "demo-moscow-trip-B-0907",
+   "slack_after_coordinate_s": 60,
+   "slack_s": -60,
+   "to_stop": "demo-moscow-stop-B1",
+   "transfer_id": "demo-moscow-transfer-A4-B1",
+   "walk_s": 190
+  },
+  "resource": {
+   "assigned_trip_ids": [],
+   "capacity_persons": 80,
+   "evidence_id": "demo-model:moscow:resource",
+   "vehicle_id": "demo-moscow-vehicle-B-reserve-1",
+   "working_window_local": [
+    "06:00",
+    "14:00"
+   ]
+  },
+  "turnaround": {
+   "evidence_id": "demo-model:moscow:turnaround",
+   "layover_s": 300,
+   "route_id": "demo-moscow-route-B",
+   "run_s": 1180,
+   "turnaround_s": 2960
+  }
+ },
+ "neighbour_worse": [],
+ "operation_type": "additional_departure",
+ "other_better": [
+  {
+   "after_s": 4080.0,
+   "before_s": 4530.0,
+   "destination_id": "moscow-child_polyclinic-mgfoms-34376767c1bc",
+   "origin_point_id": "moscow-utm37n-1km-v1-e416-n6175-p"
+  },
+  {
+   "after_s": 3660.0,
+   "before_s": 4110.0,
+   "destination_id": "moscow-child_polyclinic-mgfoms-5ff4f43ed9a3",
+   "origin_point_id": "moscow-utm37n-1km-v1-e416-n6175-p"
+  },
+  {
+   "after_s": 3590.0,
+   "before_s": 4040.0,
+   "destination_id": "moscow-kindergarten-node-5332088797",
+   "origin_point_id": "moscow-utm37n-1km-v1-e416-n6175-p"
+  }
+ ],
+ "preset_id": "demo-moscow-urban-pt"
+}

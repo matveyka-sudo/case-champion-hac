@@ -1,0 +1,3 @@
+connection_id,from,to,direction,product,capacity_t_per_day,volume_t_per_day,utilisation,origin
+demo-pipeline-novorossiysk-1,novorossiysk-pipeline_terminal-relation-3569335,novorossiysk-pipeline_terminal-way-183488914,intake_to_delivery,oil,322000.0,289000.0,0.898,synthetic
+demo-pipeline-novorossiysk-2,novorossiysk-pipeline_terminal-way-183488914,novorossiysk-pipeline_terminal-way-126416704,intake_to_delivery,oil,322000.0,282000.0,0.876,synthetic

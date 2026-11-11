@@ -1,0 +1,97 @@
+{
+ "after": {
+  "arrival_utc": "2026-11-11T16:00:00+00:00",
+  "departure_utc": "2026-11-11T10:40:00+00:00",
+  "from_node_id": "node-wd-q1431650",
+  "initial_wait_s": 15000,
+  "path_s": 19200,
+  "to_node_id": "node-wd-q1997645",
+  "total_s": 34200,
+  "transfer_slack_s": 900,
+  "transfer_wait_s": 4500,
+  "trips": [
+   "demo-ic-air-kaliningrad--moscow-1240",
+   "demo-ic-air-moscow--novorossiysk-1450"
+  ]
+ },
+ "before": {
+  "arrival_utc": "2026-11-11T19:50:00+00:00",
+  "departure_utc": "2026-11-11T10:40:00+00:00",
+  "from_node_id": "node-wd-q1431650",
+  "initial_wait_s": 15000,
+  "path_s": 33000,
+  "to_node_id": "node-wd-q1997645",
+  "total_s": 48000,
+  "transfer_slack_s": 14700,
+  "transfer_wait_s": 18300,
+  "trips": [
+   "demo-ic-air-kaliningrad--moscow-1240",
+   "demo-ic-air-moscow--novorossiysk-2040"
+  ]
+ },
+ "comparison_id": "cmp-demo-ic-kaliningrad--novorossiysk-coordinate_transfer",
+ "contract_status": "scenario_contract_v2_operation; intercity context not accepted by the current API",
+ "created_ids": [],
+ "delta": {
+  "initial_wait_s": 0,
+  "path_s": 13800,
+  "sign": "before_minus_after",
+  "total_s": 13800,
+  "transfer_wait_s": 13800
+ },
+ "fixed_parameters": {
+  "demand_evidence": [
+   "demo-model:intercity:demand"
+  ],
+  "resource_constraints": [
+   "demo-ic-aircraft-rotation-demo-ic-air-moscow--novorossiysk-1450"
+  ],
+  "resource_evidence": [
+   "demo-model:intercity:resource"
+  ],
+  "service_ids": [
+   "demo-ic-svc-air-moscow--novorossiysk-1450"
+  ],
+  "shift_seconds": 7200,
+  "turnaround_evidence": [
+   "demo-model:intercity:turnaround"
+  ]
+ },
+ "ids": {
+  "after": [
+   "kaliningrad--novorossiysk",
+   "demo-ic-svc-air-moscow--novorossiysk-1450"
+  ],
+  "before": [
+   "kaliningrad--novorossiysk",
+   "demo-ic-svc-air-moscow--novorossiysk-1450"
+  ]
+ },
+ "model_inputs": {
+  "demand": {
+   "connecting_persons": 24,
+   "evidence_id": "demo-model:intercity:demand"
+  },
+  "minimum_connection_s": 3600,
+  "neighbour_check": {
+   "affected_pair": "moscow--novorossiysk",
+   "note": "the shifted flight also serves moscow -> novorossiysk; its departure moves by shift_seconds",
+   "shared_trip_id": "demo-ic-air-moscow--novorossiysk-1450"
+  },
+  "resource": {
+   "evidence_id": "demo-model:intercity:resource",
+   "vehicle_id": "demo-ic-aircraft-rotation-demo-ic-air-moscow--novorossiysk-1450"
+  },
+  "service_ids": [
+   "demo-ic-svc-air-moscow--novorossiysk-1450"
+  ],
+  "shift_seconds": 7200,
+  "transfer_node_id": "node-wd-q192733",
+  "turnaround": {
+   "evidence_id": "demo-model:intercity:turnaround",
+   "turnaround_s": 3000
+  }
+ },
+ "operation_type": "coordinate_transfer",
+ "preset_id": "demo-ic-kaliningrad--novorossiysk"
+}

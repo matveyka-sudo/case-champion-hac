@@ -1,0 +1,4432 @@
+{
+ "limitations": [
+  "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+  "NOT_A_REAL_CITY_RANKING"
+ ],
+ "model": {
+  "footpaths": [
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-25cdffc101d6",
+    "path_id": "demo-moscow-endpoint:physical:destination:moscow-adult_polyclinic-mgfoms-25cdffc101d6",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:moscow-adult_polyclinic-mgfoms-25cdffc101d6"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-ac9ad0e3515e",
+    "path_id": "demo-moscow-endpoint:physical:destination:moscow-adult_polyclinic-mgfoms-ac9ad0e3515e",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:moscow-adult_polyclinic-mgfoms-ac9ad0e3515e"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "demo-moscow-access:destination:moscow-airport-relation-2673994",
+    "path_id": "demo-moscow-endpoint:physical:destination:moscow-airport-relation-2673994",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:moscow-airport-relation-2673994"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "demo-moscow-access:destination:moscow-airport-relation-9772442",
+    "path_id": "demo-moscow-endpoint:physical:destination:moscow-airport-relation-9772442",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:moscow-airport-relation-9772442"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "demo-moscow-access:destination:moscow-bus_terminal-node-5466089050",
+    "path_id": "demo-moscow-endpoint:physical:destination:moscow-bus_terminal-node-5466089050",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:moscow-bus_terminal-node-5466089050"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "demo-moscow-access:destination:moscow-bus_terminal-relation-5823911",
+    "path_id": "demo-moscow-endpoint:physical:destination:moscow-bus_terminal-relation-5823911",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:moscow-bus_terminal-relation-5823911"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-34376767c1bc",
+    "path_id": "demo-moscow-endpoint:physical:destination:moscow-child_polyclinic-mgfoms-34376767c1bc",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:moscow-child_polyclinic-mgfoms-34376767c1bc"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-5ff4f43ed9a3",
+    "path_id": "demo-moscow-endpoint:physical:destination:moscow-child_polyclinic-mgfoms-5ff4f43ed9a3",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:moscow-child_polyclinic-mgfoms-5ff4f43ed9a3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "demo-moscow-access:destination:moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd",
+    "path_id": "demo-moscow-endpoint:physical:destination:moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "demo-moscow-access:destination:moscow-college_university-way-51015369",
+    "path_id": "demo-moscow-endpoint:physical:destination:moscow-college_university-way-51015369",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:moscow-college_university-way-51015369"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "demo-moscow-access:destination:moscow-kindergarten-node-5332088797",
+    "path_id": "demo-moscow-endpoint:physical:destination:moscow-kindergarten-node-5332088797",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:moscow-kindergarten-node-5332088797"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "demo-moscow-access:destination:moscow-kindergarten-relation-9355953",
+    "path_id": "demo-moscow-endpoint:physical:destination:moscow-kindergarten-relation-9355953",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:moscow-kindergarten-relation-9355953"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "demo-moscow-access:destination:moscow-rail_terminal-relation-1395483",
+    "path_id": "demo-moscow-endpoint:physical:destination:moscow-rail_terminal-relation-1395483",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:moscow-rail_terminal-relation-1395483"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "demo-moscow-access:destination:moscow-rail_terminal-relation-7253185",
+    "path_id": "demo-moscow-endpoint:physical:destination:moscow-rail_terminal-relation-7253185",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:moscow-rail_terminal-relation-7253185"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62",
+    "path_id": "demo-moscow-endpoint:physical:destination:moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952",
+    "path_id": "demo-moscow-endpoint:physical:destination:moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "demo-moscow-access:destination:moscow-shopping_center-relation-3330565",
+    "path_id": "demo-moscow-endpoint:physical:destination:moscow-shopping_center-relation-3330565",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:moscow-shopping_center-relation-3330565"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "demo-moscow-access:destination:moscow-shopping_center-relation-6233742",
+    "path_id": "demo-moscow-endpoint:physical:destination:moscow-shopping_center-relation-6233742",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:moscow-shopping_center-relation-6233742"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "physical:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-endpoint:physical:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "seconds": 0.0,
+    "to_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "physical:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-endpoint:physical:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "seconds": 0.0,
+    "to_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "physical:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-endpoint:physical:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "seconds": 0.0,
+    "to_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "physical:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-endpoint:physical:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "seconds": 0.0,
+    "to_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "physical:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-endpoint:physical:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "seconds": 0.0,
+    "to_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:physical_endpoints"
+    ],
+    "from_node_id": "physical:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-endpoint:physical:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "seconds": 0.0,
+    "to_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-A2",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-A2->moscow-rail_terminal-relation-7253185",
+    "seconds": 1900.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-rail_terminal-relation-7253185"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-A3",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-A3->moscow-rail_terminal-relation-1395483",
+    "seconds": 1570.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-rail_terminal-relation-1395483"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-A3",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-A3->moscow-rail_terminal-relation-7253185",
+    "seconds": 1600.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-rail_terminal-relation-7253185"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-A4",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-A4->demo-moscow-stop-B1",
+    "seconds": 190.0,
+    "to_node_id": "demo-moscow-stop-B1"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-A4",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-A4->moscow-adult_polyclinic-mgfoms-25cdffc101d6",
+    "seconds": 1660.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-25cdffc101d6"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-A4",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-A4->moscow-adult_polyclinic-mgfoms-ac9ad0e3515e",
+    "seconds": 1440.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-ac9ad0e3515e"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-A4",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-A4->moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd",
+    "seconds": 840.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-A4",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-A4->moscow-college_university-way-51015369",
+    "seconds": 580.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-college_university-way-51015369"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-A4",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-A4->moscow-kindergarten-relation-9355953",
+    "seconds": 640.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-kindergarten-relation-9355953"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-A4",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-A4->moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62",
+    "seconds": 740.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-A4",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-A4->moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952",
+    "seconds": 1140.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-A4",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-A4->moscow-shopping_center-relation-3330565",
+    "seconds": 400.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-shopping_center-relation-3330565"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-A4",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-A4->moscow-shopping_center-relation-6233742",
+    "seconds": 710.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-shopping_center-relation-6233742"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-B1",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-B1->demo-moscow-stop-A4",
+    "seconds": 190.0,
+    "to_node_id": "demo-moscow-stop-A4"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-B1",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-B1->moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd",
+    "seconds": 910.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-B1",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-B1->moscow-college_university-way-51015369",
+    "seconds": 520.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-college_university-way-51015369"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-B1",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-B1->moscow-kindergarten-relation-9355953",
+    "seconds": 690.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-kindergarten-relation-9355953"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-B1",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-B1->moscow-rail_terminal-relation-1395483",
+    "seconds": 2100.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-rail_terminal-relation-1395483"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-B1",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-B1->moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62",
+    "seconds": 900.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-B1",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-B1->moscow-shopping_center-relation-3330565",
+    "seconds": 370.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-shopping_center-relation-3330565"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-B1",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-B1->moscow-shopping_center-relation-6233742",
+    "seconds": 750.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-shopping_center-relation-6233742"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-B2",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-B2->moscow-adult_polyclinic-mgfoms-25cdffc101d6",
+    "seconds": 910.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-25cdffc101d6"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-B2",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-B2->moscow-adult_polyclinic-mgfoms-ac9ad0e3515e",
+    "seconds": 1390.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-ac9ad0e3515e"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-B2",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-B2->moscow-child_polyclinic-mgfoms-5ff4f43ed9a3",
+    "seconds": 1110.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-5ff4f43ed9a3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-B2",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-B2->moscow-kindergarten-node-5332088797",
+    "seconds": 390.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-kindergarten-node-5332088797"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-B2",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-B2->moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952",
+    "seconds": 380.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-B3",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-B3->moscow-child_polyclinic-mgfoms-34376767c1bc",
+    "seconds": 1380.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-34376767c1bc"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-B3",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-B3->moscow-child_polyclinic-mgfoms-5ff4f43ed9a3",
+    "seconds": 140.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-5ff4f43ed9a3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-B3",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-B3->moscow-kindergarten-node-5332088797",
+    "seconds": 800.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-kindergarten-node-5332088797"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-stop-B4",
+    "path_id": "demo-moscow-fp:demo-moscow-stop-B4->moscow-child_polyclinic-mgfoms-34376767c1bc",
+    "seconds": 180.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-34376767c1bc"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-fp:moscow-utm37n-1km-v1-e411-n6178-p->demo-moscow-stop-B2",
+    "seconds": 620.0,
+    "to_node_id": "demo-moscow-stop-B2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-fp:moscow-utm37n-1km-v1-e411-n6178-p->demo-moscow-stop-B3",
+    "seconds": 890.0,
+    "to_node_id": "demo-moscow-stop-B3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-fp:moscow-utm37n-1km-v1-e411-n6181-p->demo-moscow-stop-B3",
+    "seconds": 2070.0,
+    "to_node_id": "demo-moscow-stop-B3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-fp:moscow-utm37n-1km-v1-e411-n6181-p->demo-moscow-stop-B4",
+    "seconds": 860.0,
+    "to_node_id": "demo-moscow-stop-B4"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-fp:moscow-utm37n-1km-v1-e415-n6178-p->demo-moscow-stop-A2",
+    "seconds": 1390.0,
+    "to_node_id": "demo-moscow-stop-A2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-fp:moscow-utm37n-1km-v1-e415-n6178-p->demo-moscow-stop-A3",
+    "seconds": 190.0,
+    "to_node_id": "demo-moscow-stop-A3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-fp:moscow-utm37n-1km-v1-e415-n6180-p->demo-moscow-stop-A3",
+    "seconds": 2050.0,
+    "to_node_id": "demo-moscow-stop-A3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-fp:moscow-utm37n-1km-v1-e415-n6180-p->demo-moscow-stop-B1",
+    "seconds": 1920.0,
+    "to_node_id": "demo-moscow-stop-B1"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-fp:moscow-utm37n-1km-v1-e416-n6175-p->demo-moscow-stop-A1",
+    "seconds": 310.0,
+    "to_node_id": "demo-moscow-stop-A1"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-fp:moscow-utm37n-1km-v1-e416-n6175-p->demo-moscow-stop-A2",
+    "seconds": 1790.0,
+    "to_node_id": "demo-moscow-stop-A2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-fp:moscow-utm37n-1km-v1-e416-n6177-p->demo-moscow-stop-A2",
+    "seconds": 70.0,
+    "to_node_id": "demo-moscow-stop-A2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-fp:moscow-utm37n-1km-v1-e416-n6177-p->demo-moscow-stop-A3",
+    "seconds": 1280.0,
+    "to_node_id": "demo-moscow-stop-A3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6178-p->moscow-adult_polyclinic-mgfoms-25cdffc101d6",
+    "seconds": 1030.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-25cdffc101d6"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6178-p->moscow-adult_polyclinic-mgfoms-ac9ad0e3515e",
+    "seconds": 1660.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-ac9ad0e3515e"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6178-p->moscow-airport-relation-2673994",
+    "seconds": 23050.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-airport-relation-2673994"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6178-p->moscow-airport-relation-9772442",
+    "seconds": 25300.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-airport-relation-9772442"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6178-p->moscow-bus_terminal-node-5466089050",
+    "seconds": 10240.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-bus_terminal-node-5466089050"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6178-p->moscow-bus_terminal-relation-5823911",
+    "seconds": 8650.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-bus_terminal-relation-5823911"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6178-p->moscow-child_polyclinic-mgfoms-34376767c1bc",
+    "seconds": 2130.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-34376767c1bc"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6178-p->moscow-child_polyclinic-mgfoms-5ff4f43ed9a3",
+    "seconds": 860.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-5ff4f43ed9a3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6178-p->moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd",
+    "seconds": 1720.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6178-p->moscow-college_university-way-51015369",
+    "seconds": 2220.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-college_university-way-51015369"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6178-p->moscow-kindergarten-node-5332088797",
+    "seconds": 290.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-kindergarten-node-5332088797"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6178-p->moscow-kindergarten-relation-9355953",
+    "seconds": 2360.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-kindergarten-relation-9355953"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6178-p->moscow-rail_terminal-relation-1395483",
+    "seconds": 4370.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-rail_terminal-relation-1395483"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6178-p->moscow-rail_terminal-relation-7253185",
+    "seconds": 3250.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-rail_terminal-relation-7253185"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6178-p->moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62",
+    "seconds": 1840.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6178-p->moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952",
+    "seconds": 990.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6178-p->moscow-shopping_center-relation-3330565",
+    "seconds": 2140.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-shopping_center-relation-3330565"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6178-p->moscow-shopping_center-relation-6233742",
+    "seconds": 1890.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-shopping_center-relation-6233742"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6181-p->moscow-adult_polyclinic-mgfoms-25cdffc101d6",
+    "seconds": 3440.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-25cdffc101d6"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6181-p->moscow-adult_polyclinic-mgfoms-ac9ad0e3515e",
+    "seconds": 3770.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-ac9ad0e3515e"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6181-p->moscow-airport-relation-2673994",
+    "seconds": 24870.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-airport-relation-2673994"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6181-p->moscow-airport-relation-9772442",
+    "seconds": 22780.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-airport-relation-9772442"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6181-p->moscow-bus_terminal-node-5466089050",
+    "seconds": 9370.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-bus_terminal-node-5466089050"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6181-p->moscow-bus_terminal-relation-5823911",
+    "seconds": 6170.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-bus_terminal-relation-5823911"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6181-p->moscow-child_polyclinic-mgfoms-34376767c1bc",
+    "seconds": 690.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-34376767c1bc"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6181-p->moscow-child_polyclinic-mgfoms-5ff4f43ed9a3",
+    "seconds": 2180.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-5ff4f43ed9a3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6181-p->moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd",
+    "seconds": 2090.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6181-p->moscow-college_university-way-51015369",
+    "seconds": 2400.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-college_university-way-51015369"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6181-p->moscow-kindergarten-node-5332088797",
+    "seconds": 2560.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-kindergarten-node-5332088797"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6181-p->moscow-kindergarten-relation-9355953",
+    "seconds": 3520.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-kindergarten-relation-9355953"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6181-p->moscow-rail_terminal-relation-1395483",
+    "seconds": 4420.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-rail_terminal-relation-1395483"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6181-p->moscow-rail_terminal-relation-7253185",
+    "seconds": 5200.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-rail_terminal-relation-7253185"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6181-p->moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62",
+    "seconds": 3370.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6181-p->moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952",
+    "seconds": 2510.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6181-p->moscow-shopping_center-relation-3330565",
+    "seconds": 2530.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-shopping_center-relation-3330565"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e411-n6181-p->moscow-shopping_center-relation-6233742",
+    "seconds": 2180.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-shopping_center-relation-6233742"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6178-p->moscow-adult_polyclinic-mgfoms-25cdffc101d6",
+    "seconds": 2910.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-25cdffc101d6"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6178-p->moscow-adult_polyclinic-mgfoms-ac9ad0e3515e",
+    "seconds": 2310.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-ac9ad0e3515e"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6178-p->moscow-airport-relation-2673994",
+    "seconds": 26100.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-airport-relation-2673994"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6178-p->moscow-airport-relation-9772442",
+    "seconds": 27040.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-airport-relation-9772442"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6178-p->moscow-bus_terminal-node-5466089050",
+    "seconds": 7060.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-bus_terminal-node-5466089050"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6178-p->moscow-bus_terminal-relation-5823911",
+    "seconds": 7980.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-bus_terminal-relation-5823911"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6178-p->moscow-child_polyclinic-mgfoms-34376767c1bc",
+    "seconds": 4380.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-34376767c1bc"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6178-p->moscow-child_polyclinic-mgfoms-5ff4f43ed9a3",
+    "seconds": 4300.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-5ff4f43ed9a3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6178-p->moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd",
+    "seconds": 2710.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6178-p->moscow-college_university-way-51015369",
+    "seconds": 2280.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-college_university-way-51015369"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6178-p->moscow-kindergarten-node-5332088797",
+    "seconds": 3590.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-kindergarten-node-5332088797"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6178-p->moscow-kindergarten-relation-9355953",
+    "seconds": 1400.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-kindergarten-relation-9355953"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6178-p->moscow-rail_terminal-relation-1395483",
+    "seconds": 1380.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-rail_terminal-relation-1395483"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6178-p->moscow-rail_terminal-relation-7253185",
+    "seconds": 1790.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-rail_terminal-relation-7253185"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6178-p->moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62",
+    "seconds": 1900.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6178-p->moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952",
+    "seconds": 2890.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6178-p->moscow-shopping_center-relation-3330565",
+    "seconds": 2170.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-shopping_center-relation-3330565"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6178-p->moscow-shopping_center-relation-6233742",
+    "seconds": 2560.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-shopping_center-relation-6233742"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6180-p->moscow-adult_polyclinic-mgfoms-25cdffc101d6",
+    "seconds": 3730.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-25cdffc101d6"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6180-p->moscow-adult_polyclinic-mgfoms-ac9ad0e3515e",
+    "seconds": 3360.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-ac9ad0e3515e"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6180-p->moscow-airport-relation-2673994",
+    "seconds": 27160.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-airport-relation-2673994"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6180-p->moscow-airport-relation-9772442",
+    "seconds": 25450.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-airport-relation-9772442"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6180-p->moscow-bus_terminal-node-5466089050",
+    "seconds": 6070.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-bus_terminal-node-5466089050"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6180-p->moscow-bus_terminal-relation-5823911",
+    "seconds": 6110.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-bus_terminal-relation-5823911"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6180-p->moscow-child_polyclinic-mgfoms-34376767c1bc",
+    "seconds": 3840.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-34376767c1bc"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6180-p->moscow-child_polyclinic-mgfoms-5ff4f43ed9a3",
+    "seconds": 4410.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-5ff4f43ed9a3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6180-p->moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd",
+    "seconds": 2560.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6180-p->moscow-college_university-way-51015369",
+    "seconds": 2000.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-college_university-way-51015369"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6180-p->moscow-kindergarten-node-5332088797",
+    "seconds": 3930.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-kindergarten-node-5332088797"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6180-p->moscow-kindergarten-relation-9355953",
+    "seconds": 2190.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-kindergarten-relation-9355953"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6180-p->moscow-rail_terminal-relation-1395483",
+    "seconds": 720.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-rail_terminal-relation-1395483"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6180-p->moscow-rail_terminal-relation-7253185",
+    "seconds": 3540.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-rail_terminal-relation-7253185"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6180-p->moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62",
+    "seconds": 2680.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6180-p->moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952",
+    "seconds": 3190.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6180-p->moscow-shopping_center-relation-3330565",
+    "seconds": 2050.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-shopping_center-relation-3330565"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e415-n6180-p->moscow-shopping_center-relation-6233742",
+    "seconds": 2370.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-shopping_center-relation-6233742"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6175-p->moscow-adult_polyclinic-mgfoms-25cdffc101d6",
+    "seconds": 4430.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-25cdffc101d6"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6175-p->moscow-adult_polyclinic-mgfoms-ac9ad0e3515e",
+    "seconds": 3820.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-ac9ad0e3515e"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6175-p->moscow-airport-relation-2673994",
+    "seconds": 25540.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-airport-relation-2673994"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6175-p->moscow-airport-relation-9772442",
+    "seconds": 29920.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-airport-relation-9772442"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6175-p->moscow-bus_terminal-node-5466089050",
+    "seconds": 8540.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-bus_terminal-node-5466089050"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6175-p->moscow-bus_terminal-relation-5823911",
+    "seconds": 10860.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-bus_terminal-relation-5823911"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6175-p->moscow-child_polyclinic-mgfoms-34376767c1bc",
+    "seconds": 6860.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-34376767c1bc"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6175-p->moscow-child_polyclinic-mgfoms-5ff4f43ed9a3",
+    "seconds": 6250.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-5ff4f43ed9a3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6175-p->moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd",
+    "seconds": 5210.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6175-p->moscow-college_university-way-51015369",
+    "seconds": 4950.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-college_university-way-51015369"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6175-p->moscow-kindergarten-node-5332088797",
+    "seconds": 5450.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-kindergarten-node-5332088797"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6175-p->moscow-kindergarten-relation-9355953",
+    "seconds": 3780.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-kindergarten-relation-9355953"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6175-p->moscow-rail_terminal-relation-1395483",
+    "seconds": 4140.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-rail_terminal-relation-1395483"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6175-p->moscow-rail_terminal-relation-7253185",
+    "seconds": 2220.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-rail_terminal-relation-7253185"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6175-p->moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62",
+    "seconds": 3970.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6175-p->moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952",
+    "seconds": 5000.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6175-p->moscow-shopping_center-relation-3330565",
+    "seconds": 4790.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-shopping_center-relation-3330565"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6175-p->moscow-shopping_center-relation-6233742",
+    "seconds": 5120.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-shopping_center-relation-6233742"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6177-p->moscow-adult_polyclinic-mgfoms-25cdffc101d6",
+    "seconds": 3810.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-25cdffc101d6"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6177-p->moscow-adult_polyclinic-mgfoms-ac9ad0e3515e",
+    "seconds": 3150.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-ac9ad0e3515e"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6177-p->moscow-airport-relation-2673994",
+    "seconds": 26390.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-airport-relation-2673994"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6177-p->moscow-airport-relation-9772442",
+    "seconds": 28330.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-airport-relation-9772442"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6177-p->moscow-bus_terminal-node-5466089050",
+    "seconds": 7070.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-bus_terminal-node-5466089050"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6177-p->moscow-bus_terminal-relation-5823911",
+    "seconds": 9030.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-bus_terminal-relation-5823911"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6177-p->moscow-child_polyclinic-mgfoms-34376767c1bc",
+    "seconds": 5670.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-34376767c1bc"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6177-p->moscow-child_polyclinic-mgfoms-5ff4f43ed9a3",
+    "seconds": 5420.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-5ff4f43ed9a3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6177-p->moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd",
+    "seconds": 3980.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6177-p->moscow-college_university-way-51015369",
+    "seconds": 3590.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-college_university-way-51015369"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6177-p->moscow-kindergarten-node-5332088797",
+    "seconds": 4660.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-kindergarten-node-5332088797"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6177-p->moscow-kindergarten-relation-9355953",
+    "seconds": 2570.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-kindergarten-relation-9355953"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6177-p->moscow-rail_terminal-relation-1395483",
+    "seconds": 2320.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-rail_terminal-relation-1395483"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6177-p->moscow-rail_terminal-relation-7253185",
+    "seconds": 1900.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-rail_terminal-relation-7253185"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6177-p->moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62",
+    "seconds": 2970.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6177-p->moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952",
+    "seconds": 4030.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6177-p->moscow-shopping_center-relation-3330565",
+    "seconds": 3460.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-shopping_center-relation-3330565"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:moscow:edges",
+     "demo-model:moscow:footpaths"
+    ],
+    "from_node_id": "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "path_id": "demo-moscow-walk:moscow-utm37n-1km-v1-e416-n6177-p->moscow-shopping_center-relation-6233742",
+    "seconds": 3840.0,
+    "to_node_id": "demo-moscow-access:destination:moscow-shopping_center-relation-6233742"
+   }
+  ],
+  "runs": [
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:22:50Z",
+      "departure_at": "2026-11-11T06:22:50Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:30:50Z",
+      "departure_at": "2026-11-11T06:31:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:36:10Z",
+      "departure_at": "2026-11-11T06:36:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:42:30Z",
+      "departure_at": "2026-11-11T06:42:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-B-0922"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:37:50Z",
+      "departure_at": "2026-11-11T07:37:50Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:45:50Z",
+      "departure_at": "2026-11-11T07:46:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:51:10Z",
+      "departure_at": "2026-11-11T07:51:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:57:30Z",
+      "departure_at": "2026-11-11T07:57:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-B-1037"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:40:00Z",
+      "departure_at": "2026-11-11T05:40:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:48:30Z",
+      "departure_at": "2026-11-11T05:48:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:55:20Z",
+      "departure_at": "2026-11-11T05:55:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:04:40Z",
+      "departure_at": "2026-11-11T06:04:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-0840"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:00:00Z",
+      "departure_at": "2026-11-11T05:00:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:08:30Z",
+      "departure_at": "2026-11-11T05:08:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:15:20Z",
+      "departure_at": "2026-11-11T05:15:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:24:40Z",
+      "departure_at": "2026-11-11T05:24:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-0800"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T04:10:00Z",
+      "departure_at": "2026-11-11T04:10:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T04:18:30Z",
+      "departure_at": "2026-11-11T04:18:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T04:25:20Z",
+      "departure_at": "2026-11-11T04:25:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T04:34:40Z",
+      "departure_at": "2026-11-11T04:34:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-0710"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:30:00Z",
+      "departure_at": "2026-11-11T07:30:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:38:30Z",
+      "departure_at": "2026-11-11T07:38:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:45:20Z",
+      "departure_at": "2026-11-11T07:45:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:54:40Z",
+      "departure_at": "2026-11-11T07:54:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-1030"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:22:50Z",
+      "departure_at": "2026-11-11T05:22:50Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:30:50Z",
+      "departure_at": "2026-11-11T05:31:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:36:10Z",
+      "departure_at": "2026-11-11T05:36:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:42:30Z",
+      "departure_at": "2026-11-11T05:42:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-B-0822"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:52:50Z",
+      "departure_at": "2026-11-11T07:52:50Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T08:00:50Z",
+      "departure_at": "2026-11-11T08:01:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T08:06:10Z",
+      "departure_at": "2026-11-11T08:06:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:12:30Z",
+      "departure_at": "2026-11-11T08:12:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-B-1052"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:37:50Z",
+      "departure_at": "2026-11-11T05:37:50Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:45:50Z",
+      "departure_at": "2026-11-11T05:46:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:51:10Z",
+      "departure_at": "2026-11-11T05:51:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:57:30Z",
+      "departure_at": "2026-11-11T05:57:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-B-0837"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:52:50Z",
+      "departure_at": "2026-11-11T05:52:50Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:00:50Z",
+      "departure_at": "2026-11-11T06:01:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:06:10Z",
+      "departure_at": "2026-11-11T06:06:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:12:30Z",
+      "departure_at": "2026-11-11T06:12:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-B-0852"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T08:22:50Z",
+      "departure_at": "2026-11-11T08:22:50Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T08:30:50Z",
+      "departure_at": "2026-11-11T08:31:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T08:36:10Z",
+      "departure_at": "2026-11-11T08:36:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:42:30Z",
+      "departure_at": "2026-11-11T08:42:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-B-1122"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T04:37:50Z",
+      "departure_at": "2026-11-11T04:37:50Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T04:45:50Z",
+      "departure_at": "2026-11-11T04:46:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T04:51:10Z",
+      "departure_at": "2026-11-11T04:51:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T04:57:30Z",
+      "departure_at": "2026-11-11T04:57:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-B-0737"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T04:20:00Z",
+      "departure_at": "2026-11-11T04:20:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T04:28:30Z",
+      "departure_at": "2026-11-11T04:28:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T04:35:20Z",
+      "departure_at": "2026-11-11T04:35:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T04:44:40Z",
+      "departure_at": "2026-11-11T04:44:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-0720"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:50:00Z",
+      "departure_at": "2026-11-11T05:50:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:58:30Z",
+      "departure_at": "2026-11-11T05:58:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:05:20Z",
+      "departure_at": "2026-11-11T06:05:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:14:40Z",
+      "departure_at": "2026-11-11T06:14:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-0850"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:10:00Z",
+      "departure_at": "2026-11-11T05:10:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:18:30Z",
+      "departure_at": "2026-11-11T05:18:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:25:20Z",
+      "departure_at": "2026-11-11T05:25:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:34:40Z",
+      "departure_at": "2026-11-11T05:34:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-0810"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:07:50Z",
+      "departure_at": "2026-11-11T05:07:50Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:15:50Z",
+      "departure_at": "2026-11-11T05:16:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:21:10Z",
+      "departure_at": "2026-11-11T05:21:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:27:30Z",
+      "departure_at": "2026-11-11T05:27:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-B-0807"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:30:00Z",
+      "departure_at": "2026-11-11T05:30:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:38:30Z",
+      "departure_at": "2026-11-11T05:38:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:45:20Z",
+      "departure_at": "2026-11-11T05:45:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:54:40Z",
+      "departure_at": "2026-11-11T05:54:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-0830"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:07:50Z",
+      "departure_at": "2026-11-11T07:07:50Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:15:50Z",
+      "departure_at": "2026-11-11T07:16:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:21:10Z",
+      "departure_at": "2026-11-11T07:21:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:27:30Z",
+      "departure_at": "2026-11-11T07:27:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-B-1007"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:50:00Z",
+      "departure_at": "2026-11-11T06:50:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:58:30Z",
+      "departure_at": "2026-11-11T06:58:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:05:20Z",
+      "departure_at": "2026-11-11T07:05:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:14:40Z",
+      "departure_at": "2026-11-11T07:14:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-0950"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:52:50Z",
+      "departure_at": "2026-11-11T06:52:50Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:00:50Z",
+      "departure_at": "2026-11-11T07:01:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:06:10Z",
+      "departure_at": "2026-11-11T07:06:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:12:30Z",
+      "departure_at": "2026-11-11T07:12:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-B-0952"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T04:50:00Z",
+      "departure_at": "2026-11-11T04:50:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T04:58:30Z",
+      "departure_at": "2026-11-11T04:58:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:05:20Z",
+      "departure_at": "2026-11-11T05:05:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:14:40Z",
+      "departure_at": "2026-11-11T05:14:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-0750"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:20:00Z",
+      "departure_at": "2026-11-11T07:20:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:28:30Z",
+      "departure_at": "2026-11-11T07:28:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:35:20Z",
+      "departure_at": "2026-11-11T07:35:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:44:40Z",
+      "departure_at": "2026-11-11T07:44:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-1020"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T04:30:00Z",
+      "departure_at": "2026-11-11T04:30:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T04:38:30Z",
+      "departure_at": "2026-11-11T04:38:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T04:45:20Z",
+      "departure_at": "2026-11-11T04:45:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T04:54:40Z",
+      "departure_at": "2026-11-11T04:54:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-0730"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:40:00Z",
+      "departure_at": "2026-11-11T06:40:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:48:30Z",
+      "departure_at": "2026-11-11T06:48:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:55:20Z",
+      "departure_at": "2026-11-11T06:55:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:04:40Z",
+      "departure_at": "2026-11-11T07:04:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-0940"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:10:00Z",
+      "departure_at": "2026-11-11T07:10:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:18:30Z",
+      "departure_at": "2026-11-11T07:18:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:25:20Z",
+      "departure_at": "2026-11-11T07:25:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:34:40Z",
+      "departure_at": "2026-11-11T07:34:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-1010"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:30:00Z",
+      "departure_at": "2026-11-11T06:30:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:38:30Z",
+      "departure_at": "2026-11-11T06:38:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:45:20Z",
+      "departure_at": "2026-11-11T06:45:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:54:40Z",
+      "departure_at": "2026-11-11T06:54:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-0930"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:22:50Z",
+      "departure_at": "2026-11-11T07:22:50Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:30:50Z",
+      "departure_at": "2026-11-11T07:31:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:36:10Z",
+      "departure_at": "2026-11-11T07:36:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:42:30Z",
+      "departure_at": "2026-11-11T07:42:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-B-1022"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:37:50Z",
+      "departure_at": "2026-11-11T06:37:50Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:45:50Z",
+      "departure_at": "2026-11-11T06:46:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:51:10Z",
+      "departure_at": "2026-11-11T06:51:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:57:30Z",
+      "departure_at": "2026-11-11T06:57:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-B-0937"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T04:52:50Z",
+      "departure_at": "2026-11-11T04:52:50Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:00:50Z",
+      "departure_at": "2026-11-11T05:01:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:06:10Z",
+      "departure_at": "2026-11-11T05:06:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:12:30Z",
+      "departure_at": "2026-11-11T05:12:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-B-0752"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:20:00Z",
+      "departure_at": "2026-11-11T06:20:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:28:30Z",
+      "departure_at": "2026-11-11T06:28:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:35:20Z",
+      "departure_at": "2026-11-11T06:35:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:44:40Z",
+      "departure_at": "2026-11-11T06:44:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-0920"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:00:00Z",
+      "departure_at": "2026-11-11T06:00:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:08:30Z",
+      "departure_at": "2026-11-11T06:08:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:15:20Z",
+      "departure_at": "2026-11-11T06:15:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:24:40Z",
+      "departure_at": "2026-11-11T06:24:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-0900"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T04:00:00Z",
+      "departure_at": "2026-11-11T04:00:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T04:08:30Z",
+      "departure_at": "2026-11-11T04:08:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T04:15:20Z",
+      "departure_at": "2026-11-11T04:15:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T04:24:40Z",
+      "departure_at": "2026-11-11T04:24:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-0700"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:40:00Z",
+      "departure_at": "2026-11-11T07:40:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:48:30Z",
+      "departure_at": "2026-11-11T07:48:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:55:20Z",
+      "departure_at": "2026-11-11T07:55:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:04:40Z",
+      "departure_at": "2026-11-11T08:04:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-1040"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:10:00Z",
+      "departure_at": "2026-11-11T06:10:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:18:30Z",
+      "departure_at": "2026-11-11T06:18:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:25:20Z",
+      "departure_at": "2026-11-11T06:25:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:34:40Z",
+      "departure_at": "2026-11-11T06:34:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-0910"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:50:00Z",
+      "departure_at": "2026-11-11T07:50:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:58:30Z",
+      "departure_at": "2026-11-11T07:58:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T08:05:20Z",
+      "departure_at": "2026-11-11T08:05:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:14:40Z",
+      "departure_at": "2026-11-11T08:14:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-1050"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:07:50Z",
+      "departure_at": "2026-11-11T06:07:50Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:15:50Z",
+      "departure_at": "2026-11-11T06:16:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:21:10Z",
+      "departure_at": "2026-11-11T06:21:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:27:30Z",
+      "departure_at": "2026-11-11T06:27:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-B-0907"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:20:00Z",
+      "departure_at": "2026-11-11T05:20:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:28:30Z",
+      "departure_at": "2026-11-11T05:28:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:35:20Z",
+      "departure_at": "2026-11-11T05:35:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:44:40Z",
+      "departure_at": "2026-11-11T05:44:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-0820"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T04:40:00Z",
+      "departure_at": "2026-11-11T04:40:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T04:48:30Z",
+      "departure_at": "2026-11-11T04:48:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T04:55:20Z",
+      "departure_at": "2026-11-11T04:55:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:04:40Z",
+      "departure_at": "2026-11-11T05:04:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-0740"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:00:00Z",
+      "departure_at": "2026-11-11T07:00:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:08:30Z",
+      "departure_at": "2026-11-11T07:08:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:15:20Z",
+      "departure_at": "2026-11-11T07:15:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:24:40Z",
+      "departure_at": "2026-11-11T07:24:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-A-1000"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:moscow:calendar",
+     "demo-model:moscow:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T08:07:50Z",
+      "departure_at": "2026-11-11T08:07:50Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T08:15:50Z",
+      "departure_at": "2026-11-11T08:16:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T08:21:10Z",
+      "departure_at": "2026-11-11T08:21:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:27:30Z",
+      "departure_at": "2026-11-11T08:27:30Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:moscow:schedule"
+      ],
+      "node_id": "demo-moscow-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-moscow-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-moscow-trip-B-1107"
+   }
+  ],
+  "scope": {
+   "calendar_complete": true,
+   "calendar_version": "demo-moscow-2026-11-11.2:calendar",
+   "continuations_complete": true,
+   "end_at": "2026-11-11T21:00:00Z",
+   "evidence_refs": [
+    "demo-model:moscow:schedule"
+   ],
+   "footpath_version": "demo-moscow-2026-11-11.2:footpaths",
+   "footpaths_complete": true,
+   "graph_version": "demo-moscow-2026-11-11.2:graph",
+   "limitations": [],
+   "node_ids": [
+    "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-25cdffc101d6",
+    "demo-moscow-access:destination:moscow-adult_polyclinic-mgfoms-ac9ad0e3515e",
+    "demo-moscow-access:destination:moscow-airport-relation-2673994",
+    "demo-moscow-access:destination:moscow-airport-relation-9772442",
+    "demo-moscow-access:destination:moscow-bus_terminal-node-5466089050",
+    "demo-moscow-access:destination:moscow-bus_terminal-relation-5823911",
+    "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-34376767c1bc",
+    "demo-moscow-access:destination:moscow-child_polyclinic-mgfoms-5ff4f43ed9a3",
+    "demo-moscow-access:destination:moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd",
+    "demo-moscow-access:destination:moscow-college_university-way-51015369",
+    "demo-moscow-access:destination:moscow-kindergarten-node-5332088797",
+    "demo-moscow-access:destination:moscow-kindergarten-relation-9355953",
+    "demo-moscow-access:destination:moscow-rail_terminal-relation-1395483",
+    "demo-moscow-access:destination:moscow-rail_terminal-relation-7253185",
+    "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62",
+    "demo-moscow-access:destination:moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952",
+    "demo-moscow-access:destination:moscow-shopping_center-relation-3330565",
+    "demo-moscow-access:destination:moscow-shopping_center-relation-6233742",
+    "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "demo-moscow-access:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "demo-moscow-access:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "demo-moscow-access:point:moscow-utm37n-1km-v1-e416-n6177-p",
+    "demo-moscow-stop-A1",
+    "demo-moscow-stop-A2",
+    "demo-moscow-stop-A3",
+    "demo-moscow-stop-A4",
+    "demo-moscow-stop-B1",
+    "demo-moscow-stop-B2",
+    "demo-moscow-stop-B3",
+    "demo-moscow-stop-B4",
+    "physical:destination:moscow-adult_polyclinic-mgfoms-25cdffc101d6",
+    "physical:destination:moscow-adult_polyclinic-mgfoms-ac9ad0e3515e",
+    "physical:destination:moscow-airport-relation-2673994",
+    "physical:destination:moscow-airport-relation-9772442",
+    "physical:destination:moscow-bus_terminal-node-5466089050",
+    "physical:destination:moscow-bus_terminal-relation-5823911",
+    "physical:destination:moscow-child_polyclinic-mgfoms-34376767c1bc",
+    "physical:destination:moscow-child_polyclinic-mgfoms-5ff4f43ed9a3",
+    "physical:destination:moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd",
+    "physical:destination:moscow-college_university-way-51015369",
+    "physical:destination:moscow-kindergarten-node-5332088797",
+    "physical:destination:moscow-kindergarten-relation-9355953",
+    "physical:destination:moscow-rail_terminal-relation-1395483",
+    "physical:destination:moscow-rail_terminal-relation-7253185",
+    "physical:destination:moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62",
+    "physical:destination:moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952",
+    "physical:destination:moscow-shopping_center-relation-3330565",
+    "physical:destination:moscow-shopping_center-relation-6233742",
+    "physical:point:moscow-utm37n-1km-v1-e411-n6178-p",
+    "physical:point:moscow-utm37n-1km-v1-e411-n6181-p",
+    "physical:point:moscow-utm37n-1km-v1-e415-n6178-p",
+    "physical:point:moscow-utm37n-1km-v1-e415-n6180-p",
+    "physical:point:moscow-utm37n-1km-v1-e416-n6175-p",
+    "physical:point:moscow-utm37n-1km-v1-e416-n6177-p"
+   ],
+   "schedule_complete": true,
+   "snapshot_id": "demo-moscow-2026-11-11.2",
+   "start_at": "2026-11-11T03:00:00Z",
+   "timetable_version": "demo-moscow-2026-11-11.2:timetable",
+   "timezone": "Europe/Moscow",
+   "transfer_version": "demo-moscow-2026-11-11.2:transfers",
+   "transfers_complete": true
+  },
+  "transfers": [
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:moscow:transfers"
+    ],
+    "from_node_id": "demo-moscow-stop-A1",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-moscow-minimum-A1-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-moscow-stop-A1",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:moscow:transfers"
+    ],
+    "from_node_id": "demo-moscow-stop-A2",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-moscow-minimum-A2-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-moscow-stop-A2",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:moscow:transfers"
+    ],
+    "from_node_id": "demo-moscow-stop-A3",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-moscow-minimum-A3-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-moscow-stop-A3",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:moscow:transfers"
+    ],
+    "from_node_id": "demo-moscow-stop-A4",
+    "from_run_id": null,
+    "minimum_seconds": 250.0,
+    "rule_id": "demo-moscow-minimum-A4-B1",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-moscow-stop-B1",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:moscow:transfers"
+    ],
+    "from_node_id": "demo-moscow-stop-A4",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-moscow-minimum-A4-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-moscow-stop-A4",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:moscow:transfers"
+    ],
+    "from_node_id": "demo-moscow-stop-B1",
+    "from_run_id": null,
+    "minimum_seconds": 250.0,
+    "rule_id": "demo-moscow-minimum-B1-A4",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-moscow-stop-A4",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:moscow:transfers"
+    ],
+    "from_node_id": "demo-moscow-stop-B1",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-moscow-minimum-B1-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-moscow-stop-B1",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:moscow:transfers"
+    ],
+    "from_node_id": "demo-moscow-stop-B2",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-moscow-minimum-B2-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-moscow-stop-B2",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:moscow:transfers"
+    ],
+    "from_node_id": "demo-moscow-stop-B3",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-moscow-minimum-B3-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-moscow-stop-B3",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:moscow:transfers"
+    ],
+    "from_node_id": "demo-moscow-stop-B4",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-moscow-minimum-B4-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-moscow-stop-B4",
+    "to_run_id": null
+   }
+  ]
+ },
+ "schema_version": "waydex-demo-closed-transport/1",
+ "snapshot_hash": "07e80f0e641012673a0d1efc6b7b06599256e09ee547262e66f79dad0413b8e9"
+}

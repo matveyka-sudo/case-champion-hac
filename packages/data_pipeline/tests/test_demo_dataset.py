@@ -2,8 +2,9 @@
 
 import hashlib
 import json
+from csv import DictReader
 from dataclasses import replace
-from datetime import datetime, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -27,10 +28,18 @@ def load(name: str) -> object:
     return json.loads((PUBLISHED / name).read_text())
 
 
+def rows(name: str) -> list[dict[str, str]]:
+    with (PUBLISHED / name).open(encoding="utf-8", newline="") as file:
+        return list(DictReader(file))
+
+
 @pytest.fixture(scope="module")
 def rebuilt(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    out = tmp_path_factory.mktemp("demo") / demo.DATASET_ID
-    demo.build(out)
+    root = tmp_path_factory.mktemp("demo")
+    out = root / demo.DATASET_ID
+    copied_extract = root / EXTRACT.name
+    copied_extract.write_bytes(EXTRACT.read_bytes())
+    demo.build(out, extract_path=copied_extract)
     return out
 
 
@@ -86,6 +95,12 @@ def test_real_inputs_are_pinned_to_the_handoff() -> None:
     for row in manifest["real_inputs"]:
         if row["kind"] == "accepted_bundle":
             assert pinned[row["snapshot_id"]] == row["content_hash"]
+        elif row["kind"] == "runtime_extract":
+            assert (
+                row["sha256"]
+                == demo.EXTRACT_SHA256
+                == hashlib.sha256(EXTRACT.read_bytes()).hexdigest()
+            )
 
 
 def test_extract_refuses_another_archive(tmp_path: Path) -> None:
@@ -95,29 +110,28 @@ def test_extract_refuses_another_archive(tmp_path: Path) -> None:
         demo.extract(fake, tmp_path / "out.json")
 
 
+def test_build_rejects_changed_observation_with_original_evidence(tmp_path: Path) -> None:
+    payload = json.loads(EXTRACT.read_bytes())
+    row = next(row for row in payload["road"]["rows"] if row["http_status"] == 200)
+    row["time_s"] = 1.0
+    changed = tmp_path / EXTRACT.name
+    changed.write_text(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=1) + "\n")
+    out = tmp_path / demo.DATASET_ID
+    with pytest.raises(ValueError, match="runtime extract sha256"):
+        demo.build(out, extract_path=changed)
+    assert not out.exists()
+
+
 def _table(city: str) -> tuple[dict, object]:
-    sid = f"demo-{city}-2026-11-11.1"
+    sid = f"demo-{city}-{demo.DATASET_VERSION}"
     receipt = load(f"receipts/{sid}-transport.json")
     snapshot = load(f"snapshots/{sid}.json")
     assert receipt["snapshot_hash"] == canonical_hash(snapshot)
     return snapshot, pydantic.TypeAdapter(engine.Timetable).validate_python(receipt["model"])
 
 
-@pytest.mark.parametrize("city", list(demo.CITIES))
-@pytest.mark.parametrize("operation", ["coordinate_transfer", "additional_departure"])
-def test_engine_reproduces_the_control_values(city: str, operation: str) -> None:
-    snapshot, table = _table(city)
+def _operation(city: str, operation: str, table: object) -> tuple[dict, object]:
     control = load(f"control/cmp-demo-{city}-urban-pt-{operation}.json")
-    origin = next(
-        p["access_node_id"]
-        for p in snapshot["sample_points"]
-        if p["point_id"] == control["ids"]["before"][0]
-    )
-    target = next(
-        d["access_node_id"]
-        for d in snapshot["destinations"]
-        if d["destination_id"] == control["ids"]["before"][1]
-    )
     params = control["fixed_parameters"]
     trip = params["service_ids"][0].replace("-svc-", "-trip-")
     shift = timedelta(seconds=params["shift_seconds"])
@@ -133,33 +147,236 @@ def test_engine_reproduces_the_control_values(city: str, operation: str) -> None
         runs = (*table.runs, replace(moved, trip_id=control["created_ids"][0]))
     else:
         runs = tuple(moved if r.trip_id == trip else r for r in table.runs)
+    return control, replace(table, runs=runs)
+
+
+@pytest.mark.parametrize("city", list(demo.CITIES))
+@pytest.mark.parametrize("operation", ["coordinate_transfer", "additional_departure"])
+def test_engine_reproduces_the_control_values(city: str, operation: str) -> None:
+    snapshot, table = _table(city)
+    control, changed = _operation(city, operation, table)
+    origin = next(
+        p["access_node_id"]
+        for p in snapshot["sample_points"]
+        if p["point_id"] == control["ids"]["before"][0]
+    )
+    target = next(
+        d["access_node_id"]
+        for d in snapshot["destinations"]
+        if d["destination_id"] == control["ids"]["before"][1]
+    )
     start = datetime(2026, 11, 11, 8, 30, tzinfo=ZoneInfo(demo.CITIES[city]["tz"]))
     before = engine.solve_timetable(table, origin, target, start, max_wait_seconds=3600)
-    after = engine.solve_timetable(
-        replace(table, runs=runs), origin, target, start, max_wait_seconds=3600
-    )
+    after = engine.solve_timetable(changed, origin, target, start, max_wait_seconds=3600)
     assert before.best_known.total_seconds == control["before"]["total_s"]
     assert (
         after.best_known.total_seconds == control["after"]["total_s"] < control["before"]["total_s"]
     )
 
 
-def test_moscow_receipt_passes_the_api_demo_guard(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("city", list(demo.CITIES))
+def test_receipt_matches_the_api_canonical_timetable(city: str) -> None:
     transport = pytest.importorskip("a2_api.adapters.demo_transport")
     source = pytest.importorskip("a2_api.adapters.timetable_source")
-    monkeypatch.setenv("A2_DEMO_TRANSPORT_ENABLED", "true")
-    for city in demo.CITIES:
-        sid = f"demo-{city}-2026-11-11.1"
-        snapshot = AcceptedData.model_validate(load(f"snapshots/{sid}.json"))
-        receipt = transport.DemoTransportReceipt.model_validate(
-            load(f"receipts/{sid}-transport.json")
-        )
-        canonical = source.verify_canonical_timetable(snapshot, receipt.model, demo.CLOCK)
-        assert canonical.materialization_complete
-        if city == "moscow":
-            assert (
-                transport.verify_demo_model(snapshot, receipt.model, demo.CLOCK, receipt) == receipt
+    sid = f"demo-{city}-{demo.DATASET_VERSION}"
+    snapshot = AcceptedData.model_validate(load(f"snapshots/{sid}.json"))
+    receipt = transport.DemoTransportReceipt.model_validate(load(f"receipts/{sid}-transport.json"))
+    assert receipt.snapshot_hash == canonical_hash(snapshot.model_dump(mode="json"))
+    canonical = source.verify_canonical_timetable(snapshot, receipt.model, demo.CLOCK)
+    assert canonical.materialization_complete
+
+
+@pytest.mark.parametrize("city", list(demo.CITIES))
+def test_walk_roster_is_routable_in_public_transport(city: str) -> None:
+    snapshot, table = _table(city)
+    origins = {row["point_id"]: row for row in snapshot["sample_points"]}
+    destinations = {row["destination_id"]: row for row in snapshot["destinations"]}
+    nodes = {row["node_id"]: row for row in snapshot["access_nodes"]}
+    endpoints = [*origins.values(), *destinations.values()]
+    assert len({row["access_node_id"] for row in endpoints}) == len(endpoints)
+    assert all(nodes[row["access_node_id"]]["location"] == row["location"] for row in endpoints)
+    assert all(row["access_distance_m"] == 0 for row in origins.values())
+    edges = {row["edge_id"]: row for row in snapshot["reference_edges"] if row["mode"] == "walk"}
+    paths = {row.path_id: row for row in table.footpaths}
+    by_nodes = {(row.from_node_id, row.to_node_id): row for row in table.footpaths}
+    for roster, entities, role in (
+        ("origins", origins, "point"),
+        ("destinations", destinations, "destination"),
+    ):
+        for row in rows(f"tables/{city}/{roster}.csv"):
+            identity = row[f"{role}_id"]
+            physical, access = row["physical_node_id"], row["access_node_id"]
+            assert physical == f"physical:{role}:{identity}"
+            assert access == entities[identity]["access_node_id"]
+            assert nodes[physical]["location"] == nodes[access]["location"]
+            boundary = (physical, access) if role == "point" else (access, physical)
+            assert by_nodes[boundary].seconds == 0 and by_nodes[boundary].usable
+    start = datetime(2026, 11, 11, 8, 30, tzinfo=ZoneInfo(demo.CITIES[city]["tz"]))
+    for row in rows(f"tables/{city}/walk_edges.csv"):
+        origin = origins[row["origin_point_id"]]["access_node_id"]
+        target = destinations[row["destination_id"]]["access_node_id"]
+        edge, path = edges[row["edge_id"]], paths[row["edge_id"]]
+        assert (
+            (path.from_node_id, path.to_node_id, path.seconds)
+            == (
+                origin,
+                target,
+                float(row["time_s"]),
             )
-        else:  # the API demo guard admits demo-moscow-* only (BACKEND opt-in needed)
-            with pytest.raises(ValueError, match="DEMO_TRANSPORT_SNAPSHOT_REQUIRED"):
-                transport.verify_demo_model(snapshot, receipt.model, demo.CLOCK, receipt)
+            == (edge["from_node_id"], edge["to_node_id"], edge["running_time_seconds"])
+        )
+        assert path.usable
+        assert start + timedelta(seconds=path.seconds) <= table.scope.end_at
+
+
+@pytest.mark.parametrize(
+    ("point_id", "destination_id", "walk_only"),
+    [
+        (
+            "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+            "kaliningrad-adult_polyclinic-dce0201c87e5",
+            True,
+        ),
+        (
+            "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+            "kaliningrad-adult_polyclinic-dce0201c87e5",
+            False,
+        ),
+    ],
+)
+def test_public_transport_uses_the_faster_or_only_walk_before_and_after(
+    point_id: str, destination_id: str, walk_only: bool
+) -> None:
+    city = "kaliningrad"
+    snapshot, table = _table(city)
+    origin = f"physical:point:{point_id}"
+    target = f"physical:destination:{destination_id}"
+    start = datetime(2026, 11, 11, 8, 30, tzinfo=ZoneInfo(demo.CITIES[city]["tz"]))
+    walk_s = float(
+        next(
+            r["time_s"]
+            for r in rows(f"tables/{city}/walk_edges.csv")
+            if (r["origin_point_id"], r["destination_id"]) == (point_id, destination_id)
+        )
+    )
+    direct_ids = {row["edge_id"] for row in snapshot["reference_edges"] if row["mode"] == "walk"}
+    _, coordinated = _operation(city, "coordinate_transfer", table)
+    _, extra = _operation(city, "additional_departure", table)
+    for variant in (table, coordinated, extra):
+        best = engine.solve_timetable(variant, origin, target, start, max_wait_seconds=3600)
+        assert best.best_known.total_seconds == walk_s
+        assert not best.best_known.boardings
+        without_direct = replace(
+            variant, footpaths=tuple(p for p in variant.footpaths if p.path_id not in direct_ids)
+        )
+        other = engine.solve_timetable(without_direct, origin, target, start, max_wait_seconds=3600)
+        if walk_only:
+            assert other.best_known is None
+        else:
+            assert other.best_known.total_seconds > walk_s
+
+
+@pytest.mark.parametrize("city", list(demo.CITIES))
+def test_transfer_csv_matches_snapshot_and_receipt(city: str) -> None:
+    snapshot, table = _table(city)
+    expected = {
+        (row["from_node_id"], row["to_node_id"]): row["seconds"] for row in snapshot["transfers"]
+    }
+    minima = {row["minimum_id"]: row["seconds"] for row in snapshot["minimum_transfers"]}
+    rules = {r.rule_id: r for r in table.transfers}
+    transfers = rows(f"tables/{city}/transfers.csv")
+    assert len(transfers) == len(expected) == len(minima) == len(rules)
+    for row in transfers:
+        pair = row["from_node_id"], row["to_node_id"]
+        rule = rules[row["rule_id"]]
+        assert (rule.from_node_id, rule.to_node_id) == pair
+        assert float(row["walk_s"]) == expected[pair]
+        assert (
+            float(row["minimum_seconds"])
+            == expected[pair] + demo.MIN_CHANGE_S
+            == minima[row["rule_id"]]
+            == rule.minimum_seconds
+        )
+
+
+@pytest.mark.parametrize(("origin", "destination"), demo.PAIRS)
+def test_intercity_cargo_control_uses_service_day_utc(origin: str, destination: str) -> None:
+    manifest = load("manifest.json")
+    chain = next(
+        c
+        for c in load("tables/intercity/freight_chains.json")
+        if c["pair"] == f"{origin}--{destination}"
+    )
+    control = load(f"control/cmp-demo-icc-{chain['pair']}-{chain['operation_type']}.json")
+    ready_at = datetime.fromisoformat(manifest["slice"]["utc"][origin]) + timedelta(
+        seconds=chain["legs"][0]["run_s"] + chain["legs"][0]["handling_at_end_s"]
+    )
+    service_day = date.fromisoformat(manifest["slice"]["service_date"])
+    zone = ZoneInfo(manifest["slice"]["timezones"][origin])
+    departures = []
+    for local in chain["legs"][1]["departures_local"]:
+        day_offset, clock = local.split()
+        day = service_day + timedelta(days=int(day_offset.removesuffix("d")))
+        departures.append(datetime.combine(day, time.fromisoformat(clock), zone).astimezone(UTC))
+    before = min(departure for departure in departures if departure >= ready_at)
+    after = before
+    if chain["operation_type"] == "add_compatible_departure":
+        after = ready_at + timedelta(minutes=30)
+        after += timedelta(seconds=-int(after.timestamp()) % 1800)
+        assert chain["change"]["departure_utc"] == after.isoformat()
+    for label, expected in (("before", before), ("after", after)):
+        assert chain[label]["departure_utc"] == expected.isoformat()
+        assert chain[label]["wait_s"] == (expected - ready_at).total_seconds()
+        assert control[label] == chain[label]
+
+
+@pytest.mark.parametrize(("origin", "destination"), demo.PAIRS)
+def test_intercity_passenger_control_uses_node_to_node_boundaries(
+    origin: str, destination: str
+) -> None:
+    preset = next(
+        p for p in load("presets.json") if p["preset_id"] == f"demo-ic-{origin}--{destination}"
+    )
+    snapshot = load(f"snapshots/{preset['snapshot_id']}.json")
+    control = load(f"control/{preset['comparison_ids'][0]}.json")
+    services = {row["trip_id"]: row for row in snapshot["scheduled_services"]}
+    model = control["model_inputs"]
+    changed = next(row for row in services.values() if row["service_id"] == model["service_ids"][0])
+    ready = datetime.fromisoformat(preset["departure_utc"])
+    changed_trip = model.get("new_trip_id", changed["trip_id"])
+
+    def timestamp(service: dict, event: dict, field: str, shift_s: int) -> datetime:
+        midnight = datetime.combine(
+            date.fromisoformat(service["service_dates"][0]), time(), ZoneInfo(service["timezone"])
+        )
+        return (midnight + timedelta(seconds=event[field] + shift_s)).astimezone(UTC)
+
+    for label in ("before", "after"):
+        journey = control[label]
+        legs = []
+        for trip_id in journey["trips"]:
+            service = services.get(trip_id, changed)
+            first, last = service["stop_times"]
+            shift_s = model["shift_seconds"] if label == "after" and trip_id == changed_trip else 0
+            legs.append(
+                (
+                    first["node_id"],
+                    last["node_id"],
+                    timestamp(service, first, "departure_seconds", shift_s),
+                    timestamp(service, last, "arrival_seconds", shift_s),
+                )
+            )
+        first, last = legs[0], legs[-1]
+        assert journey["initial_wait_s"] == (first[2] - ready).total_seconds()
+        assert journey["path_s"] == (last[3] - first[2]).total_seconds()
+        assert journey["total_s"] == (last[3] - ready).total_seconds()
+        assert (journey["from_node_id"], journey["to_node_id"]) == (first[0], last[1])
+        assert journey["departure_utc"] == first[2].isoformat()
+        assert journey["arrival_utc"] == last[3].isoformat()
+        if len(legs) == 2:
+            assert first[1] == last[0] == model["transfer_node_id"]
+            assert journey["transfer_wait_s"] == (last[2] - first[3]).total_seconds()
+            assert (
+                journey["transfer_slack_s"]
+                == journey["transfer_wait_s"] - model["minimum_connection_s"]
+            )

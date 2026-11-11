@@ -1,0 +1,4472 @@
+{
+ "limitations": [
+  "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+  "NOT_A_REAL_CITY_RANKING"
+ ],
+ "model": {
+  "footpaths": [
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "demo-kaliningrad-access:destination:demo-kaliningrad-airport-model-2",
+    "path_id": "demo-kaliningrad-endpoint:physical:destination:demo-kaliningrad-airport-model-2",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:demo-kaliningrad-airport-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-dce0201c87e5",
+    "path_id": "demo-kaliningrad-endpoint:physical:destination:kaliningrad-adult_polyclinic-dce0201c87e5",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:kaliningrad-adult_polyclinic-dce0201c87e5"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-ebfd91789e16",
+    "path_id": "demo-kaliningrad-endpoint:physical:destination:kaliningrad-adult_polyclinic-ebfd91789e16",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:kaliningrad-adult_polyclinic-ebfd91789e16"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "demo-kaliningrad-access:destination:kaliningrad-airport-way-59178160",
+    "path_id": "demo-kaliningrad-endpoint:physical:destination:kaliningrad-airport-way-59178160",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:kaliningrad-airport-way-59178160"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-1558947984",
+    "path_id": "demo-kaliningrad-endpoint:physical:destination:kaliningrad-bus_terminal-way-1558947984",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:kaliningrad-bus_terminal-way-1558947984"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-59285812",
+    "path_id": "demo-kaliningrad-endpoint:physical:destination:kaliningrad-bus_terminal-way-59285812",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:kaliningrad-bus_terminal-way-59285812"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-24011a9a47d5",
+    "path_id": "demo-kaliningrad-endpoint:physical:destination:kaliningrad-child_polyclinic-24011a9a47d5",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:kaliningrad-child_polyclinic-24011a9a47d5"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-2732eb295a99",
+    "path_id": "demo-kaliningrad-endpoint:physical:destination:kaliningrad-child_polyclinic-2732eb295a99",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:kaliningrad-child_polyclinic-2732eb295a99"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "demo-kaliningrad-access:destination:kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168",
+    "path_id": "demo-kaliningrad-endpoint:physical:destination:kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "demo-kaliningrad-access:destination:kaliningrad-college_university-relation-1308717",
+    "path_id": "demo-kaliningrad-endpoint:physical:destination:kaliningrad-college_university-relation-1308717",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:kaliningrad-college_university-relation-1308717"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423977",
+    "path_id": "demo-kaliningrad-endpoint:physical:destination:kaliningrad-kindergarten-klgd_education-4423977",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:kaliningrad-kindergarten-klgd_education-4423977"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423995",
+    "path_id": "demo-kaliningrad-endpoint:physical:destination:kaliningrad-kindergarten-klgd_education-4423995",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:kaliningrad-kindergarten-klgd_education-4423995"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-node-2010693425",
+    "path_id": "demo-kaliningrad-endpoint:physical:destination:kaliningrad-rail_terminal-node-2010693425",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:kaliningrad-rail_terminal-node-2010693425"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-way-45511034",
+    "path_id": "demo-kaliningrad-endpoint:physical:destination:kaliningrad-rail_terminal-way-45511034",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:kaliningrad-rail_terminal-way-45511034"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418379",
+    "path_id": "demo-kaliningrad-endpoint:physical:destination:kaliningrad-school-klgd_education-4418379",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:kaliningrad-school-klgd_education-4418379"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418380",
+    "path_id": "demo-kaliningrad-endpoint:physical:destination:kaliningrad-school-klgd_education-4418380",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:kaliningrad-school-klgd_education-4418380"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-101820195",
+    "path_id": "demo-kaliningrad-endpoint:physical:destination:kaliningrad-shopping_center-way-101820195",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:kaliningrad-shopping_center-way-101820195"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-77806551",
+    "path_id": "demo-kaliningrad-endpoint:physical:destination:kaliningrad-shopping_center-way-77806551",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:kaliningrad-shopping_center-way-77806551"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "physical:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-endpoint:physical:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "seconds": 0.0,
+    "to_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "physical:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-endpoint:physical:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "seconds": 0.0,
+    "to_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "physical:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-endpoint:physical:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "seconds": 0.0,
+    "to_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "physical:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-endpoint:physical:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "seconds": 0.0,
+    "to_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "physical:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-endpoint:physical:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "seconds": 0.0,
+    "to_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:physical_endpoints"
+    ],
+    "from_node_id": "physical:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-endpoint:physical:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "seconds": 0.0,
+    "to_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A1",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-A1->kaliningrad-bus_terminal-way-59285812",
+    "seconds": 1730.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-59285812"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A2",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-A2->kaliningrad-bus_terminal-way-1558947984",
+    "seconds": 2020.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-1558947984"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A2",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-A2->kaliningrad-bus_terminal-way-59285812",
+    "seconds": 1760.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-59285812"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A2",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-A2->kaliningrad-rail_terminal-way-45511034",
+    "seconds": 2070.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-way-45511034"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A3",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-A3->kaliningrad-college_university-relation-1308717",
+    "seconds": 140.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-college_university-relation-1308717"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A3",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-A3->kaliningrad-rail_terminal-node-2010693425",
+    "seconds": 530.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-node-2010693425"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A3",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-A3->kaliningrad-school-klgd_education-4418379",
+    "seconds": 300.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418379"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A3",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-A3->kaliningrad-school-klgd_education-4418380",
+    "seconds": 310.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418380"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A4",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-A4->demo-kaliningrad-stop-B1",
+    "seconds": 110.0,
+    "to_node_id": "demo-kaliningrad-stop-B1"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A4",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-A4->kaliningrad-adult_polyclinic-dce0201c87e5",
+    "seconds": 470.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-dce0201c87e5"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A4",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-A4->kaliningrad-adult_polyclinic-ebfd91789e16",
+    "seconds": 310.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-ebfd91789e16"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A4",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-A4->kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168",
+    "seconds": 500.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A4",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-A4->kaliningrad-kindergarten-klgd_education-4423977",
+    "seconds": 400.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423977"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A4",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-A4->kaliningrad-kindergarten-klgd_education-4423995",
+    "seconds": 390.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423995"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A4",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-A4->kaliningrad-shopping_center-way-101820195",
+    "seconds": 200.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-101820195"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A4",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-A4->kaliningrad-shopping_center-way-77806551",
+    "seconds": 100.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-77806551"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B1",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-B1->demo-kaliningrad-stop-A4",
+    "seconds": 110.0,
+    "to_node_id": "demo-kaliningrad-stop-A4"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B1",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-B1->kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168",
+    "seconds": 410.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B1",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-B1->kaliningrad-college_university-relation-1308717",
+    "seconds": 400.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-college_university-relation-1308717"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B1",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-B1->kaliningrad-kindergarten-klgd_education-4423977",
+    "seconds": 450.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423977"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B1",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-B1->kaliningrad-kindergarten-klgd_education-4423995",
+    "seconds": 490.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423995"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B1",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-B1->kaliningrad-rail_terminal-node-2010693425",
+    "seconds": 450.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-node-2010693425"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B1",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-B1->kaliningrad-school-klgd_education-4418379",
+    "seconds": 360.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418379"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B1",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-B1->kaliningrad-school-klgd_education-4418380",
+    "seconds": 340.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418380"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B1",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-B1->kaliningrad-shopping_center-way-101820195",
+    "seconds": 130.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-101820195"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B1",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-B1->kaliningrad-shopping_center-way-77806551",
+    "seconds": 160.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-77806551"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B2",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-B2->kaliningrad-adult_polyclinic-dce0201c87e5",
+    "seconds": 280.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-dce0201c87e5"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B2",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-B2->kaliningrad-adult_polyclinic-ebfd91789e16",
+    "seconds": 400.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-ebfd91789e16"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B2",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-B2->kaliningrad-bus_terminal-way-1558947984",
+    "seconds": 1820.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-1558947984"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B2",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-B2->kaliningrad-rail_terminal-way-45511034",
+    "seconds": 1690.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-way-45511034"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B3",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-B3->kaliningrad-child_polyclinic-24011a9a47d5",
+    "seconds": 1240.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-24011a9a47d5"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B3",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-B3->kaliningrad-child_polyclinic-2732eb295a99",
+    "seconds": 80.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-2732eb295a99"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B4",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-B4->kaliningrad-child_polyclinic-24011a9a47d5",
+    "seconds": 230.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-24011a9a47d5"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B4",
+    "path_id": "demo-kaliningrad-fp:demo-kaliningrad-stop-B4->kaliningrad-child_polyclinic-2732eb295a99",
+    "seconds": 1050.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-2732eb295a99"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-fp:kaliningrad-utm34n-1km-v1-e466-n6065-p->demo-kaliningrad-stop-B3",
+    "seconds": 2030.0,
+    "to_node_id": "demo-kaliningrad-stop-B3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-fp:kaliningrad-utm34n-1km-v1-e466-n6065-p->demo-kaliningrad-stop-B4",
+    "seconds": 960.0,
+    "to_node_id": "demo-kaliningrad-stop-B4"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-fp:kaliningrad-utm34n-1km-v1-e467-n6064-p->demo-kaliningrad-stop-B1",
+    "seconds": 1050.0,
+    "to_node_id": "demo-kaliningrad-stop-B1"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-fp:kaliningrad-utm34n-1km-v1-e467-n6064-p->demo-kaliningrad-stop-B4",
+    "seconds": 1010.0,
+    "to_node_id": "demo-kaliningrad-stop-B4"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-fp:kaliningrad-utm34n-1km-v1-e468-n6061-p->demo-kaliningrad-stop-A2",
+    "seconds": 1160.0,
+    "to_node_id": "demo-kaliningrad-stop-A2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-fp:kaliningrad-utm34n-1km-v1-e468-n6061-p->demo-kaliningrad-stop-B2",
+    "seconds": 1400.0,
+    "to_node_id": "demo-kaliningrad-stop-B2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-fp:kaliningrad-utm34n-1km-v1-e468-n6063-p->demo-kaliningrad-stop-A3",
+    "seconds": 250.0,
+    "to_node_id": "demo-kaliningrad-stop-A3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-fp:kaliningrad-utm34n-1km-v1-e468-n6063-p->demo-kaliningrad-stop-B1",
+    "seconds": 510.0,
+    "to_node_id": "demo-kaliningrad-stop-B1"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-fp:kaliningrad-utm34n-1km-v1-e469-n6062-p->demo-kaliningrad-stop-A2",
+    "seconds": 310.0,
+    "to_node_id": "demo-kaliningrad-stop-A2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-fp:kaliningrad-utm34n-1km-v1-e469-n6062-p->demo-kaliningrad-stop-A3",
+    "seconds": 1580.0,
+    "to_node_id": "demo-kaliningrad-stop-A3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-fp:kaliningrad-utm34n-1km-v1-e470-n6064-p->demo-kaliningrad-stop-A1",
+    "seconds": 200.0,
+    "to_node_id": "demo-kaliningrad-stop-A1"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-fp:kaliningrad-utm34n-1km-v1-e470-n6064-p->demo-kaliningrad-stop-A3",
+    "seconds": 2160.0,
+    "to_node_id": "demo-kaliningrad-stop-A3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e466-n6065-p->demo-kaliningrad-airport-model-2",
+    "seconds": 5940.0,
+    "to_node_id": "demo-kaliningrad-access:destination:demo-kaliningrad-airport-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e466-n6065-p->kaliningrad-adult_polyclinic-dce0201c87e5",
+    "seconds": 2790.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-dce0201c87e5"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e466-n6065-p->kaliningrad-adult_polyclinic-ebfd91789e16",
+    "seconds": 2650.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-ebfd91789e16"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e466-n6065-p->kaliningrad-airport-way-59178160",
+    "seconds": 16610.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-airport-way-59178160"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e466-n6065-p->kaliningrad-bus_terminal-way-1558947984",
+    "seconds": 4610.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-1558947984"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e466-n6065-p->kaliningrad-bus_terminal-way-59285812",
+    "seconds": 5080.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-59285812"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e466-n6065-p->kaliningrad-child_polyclinic-24011a9a47d5",
+    "seconds": 800.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-24011a9a47d5"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e466-n6065-p->kaliningrad-child_polyclinic-2732eb295a99",
+    "seconds": 1950.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-2732eb295a99"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e466-n6065-p->kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168",
+    "seconds": 1920.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e466-n6065-p->kaliningrad-college_university-relation-1308717",
+    "seconds": 2270.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-college_university-relation-1308717"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e466-n6065-p->kaliningrad-kindergarten-klgd_education-4423977",
+    "seconds": 2760.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423977"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e466-n6065-p->kaliningrad-kindergarten-klgd_education-4423995",
+    "seconds": 2790.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423995"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e466-n6065-p->kaliningrad-rail_terminal-node-2010693425",
+    "seconds": 1920.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-node-2010693425"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e466-n6065-p->kaliningrad-rail_terminal-way-45511034",
+    "seconds": 4440.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-way-45511034"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e466-n6065-p->kaliningrad-school-klgd_education-4418379",
+    "seconds": 2570.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418379"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e466-n6065-p->kaliningrad-school-klgd_education-4418380",
+    "seconds": 2560.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418380"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e466-n6065-p->kaliningrad-shopping_center-way-101820195",
+    "seconds": 2210.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-101820195"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e466-n6065-p->kaliningrad-shopping_center-way-77806551",
+    "seconds": 2350.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-77806551"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e467-n6064-p->demo-kaliningrad-airport-model-2",
+    "seconds": 4670.0,
+    "to_node_id": "demo-kaliningrad-access:destination:demo-kaliningrad-airport-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e467-n6064-p->kaliningrad-adult_polyclinic-dce0201c87e5",
+    "seconds": 1580.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-dce0201c87e5"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e467-n6064-p->kaliningrad-adult_polyclinic-ebfd91789e16",
+    "seconds": 1420.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-ebfd91789e16"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e467-n6064-p->kaliningrad-airport-way-59178160",
+    "seconds": 17150.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-airport-way-59178160"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e467-n6064-p->kaliningrad-bus_terminal-way-1558947984",
+    "seconds": 3500.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-1558947984"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e467-n6064-p->kaliningrad-bus_terminal-way-59285812",
+    "seconds": 3800.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-59285812"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e467-n6064-p->kaliningrad-child_polyclinic-24011a9a47d5",
+    "seconds": 1150.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-24011a9a47d5"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e467-n6064-p->kaliningrad-child_polyclinic-2732eb295a99",
+    "seconds": 1780.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-2732eb295a99"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e467-n6064-p->kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168",
+    "seconds": 650.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e467-n6064-p->kaliningrad-college_university-relation-1308717",
+    "seconds": 950.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-college_university-relation-1308717"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e467-n6064-p->kaliningrad-kindergarten-klgd_education-4423977",
+    "seconds": 1470.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423977"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e467-n6064-p->kaliningrad-kindergarten-klgd_education-4423995",
+    "seconds": 1530.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423995"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e467-n6064-p->kaliningrad-rail_terminal-node-2010693425",
+    "seconds": 610.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-node-2010693425"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e467-n6064-p->kaliningrad-rail_terminal-way-45511034",
+    "seconds": 3370.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-way-45511034"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e467-n6064-p->kaliningrad-school-klgd_education-4418379",
+    "seconds": 1260.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418379"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e467-n6064-p->kaliningrad-school-klgd_education-4418380",
+    "seconds": 1250.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418380"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e467-n6064-p->kaliningrad-shopping_center-way-101820195",
+    "seconds": 950.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-101820195"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e467-n6064-p->kaliningrad-shopping_center-way-77806551",
+    "seconds": 1110.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-77806551"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6061-p->demo-kaliningrad-airport-model-2",
+    "seconds": 1810.0,
+    "to_node_id": "demo-kaliningrad-access:destination:demo-kaliningrad-airport-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6061-p->kaliningrad-adult_polyclinic-dce0201c87e5",
+    "seconds": 1400.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-dce0201c87e5"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6061-p->kaliningrad-adult_polyclinic-ebfd91789e16",
+    "seconds": 1550.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-ebfd91789e16"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6061-p->kaliningrad-airport-way-59178160",
+    "seconds": 19590.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-airport-way-59178160"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6061-p->kaliningrad-bus_terminal-way-1558947984",
+    "seconds": 870.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-1558947984"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6061-p->kaliningrad-bus_terminal-way-59285812",
+    "seconds": 2570.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-59285812"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6061-p->kaliningrad-child_polyclinic-24011a9a47d5",
+    "seconds": 3630.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-24011a9a47d5"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6061-p->kaliningrad-child_polyclinic-2732eb295a99",
+    "seconds": 3100.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-2732eb295a99"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6061-p->kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168",
+    "seconds": 2320.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6061-p->kaliningrad-college_university-relation-1308717",
+    "seconds": 2150.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-college_university-relation-1308717"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6061-p->kaliningrad-kindergarten-klgd_education-4423977",
+    "seconds": 1550.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423977"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6061-p->kaliningrad-kindergarten-klgd_education-4423995",
+    "seconds": 1440.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423995"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6061-p->kaliningrad-rail_terminal-node-2010693425",
+    "seconds": 2370.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-node-2010693425"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6061-p->kaliningrad-rail_terminal-way-45511034",
+    "seconds": 960.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-way-45511034"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6061-p->kaliningrad-school-klgd_education-4418379",
+    "seconds": 1820.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418379"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6061-p->kaliningrad-school-klgd_education-4418380",
+    "seconds": 1820.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418380"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6061-p->kaliningrad-shopping_center-way-101820195",
+    "seconds": 2020.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-101820195"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6061-p->kaliningrad-shopping_center-way-77806551",
+    "seconds": 1860.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-77806551"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6063-p->demo-kaliningrad-airport-model-2",
+    "seconds": 3450.0,
+    "to_node_id": "demo-kaliningrad-access:destination:demo-kaliningrad-airport-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6063-p->kaliningrad-adult_polyclinic-dce0201c87e5",
+    "seconds": 820.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-dce0201c87e5"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6063-p->kaliningrad-adult_polyclinic-ebfd91789e16",
+    "seconds": 700.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-ebfd91789e16"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6063-p->kaliningrad-airport-way-59178160",
+    "seconds": 17770.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-airport-way-59178160"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6063-p->kaliningrad-bus_terminal-way-1558947984",
+    "seconds": 2610.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-1558947984"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6063-p->kaliningrad-bus_terminal-way-59285812",
+    "seconds": 2580.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-59285812"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6063-p->kaliningrad-child_polyclinic-24011a9a47d5",
+    "seconds": 2320.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-24011a9a47d5"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6063-p->kaliningrad-child_polyclinic-2732eb295a99",
+    "seconds": 2430.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-2732eb295a99"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6063-p->kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168",
+    "seconds": 790.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6063-p->kaliningrad-college_university-relation-1308717",
+    "seconds": 350.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-college_university-relation-1308717"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6063-p->kaliningrad-kindergarten-klgd_education-4423977",
+    "seconds": 400.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423977"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6063-p->kaliningrad-kindergarten-klgd_education-4423995",
+    "seconds": 620.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423995"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6063-p->kaliningrad-rail_terminal-node-2010693425",
+    "seconds": 720.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-node-2010693425"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6063-p->kaliningrad-rail_terminal-way-45511034",
+    "seconds": 2550.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-way-45511034"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6063-p->kaliningrad-school-klgd_education-4418379",
+    "seconds": 180.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418379"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6063-p->kaliningrad-school-klgd_education-4418380",
+    "seconds": 200.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418380"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6063-p->kaliningrad-shopping_center-way-101820195",
+    "seconds": 620.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-101820195"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e468-n6063-p->kaliningrad-shopping_center-way-77806551",
+    "seconds": 630.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-77806551"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e469-n6062-p->demo-kaliningrad-airport-model-2",
+    "seconds": 2280.0,
+    "to_node_id": "demo-kaliningrad-access:destination:demo-kaliningrad-airport-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e469-n6062-p->kaliningrad-adult_polyclinic-dce0201c87e5",
+    "seconds": 1550.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-dce0201c87e5"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e469-n6062-p->kaliningrad-adult_polyclinic-ebfd91789e16",
+    "seconds": 1580.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-ebfd91789e16"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e469-n6062-p->kaliningrad-airport-way-59178160",
+    "seconds": 18470.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-airport-way-59178160"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e469-n6062-p->kaliningrad-bus_terminal-way-1558947984",
+    "seconds": 2190.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-1558947984"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e469-n6062-p->kaliningrad-bus_terminal-way-59285812",
+    "seconds": 1450.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-59285812"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e469-n6062-p->kaliningrad-child_polyclinic-24011a9a47d5",
+    "seconds": 3630.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-24011a9a47d5"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e469-n6062-p->kaliningrad-child_polyclinic-2732eb295a99",
+    "seconds": 3520.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-2732eb295a99"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e469-n6062-p->kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168",
+    "seconds": 2100.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e469-n6062-p->kaliningrad-college_university-relation-1308717",
+    "seconds": 1700.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-college_university-relation-1308717"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e469-n6062-p->kaliningrad-kindergarten-klgd_education-4423977",
+    "seconds": 1290.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423977"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e469-n6062-p->kaliningrad-kindergarten-klgd_education-4423995",
+    "seconds": 1400.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423995"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e469-n6062-p->kaliningrad-rail_terminal-node-2010693425",
+    "seconds": 2060.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-node-2010693425"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e469-n6062-p->kaliningrad-rail_terminal-way-45511034",
+    "seconds": 2270.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-way-45511034"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e469-n6062-p->kaliningrad-school-klgd_education-4418379",
+    "seconds": 1420.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418379"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e469-n6062-p->kaliningrad-school-klgd_education-4418380",
+    "seconds": 1430.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418380"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e469-n6062-p->kaliningrad-shopping_center-way-101820195",
+    "seconds": 1860.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-101820195"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e469-n6062-p->kaliningrad-shopping_center-way-77806551",
+    "seconds": 1770.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-77806551"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e470-n6064-p->demo-kaliningrad-airport-model-2",
+    "seconds": 4180.0,
+    "to_node_id": "demo-kaliningrad-access:destination:demo-kaliningrad-airport-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e470-n6064-p->kaliningrad-adult_polyclinic-dce0201c87e5",
+    "seconds": 2910.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-dce0201c87e5"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e470-n6064-p->kaliningrad-adult_polyclinic-ebfd91789e16",
+    "seconds": 2820.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-ebfd91789e16"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e470-n6064-p->kaliningrad-airport-way-59178160",
+    "seconds": 16460.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-airport-way-59178160"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e470-n6064-p->kaliningrad-bus_terminal-way-1558947984",
+    "seconds": 4260.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-1558947984"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e470-n6064-p->kaliningrad-bus_terminal-way-59285812",
+    "seconds": 1910.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-59285812"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e470-n6064-p->kaliningrad-child_polyclinic-24011a9a47d5",
+    "seconds": 3970.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-24011a9a47d5"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e470-n6064-p->kaliningrad-child_polyclinic-2732eb295a99",
+    "seconds": 4450.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-2732eb295a99"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e470-n6064-p->kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168",
+    "seconds": 2720.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e470-n6064-p->kaliningrad-college_university-relation-1308717",
+    "seconds": 2270.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-college_university-relation-1308717"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e470-n6064-p->kaliningrad-kindergarten-klgd_education-4423977",
+    "seconds": 2460.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423977"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e470-n6064-p->kaliningrad-kindergarten-klgd_education-4423995",
+    "seconds": 2700.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423995"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e470-n6064-p->kaliningrad-rail_terminal-node-2010693425",
+    "seconds": 2580.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-node-2010693425"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e470-n6064-p->kaliningrad-rail_terminal-way-45511034",
+    "seconds": 4300.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-way-45511034"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e470-n6064-p->kaliningrad-school-klgd_education-4418379",
+    "seconds": 2310.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418379"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e470-n6064-p->kaliningrad-school-klgd_education-4418380",
+    "seconds": 2330.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418380"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e470-n6064-p->kaliningrad-shopping_center-way-101820195",
+    "seconds": 2690.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-101820195"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:edges",
+     "demo-model:kaliningrad:footpaths"
+    ],
+    "from_node_id": "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "path_id": "demo-kaliningrad-walk:kaliningrad-utm34n-1km-v1-e470-n6064-p->kaliningrad-shopping_center-way-77806551",
+    "seconds": 2750.0,
+    "to_node_id": "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-77806551"
+   }
+  ],
+  "runs": [
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T08:40:00Z",
+      "departure_at": "2026-11-11T08:40:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T08:50:00Z",
+      "departure_at": "2026-11-11T08:50:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T08:56:50Z",
+      "departure_at": "2026-11-11T08:57:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T09:00:10Z",
+      "departure_at": "2026-11-11T09:00:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-1040"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:10:00Z",
+      "departure_at": "2026-11-11T06:10:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:20:00Z",
+      "departure_at": "2026-11-11T06:20:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:26:50Z",
+      "departure_at": "2026-11-11T06:27:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:30:10Z",
+      "departure_at": "2026-11-11T06:30:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-0810"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T09:02:00Z",
+      "departure_at": "2026-11-11T09:02:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T09:06:00Z",
+      "departure_at": "2026-11-11T09:06:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T09:14:50Z",
+      "departure_at": "2026-11-11T09:15:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T09:20:40Z",
+      "departure_at": "2026-11-11T09:20:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-B-1102"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:30:00Z",
+      "departure_at": "2026-11-11T05:30:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:40:00Z",
+      "departure_at": "2026-11-11T05:40:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:46:50Z",
+      "departure_at": "2026-11-11T05:47:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:50:10Z",
+      "departure_at": "2026-11-11T05:50:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-0730"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:32:00Z",
+      "departure_at": "2026-11-11T05:32:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:36:00Z",
+      "departure_at": "2026-11-11T05:36:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:44:50Z",
+      "departure_at": "2026-11-11T05:45:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:50:40Z",
+      "departure_at": "2026-11-11T05:50:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-B-0732"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T08:30:00Z",
+      "departure_at": "2026-11-11T08:30:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T08:40:00Z",
+      "departure_at": "2026-11-11T08:40:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T08:46:50Z",
+      "departure_at": "2026-11-11T08:47:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:50:10Z",
+      "departure_at": "2026-11-11T08:50:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-1030"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:50:00Z",
+      "departure_at": "2026-11-11T06:50:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:00:00Z",
+      "departure_at": "2026-11-11T07:00:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:06:50Z",
+      "departure_at": "2026-11-11T07:07:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:10:10Z",
+      "departure_at": "2026-11-11T07:10:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-0850"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:17:00Z",
+      "departure_at": "2026-11-11T07:17:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:21:00Z",
+      "departure_at": "2026-11-11T07:21:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:29:50Z",
+      "departure_at": "2026-11-11T07:30:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:35:40Z",
+      "departure_at": "2026-11-11T07:35:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-B-0917"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:10:00Z",
+      "departure_at": "2026-11-11T07:10:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:20:00Z",
+      "departure_at": "2026-11-11T07:20:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:26:50Z",
+      "departure_at": "2026-11-11T07:27:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:30:10Z",
+      "departure_at": "2026-11-11T07:30:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-0910"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T08:10:00Z",
+      "departure_at": "2026-11-11T08:10:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T08:20:00Z",
+      "departure_at": "2026-11-11T08:20:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T08:26:50Z",
+      "departure_at": "2026-11-11T08:27:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:30:10Z",
+      "departure_at": "2026-11-11T08:30:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-1010"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:32:00Z",
+      "departure_at": "2026-11-11T07:32:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:36:00Z",
+      "departure_at": "2026-11-11T07:36:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:44:50Z",
+      "departure_at": "2026-11-11T07:45:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:50:40Z",
+      "departure_at": "2026-11-11T07:50:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-B-0932"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:20:00Z",
+      "departure_at": "2026-11-11T06:20:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:30:00Z",
+      "departure_at": "2026-11-11T06:30:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:36:50Z",
+      "departure_at": "2026-11-11T06:37:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:40:10Z",
+      "departure_at": "2026-11-11T06:40:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-0820"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:02:00Z",
+      "departure_at": "2026-11-11T07:02:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:06:00Z",
+      "departure_at": "2026-11-11T07:06:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:14:50Z",
+      "departure_at": "2026-11-11T07:15:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:20:40Z",
+      "departure_at": "2026-11-11T07:20:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-B-0902"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T09:17:00Z",
+      "departure_at": "2026-11-11T09:17:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T09:21:00Z",
+      "departure_at": "2026-11-11T09:21:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T09:29:50Z",
+      "departure_at": "2026-11-11T09:30:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T09:35:40Z",
+      "departure_at": "2026-11-11T09:35:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-B-1117"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T08:20:00Z",
+      "departure_at": "2026-11-11T08:20:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T08:30:00Z",
+      "departure_at": "2026-11-11T08:30:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T08:36:50Z",
+      "departure_at": "2026-11-11T08:37:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:40:10Z",
+      "departure_at": "2026-11-11T08:40:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-1020"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:47:00Z",
+      "departure_at": "2026-11-11T05:47:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:51:00Z",
+      "departure_at": "2026-11-11T05:51:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:59:50Z",
+      "departure_at": "2026-11-11T06:00:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:05:40Z",
+      "departure_at": "2026-11-11T06:05:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-B-0747"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:20:00Z",
+      "departure_at": "2026-11-11T05:20:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:30:00Z",
+      "departure_at": "2026-11-11T05:30:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:36:50Z",
+      "departure_at": "2026-11-11T05:37:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:40:10Z",
+      "departure_at": "2026-11-11T05:40:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-0720"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:40:00Z",
+      "departure_at": "2026-11-11T06:40:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:50:00Z",
+      "departure_at": "2026-11-11T06:50:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:56:50Z",
+      "departure_at": "2026-11-11T06:57:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:00:10Z",
+      "departure_at": "2026-11-11T07:00:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-0840"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:17:00Z",
+      "departure_at": "2026-11-11T06:17:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:21:00Z",
+      "departure_at": "2026-11-11T06:21:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:29:50Z",
+      "departure_at": "2026-11-11T06:30:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:35:40Z",
+      "departure_at": "2026-11-11T06:35:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-B-0817"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T08:47:00Z",
+      "departure_at": "2026-11-11T08:47:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T08:51:00Z",
+      "departure_at": "2026-11-11T08:51:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T08:59:50Z",
+      "departure_at": "2026-11-11T09:00:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T09:05:40Z",
+      "departure_at": "2026-11-11T09:05:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-B-1047"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T08:50:00Z",
+      "departure_at": "2026-11-11T08:50:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T09:00:00Z",
+      "departure_at": "2026-11-11T09:00:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T09:06:50Z",
+      "departure_at": "2026-11-11T09:07:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T09:10:10Z",
+      "departure_at": "2026-11-11T09:10:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-1050"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:40:00Z",
+      "departure_at": "2026-11-11T05:40:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:50:00Z",
+      "departure_at": "2026-11-11T05:50:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:56:50Z",
+      "departure_at": "2026-11-11T05:57:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:00:10Z",
+      "departure_at": "2026-11-11T06:00:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-0740"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:00:00Z",
+      "departure_at": "2026-11-11T05:00:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:10:00Z",
+      "departure_at": "2026-11-11T05:10:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:16:50Z",
+      "departure_at": "2026-11-11T05:17:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:20:10Z",
+      "departure_at": "2026-11-11T05:20:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-0700"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T08:17:00Z",
+      "departure_at": "2026-11-11T08:17:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T08:21:00Z",
+      "departure_at": "2026-11-11T08:21:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T08:29:50Z",
+      "departure_at": "2026-11-11T08:30:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:35:40Z",
+      "departure_at": "2026-11-11T08:35:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-B-1017"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:50:00Z",
+      "departure_at": "2026-11-11T05:50:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:00:00Z",
+      "departure_at": "2026-11-11T06:00:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:06:50Z",
+      "departure_at": "2026-11-11T06:07:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:10:10Z",
+      "departure_at": "2026-11-11T06:10:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-0750"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T08:02:00Z",
+      "departure_at": "2026-11-11T08:02:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T08:06:00Z",
+      "departure_at": "2026-11-11T08:06:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T08:14:50Z",
+      "departure_at": "2026-11-11T08:15:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:20:40Z",
+      "departure_at": "2026-11-11T08:20:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-B-1002"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:47:00Z",
+      "departure_at": "2026-11-11T07:47:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:51:00Z",
+      "departure_at": "2026-11-11T07:51:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:59:50Z",
+      "departure_at": "2026-11-11T08:00:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:05:40Z",
+      "departure_at": "2026-11-11T08:05:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-B-0947"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T08:32:00Z",
+      "departure_at": "2026-11-11T08:32:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T08:36:00Z",
+      "departure_at": "2026-11-11T08:36:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T08:44:50Z",
+      "departure_at": "2026-11-11T08:45:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:50:40Z",
+      "departure_at": "2026-11-11T08:50:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-B-1032"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:50:00Z",
+      "departure_at": "2026-11-11T07:50:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T08:00:00Z",
+      "departure_at": "2026-11-11T08:00:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T08:06:50Z",
+      "departure_at": "2026-11-11T08:07:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:10:10Z",
+      "departure_at": "2026-11-11T08:10:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-0950"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:30:00Z",
+      "departure_at": "2026-11-11T07:30:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:40:00Z",
+      "departure_at": "2026-11-11T07:40:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:46:50Z",
+      "departure_at": "2026-11-11T07:47:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:50:10Z",
+      "departure_at": "2026-11-11T07:50:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-0930"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:02:00Z",
+      "departure_at": "2026-11-11T06:02:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:06:00Z",
+      "departure_at": "2026-11-11T06:06:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:14:50Z",
+      "departure_at": "2026-11-11T06:15:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:20:40Z",
+      "departure_at": "2026-11-11T06:20:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-B-0802"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:20:00Z",
+      "departure_at": "2026-11-11T07:20:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:30:00Z",
+      "departure_at": "2026-11-11T07:30:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:36:50Z",
+      "departure_at": "2026-11-11T07:37:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:40:10Z",
+      "departure_at": "2026-11-11T07:40:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-0920"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:10:00Z",
+      "departure_at": "2026-11-11T05:10:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:20:00Z",
+      "departure_at": "2026-11-11T05:20:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:26:50Z",
+      "departure_at": "2026-11-11T05:27:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:30:10Z",
+      "departure_at": "2026-11-11T05:30:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-0710"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:47:00Z",
+      "departure_at": "2026-11-11T06:47:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:51:00Z",
+      "departure_at": "2026-11-11T06:51:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:59:50Z",
+      "departure_at": "2026-11-11T07:00:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:05:40Z",
+      "departure_at": "2026-11-11T07:05:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-B-0847"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:00:00Z",
+      "departure_at": "2026-11-11T07:00:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:10:00Z",
+      "departure_at": "2026-11-11T07:10:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:16:50Z",
+      "departure_at": "2026-11-11T07:17:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:20:10Z",
+      "departure_at": "2026-11-11T07:20:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-0900"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:00:00Z",
+      "departure_at": "2026-11-11T06:00:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:10:00Z",
+      "departure_at": "2026-11-11T06:10:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:16:50Z",
+      "departure_at": "2026-11-11T06:17:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:20:10Z",
+      "departure_at": "2026-11-11T06:20:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-0800"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:40:00Z",
+      "departure_at": "2026-11-11T07:40:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:50:00Z",
+      "departure_at": "2026-11-11T07:50:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:56:50Z",
+      "departure_at": "2026-11-11T07:57:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:00:10Z",
+      "departure_at": "2026-11-11T08:00:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-0940"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:32:00Z",
+      "departure_at": "2026-11-11T06:32:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:36:00Z",
+      "departure_at": "2026-11-11T06:36:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:44:50Z",
+      "departure_at": "2026-11-11T06:45:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:50:40Z",
+      "departure_at": "2026-11-11T06:50:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-B-0832"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:30:00Z",
+      "departure_at": "2026-11-11T06:30:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:40:00Z",
+      "departure_at": "2026-11-11T06:40:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:46:50Z",
+      "departure_at": "2026-11-11T06:47:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:50:10Z",
+      "departure_at": "2026-11-11T06:50:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-0830"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:kaliningrad:calendar",
+     "demo-model:kaliningrad:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T08:00:00Z",
+      "departure_at": "2026-11-11T08:00:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T08:10:00Z",
+      "departure_at": "2026-11-11T08:10:20Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T08:16:50Z",
+      "departure_at": "2026-11-11T08:17:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:20:10Z",
+      "departure_at": "2026-11-11T08:20:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:kaliningrad:schedule"
+      ],
+      "node_id": "demo-kaliningrad-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Kaliningrad",
+    "transport_type": "bus",
+    "trip_id": "demo-kaliningrad-trip-A-1000"
+   }
+  ],
+  "scope": {
+   "calendar_complete": true,
+   "calendar_version": "demo-kaliningrad-2026-11-11.2:calendar",
+   "continuations_complete": true,
+   "end_at": "2026-11-11T22:00:00Z",
+   "evidence_refs": [
+    "demo-model:kaliningrad:schedule"
+   ],
+   "footpath_version": "demo-kaliningrad-2026-11-11.2:footpaths",
+   "footpaths_complete": true,
+   "graph_version": "demo-kaliningrad-2026-11-11.2:graph",
+   "limitations": [],
+   "node_ids": [
+    "demo-kaliningrad-access:destination:demo-kaliningrad-airport-model-2",
+    "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-dce0201c87e5",
+    "demo-kaliningrad-access:destination:kaliningrad-adult_polyclinic-ebfd91789e16",
+    "demo-kaliningrad-access:destination:kaliningrad-airport-way-59178160",
+    "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-1558947984",
+    "demo-kaliningrad-access:destination:kaliningrad-bus_terminal-way-59285812",
+    "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-24011a9a47d5",
+    "demo-kaliningrad-access:destination:kaliningrad-child_polyclinic-2732eb295a99",
+    "demo-kaliningrad-access:destination:kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168",
+    "demo-kaliningrad-access:destination:kaliningrad-college_university-relation-1308717",
+    "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423977",
+    "demo-kaliningrad-access:destination:kaliningrad-kindergarten-klgd_education-4423995",
+    "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-node-2010693425",
+    "demo-kaliningrad-access:destination:kaliningrad-rail_terminal-way-45511034",
+    "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418379",
+    "demo-kaliningrad-access:destination:kaliningrad-school-klgd_education-4418380",
+    "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-101820195",
+    "demo-kaliningrad-access:destination:kaliningrad-shopping_center-way-77806551",
+    "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "demo-kaliningrad-access:point:kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "demo-kaliningrad-stop-A1",
+    "demo-kaliningrad-stop-A2",
+    "demo-kaliningrad-stop-A3",
+    "demo-kaliningrad-stop-A4",
+    "demo-kaliningrad-stop-B1",
+    "demo-kaliningrad-stop-B2",
+    "demo-kaliningrad-stop-B3",
+    "demo-kaliningrad-stop-B4",
+    "physical:destination:demo-kaliningrad-airport-model-2",
+    "physical:destination:kaliningrad-adult_polyclinic-dce0201c87e5",
+    "physical:destination:kaliningrad-adult_polyclinic-ebfd91789e16",
+    "physical:destination:kaliningrad-airport-way-59178160",
+    "physical:destination:kaliningrad-bus_terminal-way-1558947984",
+    "physical:destination:kaliningrad-bus_terminal-way-59285812",
+    "physical:destination:kaliningrad-child_polyclinic-24011a9a47d5",
+    "physical:destination:kaliningrad-child_polyclinic-2732eb295a99",
+    "physical:destination:kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168",
+    "physical:destination:kaliningrad-college_university-relation-1308717",
+    "physical:destination:kaliningrad-kindergarten-klgd_education-4423977",
+    "physical:destination:kaliningrad-kindergarten-klgd_education-4423995",
+    "physical:destination:kaliningrad-rail_terminal-node-2010693425",
+    "physical:destination:kaliningrad-rail_terminal-way-45511034",
+    "physical:destination:kaliningrad-school-klgd_education-4418379",
+    "physical:destination:kaliningrad-school-klgd_education-4418380",
+    "physical:destination:kaliningrad-shopping_center-way-101820195",
+    "physical:destination:kaliningrad-shopping_center-way-77806551",
+    "physical:point:kaliningrad-utm34n-1km-v1-e466-n6065-p",
+    "physical:point:kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "physical:point:kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "physical:point:kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "physical:point:kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "physical:point:kaliningrad-utm34n-1km-v1-e470-n6064-p"
+   ],
+   "schedule_complete": true,
+   "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+   "start_at": "2026-11-11T04:00:00Z",
+   "timetable_version": "demo-kaliningrad-2026-11-11.2:timetable",
+   "timezone": "Europe/Kaliningrad",
+   "transfer_version": "demo-kaliningrad-2026-11-11.2:transfers",
+   "transfers_complete": true
+  },
+  "transfers": [
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:transfers"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A1",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-kaliningrad-minimum-A1-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-kaliningrad-stop-A1",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:transfers"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A2",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-kaliningrad-minimum-A2-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-kaliningrad-stop-A2",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:transfers"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A3",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-kaliningrad-minimum-A3-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-kaliningrad-stop-A3",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:transfers"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A4",
+    "from_run_id": null,
+    "minimum_seconds": 170.0,
+    "rule_id": "demo-kaliningrad-minimum-A4-B1",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-kaliningrad-stop-B1",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:transfers"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-A4",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-kaliningrad-minimum-A4-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-kaliningrad-stop-A4",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:transfers"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B1",
+    "from_run_id": null,
+    "minimum_seconds": 170.0,
+    "rule_id": "demo-kaliningrad-minimum-B1-A4",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-kaliningrad-stop-A4",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:transfers"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B1",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-kaliningrad-minimum-B1-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-kaliningrad-stop-B1",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:transfers"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B2",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-kaliningrad-minimum-B2-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-kaliningrad-stop-B2",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:transfers"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B3",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-kaliningrad-minimum-B3-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-kaliningrad-stop-B3",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:kaliningrad:transfers"
+    ],
+    "from_node_id": "demo-kaliningrad-stop-B4",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-kaliningrad-minimum-B4-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-kaliningrad-stop-B4",
+    "to_run_id": null
+   }
+  ]
+ },
+ "schema_version": "waydex-demo-closed-transport/1",
+ "snapshot_hash": "d55ba71ffe26e62b6e385386e6a138e9fe82b3b54d7a34b663d01f994485febe"
+}

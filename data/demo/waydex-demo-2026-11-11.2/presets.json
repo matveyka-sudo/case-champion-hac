@@ -1,0 +1,1362 @@
+[
+ {
+  "analysis_kind": "urban_passenger",
+  "categories": [
+   "adult_polyclinic",
+   "child_polyclinic",
+   "kindergarten",
+   "school",
+   "college_university",
+   "rail_terminal",
+   "bus_terminal",
+   "airport",
+   "shopping_center"
+  ],
+  "city_id": "moscow",
+  "comparison_ids": [],
+  "departure_utc": "2026-11-11T05:30:00Z",
+  "inputs": {
+   "destination_ids": [
+    "moscow-adult_polyclinic-mgfoms-25cdffc101d6",
+    "moscow-adult_polyclinic-mgfoms-ac9ad0e3515e",
+    "moscow-airport-relation-2673994",
+    "moscow-airport-relation-9772442",
+    "moscow-bus_terminal-node-5466089050",
+    "moscow-bus_terminal-relation-5823911",
+    "moscow-child_polyclinic-mgfoms-34376767c1bc",
+    "moscow-child_polyclinic-mgfoms-5ff4f43ed9a3",
+    "moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd",
+    "moscow-college_university-way-51015369",
+    "moscow-kindergarten-node-5332088797",
+    "moscow-kindergarten-relation-9355953",
+    "moscow-rail_terminal-relation-1395483",
+    "moscow-rail_terminal-relation-7253185",
+    "moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62",
+    "moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952",
+    "moscow-shopping_center-relation-3330565",
+    "moscow-shopping_center-relation-6233742"
+   ],
+   "edge_count": 108,
+   "origin_point_ids": [
+    "moscow-utm37n-1km-v1-e416-n6175-p",
+    "moscow-utm37n-1km-v1-e411-n6178-p",
+    "moscow-utm37n-1km-v1-e416-n6177-p",
+    "moscow-utm37n-1km-v1-e415-n6178-p",
+    "moscow-utm37n-1km-v1-e411-n6181-p",
+    "moscow-utm37n-1km-v1-e415-n6180-p"
+   ],
+   "trip_count": null
+  },
+  "label_ru": "Москва · пешком · 9 категорий · 11.11.2026 08:30",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "NO_SCHEDULE_OPERATIONS_FOR_MODE"
+  ],
+  "local_time": "08:30",
+  "model_destination_ids": [],
+  "origin": {
+   "destinations": "real",
+   "origins": "real",
+   "schedule": null,
+   "times": "synthetic"
+  },
+  "passenger_mode": "walk",
+  "preset_id": "demo-moscow-urban-walk",
+  "schedule_operations": [],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-moscow-2026-11-11.2",
+  "tab": "in_city",
+  "timezone": "Europe/Moscow",
+  "transport_receipt": null
+ },
+ {
+  "analysis_kind": "urban_passenger",
+  "categories": [
+   "adult_polyclinic",
+   "child_polyclinic",
+   "kindergarten",
+   "school",
+   "college_university",
+   "rail_terminal",
+   "bus_terminal",
+   "airport",
+   "shopping_center"
+  ],
+  "city_id": "moscow",
+  "comparison_ids": [],
+  "departure_utc": "2026-11-11T05:30:00Z",
+  "inputs": {
+   "destination_ids": [
+    "moscow-adult_polyclinic-mgfoms-25cdffc101d6",
+    "moscow-adult_polyclinic-mgfoms-ac9ad0e3515e",
+    "moscow-airport-relation-2673994",
+    "moscow-airport-relation-9772442",
+    "moscow-bus_terminal-node-5466089050",
+    "moscow-bus_terminal-relation-5823911",
+    "moscow-child_polyclinic-mgfoms-34376767c1bc",
+    "moscow-child_polyclinic-mgfoms-5ff4f43ed9a3",
+    "moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd",
+    "moscow-college_university-way-51015369",
+    "moscow-kindergarten-node-5332088797",
+    "moscow-kindergarten-relation-9355953",
+    "moscow-rail_terminal-relation-1395483",
+    "moscow-rail_terminal-relation-7253185",
+    "moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62",
+    "moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952",
+    "moscow-shopping_center-relation-3330565",
+    "moscow-shopping_center-relation-6233742"
+   ],
+   "edge_count": 108,
+   "origin_point_ids": [
+    "moscow-utm37n-1km-v1-e416-n6175-p",
+    "moscow-utm37n-1km-v1-e411-n6178-p",
+    "moscow-utm37n-1km-v1-e416-n6177-p",
+    "moscow-utm37n-1km-v1-e415-n6178-p",
+    "moscow-utm37n-1km-v1-e411-n6181-p",
+    "moscow-utm37n-1km-v1-e415-n6180-p"
+   ],
+   "trip_count": null
+  },
+  "label_ru": "Москва · на автомобиле · 9 категорий · 11.11.2026 08:30",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "NO_SCHEDULE_OPERATIONS_FOR_MODE"
+  ],
+  "local_time": "08:30",
+  "model_destination_ids": [],
+  "origin": {
+   "destinations": "real",
+   "origins": "real",
+   "schedule": null,
+   "times": "synthetic"
+  },
+  "passenger_mode": "private_car",
+  "preset_id": "demo-moscow-urban-car",
+  "schedule_operations": [],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-moscow-2026-11-11.2",
+  "tab": "in_city",
+  "timezone": "Europe/Moscow",
+  "transport_receipt": null
+ },
+ {
+  "analysis_kind": "urban_passenger",
+  "categories": [
+   "adult_polyclinic",
+   "child_polyclinic",
+   "kindergarten",
+   "school",
+   "college_university",
+   "rail_terminal",
+   "bus_terminal",
+   "airport",
+   "shopping_center"
+  ],
+  "city_id": "moscow",
+  "comparison_ids": [
+   "cmp-demo-moscow-urban-pt-coordinate_transfer",
+   "cmp-demo-moscow-urban-pt-additional_departure"
+  ],
+  "departure_utc": "2026-11-11T05:30:00Z",
+  "inputs": {
+   "destination_ids": [
+    "moscow-adult_polyclinic-mgfoms-25cdffc101d6",
+    "moscow-adult_polyclinic-mgfoms-ac9ad0e3515e",
+    "moscow-airport-relation-2673994",
+    "moscow-airport-relation-9772442",
+    "moscow-bus_terminal-node-5466089050",
+    "moscow-bus_terminal-relation-5823911",
+    "moscow-child_polyclinic-mgfoms-34376767c1bc",
+    "moscow-child_polyclinic-mgfoms-5ff4f43ed9a3",
+    "moscow-college_university-obrnadzor_accreditation-1d850b67-bb6c-a9d7-4903-b08a30cd55fd",
+    "moscow-college_university-way-51015369",
+    "moscow-kindergarten-node-5332088797",
+    "moscow-kindergarten-relation-9355953",
+    "moscow-rail_terminal-relation-1395483",
+    "moscow-rail_terminal-relation-7253185",
+    "moscow-school-obrnadzor_accreditation-3a214f84-d8bb-34c0-e6f6-03dfc5bb7f62",
+    "moscow-school-obrnadzor_accreditation-7d596f3f-d565-8368-10f3-e12124461952",
+    "moscow-shopping_center-relation-3330565",
+    "moscow-shopping_center-relation-6233742"
+   ],
+   "edge_count": null,
+   "origin_point_ids": [
+    "moscow-utm37n-1km-v1-e416-n6175-p",
+    "moscow-utm37n-1km-v1-e411-n6178-p",
+    "moscow-utm37n-1km-v1-e416-n6177-p",
+    "moscow-utm37n-1km-v1-e415-n6178-p",
+    "moscow-utm37n-1km-v1-e411-n6181-p",
+    "moscow-utm37n-1km-v1-e415-n6180-p"
+   ],
+   "trip_count": 40
+  },
+  "label_ru": "Москва · общественный транспорт · 9 категорий · 11.11.2026 08:30",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING"
+  ],
+  "local_time": "08:30",
+  "model_destination_ids": [],
+  "origin": {
+   "destinations": "real",
+   "origins": "real",
+   "schedule": "synthetic",
+   "times": "synthetic"
+  },
+  "passenger_mode": "public_transport",
+  "preset_id": "demo-moscow-urban-pt",
+  "schedule_operations": [
+   "coordinate_transfer",
+   "additional_departure"
+  ],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-moscow-2026-11-11.2",
+  "tab": "in_city",
+  "timezone": "Europe/Moscow",
+  "transport_receipt": "receipts/demo-moscow-2026-11-11.2-transport.json"
+ },
+ {
+  "analysis_kind": "urban_passenger",
+  "categories": [
+   "adult_polyclinic",
+   "child_polyclinic",
+   "kindergarten",
+   "school",
+   "college_university",
+   "rail_terminal",
+   "bus_terminal",
+   "airport",
+   "shopping_center"
+  ],
+  "city_id": "kaliningrad",
+  "comparison_ids": [],
+  "departure_utc": "2026-11-11T06:30:00Z",
+  "inputs": {
+   "destination_ids": [
+    "kaliningrad-adult_polyclinic-dce0201c87e5",
+    "kaliningrad-adult_polyclinic-ebfd91789e16",
+    "kaliningrad-airport-way-59178160",
+    "kaliningrad-bus_terminal-way-1558947984",
+    "kaliningrad-bus_terminal-way-59285812",
+    "kaliningrad-child_polyclinic-24011a9a47d5",
+    "kaliningrad-child_polyclinic-2732eb295a99",
+    "kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168",
+    "kaliningrad-college_university-relation-1308717",
+    "kaliningrad-kindergarten-klgd_education-4423977",
+    "kaliningrad-kindergarten-klgd_education-4423995",
+    "kaliningrad-rail_terminal-node-2010693425",
+    "kaliningrad-rail_terminal-way-45511034",
+    "kaliningrad-school-klgd_education-4418379",
+    "kaliningrad-school-klgd_education-4418380",
+    "kaliningrad-shopping_center-way-101820195",
+    "kaliningrad-shopping_center-way-77806551",
+    "demo-kaliningrad-airport-model-2"
+   ],
+   "edge_count": 108,
+   "origin_point_ids": [
+    "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "kaliningrad-utm34n-1km-v1-e466-n6065-p"
+   ],
+   "trip_count": null
+  },
+  "label_ru": "Калининград · пешком · 9 категорий · 11.11.2026 08:30",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "NO_SCHEDULE_OPERATIONS_FOR_MODE"
+  ],
+  "local_time": "08:30",
+  "model_destination_ids": [
+   "demo-kaliningrad-airport-model-2"
+  ],
+  "origin": {
+   "destinations": "real+model:1",
+   "origins": "real",
+   "schedule": null,
+   "times": "synthetic"
+  },
+  "passenger_mode": "walk",
+  "preset_id": "demo-kaliningrad-urban-walk",
+  "schedule_operations": [],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+  "tab": "in_city",
+  "timezone": "Europe/Kaliningrad",
+  "transport_receipt": null
+ },
+ {
+  "analysis_kind": "urban_passenger",
+  "categories": [
+   "adult_polyclinic",
+   "child_polyclinic",
+   "kindergarten",
+   "school",
+   "college_university",
+   "rail_terminal",
+   "bus_terminal",
+   "airport",
+   "shopping_center"
+  ],
+  "city_id": "kaliningrad",
+  "comparison_ids": [],
+  "departure_utc": "2026-11-11T06:30:00Z",
+  "inputs": {
+   "destination_ids": [
+    "kaliningrad-adult_polyclinic-dce0201c87e5",
+    "kaliningrad-adult_polyclinic-ebfd91789e16",
+    "kaliningrad-airport-way-59178160",
+    "kaliningrad-bus_terminal-way-1558947984",
+    "kaliningrad-bus_terminal-way-59285812",
+    "kaliningrad-child_polyclinic-24011a9a47d5",
+    "kaliningrad-child_polyclinic-2732eb295a99",
+    "kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168",
+    "kaliningrad-college_university-relation-1308717",
+    "kaliningrad-kindergarten-klgd_education-4423977",
+    "kaliningrad-kindergarten-klgd_education-4423995",
+    "kaliningrad-rail_terminal-node-2010693425",
+    "kaliningrad-rail_terminal-way-45511034",
+    "kaliningrad-school-klgd_education-4418379",
+    "kaliningrad-school-klgd_education-4418380",
+    "kaliningrad-shopping_center-way-101820195",
+    "kaliningrad-shopping_center-way-77806551",
+    "demo-kaliningrad-airport-model-2"
+   ],
+   "edge_count": 108,
+   "origin_point_ids": [
+    "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "kaliningrad-utm34n-1km-v1-e466-n6065-p"
+   ],
+   "trip_count": null
+  },
+  "label_ru": "Калининград · на автомобиле · 9 категорий · 11.11.2026 08:30",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "NO_SCHEDULE_OPERATIONS_FOR_MODE"
+  ],
+  "local_time": "08:30",
+  "model_destination_ids": [
+   "demo-kaliningrad-airport-model-2"
+  ],
+  "origin": {
+   "destinations": "real+model:1",
+   "origins": "real",
+   "schedule": null,
+   "times": "synthetic"
+  },
+  "passenger_mode": "private_car",
+  "preset_id": "demo-kaliningrad-urban-car",
+  "schedule_operations": [],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+  "tab": "in_city",
+  "timezone": "Europe/Kaliningrad",
+  "transport_receipt": null
+ },
+ {
+  "analysis_kind": "urban_passenger",
+  "categories": [
+   "adult_polyclinic",
+   "child_polyclinic",
+   "kindergarten",
+   "school",
+   "college_university",
+   "rail_terminal",
+   "bus_terminal",
+   "airport",
+   "shopping_center"
+  ],
+  "city_id": "kaliningrad",
+  "comparison_ids": [
+   "cmp-demo-kaliningrad-urban-pt-coordinate_transfer",
+   "cmp-demo-kaliningrad-urban-pt-additional_departure"
+  ],
+  "departure_utc": "2026-11-11T06:30:00Z",
+  "inputs": {
+   "destination_ids": [
+    "kaliningrad-adult_polyclinic-dce0201c87e5",
+    "kaliningrad-adult_polyclinic-ebfd91789e16",
+    "kaliningrad-airport-way-59178160",
+    "kaliningrad-bus_terminal-way-1558947984",
+    "kaliningrad-bus_terminal-way-59285812",
+    "kaliningrad-child_polyclinic-24011a9a47d5",
+    "kaliningrad-child_polyclinic-2732eb295a99",
+    "kaliningrad-college_university-obrnadzor_accreditation-d8e11cd482d923278190f44b09f5b168",
+    "kaliningrad-college_university-relation-1308717",
+    "kaliningrad-kindergarten-klgd_education-4423977",
+    "kaliningrad-kindergarten-klgd_education-4423995",
+    "kaliningrad-rail_terminal-node-2010693425",
+    "kaliningrad-rail_terminal-way-45511034",
+    "kaliningrad-school-klgd_education-4418379",
+    "kaliningrad-school-klgd_education-4418380",
+    "kaliningrad-shopping_center-way-101820195",
+    "kaliningrad-shopping_center-way-77806551",
+    "demo-kaliningrad-airport-model-2"
+   ],
+   "edge_count": null,
+   "origin_point_ids": [
+    "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+    "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+    "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+    "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+    "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+    "kaliningrad-utm34n-1km-v1-e466-n6065-p"
+   ],
+   "trip_count": 40
+  },
+  "label_ru": "Калининград · общественный транспорт · 9 категорий · 11.11.2026 08:30",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING"
+  ],
+  "local_time": "08:30",
+  "model_destination_ids": [
+   "demo-kaliningrad-airport-model-2"
+  ],
+  "origin": {
+   "destinations": "real+model:1",
+   "origins": "real",
+   "schedule": "synthetic",
+   "times": "synthetic"
+  },
+  "passenger_mode": "public_transport",
+  "preset_id": "demo-kaliningrad-urban-pt",
+  "schedule_operations": [
+   "coordinate_transfer",
+   "additional_departure"
+  ],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+  "tab": "in_city",
+  "timezone": "Europe/Kaliningrad",
+  "transport_receipt": "receipts/demo-kaliningrad-2026-11-11.2-transport.json"
+ },
+ {
+  "analysis_kind": "urban_passenger",
+  "categories": [
+   "adult_polyclinic",
+   "child_polyclinic",
+   "kindergarten",
+   "school",
+   "college_university",
+   "rail_terminal",
+   "bus_terminal",
+   "airport",
+   "shopping_center"
+  ],
+  "city_id": "novorossiysk",
+  "comparison_ids": [],
+  "departure_utc": "2026-11-11T05:30:00Z",
+  "inputs": {
+   "destination_ids": [
+    "novorossiysk-adult_polyclinic-a96a4f8aea02",
+    "novorossiysk-adult_polyclinic-d7725c0eca3f",
+    "novorossiysk-airport-relation-1519974",
+    "novorossiysk-bus_terminal-node-1877855052",
+    "novorossiysk-bus_terminal-way-61808901",
+    "novorossiysk-child_polyclinic-2fc149e7dc8a",
+    "novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea",
+    "novorossiysk-college_university-way-483100861",
+    "novorossiysk-kindergarten-gorono-17",
+    "novorossiysk-kindergarten-gorono-56",
+    "novorossiysk-rail_terminal-node-343446779",
+    "novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f",
+    "novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160",
+    "novorossiysk-shopping_center-way-482887330",
+    "novorossiysk-shopping_center-way-511814920",
+    "demo-novorossiysk-child_polyclinic-model-2",
+    "demo-novorossiysk-rail_terminal-model-2",
+    "demo-novorossiysk-airport-model-2"
+   ],
+   "edge_count": 108,
+   "origin_point_ids": [
+    "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "novorossiysk-utm37n-1km-v1-e402-n4949-p"
+   ],
+   "trip_count": null
+  },
+  "label_ru": "Новороссийск · пешком · 9 категорий · 11.11.2026 08:30",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "NO_SCHEDULE_OPERATIONS_FOR_MODE"
+  ],
+  "local_time": "08:30",
+  "model_destination_ids": [
+   "demo-novorossiysk-child_polyclinic-model-2",
+   "demo-novorossiysk-rail_terminal-model-2",
+   "demo-novorossiysk-airport-model-2"
+  ],
+  "origin": {
+   "destinations": "real+model:3",
+   "origins": "real",
+   "schedule": null,
+   "times": "synthetic"
+  },
+  "passenger_mode": "walk",
+  "preset_id": "demo-novorossiysk-urban-walk",
+  "schedule_operations": [],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+  "tab": "in_city",
+  "timezone": "Europe/Moscow",
+  "transport_receipt": null
+ },
+ {
+  "analysis_kind": "urban_passenger",
+  "categories": [
+   "adult_polyclinic",
+   "child_polyclinic",
+   "kindergarten",
+   "school",
+   "college_university",
+   "rail_terminal",
+   "bus_terminal",
+   "airport",
+   "shopping_center"
+  ],
+  "city_id": "novorossiysk",
+  "comparison_ids": [],
+  "departure_utc": "2026-11-11T05:30:00Z",
+  "inputs": {
+   "destination_ids": [
+    "novorossiysk-adult_polyclinic-a96a4f8aea02",
+    "novorossiysk-adult_polyclinic-d7725c0eca3f",
+    "novorossiysk-airport-relation-1519974",
+    "novorossiysk-bus_terminal-node-1877855052",
+    "novorossiysk-bus_terminal-way-61808901",
+    "novorossiysk-child_polyclinic-2fc149e7dc8a",
+    "novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea",
+    "novorossiysk-college_university-way-483100861",
+    "novorossiysk-kindergarten-gorono-17",
+    "novorossiysk-kindergarten-gorono-56",
+    "novorossiysk-rail_terminal-node-343446779",
+    "novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f",
+    "novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160",
+    "novorossiysk-shopping_center-way-482887330",
+    "novorossiysk-shopping_center-way-511814920",
+    "demo-novorossiysk-child_polyclinic-model-2",
+    "demo-novorossiysk-rail_terminal-model-2",
+    "demo-novorossiysk-airport-model-2"
+   ],
+   "edge_count": 108,
+   "origin_point_ids": [
+    "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "novorossiysk-utm37n-1km-v1-e402-n4949-p"
+   ],
+   "trip_count": null
+  },
+  "label_ru": "Новороссийск · на автомобиле · 9 категорий · 11.11.2026 08:30",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "NO_SCHEDULE_OPERATIONS_FOR_MODE"
+  ],
+  "local_time": "08:30",
+  "model_destination_ids": [
+   "demo-novorossiysk-child_polyclinic-model-2",
+   "demo-novorossiysk-rail_terminal-model-2",
+   "demo-novorossiysk-airport-model-2"
+  ],
+  "origin": {
+   "destinations": "real+model:3",
+   "origins": "real",
+   "schedule": null,
+   "times": "synthetic"
+  },
+  "passenger_mode": "private_car",
+  "preset_id": "demo-novorossiysk-urban-car",
+  "schedule_operations": [],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+  "tab": "in_city",
+  "timezone": "Europe/Moscow",
+  "transport_receipt": null
+ },
+ {
+  "analysis_kind": "urban_passenger",
+  "categories": [
+   "adult_polyclinic",
+   "child_polyclinic",
+   "kindergarten",
+   "school",
+   "college_university",
+   "rail_terminal",
+   "bus_terminal",
+   "airport",
+   "shopping_center"
+  ],
+  "city_id": "novorossiysk",
+  "comparison_ids": [
+   "cmp-demo-novorossiysk-urban-pt-coordinate_transfer",
+   "cmp-demo-novorossiysk-urban-pt-additional_departure"
+  ],
+  "departure_utc": "2026-11-11T05:30:00Z",
+  "inputs": {
+   "destination_ids": [
+    "novorossiysk-adult_polyclinic-a96a4f8aea02",
+    "novorossiysk-adult_polyclinic-d7725c0eca3f",
+    "novorossiysk-airport-relation-1519974",
+    "novorossiysk-bus_terminal-node-1877855052",
+    "novorossiysk-bus_terminal-way-61808901",
+    "novorossiysk-child_polyclinic-2fc149e7dc8a",
+    "novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea",
+    "novorossiysk-college_university-way-483100861",
+    "novorossiysk-kindergarten-gorono-17",
+    "novorossiysk-kindergarten-gorono-56",
+    "novorossiysk-rail_terminal-node-343446779",
+    "novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f",
+    "novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160",
+    "novorossiysk-shopping_center-way-482887330",
+    "novorossiysk-shopping_center-way-511814920",
+    "demo-novorossiysk-child_polyclinic-model-2",
+    "demo-novorossiysk-rail_terminal-model-2",
+    "demo-novorossiysk-airport-model-2"
+   ],
+   "edge_count": null,
+   "origin_point_ids": [
+    "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "novorossiysk-utm37n-1km-v1-e402-n4949-p"
+   ],
+   "trip_count": 41
+  },
+  "label_ru": "Новороссийск · общественный транспорт · 9 категорий · 11.11.2026 08:30",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING"
+  ],
+  "local_time": "08:30",
+  "model_destination_ids": [
+   "demo-novorossiysk-child_polyclinic-model-2",
+   "demo-novorossiysk-rail_terminal-model-2",
+   "demo-novorossiysk-airport-model-2"
+  ],
+  "origin": {
+   "destinations": "real+model:3",
+   "origins": "real",
+   "schedule": "synthetic",
+   "times": "synthetic"
+  },
+  "passenger_mode": "public_transport",
+  "preset_id": "demo-novorossiysk-urban-pt",
+  "schedule_operations": [
+   "coordinate_transfer",
+   "additional_departure"
+  ],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+  "tab": "in_city",
+  "timezone": "Europe/Moscow",
+  "transport_receipt": "receipts/demo-novorossiysk-2026-11-11.2-transport.json"
+ },
+ {
+  "analysis_kind": "intercity_passenger",
+  "applicability": {
+   "air": "model_schedule",
+   "rail": "model_schedule",
+   "road_bus": "not_applicable:INTERNATIONAL_TRANSIT_BUS_NOT_MODELLED",
+   "road_car": "real_observation",
+   "water": "not_applicable:NO_SCHEDULED_PASSENGER_WATER_LINK_BETWEEN_THESE_CITIES"
+  },
+  "comparison_ids": [
+   "cmp-demo-ic-moscow--kaliningrad-additional_departure"
+  ],
+  "departure_utc": "2026-11-11T05:30:00Z",
+  "destination_city_id": "kaliningrad",
+  "inputs": {
+   "trip_ids": [
+    "demo-ic-air-moscow--kaliningrad-1320"
+   ]
+  },
+  "label_ru": "Москва → Калининград · самолёт",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "MODEL_SCHEDULE_NOT_A_REAL_TIMETABLE"
+  ],
+  "local_time": "08:30",
+  "origin": {
+   "nodes": "real",
+   "road_observation": "real_observation",
+   "schedule": "synthetic"
+  },
+  "origin_city_id": "moscow",
+  "passenger_mode": "air",
+  "preset_id": "demo-ic-moscow--kaliningrad",
+  "route_plan": "air",
+  "schedule_operations": [
+   "additional_departure"
+  ],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-intercity-2026-11-11.2",
+  "tab": "passenger_links",
+  "timezone": "Europe/Moscow"
+ },
+ {
+  "analysis_kind": "intercity_passenger",
+  "applicability": {
+   "air": "model_schedule",
+   "rail": "model_schedule",
+   "road_bus": "not_applicable:INTERNATIONAL_TRANSIT_BUS_NOT_MODELLED",
+   "road_car": "real_observation",
+   "water": "not_applicable:NO_SCHEDULED_PASSENGER_WATER_LINK_BETWEEN_THESE_CITIES"
+  },
+  "comparison_ids": [
+   "cmp-demo-ic-kaliningrad--moscow-additional_departure"
+  ],
+  "departure_utc": "2026-11-11T06:30:00Z",
+  "destination_city_id": "moscow",
+  "inputs": {
+   "trip_ids": [
+    "demo-ic-air-kaliningrad--moscow-1240"
+   ]
+  },
+  "label_ru": "Калининград → Москва · самолёт",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "MODEL_SCHEDULE_NOT_A_REAL_TIMETABLE"
+  ],
+  "local_time": "08:30",
+  "origin": {
+   "nodes": "real",
+   "road_observation": "real_observation",
+   "schedule": "synthetic"
+  },
+  "origin_city_id": "kaliningrad",
+  "passenger_mode": "air",
+  "preset_id": "demo-ic-kaliningrad--moscow",
+  "route_plan": "air",
+  "schedule_operations": [
+   "additional_departure"
+  ],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-intercity-2026-11-11.2",
+  "tab": "passenger_links",
+  "timezone": "Europe/Kaliningrad"
+ },
+ {
+  "analysis_kind": "intercity_passenger",
+  "applicability": {
+   "air": "model_schedule",
+   "rail": "model_schedule",
+   "road_bus": "model_schedule",
+   "road_car": "real_observation",
+   "water": "not_applicable:NO_SCHEDULED_PASSENGER_WATER_LINK_BETWEEN_THESE_CITIES"
+  },
+  "comparison_ids": [
+   "cmp-demo-ic-moscow--novorossiysk-additional_departure"
+  ],
+  "departure_utc": "2026-11-11T05:30:00Z",
+  "destination_city_id": "novorossiysk",
+  "inputs": {
+   "trip_ids": [
+    "demo-ic-rail-moscow--novorossiysk-1240"
+   ]
+  },
+  "label_ru": "Москва → Новороссийск · поезд",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "MODEL_SCHEDULE_NOT_A_REAL_TIMETABLE"
+  ],
+  "local_time": "08:30",
+  "origin": {
+   "nodes": "real",
+   "road_observation": "real_observation",
+   "schedule": "synthetic"
+  },
+  "origin_city_id": "moscow",
+  "passenger_mode": "rail",
+  "preset_id": "demo-ic-moscow--novorossiysk",
+  "route_plan": "rail",
+  "schedule_operations": [
+   "additional_departure"
+  ],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-intercity-2026-11-11.2",
+  "tab": "passenger_links",
+  "timezone": "Europe/Moscow"
+ },
+ {
+  "analysis_kind": "intercity_passenger",
+  "applicability": {
+   "air": "model_schedule",
+   "rail": "model_schedule",
+   "road_bus": "model_schedule",
+   "road_car": "real_observation",
+   "water": "not_applicable:NO_SCHEDULED_PASSENGER_WATER_LINK_BETWEEN_THESE_CITIES"
+  },
+  "comparison_ids": [
+   "cmp-demo-ic-novorossiysk--moscow-additional_departure"
+  ],
+  "departure_utc": "2026-11-11T05:30:00Z",
+  "destination_city_id": "moscow",
+  "inputs": {
+   "trip_ids": [
+    "demo-ic-rail-novorossiysk--moscow-1340"
+   ]
+  },
+  "label_ru": "Новороссийск → Москва · поезд",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "MODEL_SCHEDULE_NOT_A_REAL_TIMETABLE"
+  ],
+  "local_time": "08:30",
+  "origin": {
+   "nodes": "real",
+   "road_observation": "real_observation",
+   "schedule": "synthetic"
+  },
+  "origin_city_id": "novorossiysk",
+  "passenger_mode": "rail",
+  "preset_id": "demo-ic-novorossiysk--moscow",
+  "route_plan": "rail",
+  "schedule_operations": [
+   "additional_departure"
+  ],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-intercity-2026-11-11.2",
+  "tab": "passenger_links",
+  "timezone": "Europe/Moscow"
+ },
+ {
+  "analysis_kind": "intercity_passenger",
+  "applicability": {
+   "air": "model_schedule_via_moscow",
+   "rail": "not_applicable:NO_DIRECT_RAIL_LINK_AND_CROSS_TERMINAL_TRANSFER_IN_MOSCOW_NOT_MODELLED",
+   "road_bus": "not_applicable:INTERNATIONAL_TRANSIT_BUS_NOT_MODELLED",
+   "road_car": "ROAD_OBSERVATION_UNAVAILABLE:154:Path distance exceeds the max distance limit: 1500000 meters",
+   "water": "not_applicable:NO_SCHEDULED_PASSENGER_WATER_LINK_BETWEEN_THESE_CITIES"
+  },
+  "comparison_ids": [
+   "cmp-demo-ic-kaliningrad--novorossiysk-coordinate_transfer"
+  ],
+  "departure_utc": "2026-11-11T06:30:00Z",
+  "destination_city_id": "novorossiysk",
+  "inputs": {
+   "trip_ids": [
+    "demo-ic-air-kaliningrad--moscow-1240",
+    "demo-ic-air-moscow--novorossiysk-2040"
+   ]
+  },
+  "label_ru": "Калининград → Новороссийск · самолёт через Москву",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "MODEL_SCHEDULE_NOT_A_REAL_TIMETABLE"
+  ],
+  "local_time": "08:30",
+  "origin": {
+   "nodes": "real",
+   "road_observation": "ROAD_OBSERVATION_UNAVAILABLE:154:Path distance exceeds the max distance limit: 1500000 meters",
+   "schedule": "synthetic"
+  },
+  "origin_city_id": "kaliningrad",
+  "passenger_mode": "air",
+  "preset_id": "demo-ic-kaliningrad--novorossiysk",
+  "route_plan": "air_via_moscow",
+  "schedule_operations": [
+   "coordinate_transfer"
+  ],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-intercity-2026-11-11.2",
+  "tab": "passenger_links",
+  "timezone": "Europe/Kaliningrad"
+ },
+ {
+  "analysis_kind": "intercity_passenger",
+  "applicability": {
+   "air": "model_schedule_via_moscow",
+   "rail": "not_applicable:NO_DIRECT_RAIL_LINK_AND_CROSS_TERMINAL_TRANSFER_IN_MOSCOW_NOT_MODELLED",
+   "road_bus": "not_applicable:INTERNATIONAL_TRANSIT_BUS_NOT_MODELLED",
+   "road_car": "ROAD_OBSERVATION_UNAVAILABLE:154:Path distance exceeds the max distance limit: 1500000 meters",
+   "water": "not_applicable:NO_SCHEDULED_PASSENGER_WATER_LINK_BETWEEN_THESE_CITIES"
+  },
+  "comparison_ids": [
+   "cmp-demo-ic-novorossiysk--kaliningrad-coordinate_transfer"
+  ],
+  "departure_utc": "2026-11-11T05:30:00Z",
+  "destination_city_id": "kaliningrad",
+  "inputs": {
+   "trip_ids": [
+    "demo-ic-air-novorossiysk--moscow-1145",
+    "demo-ic-air-moscow--kaliningrad-1905"
+   ]
+  },
+  "label_ru": "Новороссийск → Калининград · самолёт через Москву",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "MODEL_SCHEDULE_NOT_A_REAL_TIMETABLE"
+  ],
+  "local_time": "08:30",
+  "origin": {
+   "nodes": "real",
+   "road_observation": "ROAD_OBSERVATION_UNAVAILABLE:154:Path distance exceeds the max distance limit: 1500000 meters",
+   "schedule": "synthetic"
+  },
+  "origin_city_id": "novorossiysk",
+  "passenger_mode": "air",
+  "preset_id": "demo-ic-novorossiysk--kaliningrad",
+  "route_plan": "air_via_moscow",
+  "schedule_operations": [
+   "coordinate_transfer"
+  ],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-intercity-2026-11-11.2",
+  "tab": "passenger_links",
+  "timezone": "Europe/Moscow"
+ },
+ {
+  "analysis_kind": "urban_cargo",
+  "cargo_profile_id": "truck-model-20t-container-nonfood-ordinary",
+  "city_id": "moscow",
+  "comparison_ids": [
+   "cmp-demo-moscow-cargo-urban-reduce_handling_wait"
+  ],
+  "departure_utc": "2026-11-11T05:30:00Z",
+  "direction": "outbound",
+  "freight_node_id": "demo-moscow-logistics-terminal-model",
+  "inputs": {
+   "approach_edge_id": "demo-moscow-truck:moscow-site-relation-9975357:demo-moscow-logistics-terminal-model:outbound"
+  },
+  "label_ru": "Москва · площадка → грузовой узел · контейнер 20 т",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING"
+  ],
+  "local_time": "08:30",
+  "origin": {
+   "approach": "synthetic",
+   "handling": "synthetic",
+   "node": "model",
+   "site": "real"
+  },
+  "preset_id": "demo-moscow-cargo-urban",
+  "schedule_operations": [
+   "reduce_handling_wait"
+  ],
+  "service_date": "2026-11-11",
+  "site_id": "moscow-site-relation-9975357",
+  "snapshot_id": "demo-moscow-2026-11-11.2",
+  "tab": "cargo_in_city",
+  "timezone": "Europe/Moscow"
+ },
+ {
+  "analysis_kind": "urban_cargo",
+  "cargo_profile_id": "truck-model-20t-container-nonfood-ordinary",
+  "city_id": "kaliningrad",
+  "comparison_ids": [
+   "cmp-demo-kaliningrad-cargo-urban-reduce_handling_wait"
+  ],
+  "departure_utc": "2026-11-11T06:30:00Z",
+  "direction": "outbound",
+  "freight_node_id": "kaliningrad-port-relation-21031708",
+  "inputs": {
+   "approach_edge_id": "demo-kaliningrad-truck:kaliningrad-site-relation-1307845:kaliningrad-port-relation-21031708:outbound"
+  },
+  "label_ru": "Калининград · площадка → грузовой узел · контейнер 20 т",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING"
+  ],
+  "local_time": "08:30",
+  "origin": {
+   "approach": "real_observation",
+   "handling": "synthetic",
+   "node": "real_location_model_operations",
+   "site": "real"
+  },
+  "preset_id": "demo-kaliningrad-cargo-urban",
+  "schedule_operations": [
+   "reduce_handling_wait"
+  ],
+  "service_date": "2026-11-11",
+  "site_id": "kaliningrad-site-relation-1307845",
+  "snapshot_id": "demo-kaliningrad-2026-11-11.2",
+  "tab": "cargo_in_city",
+  "timezone": "Europe/Kaliningrad"
+ },
+ {
+  "analysis_kind": "urban_cargo",
+  "cargo_profile_id": "truck-model-20t-container-nonfood-ordinary",
+  "city_id": "novorossiysk",
+  "comparison_ids": [
+   "cmp-demo-novorossiysk-cargo-urban-reduce_handling_wait"
+  ],
+  "departure_utc": "2026-11-11T05:30:00Z",
+  "direction": "outbound",
+  "freight_node_id": "novorossiysk-port-way-1168951234",
+  "inputs": {
+   "approach_edge_id": "demo-novorossiysk-truck:novorossiysk-site-way-31091391:novorossiysk-port-way-1168951234:outbound"
+  },
+  "label_ru": "Новороссийск · площадка → грузовой узел · контейнер 20 т",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING"
+  ],
+  "local_time": "08:30",
+  "origin": {
+   "approach": "real_observation",
+   "handling": "synthetic",
+   "node": "real_location_model_operations",
+   "site": "real"
+  },
+  "preset_id": "demo-novorossiysk-cargo-urban",
+  "schedule_operations": [
+   "reduce_handling_wait"
+  ],
+  "service_date": "2026-11-11",
+  "site_id": "novorossiysk-site-way-31091391",
+  "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+  "tab": "cargo_in_city",
+  "timezone": "Europe/Moscow"
+ },
+ {
+  "analysis_kind": "intercity_cargo",
+  "applicability": {
+   "air": "not_applicable:AIR_CARGO_NOT_MODELLED_FOR_CONTAINER_PROFILE",
+   "pipeline": "not_applicable:NO_PIPELINE_LINK",
+   "rail": "model_chain",
+   "road": "not_applicable:LONG_HAUL_ROAD_NOT_IN_DEMO_CHAIN",
+   "water": "not_applicable:NO_WATER_LINK_MODELLED"
+  },
+  "cargo_profile_id": "truck-model-20t-container-nonfood-ordinary",
+  "chain_id": "demo-icf-moscow--kaliningrad",
+  "comparison_ids": [
+   "cmp-demo-icc-moscow--kaliningrad-reduce_transshipment_time"
+  ],
+  "departure_utc": "2026-11-11T05:30:00Z",
+  "destination_city_id": "kaliningrad",
+  "inputs": {
+   "leg_ids": [
+    "demo-icf-moscow--kaliningrad-1",
+    "demo-icf-moscow--kaliningrad-2",
+    "demo-icf-moscow--kaliningrad-3"
+   ]
+  },
+  "label_ru": "Москва → Калининград · груз · ж/д",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "FOREIGN_TRANSIT_TERRITORY",
+   "PIPELINE_EXCLUDED_FROM_DELIVERY_INDEX"
+  ],
+  "local_time": "08:30",
+  "main_mode": "rail",
+  "origin": {
+   "chain": "synthetic",
+   "sites_nodes": "real+model"
+  },
+  "origin_city_id": "moscow",
+  "preset_id": "demo-icc-moscow--kaliningrad",
+  "schedule_operations": [
+   "reduce_transshipment_time"
+  ],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-intercity-2026-11-11.2",
+  "tab": "cargo_between",
+  "timezone": "Europe/Moscow"
+ },
+ {
+  "analysis_kind": "intercity_cargo",
+  "applicability": {
+   "air": "not_applicable:AIR_CARGO_NOT_MODELLED_FOR_CONTAINER_PROFILE",
+   "pipeline": "not_applicable:NO_PIPELINE_LINK",
+   "rail": "model_chain",
+   "road": "not_applicable:LONG_HAUL_ROAD_NOT_IN_DEMO_CHAIN",
+   "water": "not_applicable:NO_WATER_LINK_MODELLED"
+  },
+  "cargo_profile_id": "truck-model-20t-container-nonfood-ordinary",
+  "chain_id": "demo-icf-kaliningrad--moscow",
+  "comparison_ids": [
+   "cmp-demo-icc-kaliningrad--moscow-add_compatible_departure"
+  ],
+  "departure_utc": "2026-11-11T06:30:00Z",
+  "destination_city_id": "moscow",
+  "inputs": {
+   "leg_ids": [
+    "demo-icf-kaliningrad--moscow-1",
+    "demo-icf-kaliningrad--moscow-2",
+    "demo-icf-kaliningrad--moscow-3"
+   ]
+  },
+  "label_ru": "Калининград → Москва · груз · ж/д",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "FOREIGN_TRANSIT_TERRITORY",
+   "PIPELINE_EXCLUDED_FROM_DELIVERY_INDEX"
+  ],
+  "local_time": "08:30",
+  "main_mode": "rail",
+  "origin": {
+   "chain": "synthetic",
+   "sites_nodes": "real+model"
+  },
+  "origin_city_id": "kaliningrad",
+  "preset_id": "demo-icc-kaliningrad--moscow",
+  "schedule_operations": [
+   "add_compatible_departure"
+  ],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-intercity-2026-11-11.2",
+  "tab": "cargo_between",
+  "timezone": "Europe/Kaliningrad"
+ },
+ {
+  "analysis_kind": "intercity_cargo",
+  "applicability": {
+   "air": "not_applicable:AIR_CARGO_NOT_MODELLED_FOR_CONTAINER_PROFILE",
+   "pipeline": "separate_profile:demo-novorossiysk-pipeline",
+   "rail": "model_chain",
+   "road": "not_applicable:LONG_HAUL_ROAD_NOT_IN_DEMO_CHAIN",
+   "water": "not_applicable:NO_WATER_LINK_MODELLED"
+  },
+  "cargo_profile_id": "truck-model-20t-container-nonfood-ordinary",
+  "chain_id": "demo-icf-moscow--novorossiysk",
+  "comparison_ids": [
+   "cmp-demo-icc-moscow--novorossiysk-add_compatible_departure"
+  ],
+  "departure_utc": "2026-11-11T05:30:00Z",
+  "destination_city_id": "novorossiysk",
+  "inputs": {
+   "leg_ids": [
+    "demo-icf-moscow--novorossiysk-1",
+    "demo-icf-moscow--novorossiysk-2",
+    "demo-icf-moscow--novorossiysk-3"
+   ]
+  },
+  "label_ru": "Москва → Новороссийск · груз · ж/д",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "PIPELINE_EXCLUDED_FROM_DELIVERY_INDEX"
+  ],
+  "local_time": "08:30",
+  "main_mode": "rail",
+  "origin": {
+   "chain": "synthetic",
+   "sites_nodes": "real+model"
+  },
+  "origin_city_id": "moscow",
+  "preset_id": "demo-icc-moscow--novorossiysk",
+  "schedule_operations": [
+   "add_compatible_departure"
+  ],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-intercity-2026-11-11.2",
+  "tab": "cargo_between",
+  "timezone": "Europe/Moscow"
+ },
+ {
+  "analysis_kind": "intercity_cargo",
+  "applicability": {
+   "air": "not_applicable:AIR_CARGO_NOT_MODELLED_FOR_CONTAINER_PROFILE",
+   "pipeline": "separate_profile:demo-novorossiysk-pipeline",
+   "rail": "model_chain",
+   "road": "not_applicable:LONG_HAUL_ROAD_NOT_IN_DEMO_CHAIN",
+   "water": "not_applicable:NO_WATER_LINK_MODELLED"
+  },
+  "cargo_profile_id": "truck-model-20t-container-nonfood-ordinary",
+  "chain_id": "demo-icf-novorossiysk--moscow",
+  "comparison_ids": [
+   "cmp-demo-icc-novorossiysk--moscow-reduce_transshipment_time"
+  ],
+  "departure_utc": "2026-11-11T05:30:00Z",
+  "destination_city_id": "moscow",
+  "inputs": {
+   "leg_ids": [
+    "demo-icf-novorossiysk--moscow-1",
+    "demo-icf-novorossiysk--moscow-2",
+    "demo-icf-novorossiysk--moscow-3"
+   ]
+  },
+  "label_ru": "Новороссийск → Москва · груз · ж/д",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "PIPELINE_EXCLUDED_FROM_DELIVERY_INDEX"
+  ],
+  "local_time": "08:30",
+  "main_mode": "rail",
+  "origin": {
+   "chain": "synthetic",
+   "sites_nodes": "real+model"
+  },
+  "origin_city_id": "novorossiysk",
+  "preset_id": "demo-icc-novorossiysk--moscow",
+  "schedule_operations": [
+   "reduce_transshipment_time"
+  ],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-intercity-2026-11-11.2",
+  "tab": "cargo_between",
+  "timezone": "Europe/Moscow"
+ },
+ {
+  "analysis_kind": "intercity_cargo",
+  "applicability": {
+   "air": "not_applicable:AIR_CARGO_NOT_MODELLED_FOR_CONTAINER_PROFILE",
+   "pipeline": "separate_profile:demo-novorossiysk-pipeline",
+   "rail": "not_applicable:NO_DIRECT_RAIL_LINK",
+   "road": "unknown:ROAD_OBSERVATION_UNAVAILABLE",
+   "water": "model_chain"
+  },
+  "cargo_profile_id": "truck-model-20t-container-nonfood-ordinary",
+  "chain_id": "demo-icf-kaliningrad--novorossiysk",
+  "comparison_ids": [
+   "cmp-demo-icc-kaliningrad--novorossiysk-reduce_transshipment_time"
+  ],
+  "departure_utc": "2026-11-11T06:30:00Z",
+  "destination_city_id": "novorossiysk",
+  "inputs": {
+   "leg_ids": [
+    "demo-icf-kaliningrad--novorossiysk-1",
+    "demo-icf-kaliningrad--novorossiysk-2",
+    "demo-icf-kaliningrad--novorossiysk-3"
+   ]
+  },
+  "label_ru": "Калининград → Новороссийск · груз · море",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "PIPELINE_EXCLUDED_FROM_DELIVERY_INDEX"
+  ],
+  "local_time": "08:30",
+  "main_mode": "water",
+  "origin": {
+   "chain": "synthetic",
+   "sites_nodes": "real+model"
+  },
+  "origin_city_id": "kaliningrad",
+  "preset_id": "demo-icc-kaliningrad--novorossiysk",
+  "schedule_operations": [
+   "reduce_transshipment_time"
+  ],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-intercity-2026-11-11.2",
+  "tab": "cargo_between",
+  "timezone": "Europe/Kaliningrad"
+ },
+ {
+  "analysis_kind": "intercity_cargo",
+  "applicability": {
+   "air": "not_applicable:AIR_CARGO_NOT_MODELLED_FOR_CONTAINER_PROFILE",
+   "pipeline": "separate_profile:demo-novorossiysk-pipeline",
+   "rail": "not_applicable:NO_DIRECT_RAIL_LINK",
+   "road": "unknown:ROAD_OBSERVATION_UNAVAILABLE",
+   "water": "model_chain"
+  },
+  "cargo_profile_id": "truck-model-20t-container-nonfood-ordinary",
+  "chain_id": "demo-icf-novorossiysk--kaliningrad",
+  "comparison_ids": [
+   "cmp-demo-icc-novorossiysk--kaliningrad-add_compatible_departure"
+  ],
+  "departure_utc": "2026-11-11T05:30:00Z",
+  "destination_city_id": "kaliningrad",
+  "inputs": {
+   "leg_ids": [
+    "demo-icf-novorossiysk--kaliningrad-1",
+    "demo-icf-novorossiysk--kaliningrad-2",
+    "demo-icf-novorossiysk--kaliningrad-3"
+   ]
+  },
+  "label_ru": "Новороссийск → Калининград · груз · море",
+  "limitations": [
+   "DATE_SLICE_ONLY:2026-11-11T08:30_LOCAL",
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "PIPELINE_EXCLUDED_FROM_DELIVERY_INDEX"
+  ],
+  "local_time": "08:30",
+  "main_mode": "water",
+  "origin": {
+   "chain": "synthetic",
+   "sites_nodes": "real+model"
+  },
+  "origin_city_id": "novorossiysk",
+  "preset_id": "demo-icc-novorossiysk--kaliningrad",
+  "schedule_operations": [
+   "add_compatible_departure"
+  ],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-intercity-2026-11-11.2",
+  "tab": "cargo_between",
+  "timezone": "Europe/Moscow"
+ },
+ {
+  "analysis_kind": "pipeline_profile",
+  "city_id": "novorossiysk",
+  "comparison_ids": [],
+  "in_acceptance_matrix": false,
+  "inputs": {
+   "connection_ids": [
+    "demo-pipeline-novorossiysk-1",
+    "demo-pipeline-novorossiysk-2"
+   ]
+  },
+  "label_ru": "Новороссийск · трубопровод (отдельный профиль, модель)",
+  "limitations": [
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "PIPELINE_NOT_IN_DELIVERY_INDEX"
+  ],
+  "origin": {
+   "network": "synthetic",
+   "nodes": "real"
+  },
+  "preset_id": "demo-novorossiysk-pipeline",
+  "schedule_operations": [],
+  "service_date": "2026-11-11",
+  "snapshot_id": "demo-pipeline-2026-11-11.2",
+  "tab": "cargo_between"
+ }
+]

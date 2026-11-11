@@ -1,0 +1,54 @@
+{
+ "after": {
+  "departure_utc": "2026-11-11T10:00:00+00:00",
+  "total_s": 156190,
+  "transshipment_s": 25200,
+  "wait_s": 2390
+ },
+ "before": {
+  "departure_utc": "2026-11-11T20:00:00+00:00",
+  "total_s": 192190,
+  "transshipment_s": 25200,
+  "wait_s": 38390
+ },
+ "comparison_id": "cmp-demo-icc-kaliningrad--moscow-add_compatible_departure",
+ "contract_status": "requires_contract_change: cargo operations are not in scenarios v2",
+ "created_ids": [
+  "demo-icf-rail-kaliningrad--moscow-extra"
+ ],
+ "delta": {
+  "sign": "before_minus_after",
+  "total_s": 36000,
+  "wait_s": 36000
+ },
+ "ids": {
+  "after": [
+   "demo-icf-kaliningrad--moscow",
+   "demo-icf-kaliningrad--moscow-1",
+   "demo-icf-kaliningrad--moscow-2",
+   "demo-icf-kaliningrad--moscow-3",
+   "demo-icf-rail-kaliningrad--moscow-extra"
+  ],
+  "before": [
+   "demo-icf-kaliningrad--moscow",
+   "demo-icf-kaliningrad--moscow-1",
+   "demo-icf-kaliningrad--moscow-2",
+   "demo-icf-kaliningrad--moscow-3"
+  ]
+ },
+ "model_inputs": {
+  "demand": {
+   "evidence_id": "demo-model:intercity:demand",
+   "teu": 36
+  },
+  "departure_utc": "2026-11-11T10:00:00+00:00",
+  "new_departure_id": "demo-icf-rail-kaliningrad--moscow-extra",
+  "resource": {
+   "capacity_teu": 70,
+   "evidence_id": "demo-model:intercity:resource",
+   "unit": "locomotive+wagons"
+  }
+ },
+ "operation_type": "add_compatible_departure",
+ "preset_id": "demo-icc-kaliningrad--moscow"
+}
