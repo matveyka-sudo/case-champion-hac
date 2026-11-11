@@ -247,6 +247,18 @@ class JobRepository(ScenariosRepository):
         payload["result_hash"] = canonical_hash(payload)
         # Revalidate metadata before publishing it; backend owns the saved content hash.
         saved = type(result).model_validate(payload)
+        checkpoint_repository = checkpoint_receipt = None
+        if (
+            isinstance(claim.context, V2JobContext)
+            and claim.context.batch_execution is not None
+            and not claim.context.private_source_bindings
+        ):
+            from a2_api.db.repositories.checkpoints import CheckpointRepository
+
+            checkpoint_repository = CheckpointRepository(self)
+            # Raw files are freshly verified before the publication transaction,
+            # while heartbeat and cancellation can still update the job row.
+            checkpoint_receipt = await checkpoint_repository.prepare_publication(claim)
         try:
             async with self._publication_connection() as connection:
                 async with connection.transaction():
@@ -346,9 +358,10 @@ class JobRepository(ScenariosRepository):
                         isinstance(claim.context, V2JobContext)
                         and claim.context.batch_execution is not None
                     ):
-                        from a2_api.db.repositories.checkpoints import CheckpointRepository
-
-                        await CheckpointRepository(self).publish(connection, claim, run_id)
+                        assert checkpoint_repository is not None and checkpoint_receipt is not None
+                        await checkpoint_repository.publish(
+                            connection, claim, run_id, checkpoint_receipt
+                        )
                     else:
                         await connection.execute(
                             "UPDATE jobs SET status='succeeded',run_id=$2,finished_at=now() WHERE job_id=$1",
