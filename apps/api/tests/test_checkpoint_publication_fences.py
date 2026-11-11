@@ -2,7 +2,6 @@
 
 import asyncio
 import threading
-import time
 from datetime import UTC, datetime, timedelta
 
 import asyncpg
@@ -24,13 +23,12 @@ from test_walk_pilot import configured as configured
 @pytest_asyncio.fixture
 async def saved(database, batch_context):
     _, schema, url = database
-    # Scale the production 10s-query/long-validation conflict down for a fast,
-    # deterministic regression at precisely the same real PG lock boundary.
+    # Setup and COMMIT do not share the responsiveness probes' small budgets.
+    # Those probes run only after validation is held at the real PG lock boundary.
     pool = await asyncpg.create_pool(
         url,
         min_size=2,
         max_size=5,
-        command_timeout=0.2,
         server_settings={"search_path": schema},
     )
     try:
@@ -92,14 +90,33 @@ async def test_worker_keeps_heartbeat_through_finalization_and_actual_publicatio
 ):
     pool, repo, claim, _ = saved
     original = module.validate_raw_files
+    heartbeat = repo.heartbeat
+    loop = asyncio.get_running_loop()
     validations = []
+    entered = [asyncio.Event(), asyncio.Event()]
+    observed = [asyncio.Event(), asyncio.Event()]
+    release = [threading.Event(), threading.Event()]
 
-    def slow(*args):
+    def gated(*args):
+        value = original(*args)
+        phase = len(validations)
         validations.append(True)
-        time.sleep(0.4)
-        return original(*args)
+        loop.call_soon_threadsafe(entered[phase].set)
+        assert release[phase].wait(5), "Test must release the bounded validation gate"
+        return value
 
-    monkeypatch.setattr(module, "validate_raw_files", slow)
+    async def observed_heartbeat(incoming):
+        phase = next(
+            (i for i, event in enumerate(entered) if event.is_set() and not release[i].is_set()),
+            None,
+        )
+        updated = await heartbeat(incoming)
+        if phase is not None and updated:
+            observed[phase].set()
+        return updated
+
+    monkeypatch.setattr(module, "validate_raw_files", gated)
+    monkeypatch.setattr(repo, "heartbeat", observed_heartbeat)
 
     class SavedWorker(Worker):
         async def _calculate(self, incoming, handler, timeout_seconds):
@@ -114,7 +131,18 @@ async def test_worker_keeps_heartbeat_through_finalization_and_actual_publicatio
             code_version=claim.context.code_version,
             timeout_seconds=5,
         )
-        await worker._calculate_with_lease(claim, asyncio.Event())
+        operation = asyncio.create_task(worker._calculate_with_lease(claim, asyncio.Event()))
+        try:
+            for phase in range(2):
+                await asyncio.wait_for(entered[phase].wait(), 3)
+                # Require a real heartbeat STARTED after each gate was entered,
+                # including publication, before allowing that validation to finish.
+                await asyncio.wait_for(observed[phase].wait(), 2)
+                release[phase].set()
+        finally:
+            for event in release:
+                event.set()
+            await operation
     assert validations == [True, True]  # Fresh raw validation on publication too.
     assert (await repo.get_job(claim.job.job_id, claim.context.access_scope)).status == "succeeded"
     assert await pool.fetchval("SELECT count(*) FROM runs") == 1
@@ -225,11 +253,21 @@ async def test_post_commit_false_heartbeat_cannot_turn_success_into_failure(save
 @pytest.mark.asyncio
 async def test_overall_hard_deadline_includes_publication(saved, monkeypatch):
     pool, repo, claim, _ = saved
-    entered, release = gate_validation(monkeypatch)
+    calculated = result(claim)
+    entered, release = asyncio.Event(), asyncio.Event()
+    succeed = repo.succeed
+
+    async def gated_publication(incoming, output):
+        assert incoming is claim and output is calculated
+        entered.set()
+        await release.wait()
+        await succeed(incoming, output)
+
+    monkeypatch.setattr(repo, "succeed", gated_publication)
 
     class SavedWorker(Worker):
         async def _calculate(self, incoming, handler, timeout_seconds):
-            return result(incoming)
+            return calculated
 
     worker = SavedWorker(
         repo,
@@ -237,12 +275,18 @@ async def test_overall_hard_deadline_includes_publication(saved, monkeypatch):
         code_version=claim.context.code_version,
         timeout_seconds=0.3,
     )
+    operation = asyncio.create_task(worker._calculate_with_lease(claim, asyncio.Event()))
     try:
+        # Gate the actual publication call before serialization/PG/threadpool work
+        # can consume the deadline. The gate stays closed beyond the hard timeout.
+        await asyncio.wait_for(entered.wait(), 1)
         with pytest.raises(DomainError) as error:
-            await worker._calculate_with_lease(claim, asyncio.Event())
-        assert error.value.code == "job_timeout" and entered.is_set()
+            await asyncio.wait_for(operation, 1)
+        assert error.value.code == "job_timeout" and not release.is_set()
     finally:
         release.set()
+        operation.cancel()
+        await asyncio.gather(operation, return_exceptions=True)
     assert await pool.fetchval("SELECT count(*) FROM runs") == 0
 
 
