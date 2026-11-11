@@ -24,8 +24,9 @@ class GraphTransferTests(unittest.TestCase):
         (self.source / "tile.gph").write_bytes(b"reviewed tile bytes")
         self.sources = {"graphs/test": self.source}
         self.manifest = {
-            "schema_version": "waydex-four-profile-graph-transfer/1",
+            "schema_version": "waydex-four-profile-graph-transfer/2",
             "groups": {"graphs/test": transfer.inventory(self.source)},
+            "router_tileset_metadata": {},
         }
 
     def test_copy_preserves_bytes_and_publishes_read_only_completion_last(self):
@@ -43,6 +44,56 @@ class GraphTransferTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "source changed"):
             transfer.copy_sources(self.sources, self.manifest, output)
         self.assertFalse((output / transfer.MARKER).exists())
+
+    def test_router_tiles_directory_status_timestamp_survives_copy(self):
+        tiles = self.source / "tiles"
+        tiles.mkdir()
+        (tiles / "tile.gph").write_bytes(b"reviewed nested tile")
+        source_mtime_ns = 1700000000123456789
+        os.utime(tiles, ns=(source_mtime_ns, source_mtime_ns))
+        manifest = {
+            "schema_version": "waydex-four-profile-graph-transfer/2",
+            "groups": {"graphs/test": transfer.inventory(self.source)},
+            "router_tileset_metadata": {
+                "graphs/test": {"path": "tiles", "mtime_seconds": source_mtime_ns // 10**9}
+            },
+        }
+        output = self.root / "transfer"
+        transfer.copy_sources(self.sources, manifest, output)
+        self.assertEqual(
+            (output / "graphs/test/tiles").stat().st_mtime_ns // 10**9,
+            source_mtime_ns // 10**9,
+        )
+        self.assertEqual(tiles.stat().st_mtime_ns, source_mtime_ns)
+        self.assertEqual(
+            transfer.inventory(output / "graphs/test"), manifest["groups"]["graphs/test"]
+        )
+
+    def test_changed_router_directory_metadata_leaves_no_completion_record(self):
+        tiles = self.source / "tiles"
+        tiles.mkdir()
+        (tiles / "tile.gph").write_bytes(b"reviewed nested tile")
+        source_seconds = 1700000000
+        os.utime(tiles, ns=(source_seconds * 10**9, source_seconds * 10**9))
+        manifest = {
+            "schema_version": "waydex-four-profile-graph-transfer/2",
+            "groups": {"graphs/test": transfer.inventory(self.source)},
+            "router_tileset_metadata": {
+                "graphs/test": {"path": "tiles", "mtime_seconds": source_seconds}
+            },
+        }
+        os.utime(tiles, ns=((source_seconds + 1) * 10**9, (source_seconds + 1) * 10**9))
+        output = self.root / "transfer"
+        with self.assertRaisesRegex(ValueError, "metadata changed"):
+            transfer.copy_sources(self.sources, manifest, output)
+        self.assertFalse(output.exists())
+
+    def test_legacy_transfer_without_checked_metadata_is_rejected(self):
+        self.manifest["schema_version"] = "waydex-four-profile-graph-transfer/1"
+        output = self.root / "transfer"
+        with self.assertRaisesRegex(ValueError, "checked v2 metadata"):
+            transfer.copy_sources(self.sources, self.manifest, output)
+        self.assertFalse(output.exists())
 
     def test_existing_destination_is_never_replaced(self):
         output = self.root / "transfer"

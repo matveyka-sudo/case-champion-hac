@@ -92,10 +92,22 @@ and checked against the already verified inventory. Files become read-only;
 interrupted destination remains available for diagnosis; retry into a new one.
 Links, changed sources, extra files and different inventories fail verification.
 
+Valhalla 3.5.1 reports the modification time of its `tiles` directory in
+`/status`; a byte-identical copy with a new directory timestamp fails the
+existing runtime build-status guard. The v2 transfer receipt therefore records
+Moscow and Novorossiysk's source directory timestamps in whole seconds, checks
+them against the unchanged artifact status pins, and restores them only after
+all descendants have been copied. File hashes and graph bindings are unchanged.
+The Kaliningrad profile remains offline and makes no actor-status claim.
+Verification rejects old v1 transfers without this metadata; export a fresh
+destination instead of altering an old transfer, binding or status expectation.
+
 Transfer the resulting directory through the approved private file channel.
 For example, an operator can run `rsync -a -- "$graphs/" operator@server:/private/new-graph-transfer/`
-into a fresh destination. Do not use `--delete` on an existing deployment. On
-the recipient, set `graphs` to the received directory and verify again:
+into a fresh destination. Do not use `--delete` on an existing deployment.
+Preserve directory modification times on both ends (`rsync -a` includes them).
+After transfer, do not touch or recreate the checked router `tiles` directories.
+On the recipient, set `graphs` to the received directory and verify again:
 
 ```sh
 "$python" "$tools/infra/full-stack/four_profile_restore.py" verify \
