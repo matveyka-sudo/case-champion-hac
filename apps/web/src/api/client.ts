@@ -40,6 +40,14 @@ export function pause(ms: number, signal: AbortSignal): Promise<void> {
     signal.addEventListener("abort", abort, { once: true });
   });
 }
+/** Default request timeout; slow endpoints pass their own (see gateway.explain). */
+export const REQUEST_TIMEOUT_MS = 15000;
+type RequestOptions = {
+  signal?: AbortSignal;
+  body?: unknown;
+  key?: string;
+  timeoutMs?: number;
+};
 export class ApiClient {
   private bootstrap: Promise<Schemas["Capabilities"]> | undefined;
   private readonly fetcher: typeof fetch;
@@ -58,7 +66,7 @@ export class ApiClient {
   async request<K extends keyof Schemas>(
     path: string,
     schema: K,
-    options: { signal?: AbortSignal; body?: unknown; key?: string } = {},
+    options: RequestOptions = {},
   ): Promise<Schemas[K]> {
     await this.capabilities();
     options.signal?.throwIfAborted();
@@ -97,7 +105,7 @@ export class ApiClient {
   private async send<K extends keyof Schemas>(
     path: string,
     schema: K,
-    options: { signal?: AbortSignal; body?: unknown; key?: string } = {},
+    options: RequestOptions = {},
   ): Promise<Schemas[K]> {
     const data = await this.raw(path, options);
     try {
@@ -112,7 +120,7 @@ export class ApiClient {
   }
   private async raw(
     path: string,
-    options: { signal?: AbortSignal; body?: unknown; key?: string } = {},
+    options: RequestOptions = {},
   ): Promise<unknown> {
     const body =
       options.body === undefined ? undefined : JSON.stringify(options.body);
@@ -121,7 +129,7 @@ export class ApiClient {
       options.signal?.throwIfAborted();
       const signal = AbortSignal.any([
         ...(options.signal ? [options.signal] : []),
-        AbortSignal.timeout(15000),
+        AbortSignal.timeout(options.timeoutMs ?? REQUEST_TIMEOUT_MS),
       ]);
       let retryAfter = 0;
       let failure: ApiError;

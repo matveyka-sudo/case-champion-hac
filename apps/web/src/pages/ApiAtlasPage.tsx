@@ -1159,7 +1159,7 @@ export function ApiAtlasPage() {
                   {noticeTexts(m.answer.limitations).map((text, j) => (
                     <p key={j}>{text}</p>
                   ))}
-                  <Sources refs={m.answer.retrieved_evidence || []} resolveSources={result?.evidence_groups?.length ? () => explanationSources(result, m.answer) : undefined} />
+                  <Sources refs={m.answer.retrieved_evidence || []} resolveSources={result ? () => explanationSources(result, m.answer) : undefined} />
                 </div>
               </div>
             ))}

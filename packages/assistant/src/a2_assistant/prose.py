@@ -45,6 +45,7 @@ _PROSE_RULES = frozenset(
         "forecast_assertion",
         "comparative_assertion",
         "no_route_assertion",
+        "unsupported_term",
         "assembled_text_too_long",
     }
 )
@@ -205,6 +206,300 @@ def _check_qualitative(text: str) -> None:
                     raise ProseRejected(rule)
 
 
+# Closed vocabulary for model prose. A content word must come from this domain
+# lexicon or from the saved text the answer is about (fact names, units, saved
+# limitations, server atoms and warnings). Any other word may appear only in a
+# clause that states the limit of the saved data ("по этим данным нельзя
+# установить ...", "данные не описывают ..."), never in a plain assertion:
+# "дорожное покрытие разрушено" has no saved support. A plain negation is not
+# enough, since "покрытие не отремонтировано" is an assertion too.
+_FUNCTION_WORDS = frozenset(
+    """а и или но да же ли бы не ни нет без в во на по о об обо от до из к ко с со у за
+    над под при про для через между перед после как так что чтобы это эта этот эти этого
+    этой этом этим этих тот та те то того той тем там тут здесь где когда если уже еще
+    только лишь также тоже даже именно ее его их им ей ему они она он оно мы вы ты я вас
+    нас вам нам меня мне вам себя свой своя свое свои своих своим своей который которая
+    которое которые которого которой котором которым которых каждый каждая каждое каждого
+    все весь вся всех всего всей всем сам сама само сами самого самой может могут можно
+    нельзя нужно надо следует есть был была было были будет быть пока сейчас вот какой
+    какая какое какие каких такой такая такое такие таких такого этому иначе либо ведь
+    вообще""".split()
+)
+_LEXICON = (
+    "сохран",
+    "расчет",
+    "рассчит",
+    "посчит",
+    "показат",
+    "значен",
+    "данн",
+    "сведен",
+    "информац",
+    "времени",
+    "время",
+    "минут",
+    "секунд",
+    "часов",
+    "маршрут",
+    "путь",
+    "пути",
+    "поездк",
+    "пересад",
+    "ожидан",
+    "ожида",
+    "отправлен",
+    "рейс",
+    "остановк",
+    "пешк",
+    "пешеход",
+    "транспорт",
+    "автомоб",
+    "машин",
+    "общественн",
+    "индекс",
+    "оценк",
+    "балл",
+    "категор",
+    "объект",
+    "точк",
+    "город",
+    "территор",
+    "район",
+    "участ",
+    "модел",
+    "модельн",
+    "полнот",
+    "огранич",
+    "метод",
+    "формул",
+    "норматив",
+    "сценари",
+    "предлож",
+    "вариант",
+    "выбран",
+    "выбор",
+    "текущ",
+    "доступ",
+    "недоступ",
+    "известн",
+    "неизвестн",
+    "предварит",
+    "отдельн",
+    "провер",
+    "подтвер",
+    "неподтвер",
+    "учит",
+    "учет",
+    "относ",
+    "означа",
+    "показыва",
+    "указыва",
+    "завис",
+    "содерж",
+    "включа",
+    "описыва",
+    "объясн",
+    "ответ",
+    "вопрос",
+    "услов",
+    "параметр",
+    "результат",
+    "анализ",
+    "запрос",
+    "источник",
+    "документ",
+    "ссылк",
+    "основан",
+    "оценива",
+    "измер",
+    "величин",
+    "единиц",
+    "площад",
+    "класс",
+    "длитель",
+    "расстоян",
+    "километр",
+    "метр",
+    "поликлин",
+    "взросл",
+    "детск",
+    "школ",
+    "колледж",
+    "универс",
+    "институт",
+    "вокзал",
+    "автовокзал",
+    "аэропорт",
+    "торгов",
+    "центр",
+    "груз",
+    "площадк",
+    "узел",
+    "узл",
+    "терминал",
+    "порт",
+    "станц",
+    "трубопровод",
+    "направлен",
+    "межгород",
+    "связ",
+    "сравн",
+    "сопостав",
+    "разниц",
+    "отлича",
+    "различ",
+    "примен",
+    "непримен",
+    "соответств",
+    "конкрет",
+    "подробн",
+    "кратк",
+    "общ",
+    "част",
+    "нужн",
+    "необход",
+    "получ",
+    "найд",
+    "нашл",
+    "явля",
+    "имеет",
+    "имеют",
+    "позвол",
+    "сначал",
+    "затем",
+    "далее",
+    "итог",
+    "например",
+    "кроме",
+    "однак",
+    "друг",
+    "ин",
+    "нов",
+    "прям",
+    "указан",
+    "сделан",
+    "выполн",
+    "отсутств",
+    "недостат",
+    "достаточ",
+    "уточн",
+    "попроб",
+    "посмотр",
+    "откр",
+    "карт",
+    "выбер",
+    "выбра",
+    "смысл",
+    "суть",
+    "важн",
+    "главн",
+    "основн",
+    "реальн",
+    "физическ",
+    "синтетич",
+    "демонстрац",
+    "наблюд",
+    "свед",
+    "покрыти",
+    "охват",
+    "состоян",
+    "причин",
+    "фактор",
+    "эффект",
+    "изменен",
+    "улучшен",
+    "работ",
+    "использ",
+    "помог",
+    "помощ",
+    "мож",
+    "должн",
+    "стоит",
+    "дает",
+    "даёт",
+    "будут",
+    "был",
+    "есть",
+    "нет",
+    "здесь",
+    "такж",
+    "лишь",
+    "пока",
+    "сейчас",
+    "чтени",
+    "начн",
+    "начин",
+    "разбер",
+    "установ",
+    "полезн",
+    "раздел",
+    "отдел",
+    "числен",
+    "мест",
+    "требу",
+    "поня",
+    "запис",
+    "фактич",
+    "утвержд",
+    "полн",
+    "гарантир",
+    "могу",
+    "говор",
+    "счита",
+    "обещ",
+    "доказ",
+    "определ",
+    "заключ",
+    "вывод",
+    "опира",
+    "смотр",
+    "качеств",
+    "действит",
+    "именно",
+    "конечн",
+    "стоимост",
+)
+_EPISTEMIC = re.compile(
+    r"\b(?:нельзя|невозможно|неизвестн\w*)"
+    r"|\bне\s+(?:могу|можем|удается|получится|описыва\w*|содерж\w*|отража\w*|сообща\w*|"
+    r"включа\w*|учитыва\w*|позволя\w*|показыва\w*)"
+    r"|\b(?:нет|без|недостаточно|отсутству\w*)\s+(?:\w+\s+)?(?:данн|сведен|информац|основан)\w*"
+)
+_WORD = re.compile(r"[a-zа-я]+")
+
+
+def _words(text: str) -> list[str]:
+    normalized = unicodedata.normalize("NFKC", text).casefold().replace("ё", "е")
+    return _WORD.findall(normalized)
+
+
+def _same_stem(a: str, b: str) -> bool:
+    common = 0
+    for left, right in zip(a, b, strict=False):
+        if left != right:
+            break
+        common += 1
+    return common >= 5 or (common == min(len(a), len(b)) and common >= 4)
+
+
+def _known(word: str, vocabulary: set[str]) -> bool:
+    return (
+        len(word) <= 3
+        or word in _FUNCTION_WORDS
+        or any(word.startswith(stem) for stem in _LEXICON)
+        or any(_same_stem(word, saved) for saved in vocabulary)
+    )
+
+
+def _check_grounding(text: str, saved_text: str) -> None:
+    vocabulary = {word for word in _words(saved_text) if len(word) >= 4}
+    normalized = unicodedata.normalize("NFKC", text).casefold().replace("ё", "е")
+    for clause in re.split(r"[,.!?;:\n—()]+", normalized):
+        unknown = [word for word in _WORD.findall(clause) if not _known(word, vocabulary)]
+        if unknown and not _EPISTEMIC.search(clause):
+            raise ProseRejected("unsupported_term")
+
+
 def generated_finding(
     paragraph: str,
     saved: AnalysisResult,
@@ -215,6 +510,7 @@ def generated_finding(
     has_proposal: bool,
     resolver: EvidenceResolver | None = None,
     limits: ProseLimits | None = None,
+    retrieved_ids: frozenset[str] = frozenset(),
 ) -> Finding:
     limits = limits or prose_limits(
         saved,
@@ -233,10 +529,14 @@ def generated_finding(
         *(metrics[identifier] for identifier in metric_ids),
         *(scores[identifier] for identifier in score_ids),
     ]
-    if len(evidence_ids) != len(set(evidence_ids)) or not set(evidence_ids) <= set(
-        canonical.evidence_refs
+    # A paragraph may also cite documents that search_evidence returned in this
+    # explanation; their provenance is checked against the retrieved set later.
+    if len(evidence_ids) != len(set(evidence_ids)) or not set(evidence_ids) <= (
+        set(canonical.evidence_refs) | retrieved_ids
     ):
         raise ProseRejected("evidence_mismatch")
+    cited = [*canonical.evidence_refs]
+    cited += [ref for ref in evidence_ids if ref not in cited]
     replacements = {fact_placeholder(fact): _display(fact) for fact in facts}
     used = {token for token in replacements if token in paragraph}
     if used != set(replacements):
@@ -266,6 +566,16 @@ def generated_finding(
     for token in sorted([*replacements, *atoms], key=len, reverse=True):
         raw = raw.replace(token, " ")
     _check_qualitative(raw)
+    saved_text = " ".join(
+        [
+            *(fact.name for fact in facts),
+            *(fact.unit for fact in facts if isinstance(fact, Metric)),
+            *saved.limitations,
+            *(build() for build in atoms.values()),
+            _safety(saved, facts),
+        ]
+    )
+    _check_grounding(raw, saved_text)
     for token, value in replacements.items():
         paragraph = paragraph.replace(token, value)
     for token, build in atoms.items():
@@ -275,7 +585,9 @@ def generated_finding(
     paragraph = " ".join(part for part in (paragraph.strip(), _safety(saved, facts)) if part)
     if len(paragraph) > limits.final_text_max_characters:
         raise ProseRejected("assembled_text_too_long")
-    return Finding.model_validate(canonical.model_dump() | {"text": paragraph})
+    return Finding.model_validate(
+        canonical.model_dump() | {"text": paragraph, "evidence_refs": cited[:50]}
+    )
 
 
 def _digest(value: object) -> str:

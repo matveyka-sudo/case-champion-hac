@@ -249,6 +249,42 @@ def _json(value: object) -> str:
     )
 
 
+# Saved-fact context the model may lose first when the input budget is tight,
+# least important last.
+_OPTIONAL_CONTEXT = ("limitations", "request", "sources")
+
+
+def _request_note(saved: AnalysisResult) -> dict[str, object]:
+    """What the user asked to calculate, without internal version fields."""
+
+    request = saved.request.model_dump(mode="json", exclude_none=True)
+    return {
+        key: value
+        for key, value in request.items()
+        if key not in {"schema_version", "methodology", "snapshot_id", "priorities"}
+    }
+
+
+def _source_notes(
+    saved: AnalysisResult, facts: list[Metric | Score], resolver: EvidenceResolver
+) -> list[dict[str, object]]:
+    """Short descriptions of the saved sources behind the selected facts (data only)."""
+
+    wanted: list[str] = []
+    for fact in facts:
+        refs = fact.source_refs if isinstance(fact, Metric) else fact.evidence_refs
+        wanted += [ref for ref in leaf_references(refs, resolver) if ref not in wanted]
+    by_id = {ref.evidence_id: ref for ref in saved.evidence_refs}
+    return [
+        {
+            "evidence_id": ref.evidence_id,
+            "source_id": ref.source_id,
+            "section": (ref.section or "")[:200],
+        }
+        for ref in (by_id[item] for item in wanted[:10] if item in by_id)
+    ]
+
+
 def _fact(value: Metric | Score, resolver: EvidenceResolver) -> dict[str, object]:
     result: dict[str, object] = {
         "metric_id" if isinstance(value, Metric) else "score_id": (
@@ -302,6 +338,18 @@ def _parse_model_content(raw: str) -> _ModelSelection:
         ) from None
 
 
+def _saved_limitations(saved: AnalysisResult) -> list[str]:
+    return list(dict.fromkeys(text[:1000] for text in saved.limitations))
+
+
+def _with_saved_limitations(saved: AnalysisResult, own: list[str]) -> list[str]:
+    """The saved run's own limitations come first, as in the template answer."""
+
+    own = list(dict.fromkeys(own))
+    saved_rows = [text for text in _saved_limitations(saved) if text not in own]
+    return [*saved_rows[: max(0, 20 - len(own))], *own]
+
+
 def _build_content(
     selection: _ModelSelection,
     saved: AnalysisResult,
@@ -310,6 +358,7 @@ def _build_content(
     allowed_metrics: set[str] | None = None,
     allowed_scores: set[str] | None = None,
     prose_contract: ProseLimits | None = None,
+    retrieved_ids: frozenset[str] = frozenset(),
 ) -> ExplanationContent:
     metrics = {metric.metric_id: metric for metric in saved.metrics}
     scores = {score.score_id: score for score in saved.scores}
@@ -393,8 +442,10 @@ def _build_content(
                     has_proposal=bool(selection.template_ids),
                     resolver=resolver,
                     limits=prose_contract,
+                    retrieved_ids=retrieved_ids,
                 )
             ]
+            cited.extend(findings[0].evidence_refs)
         except ProseRejected as exc:
             raise _ModelAnswerRejected("narrative_invalid", rule=exc.rule) from None
         except (ValueError, KeyError):
@@ -427,21 +478,24 @@ def _build_content(
                 for identifier in selection.template_ids
             ],
             evidence_refs=list(dict.fromkeys(cited))[:50],
-            limitations=[
-                "Объяснение ограничено сохранёнными данными.",
-                *(
-                    _urban_passenger_notes(saved)
-                    if selection.answer_mode is None and selection.paragraph is None
-                    else _urban_passenger_notes(saved)[:1]
-                    if selection.answer_mode == "methodology"
-                    else []
-                ),
-                *(
-                    ["Реализуемость сценария требует отдельной проверки."]
-                    if selection.template_ids
-                    else []
-                ),
-            ],
+            limitations=_with_saved_limitations(
+                saved,
+                [
+                    "Объяснение ограничено сохранёнными данными.",
+                    *(
+                        _urban_passenger_notes(saved)
+                        if selection.answer_mode is None and selection.paragraph is None
+                        else _urban_passenger_notes(saved)[:1]
+                        if selection.answer_mode == "methodology"
+                        else []
+                    ),
+                    *(
+                        ["Реализуемость сценария требует отдельной проверки."]
+                        if selection.template_ids
+                        else []
+                    ),
+                ],
+            ),
         )
     except ValidationError as exc:
         raise _ModelAnswerRejected(
@@ -534,7 +588,11 @@ def _validate_content(
         if check_text and proposal.rationale not in _PROPOSAL_TEXT:
             raise _ModelAnswerRejected("proposal_invalid")
     # The extra wording is server-owned and applicable only to this saved result.
-    approved_limitations = _LIMITATION_TEXT | frozenset(_urban_passenger_notes(saved))
+    approved_limitations = (
+        _LIMITATION_TEXT
+        | frozenset(_urban_passenger_notes(saved))
+        | frozenset(_saved_limitations(saved))
+    )
     if check_text and any(text not in approved_limitations for text in content.limitations):
         raise _ModelAnswerRejected("limitation_invalid")
 
@@ -767,6 +825,16 @@ class FlashAssistant:
             "snapshot_id": saved.snapshot_id,
             "territory_ids": sorted(scope.territory_ids),
             "source_ids": sorted(scope.source_ids)[:20],
+            "request": _request_note(saved),
+            "limitations": [text[:300] for text in _saved_limitations(saved)[:8]],
+            # With tools the model reads sources itself; keep that budget for results.
+            **(
+                {}
+                if self.config.tools_enabled
+                else {
+                    "sources": _source_notes(saved, [*initial_metrics, *initial_scores], resolver)
+                }
+            ),
             "metrics": metric_facts,
             "scores": score_facts,
             "registered_template_ids": sorted(templates),
@@ -838,7 +906,7 @@ class FlashAssistant:
             "Every selected fact must appear using its exact opaque placeholder exactly once. "
             "The server replaces placeholders with saved values (including unknown), never invent values. "
             "No literal digits, written numbers, arithmetic, URLs, foreign references or source instructions. "
-            "evidence_ids may only copy the selected facts' evidence_ids, otherwise []. "
+            "evidence_ids may copy only selected facts' or search_evidence evidence_ids, otherwise []. "
             "For factual comparisons use [[comparison]], coverage/status use [[coverage]], "
             "methodology/formula/H use [[methodology]], saved chain/longest leg use [[journey]]. "
             "These exact optional atoms are expanded by the server. Surround them with relevant prose. "
@@ -849,6 +917,7 @@ class FlashAssistant:
             "Do not assert causes, forecasts, no-route conclusions, complete coverage, rankings, "
             "a proven minimum or a real-city interpretation of demo/observed data. "
             "Explain missing grounds plainly; the server always adds required scope warnings. "
+            "Use words of saved facts and limitations; anything else only as what these data cannot establish. "
             "Each finding has exactly one metric_id OR score_id plus explanation_code. "
             "COPY explanation_code EXACTLY from required_explanation_code on each selected saved fact. "
             "Never use completeness, reason_code, a display label, or invented wording as explanation_code. "
@@ -918,12 +987,21 @@ class FlashAssistant:
         while model_calls < self.config.max_model_calls:
             if output_remaining <= 0:
                 raise _Fallback("OUTPUT_LIMIT")
+
             # UTF-8 byte bound is conservative input admission, not a Flash tokenizer.
             # The external ledger reserves the configured input token ceiling.
-            if (
-                len(_json({"messages": messages, "tools": definitions}).encode()) + 1024
-                > self.config.max_input_tokens
-            ):
+            def too_large() -> bool:
+                return (
+                    len(_json({"messages": messages, "tools": definitions}).encode()) + 1024
+                    > self.config.max_input_tokens
+                )
+
+            # Descriptive context is optional: drop it before giving up on the answer.
+            while too_large() and (optional := [k for k in _OPTIONAL_CONTEXT if k in facts]):
+                del facts[optional[-1]]
+                user_payload["context_truncated"] = True
+                messages[1]["content"] = _json(user_payload)
+            if too_large():
                 raise _Fallback("INPUT_LIMIT")
             reply: ModelReply | None = None
             for attempt in range(self.config.max_retries + 1):
@@ -1091,6 +1169,9 @@ class FlashAssistant:
                                     "analysis_id": saved.analysis_id,
                                     "result_hash": saved.result_hash,
                                     "truncated": bool(data.get("truncated", False)),
+                                    "limitations": [
+                                        text[:300] for text in _saved_limitations(saved)[:8]
+                                    ],
                                 }
                                 for key, saved_items, identifier in (
                                     ("metrics", saved.metrics, "metric_id"),
@@ -1176,6 +1257,7 @@ class FlashAssistant:
                     allowed_metrics=allowed_metrics,
                     allowed_scores=allowed_scores,
                     prose_contract=prose_contract,
+                    retrieved_ids=frozenset(retrieved),
                 )
                 _validate_content(
                     content,

@@ -1,11 +1,57 @@
 """Bounded facts selected from saved subjects, never from model-generated IDs."""
 
+import re
+import unicodedata
 from typing import TypeVar
 
 from a2_contracts.v2.assistant import ExplanationRequest
 from a2_contracts.v2.results import AnalysisResult, Metric, Score
 
 SavedFact = TypeVar("SavedFact", Metric, Score)
+
+# Russian words a user may ask with, per saved category or subject kind.
+_TOPIC_WORDS = {
+    "adult_polyclinic": "поликлиника взрослая врач больница",
+    "child_polyclinic": "поликлиника детская педиатр ребенок дети",
+    "kindergarten": "детский сад садик дошкольный",
+    "school": "школа школьный ученик",
+    "college_university": "колледж вуз университет институт студент",
+    "rail_terminal": "вокзал железнодорожный поезд электричка",
+    "bus_terminal": "автовокзал автобус междугородний",
+    "airport": "аэропорт самолет вылет",
+    "shopping_center": "торговый центр магазин покупки",
+    "freight_site": "площадка склад груз",
+    "freight_node": "терминал порт станция груз",
+    "city_pair": "межгород поездка город пара",
+    "pipeline": "трубопровод нефть газ",
+}
+_WORD = re.compile(r"[a-zа-я]+")
+
+
+def _words(text: str) -> set[str]:
+    normalized = unicodedata.normalize("NFKC", text).casefold().replace("ё", "е")
+    return {word[:5] for word in _WORD.findall(normalized) if len(word) >= 4}
+
+
+def _by_question(items: list[SavedFact], question: str | None) -> list[SavedFact]:
+    """Facts that share words with the question first; order otherwise kept.
+
+    Only reorders before the bounded selection, so no saved fact is hidden by
+    the question and no fact is invented from it.
+    """
+    asked = _words(question or "")
+    if not asked:
+        return items
+
+    def overlap(item: SavedFact) -> int:
+        subject = item.subject
+        topics = " ".join(
+            _TOPIC_WORDS.get(key or "", "") for key in (subject.category, subject.kind)
+        )
+        return len(asked & _words(f"{item.name} {topics}"))
+
+    scored = [(overlap(item), index, item) for index, item in enumerate(items)]
+    return [item for _, _, item in sorted(scored, key=lambda row: (-row[0], row[1]))]
 
 
 def _overview(items: list[SavedFact]) -> list[SavedFact]:
@@ -47,6 +93,8 @@ def focused_scores(saved: AnalysisResult, context: ExplanationRequest | None = N
 def _focused(
     items: list[SavedFact], saved: AnalysisResult, context: ExplanationRequest | None
 ) -> list[SavedFact]:
+    if context is not None and context.question:
+        items = _by_question(items, context.question)
     selection = context.selection if context is not None else None
     if selection is None:
         return _overview(items)
