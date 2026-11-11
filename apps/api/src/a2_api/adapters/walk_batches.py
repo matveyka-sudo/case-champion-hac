@@ -33,6 +33,7 @@ from a2_api.adapters import walk_pilot
 from a2_api.adapters.product_projection import Projection, project_urban
 from a2_api.adapters.product_runtime import FileRef, read_document
 from a2_api.core.batches import (
+    MAX_EXECUTION_PAIRS,
     MAX_RETAINED_ROUTE_BYTES,
     BatchCheckpoint,
     BatchPlan,
@@ -85,7 +86,9 @@ class Approval(ContractModel):
     routing_binding: RoutingBinding
     city_id: Identifier
     categories: list[Category] = Field(min_length=1, max_length=9)
-    pairs: list[PhysicalPair] = Field(min_length=1, max_length=4096)
+    # The city/category catalog is not a single executable job. Request-level
+    # selection below retains the existing 4096-pair and 8 MiB execution limits.
+    pairs: list[PhysicalPair] = Field(min_length=1, max_length=32768)
     batch_size: int = Field(ge=1, le=16)
     max_attempts: int = Field(ge=1, le=3)
     max_provider_calls: int = Field(ge=1, le=100000)
@@ -109,6 +112,13 @@ class Approval(ContractModel):
 
 def _unavailable(reason: str) -> DomainError:
     return DomainError(503, "engine_unavailable", reason, retryable=True)
+
+
+def selected_pairs(pairs: list[PhysicalPair], destinations: set[str]) -> set[tuple[str, str]]:
+    selected = {(p.point_id, p.destination_id) for p in pairs if p.destination_id in destinations}
+    if len(selected) > MAX_EXECUTION_PAIRS:
+        raise DomainError(422, "budget_exceeded", "WALK_BATCH_PAIR_BUDGET_EXCEEDED")
+    return selected
 
 
 def load_approval(
@@ -215,11 +225,7 @@ def _prepare(
         for d in snapshot.destinations
         if set(d.categories) & set(request.categories)
     }
-    approved = {
-        (p.point_id, p.destination_id)
-        for p in approval.pairs
-        if p.destination_id in selected_destinations
-    }
+    approved = selected_pairs(approval.pairs, selected_destinations)
     # Keep the full canonical catalog for final unknown/completeness semantics,
     # but ask the public planner only about explicitly approved physical pairs.
     # No city-wide Cartesian request inventory is materialized in preflight.
@@ -285,7 +291,7 @@ def _prepare(
         valid_until=approval.valid_until,
     )
     if len(batch.model_dump_json().encode()) > 8 * 1024 * 1024:
-        raise _unavailable("WALK_BATCH_MANIFEST_BYTE_BUDGET_EXCEEDED")
+        raise DomainError(422, "budget_exceeded", "WALK_BATCH_MANIFEST_BYTE_BUDGET_EXCEEDED")
     return batch, plan, runtime
 
 

@@ -1,0 +1,6 @@
+# Moscow's 1549-pair school result exceeded 2 GiB during final publication.
+# Keep routing, deadline, job pair count and response-size bounds unchanged.
+services:
+  worker:
+    mem_limit: 3g
+    memswap_limit: 3g

@@ -421,6 +421,7 @@ export function ApiAtlasPage() {
               t.territory_id,
             )),
       )
+      .sort((a, b) => urban && caps ? caps.urban_city_names.indexOf(a.name) - caps.urban_city_names.indexOf(b.name) : 0)
       .map((t) => {
         const reason = publishedScopes == null ? undefined
           : !publishedScopes.some((s) => s.city_id === t.territory_id)
