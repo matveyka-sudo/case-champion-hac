@@ -1,0 +1,11 @@
+rule_id,from_node_id,to_node_id,minimum_seconds,walk_s,origin
+demo-moscow-minimum-A4-B1,demo-moscow-stop-A4,demo-moscow-stop-B1,250.0,190.0,synthetic
+demo-moscow-minimum-B1-A4,demo-moscow-stop-B1,demo-moscow-stop-A4,250.0,190.0,synthetic
+demo-moscow-minimum-A1-same,demo-moscow-stop-A1,demo-moscow-stop-A1,60.0,0.0,synthetic
+demo-moscow-minimum-A2-same,demo-moscow-stop-A2,demo-moscow-stop-A2,60.0,0.0,synthetic
+demo-moscow-minimum-A3-same,demo-moscow-stop-A3,demo-moscow-stop-A3,60.0,0.0,synthetic
+demo-moscow-minimum-A4-same,demo-moscow-stop-A4,demo-moscow-stop-A4,60.0,0.0,synthetic
+demo-moscow-minimum-B1-same,demo-moscow-stop-B1,demo-moscow-stop-B1,60.0,0.0,synthetic
+demo-moscow-minimum-B2-same,demo-moscow-stop-B2,demo-moscow-stop-B2,60.0,0.0,synthetic
+demo-moscow-minimum-B3-same,demo-moscow-stop-B3,demo-moscow-stop-B3,60.0,0.0,synthetic
+demo-moscow-minimum-B4-same,demo-moscow-stop-B4,demo-moscow-stop-B4,60.0,0.0,synthetic

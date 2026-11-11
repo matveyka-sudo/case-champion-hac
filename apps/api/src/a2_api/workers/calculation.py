@@ -109,9 +109,9 @@ def _result_byte_limit(claim: ClaimedJob) -> int:
         os.environ.get("A2_DEMO_TRANSPORT_ENABLED", "").strip().lower() != "true"
         or claim.kind != "scenario"
         or not isinstance(context, V2JobContext)
-        or not context.snapshot_id.startswith("demo-moscow-")
         or not isinstance(context.normalized_request, UrbanPassengerRequest)
-        or context.normalized_request.city_id != "moscow"
+        or context.normalized_request.snapshot_id != context.snapshot_id
+        or context.versions.snapshot_id != context.snapshot_id
         or not isinstance(claim.request, ScenarioRunRequest)
     ):
         return MAX_RESULT_BYTES
@@ -121,7 +121,7 @@ def _result_byte_limit(claim: ClaimedJob) -> int:
         or scope is None
         or scope.snapshot_id != context.snapshot_id
         or scope.snapshot_hash != context.snapshot_hash
-        or scope.city_id != "moscow"
+        or scope.city_id != context.normalized_request.city_id
         or not scope.point_origins
         or not scope.destination_nodes
         or not _DEMO_LABELS <= set(proposal.assumptions)

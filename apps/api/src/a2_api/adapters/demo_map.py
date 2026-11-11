@@ -5,15 +5,27 @@ from a2_contracts.v2.dataset import AcceptedData
 from a2_contracts.v2.map_data import AnalysisMapData, MapFeature, PointGeometry
 from a2_contracts.v2.results import AnalysisResult
 
-from a2_api.adapters.demo_transport import DEMO_LIMITATIONS
+from a2_api.adapters.demo_transport import DEMO_LIMITATIONS, verify_demo_snapshot
 
 
 def attach_demo_result(result: AnalysisResult, snapshot: AcceptedData) -> AnalysisResult:
+    verify_demo_snapshot(snapshot)
     if (
-        not snapshot.snapshot_id.startswith("demo-moscow-")
-        or result.snapshot_id != snapshot.snapshot_id
+        result.snapshot_id != snapshot.snapshot_id
+        or result.request.snapshot_id != snapshot.snapshot_id
+        or result.versions.snapshot_id != snapshot.snapshot_id
     ):
         raise ValueError("DEMO_RESULT_SNAPSHOT_MISMATCH")
+    city_id = getattr(result.request, "city_id", None)
+    if city_id is not None and city_id not in {row.territory_id for row in snapshot.territories}:
+        raise ValueError("DEMO_RESULT_CITY_MISMATCH")
+    selected_territories = {
+        identity
+        for name in ("city_id", "origin_id", "destination_id")
+        if (identity := getattr(result.request, name, None)) is not None
+    }
+    if not selected_territories <= set(snapshot.geographic_scope):
+        raise ValueError("DEMO_RESULT_TERRITORY_MISMATCH")
     cells = {cell.cell_id: cell for cell in snapshot.population_cells}
     features = []
     for point in snapshot.sample_points:
@@ -64,7 +76,7 @@ def attach_demo_result(result: AnalysisResult, snapshot: AcceptedData) -> Analys
                 entity_id=destination.destination_id,
                 territory_id=destination.territory_id,
                 categories=destination.categories,
-                name="Поликлиника в синтетической модели (реальные координаты)",
+                name="Объект в синтетической модели",
                 geometry=PointGeometry(
                     type="Point", coordinates=(destination.location.lon, destination.location.lat)
                 ),
@@ -77,12 +89,13 @@ def attach_demo_result(result: AnalysisResult, snapshot: AcceptedData) -> Analys
     values["scores"] = [
         {**score.model_dump(mode="json"), "ranking_eligible": False} for score in result.scores
     ]
-    values["map_data"] = AnalysisMapData(
-        status="available",
-        completeness="partial",
-        reason_code="DEMO_MODEL_MAP_ONLY",
-        features=features,
-    ).model_dump(mode="json")
+    if result.analysis_kind == "urban_passenger":
+        values["map_data"] = AnalysisMapData(
+            status="available",
+            completeness="partial",
+            reason_code="DEMO_MODEL_MAP_ONLY",
+            features=features,
+        ).model_dump(mode="json")
     values["result_hash"] = "pending-demo-decoration"
     checked = AnalysisResult.model_validate(values)
     return checked.model_copy(

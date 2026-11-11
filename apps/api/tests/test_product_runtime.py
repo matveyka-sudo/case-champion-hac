@@ -264,11 +264,11 @@ def test_profile_scope_and_route_budget_refuse_unsupported_requests(
     configure(tmp_path, monkeypatch, transport_facts)
     runtime = load_runtime()
     snapshot = transport_facts[0]
-    with pytest.raises(DomainError, match="RUNTIME_INPUTS_UNAVAILABLE"):
+    with pytest.raises(DomainError, match="REQUEST_OUTSIDE_SUPPORTED_PRESETS"):
         runtime.select(request_for(snapshot, passenger_mode="public_transport"), snapshot)
-    with pytest.raises(DomainError, match="RUNTIME_INPUTS_UNAVAILABLE"):
+    with pytest.raises(DomainError, match="REQUEST_OUTSIDE_SUPPORTED_PRESETS"):
         runtime.select(request_for(snapshot, departure_at="2027-01-01T00:00:00Z"), snapshot)
-    with pytest.raises(DomainError, match="RUNTIME_INPUTS_UNAVAILABLE"):
+    with pytest.raises(DomainError, match="REQUEST_OUTSIDE_SUPPORTED_PRESETS"):
         runtime.select(request_for(snapshot, area_id="TEST_ONLY-known-district"), snapshot)
 
 

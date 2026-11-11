@@ -1,0 +1,97 @@
+{
+  "description": "Durable serial analysis groups introduced in 3d225a2.",
+  "signatures": {
+    "a2_api.workers.runner:Worker": "(repository: a2_api.db.repositories.jobs.JobRepository, *, handler: str, code_version: str, timeout_seconds: float = 600, decoded_result_bytes: int = 16777216, dispatch_groups: collections.abc.Callable[[], collections.abc.Awaitable[bool]] | None = None) -> None",
+    "a2_api.workers.runner:Worker.__init__": "(self, repository: a2_api.db.repositories.jobs.JobRepository, *, handler: str, code_version: str, timeout_seconds: float = 600, decoded_result_bytes: int = 16777216, dispatch_groups: collections.abc.Callable[[], collections.abc.Awaitable[bool]] | None = None) -> None",
+    "a2_api.db.repositories.jobs:JobRepository.enqueue": "(self, kind: Literal['analysis', 'scenario'], request: Union[a2_contracts.api.AnalysisRequest, a2_contracts.scenarios.ScenarioRequest, Annotated[a2_contracts.v2.requests.UrbanPassengerRequest | a2_contracts.v2.requests.IntercityPassengerRequest | a2_contracts.v2.requests.UrbanCargoRequest | a2_contracts.v2.requests.IntercityCargoRequest, FieldInfo(annotation=NoneType, required=True, discriminator='analysis_kind')], a2_contracts.v2.scenarios.ScenarioRunRequest], context: a2_api.core.jobs.JobContext | a2_api.core.jobs.V2JobContext, key: str, trace_id: str, scope: str | None = None, *, group: a2_api.core.analysis_groups.GroupAdmission | None = None) -> a2_contracts.api.JobAccepted",
+    "a2_api.services.analyses:AnalysisService.analyse": "(self, request: Annotated[a2_contracts.v2.requests.UrbanPassengerRequest | a2_contracts.v2.requests.IntercityPassengerRequest | a2_contracts.v2.requests.UrbanCargoRequest | a2_contracts.v2.requests.IntercityCargoRequest, FieldInfo(annotation=NoneType, required=True, discriminator='analysis_kind')], key: str, request_id: str, scope: str, *, group: a2_api.core.analysis_groups.GroupAdmission | None = None) -> a2_contracts.v2.api.JobAccepted"
+  },
+  "sql_by_module": {
+    "db/connection.py": {
+      "sql_literals": [
+        "SELECT to_regclass('analysis_group_items')",
+        "SELECT to_regclass('analysis_groups')"
+      ],
+      "sql_call_hashes": [
+        "2734114a6f8da8972b7e080ac7f1c728a604e51f802fffaf23d02139cbca6633",
+        "e649f353eba4e602b896ea812bfb46a9d1b1e6a5686ac3168f9a6d2c15c03e29"
+      ]
+    },
+    "db/repositories/analysis_groups.py": {
+      "sql_literals": [
+        "INSERT INTO analysis_group_items(group_id,ordinal) VALUES($1,$2)",
+        "INSERT INTO analysis_groups(group_id,access_scope,idempotency_key,input_hash,plan,plan_hash) VALUES($1,$2,$3,$4,$5::jsonb,$6)",
+        "SELECT * FROM analysis_groups WHERE group_id=$1 AND access_scope=$2",
+        "SELECT count(*) AS total,count(*) FILTER(WHERE access_scope=$1) AS owned FROM analysis_groups WHERE status IN ('queued','running')",
+        "SELECT count(*) AS total,count(*) FILTER(WHERE access_scope=$1) AS owned FROM analysis_groups WHERE status IN ('queued','running') AND group_id<>$2",
+        "SELECT group_id,access_scope FROM analysis_groups WHERE status IN ('queued','running') ORDER BY created_at,group_id LIMIT 32",
+        "SELECT group_id,input_hash FROM analysis_groups WHERE idempotency_key=$1 AND access_scope=$2",
+        "SELECT group_id,input_hash FROM analysis_groups WHERE idempotency_key=$1 AND access_scope=$2",
+        "SELECT i.*,j.status AS job_status,j.run_id FROM analysis_group_items i LEFT JOIN jobs j ON j.job_id=i.job_id AND j.access_scope=$2 WHERE i.group_id=$1 ORDER BY i.ordinal",
+        "SELECT pg_advisory_xact_lock(41822008)",
+        "SELECT pg_advisory_xact_lock(41822008)",
+        "SELECT retry_keys FROM analysis_groups WHERE group_id=$1",
+        "UPDATE analysis_group_items SET attempt=attempt+1,error=NULL,previous_job_ids=CASE WHEN job_id IS NULL THEN previous_job_ids ELSE array_append(previous_job_ids,job_id) END,job_id=NULL WHERE group_id=$1 AND ordinal=$2",
+        "UPDATE analysis_group_items SET error=$3::jsonb WHERE group_id=$1 AND ordinal=$2",
+        "UPDATE analysis_groups SET status=$2 WHERE group_id=$1",
+        "UPDATE analysis_groups SET status='cancelled' WHERE group_id=$1",
+        "UPDATE analysis_groups SET status='failed' WHERE group_id=$1 AND access_scope=$2 AND status IN ('queued','running')",
+        "UPDATE analysis_groups SET status='failed',error=$2::jsonb WHERE group_id=$1",
+        "UPDATE analysis_groups SET status='queued',error=NULL,retry_keys=array_append(retry_keys,$2) WHERE group_id=$1",
+        "UPDATE analysis_groups SET status='running' WHERE group_id=$1",
+        "UPDATE jobs SET status='cancelled',finished_at=now(),error=NULL,lease_expires_at=NULL WHERE access_scope=$2 AND status IN ('queued','running') AND job_id IN (SELECT job_id FROM analysis_group_items WHERE group_id=$1)"
+      ],
+      "sql_call_hashes": [
+        "041c515b1c149598f893e60ea0ff8f2675f345dca6963ba6dec7e4574196e1a2",
+        "0def6c45fe581d1ba599ed15883c733541eaf7faf47625d3e48ef69913911439",
+        "0def6c45fe581d1ba599ed15883c733541eaf7faf47625d3e48ef69913911439",
+        "0def6c45fe581d1ba599ed15883c733541eaf7faf47625d3e48ef69913911439",
+        "0def6c45fe581d1ba599ed15883c733541eaf7faf47625d3e48ef69913911439",
+        "0def6c45fe581d1ba599ed15883c733541eaf7faf47625d3e48ef69913911439",
+        "12bf79af2973c4b62b89955a4a0f9d39222fc0bc6418c43343990d3482879d2d",
+        "168664a0df9c4add4675b60409ba164300f80c4b92f0478c08107d9873f5c906",
+        "1835443c4ba5cb2e227f85dce529cbd273464fa83b51b5d724af0ac40046a025",
+        "1b02e24458e261d31a4c2e48b61af44f297d8e1d54bbd38ce5a7e59ac93ad257",
+        "1d054babe0c255d39e42b3a8ddc5e82feb0f41150b3313ae01cf2c637e580ad0",
+        "400c3e5787e0c708183624da682b0f2d5309af3d57caa57cbbddfd1d84ceae66",
+        "40d928dedbaff247c4fd4c48aed348199a312acb48333b325e9cbcb4d262e120",
+        "40e849065bbc6d0cddf4646e96165da85a3df146227144dce28b19122295e378",
+        "4b22ea433b044c61113faf7a34a1de070537b63cd4cc37b67ff135de1ad64661",
+        "57f66ebb24ddf491d0fc35931eb1430f38b9409e30140a182816cd17d067500a",
+        "781d6592918978cc5bdd0da78472a51c7ef6c32106d800142bdc198db1e8157e",
+        "7e00fbc052422e42c676f955de8306c2a79033ba3c9e3dbc01a941d63b595f9c",
+        "80d634f249dc3820a2ed2eac6823a3dbf3d4b751fb0000b3f078879c7d406ced",
+        "9cee25253440d4f9f66d7d44f4a1bf8c601d9a9a4cd3f20ca689e188f5757fb7",
+        "ba3676e87ba748377433646c917ab2e686fda25edc47591348262342e08fd26b",
+        "c449488dd69e067ced9e74501014e6e82a522647eb7bb6044b6bd4de164ed1c0",
+        "c47de49693605fa2d1af04e6e73b2a9e6d3b2bea0f6c13e167b73326604e5838",
+        "d72ed7632a57471c068578700bc2955d87bdd1c72fc3c85983075a37e6f9a3c5",
+        "e0b5862929ae65ae7d2a087f4bb142e7015a60ece7a194d7cd71455701188b16",
+        "e0b5862929ae65ae7d2a087f4bb142e7015a60ece7a194d7cd71455701188b16",
+        "f253ca82bbd9c712a33372635051668d7300c927ace94a2bbcbc821cb867322b"
+      ]
+    },
+    "db/repositories/jobs.py": {
+      "sql_literals": [
+        "UPDATE analysis_group_items SET job_id=$3 WHERE group_id=$1 AND ordinal=$2",
+        "UPDATE analysis_groups SET status='running' WHERE group_id=$1"
+      ],
+      "sql_call_hashes": [
+        "9cee25253440d4f9f66d7d44f4a1bf8c601d9a9a4cd3f20ca689e188f5757fb7",
+        "a19cd808db091d05a710f9b5080ed5e62c6159a7bbeeaefdb8b0254edb51320e"
+      ]
+    }
+  },
+  "schemas": {
+    "replaced": {
+      "manifest.json": "d300beca682c3670c11e5b4bc02fc5289a2f4e761588bb652f50208cddc4ffbc",
+      "openapi.json": "399bbbd6a8a7c2a01e71d577177bac20b755b9524a240bc45adab94aecc56282"
+    },
+    "added": {
+      "v2.AnalysisGroupItem.serialization.schema.json": "47940c794330186c263d0d61d8ce167cbba9f5d3b83a072155fd93df3b7b9300",
+      "v2.AnalysisGroupItem.validation.schema.json": "47940c794330186c263d0d61d8ce167cbba9f5d3b83a072155fd93df3b7b9300",
+      "v2.AnalysisGroupView.serialization.schema.json": "58b67aaf1e14ac98fda311491b1cf97fc85aa7c6e5627a41b4504ff3b480137c",
+      "v2.AnalysisGroupView.validation.schema.json": "58b67aaf1e14ac98fda311491b1cf97fc85aa7c6e5627a41b4504ff3b480137c"
+    }
+  }
+}

@@ -25,3 +25,23 @@
 proxy должен передавать /api/v1 и /health, сохраняя Host/Origin/cookie; подробности
 в docs/FRONTEND_INTEGRATION.md. Локальный Vite proxy проверен с echo API, cloud CI
 и production backend E2E не выдаются за выполненные локальные проверки.
+
+## Изоляция модельного стенда — 11.11.2026, PR #33
+
+Ветка `work/devops-demo-stack` проверена с `origin/dev` на `675f3db`.
+`infra/full-stack/demo-compose.sh` читает имя проекта и проверяет HTTP-порт
+через Compose по явно указанному demo env-файлу. Имя проекта передаётся
+в `--project-name`, а порт фиксируется в окружении Compose для каждой
+команды, включая `down`. При чтении этих двух значений Compose получает
+из оболочки только `PATH`, `HOME` и `DOCKER_CONFIG`. Ссылки в demo env-файле
+разрешаются через переменные в самом файле. Изменение относится к запуску Compose.
+
+`python3 infra/full-stack/test_demo_compose.py -v` воспроизвёл подстановку
+чужого проекта и порта до исправления. После исправления все 6 тестов
+прошли на Compose v5.1.3 и Python 3.12.13. Для `down` проверены аргументы
+и итоговая конфигурация через подмену команды в тесте. `python -m pytest
+infra/full-stack -q` дал 102 успешных и 3 пропущенных теста. Синтаксис
+обёртки, `ruff check`, `ruff format --check` и `git diff --check` прошли.
+
+Локальный Docker daemon недоступен. Запуск контейнеров и приёмка в браузере
+остаются отдельной проверкой на ВМ с подготовленным runtime-пакетом Backend.

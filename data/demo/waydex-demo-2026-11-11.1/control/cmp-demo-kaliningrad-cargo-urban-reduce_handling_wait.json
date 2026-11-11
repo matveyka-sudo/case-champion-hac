@@ -1,0 +1,48 @@
+{
+ "after": {
+  "handling_s": 1740,
+  "total_s": 4348.506,
+  "wait_s": 1620
+ },
+ "before": {
+  "handling_s": 1740,
+  "total_s": 4888.506,
+  "wait_s": 2160
+ },
+ "comparison_id": "cmp-demo-kaliningrad-cargo-urban-reduce_handling_wait",
+ "contract_status": "requires_contract_change: cargo operations are not in scenarios v2",
+ "created_ids": [],
+ "delta": {
+  "sign": "before_minus_after",
+  "total_s": 540.0,
+  "wait_s": 540
+ },
+ "ids": {
+  "after": [
+   "kaliningrad-site-relation-1307845",
+   "kaliningrad-port-relation-21031708",
+   "outbound",
+   "demo-kaliningrad-truck:kaliningrad-site-relation-1307845:kaliningrad-port-relation-21031708:outbound"
+  ],
+  "before": [
+   "kaliningrad-site-relation-1307845",
+   "kaliningrad-port-relation-21031708",
+   "outbound",
+   "demo-kaliningrad-truck:kaliningrad-site-relation-1307845:kaliningrad-port-relation-21031708:outbound"
+  ]
+ },
+ "model_inputs": {
+  "evidence_id": "demo-model:kaliningrad:handling",
+  "resource_change": {
+   "equipment": "reach_stacker",
+   "units_after": 4,
+   "units_before": 3,
+   "window_local": [
+    "08:00",
+    "12:00"
+   ]
+  }
+ },
+ "operation_type": "reduce_handling_wait",
+ "preset_id": "demo-kaliningrad-cargo-urban"
+}

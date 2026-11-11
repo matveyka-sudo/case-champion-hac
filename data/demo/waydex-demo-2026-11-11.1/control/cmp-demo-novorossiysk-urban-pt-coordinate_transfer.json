@@ -1,0 +1,167 @@
+{
+ "after": {
+  "initial_wait_s": 580.0,
+  "reasons": [],
+  "state": "reachable",
+  "total_s": 3320.0,
+  "transfer_wait_s": 120.0,
+  "transfers": 1,
+  "trip_ids": [
+   "demo-novorossiysk-trip-A-0840",
+   "demo-novorossiysk-trip-B-0859"
+  ]
+ },
+ "before": {
+  "initial_wait_s": 280.0,
+  "reasons": [],
+  "state": "reachable",
+  "total_s": 4100.0,
+  "transfer_wait_s": 140.0,
+  "transfers": 1,
+  "trip_ids": [
+   "demo-novorossiysk-trip-A-0850",
+   "demo-novorossiysk-trip-B-0914"
+  ]
+ },
+ "comparison_id": "cmp-demo-novorossiysk-urban-pt-coordinate_transfer",
+ "contract_status": "scenario_contract_v2",
+ "created_ids": [],
+ "delta": {
+  "sign": "before_minus_after",
+  "total_s": 780.0,
+  "waiting_s": -280.0
+ },
+ "expected_by": "a2_engine.solve_timetable(max_wait_seconds=3600), departure 08:30 local",
+ "fixed_parameters": {
+  "demand_evidence": [
+   "demo-model:novorossiysk:demand"
+  ],
+  "resource_constraints": [],
+  "resource_evidence": [
+   "demo-model:novorossiysk:resource"
+  ],
+  "service_ids": [
+   "demo-novorossiysk-svc-B-0859"
+  ],
+  "shift_seconds": 120,
+  "turnaround_evidence": [
+   "demo-model:novorossiysk:turnaround"
+  ]
+ },
+ "ids": {
+  "after": [
+   "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+   "novorossiysk-rail_terminal-node-343446779",
+   "demo-novorossiysk-transfer-A4-B1",
+   "demo-novorossiysk-svc-B-0859"
+  ],
+  "before": [
+   "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+   "novorossiysk-rail_terminal-node-343446779",
+   "demo-novorossiysk-transfer-A4-B1",
+   "demo-novorossiysk-svc-B-0859"
+  ]
+ },
+ "model_inputs": {
+  "demand": {
+   "capacity_persons_per_hour": 320,
+   "catchment_population_persons": 43815.494,
+   "demand_persons_per_hour": 299,
+   "evidence_id": "demo-model:novorossiysk:demand",
+   "load_factor": 0.935,
+   "route_id": "demo-novorossiysk-route-B",
+   "window_local": [
+    "08:00",
+    "09:00"
+   ]
+  },
+  "extra_departure_slot": null,
+  "problem_transfer": {
+   "arrival_local": "08:58",
+   "arriving_trip_id": "demo-novorossiysk-trip-A-0840",
+   "base_wait_s": 900,
+   "from_stop": "demo-novorossiysk-stop-A4",
+   "min_change_s": 60,
+   "minimum_id": "demo-novorossiysk-minimum-A4-B1",
+   "next_trip_id": "demo-novorossiysk-trip-B-0914",
+   "planned_departure_local": "08:59",
+   "planned_trip_id": "demo-novorossiysk-trip-B-0859",
+   "slack_after_coordinate_s": 60,
+   "slack_s": -60,
+   "to_stop": "demo-novorossiysk-stop-B1",
+   "transfer_id": "demo-novorossiysk-transfer-A4-B1",
+   "walk_s": 80
+  },
+  "resource": {
+   "assigned_trip_ids": [],
+   "capacity_persons": 80,
+   "evidence_id": "demo-model:novorossiysk:resource",
+   "vehicle_id": "demo-novorossiysk-vehicle-B-reserve-1",
+   "working_window_local": [
+    "06:00",
+    "14:00"
+   ]
+  },
+  "turnaround": {
+   "evidence_id": "demo-model:novorossiysk:turnaround",
+   "layover_s": 300,
+   "route_id": "demo-novorossiysk-route-B",
+   "run_s": 700,
+   "turnaround_s": 2000
+  }
+ },
+ "neighbour_worse": [
+  {
+   "after_s": 2650.0,
+   "before_s": 2530.0,
+   "destination_id": "novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f",
+   "origin_point_id": "novorossiysk-utm37n-1km-v1-e400-n4953-p"
+  },
+  {
+   "after_s": 2190.0,
+   "before_s": 2070.0,
+   "destination_id": "novorossiysk-adult_polyclinic-d7725c0eca3f",
+   "origin_point_id": "novorossiysk-utm37n-1km-v1-e403-n4950-p"
+  },
+  {
+   "after_s": 2090.0,
+   "before_s": 1970.0,
+   "destination_id": "novorossiysk-child_polyclinic-2fc149e7dc8a",
+   "origin_point_id": "novorossiysk-utm37n-1km-v1-e403-n4950-p"
+  },
+  {
+   "after_s": 3320.0,
+   "before_s": 3200.0,
+   "destination_id": "novorossiysk-rail_terminal-node-343446779",
+   "origin_point_id": "novorossiysk-utm37n-1km-v1-e403-n4950-p"
+  },
+  {
+   "after_s": 2650.0,
+   "before_s": 2530.0,
+   "destination_id": "novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f",
+   "origin_point_id": "novorossiysk-utm37n-1km-v1-e403-n4954-p"
+  }
+ ],
+ "operation_type": "coordinate_transfer",
+ "other_better": [
+  {
+   "after_s": 2190.0,
+   "before_s": 2970.0,
+   "destination_id": "novorossiysk-adult_polyclinic-d7725c0eca3f",
+   "origin_point_id": "novorossiysk-utm37n-1km-v1-e402-n4949-p"
+  },
+  {
+   "after_s": 2090.0,
+   "before_s": 2870.0,
+   "destination_id": "novorossiysk-child_polyclinic-2fc149e7dc8a",
+   "origin_point_id": "novorossiysk-utm37n-1km-v1-e402-n4949-p"
+  },
+  {
+   "after_s": 3320.0,
+   "before_s": 4100.0,
+   "destination_id": "novorossiysk-rail_terminal-node-343446779",
+   "origin_point_id": "novorossiysk-utm37n-1km-v1-e402-n4949-p"
+  }
+ ],
+ "preset_id": "demo-novorossiysk-urban-pt"
+}

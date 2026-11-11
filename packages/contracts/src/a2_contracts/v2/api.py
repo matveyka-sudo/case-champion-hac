@@ -19,7 +19,7 @@ from .base import (
     TrafficMode,
     VersionRefs,
 )
-from .requests import CargoProfile, UrbanPassengerRequest
+from .requests import AnalysisRequest, CargoProfile, UrbanPassengerRequest
 
 
 class ErrorDetail(ContractModel):
@@ -220,6 +220,16 @@ class UrbanPassengerScope(ContractModel):
         return self
 
 
+class AnalysisPreset(ContractModel):
+    """One exact versioned request supported by a registered server profile."""
+
+    preset_id: Identifier
+    label: Identifier
+    request: AnalysisRequest
+    scenario_operations: list[Identifier] = Field(default_factory=list)
+    limitations: list[Identifier] = Field(default_factory=list)
+
+
 class Capabilities(ContractModel):
     schema_version: Literal["2"]
     spec_version: Literal["2026-11-08.1"]
@@ -238,3 +248,4 @@ class Capabilities(ContractModel):
     areas: list[AreaOption] = Field(default_factory=list)
     # None: legacy registry does not publish detailed constraints; []: none registered.
     urban_passenger_scopes: list[UrbanPassengerScope] | None = None
+    analysis_presets: list[AnalysisPreset] = Field(default_factory=list)

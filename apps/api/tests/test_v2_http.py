@@ -84,6 +84,24 @@ def test_canonical_openapi_has_four_discriminated_forms_and_scoped_routes():
     assert "/api/v1/scenario-analyses" not in spec["paths"]
 
 
+def test_openapi_examples_cover_saved_partial_unsupported_and_retry():
+    from a2_contracts.v2.api import ErrorEnvelope, JobAccepted
+    from a2_contracts.v2.results import AnalysisResult
+
+    spec = create_app().openapi()
+    post = spec["paths"]["/api/v1/analyses"]["post"]["responses"]
+    accepted = post["202"]["content"]["application/json"]["examples"]["accepted"]["value"]
+    assert JobAccepted.model_validate(accepted).status == "queued"
+    for status, example, retryable in (("422", "unsupported", False), ("503", "retry", True)):
+        value = post[status]["content"]["application/json"]["examples"][example]["value"]
+        assert ErrorEnvelope.model_validate(value).error.retryable is retryable
+    responses = spec["paths"]["/api/v1/analyses/{analysis_id}"]["get"]["responses"]
+    partial = responses["200"]["content"]["application/json"]["examples"]["partial"]["value"]
+    result = AnalysisResult.model_validate(partial)
+    assert result.status == "partial"
+    assert any(metric.value is None and metric.reason_code for metric in result.metrics)
+
+
 def test_session_cookie_supports_https_and_cross_origin_mutations_are_rejected():
     with TestClient(create_app(secure_cookies=True), base_url="https://testserver") as client:
         response = client.get("/api/v1/capabilities")

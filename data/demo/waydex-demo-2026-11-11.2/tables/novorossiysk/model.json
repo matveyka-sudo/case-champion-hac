@@ -1,0 +1,215 @@
+{
+ "cargo_profile": {
+  "food_class": "nonfood",
+  "handling_requirements": [
+   "container"
+  ],
+  "kind": "delivery",
+  "profile_id": "truck-model-20t-container-nonfood-ordinary",
+  "temperature_requirements": {
+   "controlled": false,
+   "max_c": null,
+   "min_c": null
+  },
+  "urgency": "ordinary",
+  "vehicle_constraints": {
+   "max_height_m": 4.0,
+   "max_weight_tonnes": 20.0,
+   "restrictions": []
+  }
+ },
+ "freight_nodes": [
+  {
+   "approach_directions": [
+    "inbound",
+    "outbound"
+   ],
+   "base_wait_s": 2280,
+   "freight_node_id": "novorossiysk-port-way-1168951234",
+   "gate_window_local": [
+    "06:00",
+    "22:00"
+   ],
+   "handling_s": 1800,
+   "handling_types": [
+    "container",
+    "bulk"
+   ],
+   "kind": "port",
+   "max_height_m": 4.5,
+   "max_mass_t": 40.0,
+   "origin": "real_location_model_operations",
+   "resource": {
+    "equipment": "reach_stacker",
+    "slots_per_hour": 9,
+    "units": 3
+   }
+  },
+  {
+   "approach_directions": [
+    "inbound",
+    "outbound"
+   ],
+   "base_wait_s": 2880,
+   "freight_node_id": "demo-novorossiysk-rail-terminal-model",
+   "gate_window_local": [
+    "06:00",
+    "22:00"
+   ],
+   "handling_s": 1740,
+   "handling_types": [
+    "container"
+   ],
+   "kind": "rail_terminal",
+   "max_height_m": 4.5,
+   "max_mass_t": 30.0,
+   "origin": "model",
+   "resource": {
+    "equipment": "reach_stacker",
+    "slots_per_hour": 9,
+    "units": 3
+   }
+  }
+ ],
+ "public_transport": {
+  "demand": {
+   "capacity_persons_per_hour": 320,
+   "catchment_population_persons": 43815.494,
+   "demand_persons_per_hour": 299,
+   "evidence_id": "demo-model:novorossiysk:demand",
+   "load_factor": 0.935,
+   "route_id": "demo-novorossiysk-route-B",
+   "window_local": [
+    "08:00",
+    "09:00"
+   ]
+  },
+  "extra_departure_slot": {
+   "departure_local": "09:07",
+   "new_trip_id": "demo-novorossiysk-trip-B-0907-extra",
+   "shift_s": 450,
+   "template_trip_id": "demo-novorossiysk-trip-B-0859"
+  },
+  "problem_transfer": {
+   "arrival_local": "08:58",
+   "arriving_trip_id": "demo-novorossiysk-trip-A-0840",
+   "base_wait_s": 900,
+   "from_stop": "demo-novorossiysk-stop-A4",
+   "min_change_s": 60,
+   "minimum_id": "demo-novorossiysk-minimum-A4-B1",
+   "next_trip_id": "demo-novorossiysk-trip-B-0914",
+   "planned_departure_local": "08:59",
+   "planned_trip_id": "demo-novorossiysk-trip-B-0859",
+   "slack_after_coordinate_s": 60,
+   "slack_s": -60,
+   "to_stop": "demo-novorossiysk-stop-B1",
+   "transfer_id": "demo-novorossiysk-transfer-A4-B1",
+   "walk_s": 80
+  },
+  "resource": {
+   "assigned_trip_ids": [],
+   "capacity_persons": 80,
+   "evidence_id": "demo-model:novorossiysk:resource",
+   "vehicle_id": "demo-novorossiysk-vehicle-B-reserve-1",
+   "working_window_local": [
+    "06:00",
+    "14:00"
+   ]
+  },
+  "routes": [
+   {
+    "dwell_s": 20,
+    "headway_s": 600,
+    "route_id": "demo-novorossiysk-route-A",
+    "segment_run_s": [
+     390,
+     270,
+     390
+    ],
+    "stops": [
+     "demo-novorossiysk-stop-A1",
+     "demo-novorossiysk-stop-A2",
+     "demo-novorossiysk-stop-A3",
+     "demo-novorossiysk-stop-A4"
+    ],
+    "trip_ids": [
+     "demo-novorossiysk-trip-A-0700",
+     "demo-novorossiysk-trip-A-0710",
+     "demo-novorossiysk-trip-A-0720",
+     "demo-novorossiysk-trip-A-0730",
+     "demo-novorossiysk-trip-A-0740",
+     "demo-novorossiysk-trip-A-0750",
+     "demo-novorossiysk-trip-A-0800",
+     "demo-novorossiysk-trip-A-0810",
+     "demo-novorossiysk-trip-A-0820",
+     "demo-novorossiysk-trip-A-0830",
+     "demo-novorossiysk-trip-A-0840",
+     "demo-novorossiysk-trip-A-0850",
+     "demo-novorossiysk-trip-A-0900",
+     "demo-novorossiysk-trip-A-0910",
+     "demo-novorossiysk-trip-A-0920",
+     "demo-novorossiysk-trip-A-0930",
+     "demo-novorossiysk-trip-A-0940",
+     "demo-novorossiysk-trip-A-0950",
+     "demo-novorossiysk-trip-A-1000",
+     "demo-novorossiysk-trip-A-1010",
+     "demo-novorossiysk-trip-A-1020",
+     "demo-novorossiysk-trip-A-1030",
+     "demo-novorossiysk-trip-A-1040",
+     "demo-novorossiysk-trip-A-1050"
+    ],
+    "vehicle_capacity_persons": 80
+   },
+   {
+    "dwell_s": 20,
+    "headway_s": 900,
+    "route_id": "demo-novorossiysk-route-B",
+    "segment_run_s": [
+     180,
+     90,
+     390
+    ],
+    "stops": [
+     "demo-novorossiysk-stop-B1",
+     "demo-novorossiysk-stop-B2",
+     "demo-novorossiysk-stop-B3",
+     "demo-novorossiysk-stop-B4"
+    ],
+    "trip_ids": [
+     "demo-novorossiysk-trip-B-0729",
+     "demo-novorossiysk-trip-B-0744",
+     "demo-novorossiysk-trip-B-0759",
+     "demo-novorossiysk-trip-B-0814",
+     "demo-novorossiysk-trip-B-0829",
+     "demo-novorossiysk-trip-B-0844",
+     "demo-novorossiysk-trip-B-0859",
+     "demo-novorossiysk-trip-B-0914",
+     "demo-novorossiysk-trip-B-0929",
+     "demo-novorossiysk-trip-B-0944",
+     "demo-novorossiysk-trip-B-0959",
+     "demo-novorossiysk-trip-B-1014",
+     "demo-novorossiysk-trip-B-1029",
+     "demo-novorossiysk-trip-B-1044",
+     "demo-novorossiysk-trip-B-1059",
+     "demo-novorossiysk-trip-B-1114",
+     "demo-novorossiysk-trip-B-1129"
+    ],
+    "vehicle_capacity_persons": 80
+   }
+  ],
+  "target": {
+   "destination_id": "novorossiysk-rail_terminal-node-343446779",
+   "origin_point_id": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+   "ready_local": "08:30",
+   "selection": "pair with the largest a2_engine gain under both operations that rides the planned trip after a change"
+  },
+  "turnaround": {
+   "evidence_id": "demo-model:novorossiysk:turnaround",
+   "layover_s": 300,
+   "route_id": "demo-novorossiysk-route-B",
+   "run_s": 700,
+   "turnaround_s": 2000
+  }
+ },
+ "stops_template": "real walk-network projections (no accepted stop table)"
+}

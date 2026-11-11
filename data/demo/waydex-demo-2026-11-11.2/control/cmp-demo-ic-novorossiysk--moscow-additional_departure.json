@@ -1,0 +1,106 @@
+{
+ "after": {
+  "arrival_utc": "2026-11-12T03:30:00+00:00",
+  "departure_utc": "2026-11-11T06:15:00+00:00",
+  "from_node_id": "node-wd-q3728238",
+  "initial_wait_s": 2700,
+  "path_s": 76500,
+  "to_node_id": "node-wd-q21844902",
+  "total_s": 79200,
+  "trips": [
+   "demo-ic-rail-novorossiysk--moscow-0915-extra"
+  ]
+ },
+ "before": {
+  "arrival_utc": "2026-11-12T07:55:00+00:00",
+  "departure_utc": "2026-11-11T10:40:00+00:00",
+  "from_node_id": "node-wd-q3728238",
+  "initial_wait_s": 18600,
+  "path_s": 76500,
+  "to_node_id": "node-wd-q21844902",
+  "total_s": 95100,
+  "trips": [
+   "demo-ic-rail-novorossiysk--moscow-1340"
+  ]
+ },
+ "comparison_id": "cmp-demo-ic-novorossiysk--moscow-additional_departure",
+ "contract_status": "scenario_contract_v2_operation; intercity context not accepted by the current API",
+ "created_ids": [
+  "demo-ic-rail-novorossiysk--moscow-0915-extra"
+ ],
+ "delta": {
+  "initial_wait_s": 15900,
+  "path_s": 0,
+  "sign": "before_minus_after",
+  "total_s": 15900,
+  "transfer_wait_s": 0
+ },
+ "fixed_parameters": {
+  "demand_evidence": [
+   "demo-model:intercity:demand"
+  ],
+  "resource_constraints": [
+   "demo-ic-trainset-reserve-novorossiysk--moscow"
+  ],
+  "resource_evidence": [
+   "demo-model:intercity:resource"
+  ],
+  "service_ids": [
+   "demo-ic-svc-rail-novorossiysk--moscow-1340"
+  ],
+  "shift_seconds": -15900,
+  "turnaround_evidence": [
+   "demo-model:intercity:turnaround"
+  ]
+ },
+ "ids": {
+  "after": [
+   "novorossiysk--moscow",
+   "demo-ic-svc-rail-novorossiysk--moscow-1340",
+   "demo-ic-rail-novorossiysk--moscow-0915-extra"
+  ],
+  "before": [
+   "novorossiysk--moscow",
+   "demo-ic-svc-rail-novorossiysk--moscow-1340"
+  ]
+ },
+ "model_inputs": {
+  "demand": {
+   "demand_persons": 377,
+   "evidence_id": "demo-model:intercity:demand",
+   "window_local": [
+    "08:30",
+    "13:40"
+   ]
+  },
+  "new_trip_id": "demo-ic-rail-novorossiysk--moscow-0915-extra",
+  "resource": {
+   "capacity_persons": 450,
+   "evidence_id": "demo-model:intercity:resource",
+   "vehicle_id": "demo-ic-trainset-reserve-novorossiysk--moscow",
+   "working_window_local": [
+    "06:00",
+    "23:00"
+   ]
+  },
+  "service_ids": [
+   "demo-ic-svc-rail-novorossiysk--moscow-1340"
+  ],
+  "shift_seconds": -15900,
+  "synthetic_departure_planning": {
+   "city_centre_to_origin_node_s": 320,
+   "evidence_id": "demo-model:intercity:departure_planning",
+   "origin": "synthetic",
+   "pre_boarding_s": 1200,
+   "slot_margin_s": 900,
+   "slot_rounding_s": 300
+  },
+  "template_trip_id": "demo-ic-rail-novorossiysk--moscow-1340",
+  "turnaround": {
+   "evidence_id": "demo-model:intercity:turnaround",
+   "turnaround_s": 14400
+  }
+ },
+ "operation_type": "additional_departure",
+ "preset_id": "demo-ic-novorossiysk--moscow"
+}

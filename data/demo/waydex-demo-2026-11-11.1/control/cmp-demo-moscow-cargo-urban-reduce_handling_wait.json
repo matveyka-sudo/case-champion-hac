@@ -1,0 +1,48 @@
+{
+ "after": {
+  "handling_s": 1680,
+  "total_s": 5330.0,
+  "wait_s": 1740
+ },
+ "before": {
+  "handling_s": 1680,
+  "total_s": 5750.0,
+  "wait_s": 2160
+ },
+ "comparison_id": "cmp-demo-moscow-cargo-urban-reduce_handling_wait",
+ "contract_status": "requires_contract_change: cargo operations are not in scenarios v2",
+ "created_ids": [],
+ "delta": {
+  "sign": "before_minus_after",
+  "total_s": 420.0,
+  "wait_s": 420
+ },
+ "ids": {
+  "after": [
+   "moscow-site-relation-9975357",
+   "demo-moscow-logistics-terminal-model",
+   "outbound",
+   "demo-moscow-truck:moscow-site-relation-9975357:demo-moscow-logistics-terminal-model:outbound"
+  ],
+  "before": [
+   "moscow-site-relation-9975357",
+   "demo-moscow-logistics-terminal-model",
+   "outbound",
+   "demo-moscow-truck:moscow-site-relation-9975357:demo-moscow-logistics-terminal-model:outbound"
+  ]
+ },
+ "model_inputs": {
+  "evidence_id": "demo-model:moscow:handling",
+  "resource_change": {
+   "equipment": "reach_stacker",
+   "units_after": 5,
+   "units_before": 4,
+   "window_local": [
+    "08:00",
+    "12:00"
+   ]
+  }
+ },
+ "operation_type": "reduce_handling_wait",
+ "preset_id": "demo-moscow-cargo-urban"
+}

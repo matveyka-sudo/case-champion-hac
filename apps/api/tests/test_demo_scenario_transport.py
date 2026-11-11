@@ -67,6 +67,27 @@ def test_only_frozen_admitted_demo_scenario_gets_32mib(monkeypatch):
     )
     monkeypatch.setenv("A2_DEMO_TRANSPORT_ENABLED", "false")
     assert calculation._result_byte_limit(claim) == 16 * 1024 * 1024
+
+
+@pytest.mark.parametrize("city", ["kaliningrad", "novorossiysk"])
+def test_frozen_demo_ipc_allowance_uses_matching_scope_in_each_city(monkeypatch, city):
+    monkeypatch.setenv("A2_DEMO_TRANSPORT_ENABLED", "true")
+    values = synthetic_demo_claim().model_dump(mode="json")
+    context = values["context"]
+    identity = "demo-" + city + "-TEST_ONLY"
+    context["snapshot_id"] = context["versions"]["snapshot_id"] = identity
+    context["normalized_request"].update(city_id=city, snapshot_id=identity)
+    context["scenario_endpoint_scope"].update(city_id=city, snapshot_id=identity)
+    context["scenario_proposal"]["versions"]["snapshot_id"] = identity
+    values["job"]["bundle_id"] = identity
+    claim = ClaimedJob.model_validate(values)
+    assert calculation._result_byte_limit(claim) == calculation.MAX_DEMO_SCENARIO_BYTES
+    for key, change in [("city_id", "foreign-city"), ("snapshot_id", "foreign-snapshot")]:
+        request = claim.context.normalized_request.model_copy(update={key: change})
+        mutated = claim.model_copy(
+            update={"context": claim.context.model_copy(update={"normalized_request": request})}
+        )
+        assert calculation._result_byte_limit(mutated) == calculation.MAX_RESULT_BYTES
     monkeypatch.delenv("A2_DEMO_TRANSPORT_ENABLED")
     assert calculation._result_byte_limit(claim) == 16 * 1024 * 1024
 

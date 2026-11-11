@@ -8,11 +8,18 @@ from a2_contracts.v2.results import AnalysisResult
 from fastapi import APIRouter, Request
 
 from a2_api.api.dependencies import IdempotencyKey, backend
+from a2_api.api.v2.examples import ACCEPTED_EXAMPLES, ANALYSIS_EXAMPLES
 
 router = APIRouter()
 
 
-@router.post("/analyses", status_code=202)
+@router.post(
+    "/analyses",
+    status_code=202,
+    responses={
+        202: {"content": {"application/json": {"examples": ACCEPTED_EXAMPLES}}},
+    },
+)
 async def analyse(
     body: AnalysisRequest, request: Request, idempotency_key: IdempotencyKey
 ) -> JobAccepted:
@@ -21,6 +28,11 @@ async def analyse(
     )
 
 
-@router.get("/analyses/{analysis_id}")
+@router.get(
+    "/analyses/{analysis_id}",
+    responses={
+        200: {"content": {"application/json": {"examples": ANALYSIS_EXAMPLES}}},
+    },
+)
 async def analysis(analysis_id: str, request: Request) -> AnalysisResult:
     return await backend(request).analysis(analysis_id, request.state.access_scope)

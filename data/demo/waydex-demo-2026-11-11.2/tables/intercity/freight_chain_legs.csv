@@ -1,0 +1,19 @@
+leg_id,mode,from,to,run_s,handling_at_end_s,origin,chain_id,pair,distance_km,departures_local
+demo-icf-moscow--kaliningrad-1,road,moscow-site-relation-9975357,demo-moscow-rail-terminal-model,1390,8400,synthetic,demo-icf-moscow--kaliningrad,moscow--kaliningrad,,
+demo-icf-moscow--kaliningrad-2,rail,demo-moscow-rail-terminal-model,demo-kaliningrad-rail-terminal-model,117000,19800,synthetic,demo-icf-moscow--kaliningrad,moscow--kaliningrad,1300.0,"[""+0d 14:00"", ""+1d 14:00""]"
+demo-icf-moscow--kaliningrad-3,road,demo-kaliningrad-rail-terminal-model,kaliningrad-site-relation-1307845,1210,,synthetic,demo-icf-moscow--kaliningrad,moscow--kaliningrad,,
+demo-icf-kaliningrad--moscow-1,road,kaliningrad-site-relation-1307845,demo-kaliningrad-rail-terminal-model,1210,9000,synthetic,demo-icf-kaliningrad--moscow,kaliningrad--moscow,,
+demo-icf-kaliningrad--moscow-2,rail,demo-kaliningrad-rail-terminal-model,demo-moscow-rail-terminal-model,117000,25200,synthetic,demo-icf-kaliningrad--moscow,kaliningrad--moscow,1300.0,"[""+0d 22:00"", ""+1d 22:00""]"
+demo-icf-kaliningrad--moscow-3,road,demo-moscow-rail-terminal-model,moscow-site-relation-9975357,1390,,synthetic,demo-icf-kaliningrad--moscow,kaliningrad--moscow,,
+demo-icf-moscow--novorossiysk-1,road,moscow-site-relation-9975357,demo-moscow-rail-terminal-model,1390,10800,synthetic,demo-icf-moscow--novorossiysk,moscow--novorossiysk,,
+demo-icf-moscow--novorossiysk-2,rail,demo-moscow-rail-terminal-model,demo-novorossiysk-rail-terminal-model,129600,20400,synthetic,demo-icf-moscow--novorossiysk,moscow--novorossiysk,1440.0,"[""+0d 11:00"", ""+0d 23:00"", ""+1d 11:00""]"
+demo-icf-moscow--novorossiysk-3,road,demo-novorossiysk-rail-terminal-model,novorossiysk-site-way-31091391,1370,,synthetic,demo-icf-moscow--novorossiysk,moscow--novorossiysk,,
+demo-icf-novorossiysk--moscow-1,road,novorossiysk-site-way-31091391,demo-novorossiysk-rail-terminal-model,1370,10800,synthetic,demo-icf-novorossiysk--moscow,novorossiysk--moscow,,
+demo-icf-novorossiysk--moscow-2,rail,demo-novorossiysk-rail-terminal-model,demo-moscow-rail-terminal-model,129600,21600,synthetic,demo-icf-novorossiysk--moscow,novorossiysk--moscow,1440.0,"[""+0d 06:00"", ""+0d 18:00"", ""+1d 06:00""]"
+demo-icf-novorossiysk--moscow-3,road,demo-moscow-rail-terminal-model,moscow-site-relation-9975357,1390,,synthetic,demo-icf-novorossiysk--moscow,novorossiysk--moscow,,
+demo-icf-kaliningrad--novorossiysk-1,road,kaliningrad-site-relation-1307845,kaliningrad-port-relation-21031708,550,8400,synthetic,demo-icf-kaliningrad--novorossiysk,kaliningrad--novorossiysk,,
+demo-icf-kaliningrad--novorossiysk-2,water,kaliningrad-port-relation-21031708,novorossiysk-port-way-1168951234,955800,22200,synthetic,demo-icf-kaliningrad--novorossiysk,kaliningrad--novorossiysk,6900.0,"[""+2d 10:00"", ""+9d 10:00""]"
+demo-icf-kaliningrad--novorossiysk-3,road,novorossiysk-port-way-1168951234,novorossiysk-site-way-31091391,360,,synthetic,demo-icf-kaliningrad--novorossiysk,kaliningrad--novorossiysk,,
+demo-icf-novorossiysk--kaliningrad-1,road,novorossiysk-site-way-31091391,novorossiysk-port-way-1168951234,360,7800,synthetic,demo-icf-novorossiysk--kaliningrad,novorossiysk--kaliningrad,,
+demo-icf-novorossiysk--kaliningrad-2,water,novorossiysk-port-way-1168951234,kaliningrad-port-relation-21031708,955800,18600,synthetic,demo-icf-novorossiysk--kaliningrad,novorossiysk--kaliningrad,6900.0,"[""+3d 16:00"", ""+10d 16:00""]"
+demo-icf-novorossiysk--kaliningrad-3,road,kaliningrad-port-relation-21031708,kaliningrad-site-relation-1307845,550,,synthetic,demo-icf-novorossiysk--kaliningrad,novorossiysk--kaliningrad,,

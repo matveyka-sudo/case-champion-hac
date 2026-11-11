@@ -1,0 +1,342 @@
+{
+ "access_nodes": [
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 44.7114606,
+    "lon": 37.8498495
+   },
+   "node_id": "road:way:195722498:210.5",
+   "source_refs": [
+    "osm:way:195722498"
+   ],
+   "territory_id": "novorossiysk"
+  },
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 44.6706487,
+    "lon": 37.653785
+   },
+   "node_id": "road:way:344051420:430.4",
+   "source_refs": [
+    "osm:way:344051420"
+   ],
+   "territory_id": "novorossiysk"
+  },
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 44.7446533,
+    "lon": 37.8825632
+   },
+   "node_id": "road:way:61589322:63.5",
+   "source_refs": [
+    "osm:way:61589322"
+   ],
+   "territory_id": "novorossiysk"
+  }
+ ],
+ "category_ownership": [],
+ "confirmed_absence_scope": [],
+ "coverage_by_mode_date_category": [],
+ "destinations": [],
+ "evidence": [
+  {
+   "content_hash": "20af7ca007a87741e50862ef873da146ba19729897c9c901f7d3a9b818e05ad5",
+   "evidence_id": "osm:relation:3569335",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T19:17:34.676135Z",
+   "source_id": "osm_geofabrik",
+   "source_version": "osm_geofabrik.south-fed-district-261107",
+   "url": "https://www.openstreetmap.org/relation/3569335",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "d65adb5d0304ce39cf66e153a6b744dd61a587440e5a42f1510fc5a23bc6036e",
+   "evidence_id": "osm:relation:364545",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T19:17:34.676135Z",
+   "source_id": "osm_geofabrik",
+   "source_version": "osm_geofabrik.south-fed-district-261107",
+   "url": "https://www.openstreetmap.org/relation/364545",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "ef7e8bc8d5c307522980b59c73ade342bc617b24adc31ef9713b7afe6d1eb687",
+   "evidence_id": "osm:way:126416704",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T19:17:34.676135Z",
+   "source_id": "osm_geofabrik",
+   "source_version": "osm_geofabrik.south-fed-district-261107",
+   "url": "https://www.openstreetmap.org/way/126416704",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "590bfe8c7be8cf56d4a6036dc8beff97c916e84c6297baea2f076d7cfd729cc1",
+   "evidence_id": "osm:way:183488914",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T19:17:34.676135Z",
+   "source_id": "osm_geofabrik",
+   "source_version": "osm_geofabrik.south-fed-district-261107",
+   "url": "https://www.openstreetmap.org/way/183488914",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "c848323771958fbbd2c2d41213ef3c44c3d3aadd56cad1fe3e02ea7cd4181003",
+   "evidence_id": "osm:way:195722498",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T19:17:34.676135Z",
+   "source_id": "osm_geofabrik",
+   "source_version": "osm_geofabrik.south-fed-district-261107",
+   "url": "https://www.openstreetmap.org/way/195722498",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "e4059298bd37fd17ffab1831295a018d96ba8bcdb1fd130acb6048c77e8be057",
+   "evidence_id": "osm:way:344051420",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T19:17:34.676135Z",
+   "source_id": "osm_geofabrik",
+   "source_version": "osm_geofabrik.south-fed-district-261107",
+   "url": "https://www.openstreetmap.org/way/344051420",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "30ef5468fcc1a7aa8e9713b2aa220e5603e51fb9bdd5ef91f278396f6f590c46",
+   "evidence_id": "osm:way:61589322",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T19:17:34.676135Z",
+   "source_id": "osm_geofabrik",
+   "source_version": "osm_geofabrik.south-fed-district-261107",
+   "url": "https://www.openstreetmap.org/way/61589322",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "3190ddaabc60ca63500c645ca8613ca47660aa8cfe469f2bfc0b4ecb1c1fea7b",
+   "evidence_id": "rosmorport:seaport-novorossiysk",
+   "license": "Используются только факты: перечень операторов и характеристики порта (ст. 1259 ГК РФ)",
+   "retrieved_at": "2026-11-08T19:40:38.141524Z",
+   "source_id": "rosmorport",
+   "source_version": "rosmorport.seaports-novorossiysk-20261108",
+   "url": "https://www.rosmorport.ru/nvr_seaports.html",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "0224074b612019190f089588b517ce19ebb7a1c520a64b8bb2aca08ab69eb5b8",
+   "evidence_id": "demo-model:pipeline:network",
+   "license": "CC0-1.0 synthetic model data",
+   "retrieved_at": "2026-11-11T00:00:00Z",
+   "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "source_version": "waydex-demo-2026-11-11.2",
+   "url": "https://github.com/matveyka-sudo/case-champion-hac/tree/dev/data/demo/waydex-demo-2026-11-11.2",
+   "valid_period": {
+    "end": "2026-11-11",
+    "start": "2026-11-11"
+   },
+   "verified": true
+  }
+ ],
+ "freight_compatibility": [],
+ "freight_nodes": [
+  {
+   "access_node_id": "road:way:61589322:63.5",
+   "freight_node_id": "novorossiysk-pipeline_terminal-relation-3569335",
+   "kind": "pipeline_terminal",
+   "location": {
+    "lat": 44.7504515,
+    "lon": 37.8925133
+   },
+   "source_refs": [
+    "osm:relation:3569335"
+   ],
+   "territory_id": "novorossiysk"
+  },
+  {
+   "access_node_id": "road:way:195722498:210.5",
+   "freight_node_id": "novorossiysk-pipeline_terminal-way-183488914",
+   "kind": "pipeline_terminal",
+   "location": {
+    "lat": 44.7093769,
+    "lon": 37.8503051
+   },
+   "source_refs": [
+    "osm:way:183488914"
+   ],
+   "territory_id": "novorossiysk"
+  },
+  {
+   "access_node_id": "road:way:344051420:430.4",
+   "freight_node_id": "novorossiysk-pipeline_terminal-way-126416704",
+   "kind": "pipeline_terminal",
+   "location": {
+    "lat": 44.6707775,
+    "lon": 37.6537833
+   },
+   "source_refs": [
+    "osm:way:126416704",
+    "rosmorport:seaport-novorossiysk"
+   ],
+   "territory_id": "novorossiysk"
+  }
+ ],
+ "freight_sites": [],
+ "geographic_scope": [
+  "novorossiysk"
+ ],
+ "minimum_transfers": [],
+ "pipeline_connections": [
+  {
+   "capacity": {
+    "period": {
+     "end": "2026-11-11",
+     "start": "2026-11-11"
+    },
+    "product": "oil",
+    "unit": "t",
+    "value": 322000.0
+   },
+   "connection_confirmed": true,
+   "connection_id": "demo-pipeline-novorossiysk-1",
+   "direction_confirmed": true,
+   "from_node_id": "novorossiysk-pipeline_terminal-relation-3569335",
+   "product": "oil",
+   "quantity_status": "available",
+   "source_refs": [
+    "demo-model:pipeline:network"
+   ],
+   "to_node_id": "novorossiysk-pipeline_terminal-way-183488914",
+   "volume": {
+    "period": {
+     "end": "2026-11-11",
+     "start": "2026-11-11"
+    },
+    "product": "oil",
+    "unit": "t",
+    "value": 289000.0
+   }
+  },
+  {
+   "capacity": {
+    "period": {
+     "end": "2026-11-11",
+     "start": "2026-11-11"
+    },
+    "product": "oil",
+    "unit": "t",
+    "value": 322000.0
+   },
+   "connection_confirmed": true,
+   "connection_id": "demo-pipeline-novorossiysk-2",
+   "direction_confirmed": true,
+   "from_node_id": "novorossiysk-pipeline_terminal-way-183488914",
+   "product": "oil",
+   "quantity_status": "available",
+   "source_refs": [
+    "demo-model:pipeline:network"
+   ],
+   "to_node_id": "novorossiysk-pipeline_terminal-way-126416704",
+   "volume": {
+    "period": {
+     "end": "2026-11-11",
+     "start": "2026-11-11"
+    },
+    "product": "oil",
+    "unit": "t",
+    "value": 282000.0
+   }
+  }
+ ],
+ "population_cells": [],
+ "provenance": {
+  "calendar_version": "demo-pipeline-2026-11-11.2:calendar",
+  "geometry_version": "osm_geofabrik.south-fed-district-261107:relation/364545+novorossiysk-utm37n-1km-v1",
+  "graph_version": "demo-pipeline-2026-11-11.2:graph",
+  "population_version": null
+ },
+ "qa": {
+  "acceptance_state": "accepted",
+  "accepted_at": "2026-11-11T00:00:00Z",
+  "accepted_by": "ML2 waydex-demo-rules-v2 synthetic demo generator; model data, not a real acceptance",
+  "checks": [
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "PIPELINE_NOT_IN_DELIVERY_INDEX"
+  ]
+ },
+ "reference_edges": [],
+ "registry_evidence": [],
+ "sample_points": [],
+ "scheduled_services": [],
+ "schema_version": "2",
+ "snapshot_id": "demo-pipeline-2026-11-11.2",
+ "source_versions": {
+  "DEMO_SYNTHETIC_TRANSPORT_MODEL": "waydex-demo-2026-11-11.2",
+  "osm_geofabrik": "osm_geofabrik.south-fed-district-261107",
+  "rosmorport": "rosmorport.seaports-novorossiysk-20261108"
+ },
+ "territories": [
+  {
+   "area_km2": 848.313,
+   "geometry": {
+    "bbox": {
+     "east": 37.921905,
+     "north": 45.011626,
+     "south": 44.649431,
+     "west": 37.424356
+    },
+    "geometry_id": "novorossiysk:boundary",
+    "source_refs": [
+     "osm:relation:364545"
+    ],
+    "version": "osm_geofabrik.south-fed-district-261107:relation/364545"
+   },
+   "level": "city",
+   "name": "Новороссийск",
+   "source_refs": [
+    "osm:relation:364545"
+   ],
+   "territory_id": "novorossiysk",
+   "timezone": "Europe/Moscow"
+  }
+ ],
+ "timezone": "Europe/Moscow",
+ "traffic_profiles": [],
+ "transfers": [],
+ "valid_period": {
+  "end": "2026-11-11",
+  "start": "2026-11-11"
+ }
+}

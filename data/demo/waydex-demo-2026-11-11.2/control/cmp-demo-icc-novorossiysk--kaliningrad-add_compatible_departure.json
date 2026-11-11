@@ -1,0 +1,54 @@
+{
+ "after": {
+  "departure_utc": "2026-11-11T08:30:00+00:00",
+  "total_s": 985750,
+  "transshipment_s": 18600,
+  "wait_s": 2640
+ },
+ "before": {
+  "departure_utc": "2026-11-14T13:00:00+00:00",
+  "total_s": 1261150,
+  "transshipment_s": 18600,
+  "wait_s": 278040
+ },
+ "comparison_id": "cmp-demo-icc-novorossiysk--kaliningrad-add_compatible_departure",
+ "contract_status": "requires_contract_change: cargo operations are not in scenarios v2",
+ "created_ids": [
+  "demo-icf-water-novorossiysk--kaliningrad-extra"
+ ],
+ "delta": {
+  "sign": "before_minus_after",
+  "total_s": 275400,
+  "wait_s": 275400
+ },
+ "ids": {
+  "after": [
+   "demo-icf-novorossiysk--kaliningrad",
+   "demo-icf-novorossiysk--kaliningrad-1",
+   "demo-icf-novorossiysk--kaliningrad-2",
+   "demo-icf-novorossiysk--kaliningrad-3",
+   "demo-icf-water-novorossiysk--kaliningrad-extra"
+  ],
+  "before": [
+   "demo-icf-novorossiysk--kaliningrad",
+   "demo-icf-novorossiysk--kaliningrad-1",
+   "demo-icf-novorossiysk--kaliningrad-2",
+   "demo-icf-novorossiysk--kaliningrad-3"
+  ]
+ },
+ "model_inputs": {
+  "demand": {
+   "evidence_id": "demo-model:intercity:demand",
+   "teu": 48
+  },
+  "departure_utc": "2026-11-11T08:30:00+00:00",
+  "new_departure_id": "demo-icf-water-novorossiysk--kaliningrad-extra",
+  "resource": {
+   "capacity_teu": 600,
+   "evidence_id": "demo-model:intercity:resource",
+   "unit": "feeder_vessel"
+  }
+ },
+ "operation_type": "add_compatible_departure",
+ "preset_id": "demo-icc-novorossiysk--kaliningrad"
+}

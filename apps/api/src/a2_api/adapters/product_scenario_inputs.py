@@ -36,6 +36,7 @@ from a2_engine import (
 )
 from pydantic import Field, field_serializer, model_validator
 
+from a2_api.adapters.cargo_scenarios import CargoScenarioDocument
 from a2_api.adapters.product_inputs import (
     DeliveryInputs,
     EngineInputs,
@@ -104,11 +105,23 @@ class ScenarioDocument(ContractModel):
         return self
 
 
+ScenarioCatalogDocument = ScenarioDocument | CargoScenarioDocument
+
+
+def parse_scenario_document(value: object) -> ScenarioCatalogDocument:
+    if (
+        isinstance(value, dict)
+        and value.get("schema_version") == "waydex-product-cargo-scenarios/1"
+    ):
+        return CargoScenarioDocument.model_validate(value)
+    return ScenarioDocument.model_validate(value)
+
+
 def source_inputs_hash(inputs: EngineInputs) -> str:
     return scenario_hash(inputs.model_dump(mode="python"))
 
 
-def document_matches_request(document: ScenarioDocument, request: AnalysisRequest) -> bool:
+def document_matches_request(document: ScenarioCatalogDocument, request: AnalysisRequest) -> bool:
     """Match typed request scope while retaining the document's original hash.
 
     Offset spellings of the same aware instant have equal request semantics.

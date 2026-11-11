@@ -1,0 +1,419 @@
+[
+ {
+  "after": {
+   "departure_utc": "2026-11-11T11:00:00+00:00",
+   "total_s": 150010,
+   "transshipment_s": 12000,
+   "wait_s": 10010
+  },
+  "before": {
+   "departure_utc": "2026-11-11T11:00:00+00:00",
+   "total_s": 157810,
+   "transshipment_s": 19800,
+   "wait_s": 10010
+  },
+  "cargo_profile_id": "truck-model-20t-container-nonfood-ordinary",
+  "chain_id": "demo-icf-moscow--kaliningrad",
+  "change": {
+   "node_id": "demo-kaliningrad-rail-terminal-model",
+   "resource": {
+    "added": 1,
+    "evidence_id": "demo-model:intercity:resource",
+    "unit": "crane_shift",
+    "window_local": [
+     "08:00",
+     "20:00"
+    ]
+   },
+   "transshipment_after_s": 12000,
+   "transshipment_before_s": 19800
+  },
+  "created_ids": [],
+  "legs": [
+   {
+    "from": "moscow-site-relation-9975357",
+    "handling_at_end_s": 8400,
+    "leg_id": "demo-icf-moscow--kaliningrad-1",
+    "mode": "road",
+    "origin": "synthetic",
+    "run_s": 1390,
+    "to": "demo-moscow-rail-terminal-model"
+   },
+   {
+    "departures_local": [
+     "+0d 14:00",
+     "+1d 14:00"
+    ],
+    "distance_km": 1300.0,
+    "from": "demo-moscow-rail-terminal-model",
+    "handling_at_end_s": 19800,
+    "leg_id": "demo-icf-moscow--kaliningrad-2",
+    "mode": "rail",
+    "origin": "synthetic",
+    "run_s": 117000,
+    "to": "demo-kaliningrad-rail-terminal-model"
+   },
+   {
+    "from": "demo-kaliningrad-rail-terminal-model",
+    "leg_id": "demo-icf-moscow--kaliningrad-3",
+    "mode": "road",
+    "origin": "synthetic",
+    "run_s": 1210,
+    "to": "kaliningrad-site-relation-1307845"
+   }
+  ],
+  "limitations": [
+   "FOREIGN_TRANSIT_TERRITORY"
+  ],
+  "operation_type": "reduce_transshipment_time",
+  "pair": "moscow--kaliningrad",
+  "unit_load": "container_20ft"
+ },
+ {
+  "after": {
+   "departure_utc": "2026-11-11T10:00:00+00:00",
+   "total_s": 156190,
+   "transshipment_s": 25200,
+   "wait_s": 2390
+  },
+  "before": {
+   "departure_utc": "2026-11-11T20:00:00+00:00",
+   "total_s": 192190,
+   "transshipment_s": 25200,
+   "wait_s": 38390
+  },
+  "cargo_profile_id": "truck-model-20t-container-nonfood-ordinary",
+  "chain_id": "demo-icf-kaliningrad--moscow",
+  "change": {
+   "demand": {
+    "evidence_id": "demo-model:intercity:demand",
+    "teu": 36
+   },
+   "departure_utc": "2026-11-11T10:00:00+00:00",
+   "new_departure_id": "demo-icf-rail-kaliningrad--moscow-extra",
+   "resource": {
+    "capacity_teu": 70,
+    "evidence_id": "demo-model:intercity:resource",
+    "unit": "locomotive+wagons"
+   }
+  },
+  "created_ids": [
+   "demo-icf-rail-kaliningrad--moscow-extra"
+  ],
+  "legs": [
+   {
+    "from": "kaliningrad-site-relation-1307845",
+    "handling_at_end_s": 9000,
+    "leg_id": "demo-icf-kaliningrad--moscow-1",
+    "mode": "road",
+    "origin": "synthetic",
+    "run_s": 1210,
+    "to": "demo-kaliningrad-rail-terminal-model"
+   },
+   {
+    "departures_local": [
+     "+0d 22:00",
+     "+1d 22:00"
+    ],
+    "distance_km": 1300.0,
+    "from": "demo-kaliningrad-rail-terminal-model",
+    "handling_at_end_s": 25200,
+    "leg_id": "demo-icf-kaliningrad--moscow-2",
+    "mode": "rail",
+    "origin": "synthetic",
+    "run_s": 117000,
+    "to": "demo-moscow-rail-terminal-model"
+   },
+   {
+    "from": "demo-moscow-rail-terminal-model",
+    "leg_id": "demo-icf-kaliningrad--moscow-3",
+    "mode": "road",
+    "origin": "synthetic",
+    "run_s": 1390,
+    "to": "moscow-site-relation-9975357"
+   }
+  ],
+  "limitations": [
+   "FOREIGN_TRANSIT_TERRITORY"
+  ],
+  "operation_type": "add_compatible_departure",
+  "pair": "kaliningrad--moscow",
+  "unit_load": "container_20ft"
+ },
+ {
+  "after": {
+   "departure_utc": "2026-11-11T09:30:00+00:00",
+   "total_s": 165770,
+   "transshipment_s": 20400,
+   "wait_s": 2210
+  },
+  "before": {
+   "departure_utc": "2026-11-11T20:00:00+00:00",
+   "total_s": 203570,
+   "transshipment_s": 20400,
+   "wait_s": 40010
+  },
+  "cargo_profile_id": "truck-model-20t-container-nonfood-ordinary",
+  "chain_id": "demo-icf-moscow--novorossiysk",
+  "change": {
+   "demand": {
+    "evidence_id": "demo-model:intercity:demand",
+    "teu": 38
+   },
+   "departure_utc": "2026-11-11T09:30:00+00:00",
+   "new_departure_id": "demo-icf-rail-moscow--novorossiysk-extra",
+   "resource": {
+    "capacity_teu": 70,
+    "evidence_id": "demo-model:intercity:resource",
+    "unit": "locomotive+wagons"
+   }
+  },
+  "created_ids": [
+   "demo-icf-rail-moscow--novorossiysk-extra"
+  ],
+  "legs": [
+   {
+    "from": "moscow-site-relation-9975357",
+    "handling_at_end_s": 10800,
+    "leg_id": "demo-icf-moscow--novorossiysk-1",
+    "mode": "road",
+    "origin": "synthetic",
+    "run_s": 1390,
+    "to": "demo-moscow-rail-terminal-model"
+   },
+   {
+    "departures_local": [
+     "+0d 11:00",
+     "+0d 23:00",
+     "+1d 11:00"
+    ],
+    "distance_km": 1440.0,
+    "from": "demo-moscow-rail-terminal-model",
+    "handling_at_end_s": 20400,
+    "leg_id": "demo-icf-moscow--novorossiysk-2",
+    "mode": "rail",
+    "origin": "synthetic",
+    "run_s": 129600,
+    "to": "demo-novorossiysk-rail-terminal-model"
+   },
+   {
+    "from": "demo-novorossiysk-rail-terminal-model",
+    "leg_id": "demo-icf-moscow--novorossiysk-3",
+    "mode": "road",
+    "origin": "synthetic",
+    "run_s": 1370,
+    "to": "novorossiysk-site-way-31091391"
+   }
+  ],
+  "limitations": [],
+  "operation_type": "add_compatible_departure",
+  "pair": "moscow--novorossiysk",
+  "unit_load": "container_20ft"
+ },
+ {
+  "after": {
+   "departure_utc": "2026-11-11T15:00:00+00:00",
+   "total_s": 178390,
+   "transshipment_s": 13200,
+   "wait_s": 22030
+  },
+  "before": {
+   "departure_utc": "2026-11-11T15:00:00+00:00",
+   "total_s": 186790,
+   "transshipment_s": 21600,
+   "wait_s": 22030
+  },
+  "cargo_profile_id": "truck-model-20t-container-nonfood-ordinary",
+  "chain_id": "demo-icf-novorossiysk--moscow",
+  "change": {
+   "node_id": "demo-moscow-rail-terminal-model",
+   "resource": {
+    "added": 1,
+    "evidence_id": "demo-model:intercity:resource",
+    "unit": "crane_shift",
+    "window_local": [
+     "08:00",
+     "20:00"
+    ]
+   },
+   "transshipment_after_s": 13200,
+   "transshipment_before_s": 21600
+  },
+  "created_ids": [],
+  "legs": [
+   {
+    "from": "novorossiysk-site-way-31091391",
+    "handling_at_end_s": 10800,
+    "leg_id": "demo-icf-novorossiysk--moscow-1",
+    "mode": "road",
+    "origin": "synthetic",
+    "run_s": 1370,
+    "to": "demo-novorossiysk-rail-terminal-model"
+   },
+   {
+    "departures_local": [
+     "+0d 06:00",
+     "+0d 18:00",
+     "+1d 06:00"
+    ],
+    "distance_km": 1440.0,
+    "from": "demo-novorossiysk-rail-terminal-model",
+    "handling_at_end_s": 21600,
+    "leg_id": "demo-icf-novorossiysk--moscow-2",
+    "mode": "rail",
+    "origin": "synthetic",
+    "run_s": 129600,
+    "to": "demo-moscow-rail-terminal-model"
+   },
+   {
+    "from": "demo-moscow-rail-terminal-model",
+    "leg_id": "demo-icf-novorossiysk--moscow-3",
+    "mode": "road",
+    "origin": "synthetic",
+    "run_s": 1390,
+    "to": "moscow-site-relation-9975357"
+   }
+  ],
+  "limitations": [],
+  "operation_type": "reduce_transshipment_time",
+  "pair": "novorossiysk--moscow",
+  "unit_load": "container_20ft"
+ },
+ {
+  "after": {
+   "departure_utc": "2026-11-13T08:00:00+00:00",
+   "total_s": 1148160,
+   "transshipment_s": 13800,
+   "wait_s": 169250
+  },
+  "before": {
+   "departure_utc": "2026-11-13T08:00:00+00:00",
+   "total_s": 1156560,
+   "transshipment_s": 22200,
+   "wait_s": 169250
+  },
+  "cargo_profile_id": "truck-model-20t-container-nonfood-ordinary",
+  "chain_id": "demo-icf-kaliningrad--novorossiysk",
+  "change": {
+   "node_id": "novorossiysk-port-way-1168951234",
+   "resource": {
+    "added": 1,
+    "evidence_id": "demo-model:intercity:resource",
+    "unit": "crane_shift",
+    "window_local": [
+     "08:00",
+     "20:00"
+    ]
+   },
+   "transshipment_after_s": 13800,
+   "transshipment_before_s": 22200
+  },
+  "created_ids": [],
+  "legs": [
+   {
+    "from": "kaliningrad-site-relation-1307845",
+    "handling_at_end_s": 8400,
+    "leg_id": "demo-icf-kaliningrad--novorossiysk-1",
+    "mode": "road",
+    "origin": "synthetic",
+    "run_s": 550,
+    "to": "kaliningrad-port-relation-21031708"
+   },
+   {
+    "departures_local": [
+     "+2d 10:00",
+     "+9d 10:00"
+    ],
+    "distance_km": 6900.0,
+    "from": "kaliningrad-port-relation-21031708",
+    "handling_at_end_s": 22200,
+    "leg_id": "demo-icf-kaliningrad--novorossiysk-2",
+    "mode": "water",
+    "origin": "synthetic",
+    "run_s": 955800,
+    "to": "novorossiysk-port-way-1168951234"
+   },
+   {
+    "from": "novorossiysk-port-way-1168951234",
+    "leg_id": "demo-icf-kaliningrad--novorossiysk-3",
+    "mode": "road",
+    "origin": "synthetic",
+    "run_s": 360,
+    "to": "novorossiysk-site-way-31091391"
+   }
+  ],
+  "limitations": [],
+  "operation_type": "reduce_transshipment_time",
+  "pair": "kaliningrad--novorossiysk",
+  "unit_load": "container_20ft"
+ },
+ {
+  "after": {
+   "departure_utc": "2026-11-11T08:30:00+00:00",
+   "total_s": 985750,
+   "transshipment_s": 18600,
+   "wait_s": 2640
+  },
+  "before": {
+   "departure_utc": "2026-11-14T13:00:00+00:00",
+   "total_s": 1261150,
+   "transshipment_s": 18600,
+   "wait_s": 278040
+  },
+  "cargo_profile_id": "truck-model-20t-container-nonfood-ordinary",
+  "chain_id": "demo-icf-novorossiysk--kaliningrad",
+  "change": {
+   "demand": {
+    "evidence_id": "demo-model:intercity:demand",
+    "teu": 48
+   },
+   "departure_utc": "2026-11-11T08:30:00+00:00",
+   "new_departure_id": "demo-icf-water-novorossiysk--kaliningrad-extra",
+   "resource": {
+    "capacity_teu": 600,
+    "evidence_id": "demo-model:intercity:resource",
+    "unit": "feeder_vessel"
+   }
+  },
+  "created_ids": [
+   "demo-icf-water-novorossiysk--kaliningrad-extra"
+  ],
+  "legs": [
+   {
+    "from": "novorossiysk-site-way-31091391",
+    "handling_at_end_s": 7800,
+    "leg_id": "demo-icf-novorossiysk--kaliningrad-1",
+    "mode": "road",
+    "origin": "synthetic",
+    "run_s": 360,
+    "to": "novorossiysk-port-way-1168951234"
+   },
+   {
+    "departures_local": [
+     "+3d 16:00",
+     "+10d 16:00"
+    ],
+    "distance_km": 6900.0,
+    "from": "novorossiysk-port-way-1168951234",
+    "handling_at_end_s": 18600,
+    "leg_id": "demo-icf-novorossiysk--kaliningrad-2",
+    "mode": "water",
+    "origin": "synthetic",
+    "run_s": 955800,
+    "to": "kaliningrad-port-relation-21031708"
+   },
+   {
+    "from": "kaliningrad-port-relation-21031708",
+    "leg_id": "demo-icf-novorossiysk--kaliningrad-3",
+    "mode": "road",
+    "origin": "synthetic",
+    "run_s": 550,
+    "to": "kaliningrad-site-relation-1307845"
+   }
+  ],
+  "limitations": [],
+  "operation_type": "add_compatible_departure",
+  "pair": "novorossiysk--kaliningrad",
+  "unit_load": "container_20ft"
+ }
+]

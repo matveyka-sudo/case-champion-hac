@@ -196,3 +196,49 @@ def test_demo_verifier_preserves_actual_algorithm_limitations(demo, monkeypatch)
     )
     assert receipt.model_dump_json() == original
     assert table.scope.limitations == ("TEST_ONLY_INCOMPLETE_PATH_SEARCH",)
+
+
+@pytest.mark.parametrize(
+    "identity", ["demo-kaliningrad-v1", "demo-novorossiysk-v1", "registered-model-v1"]
+)
+def test_exact_synthetic_receipt_is_independent_of_city_name(demo, monkeypatch, identity):
+    snapshot, table, receipt = demo
+    monkeypatch.setenv("A2_DEMO_TRANSPORT_ENABLED", "true")
+    snapshot = snapshot.model_copy(update={"snapshot_id": identity})
+    table = replace(
+        table,
+        scope=replace(table.scope, snapshot_id=identity),
+        runs=tuple(replace(run, snapshot_id=identity) for run in table.runs),
+    )
+    receipt = receipt.model_copy(
+        update={"snapshot_hash": canonical_hash(snapshot.model_dump(mode="json")), "model": table}
+    )
+    assert verify_demo_model(snapshot, table, CLOCK, receipt) == receipt
+
+
+@pytest.mark.parametrize("attack", ["missing_version", "foreign_version", "unverified"])
+def test_model_provenance_must_match_the_declared_source_version(demo, monkeypatch, attack):
+    snapshot, table, receipt = demo
+    monkeypatch.setenv("A2_DEMO_TRANSPORT_ENABLED", "true")
+    payload = snapshot.model_dump(mode="json")
+    if attack == "missing_version":
+        del payload["source_versions"][DEMO_SOURCE]
+    elif attack == "foreign_version":
+        payload["source_versions"][DEMO_SOURCE] = "foreign-model-version"
+    else:
+        for row in payload["evidence"]:
+            if row["source_id"] == DEMO_SOURCE:
+                row["verified"] = False
+    snapshot = snapshot.model_copy(
+        update={
+            "source_versions": payload["source_versions"],
+            "evidence": [
+                type(snapshot.evidence[0]).model_validate(row) for row in payload["evidence"]
+            ],
+        }
+    )
+    receipt = receipt.model_copy(
+        update={"snapshot_hash": canonical_hash(snapshot.model_dump(mode="json"))}
+    )
+    with pytest.raises(ValueError):
+        verify_demo_model(snapshot, table, CLOCK, receipt)
