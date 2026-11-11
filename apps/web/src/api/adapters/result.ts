@@ -107,6 +107,8 @@ export function reasonText(code: string | null | undefined) {
         EDITABLE_GRAPH_UNAVAILABLE:
           "Нет доступного расписания для проверки изменения.",
         SYNTHETIC_ONLY: "Синтетический пример — не реальные результаты.",
+        DEMO_SYNTHETIC_TRANSPORT_MODEL: "Демонстрационная транспортная модель: показатели рассчитаны на синтетических данных.",
+        NOT_A_REAL_CITY_RANKING: "Не является рейтингом фактической доступности городов.",
         DATA_OR_ENGINE_UNAVAILABLE:
           "Нет готовых данных или доступного расчётного модуля.",
         NATIONAL_TERRITORY_CATALOG_NOT_ACCEPTED:
@@ -386,6 +388,8 @@ export function noticeTexts(values: readonly string[]) {
 }
 
 export function errorText(error: { message: string; code?: string }) {
+  if (error.message === "REQUEST_OUTSIDE_SUPPORTED_PRESETS") return "Выбранные условия не совпадают с опубликованным набором расчёта. Выберите готовый набор сервера.";
+  if (error.message === "ANALYSIS_GROUP_CATEGORY_REQUEST_UNSUPPORTED") return "Для этого набора категории нельзя запускать по отдельности. Выберите готовый набор сервера и запустите единый расчёт.";
   if (["WALK_BATCH_MANIFEST_BYTE_BUDGET_EXCEEDED", "WALK_BATCH_PAIR_BUDGET_EXCEEDED"].includes(error.message)) return "Для одного расчёта выбрано слишком много объектов. Запустите категории по отдельности или меньшими группами — сохранённые результаты останутся доступны.";
   if (error.message === "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST") return "Для выбранного сочетания условий расчёт пока не подключён. Выберите другую категорию или способ передвижения.";
   if (error.message === "RUNTIME_INPUTS_BUSY" || error.code?.toUpperCase() === "RUNTIME_INPUTS_BUSY") return "Сервер подготавливает данные. Повторите расчёт чуть позже.";

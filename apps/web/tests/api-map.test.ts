@@ -93,9 +93,11 @@ describe("explicit calculated-point focus", () => {
     expect(drawn.layers).toHaveLength(0);
   });
 
-  it("opens only new DEMO analyses centrally, retains New Moscow, and preserves camera on before/after toggles", () => {
+  it("opens only new Moscow analyses centrally, retains New Moscow, and preserves camera on before/after toggles", () => {
     const result = decode("AnalysisResult", structuredClone(resultRaw));
     result.snapshot_id = "demo-moscow-synthetic-camera";
+    if (result.request.analysis_kind !== "urban_passenger") throw new Error("urban fixture required");
+    result.request.city_id = "moscow";
     result.map_data = { status: "available", features: [
       { entity_kind: "sample_point", entity_id: "central-point", territory_id: "city-1", geometry: { type: "Point", coordinates: [37.62, 55.75] }, geometry_kind: "actual", source_refs: [] },
       { entity_kind: "sample_point", entity_id: "new-moscow-point", territory_id: "city-1", geometry: { type: "Point", coordinates: [37.19, 55.41] }, geometry_kind: "actual", source_refs: [] },
@@ -119,6 +121,18 @@ describe("explicit calculated-point focus", () => {
     expect(drawn.views).toHaveLength(2);
     view.rerender(createElement(ApiMap, { ...props, result: { ...result, analysis_id: "new-analysis" }, zoomAction: { id: 3, kind: "home" } }));
     expect(drawn.views).toHaveLength(3);
+  });
+  it.each(["kaliningrad", "novorossiysk"])("uses result geometry for %s even when the snapshot ID resembles a Moscow demo", (city) => {
+    const result = decode("AnalysisResult", structuredClone(resultRaw));
+    if (result.request.analysis_kind !== "urban_passenger") throw new Error("urban fixture required");
+    result.request.city_id = city;
+    result.snapshot_id = "demo-moscow-misleading-name";
+    result.limitations = ["DEMO_SYNTHETIC_TRANSPORT_MODEL", "NOT_A_REAL_CITY_RANKING"];
+    const view = render(createElement(ApiMap, { result, scores: result.scores, onSelect: vi.fn(), selection: null, zoomAction: { id: 0, kind: "home" } }));
+    expect(drawn.views).toHaveLength(0);
+    expect(drawn.commands).toContain("home");
+    view.rerender(createElement(ApiMap, { result, scores: result.scores, onSelect: vi.fn(), selection: null, zoomAction: { id: 1, kind: "home" } }));
+    expect(drawn.views).toHaveLength(0);
   });
   it.each(["in", "out", "home"])("consumes the %s command across later selection/result renders", (kind) => {
     const result = decode("AnalysisResult", structuredClone(resultRaw));

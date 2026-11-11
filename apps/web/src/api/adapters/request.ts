@@ -343,3 +343,38 @@ export function toRequest(
     cargo_modes: d.cargoModes,
   });
 }
+
+
+/** A published request is a frozen server choice, independent of editable filters. */
+export function toPresetRequest(presetId: string, caps: Schemas["Capabilities"]): AnalysisRequest {
+  const matches = (caps.analysis_presets || []).filter((preset) => preset.preset_id === presetId);
+  if (matches.length !== 1) throw new DraftError("preset", "Набор условий больше недоступен. Обновите список и выберите другой.");
+  return structuredClone(matches[0].request);
+}
+
+/** Display only: the original preset request remains the submitted payload. */
+export function presetDraft(request: AnalysisRequest, catalog: Territory[]): ApiDraft {
+  const urban = "city_id" in request;
+  const origin = catalog.find((t) => t.territory_id === (urban ? request.city_id : request.origin_id));
+  const time = Temporal.Instant.from(request.departure_at).toZonedDateTimeISO(origin?.timezone || "UTC");
+  const draft: ApiDraft = { ...initialDraft(), kind: request.analysis_kind, level: urban ? "city" : request.territory_level,
+    cityId: urban ? request.city_id : "", originId: urban ? "" : request.origin_id, destinationId: urban ? "" : request.destination_id,
+    areaId: urban ? request.area_id || "" : "", snapshotId: request.snapshot_id || "", date: time.toPlainDate().toString(), slot: time.hour * 4 + Math.floor(time.minute / 15), traffic: request.traffic_mode,
+    cats: {}, travel: "", paxModes: [], cargoModes: [], profileId: "", pipeline: false, pipelineProduct: "" };
+  if (request.analysis_kind === "urban_passenger") {
+    draft.travel = (Object.entries(passengerModes).find(([, mode]) => mode === request.passenger_mode)?.[0] || "") as ApiDraft["travel"];
+    for (const [key, category] of Object.entries(categoryIds)) if (request.categories.includes(category)) draft.cats[key as keyof typeof categoryIds] = ({ low: 1, medium: 2, high: 3 } as const)[request.priorities[category] || "medium"];
+  } else if (request.analysis_kind === "intercity_passenger") {
+    const modes: Record<string, string> = { air: "air", rail: "rail", road: "bus", private_car: "car", water: "sea", mixed: "mixed" };
+    draft.paxModes = (request.passenger_modes || []).map((mode) => modes[mode]);
+  } else {
+    draft.profileId = request.cargo_profile_id;
+    if (request.analysis_kind === "urban_cargo") draft.direction = request.direction === "outbound" ? "out" : "in";
+    else {
+      draft.cargoModes = [...request.cargo_modes || []];
+      draft.pipeline = request.cargo_transport === "pipeline";
+      draft.pipelineProduct = (Object.entries(pipelineProducts).find(([, product]) => product === request.pipeline_product)?.[0] || "") as ApiDraft["pipelineProduct"];
+    }
+  }
+  return draft;
+}

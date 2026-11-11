@@ -1,13 +1,13 @@
 import type { RefObject } from "react";
-import { demoModelWarning, isDemoModelSnapshot } from "../api/adapters/demoModel";
+import { demoModelWarning, isDemoModel } from "../api/adapters/demoModel";
 
-export function DemoModelBanner({ selectedSnapshotId, savedSnapshotId, hasSavedResult, bannerRef }: {
-  selectedSnapshotId?: string;
-  savedSnapshotId?: string;
+export function DemoModelBanner({ selectedLimitations, savedLimitations, hasSavedResult, bannerRef }: {
+  selectedLimitations?: readonly string[];
+  savedLimitations?: readonly string[];
   hasSavedResult: boolean;
   bannerRef?: RefObject<HTMLElement | null>;
 }) {
-  const selected = isDemoModelSnapshot(selectedSnapshotId), saved = isDemoModelSnapshot(savedSnapshotId);
+  const selected = isDemoModel({ limitations: selectedLimitations }), saved = isDemoModel({ limitations: savedLimitations });
   if (!selected && !saved) return null;
   return (
     <section className="api-demo-banner" role="note" aria-label="Демонстрационная модель" ref={bannerRef}>

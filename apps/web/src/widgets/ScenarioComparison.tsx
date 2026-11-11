@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CargoHandlingChanges } from './CargoHandlingChanges';
 import type { Schemas } from '../api/types';
 import { scenarioOverview } from '../api/adapters/scenarioOverview';
 import { deltaText, measureLabel, measureText, noticeText } from '../api/adapters/result';
@@ -11,6 +12,7 @@ export function ScenarioComparison({ scenario, metrics, scores, selectionActive,
   const overview = scenarioOverview(scenario, metrics, scores, selectionActive);
   return <section className="sect api-scenario-comparison" aria-label="Сравнение до / после">
     <h4>Сравнение до / после</h4>
+    {!!scenario.handling_changes?.length && <CargoHandlingChanges changes={scenario.handling_changes} />}
     <div className="segc">
       <button aria-pressed={!scenarioView} onClick={() => onViewChange(false)}>База</button>
       <button aria-pressed={scenarioView} onClick={() => onViewChange(true)}>Сценарий</button>

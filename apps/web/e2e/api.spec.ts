@@ -1165,16 +1165,24 @@ test("API: a saved route remains easy to select when every point index is unknow
 test("API: generated transport snapshot remains explicitly demo through canonical scenario before and after", async ({ page }) => {
   const snapshot = "demo-moscow-synthetic-ui-only";
   const c = structuredClone(capabilities) as Schemas["Capabilities"];
-  c.snapshots![0] = { ...c.snapshots![0], snapshot_id: snapshot, territory_ids: ["city-1"] };
+  c.snapshots![0] = { ...c.snapshots![0], snapshot_id: snapshot, territory_ids: ["moscow"] };
   const data = structuredClone(urban) as AnalysisResult;
   data.snapshot_id = snapshot; data.versions.snapshot_id = snapshot;
+  data.limitations = ["DEMO_SYNTHETIC_TRANSPORT_MODEL", "NOT_A_REAL_CITY_RANKING"];
+  data.scores.forEach((score) => { score.ranking_eligible = false; });
+  if (data.request.analysis_kind !== "urban_passenger") throw new Error("Urban fixture required");
+  data.request.city_id = "moscow"; data.request.snapshot_id = snapshot;
+  c.analysis_presets = [{ preset_id: "demo-preset", label: "Модель Москвы", request: data.request, limitations: data.limitations }];
   const after = structuredClone(scenario) as Schemas["ScenarioResult"];
   after.versions.snapshot_id = snapshot;
-  await mockApi(page, { capabilities: c, result: data, scenarioResult: after });
+  after.limitations = data.limitations;
+  [...after.before.scores, ...after.after.scores].forEach((score) => { score.ranking_eligible = false; });
+  const cities = territories.map((city) => city.territory_id === "city-1" ? { ...city, territory_id: "moscow" } : city) as Territory[];
+  await mockApi(page, { capabilities: c, territories: cities, result: data, scenarioResult: after });
   await page.goto("/?data=api#atlas");
   await choose(page, "Город", "Москва");
   const notice = page.getByRole("note", { name: "Демонстрационная модель" });
-  await expect(notice).toContainText("Демонстрационная транспортная модель — не оценка фактической доступности Москвы");
+  await expect(notice).toContainText("Демонстрационная транспортная модель — не оценка фактической доступности и не рейтинг городов");
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
   await expect(page.locator(".status")).toContainText("Результат получен");
   await expect(page.locator("#apiResultCard .k")).toHaveText("Демонстрационный анализ");

@@ -13,6 +13,7 @@ import { backend } from "../api/gateway";
 import { ApiError } from "../api/client";
 import type {
   AnalysisKind,
+  AnalysisRequest,
   AnalysisResult,
   Schemas,
   Territory,
@@ -21,6 +22,8 @@ import type {
 import {
   initialDraft,
   toRequest,
+  toPresetRequest,
+  presetDraft,
   DraftError,
   categoryIds,
   categoryLabels,
@@ -56,11 +59,12 @@ import { urbanReadiness } from "../api/adapters/urbanReadiness";
 import { UrbanReadiness } from "../widgets/UrbanReadiness";
 import { CalculatedJourneys } from "../widgets/CalculatedJourneys";
 import { DemoModelBanner } from "../widgets/DemoModelBanner";
-import { demoModelWarning, isDemoModelSnapshot } from "../api/adapters/demoModel";
+import { demoModelWarning, isDemoModel, demoModelSelection, demoModelMarker } from "../api/adapters/demoModel";
 import { proposalShiftText } from "../api/adapters/result";
 import { ResultHeadline } from "../widgets/ResultHeadline";
 import { ResultCardFrame, ResultCardHeader, ResultFigure, ResultCategoryTable } from "../widgets/ResultCardView";
 import { pointScorePresentation } from "../api/adapters/scorePresentation";
+import { CargoHandlingChanges } from "../widgets/CargoHandlingChanges";
 import { ScenarioComparison } from "../widgets/ScenarioComparison";
 import { Select } from "../shared/Select";
 import { Icon } from "../shared/ui";
@@ -153,6 +157,7 @@ export function ApiAtlasPage() {
     [bootError, setBootError] = useState<Error | null>(null),
     [reload, setReload] = useState(0),
     [draft, setDraft] = useState(initialDraft),
+    [selectedPresetId, setSelectedPresetId] = useState(""),
     [restoreAttempt, setRestoreAttempt] = useState(0),
     [restoreMode, setRestoreMode] = useState(false),
     [savedWarning, setSavedWarning] = useState(""),
@@ -176,6 +181,7 @@ export function ApiAtlasPage() {
     [layers, setLayers] = useState({ index: true, objects: true, pop: false }),
     [zoom, setZoom] = useState({ kind: "home", id: 0 });
   const session = useAnalysisSession();
+  const selectedPreset = caps?.analysis_presets?.find((preset) => preset.preset_id === selectedPresetId);
   const draftTouched = useRef(false);
   const groupSubmission = useRef<{ controller: AbortController; key: string; fingerprint: string } | null>(null);
   const groupPending = useRef(false);
@@ -233,6 +239,7 @@ export function ApiAtlasPage() {
     if (!caps || handledPointer.current === hash) return;
     const previous = handledPointer.current;
     handledPointer.current = hash;
+    setSelectedPresetId("");
     if (groupId) {
       session.reset();
       setRestoreMode(false);
@@ -334,6 +341,7 @@ export function ApiAtlasPage() {
     return () => window.removeEventListener("keydown", key);
   }, []);
   const change = (patch: Partial<ApiDraft>) => {
+    setSelectedPresetId("");
     draftTouched.current = true;
     groupSubmission.current?.controller.abort();
     groupSubmission.current = null;
@@ -381,32 +389,37 @@ export function ApiAtlasPage() {
   const startAnalysis = (grouped: boolean) => {
     if (!caps || unavailableReason || groupPending.current || phase === "running") return;
     try {
-      if (draft.kind === "urban_passenger" && draft.cityId && caps.urban_passenger_scopes != null &&
-        !caps.urban_passenger_scopes.some((scope) => scope.city_id === draft.cityId)) {
-        setLocalError(new DraftError(
-          "cityId",
-          caps.urban_passenger_scopes.length
-            ? "Для выбранного города нет зарегистрированного расчёта."
-            : "Для городского расчёта нет зарегистрированных наборов параметров.",
-        ));
-        return;
+      let request: AnalysisRequest;
+      if (selectedPresetId) {
+        request = toPresetRequest(selectedPresetId, caps);
+      } else {
+        if (draft.kind === "urban_passenger" && draft.cityId && caps.urban_passenger_scopes != null &&
+          !caps.urban_passenger_scopes.some((scope) => scope.city_id === draft.cityId)) {
+          setLocalError(new DraftError(
+            "cityId",
+            caps.urban_passenger_scopes.length
+              ? "Для выбранного города нет зарегистрированного расчёта."
+              : "Для городского расчёта нет зарегистрированных наборов параметров.",
+          ));
+          return;
+        }
+        const profiles = matchingCargoProfiles(caps.cargo_profiles, cargoProfile);
+        const profileId = cargo && !draft.pipeline ? draft.profileId || (profiles.length === 1 ? profiles[0].profile_id : "") : draft.profileId;
+        if (cargo && !draft.pipeline && !profileId) {
+          setLocalError(new DraftError(
+            "profileId",
+            "Для выбранного профиля груза нет однозначно подтверждённых данных. Выбранные параметры сохранены.",
+          ));
+          return;
+        }
+        request = toRequest({ ...draft, profileId, snapshotId: boundSnapshotId(draft, catalog, caps) }, catalog, caps);
       }
-      const profiles = matchingCargoProfiles(caps.cargo_profiles, cargoProfile);
-      const profileId = cargo && !draft.pipeline ? draft.profileId || (profiles.length === 1 ? profiles[0].profile_id : "") : draft.profileId;
-      if (cargo && !draft.pipeline && !profileId) {
-        setLocalError(new DraftError(
-          "profileId",
-          "Для выбранного профиля груза нет однозначно подтверждённых данных. Выбранные параметры сохранены.",
-        ));
-        return;
-      }
-      const request = toRequest({ ...draft, profileId, snapshotId: boundSnapshotId(draft, catalog, caps) }, catalog, caps);
       setLocalError(null);
       setRestoreMode(false);
       setFiltersOpen(false);
       setScenarioView(false);
       setInterfaceMessages([]);
-      if (!grouped) {
+      if (!grouped || selectedPresetId) {
         void session.run(request, savedPointerWriter((hash) => { handledPointer.current = hash; }));
         return;
       }
@@ -572,7 +585,7 @@ export function ApiAtlasPage() {
       ) || [];
   const ready = caps?.analyses.find((a) => a.analysis_kind === draft.kind);
   const running = phase === "running";
-  const unavailableReason = ready?.calculation_available === false
+  const unavailableReason = !selectedPreset && ready?.calculation_available === false
     ? ready.reason_code === "RUNTIME_INPUTS_UNAVAILABLE"
       ? "На этом стенде нет входных данных для расчёта выбранного направления."
       : reasonText(ready.reason_code) || "Сервер пока не поддерживает расчёт этого направления."
@@ -632,9 +645,10 @@ export function ApiAtlasPage() {
     return { id: category, label: categoryLabels[category] + (presentation.observed ? " · предварительно" : ""), priority: priority ? ({ low: "Н", medium: "С", high: "В" } as const)[priority] : undefined,
       time: time ? measureText(time) : "Нет данных", value: presentation.score ? measureText(presentation.score) : "Нет данных" };
   }) : [];
-  const snapshotId = caps ? boundSnapshotId(draft, catalog, caps) : "";
-  const savedDemoModel = isDemoModelSnapshot(result?.snapshot_id);
-  const demoModel = isDemoModelSnapshot(snapshotId) || savedDemoModel;
+  const snapshotId = selectedPreset?.request.snapshot_id || (caps ? boundSnapshotId(draft, catalog, caps) : "");
+  const savedDemoModel = isDemoModel(result);
+  const selectedDemoLimitations = selectedPreset?.limitations || (demoModelSelection(snapshotId, caps?.analysis_presets) ? [demoModelMarker] : []);
+  const demoModel = isDemoModel({ limitations: selectedDemoLimitations }) || savedDemoModel;
   useLayoutEffect(() => {
     const banner = demoBanner.current;
     if (!demoModel || !banner) return;
@@ -845,8 +859,8 @@ export function ApiAtlasPage() {
                 <div className="ctx-actions"><button className="iconbtn" onClick={() => { setChatOpen(true); if (window.innerWidth < 1520) setFiltersCollapsed(true); }}><Icon name="sparkles" />Спросить агента</button></div>
               </div>
             </ResultCardFrame>;
-  const moscowView = savedDemoModel || (result ? result.request.analysis_kind === "urban_passenger" && result.request.city_id === "moscow" : urban && draft.cityId === "moscow");
-  const timeDock = (compact: boolean) => <TimeDockView date={draft.date} slot={draft.slot} timezoneLabel={origin?.timezone || "Выберите территорию"}
+  const moscowView = (result ? result.request.analysis_kind === "urban_passenger" && result.request.city_id === "moscow" : urban && draft.cityId === "moscow");
+  const timeDock = (compact: boolean) => selectedPreset ? null : <TimeDockView date={draft.date} slot={draft.slot} timezoneLabel={origin?.timezone || "Выберите территорию"}
     min="1900-01-01" max="2100-12-31" dateInputId={compact ? "apiMobileDate" : "apiDate"} timeInputId={compact ? "apiMobileTime" : "apiTime"} mobile={compact}
     onDateChange={(date) => change({ date })} onSlotChange={(slot) => change({ slot })} run={start} disabled={runDisabled} highlighted={dirty} />;
   if (groupId) return <AnalysisGroupPanel key={groupId} id={groupId} />;
@@ -857,7 +871,7 @@ export function ApiAtlasPage() {
         title={origin?.name || "Россия · выберите город"} theme={theme} onThemeChange={setTheme}
         onModeChange={(mode) => toggleMode(mode === "city" ? "urban_passenger" : mode === "pax" ? "intercity_passenger" : draft.kind.endsWith("cargo") ? draft.kind : "urban_cargo")}
         onFilters={() => { setFiltersOpen(true); setChatOpen(false); }} chatOpen={chatOpen}
-        onChat={() => { const open = !chatOpen; setChatOpen(open); setFiltersOpen(false); if (window.innerWidth < 1520) setFiltersCollapsed(open); }} />} notice={      <DemoModelBanner selectedSnapshotId={snapshotId} savedSnapshotId={result?.snapshot_id} hasSavedResult={!!result} bannerRef={demoBanner} />}>
+        onChat={() => { const open = !chatOpen; setChatOpen(open); setFiltersOpen(false); if (window.innerWidth < 1520) setFiltersCollapsed(open); }} />} notice={      <DemoModelBanner selectedLimitations={selectedDemoLimitations} savedLimitations={result?.limitations} hasSavedResult={!!result} bannerRef={demoBanner} />}>
         <FiltersPanelView id="apiFilters" collapsed={filtersCollapsed} mobileOpen={filtersOpen} mobile={mobile} notice={mobile && demoModel ? demoModelWarning : undefined}
           onClose={() => setFiltersOpen(false)} onExpand={() => setFiltersCollapsed(false)}
           onToggle={() => { setFiltersCollapsed((value) => !value); if (filtersCollapsed && window.innerWidth < 1360) setChatOpen(false); }}
@@ -882,6 +896,25 @@ export function ApiAtlasPage() {
           )}
           {caps && (
             <>
+              {!!caps.analysis_presets?.length && field("Готовые серверные условия", <>
+                <Select label="Готовые серверные условия" value={selectedPresetId} options={[{ value: "", label: "Свои параметры" }, ...caps.analysis_presets.map((preset) => ({ value: preset.preset_id, label: preset.label }))]}
+                  onChange={(id) => {
+                    if (!id) { change({}); return; }
+                    try {
+                      const request = toPresetRequest(id, caps);
+                      change(presetDraft(request, catalog));
+                      setSelectedPresetId(id);
+                    } catch (error) { setLocalError(error instanceof DraftError ? error : new DraftError("preset", "Не удалось выбрать набор условий")); }
+                  }} />
+                {inline("preset")}
+              </>)}
+              {selectedPreset && <div className="fgroup" aria-label="Выбранные серверные условия">
+                <b>{selectedPreset.label}</b>
+                <p>{timestampText(selectedPreset.request.departure_at, origin?.timezone)} · {trafficText[selectedPreset.request.traffic_mode]}</p>
+                <p className="fhint">Условия заданы сервером и будут отправлены без изменений. Чтобы изменить их, выберите «Свои параметры».</p>
+                {noticeTexts(selectedPreset.limitations || []).map((text) => <p className="fhint" key={text}>{text}</p>)}
+              </div>}
+              {!selectedPreset && <>
               {cargo && field("Режим грузовых связей", <Seg name="Режим грузовых связей" value={urban ? "city" : "inter"}
                 items={[["city", "В городе", "building-2"], ["inter", "Между территориями", "waypoints"]]}
                 onChange={(value) => toggleMode(value === "city" ? "urban_cargo" : "intercity_cargo")} />)}
@@ -1019,6 +1052,7 @@ export function ApiAtlasPage() {
                   }
                 />,
               )}
+              </>}
             </>
           )}
         </FiltersPanelView>
@@ -1082,7 +1116,7 @@ export function ApiAtlasPage() {
             <MapControls items={[["in", "plus", "Приблизить"], ["out", "minus", "Отдалить"], ["home", "globe", moscowView ? "Центр Москвы" : "Показать Россию"],
               ...(moscowView ? [["all_points", "locate-fixed", "Все точки"]] : [])]} onAction={(kind) => setZoom((z) => ({ kind, id: z.id + 1 }))} />
           </MapOverlay>
-          <AtlasMobileSheet sheetRef={mobileSheet} title={requestTitle} description={selection ? `${feature?.name || "Выбранная точка"}${headlineScore ? ` · ${measureLabel(headlineScore.name)} ${measureText(headlineScore)}` : ""}` : result ? `${pointOverview?.inventoryCount ?? ""} точек · выберите точку на карте` : "Для выбранных условий результата нет"}
+          <AtlasMobileSheet sheetRef={mobileSheet} title={requestTitle} description={selection ? `${feature?.name || "Выбранная точка"}${headlineScore ? ` · ${measureLabel(headlineScore.name)} ${measureText(headlineScore)}` : ""}` : result ? (pointOverview?.inventoryCount != null && pointOverview.inventoryCount > 0 ? `${pointOverview.inventoryCount} точек · выберите точку на карте` : "Откройте показатели сохранённого результата") : "Для выбранных условий результата нет"}
             tag={savedDemoModel ? <span className="badge-s">ДЕМО</span> : undefined} timeDock={timeDock(true)}
             onFilters={() => { setFiltersOpen(true); setChatOpen(false); }} onChat={() => { setChatOpen(true); setFiltersOpen(false); }}>
             {mobile && result && <details className="more"><summary>Результат и рассчитанные точки</summary>{!cardHidden ? renderResultCard() : <button className="iconbtn" onClick={() => setCardHidden(false)}>Показать результат</button>}</details>}
@@ -1136,11 +1170,13 @@ export function ApiAtlasPage() {
             {agentResult && session.proposals.map((p) => (
               <div className="proposal" key={p.scenario_id}>
                 <b>
-                  {p.operation_type === "coordinate_transfer"
+                  {p.operation_type === "reduce_handling_wait" ? "Сократить обработку груза" : p.operation_type === "coordinate_transfer"
                     ? "Согласовать пересадку"
                     : "Дополнительное отправление"}
                 </b>
-                <p>{proposalShiftText(p.fixed_parameters.shift_seconds)}</p>
+                {p.operation_type === "reduce_handling_wait"
+                  ? <CargoHandlingChanges changes={p.fixed_parameters.handling_changes || []} />
+                  : <p>{proposalShiftText(p.fixed_parameters.shift_seconds)}</p>}
                 <p>
                   {p.feasibility === "unverified"
                     ? "Модельный эксперимент, реализуемость не подтверждена"
