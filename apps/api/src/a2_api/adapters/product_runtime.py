@@ -757,6 +757,10 @@ class Runtime:
                 ):
                     raise unavailable("ACCEPTED_PRIVATE_CAR_BOUNDARY_UNAVAILABLE")
                 return profile, inputs
+            if inputs.public_timetable_unavailable:
+                # Preserve the user's mode selection as unknown rather than run
+                # a scheduled solver on the placeholder of a car-only dataset.
+                return profile, inputs
             if request.passenger_modes is not None and (
                 "mixed" in request.passenger_modes
                 or not set(request.passenger_modes) & set(inputs.scope.applicable_modes)

@@ -90,6 +90,7 @@ export function reasonText(code: string | null | undefined) {
       {
         NO_FEASIBLE_ROUTE: "Маршрут не найден в подтверждённой области поиска",
         PROVIDER_UNAVAILABLE: "Источник временно недоступен",
+        INTERCITY_SCHEDULES_UNAVAILABLE: "Расписания для выбранного направления не загружены. Время пути, ожидание и индекс общественного транспорта неизвестны.",
         ENGINE_UNAVAILABLE: "Расчётный модуль временно недоступен",
         MAP_DATA_UNAVAILABLE: "Геометрия недоступна",
         TRUCK_NETWORK_ONLY_NOT_DELIVERY: "Известно время движения по дорожной сети. Оно не подтверждает грузовой подъезд, совместимость или полное время доставки.",

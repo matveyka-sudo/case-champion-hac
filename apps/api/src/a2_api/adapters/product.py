@@ -50,6 +50,7 @@ from a2_api.adapters.product_projection import (
     project_car,
     project_delivery,
     project_intercity,
+    project_missing_public_timetable,
     project_pipeline,
     project_urban,
     project_urban_cargo,
@@ -296,7 +297,11 @@ def calculate(
                 destination_node_ids=tuple(request.destination_node_ids or ()),
             )
         scope = replace(inputs.scope, comparison_scope=reference_scope)
-        if request.passenger_modes is not None and request.passenger_modes != ["private_car"]:
+        if (
+            not inputs.public_timetable_unavailable
+            and request.passenger_modes is not None
+            and request.passenger_modes != ["private_car"]
+        ):
             applicable = tuple(
                 mode for mode in scope.applicable_modes if mode in request.passenger_modes
             )
@@ -321,7 +326,9 @@ def calculate(
             )
             else None
         )
-        if request.passenger_modes == ["private_car"]:
+        if request.passenger_modes == ["private_car"] or (
+            inputs.public_timetable_unavailable and accepted_car is not None
+        ):
             assert accepted_car is not None
             passenger_config = load_passenger_config()
             scalar = reference_time_from_result(
@@ -338,6 +345,26 @@ def calculate(
                 accepted_car.chain_id, accepted_car.path_seconds, scalar, config=passenger_config
             )
             project_car(out, car_result, accepted_car, reference, geometry=inputs.car_geometry)
+            if request.passenger_modes == ["private_car"]:
+                return out.finish()
+        if inputs.public_timetable_unavailable:
+            project_missing_public_timetable(out, reference)
+            if (
+                request.passenger_modes is None or "private_car" in request.passenger_modes
+            ) and accepted_car is None:
+                out.score(
+                    "private-car-index",
+                    "private_car_index",
+                    MetricResult(None, "unknown", "ACCEPTED_CAR_OBSERVATION_DEPARTURE_UNAVAILABLE"),
+                    SubjectRef(
+                        kind="city_pair",
+                        origin_id=request.origin_id,
+                        destination_id=request.destination_id,
+                        mode="private_car",
+                    ),
+                    (),
+                    kind="reference_ratio",
+                )
             return out.finish()
         passenger_analysis = analyze_intercity_passenger(
             scope,

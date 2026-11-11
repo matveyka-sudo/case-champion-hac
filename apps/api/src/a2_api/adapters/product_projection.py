@@ -524,6 +524,63 @@ def _confirmed_missing_metrics(out: Projection, identities: tuple[str, ...]) -> 
     ]
 
 
+def project_missing_public_timetable(out: Projection, reference: Any) -> None:
+    """Represent absent source coverage, never confirmed absence of a service."""
+    request = out.context.normalized_request
+    assert isinstance(request, IntercityPassengerRequest)
+    if not out.references:
+        project_reference(out, reference)
+    modes = request.passenger_modes or ["road", "rail", "air", "water"]
+    selected: list[Literal["road", "rail", "air", "water", "mixed", "public_transport"]] = [
+        mode for mode in modes if mode != "private_car"
+    ]
+    selected.append("public_transport")
+    reason = "INTERCITY_SCHEDULES_UNAVAILABLE"
+    raw = MetricResult(None, "unknown", reason)
+    for mode in selected:
+        subject = SubjectRef(
+            kind="city_pair",
+            origin_id=request.origin_id,
+            destination_id=request.destination_id,
+            mode=mode,
+        )
+        prefix = "intercity-" + mode
+        path = out.metric(
+            prefix + "-path", "path_seconds", raw, subject, (), time_kind="complete_chain"
+        )
+        wait = out.metric(prefix + "-wait", "initial_wait_seconds", raw, subject, ())
+        out.metric(prefix + "-total", "total_seconds", raw, subject, (), time_kind="complete_chain")
+        path_score = out.score(
+            prefix + "-path-score",
+            "path_index",
+            raw,
+            subject,
+            (),
+            metrics=(path,),
+            kind="reference_ratio",
+            reference_ids=(reference.reference_id,),
+        )
+        wait_score = out.score(
+            prefix + "-wait-score",
+            "waiting_index",
+            raw,
+            subject,
+            (),
+            metrics=(wait,),
+            kind="initial_wait",
+        )
+        out.score(
+            prefix,
+            "passenger_index",
+            raw,
+            subject,
+            (),
+            scores=(path_score, wait_score),
+            kind="aggregate",
+        )
+    out.limitations.add(reason)
+
+
 def project_intercity(
     out: Projection, analysis: Any, reference: Any, accepted_car: Any = None
 ) -> None:

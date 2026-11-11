@@ -76,6 +76,16 @@ class IntercityInputs(ContractModel):
     car_geometry: LineGeometry | None = None
     resource_limit: int | None = Field(default=None, gt=0)
 
+    @property
+    def public_timetable_unavailable(self) -> bool:
+        """An explicitly incomplete empty timetable is not a scheduled network."""
+        return (
+            not self.transport_modes
+            and not self.physical_services
+            and not self.timetable.runs
+            and not self.timetable.scope.schedule_complete
+        )
+
 
 def car_observation_matches(
     inputs: IntercityInputs, request: IntercityPassengerRequest, *, static_observations: bool

@@ -1,6 +1,7 @@
 """TEST_ONLY: dispatch selection never changes or silently retimes accepted car facts."""
 
 import json
+from dataclasses import replace
 from datetime import timedelta
 
 import pytest
@@ -143,6 +144,48 @@ def test_private_car_uses_own_public_engine_path_without_scheduled_search(
     assert result.scores[0].subject.mode == "private_car"
     assert result.journeys[0].initial_wait_seconds == 0
     assert result.journeys[0].geometry is None
+
+
+@pytest.mark.parametrize("modes", [["road"], ["rail"], ["road", "private_car"], None])
+def test_car_only_dataset_preserves_unknown_public_modes(configured_intercity, modes):
+    module, snapshot, runtime = configured_intercity
+    key = next(iter(runtime.profiles))
+    profile, inputs = runtime.profiles[key]
+    table = replace(
+        inputs.timetable,
+        scope=replace(
+            inputs.timetable.scope,
+            schedule_complete=False,
+            calendar_complete=False,
+            transfer_version="not-collected",
+        ),
+        runs=(),
+        footpaths=(),
+        transfers=(),
+    )
+    runtime.profiles[key] = (
+        profile,
+        inputs.model_copy(
+            update={
+                "timetable": table,
+                "transport_modes": (),
+                "physical_services": (),
+                "car": replace(inputs.car, complete=False),
+            }
+        ),
+    )
+    result = product.calculate(claim_for(snapshot, request(module, modes)))
+    public = [s for s in result.scores if s.subject.mode != "private_car"]
+    assert public and all(s.value is None and s.status == "unknown" for s in public)
+    assert all(not s.ranking_eligible for s in result.scores)
+    car_requested = modes is None or "private_car" in modes
+    assert len(result.journeys) == int(car_requested)
+    if car_requested:
+        assert result.journeys[0].total_seconds == 3600
+        assert result.journeys[0].completeness == "partial"
+    else:
+        assert all(m.value is None for m in result.metrics)
+        assert result.status == "unknown"
 
 
 def test_private_car_observation_cannot_be_retimed(configured_intercity):

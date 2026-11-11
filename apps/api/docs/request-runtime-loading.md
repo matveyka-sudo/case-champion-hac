@@ -45,3 +45,19 @@ truck network times in 22.540 s, publishing analysis
 matched the preceding release's real run. Canonical validation, byte-identical
 repeat GET and unrelated-session 404 passed; strict indices remained null.
 This is one real browser replay, not a throughput or nationwide readiness test.
+
+## Missing intercity schedules
+
+The follow-up browser check exposed a separate, pre-existing integration gap:
+the road-observation dataset has no accepted public timetable, but a public-mode
+request reached the scheduled engine with placeholder versions. Job
+`d588f960-7d9b-4fe7-a2c8-c797c6b28984` failed without publishing a result.
+
+An empty timetable with no mode bindings or physical services and explicitly
+incomplete schedule coverage now produces unknown public-mode metrics and scores.
+It does not prove that a service is absent. A selected valid car observation is
+still evaluated by the existing car engine; an unselected car is never substituted
+for a bus or train. Nonempty and complete timetables retain their existing engine
+validation. Four regression cases reproduced the exception before this fix,
+covering public-only, car-plus-public and default selection. The frontend adds a
+plain-language explanation in its existing limitation list.
