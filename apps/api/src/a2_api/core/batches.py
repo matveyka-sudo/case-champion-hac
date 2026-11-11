@@ -9,6 +9,7 @@ from a2_engine import WalkResponseEnvelope, WalkRouteRequest, normalize_walk_res
 from pydantic import Field, model_validator
 
 MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024
+MAX_EXECUTION_PAIRS = 4096
 MAX_ROUTE_ARTIFACT_BYTES = 8 * 1024 * 1024
 MAX_RETAINED_ROUTE_BYTES = 256 * 1024 * 1024
 
@@ -48,9 +49,9 @@ class BatchPlan(ContractModel):
     profile_fingerprint: str = Field(pattern="^[a-f0-9]{64}$")
     runtime_artifact_hash: str = Field(pattern="^[a-f0-9]{64}$")
     approval_manifest_hash: str = Field(pattern="^[a-f0-9]{64}$")
-    pairs: list[PlannedPair] = Field(min_length=1, max_length=4096)
-    approved_pair_count: int = Field(ge=1, le=4096)
-    unresolved_pair_count: int = Field(ge=0, le=4096)
+    pairs: list[PlannedPair] = Field(min_length=1, max_length=MAX_EXECUTION_PAIRS)
+    approved_pair_count: int = Field(ge=1, le=MAX_EXECUTION_PAIRS)
+    unresolved_pair_count: int = Field(ge=0, le=MAX_EXECUTION_PAIRS)
     batch_size: int = Field(ge=1, le=16)
     max_attempts: int = Field(ge=1, le=3)
     max_provider_calls: int = Field(ge=1, le=100000)

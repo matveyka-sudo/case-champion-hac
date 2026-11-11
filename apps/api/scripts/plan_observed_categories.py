@@ -51,8 +51,8 @@ def plan(
             ))
             selected.add((point["entity_id"], target["entity_id"]))
             counts[category]["planned_origins"] += 1
-    if len(selected) > 4096:
-        raise ValueError("Split the categories into plans of at most 4096 physical pairs")
+    if len(selected) > 32768:
+        raise ValueError("The approved category catalog cannot exceed 32768 physical pairs")
     return {
         "schema_version": "waydex-observed-category-plan/1",
         "selection": "one_geographically_nearest_known_target_per_origin_and_category",

@@ -376,7 +376,7 @@ export function noticeTexts(values: readonly string[]) {
 }
 
 export function errorText(error: { message: string; code?: string }) {
-  if (error.message === "WALK_BATCH_MANIFEST_BYTE_BUDGET_EXCEEDED") return "Для одного расчёта выбрано слишком много объектов. Запустите категории по отдельности или меньшими группами — сохранённые результаты останутся доступны.";
+  if (["WALK_BATCH_MANIFEST_BYTE_BUDGET_EXCEEDED", "WALK_BATCH_PAIR_BUDGET_EXCEEDED"].includes(error.message)) return "Для одного расчёта выбрано слишком много объектов. Запустите категории по отдельности или меньшими группами — сохранённые результаты останутся доступны.";
   if (error.message === "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST") return "Для выбранного сочетания условий расчёт пока не подключён. Выберите другую категорию или способ передвижения.";
   if (error.code?.toUpperCase() === "RUNTIME_INPUTS_BUSY") return "Сервер подготавливает данные. Повторите расчёт чуть позже.";
   if (error.code === "incompatible_versions") return "Версии сохранённого расчёта и текущего вычислителя несовместимы. Для нового сценария пересчитайте базу с выбранными условиями. Сохранённый результат не изменён.";
