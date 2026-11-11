@@ -22,7 +22,7 @@ export function AtlasHeader({ mode, title, theme, onModeChange, onThemeChange, o
     }}>
       {([ ["city", "building-2", "В городе", "В городе"], ["pax", "waypoints", "Пассажирские связи", "Пассажиры"],
         ["cargo", "container", "Грузовые связи", "Грузы"] ] as const).map(([value, icon, long, short]) =>
-        <button id={`mode-${value}`} key={value} role="tab" aria-selected={mode === value} tabIndex={mode === value ? 0 : -1} onClick={() => onModeChange(value)}>
+        <button id={`mode-${value}`} key={value} role="tab" aria-label={long} aria-selected={mode === value} tabIndex={mode === value ? 0 : -1} onClick={() => onModeChange(value)}>
           <Icon name={icon} /><span className="lbl"><span className="l-full">{long}</span><span className="l-short">{short}</span></span>
         </button>)}
     </div>

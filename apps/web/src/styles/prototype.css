@@ -141,7 +141,7 @@ html {
 }
 body {
   margin: 0;
-  font-family: var(--f-ui);
+  font-family: var(--f-ui), sans-serif;
   color: var(--wx-ink);
   background: var(--wx-pale);
   font-size: 16px;
@@ -215,7 +215,7 @@ a {
   display: inline-flex;
   align-items: baseline;
   gap: 0;
-  font-family: var(--f-display);
+  font-family: var(--f-display), sans-serif;
   font-weight: 700;
   letter-spacing: -0.045em;
   font-size: 23px;
@@ -494,7 +494,7 @@ a {
   color: var(--wx-lavender);
 }
 .hero-title {
-  font-family: var(--f-display);
+  font-family: var(--f-display), sans-serif;
   font-weight: 700;
   font-size: clamp(38px, 6.3vw, 100px);
   line-height: 1;
@@ -605,8 +605,9 @@ a {
   fill: #fff;
 }
 [data-reveal="draw"] .t-main {
-  stroke-dasharray: var(--len, 1600);
-  stroke-dashoffset: var(--len, 1600);
+  --len: 1600;
+  stroke-dasharray: var(--len);
+  stroke-dashoffset: var(--len);
   transition: stroke-dashoffset 2.2s var(--ease);
 }
 [data-reveal="draw"].is-in .t-main {
@@ -636,7 +637,7 @@ a {
   margin: 0 auto;
 }
 .sec-title {
-  font-family: var(--f-display);
+  font-family: var(--f-display), sans-serif;
   font-weight: 600;
   font-size: clamp(32px, 4.4vw, 66px);
   line-height: 1.03;
@@ -669,7 +670,7 @@ a {
   align-items: end;
 }
 .about-title {
-  font-family: var(--f-display);
+  font-family: var(--f-display), sans-serif;
   font-weight: 600;
   font-size: clamp(34px, 5vw, 76px);
   line-height: 1;
@@ -722,7 +723,7 @@ a {
   height: 2px;
   background: repeating-linear-gradient(
     90deg,
-    var(--wx-line-2, #c9cdea) 0 6px,
+    #c9cdea 0 6px,
     transparent 6px 12px
   );
 }
@@ -748,6 +749,7 @@ a {
   gap: 3px;
 }
 .pseg {
+  --m: 1;
   position: relative;
   flex: var(--m) 1 0;
   display: flex;
@@ -836,7 +838,7 @@ a {
   border-top: 1px solid var(--wx-line);
 }
 .pathtotal .big {
-  font-family: var(--f-display);
+  font-family: var(--f-display), sans-serif;
   font-weight: 700;
   font-size: clamp(40px, 4vw, 56px);
   letter-spacing: -0.04em;
@@ -857,7 +859,7 @@ a {
   color: rgba(255, 255, 255, 0.7);
 }
 .formula code {
-  font-family: var(--f-ui);
+  font-family: var(--f-ui), sans-serif;
   font-weight: 700;
   color: #fff;
   background: rgba(255, 255, 255, 0.08);
@@ -909,7 +911,7 @@ a {
   isolation: isolate;
 }
 .dir h3 {
-  font-family: var(--f-display);
+  font-family: var(--f-display), sans-serif;
   font-weight: 600;
   font-size: clamp(26px, 2.5vw, 38px);
   line-height: 1.05;
@@ -956,7 +958,7 @@ a {
   z-index: -1;
   opacity: 0.42;
   mix-blend-mode: screen;
-  background: url("/assets/region-relief.jpg") center/cover;
+  background: url("../assets/region-relief.jpg") center/cover;
   -webkit-mask-image: linear-gradient(180deg, transparent, #000 40%);
   mask-image: linear-gradient(180deg, transparent, #000 40%);
 }
@@ -1021,15 +1023,17 @@ a {
   max-width: 560px;
 }
 .minigrid i {
+  --c: #eee;
+  --d: 0;
   aspect-ratio: 1;
   border-radius: 4px;
-  background: var(--c, #eee);
+  background: var(--c);
   opacity: 0;
   transform: scale(0.6);
   transition:
     opacity 0.5s var(--ease),
     transform 0.5s var(--ease);
-  transition-delay: calc(var(--d, 0) * 18ms);
+  transition-delay: calc(var(--d) * 18ms);
 }
 .is-in .minigrid i {
   opacity: 1;
@@ -1178,7 +1182,7 @@ a {
 }
 .tr-photo figcaption b {
   display: block;
-  font-family: var(--f-display);
+  font-family: var(--f-display), sans-serif;
   font-weight: 600;
   font-size: clamp(24px, 2.4vw, 36px);
   letter-spacing: -0.035em;
@@ -1429,7 +1433,7 @@ a {
   place-items: center;
   background: var(--wx-ink);
   color: #fff;
-  font-family: var(--f-display);
+  font-family: var(--f-display), sans-serif;
   font-weight: 600;
   font-size: 16px;
   margin-top: -50px;
@@ -1757,7 +1761,7 @@ a {
   isolation: isolate;
 }
 .final h2 {
-  font-family: var(--f-display);
+  font-family: var(--f-display), sans-serif;
   font-weight: 700;
   font-size: clamp(34px, 5.2vw, 84px);
   line-height: 1;
@@ -2159,8 +2163,10 @@ body.mode-atlas {
   background: var(--surface-2);
   gap: 2px;
 }
-.segc[aria-label="Город"] {
+.segc[aria-label="Город"],
+.segc[aria-label="Передвижение"] {
   grid-auto-columns: minmax(0, 1fr);
+  gap: 1px;
 }
 .segc button {
   display: flex;
@@ -2180,9 +2186,26 @@ body.mode-atlas {
   text-align: center;
 }
 .segc[aria-label="Город"] button,
-.segc[aria-label="Город"] button > span {
+.segc[aria-label="Передвижение"] button {
+  min-width: 0;
+  padding-inline: 3px;
+  gap: 4px;
+  font-size: 11.5px;
+}
+.segc[aria-label="Город"] button > span,
+.segc[aria-label="Передвижение"] button > span {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+.segc[aria-label="Передвижение"] button .lucide {
+  flex: 0 0 13px;
+  width: 13px;
+}
+.segc[aria-label="Передвижение"] {
+  grid-template-columns: minmax(0, 1.35fr) repeat(2, minmax(0, 1fr));
+}
+.segc[aria-label="Город"]:has(> button:nth-child(3):last-child) {
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1.05fr) minmax(0, 1.15fr);
 }
 .segc button .lucide {
   font-size: 16px;
@@ -2571,7 +2594,7 @@ body.mode-atlas {
 }
 .leaflet-container {
   background: var(--map-bg) !important;
-  font-family: var(--f-ui) !important;
+  font-family: var(--f-ui), sans-serif !important;
 }
 .tl-osm {
   filter: grayscale(0.78) sepia(0.14) hue-rotate(195deg) saturate(1.7)
@@ -2924,6 +2947,7 @@ body.mode-atlas {
   transition: none;
 }
 .td-slider input[type="range"] {
+  --fill: 35%;
   width: 100%;
   height: 28px;
   appearance: none;
@@ -2937,8 +2961,8 @@ body.mode-atlas {
   border-radius: 6px;
   background: linear-gradient(
     90deg,
-    var(--accent) var(--fill, 35%),
-    var(--surface-3) var(--fill, 35%)
+    var(--accent) var(--fill),
+    var(--surface-3) var(--fill)
   );
 }
 .td-slider input[type="range"]::-moz-range-track {
@@ -3081,14 +3105,14 @@ body.mode-atlas {
   flex-wrap: wrap;
 }
 .bignum {
-  font-family: var(--f-display);
+  font-family: var(--f-display), sans-serif;
   font-weight: 700;
   font-size: 44px;
   letter-spacing: -0.04em;
   line-height: 0.95;
 }
 .bignum small {
-  font-family: var(--f-ui);
+  font-family: var(--f-ui), sans-serif;
   font-size: 16px;
   font-weight: 800;
   letter-spacing: 0;
@@ -3113,6 +3137,7 @@ body.mode-atlas {
   font-size: 13px;
 }
 .idxpill i {
+  --c: transparent;
   width: 18px;
   height: 18px;
   border-radius: 50%;
@@ -3127,6 +3152,7 @@ body.mode-atlas {
   margin-top: 14px;
 }
 .mbar .s {
+  --m: 1;
   flex: var(--m) 1 0;
   display: flex;
   align-items: center;
@@ -3766,7 +3792,7 @@ details.more ul {
 }
 .ch-empty h3 {
   margin: 0;
-  font-family: var(--f-display);
+  font-family: var(--f-display), sans-serif;
   font-weight: 600;
   font-size: 22px;
   letter-spacing: -0.03em;
