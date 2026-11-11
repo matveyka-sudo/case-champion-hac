@@ -86,6 +86,31 @@ def test_missing_expected_site_and_unproven_route() -> None:
     assert evaluate(fast="confirmed", complete=False).by_type[0].index.value is None
 
 
+@pytest.mark.parametrize("missing", ["origin_access_seconds", "destination_access_seconds"])
+def test_known_road_with_unknown_access_never_proves_absence_or_zero(missing: str) -> None:
+    route, receipt = m.truck("site1", "port", 1200)
+    route = replace(route, **{missing: None})
+    receipt = replace(receipt, route_fingerprint=route.fingerprint)
+    assert route.network_seconds == 1140 and route.seconds is None
+    result = analyze_urban_cargo(
+        m.PROFILE,
+        m.START,
+        (m.CargoSite("site1", m.CONTEXT, m.PROOF),),
+        (CargoNode("port", "port", "port", m.CONTEXT, m.PROOF),),
+        (route,),
+        (receipt,),
+        replace(m.run_demo().coverage, expected_site_ids=("site1",)),
+        ("port",),
+        100,
+        config=load_freight_config(),
+    )
+    row = result.by_type[0]
+    assert row.index.value is None and not row.full_ranking_eligible
+    assert not row.sites[0].minimum_proven
+    assert "TRUCK_ACCESS_UNKNOWN" in row.sites[0].reasons
+    assert row.sites[0].observed_routes == (route,)
+
+
 def test_profile_urgency_does_not_change_physical_requirements() -> None:
     assert replace(m.PROFILE, urgency="urgent").requirements_hash == m.PROFILE.requirements_hash
     assert (

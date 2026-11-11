@@ -14,10 +14,15 @@ from test_product_source_guards import cargo_inputs
 
 @pytest.mark.parametrize("compatibility", ["unknown", "forbidden", "confirmed"])
 @pytest.mark.parametrize("direction", ["inbound", "outbound"])
-def test_road_observation_does_not_become_access_or_delivery_index(compatibility, direction):
+@pytest.mark.parametrize("unknown_access", [False, True])
+def test_road_observation_does_not_become_access_or_delivery_index(
+    compatibility, direction, unknown_access
+):
     m = example("urban_cargo")
     route, _ = m.truck("site1", "port", 1200, inbound=direction == "inbound")
     route = replace(route, compatibility=replace(route.compatibility, state=compatibility))
+    if unknown_access:
+        route = replace(route, origin_access_seconds=None, destination_access_seconds=None)
     original = m.run_demo()
     analysis = analyze_urban_cargo(
         m.PROFILE,

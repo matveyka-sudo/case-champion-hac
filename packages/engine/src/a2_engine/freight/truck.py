@@ -21,8 +21,8 @@ class TruckRoute:
     direction: Literal["inbound", "outbound"]
     requested_at: datetime
     network_seconds: float | None
-    origin_access_seconds: float
-    destination_access_seconds: float
+    origin_access_seconds: float | None
+    destination_access_seconds: float | None
     status: Literal["reachable", "confirmed_unreachable", "unknown"]
     compatibility: CargoCompatibility
     evidence_refs: tuple[str, ...]
@@ -46,11 +46,15 @@ class TruckRoute:
             raise ValueError("CONFIRMED_TRUCK_SEMANTICS_REQUIRED")
         object.__setattr__(self, "requested_at", utc(self.requested_at))
         for key in ("origin_access_seconds", "destination_access_seconds"):
-            object.__setattr__(self, key, finite_number(getattr(self, key), key))
+            value = getattr(self, key)
+            if value is not None:
+                object.__setattr__(self, key, finite_number(value, key))
+                duration(value)
         if self.network_seconds is not None:
             object.__setattr__(
                 self, "network_seconds", finite_number(self.network_seconds, "network seconds")
             )
+            duration(self.network_seconds)
         if (self.status == "reachable") != (self.network_seconds is not None):
             raise ValueError("TRUCK_STATUS_TIME_MISMATCH")
         object.__setattr__(self, "evidence_refs", ids(self.evidence_refs))
@@ -59,7 +63,11 @@ class TruckRoute:
 
     @property
     def seconds(self) -> float | None:
-        if self.network_seconds is None:
+        if (
+            self.network_seconds is None
+            or self.origin_access_seconds is None
+            or self.destination_access_seconds is None
+        ):
             return None
         try:
             return sum(
