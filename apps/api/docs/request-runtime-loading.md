@@ -35,3 +35,13 @@ local Docker host, not latency percentiles or whole-job performance claims.
 Regression tests exercise the actual preflight/worker call sites, changed selected
 bytes after prior admission, scoped/full result equality, overlapping profiles,
 duplicate manifest identities and inconsistent snapshot selection.
+
+The built source `3a694e24d5ad8a76bdd7eeb80a8d603b7f332b2c` then passed
+the full 33-profile/three-router startup check in the isolated restored stack.
+An actual React click received HTTP 202 in 142 ms and created PostgreSQL job
+`fb49d87b-3259-484e-9ed1-6074affa97f3`. The worker calculated 172 Novorossiysk
+truck network times in 22.540 s, publishing analysis
+`44058c5f-0048-4548-aff5-e5bdccc45f9b`. Metric names, subjects and values exactly
+matched the preceding release's real run. Canonical validation, byte-identical
+repeat GET and unrelated-session 404 passed; strict indices remained null.
+This is one real browser replay, not a throughput or nationwide readiness test.
