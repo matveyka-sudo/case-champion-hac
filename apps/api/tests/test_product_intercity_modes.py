@@ -146,7 +146,7 @@ def test_private_car_uses_own_public_engine_path_without_scheduled_search(
     assert result.journeys[0].geometry is None
 
 
-@pytest.mark.parametrize("modes", [["road"], ["rail"], ["road", "private_car"], None])
+@pytest.mark.parametrize("modes", [["road"], ["rail"], ["mixed"], ["road", "private_car"], None])
 def test_car_only_dataset_preserves_unknown_public_modes(configured_intercity, modes):
     module, snapshot, runtime = configured_intercity
     key = next(iter(runtime.profiles))

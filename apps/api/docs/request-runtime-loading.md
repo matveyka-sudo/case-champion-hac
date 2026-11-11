@@ -61,3 +61,16 @@ for a bus or train. Nonempty and complete timetables retain their existing engin
 validation. Four regression cases reproduced the exception before this fix,
 covering public-only, car-plus-public and default selection. The frontend adds a
 plain-language explanation in its existing limitation list.
+
+Built source `e5f8bf52f7ce207315c05b924833564992d236d9` was replayed through
+React, API, PostgreSQL and the worker on the restored stack. Public-only request
+job `7507a468-7309-46a3-b7eb-6f177befe1dd` completed in 1.070 s and saved
+unknown analysis `b5c58f64-9240-440d-9cb1-00779539443f` with no journeys or
+invented times. Adding the car mode created job
+`691954e1-7949-4a08-8e2c-cae5e1b14773`, which completed in 1.716 s and saved
+partial analysis `e8f2a01e-1627-4e0b-b718-6d45c4541133`. It retained the
+prepared 71510.406-second Moscow-to-Novorossiysk car observation and actual
+route geometry alongside unknown public-mode values. Every index remained null.
+Both results passed canonical validation, identical repeat GET and foreign-session
+404. These tests made zero new routing/provider calls and do not establish
+on-demand intercity routing or accepted public schedules.
