@@ -99,6 +99,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
     if (busy.current) return;
     busy.current = true;
     active.current?.abort();
+    setJob(null);
     chat.current?.abort();
     setChatBusy(false);
     setExplanationError(null);
@@ -166,6 +167,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
       return;
     busy.current = true;
     active.current?.abort();
+    setJob(null);
     const controller = new AbortController();
     active.current = controller;
     const rev = revision.current;
@@ -228,10 +230,10 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
   };
   const cancel = async () => {
     if (!job || !["queued", "running"].includes(job.status)) return;
-    const rev = revision.current;
+    const rev = revision.current, controller = active.current;
     try {
       const value = await gateway.cancel(job.job_id);
-      if (rev !== revision.current) return;
+      if (rev !== revision.current || active.current !== controller) return;
       setJob(value);
       if (value.status === "cancelled") {
         pendingSubmission.current = null;
@@ -240,7 +242,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
         setPhase("cancelled");
       }
     } catch (e) {
-      if (rev === revision.current)
+      if (rev === revision.current && active.current === controller)
         setError(e instanceof Error ? e : new Error("Не удалось отменить"));
     }
   };

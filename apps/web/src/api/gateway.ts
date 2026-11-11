@@ -15,7 +15,7 @@ export class BackendGateway {
       signal,
     });
   job = (id: string, signal?: AbortSignal) =>
-    this.client.request("/jobs/" + encodeURIComponent(id), "JobView", {
+    this.client.request("/jobs/" + encodeURIComponent(id) + "?include_progress=true", "JobView", {
       signal,
     });
   cancel = (id: string, signal?: AbortSignal) =>
