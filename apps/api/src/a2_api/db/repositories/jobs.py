@@ -23,6 +23,7 @@ from a2_contracts.v2.scenarios import (
     ScenarioRunRequest,
 )
 
+from a2_api.core.analysis_groups import GroupAdmission
 from a2_api.core.errors import DomainError
 from a2_api.core.jobs import (
     ClaimedJob,
@@ -104,6 +105,8 @@ class JobRepository(ScenariosRepository):
         key: str,
         trace_id: str,
         scope: str | None = None,
+        *,
+        group: GroupAdmission | None = None,
     ) -> JobAccepted:
         if not key.strip():
             raise DomainError(422, "invalid_request", "Idempotency key must not be blank")
@@ -114,6 +117,12 @@ class JobRepository(ScenariosRepository):
         schema_version = "2" if isinstance(context, V2JobContext) else "1"
         async with self.pool.acquire() as connection:
             async with connection.transaction():
+                if group is not None:
+                    from a2_api.db.repositories.analysis_groups import lock_admission
+
+                    if not isinstance(context, V2JobContext) or kind != "analysis":
+                        raise DomainError(409, "invalid_request", "Invalid grouped job context")
+                    await lock_admission(connection, group, context)
                 if isinstance(context, V2JobContext) and context.private_source_bindings:
                     await PrivateSourceRepository.check(
                         connection, context.private_source_bindings, context.access_scope
@@ -185,6 +194,17 @@ class JobRepository(ScenariosRepository):
                 job = job_from_row(row)
                 if job.status == "succeeded" and job.run_id is not None:
                     await self._read_run(connection, job.run_id, owner, lock=True)
+                if group is not None:
+                    await connection.execute(
+                        "UPDATE analysis_group_items SET job_id=$3 WHERE group_id=$1 AND ordinal=$2",
+                        group.group_id,
+                        group.ordinal,
+                        job.job_id,
+                    )
+                    await connection.execute(
+                        "UPDATE analysis_groups SET status='running' WHERE group_id=$1",
+                        group.group_id,
+                    )
                 return JobAccepted(job_id=job.job_id, status=job.status)
 
     async def get_job(self, job_id: str, scope: str | None = None) -> Job:
