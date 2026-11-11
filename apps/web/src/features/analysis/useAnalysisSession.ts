@@ -96,7 +96,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
           );
       });
   };
-  const run = async (request: AnalysisRequest, navigate?: (kind: "job" | "analysis", id: string) => void) => {
+  const run = async (request: AnalysisRequest, navigate?: (kind: "job" | "analysis", id: string) => boolean | void) => {
     if (busy.current) return;
     busy.current = true;
     active.current?.abort();
@@ -127,7 +127,10 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
         controller.signal,
         (j) => {
           if (rev === revision.current && !controller.signal.aborted) {
-            if (!accepted) { accepted = true; navigate?.("job", j.job_id); }
+            if (!accepted) {
+              accepted = true;
+              if (navigate?.("job", j.job_id) === false) { controller.abort(); return; }
+            }
             terminalFailure = j.status === "failed" || j.status === "cancelled";
             setJob(j);
           }
@@ -139,7 +142,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
         setPhase("cancelled");
         return;
       }
-      navigate?.("analysis", value.analysis_id);
+      if (navigate?.("analysis", value.analysis_id) === false) { controller.abort(); return; }
       currentResult.current = value;
       setResult(value);
       setDirty(false);

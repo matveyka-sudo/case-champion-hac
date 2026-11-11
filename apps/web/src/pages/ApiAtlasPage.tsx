@@ -46,7 +46,7 @@ import {
   scoreBand,
 } from "../api/adapters/result";
 import { useAnalysisSession } from "../features/analysis/useAnalysisSession";
-import { atlasLocation, savedPointerHash, subscribeAtlasLocation, writeSavedPointer } from "../features/analysis/savedPointer";
+import { atlasLocation, savedPointerHash, savedPointerWriter, subscribeAtlasLocation, writeSavedPointer } from "../features/analysis/savedPointer";
 import { savedRequestDraft } from "../api/adapters/savedRequest";
 import { scenarioJourneys } from "../api/adapters/scenario";
 import { scopeContainsTime, urbanScopeAvailability, type UrbanSelection } from "../api/adapters/urbanScopes";
@@ -366,10 +366,7 @@ export function ApiAtlasPage() {
       setFiltersOpen(false);
       setScenarioView(false);
       setInterfaceMessages([]);
-      void session.run(request, (kind, id) => {
-        handledPointer.current = savedPointerHash({ kind, id });
-        writeSavedPointer({ kind, id }, kind === "analysis");
-      });
+      void session.run(request, savedPointerWriter((hash) => { handledPointer.current = hash; }));
     } catch (e) {
       setLocalError(
         e instanceof DraftError
