@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any, Literal
 
 from a2_contracts.common import canonical_hash
+from a2_contracts.v2.evidence import EVIDENCE_GROUP_PREFIX, MAX_GROUP_MEMBERS, EvidenceGroup
 from a2_contracts.v2.journeys import (
     BoundaryNodeSets,
     CountResult,
@@ -39,6 +40,7 @@ class Projection:
     def __init__(self, context: V2JobContext, evidence: list[EvidenceRef]) -> None:
         self.context = context
         self.evidence = evidence
+        self.evidence_groups: list[EvidenceGroup] = []
         self.metrics: list[Metric] = []
         self.scores: list[Score] = []
         self.journeys: list[JourneyResult] = []
@@ -46,6 +48,23 @@ class Projection:
         self.counts: list[CountResult] = []
         self.map_data = AnalysisMapData()
         self.limitations: set[str] = set()
+
+    def shared_evidence(self, refs: tuple[str, ...]) -> tuple[str, ...]:
+        """Factor a repeated catalogue before constructing thousands of DTO rows."""
+        if len(refs) < 32:
+            return refs
+        identities = sorted(set(refs))
+        result = []
+        for start in range(0, len(identities), MAX_GROUP_MEMBERS):
+            members = identities[start : start + MAX_GROUP_MEMBERS]
+            if len(members) == 1:
+                result.extend(members)
+                continue
+            group_id = EVIDENCE_GROUP_PREFIX + canonical_hash(members)
+            if not any(group.group_id == group_id for group in self.evidence_groups):
+                self.evidence_groups.append(EvidenceGroup(group_id=group_id, evidence_ids=members))
+            result.append(group_id)
+        return tuple(result)
 
     def metric(
         self,
@@ -139,6 +158,7 @@ class Projection:
             metrics=self.metrics,
             scores=self.scores,
             evidence_refs=self.evidence,
+            evidence_groups=self.evidence_groups,
             limitations=sorted(self.limitations),
             versions=self.context.versions,
             journeys=self.journeys,
@@ -738,12 +758,13 @@ def project_urban_cargo(out: Projection, analysis: Any) -> None:
     request = out.context.normalized_request
     assert isinstance(request, UrbanCargoRequest)
     territory = SubjectRef(kind="territory", territory_id=request.city_id, mode="road")
+    shared_refs = out.shared_evidence(analysis.evidence_refs)
     h = out.metric(
         "cargo-h",
         "urban_h_seconds",
         analysis.h_seconds,
         territory,
-        analysis.evidence_refs,
+        shared_refs,
         full=analysis.h_seconds.value is not None,
     )
     for group in analysis.by_type:
@@ -789,7 +810,7 @@ def project_urban_cargo(out: Projection, analysis: Any) -> None:
                 "minimum_truck_access_seconds",
                 known(route.seconds if route else None, "MINIMUM_TIME_UNPROVEN"),
                 subject,
-                analysis.evidence_refs,
+                shared_refs,
                 full=site.minimum_proven,
                 time_kind="movement",
             )
@@ -799,7 +820,7 @@ def project_urban_cargo(out: Projection, analysis: Any) -> None:
                     "cargo_site_index",
                     site.evaluation.index,
                     subject,
-                    analysis.evidence_refs,
+                    shared_refs,
                     full=site.minimum_proven,
                     metrics=(raw, h),
                 )
@@ -815,7 +836,7 @@ def project_urban_cargo(out: Projection, analysis: Any) -> None:
             "cargo_access_index",
             group.index,
             territory,
-            analysis.evidence_refs,
+            shared_refs,
             full=group.full_ranking_eligible,
             scores=tuple(site_scores),
             basis=basis,

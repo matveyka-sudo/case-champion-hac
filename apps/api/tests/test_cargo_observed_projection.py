@@ -6,10 +6,52 @@ import pytest
 from a2_api.adapters.cargo_map import accepted_cargo_map
 from a2_api.adapters.product_projection import project_urban_cargo
 from a2_contracts.v2 import AnalysisResult
+from a2_contracts.v2.evidence import EvidenceResolver
 from a2_engine import CargoNode, CargoSite, analyze_urban_cargo, load_freight_config
 from test_product_projection import example, projection
 from test_product_runtime import transport_facts as transport_facts
 from test_product_source_guards import cargo_inputs
+
+
+def test_large_cargo_catalogue_preserves_all_sources_without_repeating_every_leaf():
+    m = example("urban_cargo")
+    original = m.run_demo()
+    refs = tuple(
+        sorted(set(original.evidence_refs) | {f"TEST_ONLY-source-{i}" for i in range(5000)})
+    )
+    analysis = replace(original, evidence_refs=refs)
+    out = projection(
+        "urban_cargo",
+        refs,
+        city_id="city",
+        cargo_profile_id=m.PROFILE.profile_id,
+        direction="outbound",
+    )
+    project_urban_cargo(out, analysis)
+    result = out.finish()
+    resolver = EvidenceResolver(
+        (e.evidence_id for e in result.evidence_refs), result.evidence_groups
+    )
+    assert len(result.evidence_groups) == 2
+    for score in result.scores:
+        assert set(resolver.expand(score.evidence_refs)) == set(refs)
+        assert len(score.evidence_refs) == 2
+    assert AnalysisResult.model_validate_json(result.model_dump_json()) == result
+    assert [s.value for s in result.scores] == [
+        s.value for s in _project_control(original, refs).scores
+    ]
+
+
+def _project_control(analysis, refs):
+    out = projection(
+        "urban_cargo",
+        refs,
+        city_id="city",
+        cargo_profile_id=analysis.profile.profile_id,
+        direction="outbound",
+    )
+    project_urban_cargo(out, analysis)
+    return out.finish()
 
 
 @pytest.mark.parametrize("compatibility", ["unknown", "forbidden", "confirmed"])
