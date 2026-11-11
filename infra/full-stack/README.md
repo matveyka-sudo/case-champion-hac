@@ -166,6 +166,47 @@ Then run the migration head check and `smoke.py --existing` with the preserved
 session. Keep the old project and volumes until recovery is verified. Routine
 shutdown is `full down`; volume deletion is a separate explicit operator action.
 
+## Run the isolated hackathon demo
+
+Use a clean checkout of the agreed integration commit and the separate
+generated demo package from the data and API owners. Keep the complete
+manifest directory and its receipts together. The package must provide the
+reviewed manifest SHA-256 and identify the supported presets. This deployment
+runs the generated model in API mode, with its own database and worker. It
+does not require the real release's Valhalla tile transfers.
+
+Copy [`demo.env.example`](demo.env.example) outside Git. Set the checkout path,
+exact source commit, restored demo directory, reviewed manifest hash and a new
+database password (`openssl rand -hex 32`). Keep the directory readable by
+container UID 10001 and the environment file at mode 600. Keep the demo
+project name and port distinct from the real stack. Leave the assistant
+environment at `/dev/null` for the provider-free demo.
+
+```sh
+demo_env=/absolute/path/to/private/demo.env
+demo() { ./infra/full-stack/demo-compose.sh --env-file "$demo_env" "$@"; }
+
+demo config --quiet
+demo build api web
+demo up -d --no-build --wait
+demo ps -a
+```
+
+The wrapper applies the generated-demo overlay after the base product file.
+Runtime validation and migrations must succeed before the API and worker
+start. The browser uses the same-origin web proxy. On a VM, forward the
+loopback port from the reviewer's machine, for example
+`ssh -N -L 5295:127.0.0.1:5295 user@vm`. Open
+`http://127.0.0.1:5295/#atlas` in API mode.
+
+For the first acceptance run, use one registered Moscow public transport
+preset. Run the baseline, open the route on the map, and apply an offered
+transfer adjustment. Record the source SHA, manifest hash, baseline and
+scenario IDs, before/after time and elapsed times. Reload and verify both
+saved results. Label the preset as modelled. Expand to the remaining matrix
+after this browser flow passes. Use `demo down` to stop the project and
+retain its volumes.
+
 ## Extend the runtime
 
 For the certified native replay profile and a reproducible private artifact
