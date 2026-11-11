@@ -46,7 +46,7 @@ def binding(tmp_path, monkeypatch):
     tile = graph / "tiles/1.gph"
     tile.write_bytes(b"TEST_ONLY-tile")
     config = graph / "valhalla.json"
-    config.write_text('{"TEST_ONLY":true}')
+    config.write_text('{"mjolnir":{"tile_dir":"/data/tiles","tile_extract":"/data/tiles.tar"}}')
     manifest = {
         "config_sha256": hashlib.sha256(config.read_bytes()).hexdigest(),
         "files": [
@@ -159,7 +159,7 @@ def test_unavailable_provider_is_unknown(binding):
     assert observation.http_status == 502
 
 
-@pytest.mark.parametrize("mutation", ["tile", "extra", "config", "mtime", "symlink"])
+@pytest.mark.parametrize("mutation", ["tile", "extra", "config", "mtime", "symlink", "archive"])
 def test_actual_graph_inventory_is_checked(binding, mutation, monkeypatch):
     from pathlib import Path
 
@@ -173,6 +173,8 @@ def test_actual_graph_inventory_is_checked(binding, mutation, monkeypatch):
         (root / "valhalla.json").write_text("{}")
     elif mutation == "mtime":
         os.utime(root / "tiles", (101, 101))
+    elif mutation == "archive":
+        (root / "tiles.tar").write_bytes(b"TEST_ONLY-unverified-preferred-archive")
     else:
         (root / "tiles/extra.gph").symlink_to(root / "tiles/1.gph")
     with pytest.raises(ValueError, match="TRUCK_GRAPH"):

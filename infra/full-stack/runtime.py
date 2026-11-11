@@ -226,11 +226,27 @@ def product_check(args):
             raise ValueError("Mounted directory graph differs from the certified native proof")
         print("Restored native proof files and mounted graph verified; no HTTP actor requested")
     registry()
+    truck_graphs = set()
+    for profile, _ in runtime.profiles.values():
+        binding = profile.truck_routing
+        if binding is None:
+            continue
+        identity = (
+            binding.graph_directory_env,
+            binding.graph_manifest_sha256,
+            binding.tileset_last_modified,
+        )
+        if identity not in truck_graphs:
+            from a2_api.adapters.truck_graph import verify_graph
+
+            verify_graph(binding)
+            truck_graphs.add(identity)
     print(
         json.dumps(
             {
                 "product_manifest_sha256": runtime.digest,
                 "verified_profiles": sorted(runtime.profiles),
+                "verified_truck_graphs": len(truck_graphs),
                 "analysis_kinds": sorted(
                     {profile.analysis_kind for profile, _ in runtime.profiles.values()}
                 ),

@@ -1,24 +1,28 @@
-# Optional worker-side routes. Mount the SAME immutable directories as the
-# corresponding routers. API admission reads only the hash-pinned runtime.
+# Mount the SAME immutable directories as the corresponding routers.
+x-truck-environment: &truck-environment
+  A2_TRUCK_KALININGRAD_GRAPH_DIR: /truck-graphs/kaliningrad
+  A2_TRUCK_NOVOROSSIYSK_GRAPH_DIR: /truck-graphs/novorossiysk
+  A2_TRUCK_MOSCOW_GRAPH_DIR: /truck-graphs/moscow
+x-truck-volumes: &truck-volumes
+  - type: bind
+    source: ${WAYDEX_KALININGRAD_TRUCK_GRAPH_DIR:?}
+    target: /truck-graphs/kaliningrad
+    read_only: true
+    bind: {create_host_path: false}
+  - type: bind
+    source: ${WAYDEX_NOVOROSSIYSK_GRAPH_DIR:?}
+    target: /truck-graphs/novorossiysk
+    read_only: true
+    bind: {create_host_path: false}
+  - type: bind
+    source: ${WAYDEX_GRAPH_DIR:?}
+    target: /truck-graphs/moscow
+    read_only: true
+    bind: {create_host_path: false}
 services:
+  runtime-check:
+    environment: *truck-environment
+    volumes: *truck-volumes
   worker:
-    environment:
-      A2_TRUCK_KALININGRAD_GRAPH_DIR: /truck-graphs/kaliningrad
-      A2_TRUCK_NOVOROSSIYSK_GRAPH_DIR: /truck-graphs/novorossiysk
-      A2_TRUCK_MOSCOW_GRAPH_DIR: /truck-graphs/moscow
-    volumes:
-      - type: bind
-        source: ${WAYDEX_KALININGRAD_GRAPH_DIR:?}
-        target: /truck-graphs/kaliningrad
-        read_only: true
-        bind: {create_host_path: false}
-      - type: bind
-        source: ${WAYDEX_NOVOROSSIYSK_GRAPH_DIR:?}
-        target: /truck-graphs/novorossiysk
-        read_only: true
-        bind: {create_host_path: false}
-      - type: bind
-        source: ${WAYDEX_GRAPH_DIR:?}
-        target: /truck-graphs/moscow
-        read_only: true
-        bind: {create_host_path: false}
+    environment: *truck-environment
+    volumes: *truck-volumes

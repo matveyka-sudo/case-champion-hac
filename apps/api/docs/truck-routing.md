@@ -14,12 +14,16 @@ when adding the binding. The binding is operator data, not an HTTP parameter.
 
 Apply `infra/full-stack/compose.product-truck-routing.yaml` after the existing
 product/cargo overlays. Restore each graph archive into its operator directory
+(`WAYDEX_KALININGRAD_TRUCK_GRAPH_DIR` names the actual Kaliningrad router mount,
+independently of `WAYDEX_KALININGRAD_GRAPH_DIR` used by the native certificate)
 and mount the **same bytes** read-only into its router and worker. The worker
 checks manifest, config, tile hashes/inventory and tiles-directory timestamp;
 HTTP status is checked around each new route. HTTP status alone is not a
 cryptographic attestation that a remote router serves those tiles. Deployment
 must preserve the local router/mount association. Do not bind a public provider
 to this local graph policy.
+`product-check` verifies all distinct truck graph mounts before activation,
+including timestamp identity and rejection of a preferred unverified tile archive.
 
 The fixed model sends `costing=truck`, explicit freeflow speeds, and the accepted
 vehicle's weight (kg converted to tonnes), height, width and length. Actual site

@@ -3,7 +3,7 @@
 import hashlib
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from a2_api.core.truck_routing import TruckRoutingBinding
 
@@ -40,7 +40,24 @@ def verify_graph(binding: TruckRoutingBinding) -> None:
     manifest = json.loads(
         checked("valhalla-build-manifest.json", binding.graph_manifest_sha256, 1024 * 1024)
     )
-    checked("valhalla.json", manifest["config_sha256"], 1024 * 1024)
+    config = json.loads(checked("valhalla.json", manifest["config_sha256"], 1024 * 1024))
+    reader = config.get("mjolnir", {})
+    if (
+        not isinstance(reader, dict)
+        or reader.get("tile_dir") != "/data/tiles"
+        or reader.get("tile_url") not in (None, "")
+    ):
+        raise ValueError("TRUCK_GRAPH_DIRECTORY_SOURCE_REQUIRED")
+    extract = reader.get("tile_extract")
+    if extract not in (None, ""):
+        if not isinstance(extract, str):
+            raise ValueError("TRUCK_GRAPH_ARCHIVE_PATH_INVALID")
+        relative = PurePosixPath(extract).relative_to("/data")
+        if ".." in relative.parts:
+            raise ValueError("TRUCK_GRAPH_ARCHIVE_PATH_INVALID")
+        archive = root.joinpath(*relative.parts)
+        if archive.exists() or archive.is_symlink():
+            raise ValueError("TRUCK_GRAPH_UNVERIFIED_ARCHIVE_OVERRIDE")
     rows = manifest["files"]
     if not isinstance(rows, list) or not 0 < len(rows) <= 10000:
         raise ValueError("TRUCK_GRAPH_INVENTORY_REQUIRED")
