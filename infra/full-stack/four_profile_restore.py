@@ -7,6 +7,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import stat
 import sys
 from pathlib import Path
@@ -130,21 +131,68 @@ def load_module(name, path):
     return module
 
 
-def verify_sources(runtime, sources):
+def load_release(path, expected_sha256):
+    """Explicit reviewed pins for a later release; legacy defaults stay frozen."""
+    content = io.BytesIO()
+    actual = read_file(path, content, limit=128 * 1024)
+    if actual["sha256"] != expected_sha256:
+        raise ValueError("Release pin document SHA256 differs")
+    release = json.loads(content.getvalue())
+    if (
+        not isinstance(release, dict)
+        or set(release)
+        != {
+            "schema_version",
+            "product_sha256",
+            "bundle_sha256",
+            "groups",
+            "bindings",
+            "router_tileset_metadata",
+        }
+        or release["schema_version"] != "waydex-runtime-transfer-pins/1"
+        or set(release["groups"]) != set(ARGUMENTS)
+        or set(release["bindings"]) != set(BINDINGS)
+        or set(release["router_tileset_metadata"]) != {"moscow", "novorossiysk", "kaliningrad"}
+    ):
+        raise ValueError("Invalid release pin document scope")
+    hashes = [release["product_sha256"], release["bundle_sha256"], *release["bindings"].values()]
+    for pin in release["groups"].values():
+        if (
+            not isinstance(pin, list)
+            or len(pin) != 3
+            or type(pin[0]) is not int
+            or not 0 < pin[0] <= 20000
+            or type(pin[1]) is not int
+            or not 0 < pin[1] <= 5 * 1024**3
+        ):
+            raise ValueError("Invalid release inventory bound")
+        hashes.append(pin[2])
+    if any(not isinstance(v, str) or not re.fullmatch("[a-f0-9]{64}", v) for v in hashes):
+        raise ValueError("Release pins require SHA256 identities")
+    if any(type(v) is not int or v < 0 for v in release["router_tileset_metadata"].values()):
+        raise ValueError("Invalid release router metadata")
+    return release
+
+
+def verify_sources(runtime, sources, release=None):
     runtime = checked_path(runtime)
     bundle = load_module("four_profile_bundle", ROOT / "infra/full-stack/bundle.py")
-    bundle.verify(runtime, BUNDLE_SHA)
-    if read_file(runtime / "manifest.json")["sha256"] != PRODUCT_SHA:
+    bundle.verify(runtime, release["bundle_sha256"] if release else BUNDLE_SHA)
+    if read_file(runtime / "manifest.json")["sha256"] != (
+        release["product_sha256"] if release else PRODUCT_SHA
+    ):
         raise ValueError("Four-profile product manifest differs")
+    pins = release["groups"] if release else PINS
+    bindings = release["bindings"] if release else BINDINGS
     groups = {}
-    for group, pin in PINS.items():
+    for group, pin in pins.items():
         rows = inventory(sources[group])
         actual = (
             len(rows),
             sum(r["bytes"] for r in rows),
             hashlib.sha256(encoded(rows)).hexdigest(),
         )
-        if actual != pin:
+        if actual != tuple(pin):
             raise ValueError(f"Reviewed graph transport inventory differs: {group}")
         groups[group] = rows
     checker = load_module("four_profile_runtime", ROOT / "infra/full-stack/runtime.py")
@@ -164,7 +212,7 @@ def verify_sources(runtime, sources):
                 os.environ["WAYDEX_GRAPH_BINDING_PATH"] = str(
                     sources[f"bindings/{city}"] / "binding.json"
                 )
-                os.environ["WAYDEX_GRAPH_BINDING_SHA256"] = BINDINGS[city]
+                os.environ["WAYDEX_GRAPH_BINDING_SHA256"] = bindings[city]
                 parent = (
                     runtime / "moscow/artifact.json"
                     if city == "moscow"
@@ -181,6 +229,25 @@ def verify_sources(runtime, sources):
                 seconds = tiles.stat().st_mtime_ns // 10**9
                 if seconds != status_artifact["status_expectation"]["tileset_last_modified"]:
                     raise ValueError("Source tile directory differs from the bound build status")
+                router_tileset_metadata[f"graphs/{city}"] = {
+                    "path": "tiles",
+                    "mtime_seconds": seconds,
+                }
+            if release is not None:
+                seconds = (
+                    checked_path(sources[f"graphs/{city}"] / "tiles").stat().st_mtime_ns // 10**9
+                )
+                product = json.loads((runtime / "manifest.json").read_bytes())
+                expected = {
+                    p["truck_routing"]["tileset_last_modified"]
+                    for p in product.get("profiles", [])
+                    if p.get("city_id") == city and p.get("truck_routing") is not None
+                }
+                if (
+                    expected != {release["router_tileset_metadata"][city]}
+                    or seconds not in expected
+                ):
+                    raise ValueError("Release router metadata differs from immutable runtime")
                 router_tileset_metadata[f"graphs/{city}"] = {
                     "path": "tiles",
                     "mtime_seconds": seconds,
@@ -272,21 +339,29 @@ def main():
     verify = commands.add_parser("verify")
     verify.add_argument("--runtime", type=Path, required=True)
     verify.add_argument("--transfer", type=Path, required=True)
+    for command in (export, verify):
+        command.add_argument("--release-pins", type=Path)
+        command.add_argument("--release-pins-sha256")
     args = parser.parse_args()
+    if bool(args.release_pins) != bool(args.release_pins_sha256):
+        raise ValueError("Both release pin document and SHA256 are required")
+    release = (
+        load_release(args.release_pins, args.release_pins_sha256) if args.release_pins else None
+    )
     if args.command == "export":
         sources = {group: checked_path(getattr(args, name)) for group, name in ARGUMENTS.items()}
         output = checked_path(args.output)
         roots = [checked_path(args.runtime), *sources.values()]
         if output.exists() or any(output.is_relative_to(p) for p in roots):
             raise ValueError("Graph transfer destination must be new and outside runtime")
-        manifest = verify_sources(args.runtime, sources)
+        manifest = verify_sources(args.runtime, sources, release)
         if not args.dry_run:
             copy_sources(sources, manifest, output)
         print(json.dumps(dict(summary(manifest), dry_run=args.dry_run)))
     else:
         transfer = checked_path(args.transfer)
         sources = {group: transfer / group for group in PINS}
-        manifest = verify_sources(args.runtime, sources)
+        manifest = verify_sources(args.runtime, sources, release)
         marker = checked_path(transfer / MARKER)
         marker_bytes = io.BytesIO()
         read_file(marker, marker_bytes, limit=2 * 1024**2)
