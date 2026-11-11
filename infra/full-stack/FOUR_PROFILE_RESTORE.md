@@ -179,10 +179,12 @@ routes. `$executor` is the value just placed in the private environment:
 executor=REPLACE_WITH_ACTUAL_IMAGE_EXECUTOR_SHA256
 docker run --rm --network none --read-only --memory 2g --memory-swap 2g --cpus 2 \
   --tmpfs /tmp:size=128m,mode=1777 \
+  --tmpfs /observations:size=64m,mode=1777 \
   --mount "type=bind,source=$runtime,target=/runtime,readonly" \
   --mount "type=bind,source=$graphs/graphs/kaliningrad,target=/certified-graph,readonly" \
   -e A2_RUNTIME_SOURCE_BUDGET_MIB=128 -e A2_WORKER_RESULT_DECODED_MIB=32 \
   -e A2_JOB_TIMEOUT_SECONDS=600 -e A2_DEMO_TRANSPORT_ENABLED=false \
+  -e A2_WALK_OBSERVATION_DIR=/observations \
   -e LLM_ENABLED=false -e ALICE_BILLING_CURRENCY_CONFIRMED=false \
   -e A2_PRODUCT_RUNTIME_PATH=/runtime/manifest.json \
   -e A2_PRODUCT_RUNTIME_SHA256=a68f69593e1aaea8917030e2b2f57433dc41d2ab5569bc3f15bcecfddf813dc6 \
