@@ -379,16 +379,16 @@ async def test_final_status_sql_rejects_expiry_after_inventory_validation(
         )
     else:
         deadline = context.batch_execution.valid_until
-    original = CheckpointRepository._publication_inventory
+    original = CheckpointRepository._fence
     validated = []
 
-    async def delayed(self, connection, incoming):
-        inventory = await original(self, connection, incoming)
+    async def delayed(self, connection, incoming, receipt, **kwargs):
+        inventory = await original(self, connection, incoming, receipt, **kwargs)
         validated.append(True)
         await asyncio.sleep(max(0, (deadline - datetime.now(UTC)).total_seconds()) + 0.05)
         return inventory
 
-    monkeypatch.setattr(CheckpointRepository, "_publication_inventory", delayed)
+    monkeypatch.setattr(CheckpointRepository, "_fence", delayed)
     with pytest.raises(DomainError, match="final publication claim or validity expired"):
         await repo.succeed(claim, result(claim))
     assert validated == [True]
@@ -460,10 +460,11 @@ async def test_checkpoint_commit_and_cancel_serialize_on_saved_job(
     active, release = asyncio.Event(), asyncio.Event()
     original = progress._active
 
-    async def hold(connection, incoming):
-        now = await original(connection, incoming)
-        active.set()
-        await release.wait()
+    async def hold(connection, incoming, *, lock=True):
+        now = await original(connection, incoming, lock=lock)
+        if lock:
+            active.set()
+            await release.wait()
         return now
 
     monkeypatch.setattr(progress, "_active", hold)

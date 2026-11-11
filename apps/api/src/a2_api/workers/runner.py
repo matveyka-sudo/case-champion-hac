@@ -58,23 +58,17 @@ class Worker:
                     claim.context
                 )
                 if remaining is None:
-                    result = await self._calculate_with_lease(claim, lease_lost)
+                    await self._calculate_with_lease(claim, lease_lost)
                 else:
                     try:
                         async with asyncio.timeout(remaining):
-                            result = await self._calculate_with_lease(claim, lease_lost)
+                            await self._calculate_with_lease(claim, lease_lost)
                     except TimeoutError:
                         raise DomainError(
                             410,
                             "data_unavailable",
                             "Private source permission expired during calculation",
                         ) from None
-                if isinstance(result, CalculationOutput):
-                    await self.repository.succeed(
-                        claim, result.analysis, proposals=result.proposals
-                    )
-                else:
-                    await self.repository.succeed(claim, result)
             except asyncio.CancelledError:
                 error = ErrorDetail(
                     code="engine_unavailable",
@@ -118,26 +112,46 @@ class Worker:
                     claim.context.access_scope if isinstance(claim.context, V2JobContext) else None
                 )
                 job = await self.repository.get_job(claim.job.job_id, scope=scope)
+                # Atomic publication can finish just before this heartbeat.
+                # The scoped read verifies the committed run before returning.
+                if job.status == "succeeded":
+                    return
                 if job.status == "cancelled":
                     raise DomainError(503, "job_cancelled", "Calculation was cancelled")
                 raise DomainError(503, "engine_unavailable", "Calculation claim lease expired")
             await asyncio.sleep(min(1, self.repository.lease_seconds / 3))
 
     async def _calculate_with_lease(self, claim: ClaimedJob, lost: asyncio.Event) -> HandlerOutput:
-        calculation = asyncio.create_task(
-            self._calculate(claim, self.handler, self.timeout_seconds)
-        )
+        async def calculate_and_publish() -> HandlerOutput:
+            result = await self._calculate(claim, self.handler, self.timeout_seconds)
+            if isinstance(result, CalculationOutput):
+                await self.repository.succeed(claim, result.analysis, proposals=result.proposals)
+            else:
+                await self.repository.succeed(claim, result)
+            return result
+
+        calculation = asyncio.create_task(calculate_and_publish())
         lease = asyncio.create_task(lost.wait())
         heartbeat = asyncio.create_task(self._monitor_claim(claim))
+        deadline = asyncio.timeout(self.timeout_seconds)
         try:
-            done, _ = await asyncio.wait(
-                (calculation, lease, heartbeat), return_when=asyncio.FIRST_COMPLETED
-            )
-            if lease in done:
-                raise DomainError(503, "engine_unavailable", "Worker database lease was lost")
-            if heartbeat in done:
-                await heartbeat
-            return await calculation
+            async with deadline:
+                done, _ = await asyncio.wait(
+                    (calculation, lease, heartbeat), return_when=asyncio.FIRST_COMPLETED
+                )
+                # A completed publication wins a simultaneous post-commit
+                # heartbeat/session notification. Failures still propagate.
+                if calculation in done:
+                    return await calculation
+                if lease in done:
+                    raise DomainError(503, "engine_unavailable", "Worker database lease was lost")
+                if heartbeat in done:
+                    await heartbeat
+                return await calculation
+        except TimeoutError:
+            if deadline.expired():
+                raise DomainError(503, "job_timeout", "Calculation exceeded hard timeout") from None
+            raise
         finally:
             lease.cancel()
             heartbeat.cancel()
