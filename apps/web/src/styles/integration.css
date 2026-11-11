@@ -131,6 +131,14 @@
   font-weight: 600;
   cursor: pointer;
 }
+.wx-select-popup button[role="option"] > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.wx-select-popup button[role="option"] > .lucide,
+.wx-select-trigger > .lucide {
+  flex-shrink: 0;
+}
 .wx-select-popup button[role="option"]:hover,
 .wx-select-popup button[role="option"]:focus-visible {
   background: var(--surface-2);
@@ -340,7 +348,22 @@
 .api-map-key{position:absolute;left:18px;top:104px;z-index:430;display:flex;align-items:center;gap:8px;padding:8px 10px;max-width:calc(100% - 36px);border-radius:10px;background:var(--surface);color:var(--text-2);font-size:11px}
 .api-reopen{position:absolute;z-index:450;right:18px;top:170px}.api-point-territory,.api-population{font-size:12px;margin:8px 0}.api-calculated-points summary{min-height:38px;padding:8px 0;font-size:12px}
 .idxpill[data-score-band=low]{color:#c72d44}.idxpill[data-score-band=medium]{color:#9a6100}.idxpill[data-score-band=high]{color:#0b8a5c}.idxpill[data-score-band=unknown]{color:var(--text-2)}
-.api-scenario-comparison{margin:12px 0}.api-scenario-comparison>.segc{margin-bottom:10px}.api-comparison-row{margin:10px 0;padding:10px 0;border-bottom:1px solid var(--line);font-size:12px}.api-comparison-values{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.api-comparison-values>span{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:12px;background:var(--surface-2)}.api-comparison-values small{font-size:10px;color:var(--text-3)}.api-comparison-values strong{font-size:17px}.api-comparison-row[data-outcome=improved] .api-comparison-values>span:last-child strong{color:var(--ok)}.api-comparison-row[data-outcome=worsened] .api-comparison-values>span:last-child strong{color:var(--err)}.api-route-details>summary{font-size:12px;font-weight:800}
+.api-scenario-comparison{margin:12px 0}.api-scenario-comparison>.segc{margin-bottom:10px}.api-comparison-row{margin:10px 0;padding:10px 0;border-bottom:1px solid var(--line);font-size:12px}.api-comparison-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}.api-comparison-values>span{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:12px;background:var(--surface-2)}.api-comparison-values small{font-size:10px;color:var(--text-3)}.api-comparison-values strong{font-size:17px;overflow-wrap:anywhere}.api-comparison-row[data-outcome=improved] .api-comparison-values>span:last-child strong{color:var(--ok)}.api-comparison-row[data-outcome=worsened] .api-comparison-values>span:last-child strong{color:var(--err)}.api-route-details>summary{font-size:12px;font-weight:800}
 
 .wx-select-search { position: sticky; top: -6px; padding: 6px 0; background: var(--surface); z-index: 1; }
 .wx-select-search input { width: 100%; }
+
+/* Availability is supplied by the API, so unavailable actions look inactive. */
+.atlas .runbtn:disabled,
+.atlas .td-run:disabled {
+  background: var(--surface-2);
+  color: var(--text-3);
+  border-color: var(--line);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.api-land-outline {
+  fill: var(--surface);
+  stroke: var(--line-2);
+}
