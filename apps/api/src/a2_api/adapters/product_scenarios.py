@@ -7,6 +7,7 @@ operation is evaluated here. Unsupported representations fail before publication
 
 from dataclasses import dataclass
 from typing import Literal, cast
+from uuid import NAMESPACE_URL, uuid5
 from zoneinfo import ZoneInfo
 
 from a2_contracts.common import canonical_hash
@@ -519,7 +520,8 @@ def calculate(
     try:
         result = ScenarioResult(
             schema_version="2",
-            run_id="pending:" + engine.scenario_id,
+            # Physical engine identities may repeat across distinct durable jobs.
+            run_id=str(uuid5(NAMESPACE_URL, "waydex-product-scenario-run:" + claim.job.job_id)),
             scenario_id=command.scenario_id,
             baseline_analysis_id=baseline.analysis_id,
             status="available" if complete else "partial" if known else "unknown",
