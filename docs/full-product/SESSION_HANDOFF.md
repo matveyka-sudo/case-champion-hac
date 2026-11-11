@@ -1,5 +1,52 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Current checkpoint — 2026-11-11, after source47a8 deployment
+
+This section supersedes historical live-source and concurrency statements below.
+Main stand is http://127.0.0.1:5193/ on source47a8e782f5e9b5d519290e30b8fb9d4ae89168cf.
+Root integration branch remains separate from dev; remote PR29 is draft/open,
+base dev91ed5262. No protected-branch merge or history rewriting occurred.
+Current runtime has seven slots including root. Active engineering agents use
+Sol6.1/ultra and full filesystem/network access, approval policy never; no
+restart is needed for those permissions. Original work branches remain intact.
+
+Real Moscow job983784ec-ccd4-47c8-896b-e9f9e42a4914 saved analysis
+09bf842f-a9b7-4dcb-81fc-691584f84281 (hashcf227c5faef238bd0da52959b95b5c9e44020d64b802405757b09fa4905c6f09).
+The first browser admission failed; explicit Retry recovered the SAME job.
+Do not call it first-attempt success. Actual progress and selected-route colors
+were observed;1394 valid journeys/194 clinics, all2361 points,967 unknown.
+Worker282.614745s, peak1,858,297,856B, zeroOOM. Root canonical validation,
+repeat GET equality, foreign404 and independent saved-route equality pass.
+All canonical indices remain null. Local evidence is outside Git under
+`/Users/kirito/waydex-full-runtime/root-moscow-map-progress-47a8-20261111/`,
+especially `root-combined-e2e-receipt.json` and the overview/selection screenshots.
+
+Clean restore is also replayed successfully: graph transportv2 preserves tiles
+directory mtimes required by pinned Valhalla3.5.1/status. Fresh Nschool/walk
+UI job6ed8179c saved analysis6c60fe66;601.315s route,84.1 preliminary score,
+canonical indices null. Root DTO/repeat GET/foreign404 passed. Evidence:
+`root-clean-fourprofile-ui-20261111-v2/root-clean-e2e-receipt.json`.
+Clean web/API/worker are stopped, with their volumes/results and the first
+failed job preserved. Main5193 continues running.
+
+Remote47a8 has five green checks and one backend failure: deadline regression
+test timed out before its intended publication phase (1919pass/9skip/1fail).
+Repair10d00ab+253d805 is integrated; root21 actual-PG tests pass17.84s. Saved
+analysis/job navigation plus af72714 stale-navigation fix are integrated;
+root27 focused UI tests pass. These source changes are not yet on live5193.
+BACKEND6a9bd3e admission correction and FE7e21d6b scenario restore are separate
+deliveries undergoing root verification before the next immutable release.
+
+Next: independently finish those reviews, run combined tests, push and inspect
+CI, then build/source-verify/resource-test and activate a new frozen image.
+Replay automatic cold admission plus GET-only saved analysis/scenario refresh.
+Continue six-profile K/N clinic expansion, real physical-approach audits and
+distinct-building native minimum research in their isolated worktrees. The
+first physical audit stopped before geometry due to missing libexpat.so.1;
+repair the audit image and review its new immutable plan before scanning again.
+No paid Alice/Rasp calls are authorized by this checkpoint; keep the prior
+budget ledger, raw inputs and all PostgreSQL/observation volumes intact.
+
 ## Integrated map/progress and real scenario — 2026-11-11
 
 Live 5193 remains e5e067e. Root source 8271ca1 now includes the selected-route

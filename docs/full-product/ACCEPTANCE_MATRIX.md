@@ -9,7 +9,39 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 
 ## Three-city priority — 2026-11-10 continuation
 
-### Latest gate update — map/progress integrated; clean replay defect confirmed
+### Latest gate update — 2026-11-11, actual map/progress and clean restore
+
+- Live5193 source47a8e782: actual Moscow UI job983784ec saved analysis09bf842f.
+  Root independently validated DTO, identical repeat GET, foreign-session404,
+  exact source-point set and route-time equality with saved-observation replay.
+  1394 journeys/194 clinics,2361 points,5589 map features;391 red/487 amber/
+  516 green/967 unknown. Canonical indices remain null; these colors describe
+  partial observed-route estimates, not proven minima or a city ranking.
+- First admission failed at the browser boundary. Explicit existing Retry
+  recovered the same job without duplication; worker282.614745s, peak
+  1,858,297,856 bytes, zero cgroup OOM events. Actual UI showed40/88,73/88,
+  finalizing88/88 and the colored result; root inspected overview/selection.
+  A whole-admission coalescing correction is under independent review; a
+  stale SELECT-miss race was returned to BACKEND for correction.
+- Clean four-profile restoration now passes after transporting the pinned
+  Valhalla tiles-directory timestamps in addition to bytes. Root actual fresh
+  UI job6ed8179c saved analysis6c60fe66 (N school/walk,601.315s), with canonical
+  validation, repeat GET and foreign404. Clean web/API/worker stopped after
+  acceptance; their volumes/results and the original failed job are retained.
+- Remote47a8 backend CI has1 failure/1919 passes/9 skips: the publication
+  deadline test can time out before reaching its intended gate. The repair
+  preserves production limits and proves the intended phase; root21 real-PG
+  tests pass17.84s. Other five remote checks pass. New-source CI remains due.
+- Saved analysis/job navigation and its stale-response race repair are
+  integrated; root27 focused tests pass. Saved scenario navigation is a
+  separate reviewed delivery in progress; live GET-only restore is still due.
+- Moscow physical-approach audit stopped before geometry processing because
+  the audit image lacks libexpat.so.1. No clear/blocked geometry conclusion
+  follows; a separate native-dependency image repair is in progress.
+- Ignored evidence: `waydex-full-runtime/root-moscow-map-progress-47a8-20261111/`
+  and `root-clean-fourprofile-ui-20261111-v2/`. No paid provider calls added.
+
+### Previous gate update — map/progress integrated; clean replay defect confirmed
 
 - Live e5 Moscow walk and PT/scenario E2E passed. The actual scenario preserves
   baseline and unknown/proof states while changing route time 5595.143→5235.143s.
