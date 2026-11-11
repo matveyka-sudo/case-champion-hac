@@ -5,7 +5,7 @@ import json
 import os
 from collections.abc import Iterator
 from dataclasses import dataclass, field, fields, is_dataclass, replace
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from math import fsum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
@@ -44,6 +44,7 @@ from a2_api.adapters.timetable_source import verify_timetable_source
 from a2_api.core.errors import DomainError
 from a2_api.core.registry import ProductRegistry
 from a2_api.core.runtime_budget import DEFAULT_RUNTIME_SOURCE_BYTES, runtime_source_budget_bytes
+from a2_api.core.truck_routing import TruckRoutingBinding
 
 MAX_DOCUMENT_BYTES = 32 * 1024 * 1024
 MAX_RUNTIME_BYTES = DEFAULT_RUNTIME_SOURCE_BYTES
@@ -123,6 +124,9 @@ class Profile(ContractModel):
     scenarios: list[FileRef] = Field(default_factory=list, max_length=16)
     evidence: list[EvidenceRef] = Field(default_factory=list)
     static_observations: bool = False
+    truck_routing: TruckRoutingBinding | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
     max_route_pairs: int = Field(gt=0, le=100000)
 
 
@@ -189,6 +193,11 @@ def input_fingerprints(
             "traffic_modes": profile.traffic_modes,
             "static_observations": profile.static_observations,
             "passenger_modes": profile.passenger_modes,
+            **(
+                {"truck_routing": profile.truck_routing.model_dump(mode="json")}
+                if profile.truck_routing
+                else {}
+            ),
         }
     )
     return graph, costing
@@ -217,6 +226,12 @@ def validate_inputs(
     demo_transport: Any = None,
 ) -> None:
     expected_kind = "pipeline" if profile.cargo_transport == "pipeline" else profile.analysis_kind
+    if profile.truck_routing is not None:
+        from a2_api.adapters.truck_runtime import validate_binding
+
+        if not isinstance(inputs, UrbanCargoInputs):
+            raise ValueError("TRUCK_EXECUTOR_REQUIRES_CARGO_INPUTS")
+        validate_binding(profile, inputs, snapshot)
     if inputs.kind != expected_kind:
         raise ValueError("RUNTIME_INPUT_KIND_MISMATCH")
     if (profile.graph_fingerprint, profile.routing_profile_fingerprint) != input_fingerprints(
@@ -793,6 +808,8 @@ def load_runtime() -> Runtime:
                 if profile.valid_from >= profile.valid_to:
                     raise ValueError("RUNTIME_PROFILE_VALIDITY_REQUIRED")
                 inputs = None
+                if profile.truck_routing is not None and profile.executor != "accepted_inputs":
+                    raise ValueError("TRUCK_EXECUTOR_REQUIRES_CARGO_INPUTS")
                 if profile.walk_binding is not None and profile.executor != "walk_batches":
                     raise ValueError("WALK_BINDING_REQUIRES_BATCH_EXECUTOR")
                 if profile.executor == "accepted_inputs":
@@ -945,6 +962,19 @@ class RuntimeRegistry(ProductRegistry):
     scenario_template_ids: frozenset[str] = frozenset()
     urban_passenger_scopes: list[UrbanPassengerScope] = []
     snapshot_analysis_kinds: dict[str, list[AnalysisKind]] | None = None
+    truck_cache_expiry_by_snapshot: dict[str, datetime] = {}
+
+    def required_cache_valid_until(
+        self, request: AnalysisRequest, snapshot: AcceptedData
+    ) -> datetime | None:
+        expiry = super().required_cache_valid_until(request, snapshot)
+        truck_expiry = self.truck_cache_expiry_by_snapshot.get(snapshot.snapshot_id)
+        if request.analysis_kind == "urban_cargo" and truck_expiry is not None:
+            # Provider failures must not become indefinitely cached unknown results.
+            # Positive individual routes remain reusable in the worker artifact cache.
+            limit = min(truck_expiry, datetime.now(UTC) + timedelta(minutes=5))
+            return min(expiry, limit) if expiry is not None else limit
+        return expiry
 
     def capabilities(self) -> Capabilities:
         result = super().capabilities()
@@ -982,4 +1012,16 @@ def registry() -> ProductRegistry:
         )
         for snapshot_id in runtime.snapshots
     }
+    for profile, _ in runtime.profiles.values():
+        if profile.truck_routing is not None:
+            # Install an instance-owned mapping, never mutate the class default.
+            result.truck_cache_expiry_by_snapshot = {
+                **result.truck_cache_expiry_by_snapshot,
+                profile.snapshot_id: min(
+                    result.truck_cache_expiry_by_snapshot.get(
+                        profile.snapshot_id, profile.valid_to
+                    ),
+                    profile.valid_to,
+                ),
+            }
     return result

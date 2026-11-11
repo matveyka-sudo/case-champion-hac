@@ -163,6 +163,15 @@ def calculate(
         if row.evidence_id in evidence and evidence[row.evidence_id] != row:
             raise DomainError(409, "incompatible_versions", "Runtime evidence identity collision")
         evidence[row.evidence_id] = row
+    if profile.truck_routing is not None:
+        from a2_api.adapters.truck_runtime import hydrate_routes
+
+        assert isinstance(inputs, UrbanCargoInputs)
+        inputs, observations = hydrate_routes(profile, inputs, snapshot, context)
+        for row in observations:
+            if row.evidence_id in evidence and evidence[row.evidence_id] != row:
+                raise DomainError(409, "incompatible_versions", "Truck evidence identity collision")
+            evidence[row.evidence_id] = row
     out = Projection(context, list(evidence.values()))
     if isinstance(inputs, UrbanInputs):
         assert isinstance(request, UrbanPassengerRequest)
