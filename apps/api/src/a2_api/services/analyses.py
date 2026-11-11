@@ -112,6 +112,11 @@ class AnalysisService:
         request_id: str,
         scope: str,
     ) -> JobAccepted:
+        # An outer replay can return a captured miss after the previous producer
+        # has committed and released its slot. Recheck after reserving this one.
+        replay = await repository.replay("analysis", request, scoped_key, scope=scope)
+        if replay is not None:
+            return JobAccepted(job_id=replay.job_id, status=replay.status, request_id=request_id)
         self._engine(request.analysis_kind)
         normalized = self.registry.normalize(request)
         snapshot = self.registry.resolve_snapshot(normalized)

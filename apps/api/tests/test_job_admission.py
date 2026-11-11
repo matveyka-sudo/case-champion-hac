@@ -338,3 +338,66 @@ async def test_separate_service_instances_still_rely_on_durable_database_idempot
         assert await pool.fetchval("SELECT count(*) FROM jobs") == 1
     finally:
         await asyncio.gather(*(service.close_admission() for service in services))
+
+
+@pytest.mark.asyncio
+async def test_stale_outer_replay_miss_rechecks_durably_after_previous_producer_commits(database):
+    pool, _, _ = database
+    started, preflight_allowed = asyncio.Event(), asyncio.Event()
+    captured_miss, release_miss = asyncio.Event(), asyncio.Event()
+    preflights, enqueues = [], []
+
+    class StaleReadRepository(JobRepository):
+        hold_next_miss = False
+
+        async def replay(self, *args, **kwargs):
+            saved = await super().replay(*args, **kwargs)
+            if saved is None and self.hold_next_miss:
+                self.hold_next_miss = False
+                captured_miss.set()
+                await release_miss.wait()
+            return saved
+
+        async def enqueue(self, *args, **kwargs):
+            enqueues.append(True)
+            return await super().enqueue(*args, **kwargs)
+
+    async def preflight(request, snapshot):
+        preflights.append(True)
+        started.set()
+        await preflight_allowed.wait()
+
+    repository = StaleReadRepository(pool)
+    service = AnalysisService(
+        registry(), repository, code_version="demo-code", engine_enabled=True, preflight=preflight
+    )
+    request = parse_analysis_request(body() | {"city_id": "city-1"})
+    callers = []
+    try:
+        first = asyncio.create_task(
+            service.analyse(request, "TEST_ONLY-stale-read", "first", "owner")
+        )
+        callers.append(first)
+        await started.wait()
+        repository.hold_next_miss = True
+        retry = asyncio.create_task(
+            service.analyse(request, "TEST_ONLY-stale-read", "retry", "owner")
+        )
+        callers.append(retry)
+        await captured_miss.wait()
+        preflight_allowed.set()
+        accepted = await first
+        await until(lambda: service._admission._active is None)
+        assert await pool.fetchval("SELECT count(*) FROM jobs") == 1
+        release_miss.set()
+        recovered = await retry
+        assert recovered.job_id == accepted.job_id
+        assert recovered.request_id == "retry"
+        assert preflights == [True]
+        assert enqueues == [True]
+        assert await pool.fetchval("SELECT count(*) FROM jobs") == 1
+    finally:
+        preflight_allowed.set()
+        release_miss.set()
+        await service.close_admission()
+        await asyncio.gather(*callers, return_exceptions=True)

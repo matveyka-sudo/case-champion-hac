@@ -12,6 +12,9 @@ and the final enqueue. It first checks durable database replay. If no row exists
 the same session-scoped idempotency key and existing request hash attach to the
 pending operation. Each successful caller receives its own response request ID
 and the same persisted job ID. The first request's trace remains the stored trace.
+Every newly reserved producer repeats the durable replay before engine/input
+validation: an earlier outer SELECT may have captured a miss before another
+producer committed, then returned after that producer released its slot.
 
 The operation has one slot per service instance and at most 16 attached callers
 including the original caller. Other new keys or scopes receive the existing
