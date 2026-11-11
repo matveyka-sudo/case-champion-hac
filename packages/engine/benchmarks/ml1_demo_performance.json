@@ -1,0 +1,678 @@
+{
+  "cold": "elapsed subprocess wall time including interpreter startup, imports and report",
+  "memory": "process peak RSS in MiB, cumulative during warm samples",
+  "results": {
+    "baseline": {
+      "cold": {
+        "peak_rss_mib": {
+          "max": 39.765625,
+          "median": 39.734375,
+          "min": 39.65625
+        },
+        "samples": [
+          {
+            "completed_rows": 24,
+            "fixture_preparation_s": 0.024750332988332957,
+            "peak_rss_mib": 39.65625,
+            "per_case_s": {
+              "delivery": [
+                0.01811324997106567,
+                0.015238000021781772,
+                0.012830666964873672,
+                0.011674584005959332,
+                0.011648875020910054,
+                0.012345624971203506
+              ],
+              "passenger": [
+                0.0074165830155834556,
+                0.007330042019020766,
+                0.007255834003444761,
+                0.0071106660179793835,
+                0.021215040993411094,
+                0.012807417020667344
+              ],
+              "urban": [
+                0.5275432919734158,
+                0.5094430840108544,
+                0.4893658339860849
+              ],
+              "urban-cargo": [
+                0.006100792030338198,
+                0.005477958999108523,
+                0.005394915991928428
+              ]
+            },
+            "phases": {
+              "baseline_calculation_s": 1.4703982481150888,
+              "car_replay_and_report_s": 0.21756345592439175
+            },
+            "returned_search_states": {
+              "car_replayed_arcs": 324,
+              "delivery": 36,
+              "reference_settled": 24,
+              "scheduled_frequency": 36,
+              "scheduled_passenger": 36,
+              "urban_timetable": 8748
+            },
+            "startup_s": 0.17816341697471216,
+            "subprocess_pipeline_s": 1.8912372909253463,
+            "wall_s": 1.9415852919919416
+          },
+          {
+            "completed_rows": 24,
+            "fixture_preparation_s": 0.02365495898993686,
+            "peak_rss_mib": 39.734375,
+            "per_case_s": {
+              "delivery": [
+                0.011335666989907622,
+                0.011249584029428661,
+                0.01119649998145178,
+                0.01105816598283127,
+                0.011149084020871669,
+                0.011196834035217762
+              ],
+              "passenger": [
+                0.007454582955688238,
+                0.00724804203491658,
+                0.007328666979447007,
+                0.007182291999924928,
+                0.007211291987914592,
+                0.007277459022589028
+              ],
+              "urban": [
+                0.4771847499650903,
+                0.47629704198334366,
+                0.48779120802646503
+              ],
+              "urban-cargo": [
+                0.0059365000342950225,
+                0.005608749983366579,
+                0.0054097920074127614
+              ]
+            },
+            "phases": {
+              "baseline_calculation_s": 1.3524767100461759,
+              "car_replay_and_report_s": 0.21631337516009808
+            },
+            "returned_search_states": {
+              "car_replayed_arcs": 324,
+              "delivery": 36,
+              "reference_settled": 24,
+              "scheduled_frequency": 36,
+              "scheduled_passenger": 36,
+              "urban_timetable": 8748
+            },
+            "startup_s": 0.18096520798280835,
+            "subprocess_pipeline_s": 1.7737490420113318,
+            "wall_s": 1.8225676249712706
+          },
+          {
+            "completed_rows": 24,
+            "fixture_preparation_s": 0.024731290992349386,
+            "peak_rss_mib": 39.765625,
+            "per_case_s": {
+              "delivery": [
+                0.012249916966538876,
+                0.012863375013694167,
+                0.01230958302039653,
+                0.012552750005852431,
+                0.012181625002995133,
+                0.012227000028360635
+              ],
+              "passenger": [
+                0.007568917004391551,
+                0.007098749978467822,
+                0.007133290986530483,
+                0.010659457999281585,
+                0.011568209039978683,
+                0.007529958034865558
+              ],
+              "urban": [
+                0.47297912498470396,
+                0.46686745900660753,
+                0.49084937502630055
+              ],
+              "urban-cargo": [
+                0.0059697499964386225,
+                0.005454499972984195,
+                0.005359542032238096
+              ]
+            },
+            "phases": {
+              "baseline_calculation_s": 1.349455043906346,
+              "car_replay_and_report_s": 0.22361416509374976
+            },
+            "returned_search_states": {
+              "car_replayed_arcs": 324,
+              "delivery": 36,
+              "reference_settled": 24,
+              "scheduled_frequency": 36,
+              "scheduled_passenger": 36,
+              "urban_timetable": 8748
+            },
+            "startup_s": 0.1862370409653522,
+            "subprocess_pipeline_s": 1.7844031239510514,
+            "wall_s": 1.838000791030936
+          }
+        ],
+        "wall_s": {
+          "max": 1.9415852919919416,
+          "median": 1.838000791030936,
+          "min": 1.8225676249712706
+        }
+      },
+      "profile_exclusive_python_s": {
+        "graph_and_service_preparation": 0.0017029060000000001,
+        "indices_and_population_aggregation": 0.0052195440000000004,
+        "normalized_data_and_result_construction": 0.029944418,
+        "other_engine_python": 0.13219557600000006,
+        "routing_and_chain_selection": 0.21634631300000004,
+        "scenario_overlay_validation_identity_and_effects": 3.3674859730000004,
+        "territory_aggregation": 0.0040465
+      },
+      "warm": {
+        "peak_rss_mib": {
+          "max": 50.234375,
+          "median": 45.8125,
+          "min": 40.171875
+        },
+        "samples": [
+          {
+            "completed_rows": 24,
+            "fixture_preparation_s": 0.0,
+            "peak_rss_mib": 40.171875,
+            "per_case_s": {
+              "delivery": [
+                0.012362958048470318,
+                0.011830832983832806,
+                0.01228850003099069,
+                0.01146287500159815,
+                0.01188549998914823,
+                0.011277290992438793
+              ],
+              "passenger": [
+                0.009138791996520013,
+                0.007587125001009554,
+                0.0075739999883808196,
+                0.007632750028278679,
+                0.007645290985237807,
+                0.007446250005159527
+              ],
+              "urban": [
+                0.4741337079904042,
+                0.4686486249556765,
+                0.47000537504209206
+              ],
+              "urban-cargo": [
+                0.005931083986070007,
+                0.007354833011049777,
+                0.008560500049497932
+              ]
+            },
+            "phases": {
+              "baseline_calculation_s": 1.3241117500583641,
+              "car_replay_and_report_s": 0.22825433406978846
+            },
+            "returned_search_states": {
+              "car_replayed_arcs": 324,
+              "delivery": 36,
+              "reference_settled": 24,
+              "scheduled_frequency": 36,
+              "scheduled_passenger": 36,
+              "urban_timetable": 8748
+            },
+            "startup_s": 0.0,
+            "wall_s": 1.5527884169714525
+          },
+          {
+            "completed_rows": 24,
+            "fixture_preparation_s": 0.0,
+            "peak_rss_mib": 45.8125,
+            "per_case_s": {
+              "delivery": [
+                0.012338458967860788,
+                0.012038041953928769,
+                0.011904542043339461,
+                0.011540167033672333,
+                0.011479125008918345,
+                0.011207624978851527
+              ],
+              "passenger": [
+                0.01229600002989173,
+                0.008677291974890977,
+                0.007786958012729883,
+                0.007864416984375566,
+                0.007453124970197678,
+                0.007582041958812624
+              ],
+              "urban": [
+                0.47634404100244865,
+                0.48465495801065117,
+                0.4678668749984354
+              ],
+              "urban-cargo": [
+                0.006062000000383705,
+                0.005449541960842907,
+                0.005371166975237429
+              ]
+            },
+            "phases": {
+              "baseline_calculation_s": 1.3387581670540385,
+              "car_replay_and_report_s": 0.2287903730175458
+            },
+            "returned_search_states": {
+              "car_replayed_arcs": 324,
+              "delivery": 36,
+              "reference_settled": 24,
+              "scheduled_frequency": 36,
+              "scheduled_passenger": 36,
+              "urban_timetable": 8748
+            },
+            "startup_s": 0.0,
+            "wall_s": 1.5679317500325851
+          },
+          {
+            "completed_rows": 24,
+            "fixture_preparation_s": 0.0,
+            "peak_rss_mib": 50.234375,
+            "per_case_s": {
+              "delivery": [
+                0.011925542028620839,
+                0.011857874982524663,
+                0.01157033396884799,
+                0.011250583047512919,
+                0.011216040991712362,
+                0.011120334034785628
+              ],
+              "passenger": [
+                0.0077237910008989275,
+                0.007596292009111494,
+                0.007407083990983665,
+                0.007653916021808982,
+                0.007469500007573515,
+                0.007570000016130507
+              ],
+              "urban": [
+                0.48671362502500415,
+                0.4711336669861339,
+                0.501890541985631
+              ],
+              "urban-cargo": [
+                0.01045391702791676,
+                0.0056072500301525,
+                0.00607374997343868
+              ]
+            },
+            "phases": {
+              "baseline_calculation_s": 1.3389047920936719,
+              "car_replay_and_report_s": 0.2569919581292197
+            },
+            "returned_search_states": {
+              "car_replayed_arcs": 324,
+              "delivery": 36,
+              "reference_settled": 24,
+              "scheduled_frequency": 36,
+              "scheduled_passenger": 36,
+              "urban_timetable": 8748
+            },
+            "startup_s": 0.0,
+            "wall_s": 1.5962434589746408
+          }
+        ],
+        "wall_s": {
+          "max": 1.5962434589746408,
+          "median": 1.5679317500325851,
+          "min": 1.5527884169714525
+        }
+      }
+    },
+    "scenario": {
+      "cold": {
+        "peak_rss_mib": {
+          "max": 56.59375,
+          "median": 54.859375,
+          "min": 53.453125
+        },
+        "samples": [
+          {
+            "completed_rows": 18,
+            "fixture_preparation_s": 1.3758386250119656,
+            "peak_rss_mib": 54.859375,
+            "per_case_s": {
+              "delivery": [
+                0.060929916973691434,
+                0.060919375042431056,
+                0.060224083019420505,
+                0.05998750001890585,
+                0.05973529099719599,
+                0.05985854199388996
+              ],
+              "passenger": [
+                0.03755187499336898,
+                0.03624687500996515,
+                0.03644966700812802,
+                0.03680820803856477,
+                0.03678708296502009,
+                0.03636916697723791
+              ],
+              "urban": [
+                3.4804402920417488,
+                3.4345190829481,
+                3.485715667018667
+              ],
+              "urban-cargo": [
+                2.666027285158634e-06,
+                1.1249794624745846e-06,
+                1.2500095181167126e-06
+              ]
+            },
+            "phases": {
+              "comparison_report_s": 0.0031405421323142946,
+              "publication_validation_s": 5.48978512303438,
+              "validated_overlay_recomputation_s": 5.479424249089789
+            },
+            "returned_search_states": {
+              "after:delivery": 36,
+              "after:scheduled_frequency": 36,
+              "after:scheduled_passenger": 36,
+              "after:urban_timetable": 17622,
+              "before:delivery": 36,
+              "before:scheduled_frequency": 36,
+              "before:scheduled_passenger": 36,
+              "before:urban_timetable": 17496
+            },
+            "startup_s": 0.2229434170294553,
+            "subprocess_pipeline_s": 12.581348667095881,
+            "wall_s": 12.644484500051476
+          },
+          {
+            "completed_rows": 18,
+            "fixture_preparation_s": 1.3367010420188308,
+            "peak_rss_mib": 56.59375,
+            "per_case_s": {
+              "delivery": [
+                0.05980204098159447,
+                0.05987045803340152,
+                0.06021354196127504,
+                0.06006529199657962,
+                0.059760125004686415,
+                0.05994795903097838
+              ],
+              "passenger": [
+                0.037375207990407944,
+                0.03637445898493752,
+                0.036404334008693695,
+                0.036521875008475035,
+                0.03704641602234915,
+                0.03644008300034329
+              ],
+              "urban": [
+                3.4191137499874458,
+                3.4149442079942673,
+                3.423775957955513
+              ],
+              "urban-cargo": [
+                3.1249946914613247e-06,
+                1.334003172814846e-06,
+                1.0830117389559746e-06
+              ]
+            },
+            "phases": {
+              "comparison_report_s": 0.0032115820213221014,
+              "publication_validation_s": 5.448408458149061,
+              "validated_overlay_recomputation_s": 5.376007500977721
+            },
+            "returned_search_states": {
+              "after:delivery": 36,
+              "after:scheduled_frequency": 36,
+              "after:scheduled_passenger": 36,
+              "after:urban_timetable": 17622,
+              "before:delivery": 36,
+              "before:scheduled_frequency": 36,
+              "before:scheduled_passenger": 36,
+              "before:urban_timetable": 17496
+            },
+            "startup_s": 0.19218741601798683,
+            "subprocess_pipeline_s": 12.366565208067186,
+            "wall_s": 12.428319083002862
+          },
+          {
+            "completed_rows": 18,
+            "fixture_preparation_s": 1.3431787919835187,
+            "peak_rss_mib": 53.453125,
+            "per_case_s": {
+              "delivery": [
+                0.06036341702565551,
+                0.060109624988399446,
+                0.0611975829815492,
+                0.061245958029758185,
+                0.06124349997844547,
+                0.07062225003028288
+              ],
+              "passenger": [
+                0.03807462495751679,
+                0.03845104103675112,
+                0.04012295900611207,
+                0.03692050004610792,
+                0.03707033401587978,
+                0.03651454095961526
+              ],
+              "urban": [
+                3.4412767910398543,
+                3.443480957997963,
+                3.47434183297446
+              ],
+              "urban-cargo": [
+                3.1249946914613247e-06,
+                1.4170072972774506e-06,
+                1.0830117389559746e-06
+              ]
+            },
+            "phases": {
+              "comparison_report_s": 0.0032511239987798035,
+              "publication_validation_s": 5.51219429099001,
+              "validated_overlay_recomputation_s": 5.434929875074886
+            },
+            "returned_search_states": {
+              "after:delivery": 36,
+              "after:scheduled_frequency": 36,
+              "after:scheduled_passenger": 36,
+              "after:urban_timetable": 17622,
+              "before:delivery": 36,
+              "before:scheduled_frequency": 36,
+              "before:scheduled_passenger": 36,
+              "before:urban_timetable": 17496
+            },
+            "startup_s": 0.19037191604729742,
+            "subprocess_pipeline_s": 12.494609041023068,
+            "wall_s": 12.557742457953282
+          }
+        ],
+        "wall_s": {
+          "max": 12.644484500051476,
+          "median": 12.557742457953282,
+          "min": 12.428319083002862
+        }
+      },
+      "profile_exclusive_python_s": {
+        "graph_and_service_preparation": 0.009668899000000002,
+        "indices_and_population_aggregation": 0.033505719999999996,
+        "normalized_data_and_result_construction": 0.16608159800000002,
+        "other_engine_python": 0.7171404629999999,
+        "routing_and_chain_selection": 1.5885955619999999,
+        "scenario_overlay_validation_identity_and_effects": 26.504432145000003,
+        "territory_aggregation": 0.024825108000000002
+      },
+      "warm": {
+        "peak_rss_mib": {
+          "max": 57.828125,
+          "median": 53.59375,
+          "min": 53.59375
+        },
+        "samples": [
+          {
+            "completed_rows": 18,
+            "fixture_preparation_s": 0.0,
+            "peak_rss_mib": 53.59375,
+            "per_case_s": {
+              "delivery": [
+                0.06042304198490456,
+                0.0603947089985013,
+                0.060591707995627075,
+                0.06019300001207739,
+                0.060179041989613324,
+                0.060089459002483636
+              ],
+              "passenger": [
+                0.03764900000533089,
+                0.03720500000054017,
+                0.036623209016397595,
+                0.03659245901508257,
+                0.036400999990291893,
+                0.03637650003656745
+              ],
+              "urban": [
+                3.495216791983694,
+                3.426005916961003,
+                3.43161395896459
+              ],
+              "urban-cargo": [
+                2.333021257072687e-06,
+                1.500011421740055e-06,
+                1.0409858077764511e-06
+              ]
+            },
+            "phases": {
+              "comparison_report_s": 0.003217665886040777,
+              "publication_validation_s": 5.487223750096746,
+              "validated_overlay_recomputation_s": 5.434633583179675
+            },
+            "returned_search_states": {
+              "after:delivery": 36,
+              "after:scheduled_frequency": 36,
+              "after:scheduled_passenger": 36,
+              "after:urban_timetable": 17622,
+              "before:delivery": 36,
+              "before:scheduled_frequency": 36,
+              "before:scheduled_passenger": 36,
+              "before:urban_timetable": 17496
+            },
+            "startup_s": 0.0,
+            "wall_s": 10.935608250030782
+          },
+          {
+            "completed_rows": 18,
+            "fixture_preparation_s": 0.0,
+            "peak_rss_mib": 53.59375,
+            "per_case_s": {
+              "delivery": [
+                0.060329250001814216,
+                0.05978987499838695,
+                0.05994783400092274,
+                0.06014449999202043,
+                0.06050191697431728,
+                0.060297332995105535
+              ],
+              "passenger": [
+                0.03731370798777789,
+                0.036788958008401096,
+                0.03788258298300207,
+                0.036513333034235984,
+                0.03667312499601394,
+                0.03638933302136138
+              ],
+              "urban": [
+                3.5610236669890583,
+                3.4263437499757856,
+                3.4479879999998957
+              ],
+              "urban-cargo": [
+                2.2909953258931637e-06,
+                1.0830117389559746e-06,
+                1.0409858077764511e-06
+              ]
+            },
+            "phases": {
+              "comparison_report_s": 0.00314529292518273,
+              "publication_validation_s": 5.441280502069276,
+              "validated_overlay_recomputation_s": 5.563433083996642
+            },
+            "returned_search_states": {
+              "after:delivery": 36,
+              "after:scheduled_frequency": 36,
+              "after:scheduled_passenger": 36,
+              "after:urban_timetable": 17622,
+              "before:delivery": 36,
+              "before:scheduled_frequency": 36,
+              "before:scheduled_passenger": 36,
+              "before:urban_timetable": 17496
+            },
+            "startup_s": 0.0,
+            "wall_s": 11.017942709033377
+          },
+          {
+            "completed_rows": 18,
+            "fixture_preparation_s": 0.0,
+            "peak_rss_mib": 57.828125,
+            "per_case_s": {
+              "delivery": [
+                0.07127029204275459,
+                0.06207145896041766,
+                0.06082454201532528,
+                0.06040879199281335,
+                0.06088775000534952,
+                0.06126329198013991
+              ],
+              "passenger": [
+                0.0391517499811016,
+                0.037061541981529444,
+                0.037578499992378056,
+                0.03984808298991993,
+                0.03789625002536923,
+                0.03781133401207626
+              ],
+              "urban": [
+                5.290405499981716,
+                3.468570417026058,
+                3.8238404160365462
+              ],
+              "urban-cargo": [
+                2.4579931050539017e-06,
+                1.292035449296236e-06,
+                8.33999365568161e-07
+              ]
+            },
+            "phases": {
+              "comparison_report_s": 0.003389500256162137,
+              "publication_validation_s": 7.10411516809836,
+              "validated_overlay_recomputation_s": 6.070612000126857
+            },
+            "returned_search_states": {
+              "after:delivery": 36,
+              "after:scheduled_frequency": 36,
+              "after:scheduled_passenger": 36,
+              "after:urban_timetable": 17622,
+              "before:delivery": 36,
+              "before:scheduled_frequency": 36,
+              "before:scheduled_passenger": 36,
+              "before:urban_timetable": 17496
+            },
+            "startup_s": 0.0,
+            "wall_s": 13.188905042014085
+          }
+        ],
+        "wall_s": {
+          "max": 13.188905042014085,
+          "median": 11.017942709033377,
+          "min": 10.935608250030782
+        }
+      }
+    }
+  },
+  "states": "returned before/after search counters per workload, excluding validation replay",
+  "units": {
+    "memory": "MiB",
+    "time": "seconds"
+  },
+  "warm": "same process and normalized inputs, scenario baseline frozen once"
+}

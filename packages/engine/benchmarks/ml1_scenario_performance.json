@@ -1,0 +1,139 @@
+{
+  "cold": {
+    "baseline_seconds": {
+      "max": 0.109059791022446,
+      "median": 0.10881495801731944,
+      "min": 0.10875254200072959
+    },
+    "peak_process_bytes": {
+      "max": 38879232,
+      "median": 38879232,
+      "min": 38797312
+    },
+    "simulation_seconds": {
+      "max": 0.28283383301459253,
+      "median": 0.2820482500246726,
+      "min": 0.2809873340302147
+    },
+    "validation_seconds": {
+      "max": 0.28621345799183473,
+      "median": 0.28389520797645673,
+      "min": 0.283632958016824
+    }
+  },
+  "cold_workers": [
+    {
+      "prepare_seconds": 0.0011424999684095383,
+      "samples": [
+        {
+          "after_states": 256,
+          "baseline_seconds": 0.10875254200072959,
+          "before_hash": "551d9889a26b5275707d2cc4473939032ead6244c0365ccb34be3de7faeabb3b",
+          "before_states": 192,
+          "peak_process_bytes": 38797312,
+          "scenario_id": "scenario:d52946518ac2f65df03e51035d547c902fac7e9b262da83c70d3b7fce4c84b23",
+          "simulation_seconds": 0.2809873340302147,
+          "validation_seconds": 0.28621345799183473
+        }
+      ]
+    },
+    {
+      "prepare_seconds": 0.0011701249750331044,
+      "samples": [
+        {
+          "after_states": 256,
+          "baseline_seconds": 0.109059791022446,
+          "before_hash": "551d9889a26b5275707d2cc4473939032ead6244c0365ccb34be3de7faeabb3b",
+          "before_states": 192,
+          "peak_process_bytes": 38879232,
+          "scenario_id": "scenario:d52946518ac2f65df03e51035d547c902fac7e9b262da83c70d3b7fce4c84b23",
+          "simulation_seconds": 0.28283383301459253,
+          "validation_seconds": 0.28389520797645673
+        }
+      ]
+    },
+    {
+      "prepare_seconds": 0.0011896250071004033,
+      "samples": [
+        {
+          "after_states": 256,
+          "baseline_seconds": 0.10881495801731944,
+          "before_hash": "551d9889a26b5275707d2cc4473939032ead6244c0365ccb34be3de7faeabb3b",
+          "before_states": 192,
+          "peak_process_bytes": 38879232,
+          "scenario_id": "scenario:d52946518ac2f65df03e51035d547c902fac7e9b262da83c70d3b7fce4c84b23",
+          "simulation_seconds": 0.2820482500246726,
+          "validation_seconds": 0.283632958016824
+        }
+      ]
+    }
+  ],
+  "jobs": 16,
+  "warm": {
+    "baseline_seconds": {
+      "max": 0.1089430830325,
+      "median": 0.10844529198948294,
+      "min": 0.10823079099645838
+    },
+    "peak_process_bytes": {
+      "max": 43319296,
+      "median": 40976384,
+      "min": 40157184
+    },
+    "simulation_seconds": {
+      "max": 0.28632416599430144,
+      "median": 0.28618354198988527,
+      "min": 0.28479383303783834
+    },
+    "validation_seconds": {
+      "max": 0.2932911249808967,
+      "median": 0.2901714580366388,
+      "min": 0.2870174160343595
+    }
+  },
+  "warm_worker": {
+    "prepare_seconds": 0.0011769999982789159,
+    "samples": [
+      {
+        "after_states": 256,
+        "baseline_seconds": 0.10984112496953458,
+        "before_hash": "551d9889a26b5275707d2cc4473939032ead6244c0365ccb34be3de7faeabb3b",
+        "before_states": 192,
+        "peak_process_bytes": 38895616,
+        "scenario_id": "scenario:d52946518ac2f65df03e51035d547c902fac7e9b262da83c70d3b7fce4c84b23",
+        "simulation_seconds": 0.283963333000429,
+        "validation_seconds": 0.2858826669980772
+      },
+      {
+        "after_states": 256,
+        "baseline_seconds": 0.10844529198948294,
+        "before_hash": "551d9889a26b5275707d2cc4473939032ead6244c0365ccb34be3de7faeabb3b",
+        "before_states": 192,
+        "peak_process_bytes": 40157184,
+        "scenario_id": "scenario:d52946518ac2f65df03e51035d547c902fac7e9b262da83c70d3b7fce4c84b23",
+        "simulation_seconds": 0.28632416599430144,
+        "validation_seconds": 0.2932911249808967
+      },
+      {
+        "after_states": 256,
+        "baseline_seconds": 0.1089430830325,
+        "before_hash": "551d9889a26b5275707d2cc4473939032ead6244c0365ccb34be3de7faeabb3b",
+        "before_states": 192,
+        "peak_process_bytes": 40976384,
+        "scenario_id": "scenario:d52946518ac2f65df03e51035d547c902fac7e9b262da83c70d3b7fce4c84b23",
+        "simulation_seconds": 0.28618354198988527,
+        "validation_seconds": 0.2901714580366388
+      },
+      {
+        "after_states": 256,
+        "baseline_seconds": 0.10823079099645838,
+        "before_hash": "551d9889a26b5275707d2cc4473939032ead6244c0365ccb34be3de7faeabb3b",
+        "before_states": 192,
+        "peak_process_bytes": 43319296,
+        "scenario_id": "scenario:d52946518ac2f65df03e51035d547c902fac7e9b262da83c70d3b7fce4c84b23",
+        "simulation_seconds": 0.28479383303783834,
+        "validation_seconds": 0.2870174160343595
+      }
+    ]
+  }
+}

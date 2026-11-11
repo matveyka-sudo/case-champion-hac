@@ -1,0 +1,3577 @@
+{
+  "baseline_rows_replayed": [
+    {
+      "categories": [
+        {
+          "category": "adult_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 1030.0
+        },
+        {
+          "category": "airport",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 23050.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 8650.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 860.0
+        },
+        {
+          "category": "college_university",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 1720.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 290.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 3250.0
+        },
+        {
+          "category": "school",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 990.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 1890.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 3440.0
+        },
+        {
+          "category": "airport",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 22780.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 6170.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 690.0
+        },
+        {
+          "category": "college_university",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 2090.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 2560.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 4420.0
+        },
+        {
+          "category": "school",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 2510.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 2180.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 2310.0
+        },
+        {
+          "category": "airport",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 26100.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 7060.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 4300.0
+        },
+        {
+          "category": "college_university",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 2280.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 1400.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 1380.0
+        },
+        {
+          "category": "school",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 1900.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 2170.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 3360.0
+        },
+        {
+          "category": "airport",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 25450.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 6070.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 3840.0
+        },
+        {
+          "category": "college_university",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 2000.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 2190.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 720.0
+        },
+        {
+          "category": "school",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 2680.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 2050.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 3820.0
+        },
+        {
+          "category": "airport",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 25540.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 8540.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 6250.0
+        },
+        {
+          "category": "college_university",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 4950.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 3780.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 2220.0
+        },
+        {
+          "category": "school",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 3970.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 4790.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 3150.0
+        },
+        {
+          "category": "airport",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 26390.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 7070.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 5420.0
+        },
+        {
+          "category": "college_university",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 3590.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 2570.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 1900.0
+        },
+        {
+          "category": "school",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 2970.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 3460.0
+        }
+      ],
+      "category_priorities": {
+        "adult_polyclinic": "low",
+        "airport": "low",
+        "bus_terminal": "low",
+        "child_polyclinic": "low",
+        "college_university": "low",
+        "kindergarten": "low",
+        "rail_terminal": "low",
+        "school": "low",
+        "shopping_center": "low"
+      },
+      "city": "moscow",
+      "direct_arc_oracle": "verified",
+      "eligible_within_model": true,
+      "expanded_states": 1134,
+      "h_seconds": 3600.0,
+      "id": "demo-moscow-urban-walk",
+      "index": 50.263263240151325,
+      "index_status": "available",
+      "limitations": [
+        "GEOMETRY_UNAVAILABLE",
+        "TAU_UNAVAILABLE"
+      ],
+      "mode": "walk",
+      "population": 125380.312,
+      "reachable_categories": 54,
+      "scope": "synthetic_ml2_slice",
+      "status": "partial"
+    },
+    {
+      "categories": [
+        {
+          "category": "adult_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 350.0
+        },
+        {
+          "category": "airport",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 5110.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 2000.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 310.0
+        },
+        {
+          "category": "college_university",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 500.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 190.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 830.0
+        },
+        {
+          "category": "school",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 340.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 530.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 870.0
+        },
+        {
+          "category": "airport",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 5050.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 1460.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 270.0
+        },
+        {
+          "category": "college_university",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 580.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 680.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 1080.0
+        },
+        {
+          "category": "school",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 670.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 600.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 620.0
+        },
+        {
+          "category": "airport",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 5770.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 1650.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 1060.0
+        },
+        {
+          "category": "college_university",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 620.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 430.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 420.0
+        },
+        {
+          "category": "school",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 530.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 590.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 850.0
+        },
+        {
+          "category": "airport",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 5630.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 1440.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 960.0
+        },
+        {
+          "category": "college_university",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 560.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 600.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 280.0
+        },
+        {
+          "category": "school",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 700.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 570.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 950.0
+        },
+        {
+          "category": "airport",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 5650.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 1970.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 1480.0
+        },
+        {
+          "category": "college_university",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 1200.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 940.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 600.0
+        },
+        {
+          "category": "school",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 980.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 1160.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 810.0
+        },
+        {
+          "category": "airport",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 5830.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 1650.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 1300.0
+        },
+        {
+          "category": "college_university",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 900.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 680.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 540.0
+        },
+        {
+          "category": "school",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 770.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 870.0
+        }
+      ],
+      "category_priorities": {
+        "adult_polyclinic": "low",
+        "airport": "low",
+        "bus_terminal": "low",
+        "child_polyclinic": "low",
+        "college_university": "low",
+        "kindergarten": "low",
+        "rail_terminal": "low",
+        "school": "low",
+        "shopping_center": "low"
+      },
+      "city": "moscow",
+      "direct_arc_oracle": "verified",
+      "eligible_within_model": true,
+      "expanded_states": null,
+      "h_seconds": 3600.0,
+      "id": "demo-moscow-urban-car",
+      "index": 79.69101957743568,
+      "index_status": "available",
+      "limitations": [
+        "GEOMETRY_UNAVAILABLE",
+        "TAU_UNAVAILABLE"
+      ],
+      "mode": "private_car",
+      "population": 125380.312,
+      "reachable_categories": 54,
+      "scope": "synthetic_ml2_slice",
+      "status": "partial"
+    },
+    {
+      "categories": [
+        {
+          "category": "adult_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 1530.0
+        },
+        {
+          "category": "airport",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "bus_terminal",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 1030.0
+        },
+        {
+          "category": "college_university",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": null
+        },
+        {
+          "category": "kindergarten",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 1010.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": null
+        },
+        {
+          "category": "school",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": 1000.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "moscow-utm37n-1km-v1-e411-n6178-p",
+          "status": "available",
+          "time_s": null
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": null
+        },
+        {
+          "category": "airport",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "bus_terminal",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 1040.0
+        },
+        {
+          "category": "college_university",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": null
+        },
+        {
+          "category": "kindergarten",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": 2870.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": null
+        },
+        {
+          "category": "school",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": null
+        },
+        {
+          "category": "shopping_center",
+          "point": "moscow-utm37n-1km-v1-e411-n6181-p",
+          "status": "available",
+          "time_s": null
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 2320.0
+        },
+        {
+          "category": "airport",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "bus_terminal",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 2310.0
+        },
+        {
+          "category": "college_university",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 1460.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 1520.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 1760.0
+        },
+        {
+          "category": "school",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 1620.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "moscow-utm37n-1km-v1-e415-n6178-p",
+          "status": "available",
+          "time_s": 1280.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 3550.0
+        },
+        {
+          "category": "airport",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "bus_terminal",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 3210.0
+        },
+        {
+          "category": "college_university",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 2440.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 2610.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 3620.0
+        },
+        {
+          "category": "school",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 2820.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "moscow-utm37n-1km-v1-e415-n6180-p",
+          "status": "available",
+          "time_s": 2290.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 3520.0
+        },
+        {
+          "category": "airport",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "bus_terminal",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 4110.0
+        },
+        {
+          "category": "college_university",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 2660.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 2720.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 3010.0
+        },
+        {
+          "category": "school",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 2820.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "moscow-utm37n-1km-v1-e416-n6175-p",
+          "status": "available",
+          "time_s": 2480.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 2920.0
+        },
+        {
+          "category": "airport",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "bus_terminal",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 3210.0
+        },
+        {
+          "category": "college_university",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 2060.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 2120.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 1970.0
+        },
+        {
+          "category": "school",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 2220.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "moscow-utm37n-1km-v1-e416-n6177-p",
+          "status": "available",
+          "time_s": 1880.0
+        }
+      ],
+      "category_priorities": {
+        "adult_polyclinic": "low",
+        "airport": "low",
+        "bus_terminal": "low",
+        "child_polyclinic": "low",
+        "college_university": "low",
+        "kindergarten": "low",
+        "rail_terminal": "low",
+        "school": "low",
+        "shopping_center": "low"
+      },
+      "city": "moscow",
+      "direct_arc_oracle": null,
+      "eligible_within_model": false,
+      "expanded_states": 4311,
+      "h_seconds": 3600.0,
+      "id": "demo-moscow-urban-pt",
+      "index": null,
+      "index_status": "unknown",
+      "limitations": [
+        "GEOMETRY_UNAVAILABLE",
+        "INCOMPLETE_COVERAGE",
+        "NO_FEASIBLE_ROUTE",
+        "PHYSICAL_BOUNDARY_CONNECTOR_UNAVAILABLE",
+        "POINT_INDEX_UNAVAILABLE",
+        "TAU_UNAVAILABLE"
+      ],
+      "mode": "public_transport",
+      "population": 125380.312,
+      "reachable_categories": 34,
+      "scope": "synthetic_ml2_slice",
+      "status": "partial"
+    },
+    {
+      "categories": [
+        {
+          "category": "adult_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 2650.0
+        },
+        {
+          "category": "airport",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 5940.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 4610.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 800.0
+        },
+        {
+          "category": "college_university",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 1920.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 2760.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 1920.0
+        },
+        {
+          "category": "school",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 2560.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 2210.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 1420.0
+        },
+        {
+          "category": "airport",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 4670.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 3500.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 1150.0
+        },
+        {
+          "category": "college_university",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 650.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 1470.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 610.0
+        },
+        {
+          "category": "school",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 1250.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 950.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 1400.0
+        },
+        {
+          "category": "airport",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 1810.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 870.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 3100.0
+        },
+        {
+          "category": "college_university",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 2150.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 1440.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 960.0
+        },
+        {
+          "category": "school",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 1820.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 1860.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 700.0
+        },
+        {
+          "category": "airport",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 3450.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 2580.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 2320.0
+        },
+        {
+          "category": "college_university",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 350.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 400.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 720.0
+        },
+        {
+          "category": "school",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 180.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 620.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 1550.0
+        },
+        {
+          "category": "airport",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 2280.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 1450.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 3520.0
+        },
+        {
+          "category": "college_university",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 1700.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 1290.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 2060.0
+        },
+        {
+          "category": "school",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 1420.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 1770.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 2820.0
+        },
+        {
+          "category": "airport",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 4180.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 1910.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 3970.0
+        },
+        {
+          "category": "college_university",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 2270.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 2460.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 2580.0
+        },
+        {
+          "category": "school",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 2310.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 2690.0
+        }
+      ],
+      "category_priorities": {
+        "adult_polyclinic": "low",
+        "airport": "low",
+        "bus_terminal": "low",
+        "child_polyclinic": "low",
+        "college_university": "low",
+        "kindergarten": "low",
+        "rail_terminal": "low",
+        "school": "low",
+        "shopping_center": "low"
+      },
+      "city": "kaliningrad",
+      "direct_arc_oracle": "verified",
+      "eligible_within_model": true,
+      "expanded_states": 1134,
+      "h_seconds": 1800.0,
+      "id": "demo-kaliningrad-urban-walk",
+      "index": 49.84792301353547,
+      "index_status": "available",
+      "limitations": [
+        "GEOMETRY_UNAVAILABLE",
+        "TAU_UNAVAILABLE"
+      ],
+      "mode": "walk",
+      "population": 64613.621,
+      "reachable_categories": 54,
+      "scope": "synthetic_ml2_slice",
+      "status": "partial"
+    },
+    {
+      "categories": [
+        {
+          "category": "adult_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 580.0
+        },
+        {
+          "category": "airport",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 1150.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 920.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 260.0
+        },
+        {
+          "category": "college_university",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 460.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 600.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 460.0
+        },
+        {
+          "category": "school",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 570.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 510.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 370.0
+        },
+        {
+          "category": "airport",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 930.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 730.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 320.0
+        },
+        {
+          "category": "college_university",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 240.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 380.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 230.0
+        },
+        {
+          "category": "school",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 340.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 290.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 370.0
+        },
+        {
+          "category": "airport",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 440.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 280.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 660.0
+        },
+        {
+          "category": "college_university",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 500.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 370.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 290.0
+        },
+        {
+          "category": "school",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 440.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 450.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 250.0
+        },
+        {
+          "category": "airport",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 720.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 570.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 530.0
+        },
+        {
+          "category": "college_university",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 180.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 190.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 250.0
+        },
+        {
+          "category": "school",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 180.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 230.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 390.0
+        },
+        {
+          "category": "airport",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 520.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 380.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 730.0
+        },
+        {
+          "category": "college_university",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 420.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 350.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 480.0
+        },
+        {
+          "category": "school",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 370.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 430.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 610.0
+        },
+        {
+          "category": "airport",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 850.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 460.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 810.0
+        },
+        {
+          "category": "college_university",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 520.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 550.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 570.0
+        },
+        {
+          "category": "school",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 520.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 590.0
+        }
+      ],
+      "category_priorities": {
+        "adult_polyclinic": "low",
+        "airport": "low",
+        "bus_terminal": "low",
+        "child_polyclinic": "low",
+        "college_university": "low",
+        "kindergarten": "low",
+        "rail_terminal": "low",
+        "school": "low",
+        "shopping_center": "low"
+      },
+      "city": "kaliningrad",
+      "direct_arc_oracle": "verified",
+      "eligible_within_model": true,
+      "expanded_states": null,
+      "h_seconds": 1800.0,
+      "id": "demo-kaliningrad-urban-car",
+      "index": 83.48158302069058,
+      "index_status": "available",
+      "limitations": [
+        "GEOMETRY_UNAVAILABLE",
+        "TAU_UNAVAILABLE"
+      ],
+      "mode": "private_car",
+      "population": 64613.621,
+      "reachable_categories": 54,
+      "scope": "synthetic_ml2_slice",
+      "status": "partial"
+    },
+    {
+      "categories": [
+        {
+          "category": "adult_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": null
+        },
+        {
+          "category": "airport",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "bus_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": null
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": 1190.0
+        },
+        {
+          "category": "college_university",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": null
+        },
+        {
+          "category": "kindergarten",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": null
+        },
+        {
+          "category": "rail_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": null
+        },
+        {
+          "category": "school",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": null
+        },
+        {
+          "category": "shopping_center",
+          "point": "kaliningrad-utm34n-1km-v1-e466-n6065-p",
+          "status": "available",
+          "time_s": null
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 1470.0
+        },
+        {
+          "category": "airport",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "bus_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 3980.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 1240.0
+        },
+        {
+          "category": "college_university",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 1450.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 1500.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 1500.0
+        },
+        {
+          "category": "school",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 1390.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "kaliningrad-utm34n-1km-v1-e467-n6064-p",
+          "status": "available",
+          "time_s": 1180.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 1680.0
+        },
+        {
+          "category": "airport",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "bus_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 2920.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 2770.0
+        },
+        {
+          "category": "college_university",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 1750.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 2200.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 2140.0
+        },
+        {
+          "category": "school",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 1910.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6061-p",
+          "status": "available",
+          "time_s": 1910.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 920.0
+        },
+        {
+          "category": "airport",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "bus_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 3080.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 1870.0
+        },
+        {
+          "category": "college_university",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 390.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 960.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 780.0
+        },
+        {
+          "category": "school",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 550.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "kaliningrad-utm34n-1km-v1-e468-n6063-p",
+          "status": "available",
+          "time_s": 640.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 1520.0
+        },
+        {
+          "category": "airport",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "bus_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 2070.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 2770.0
+        },
+        {
+          "category": "college_university",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 1150.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 1600.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 1540.0
+        },
+        {
+          "category": "school",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 1310.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "kaliningrad-utm34n-1km-v1-e469-n6062-p",
+          "status": "available",
+          "time_s": 1310.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 2120.0
+        },
+        {
+          "category": "airport",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "bus_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 1930.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 3670.0
+        },
+        {
+          "category": "college_university",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 1750.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 2200.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 2140.0
+        },
+        {
+          "category": "school",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 1910.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+          "status": "available",
+          "time_s": 1910.0
+        }
+      ],
+      "category_priorities": {
+        "adult_polyclinic": "low",
+        "airport": "low",
+        "bus_terminal": "low",
+        "child_polyclinic": "low",
+        "college_university": "low",
+        "kindergarten": "low",
+        "rail_terminal": "low",
+        "school": "low",
+        "shopping_center": "low"
+      },
+      "city": "kaliningrad",
+      "direct_arc_oracle": null,
+      "eligible_within_model": false,
+      "expanded_states": 23799,
+      "h_seconds": 1800.0,
+      "id": "demo-kaliningrad-urban-pt",
+      "index": null,
+      "index_status": "unknown",
+      "limitations": [
+        "GEOMETRY_UNAVAILABLE",
+        "INCOMPLETE_COVERAGE",
+        "NO_FEASIBLE_ROUTE",
+        "PHYSICAL_BOUNDARY_CONNECTOR_UNAVAILABLE",
+        "POINT_INDEX_UNAVAILABLE",
+        "TAU_UNAVAILABLE"
+      ],
+      "mode": "public_transport",
+      "population": 64613.621,
+      "reachable_categories": 41,
+      "scope": "synthetic_ml2_slice",
+      "status": "partial"
+    },
+    {
+      "categories": [
+        {
+          "category": "adult_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 1490.0
+        },
+        {
+          "category": "airport",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 3210.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 1590.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 1730.0
+        },
+        {
+          "category": "college_university",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 2030.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 1520.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 2450.0
+        },
+        {
+          "category": "school",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 2210.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 2090.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 2780.0
+        },
+        {
+          "category": "airport",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 6300.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 3100.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 3110.0
+        },
+        {
+          "category": "college_university",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 2740.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 3040.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 2970.0
+        },
+        {
+          "category": "school",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 2230.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 2800.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 300.0
+        },
+        {
+          "category": "airport",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 3500.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 520.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 570.0
+        },
+        {
+          "category": "college_university",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 90.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 540.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 1750.0
+        },
+        {
+          "category": "school",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 250.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 100.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 1950.0
+        },
+        {
+          "category": "airport",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 5440.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 2540.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 2190.0
+        },
+        {
+          "category": "college_university",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 1870.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 2180.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 3590.0
+        },
+        {
+          "category": "school",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 1770.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 1930.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 1100.0
+        },
+        {
+          "category": "airport",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 4510.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 1820.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 1270.0
+        },
+        {
+          "category": "college_university",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 1000.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 1270.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 2660.0
+        },
+        {
+          "category": "school",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 1100.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 1060.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 1740.0
+        },
+        {
+          "category": "airport",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 1830.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 2130.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 1680.0
+        },
+        {
+          "category": "college_university",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 2050.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 1700.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 510.0
+        },
+        {
+          "category": "school",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 2280.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 2000.0
+        }
+      ],
+      "category_priorities": {
+        "adult_polyclinic": "low",
+        "airport": "low",
+        "bus_terminal": "low",
+        "child_polyclinic": "low",
+        "college_university": "low",
+        "kindergarten": "low",
+        "rail_terminal": "low",
+        "school": "low",
+        "shopping_center": "low"
+      },
+      "city": "novorossiysk",
+      "direct_arc_oracle": "verified",
+      "eligible_within_model": true,
+      "expanded_states": 1134,
+      "h_seconds": 2400.0,
+      "id": "demo-novorossiysk-urban-walk",
+      "index": 58.71836206409953,
+      "index_status": "available",
+      "limitations": [
+        "GEOMETRY_UNAVAILABLE",
+        "TAU_UNAVAILABLE"
+      ],
+      "mode": "walk",
+      "population": 43815.494,
+      "reachable_categories": 54,
+      "scope": "synthetic_ml2_slice",
+      "status": "partial"
+    },
+    {
+      "categories": [
+        {
+          "category": "adult_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 380.0
+        },
+        {
+          "category": "airport",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 680.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 400.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 420.0
+        },
+        {
+          "category": "college_university",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 480.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 390.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 550.0
+        },
+        {
+          "category": "school",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 510.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 490.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 610.0
+        },
+        {
+          "category": "airport",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 1210.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 660.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 660.0
+        },
+        {
+          "category": "college_university",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 600.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 650.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 640.0
+        },
+        {
+          "category": "school",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 510.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 610.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 180.0
+        },
+        {
+          "category": "airport",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 730.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 210.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 220.0
+        },
+        {
+          "category": "college_university",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 180.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 220.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 430.0
+        },
+        {
+          "category": "school",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 180.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 180.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 460.0
+        },
+        {
+          "category": "airport",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 1070.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 560.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 500.0
+        },
+        {
+          "category": "college_university",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 450.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 500.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 750.0
+        },
+        {
+          "category": "school",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 430.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 460.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 310.0
+        },
+        {
+          "category": "airport",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 900.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 440.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 340.0
+        },
+        {
+          "category": "college_university",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 300.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 340.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 580.0
+        },
+        {
+          "category": "school",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 320.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 310.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 430.0
+        },
+        {
+          "category": "airport",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 440.0
+        },
+        {
+          "category": "bus_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 490.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 410.0
+        },
+        {
+          "category": "college_university",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 480.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 420.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 210.0
+        },
+        {
+          "category": "school",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 520.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 470.0
+        }
+      ],
+      "category_priorities": {
+        "adult_polyclinic": "low",
+        "airport": "low",
+        "bus_terminal": "low",
+        "child_polyclinic": "low",
+        "college_university": "low",
+        "kindergarten": "low",
+        "rail_terminal": "low",
+        "school": "low",
+        "shopping_center": "low"
+      },
+      "city": "novorossiysk",
+      "direct_arc_oracle": "verified",
+      "eligible_within_model": true,
+      "expanded_states": null,
+      "h_seconds": 2400.0,
+      "id": "demo-novorossiysk-urban-car",
+      "index": 87.28447516403962,
+      "index_status": "available",
+      "limitations": [
+        "GEOMETRY_UNAVAILABLE",
+        "TAU_UNAVAILABLE"
+      ],
+      "mode": "private_car",
+      "population": 43815.494,
+      "reachable_categories": 54,
+      "scope": "synthetic_ml2_slice",
+      "status": "partial"
+    },
+    {
+      "categories": [
+        {
+          "category": "adult_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 1490.0
+        },
+        {
+          "category": "airport",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "bus_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "unknown",
+          "time_s": 2180.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 1750.0
+        },
+        {
+          "category": "college_university",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": null
+        },
+        {
+          "category": "kindergarten",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 2310.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "unknown",
+          "time_s": 2750.0
+        },
+        {
+          "category": "school",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": 2530.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "novorossiysk-utm37n-1km-v1-e400-n4953-p",
+          "status": "available",
+          "time_s": null
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 2060.0
+        },
+        {
+          "category": "airport",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "bus_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "unknown",
+          "time_s": 2160.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 2300.0
+        },
+        {
+          "category": "college_university",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 1720.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 2230.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "unknown",
+          "time_s": 4100.0
+        },
+        {
+          "category": "school",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 1950.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4949-p",
+          "status": "available",
+          "time_s": 1840.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 320.0
+        },
+        {
+          "category": "airport",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "bus_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "unknown",
+          "time_s": 550.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 550.0
+        },
+        {
+          "category": "college_university",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 100.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 550.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "unknown",
+          "time_s": 2300.0
+        },
+        {
+          "category": "school",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 270.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "novorossiysk-utm37n-1km-v1-e402-n4952-p",
+          "status": "available",
+          "time_s": 100.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 1460.0
+        },
+        {
+          "category": "airport",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "bus_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "unknown",
+          "time_s": 1560.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 1700.0
+        },
+        {
+          "category": "college_university",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 1120.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 1630.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "unknown",
+          "time_s": 3200.0
+        },
+        {
+          "category": "school",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 1350.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4950-p",
+          "status": "available",
+          "time_s": 1240.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 860.0
+        },
+        {
+          "category": "airport",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "bus_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "unknown",
+          "time_s": 960.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 1070.0
+        },
+        {
+          "category": "college_university",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 520.0
+        },
+        {
+          "category": "kindergarten",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 1030.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "unknown",
+          "time_s": 2300.0
+        },
+        {
+          "category": "school",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 750.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4951-p",
+          "status": "available",
+          "time_s": 640.0
+        },
+        {
+          "category": "adult_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 1760.0
+        },
+        {
+          "category": "airport",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "unknown",
+          "time_s": null
+        },
+        {
+          "category": "bus_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "unknown",
+          "time_s": 2130.0
+        },
+        {
+          "category": "child_polyclinic",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 1700.0
+        },
+        {
+          "category": "college_university",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": null
+        },
+        {
+          "category": "kindergarten",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 2260.0
+        },
+        {
+          "category": "rail_terminal",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "unknown",
+          "time_s": 2930.0
+        },
+        {
+          "category": "school",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": 2530.0
+        },
+        {
+          "category": "shopping_center",
+          "point": "novorossiysk-utm37n-1km-v1-e403-n4954-p",
+          "status": "available",
+          "time_s": null
+        }
+      ],
+      "category_priorities": {
+        "adult_polyclinic": "low",
+        "airport": "low",
+        "bus_terminal": "low",
+        "child_polyclinic": "low",
+        "college_university": "low",
+        "kindergarten": "low",
+        "rail_terminal": "low",
+        "school": "low",
+        "shopping_center": "low"
+      },
+      "city": "novorossiysk",
+      "direct_arc_oracle": null,
+      "eligible_within_model": false,
+      "expanded_states": 6386,
+      "h_seconds": 2400.0,
+      "id": "demo-novorossiysk-urban-pt",
+      "index": null,
+      "index_status": "unknown",
+      "limitations": [
+        "GEOMETRY_UNAVAILABLE",
+        "INCOMPLETE_COVERAGE",
+        "NO_FEASIBLE_ROUTE",
+        "PHYSICAL_BOUNDARY_CONNECTOR_UNAVAILABLE",
+        "POINT_INDEX_UNAVAILABLE",
+        "TAU_UNAVAILABLE"
+      ],
+      "mode": "public_transport",
+      "population": 43815.494,
+      "reachable_categories": 44,
+      "scope": "synthetic_ml2_slice",
+      "status": "partial"
+    }
+  ],
+  "comparisons": [
+    {
+      "after": {
+        "initial_wait_s": 290.0,
+        "minimum_proven": true,
+        "status": "reachable",
+        "total_s": 3260.0,
+        "transfer_wait_s": 120.0
+      },
+      "all_effects_proven": false,
+      "analysis_kind": "urban_passenger",
+      "before": {
+        "initial_wait_s": 290.0,
+        "minimum_proven": true,
+        "status": "reachable",
+        "total_s": 4040.0,
+        "transfer_wait_s": 140.0
+      },
+      "control_path": "control/cmp-demo-moscow-urban-pt-coordinate_transfer.json",
+      "declared_status": "scenario_contract_v2",
+      "expected_by_ml2": {
+        "after": {
+          "initial_wait_s": 290.0,
+          "total_s": 3260.0,
+          "transfer_wait_s": 120.0
+        },
+        "before": {
+          "initial_wait_s": 290.0,
+          "total_s": 4040.0,
+          "transfer_wait_s": 140.0
+        }
+      },
+      "feasibility": "unverified",
+      "id": "cmp-demo-moscow-urban-pt-coordinate_transfer",
+      "matches_ml2_control": true,
+      "operation": "coordinate_transfer",
+      "replayed": true,
+      "scenario_id": "scenario:1459cb78457fe5e3c3364362e9d3ecc3af4875ca55b9e7c852b02a94cbc67d86"
+    },
+    {
+      "after": {
+        "initial_wait_s": 290.0,
+        "minimum_proven": true,
+        "status": "reachable",
+        "total_s": 3590.0,
+        "transfer_wait_s": 70.0
+      },
+      "all_effects_proven": false,
+      "analysis_kind": "urban_passenger",
+      "before": {
+        "initial_wait_s": 290.0,
+        "minimum_proven": true,
+        "status": "reachable",
+        "total_s": 4040.0,
+        "transfer_wait_s": 140.0
+      },
+      "control_path": "control/cmp-demo-moscow-urban-pt-additional_departure.json",
+      "declared_status": "scenario_contract_v2",
+      "expected_by_ml2": {
+        "after": {
+          "initial_wait_s": 290.0,
+          "total_s": 3590.0,
+          "transfer_wait_s": 70.0
+        },
+        "before": {
+          "initial_wait_s": 290.0,
+          "total_s": 4040.0,
+          "transfer_wait_s": 140.0
+        }
+      },
+      "feasibility": "feasible",
+      "id": "cmp-demo-moscow-urban-pt-additional_departure",
+      "matches_ml2_control": true,
+      "operation": "additional_departure",
+      "replayed": true,
+      "scenario_id": "scenario:c75ec8e841b2ec73567d9468e803a1f63082859131b7ac960e14d569ced73859"
+    },
+    {
+      "after": {
+        "initial_wait_s": 400.0,
+        "minimum_proven": true,
+        "status": "reachable",
+        "total_s": 2890.0,
+        "transfer_wait_s": 120.0
+      },
+      "all_effects_proven": false,
+      "analysis_kind": "urban_passenger",
+      "before": {
+        "initial_wait_s": 70.0,
+        "minimum_proven": true,
+        "status": "reachable",
+        "total_s": 3670.0,
+        "transfer_wait_s": 80.0
+      },
+      "control_path": "control/cmp-demo-kaliningrad-urban-pt-coordinate_transfer.json",
+      "declared_status": "scenario_contract_v2",
+      "expected_by_ml2": {
+        "after": {
+          "initial_wait_s": 400.0,
+          "total_s": 2890.0,
+          "transfer_wait_s": 120.0
+        },
+        "before": {
+          "initial_wait_s": 70.0,
+          "total_s": 3670.0,
+          "transfer_wait_s": 80.0
+        }
+      },
+      "feasibility": "unverified",
+      "id": "cmp-demo-kaliningrad-urban-pt-coordinate_transfer",
+      "matches_ml2_control": true,
+      "operation": "coordinate_transfer",
+      "replayed": true,
+      "scenario_id": "scenario:7ae1a48cd56908c8daa7282d27d05ca50c3c9196382b869d2f8bddb43464faf2"
+    },
+    {
+      "after": {
+        "initial_wait_s": 400.0,
+        "minimum_proven": true,
+        "status": "reachable",
+        "total_s": 3220.0,
+        "transfer_wait_s": 10.0
+      },
+      "all_effects_proven": false,
+      "analysis_kind": "urban_passenger",
+      "before": {
+        "initial_wait_s": 70.0,
+        "minimum_proven": true,
+        "status": "reachable",
+        "total_s": 3670.0,
+        "transfer_wait_s": 80.0
+      },
+      "control_path": "control/cmp-demo-kaliningrad-urban-pt-additional_departure.json",
+      "declared_status": "scenario_contract_v2",
+      "expected_by_ml2": {
+        "after": {
+          "initial_wait_s": 400.0,
+          "total_s": 3220.0,
+          "transfer_wait_s": 10.0
+        },
+        "before": {
+          "initial_wait_s": 70.0,
+          "total_s": 3670.0,
+          "transfer_wait_s": 80.0
+        }
+      },
+      "feasibility": "feasible",
+      "id": "cmp-demo-kaliningrad-urban-pt-additional_departure",
+      "matches_ml2_control": true,
+      "operation": "additional_departure",
+      "replayed": true,
+      "scenario_id": "scenario:1978303d0dcadd44169cdb1c2be3d02f894ff8275ba32563dc0c04baf68c899b"
+    },
+    {
+      "after": {
+        "initial_wait_s": 580.0,
+        "minimum_proven": true,
+        "status": "reachable",
+        "total_s": 3320.0,
+        "transfer_wait_s": 120.0
+      },
+      "all_effects_proven": false,
+      "analysis_kind": "urban_passenger",
+      "before": {
+        "initial_wait_s": 280.0,
+        "minimum_proven": true,
+        "status": "reachable",
+        "total_s": 4100.0,
+        "transfer_wait_s": 140.0
+      },
+      "control_path": "control/cmp-demo-novorossiysk-urban-pt-coordinate_transfer.json",
+      "declared_status": "scenario_contract_v2",
+      "expected_by_ml2": {
+        "after": {
+          "initial_wait_s": 580.0,
+          "total_s": 3320.0,
+          "transfer_wait_s": 120.0
+        },
+        "before": {
+          "initial_wait_s": 280.0,
+          "total_s": 4100.0,
+          "transfer_wait_s": 140.0
+        }
+      },
+      "feasibility": "unverified",
+      "id": "cmp-demo-novorossiysk-urban-pt-coordinate_transfer",
+      "matches_ml2_control": true,
+      "operation": "coordinate_transfer",
+      "replayed": true,
+      "scenario_id": "scenario:64a384eef215adc93378f8f98b72a7917a02caa9d27d1ccb81738a32ce93b9fb"
+    },
+    {
+      "after": {
+        "initial_wait_s": 580.0,
+        "minimum_proven": true,
+        "status": "reachable",
+        "total_s": 3650.0,
+        "transfer_wait_s": 130.0
+      },
+      "all_effects_proven": false,
+      "analysis_kind": "urban_passenger",
+      "before": {
+        "initial_wait_s": 280.0,
+        "minimum_proven": true,
+        "status": "reachable",
+        "total_s": 4100.0,
+        "transfer_wait_s": 140.0
+      },
+      "control_path": "control/cmp-demo-novorossiysk-urban-pt-additional_departure.json",
+      "declared_status": "scenario_contract_v2",
+      "expected_by_ml2": {
+        "after": {
+          "initial_wait_s": 580.0,
+          "total_s": 3650.0,
+          "transfer_wait_s": 130.0
+        },
+        "before": {
+          "initial_wait_s": 280.0,
+          "total_s": 4100.0,
+          "transfer_wait_s": 140.0
+        }
+      },
+      "feasibility": "feasible",
+      "id": "cmp-demo-novorossiysk-urban-pt-additional_departure",
+      "matches_ml2_control": true,
+      "operation": "additional_departure",
+      "replayed": true,
+      "scenario_id": "scenario:56f3a2281510b508fca6b86f8b3cfb41e04ea73892a48e26e7e687a967f6cc94"
+    },
+    {
+      "analysis_kind": "intercity_passenger",
+      "control_path": "control/cmp-demo-ic-moscow--kaliningrad-additional_departure.json",
+      "declared_status": "scenario_contract_v2_operation; intercity context not accepted by the current API",
+      "id": "cmp-demo-ic-moscow--kaliningrad-additional_departure",
+      "operation": "additional_departure",
+      "replayed": false
+    },
+    {
+      "analysis_kind": "intercity_passenger",
+      "control_path": "control/cmp-demo-ic-kaliningrad--moscow-additional_departure.json",
+      "declared_status": "scenario_contract_v2_operation; intercity context not accepted by the current API",
+      "id": "cmp-demo-ic-kaliningrad--moscow-additional_departure",
+      "operation": "additional_departure",
+      "replayed": false
+    },
+    {
+      "analysis_kind": "intercity_passenger",
+      "control_path": "control/cmp-demo-ic-moscow--novorossiysk-additional_departure.json",
+      "declared_status": "scenario_contract_v2_operation; intercity context not accepted by the current API",
+      "id": "cmp-demo-ic-moscow--novorossiysk-additional_departure",
+      "operation": "additional_departure",
+      "replayed": false
+    },
+    {
+      "analysis_kind": "intercity_passenger",
+      "control_path": "control/cmp-demo-ic-novorossiysk--moscow-additional_departure.json",
+      "declared_status": "scenario_contract_v2_operation; intercity context not accepted by the current API",
+      "id": "cmp-demo-ic-novorossiysk--moscow-additional_departure",
+      "operation": "additional_departure",
+      "replayed": false
+    },
+    {
+      "analysis_kind": "intercity_passenger",
+      "control_path": "control/cmp-demo-ic-kaliningrad--novorossiysk-coordinate_transfer.json",
+      "declared_status": "scenario_contract_v2_operation; intercity context not accepted by the current API",
+      "id": "cmp-demo-ic-kaliningrad--novorossiysk-coordinate_transfer",
+      "operation": "coordinate_transfer",
+      "replayed": false
+    },
+    {
+      "analysis_kind": "intercity_passenger",
+      "control_path": "control/cmp-demo-ic-novorossiysk--kaliningrad-coordinate_transfer.json",
+      "declared_status": "scenario_contract_v2_operation; intercity context not accepted by the current API",
+      "id": "cmp-demo-ic-novorossiysk--kaliningrad-coordinate_transfer",
+      "operation": "coordinate_transfer",
+      "replayed": false
+    },
+    {
+      "analysis_kind": "urban_cargo",
+      "control_path": "control/cmp-demo-moscow-cargo-urban-reduce_handling_wait.json",
+      "declared_status": "requires_contract_change: cargo operations are not in scenarios v2",
+      "id": "cmp-demo-moscow-cargo-urban-reduce_handling_wait",
+      "operation": "reduce_handling_wait",
+      "replayed": false
+    },
+    {
+      "analysis_kind": "urban_cargo",
+      "control_path": "control/cmp-demo-kaliningrad-cargo-urban-reduce_handling_wait.json",
+      "declared_status": "requires_contract_change: cargo operations are not in scenarios v2",
+      "id": "cmp-demo-kaliningrad-cargo-urban-reduce_handling_wait",
+      "operation": "reduce_handling_wait",
+      "replayed": false
+    },
+    {
+      "analysis_kind": "urban_cargo",
+      "control_path": "control/cmp-demo-novorossiysk-cargo-urban-reduce_handling_wait.json",
+      "declared_status": "requires_contract_change: cargo operations are not in scenarios v2",
+      "id": "cmp-demo-novorossiysk-cargo-urban-reduce_handling_wait",
+      "operation": "reduce_handling_wait",
+      "replayed": false
+    },
+    {
+      "analysis_kind": "intercity_cargo",
+      "control_path": "control/cmp-demo-icc-moscow--kaliningrad-reduce_transshipment_time.json",
+      "declared_status": "requires_contract_change: cargo operations are not in scenarios v2",
+      "id": "cmp-demo-icc-moscow--kaliningrad-reduce_transshipment_time",
+      "operation": "reduce_transshipment_time",
+      "replayed": false
+    },
+    {
+      "analysis_kind": "intercity_cargo",
+      "control_path": "control/cmp-demo-icc-kaliningrad--moscow-add_compatible_departure.json",
+      "declared_status": "requires_contract_change: cargo operations are not in scenarios v2",
+      "id": "cmp-demo-icc-kaliningrad--moscow-add_compatible_departure",
+      "operation": "add_compatible_departure",
+      "replayed": false
+    },
+    {
+      "analysis_kind": "intercity_cargo",
+      "control_path": "control/cmp-demo-icc-moscow--novorossiysk-add_compatible_departure.json",
+      "declared_status": "requires_contract_change: cargo operations are not in scenarios v2",
+      "id": "cmp-demo-icc-moscow--novorossiysk-add_compatible_departure",
+      "operation": "add_compatible_departure",
+      "replayed": false
+    },
+    {
+      "analysis_kind": "intercity_cargo",
+      "control_path": "control/cmp-demo-icc-novorossiysk--moscow-reduce_transshipment_time.json",
+      "declared_status": "requires_contract_change: cargo operations are not in scenarios v2",
+      "id": "cmp-demo-icc-novorossiysk--moscow-reduce_transshipment_time",
+      "operation": "reduce_transshipment_time",
+      "replayed": false
+    },
+    {
+      "analysis_kind": "intercity_cargo",
+      "control_path": "control/cmp-demo-icc-kaliningrad--novorossiysk-reduce_transshipment_time.json",
+      "declared_status": "requires_contract_change: cargo operations are not in scenarios v2",
+      "id": "cmp-demo-icc-kaliningrad--novorossiysk-reduce_transshipment_time",
+      "operation": "reduce_transshipment_time",
+      "replayed": false
+    },
+    {
+      "analysis_kind": "intercity_cargo",
+      "control_path": "control/cmp-demo-icc-novorossiysk--kaliningrad-add_compatible_departure.json",
+      "declared_status": "requires_contract_change: cargo operations are not in scenarios v2",
+      "id": "cmp-demo-icc-novorossiysk--kaliningrad-add_compatible_departure",
+      "operation": "add_compatible_departure",
+      "replayed": false
+    }
+  ],
+  "dataset_id": "waydex-demo-2026-11-11.1",
+  "declared_baselines": 24,
+  "manifest_sha256": "578c140cd8e82129fcec11ab8d9b41d0a8590225bb27f70b33f31d3c187a7cb6",
+  "scope": "external_ml2_synthetic_bundle",
+  "seed": 20261111,
+  "source_commit": "0225db8ed1f7ffbd50d3fdba7e895339f3544ca7",
+  "verified_files": 77
+}
