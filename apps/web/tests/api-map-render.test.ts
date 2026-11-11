@@ -7,7 +7,7 @@ import { pointOverviewFixture } from "./fixtures/point-overview";
 
 const fake = vi.hoisted(() => {
   const bounds = { extend: vi.fn(), isValid: () => true };
-  const map = { fitBounds: vi.fn(), setView: vi.fn(), invalidateSize: vi.fn(), remove: vi.fn(), getZoom: () => 10, panInside: vi.fn(), setZoomAround: vi.fn() };
+  const map = { createPane: () => ({ style: {} }), fitBounds: vi.fn(), setView: vi.fn(), invalidateSize: vi.fn(), remove: vi.fn(), getZoom: () => 10, panInside: vi.fn(), setZoomAround: vi.fn() };
   map.fitBounds.mockReturnValue(map);
   const group = { addTo: vi.fn(), clearLayers: vi.fn() };
   group.addTo.mockReturnValue(group);
@@ -32,6 +32,7 @@ vi.mock("leaflet", () => ({ default: {
 beforeEach(() => {
   vi.clearAllMocks();
   vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 404 })));
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 

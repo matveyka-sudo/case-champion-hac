@@ -1,6 +1,7 @@
 """Exact bounded label search with waiting as a resource, plus static walk access."""
 
 import heapq
+from bisect import bisect_left
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import ROUND_FLOOR, Decimal
@@ -78,6 +79,32 @@ def usable_runs(timetable: Timetable) -> tuple[TimetableRun, ...]:
     )
 
 
+type _TransferKey = tuple[str, str, str | None, str | None]
+
+
+def _index_transfers(timetable: Timetable) -> dict[_TransferKey, TimetableTransfer]:
+    return {
+        (r.from_node_id, r.to_node_id, r.from_run_id, r.to_run_id): r for r in timetable.transfers
+    }
+
+
+def _indexed_transfer_rule(
+    rules: dict[_TransferKey, TimetableTransfer],
+    origin: str,
+    target: str,
+    previous_id: str,
+    current_id: str,
+) -> TimetableTransfer | None:
+    exact = rules.get((origin, target, previous_id, current_id))
+    if exact is not None:
+        return exact
+    from_rule = rules.get((origin, target, previous_id, None))
+    to_rule = rules.get((origin, target, None, current_id))
+    if from_rule is not None and to_rule is not None:
+        raise ValueError("AMBIGUOUS_TRANSFER_RULE")
+    return from_rule or to_rule or rules.get((origin, target, None, None))
+
+
 def transfer_rule(
     timetable: Timetable,
     previous: TimetableRun,
@@ -85,25 +112,13 @@ def transfer_rule(
     current: TimetableRun,
     board_index: int,
 ) -> TimetableTransfer | None:
-    origin = previous.events[alight_index].node_id
-    target = current.events[board_index].node_id
-    matches = [
-        r
-        for r in timetable.transfers
-        if r.from_node_id == origin
-        and r.to_node_id == target
-        and r.from_run_id in (None, previous.run_id)
-        and r.to_run_id in (None, current.run_id)
-    ]
-    if not matches:
-        return None
-    specificity = max((r.from_run_id is not None) + (r.to_run_id is not None) for r in matches)
-    chosen = [
-        r for r in matches if (r.from_run_id is not None) + (r.to_run_id is not None) == specificity
-    ]
-    if len(chosen) != 1:
-        raise ValueError("AMBIGUOUS_TRANSFER_RULE")
-    return chosen[0]
+    return _indexed_transfer_rule(
+        _index_transfers(timetable),
+        previous.events[alight_index].node_id,
+        current.events[board_index].node_id,
+        previous.run_id,
+        current.run_id,
+    )
 
 
 @dataclass(frozen=True)
@@ -150,21 +165,20 @@ def solve_timetable(
         raise ValueError("SEARCH_ENDPOINT_OUTSIDE_TIMETABLE_SCOPE")
     max_wait = finite_number(max_wait_seconds, "max_wait_seconds")
     wait_budget = int((Decimal(str(max_wait)) * 1000000).to_integral_value(rounding=ROUND_FLOOR))
-    runs = {r.run_id: r for r in usable_runs(timetable)}
+    runs = {r.run_id: r for r in usable_runs(timetable)} if allow_transit else {}
     if first_boarding is not None and (
         first_boarding[0] not in runs
         or not any(e.sequence == first_boarding[1] for e in runs[first_boarding[0]].events)
     ):
         raise ValueError("UNKNOWN_FIRST_BOARDING_EVENT")
-    board_at: dict[str, list[tuple[TimetableRun, int]]] = {}
-    for run in runs.values():
+    board_at: dict[str, list[tuple[datetime, str, int]]] = {}
+    for run_id, run in runs.items():
         for i, event in enumerate(run.events[:-1]):
             if event.pickup:
-                board_at.setdefault(event.node_id, []).append((run, i))
+                board_at.setdefault(event.node_id, []).append((event.departure_at, run_id, i))
     for boardings in board_at.values():
-        boardings.sort(
-            key=lambda pair: (pair[0].events[pair[1]].departure_at, pair[0].run_id, pair[1])
-        )
+        boardings.sort()
+    transfers = _index_transfers(timetable) if allow_transit else {}
     walks: dict[str, list[TimetableFootpath]] = {}
     for path in timetable.footpaths:
         if path.usable:
@@ -300,24 +314,28 @@ def solve_timetable(
             )
         if not allow_transit:
             continue
-        for run, index in board_at.get(label.node, []):
+        boardings = board_at.get(label.node, [])
+        first = bisect_left(boardings, (label.at, "", 0))
+        for boarding in range(first, len(boardings)):
+            _, run_id, index = boardings[boarding]
+            run = runs[run_id]
             event = run.events[index]
-            if event.departure_at < label.at:
-                continue
             if (
                 not label.boardings
                 and first_boarding is not None
-                and (run.run_id, event.sequence) != first_boarding
+                and (run_id, event.sequence) != first_boarding
             ):
                 continue
             extra_evidence: tuple[str, ...] = ()
             if label.alight is not None:
                 prior_id, prior_index = label.alight
                 # Reboarding the same event cannot improve staying aboard, and would fake a transfer.
-                if (prior_id, prior_index) == (run.run_id, index):
+                if (prior_id, prior_index) == (run_id, index):
                     continue
                 prior = runs[prior_id]
-                rule = transfer_rule(timetable, prior, prior_index, run, index)
+                rule = _indexed_transfer_rule(
+                    transfers, prior.events[prior_index].node_id, event.node_id, prior_id, run_id
+                )
                 if (
                     rule is None
                     or rule.allowed is None
@@ -346,7 +364,7 @@ def solve_timetable(
                         label.at,
                         event.departure_at,
                         run.transport_type,
-                        run.run_id,
+                        run_id,
                         refs(event.evidence_refs + extra_evidence),
                     ),
                 )
@@ -359,7 +377,7 @@ def solve_timetable(
                     event.departure_at,
                     following.arrival_at,
                     run.transport_type,
-                    run.run_id,
+                    run_id,
                     refs(
                         event.evidence_refs
                         + following.evidence_refs
@@ -373,10 +391,10 @@ def solve_timetable(
                     following.node_id,
                     following.arrival_at,
                     label.waiting + waiting,
-                    (run.run_id, index + 1),
+                    (run_id, index + 1),
                     None,
                     steps,
-                    label.boardings + ((run.run_id, event.sequence, event.departure_at),),
+                    label.boardings + ((run_id, event.sequence, event.departure_at),),
                 )
             )
     if interrupted:

@@ -4,6 +4,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 
 from a2_engine.freight.delivery.search import analyze_intercity_cargo
+from a2_engine.scenario.bindings import timetable_execution_key, timetable_physical_ids
 from a2_engine.scenario.identity import scenario_hash
 from a2_engine.scenario.models import (
     ScenarioBaseline,
@@ -11,6 +12,7 @@ from a2_engine.scenario.models import (
     ScenarioFeasibilityInputs,
     ScenarioOperation,
     ScenarioOverlay,
+    ScenarioResourceLink,
 )
 from a2_engine.shared.normalized import advance, duration
 
@@ -23,6 +25,22 @@ class _Occupancy:
     end_at: datetime
     definite: bool
     calendar_known: bool
+
+
+def _add_resource_link(
+    links: dict[tuple[str, str], ScenarioResourceLink],
+    key: tuple[str, str],
+    link: ScenarioResourceLink,
+) -> None:
+    previous = links.get(key)
+    if previous is not None:
+        if previous.minimum_seconds != link.minimum_seconds:
+            raise ValueError("CONFLICTING_GLOBAL_RESOURCE_LINK")
+        link = replace(
+            link,
+            evidence_refs=tuple(sorted(set(previous.evidence_refs + link.evidence_refs))),
+        )
+    links[key] = link
 
 
 def check_scenario_feasibility(
@@ -51,24 +69,17 @@ def check_scenario_feasibility(
     evidence = set(inputs.evidence_refs)
     networks: dict[str, dict[str, _Occupancy]] = {}
     physical: dict[str, str] = {}
-    identities = {
-        run_id: group.physical_service_id
-        for dataset in overlay.inputs.timetables
-        for group in dataset.physical_services
-        for run_id in group.run_ids
-    }
+    identities = timetable_physical_ids(overlay.inputs.timetables)
     for dataset in overlay.inputs.timetables:
         rows = {}
         for run in dataset.timetable.runs:
-            identity = scenario_hash(
-                (run.snapshot_id, run.service_date, identities.get(run.run_id, run.run_id))
-            )
+            identity = scenario_hash(timetable_execution_key(run, identities))
             physical[run.run_id] = identity
             rows[run.run_id] = _Occupancy(
                 run.run_id,
                 identity,
-                run.events[0].departure_at,
-                run.events[-1].arrival_at,
+                run.events[0].arrival_at,
+                run.events[-1].departure_at,
                 run.active is True
                 and bool(run.calendar_evidence_refs)
                 and all(e.evidence_refs for e in run.events),
@@ -148,10 +159,35 @@ def check_scenario_feasibility(
     if not inputs.infrastructure_confirmed:
         reasons.add("INFRASTRUCTURE_CONSTRAINTS_UNVERIFIED")
     affected = set(overlay.affected_execution_ids)
-    if affected - set(inputs.covered_execution_ids):
+    covered = set(inputs.covered_execution_ids)
+    if (
+        operation.template_id == "additional_departure"
+        and operation.new_run is not None
+        and operation.new_physical_service is not None
+    ):
+        # Feed-local copies of the approved new execution use the same resource.
+        approved_id = operation.new_run.run_id
+        approved_identity = physical.get(approved_id)
+        if (
+            approved_id in covered
+            and approved_identity is not None
+            and identities.get(approved_id) == operation.new_physical_service.physical_service_id
+        ):
+            unverified_aliases = {
+                row.execution_id
+                for rows in networks.values()
+                for row in rows.values()
+                if row.physical_id == approved_identity and not row.definite
+            }
+            covered.update(
+                run_id
+                for run_id in affected - unverified_aliases
+                if physical.get(run_id) == approved_identity
+            )
+    if affected - covered:
         reasons.add("AFFECTED_EXECUTION_COVERAGE_UNVERIFIED")
     resource_rows: dict[str, dict[str, _Occupancy]] = {}
-    resource_links: dict[str, dict[tuple[str, str], float]] = {}
+    resource_links: dict[str, dict[tuple[str, str], ScenarioResourceLink]] = {}
     assigned: dict[str, str] = {}
     resources = set()
     seen_blocks = set()
@@ -161,18 +197,28 @@ def check_scenario_feasibility(
         seen_blocks.add((block.network_id, block.resource_id))
         resources.add(block.resource_id)
         evidence.update(block.evidence_refs)
-        for accepted_link in block.links:
-            key = accepted_link.previous_run_id, accepted_link.next_run_id
-            bucket = resource_links.setdefault(block.resource_id, {})
-            if key in bucket and bucket[key] != accepted_link.minimum_seconds:
-                raise ValueError("CONFLICTING_GLOBAL_RESOURCE_LINK")
-            bucket[key] = accepted_link.minimum_seconds
         if block.network_id not in networks:
             raise ValueError("FEASIBILITY_DATASET_MISSING")
         rows = networks[block.network_id]
+        raw_links = {(link.previous_run_id, link.next_run_id): link for link in block.links}
+        if len(raw_links) != len(block.links):
+            raise ValueError("DUPLICATE_RESOURCE_TURNAROUND_RULE")
+        links: dict[tuple[str, str], ScenarioResourceLink] = {}
+        global_links = resource_links.setdefault(block.resource_id, {})
+        for (previous_id, next_id), link in raw_links.items():
+            key = (
+                rows[previous_id].physical_id
+                if previous_id in rows
+                else physical.get(previous_id, "unbound:" + previous_id),
+                rows[next_id].physical_id
+                if next_id in rows
+                else physical.get(next_id, "unbound:" + next_id),
+            )
+            _add_resource_link(links, key, link)
+            _add_resource_link(global_links, key, link)
         if set(block.run_ids) - rows.keys():
             reasons.add("EXECUTION_OCCUPANCY_UNVERIFIED")
-        unique = {}
+        unique: dict[str, _Occupancy] = {}
         for run_id in block.run_ids:
             if run_id not in rows:
                 continue
@@ -185,8 +231,11 @@ def check_scenario_feasibility(
             if row.physical_id in assigned and assigned[row.physical_id] != block.resource_id:
                 raise ValueError("PHYSICAL_EXECUTION_ASSIGNED_MULTIPLE_RESOURCES")
             assigned[row.physical_id] = block.resource_id
-            unique[row.physical_id] = row
-            resource_rows.setdefault(block.resource_id, {})[row.physical_id] = row
+            if row.definite or row.physical_id not in unique:
+                unique[row.physical_id] = row
+            assignments = resource_rows.setdefault(block.resource_id, {})
+            if row.definite or row.physical_id not in assignments:
+                assignments[row.physical_id] = row
             if not row.definite:
                 reasons.add("EXECUTION_PROCESSING_OCCUPANCY_UNVERIFIED")
             if not row.calendar_known:
@@ -220,9 +269,6 @@ def check_scenario_feasibility(
                 and ordered[-1].definite
             ):
                 violations.add("RESOURCE_RELEASE_MINIMUM_VIOLATED")
-        links = {(link.previous_run_id, link.next_run_id): link for link in block.links}
-        if len(links) != len(block.links):
-            raise ValueError("DUPLICATE_RESOURCE_TURNAROUND_RULE")
         for previous, current in zip(ordered, ordered[1:]):
             if current.start_at < previous.end_at:
                 (violations if previous.definite and current.definite else reasons).add(
@@ -231,12 +277,12 @@ def check_scenario_feasibility(
                     else "RESOURCE_OVERLAP_UNVERIFIED"
                 )
                 continue
-            link = links.get((previous.execution_id, current.execution_id))
-            if link is None:
+            selected_link = links.get((previous.physical_id, current.physical_id))
+            if selected_link is None:
                 reasons.add("TURNAROUND_UNVERIFIED")
             else:
-                evidence.update(link.evidence_refs)
-                if current.start_at - previous.end_at < duration(link.minimum_seconds):
+                evidence.update(selected_link.evidence_refs)
+                if current.start_at - previous.end_at < duration(selected_link.minimum_seconds):
                     (violations if previous.definite and current.definite else reasons).add(
                         "TURNAROUND_MINIMUM_VIOLATED"
                         if previous.definite and current.definite
@@ -262,17 +308,19 @@ def check_scenario_feasibility(
                     else "RESOURCE_OVERLAP_UNVERIFIED"
                 )
             else:
-                accepted = resource_links.get(resource_id, {}).get(
-                    (previous.execution_id, current.execution_id)
+                accepted = resource_links[resource_id].get(
+                    (previous.physical_id, current.physical_id)
                 )
                 if accepted is None:
                     reasons.add("TURNAROUND_UNVERIFIED")
-                elif current.start_at - previous.end_at < duration(accepted):
-                    (violations if previous.definite and current.definite else reasons).add(
-                        "TURNAROUND_MINIMUM_VIOLATED"
-                        if previous.definite and current.definite
-                        else "TURNAROUND_UNVERIFIED"
-                    )
+                else:
+                    evidence.update(accepted.evidence_refs)
+                    if current.start_at - previous.end_at < duration(accepted.minimum_seconds):
+                        (violations if previous.definite and current.definite else reasons).add(
+                            "TURNAROUND_MINIMUM_VIOLATED"
+                            if previous.definite and current.definite
+                            else "TURNAROUND_UNVERIFIED"
+                        )
     if any(physical.get(run_id, run_id) not in assigned for run_id in affected):
         reasons.add("AFFECTED_RESOURCE_ASSIGNMENT_MISSING")
     state = "infeasible" if violations else "unverified" if reasons else "feasible"

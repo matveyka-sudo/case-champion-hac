@@ -21,7 +21,7 @@ const drawn = vi.hoisted(() => ({
 vi.mock("leaflet", () => ({
   default: {
     map: () => {
-      const map = { fitBounds: () => { drawn.commands.push("home"); return map; }, invalidateSize: vi.fn(), remove: vi.fn(), getZoom: () => 10,
+      const map = { createPane: () => ({ style: {} }), fitBounds: () => { drawn.commands.push("home"); return map; }, invalidateSize: vi.fn(), remove: vi.fn(), getZoom: () => 10,
         zoomIn: () => drawn.commands.push("in"), zoomOut: () => drawn.commands.push("out"),
         setZoomAround: (location: unknown, zoom: number) => drawn.zooms.push({ location, zoom }),
         setView: (center: unknown, zoom: number) => { drawn.views.push({ center, zoom }); drawn.commands.push("city"); return map; },
@@ -78,6 +78,7 @@ beforeEach(() => {
   drawn.boundsInputs.length = 0;
   drawn.order.length = 0;
   vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 404 })));
 });
 describe("explicit calculated-point focus", () => {
   it("focuses a source-backed Moscow selection before analysis once and never initiates a calculation", () => {

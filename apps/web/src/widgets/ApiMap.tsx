@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
+import { feature } from "topojson-client";
+import type { GeometryCollection, Topology } from "topojson-specification";
 import type { GeoJsonObject } from "geojson";
 import type { AnalysisResult, Schemas, Selection } from "../api/types";
 import { selectionText } from "../api/adapters/result";
@@ -9,8 +11,13 @@ import { displayedCategory, pointScorePresentation, observedScoreLabel } from ".
 import type { Category } from "../api/types";
 const moscowCamera = (result: AnalysisResult | null) => isDemoModelSnapshot(result?.snapshot_id) || (result?.request.analysis_kind === "urban_passenger" && result.request.city_id === "moscow");
 
-// City presentation camera; accepted source points and calculation scope are unchanged.
-const showDemoCenter = (map: L.Map) => map.setView([55.75, 37.62], 10, { animate: false });
+// Map camera anchors for the three pilot cities, independent of routing inputs.
+const pilotCenters: Record<string, L.LatLngTuple> = {
+  moscow: [55.75, 37.62],
+  kaliningrad: [54.71, 20.51],
+  novorossiysk: [44.72, 37.77],
+};
+const showDemoCenter = (map: L.Map) => map.setView(pilotCenters.moscow, 10, { animate: false });
 type FeatureLayer = { layer: L.GeoJSON; style: L.PathOptions; markers: L.CircleMarker[] };
 const featureKey = (kind: string, id: string) => `${kind}:${id}`;
 function selectLayer(item: FeatureLayer, selected: boolean) {
@@ -109,6 +116,27 @@ export function ApiMap({
       [82, 190],
     ]);
     map.current = m;
+    // Keep a neutral land outline visible when remote street tiles are slow or unavailable.
+    const landRequest = new AbortController();
+    const landPane = m.createPane("localLand");
+    landPane.style.zIndex = "150";
+    void fetch("/data/land-50m.json", { signal: landRequest.signal })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const topology = await response.json() as Topology<{ land: GeometryCollection }>;
+        if (landRequest.signal.aborted) return;
+        const landOptions: L.GeoJSONOptions & L.PathOptions = {
+          pane: "localLand",
+          renderer: L.svg({ pane: "localLand" }),
+          interactive: false,
+          attribution: "Natural Earth",
+          className: "api-land-outline",
+          weight: 1,
+          fillOpacity: 1,
+        };
+        L.geoJSON(feature(topology, topology.objects.land), landOptions).addTo(m);
+      })
+      .catch(() => { /* Street tiles and result geometry are independent of this outline. */ });
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       className: "tl-osm",
       attribution: "© OpenStreetMap",
@@ -121,6 +149,7 @@ export function ApiMap({
     const ro = new ResizeObserver(() => m.invalidateSize({ pan: false }));
     ro.observe(host.current);
     return () => {
+      landRequest.abort();
       ro.disconnect();
       m.remove();
       map.current = null;
@@ -131,7 +160,8 @@ export function ApiMap({
   useEffect(() => {
     if (result || cityId === lastCity.current || !map.current) return;
     lastCity.current = cityId || "";
-    if (cityId === "moscow") showDemoCenter(map.current);
+    const center = cityId ? pilotCenters[cityId] : undefined;
+    if (center) map.current.setView(center, 10, { animate: false });
   }, [cityId, result]);
   useEffect(() => {
     const m = map.current,
@@ -309,7 +339,10 @@ export function ApiMap({
       const bounds = L.latLngBounds(positions);
       if (bounds.isValid()) m.fitBounds(bounds, { padding: [30, 30], maxZoom: 14, animate: false });
     }
-    else if (zoomAction.kind === "home" && (moscowCamera(result) || (!result && cityId === "moscow"))) showDemoCenter(m);
+    else if (zoomAction.kind === "home" && moscowCamera(result)) showDemoCenter(m);
+    else if (zoomAction.kind === "home" && !result && cityId && pilotCenters[cityId]) {
+      m.setView(pilotCenters[cityId], 10, { animate: false });
+    }
     else if (zoomAction.kind === "selection") {
       const target = result?.map_data?.features?.find((f) => f.entity_kind === selection?.entity_kind &&
         (f.entity_id === selection.entity_id || f.point_id === selection.entity_id));

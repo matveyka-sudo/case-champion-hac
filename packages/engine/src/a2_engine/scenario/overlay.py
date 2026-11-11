@@ -2,17 +2,24 @@
 
 from dataclasses import replace
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 from a2_engine.freight.delivery.search import analyze_intercity_cargo
 from a2_engine.intercity.analysis.identity import normalize_physical_services
 from a2_engine.routing.timetable import transfer_rule, walk_access_paths
-from a2_engine.routing.timetable_models import TimetableRun
+from a2_engine.routing.timetable_models import Timetable, TimetableRun, microseconds
+from a2_engine.scenario.bindings import (
+    stop_pattern,
+    timetable_execution_key,
+    timetable_physical_ids,
+)
 from a2_engine.scenario.identity import scenario_hash
 from a2_engine.scenario.models import (
     ScenarioBaseline,
     ScenarioEventChange,
     ScenarioOperation,
     ScenarioOverlay,
+    ScenarioTimetable,
 )
 
 SCENARIO_TEMPLATES = ("coordinate_transfer", "additional_departure")
@@ -88,13 +95,26 @@ def _shift_run(run: TimetableRun, operation: ScenarioOperation) -> TimetableRun:
     return replace(run, events=tuple(events))
 
 
-def _confirm_transfer(before: object, after: object, operation: ScenarioOperation) -> None:
-    from a2_engine.routing.timetable_models import Timetable
+def _confirm_transfer(
+    dataset: ScenarioTimetable, normalized: Timetable, operation: ScenarioOperation
+) -> None:
+    runs = {run.run_id: run for run in dataset.timetable.runs}
+    physical_ids = timetable_physical_ids((dataset,))
+    unaliased = runs.keys() - physical_ids.keys()
+    canonical_runs = {
+        (run.trip_id, run.service_date): run
+        for run in normalized.runs
+        if run.run_id not in unaliased
+    }
 
-    if not isinstance(before, Timetable) or not isinstance(after, Timetable):
-        raise ValueError("TIMETABLE_REQUIRED")
-    incoming = next((r for r in before.runs if r.run_id == operation.incoming_execution_id), None)
-    outgoing = next((r for r in after.runs if r.run_id == operation.execution_id), None)
+    def resolve(run_id: str) -> TimetableRun | None:
+        run = runs.get(run_id)
+        if run is None or run_id not in physical_ids:
+            return run
+        return canonical_runs[physical_ids[run_id], run.service_date]
+
+    incoming = resolve(operation.incoming_execution_id)
+    outgoing = resolve(operation.execution_id)
     if (
         incoming is None
         or outgoing is None
@@ -115,9 +135,13 @@ def _confirm_transfer(before: object, after: object, operation: ScenarioOperatio
         raise ValueError("TRANSFER_PICKUP_DROPOFF_REQUIRED")
     i, arrival = previous[0]
     j, departure = following[0]
+    if not any(e.pickup for e in incoming.events[:i]) or not any(
+        e.dropoff for e in outgoing.events[j + 1 :]
+    ):
+        raise ValueError("TRANSFER_PICKUP_DROPOFF_REQUIRED")
     if not arrival.evidence_refs or not departure.evidence_refs:
         raise ValueError("ACCEPTED_STOP_EVENT_PROOF_REQUIRED")
-    rule = transfer_rule(before, incoming, i, outgoing, j)
+    rule = transfer_rule(normalized, incoming, i, outgoing, j)
     if (
         rule is None
         or rule.allowed is not True
@@ -125,12 +149,14 @@ def _confirm_transfer(before: object, after: object, operation: ScenarioOperatio
         or not rule.evidence_refs
     ):
         raise ValueError("ACCEPTED_TRANSFER_RULE_REQUIRED")
-    walks, _, interrupted = walk_access_paths(before, arrival.node_id)
+    walks, _, interrupted = walk_access_paths(normalized, arrival.node_id)
     if interrupted or departure.node_id not in walks:
         raise ValueError("ACCEPTED_TRANSFER_PATH_REQUIRED")
-    walking_seconds = walks[departure.node_id][0] / 1e6
-    required = max(walking_seconds, rule.minimum_seconds)
-    if (departure.departure_at - arrival.arrival_at).total_seconds() < required:
+    available = microseconds(departure.departure_at - arrival.arrival_at)
+    if (
+        available < walks[departure.node_id][0]
+        or Decimal(available) < Decimal(str(rule.minimum_seconds)) * 1000000
+    ):
         raise ValueError("SCENARIO_DOES_NOT_COORDINATE_TRANSFER")
 
 
@@ -153,20 +179,20 @@ def apply_scenario_overlay(
     changed = []
     affected: set[str] = set()
     inputs = baseline.inputs
+    physical_ids = timetable_physical_ids(inputs.timetables)
     if operation.target_kind == "timetable":
         target = next(d for d in inputs.timetables if d.network_id == operation.target_id)
         source = next(r for r in target.timetable.runs if r.run_id == operation.execution_id)
         if source.service_date != operation.service_date:
             raise ValueError("SCENARIO_SERVICE_DATE_MISMATCH")
         replacements: dict[str, TimetableRun] = {}
-        aliases = {source.run_id}
-        previous_aliases: set[str] = set()
-        while previous_aliases != aliases:
-            previous_aliases = set(aliases)
-            for dataset in inputs.timetables:
-                for group in dataset.physical_services:
-                    if aliases & set(group.run_ids):
-                        aliases.update(group.run_ids)
+        target_key = timetable_execution_key(source, physical_ids)
+        aliases = {
+            run.run_id
+            for dataset in inputs.timetables
+            for run in dataset.timetable.runs
+            if timetable_execution_key(run, physical_ids) == target_key
+        }
         if operation.template_id == "coordinate_transfer":
             if (
                 operation.new_run is not None
@@ -183,14 +209,6 @@ def apply_scenario_overlay(
                         if run.run_id in replacements and replacements[run.run_id] != updated:
                             raise ValueError("INCONSISTENT_EXECUTION_COPIES")
                         replacements[run.run_id] = updated
-            _confirm_transfer(
-                target.timetable,
-                replace(
-                    target.timetable,
-                    runs=tuple(replacements.get(r.run_id, r) for r in target.timetable.runs),
-                ),
-                operation,
-            )
             affected.update(replacements)
         else:
             new_run, identity = operation.new_run, operation.new_physical_service
@@ -214,30 +232,65 @@ def apply_scenario_overlay(
             ):
                 raise ValueError("INVALID_ADDITIONAL_EXECUTION")
 
-            def fields(run: TimetableRun) -> tuple[tuple[object, ...], ...]:
-                return tuple(
-                    (e.sequence, e.node_id, e.arrival_at, e.departure_at, e.pickup, e.dropoff)
-                    for e in run.events
-                )
-
-            if fields(new_run) != fields(expected) or any(
-                r.run_id == new_run.run_id for d in inputs.timetables for r in d.timetable.runs
+            occupied_run_ids = {r.run_id for d in inputs.timetables for r in d.timetable.runs}
+            if (
+                stop_pattern(new_run) != stop_pattern(expected)
+                or new_run.run_id in occupied_run_ids
             ):
                 raise ValueError("ADDITIONAL_EXECUTION_MUST_MATCH_APPROVED_TRIP_COPY")
+            new_key = (
+                new_run.snapshot_id,
+                new_run.service_date,
+                "physical",
+                identity.physical_service_id,
+            )
+            if any(
+                timetable_execution_key(run, physical_ids) == new_key
+                for dataset in inputs.timetables
+                for run in dataset.timetable.runs
+            ):
+                raise ValueError("ADDITIONAL_EXECUTION_REUSES_PHYSICAL_IDENTITY")
             needed = {e.sequence for e in new_run.events[:-1] if e.pickup}
             if not needed <= {d.event_sequence for d in identity.departures}:
                 raise ValueError("COMPLETE_NEW_PHYSICAL_DEPARTURES_REQUIRED")
-            affected.add(new_run.run_id)
         datasets = []
         for dataset in inputs.timetables:
             runs = tuple(replacements.get(r.run_id, r) for r in dataset.timetable.runs)
             physical = dataset.physical_services
-            if operation.template_id == "additional_departure" and any(
-                r.run_id in aliases for r in dataset.timetable.runs
-            ):
-                assert operation.new_run is not None and operation.new_physical_service is not None
-                runs += (operation.new_run,)
-                physical += (operation.new_physical_service,)
+            if operation.template_id == "additional_departure":
+                assert new_run is not None and identity is not None
+                local_aliases = [r for r in dataset.timetable.runs if r.run_id in aliases]
+                if local_aliases:
+                    local_new = new_run
+                    if dataset.network_id != target.network_id:
+                        local_modes = {
+                            binding.transport_type for binding in dataset.transport_modes
+                        }
+                        local_source = min(
+                            local_aliases,
+                            key=lambda run: (
+                                run.transport_type not in local_modes,
+                                run.transport_type != new_run.transport_type,
+                                run.run_id,
+                            ),
+                        )
+                        if local_source.transport_type != new_run.transport_type:
+                            # The approved run ID stays in the target. A local label
+                            # requires its own alias ID to preserve exact run copies.
+                            alias_source_id = "scenario-alias:" + scenario_hash(
+                                (new_run.run_id, dataset.network_id)
+                            )
+                            local_new = replace(
+                                new_run,
+                                source_id=alias_source_id,
+                                transport_type=local_source.transport_type,
+                            )
+                            if local_new.run_id in occupied_run_ids:
+                                raise ValueError("ADDITIONAL_EXECUTION_ALIAS_ID_COLLISION")
+                            occupied_run_ids.add(local_new.run_id)
+                    runs += (local_new,)
+                    physical += (replace(identity, run_ids=(local_new.run_id,)),)
+                    affected.add(local_new.run_id)
             if runs != dataset.timetable.runs:
                 before_runs = {r.run_id: r for r in dataset.timetable.runs}
                 for run in runs:
@@ -263,8 +316,15 @@ def apply_scenario_overlay(
                         dataset.timetable.scope, timetable_version="scenario-overlay:" + token
                     ),
                 )
-                normalize_physical_services(table, dataset.transport_modes, physical)
+                normalized, _, _ = normalize_physical_services(
+                    table, dataset.transport_modes, physical
+                )
                 dataset = replace(dataset, timetable=table, physical_services=physical)
+                if (
+                    operation.template_id == "coordinate_transfer"
+                    and dataset.network_id == operation.target_id
+                ):
+                    _confirm_transfer(dataset, normalized, operation)
             datasets.append(dataset)
         inputs = replace(inputs, timetables=tuple(datasets))
     else:

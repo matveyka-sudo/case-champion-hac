@@ -10,9 +10,16 @@ from datetime import datetime
 from decimal import Decimal
 
 from a2_engine.routing.road import road_hash
-from a2_engine.routing.timetable import check_limit, data_reasons, transfer_rule, usable_runs
+from a2_engine.routing.timetable import (
+    _index_transfers,
+    _indexed_transfer_rule,
+    check_limit,
+    data_reasons,
+    usable_runs,
+)
 from a2_engine.routing.timetable_models import (
     Timetable,
+    TimetableFootpath,
     TimetablePath,
     TimetableStep,
     duration_delta,
@@ -41,6 +48,13 @@ class ScheduledSearchResult:
     interrupted: bool
     expanded_states: int
     evidence_refs: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class _ScheduledSearchWithDiagnostics:
+    result: ScheduledSearchResult
+    global_reasons: tuple[str, ...]
+    nonpositive_completions: tuple[tuple[datetime, tuple[str, ...]], ...]
 
 
 @dataclass(frozen=True)
@@ -79,11 +93,34 @@ def search_scheduled_chains(
 ) -> ScheduledSearchResult:
     """Pareto labels (arrival, canonical action order) at sufficient event states.
 
-    For each first boarding and exact mode set, earliest final arrival maximizes
-    every fixed-reference passenger score. Pareto order also preserves final
+    For each first boarding and exact mode set, the earliest positive-duration
+    path maximizes every fixed-reference passenger score. Pareto order also preserves final
     tie-breaking when an earlier ready label has a less desirable prefix.
     All continuations within scope.end_at are explored, not just the first target.
     """
+    return _search_scheduled_chains(
+        timetable,
+        origin_node_ids,
+        destination_node_ids,
+        requested_at,
+        first_departures_end_at,
+        mode_map,
+        ready_at=ready_at,
+        resource_limit=resource_limit,
+    ).result
+
+
+def _search_scheduled_chains(
+    timetable: Timetable,
+    origin_node_ids: tuple[str, ...],
+    destination_node_ids: tuple[str, ...],
+    requested_at: datetime,
+    first_departures_end_at: datetime,
+    mode_map: tuple[tuple[str, str], ...],
+    *,
+    ready_at: tuple[tuple[str, datetime], ...],
+    resource_limit: int | None,
+) -> _ScheduledSearchWithDiagnostics:
     check_limit(resource_limit)
     requested, end = utc(requested_at), utc(first_departures_end_at)
     if requested >= end or requested < timetable.scope.start_at:
@@ -112,11 +149,16 @@ def search_scheduled_chains(
         for i, event in enumerate(run.events[:-1]):
             if event.pickup:
                 board_at.setdefault(event.node_id, []).append((run_id, i))
-    walks = [p for p in timetable.footpaths if p.usable]
+    walks: dict[str, list[TimetableFootpath]] = {}
+    for path in timetable.footpaths:
+        if path.usable:
+            walks.setdefault(path.from_node_id, []).append(path)
+    transfers = _index_transfers(timetable)
     labels: dict[tuple[object, ...], list[_State]] = {}
     queue: list[tuple[datetime, tuple[int, tuple[str, ...]], int, _State]] = []
     serial = 0
     finals: dict[tuple[tuple[str, int], tuple[str, ...]], ScheduledChain] = {}
+    nonpositive_completions: set[tuple[datetime, tuple[str, ...]]] = set()
 
     def add(state: _State) -> None:
         nonlocal serial
@@ -223,7 +265,11 @@ def search_scheduled_chains(
                     state.actions + (f"alight:{run_id}:{event.sequence}",),
                 )
                 add(off)
-                if state.node in destination_node_ids:
+                first_at = state.boardings[0][2]
+                valid_arrival = state.at > first_at
+                if state.node in destination_node_ids and not valid_arrival:
+                    nonpositive_completions.add((first_at, state.modes))
+                if state.node in destination_node_ids and valid_arrival:
                     first_node = state.steps[0].from_node_id
                     candidate = ScheduledChain(
                         TimetablePath(
@@ -273,9 +319,7 @@ def search_scheduled_chains(
                     )
                 )
             continue
-        for walk in walks:
-            if walk.from_node_id != state.node:
-                continue
+        for walk in walks.get(state.node, ()):
             assert walk.seconds is not None
             try:
                 arrival = state.at + duration_delta(walk.seconds)
@@ -316,7 +360,9 @@ def search_scheduled_chains(
             departure = run.events[index].departure_at
             if departure < state.at:
                 continue
-            rule = transfer_rule(timetable, prior, prior_index, run, index)
+            rule = _indexed_transfer_rule(
+                transfers, prior.events[prior_index].node_id, state.node, prior_id, run_id
+            )
             if (
                 rule is None
                 or rule.allowed is None
@@ -341,11 +387,17 @@ def search_scheduled_chains(
         evidence.update(path.evidence_refs)
     for rule in timetable.transfers:
         evidence.update(rule.evidence_refs)
-    return ScheduledSearchResult(
+    global_reasons = tuple(sorted(reasons))
+    if nonpositive_completions:
+        reasons.add("NONPOSITIVE_PASSENGER_PATH")
+    result = ScheduledSearchResult(
         timetable,
         tuple(sorted(finals.values(), key=lambda c: c.chain_id)),
-        tuple(sorted(reasons)),
+        tuple(sorted(reasons)) if nonpositive_completions else global_reasons,
         interrupted,
         expanded,
         tuple(sorted(evidence)),
+    )
+    return _ScheduledSearchWithDiagnostics(
+        result, global_reasons, tuple(sorted(nonpositive_completions))
     )
