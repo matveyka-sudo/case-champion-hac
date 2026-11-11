@@ -48,7 +48,7 @@ def test_real_child_transport_preserves_required_nulls_defaults_and_hash(
     assert len(capture.value) <= calculation.MAX_RESULT_BYTES
 
 
-def test_restored_full_moscow_demo_preserves_all_data_within_existing_wire_cap():
+def test_restored_full_moscow_demo_preserves_all_data_within_existing_wire_cap(monkeypatch):
     from a2_api.adapters.demo_map import attach_demo_result
     from a2_contracts.v2.dataset import AcceptedData
 
@@ -59,6 +59,7 @@ def test_restored_full_moscow_demo_preserves_all_data_within_existing_wire_cap()
     )
     if not (root / "baseline-result.json").is_file():
         pytest.skip("Restore DEMO runtime and set A2_TEST_DEMO_RUNTIME for full2361-point replay")
+    monkeypatch.setenv("A2_DEMO_TRANSPORT_ENABLED", "true")
     result = AnalysisResult.model_validate_json((root / "baseline-result.json").read_text())
     snapshot = AcceptedData.model_validate_json((root / "accepted-data.json").read_text())
     result = attach_demo_result(result, snapshot)

@@ -4,6 +4,7 @@ import logging
 from datetime import UTC, datetime
 from typing import cast
 
+from a2_contracts.api import FieldError
 from a2_contracts.common import canonical_hash
 from a2_contracts.v2.api import AnalysisGroupItem, AnalysisGroupView, ErrorDetail
 from a2_contracts.v2.base import VersionRefs
@@ -59,6 +60,27 @@ class AnalysisGroupService:
         if plan.valid_until is not None and plan.valid_until <= datetime.now(UTC):
             raise DomainError(409, "incompatible_versions", "Group input validity expired")
 
+    def _validate_children(self, plan: GroupPlan) -> None:
+        for ordinal, category in enumerate(plan.request.categories):
+            try:
+                self.analyses.registry.validate_group_child(plan.child(ordinal))
+            except DomainError as exc:
+                if exc.status_code != 422:
+                    raise
+                raise DomainError(
+                    422,
+                    "invalid_request",
+                    "ANALYSIS_GROUP_CATEGORY_REQUEST_UNSUPPORTED",
+                    field_errors=[
+                        FieldError(
+                            location=["categories", str(ordinal)],
+                            code="UNSUPPORTED_GROUP_CATEGORY",
+                            message=f"{category} has no supported individual analysis request. "
+                            "To run a published preset together, use /api/v1/analyses.",
+                        )
+                    ],
+                ) from exc
+
     @staticmethod
     def view(group: GroupRecord, request_id: str) -> AnalysisGroupView:
         # This is bounded queue metadata. Result bytes are read and validated via
@@ -101,6 +123,7 @@ class AnalysisGroupService:
         if existing is None:
             plan = self.plan(request)
             self.validate_plan(plan)
+            self._validate_children(plan)
             existing = await self.repository.create(plan, scoped_key, digest, scope)
         return await self.get(existing, scope, request_id)
 
@@ -113,6 +136,7 @@ class AnalysisGroupService:
     ) -> AnalysisGroupView:
         group = await self.repository.get(group_id, scope)
         self.validate_plan(group.plan)
+        self._validate_children(group.plan)
         await self.repository.retry(group_id, scope, self.analyses._key(key, scope))
         return await self.get(group_id, scope, request_id)
 

@@ -18,6 +18,7 @@ from test_product_runtime import transport_facts as transport_facts
 def test_actual_product_output_keeps_model_labels_map_and_source_population(
     transport_facts, demo, monkeypatch
 ):
+    monkeypatch.setenv("A2_DEMO_TRANSPORT_ENABLED", "true")
     snapshot, table, _ = demo
     _, facts, profile = transport_facts
     context = replace(
@@ -87,3 +88,48 @@ def test_map_cell_metadata_deduplicates_only_represented_population(
         if feature.cell_id in expected
     )
     assert all(feature.population is None for feature in retained if feature.cell_id in represented)
+
+
+@pytest.mark.parametrize("identity", ["demo-kaliningrad-v1", "demo-novorossiysk-v1"])
+def test_model_map_uses_verified_synthetic_provenance_for_each_city(
+    transport_facts, demo, monkeypatch, identity
+):
+    snapshot, table, receipt = demo
+    snapshot = snapshot.model_copy(update={"snapshot_id": identity})
+    table = replace(
+        table,
+        scope=replace(table.scope, snapshot_id=identity),
+        runs=tuple(replace(run, snapshot_id=identity) for run in table.runs),
+    )
+    test_actual_product_output_keeps_model_labels_map_and_source_population(
+        transport_facts, (snapshot, table, receipt), monkeypatch
+    )
+
+
+def test_real_baseline_cannot_be_decorated_as_a_demo(transport_facts, demo, monkeypatch):
+    test_actual_product_output_keeps_model_labels_map_and_source_population(
+        transport_facts, demo, monkeypatch
+    )
+    snapshot = demo[0]
+    result = product.calculate(claim_for(snapshot, request_for(snapshot)))
+    real_snapshot = snapshot.model_copy(
+        update={"qa": snapshot.qa.model_copy(update={"checks": ["TEST_ONLY"]})}
+    )
+    with pytest.raises(ValueError, match="SYNTHETIC"):
+        attach_demo_result(result, real_snapshot)
+
+
+def test_demo_map_rejects_disabled_mode_and_foreign_city(transport_facts, demo, monkeypatch):
+    test_actual_product_output_keeps_model_labels_map_and_source_population(
+        transport_facts, demo, monkeypatch
+    )
+    snapshot = demo[0]
+    result = product.calculate(claim_for(snapshot, request_for(snapshot)))
+    foreign = result.model_copy(
+        update={"request": result.request.model_copy(update={"city_id": "foreign-city"})}
+    )
+    with pytest.raises(ValueError, match="CITY_MISMATCH"):
+        attach_demo_result(foreign, snapshot)
+    monkeypatch.setenv("A2_DEMO_TRANSPORT_ENABLED", "false")
+    with pytest.raises(ValueError, match="DEPLOYMENT_DISABLED"):
+        attach_demo_result(result, snapshot)

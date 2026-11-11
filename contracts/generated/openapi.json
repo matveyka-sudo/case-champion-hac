@@ -196,6 +196,71 @@
         "title": "AnalysisMapData",
         "type": "object"
       },
+      "AnalysisPreset": {
+        "additionalProperties": false,
+        "description": "One exact versioned request supported by a registered server profile.",
+        "properties": {
+          "label": {
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "limitations": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "preset_id": {
+            "minLength": 1,
+            "title": "Preset Id",
+            "type": "string"
+          },
+          "request": {
+            "discriminator": {
+              "mapping": {
+                "intercity_cargo": "#/components/schemas/IntercityCargoRequest",
+                "intercity_passenger": "#/components/schemas/IntercityPassengerRequest",
+                "urban_cargo": "#/components/schemas/UrbanCargoRequest",
+                "urban_passenger": "#/components/schemas/UrbanPassengerRequest"
+              },
+              "propertyName": "analysis_kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UrbanPassengerRequest"
+              },
+              {
+                "$ref": "#/components/schemas/IntercityPassengerRequest"
+              },
+              {
+                "$ref": "#/components/schemas/UrbanCargoRequest"
+              },
+              {
+                "$ref": "#/components/schemas/IntercityCargoRequest"
+              }
+            ],
+            "title": "Request"
+          },
+          "scenario_operations": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Scenario Operations",
+            "type": "array"
+          }
+        },
+        "required": [
+          "preset_id",
+          "label",
+          "request"
+        ],
+        "title": "AnalysisPreset",
+        "type": "object"
+      },
       "AnalysisResult": {
         "additionalProperties": false,
         "properties": {
@@ -481,6 +546,13 @@
             "title": "Analyses",
             "type": "array"
           },
+          "analysis_presets": {
+            "items": {
+              "$ref": "#/components/schemas/AnalysisPreset"
+            },
+            "title": "Analysis Presets",
+            "type": "array"
+          },
           "areas": {
             "items": {
               "$ref": "#/components/schemas/AreaOption"
@@ -637,6 +709,64 @@
           "limitations"
         ],
         "title": "Capabilities",
+        "type": "object"
+      },
+      "CargoHandlingChange": {
+        "additionalProperties": false,
+        "description": "A fixed processing-duration input and the resource window permitting it.",
+        "properties": {
+          "action_id": {
+            "minLength": 1,
+            "title": "Action Id",
+            "type": "string"
+          },
+          "after_seconds": {
+            "minimum": 0.0,
+            "title": "After Seconds",
+            "type": "number"
+          },
+          "before_seconds": {
+            "minimum": 0.0,
+            "title": "Before Seconds",
+            "type": "number"
+          },
+          "resource_id": {
+            "minLength": 1,
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "resource_units_after": {
+            "minimum": 1.0,
+            "title": "Resource Units After",
+            "type": "integer"
+          },
+          "resource_units_before": {
+            "minimum": 1.0,
+            "title": "Resource Units Before",
+            "type": "integer"
+          },
+          "valid_from": {
+            "format": "date-time",
+            "title": "Valid From",
+            "type": "string"
+          },
+          "valid_to": {
+            "format": "date-time",
+            "title": "Valid To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action_id",
+          "before_seconds",
+          "after_seconds",
+          "resource_id",
+          "resource_units_before",
+          "resource_units_after",
+          "valid_from",
+          "valid_to"
+        ],
+        "title": "CargoHandlingChange",
         "type": "object"
       },
       "ComponentRef": {
@@ -1223,6 +1353,14 @@
             "title": "Demand Evidence",
             "type": "array"
           },
+          "handling_changes": {
+            "items": {
+              "$ref": "#/components/schemas/CargoHandlingChange"
+            },
+            "maxItems": 16,
+            "title": "Handling Changes",
+            "type": "array"
+          },
           "resource_constraints": {
             "items": {
               "minLength": 1,
@@ -1244,7 +1382,6 @@
               "minLength": 1,
               "type": "string"
             },
-            "minItems": 1,
             "title": "Service Ids",
             "type": "array"
           },
@@ -3202,7 +3339,8 @@
           "operation_type": {
             "enum": [
               "coordinate_transfer",
-              "additional_departure"
+              "additional_departure",
+              "reduce_handling_wait"
             ],
             "title": "Operation Type",
             "type": "string"
@@ -3344,6 +3482,14 @@
             "title": "Feasibility",
             "type": "string"
           },
+          "handling_changes": {
+            "items": {
+              "$ref": "#/components/schemas/CargoHandlingChange"
+            },
+            "maxItems": 16,
+            "title": "Handling Changes",
+            "type": "array"
+          },
           "limitations": {
             "items": {
               "minLength": 1,
@@ -3399,7 +3545,6 @@
             "items": {
               "$ref": "#/components/schemas/ServiceChange"
             },
-            "minItems": 1,
             "title": "Service Changes",
             "type": "array"
           },
@@ -4593,6 +4738,17 @@
           "202": {
             "content": {
               "application/json": {
+                "examples": {
+                  "accepted": {
+                    "summary": "Queued calculation; poll this job",
+                    "value": {
+                      "job_id": "demo-job",
+                      "poll_after_seconds": 2,
+                      "request_id": "demo-request",
+                      "status": "queued"
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/JobAccepted"
                 }
@@ -4623,6 +4779,20 @@
           "409": {
             "content": {
               "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -4633,6 +4803,28 @@
           "422": {
             "content": {
               "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -4663,6 +4855,20 @@
           "503": {
             "content": {
               "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -4692,6 +4898,276 @@
           "200": {
             "content": {
               "application/json": {
+                "examples": {
+                  "partial": {
+                    "summary": "Saved partial result; unknown stays null",
+                    "value": {
+                      "analysis_id": "demo-urban_passenger",
+                      "analysis_kind": "urban_passenger",
+                      "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+                      "counts": [],
+                      "evidence_refs": [
+                        {
+                          "evidence_id": "demo-evidence",
+                          "observed_at": null,
+                          "retrieved_at": "2026-11-08T09:00:00Z",
+                          "section": "Synthetic test only",
+                          "source_id": "demo-source",
+                          "url": "https://example.org/synthetic"
+                        }
+                      ],
+                      "journeys": [],
+                      "last_returns": [],
+                      "limitations": [
+                        "synthetic_only"
+                      ],
+                      "methodology_version": "a2-methodology-v3",
+                      "metrics": [
+                        {
+                          "completeness": "full",
+                          "dependency_job_id": null,
+                          "metric_id": "demo-time",
+                          "name": "Synthetic elapsed travel time",
+                          "population_basis": null,
+                          "reason_code": null,
+                          "site_basis": null,
+                          "source_refs": [
+                            "demo-evidence"
+                          ],
+                          "status": "available",
+                          "subject": {
+                            "category": "school",
+                            "destination_id": null,
+                            "kind": "sample_point",
+                            "mode": "walk",
+                            "node_id": null,
+                            "origin_id": null,
+                            "point_id": "demo-point",
+                            "site_id": null,
+                            "territory_id": null
+                          },
+                          "unit": "seconds",
+                          "value": 1800.0
+                        },
+                        {
+                          "completeness": "partial",
+                          "dependency_job_id": null,
+                          "metric_id": "demo-unknown-time",
+                          "name": "Synthetic elapsed travel time",
+                          "population_basis": null,
+                          "reason_code": "INPUT_NOT_OBSERVED",
+                          "site_basis": null,
+                          "source_refs": [],
+                          "status": "unknown",
+                          "subject": {
+                            "category": "school",
+                            "destination_id": null,
+                            "kind": "sample_point",
+                            "mode": "walk",
+                            "node_id": null,
+                            "origin_id": null,
+                            "point_id": "demo-point",
+                            "site_id": null,
+                            "territory_id": null
+                          },
+                          "unit": "seconds",
+                          "value": null
+                        }
+                      ],
+                      "references": [],
+                      "request": {
+                        "analysis_kind": "urban_passenger",
+                        "area_id": null,
+                        "categories": [
+                          "school"
+                        ],
+                        "city_id": "demo-city",
+                        "departure_at": "2026-11-09T08:15:00+03:00",
+                        "methodology": {
+                          "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+                          "reference_profile": "edge-calibrated-v1",
+                          "version": "a2-methodology-v3"
+                        },
+                        "passenger_mode": "walk",
+                        "priorities": {
+                          "school": "high"
+                        },
+                        "schema_version": "2",
+                        "snapshot_id": "demo-snapshot",
+                        "traffic_mode": "static"
+                      },
+                      "result_hash": "be2e58a7096f2592e5e000b3a5312f6faded30fe01f148a14988c39c8674f5be",
+                      "schema_version": "2",
+                      "scores": [
+                        {
+                          "aggregation_basis": null,
+                          "completeness": "full",
+                          "components": [
+                            {
+                              "id": "demo-time",
+                              "kind": "metric"
+                            }
+                          ],
+                          "evidence_refs": [
+                            "demo-evidence"
+                          ],
+                          "methodology_version": "a2-methodology-v3",
+                          "name": "Synthetic category index",
+                          "ranking_eligible": false,
+                          "reason_code": null,
+                          "score_id": "demo-score",
+                          "status": "available",
+                          "subject": {
+                            "category": "school",
+                            "destination_id": null,
+                            "kind": "sample_point",
+                            "mode": "walk",
+                            "node_id": null,
+                            "origin_id": null,
+                            "point_id": "demo-point",
+                            "site_id": null,
+                            "territory_id": null
+                          },
+                          "value": 50.0
+                        }
+                      ],
+                      "snapshot_id": "demo-snapshot",
+                      "status": "partial",
+                      "traffic_mode": "static",
+                      "versions": {
+                        "calendar_version": "demo-calendar",
+                        "code_version": "demo-code",
+                        "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+                        "graph_version": "demo-graph",
+                        "methodology_version": "a2-methodology-v3",
+                        "population_version": null,
+                        "snapshot_id": "demo-snapshot"
+                      }
+                    }
+                  },
+                  "success": {
+                    "summary": "Saved synthetic result; contract example only",
+                    "value": {
+                      "analysis_id": "demo-urban_passenger",
+                      "analysis_kind": "urban_passenger",
+                      "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+                      "counts": [],
+                      "evidence_refs": [
+                        {
+                          "evidence_id": "demo-evidence",
+                          "observed_at": null,
+                          "retrieved_at": "2026-11-08T09:00:00Z",
+                          "section": "Synthetic test only",
+                          "source_id": "demo-source",
+                          "url": "https://example.org/synthetic"
+                        }
+                      ],
+                      "journeys": [],
+                      "last_returns": [],
+                      "limitations": [
+                        "synthetic_only"
+                      ],
+                      "methodology_version": "a2-methodology-v3",
+                      "metrics": [
+                        {
+                          "completeness": "full",
+                          "dependency_job_id": null,
+                          "metric_id": "demo-time",
+                          "name": "Synthetic elapsed travel time",
+                          "population_basis": null,
+                          "reason_code": null,
+                          "site_basis": null,
+                          "source_refs": [
+                            "demo-evidence"
+                          ],
+                          "status": "available",
+                          "subject": {
+                            "category": "school",
+                            "destination_id": null,
+                            "kind": "sample_point",
+                            "mode": "walk",
+                            "node_id": null,
+                            "origin_id": null,
+                            "point_id": "demo-point",
+                            "site_id": null,
+                            "territory_id": null
+                          },
+                          "unit": "seconds",
+                          "value": 1800.0
+                        }
+                      ],
+                      "references": [],
+                      "request": {
+                        "analysis_kind": "urban_passenger",
+                        "area_id": null,
+                        "categories": [
+                          "school"
+                        ],
+                        "city_id": "demo-city",
+                        "departure_at": "2026-11-09T08:15:00+03:00",
+                        "methodology": {
+                          "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+                          "reference_profile": "edge-calibrated-v1",
+                          "version": "a2-methodology-v3"
+                        },
+                        "passenger_mode": "walk",
+                        "priorities": {
+                          "school": "high"
+                        },
+                        "schema_version": "2",
+                        "snapshot_id": "demo-snapshot",
+                        "traffic_mode": "static"
+                      },
+                      "result_hash": "bccc616b6b154e88a6e09f3801a229c969e262491ec5d6c94177fd42fc29f912",
+                      "schema_version": "2",
+                      "scores": [
+                        {
+                          "aggregation_basis": null,
+                          "completeness": "full",
+                          "components": [
+                            {
+                              "id": "demo-time",
+                              "kind": "metric"
+                            }
+                          ],
+                          "evidence_refs": [
+                            "demo-evidence"
+                          ],
+                          "methodology_version": "a2-methodology-v3",
+                          "name": "Synthetic category index",
+                          "ranking_eligible": false,
+                          "reason_code": null,
+                          "score_id": "demo-score",
+                          "status": "available",
+                          "subject": {
+                            "category": "school",
+                            "destination_id": null,
+                            "kind": "sample_point",
+                            "mode": "walk",
+                            "node_id": null,
+                            "origin_id": null,
+                            "point_id": "demo-point",
+                            "site_id": null,
+                            "territory_id": null
+                          },
+                          "value": 50.0
+                        }
+                      ],
+                      "snapshot_id": "demo-snapshot",
+                      "status": "available",
+                      "traffic_mode": "static",
+                      "versions": {
+                        "calendar_version": "demo-calendar",
+                        "code_version": "demo-code",
+                        "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+                        "graph_version": "demo-graph",
+                        "methodology_version": "a2-methodology-v3",
+                        "population_version": null,
+                        "snapshot_id": "demo-snapshot"
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/AnalysisResult"
                 }
@@ -4722,6 +5198,20 @@
           "409": {
             "content": {
               "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -4732,6 +5222,28 @@
           "422": {
             "content": {
               "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -4762,6 +5274,20 @@
           "503": {
             "content": {
               "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -4838,6 +5364,20 @@
           "409": {
             "content": {
               "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -4848,6 +5388,28 @@
           "422": {
             "content": {
               "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -4878,6 +5440,20 @@
           "503": {
             "content": {
               "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -4941,6 +5517,20 @@
           "409": {
             "content": {
               "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -4951,6 +5541,28 @@
           "422": {
             "content": {
               "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -4981,6 +5593,20 @@
           "503": {
             "content": {
               "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5052,6 +5678,20 @@
           "409": {
             "content": {
               "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5062,6 +5702,28 @@
           "422": {
             "content": {
               "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5092,6 +5754,20 @@
           "503": {
             "content": {
               "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5151,6 +5827,20 @@
           "409": {
             "content": {
               "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5161,6 +5851,28 @@
           "422": {
             "content": {
               "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5191,6 +5903,20 @@
           "503": {
             "content": {
               "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5250,6 +5976,20 @@
           "409": {
             "content": {
               "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5260,6 +6000,28 @@
           "422": {
             "content": {
               "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5290,6 +6052,20 @@
           "503": {
             "content": {
               "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5360,6 +6136,20 @@
           "409": {
             "content": {
               "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5370,6 +6160,28 @@
           "422": {
             "content": {
               "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5400,6 +6212,20 @@
           "503": {
             "content": {
               "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5448,6 +6274,20 @@
           "409": {
             "content": {
               "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5458,6 +6298,28 @@
           "422": {
             "content": {
               "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5488,6 +6350,20 @@
           "503": {
             "content": {
               "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5557,6 +6433,20 @@
           "409": {
             "content": {
               "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5567,6 +6457,28 @@
           "422": {
             "content": {
               "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5597,6 +6509,20 @@
           "503": {
             "content": {
               "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5656,6 +6582,20 @@
           "409": {
             "content": {
               "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5666,6 +6606,28 @@
           "422": {
             "content": {
               "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5696,6 +6658,20 @@
           "503": {
             "content": {
               "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5755,6 +6731,20 @@
           "409": {
             "content": {
               "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5765,6 +6755,28 @@
           "422": {
             "content": {
               "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5795,6 +6807,20 @@
           "503": {
             "content": {
               "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5875,6 +6901,20 @@
           "409": {
             "content": {
               "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5885,6 +6925,28 @@
           "422": {
             "content": {
               "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -5915,6 +6977,20 @@
           "503": {
             "content": {
               "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -6006,6 +7082,20 @@
           "409": {
             "content": {
               "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -6016,6 +7106,28 @@
           "422": {
             "content": {
               "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }
@@ -6046,6 +7158,20 @@
           "503": {
             "content": {
               "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelope"
                 }

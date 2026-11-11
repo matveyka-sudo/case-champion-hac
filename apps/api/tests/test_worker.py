@@ -67,6 +67,7 @@ async def test_engine_failure_is_explicit_and_sanitized(database, handler):
     ).run_once()
     job = await repo.get_job(accepted.job_id)
     assert job.status == "failed" and job.error.code == "engine_unavailable"
+    assert any(field.location == ["worker", "calculation"] for field in job.error.field_errors)
     assert "secret_test_database_password" not in job.model_dump_json()
 
 
@@ -113,4 +114,6 @@ async def test_worker_cannot_run_old_job_as_a_new_code_version(database):
     await Worker(repo, handler="worker_handlers:success", code_version="new-code").run_once()
     job = await repo.get_job(accepted.job_id)
     assert job.status == "failed" and job.error.code == "incompatible_versions"
+    assert any(field.location == ["worker", "preflight"] for field in job.error.field_errors)
+    assert "Recalculate" in job.error.message
     assert await pool.fetchval("SELECT count(*) FROM runs") == 0

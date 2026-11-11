@@ -267,6 +267,12 @@ class ProductRegistry:
         self.required_cache_valid_until(request, selected)
         return selected
 
+    def validate_group_child(self, request: UrbanPassengerRequest) -> None:
+        """Check child-specific selectors after the group has pinned its accepted snapshot.
+
+        The base registry accepts the child's unchanged scope and narrower category list.
+        """
+
     def _request_days(self, request: AnalysisRequest) -> dict[str, date]:
         identifiers = (
             {request.city_id}

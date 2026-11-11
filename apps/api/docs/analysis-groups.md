@@ -15,6 +15,13 @@ This avoids increasing the OD or decoded-result bounds to fit all Moscow categor
 inside one process/result. A single category still has to fit existing execution
 limits; groups do not partition one oversized category by population or geography.
 
+For exact demo presets, each derived category request must be published on its
+own. Create and retry return HTTP 422 with
+`ANALYSIS_GROUP_CATEGORY_REQUEST_UNSUPPORTED` if a derived category request is
+missing from the published presets.
+Submit the complete published preset to `POST /api/v1/analyses` to run all its
+categories together.
+
 Endpoints:
 
 - `GET /api/v1/analysis-groups/{id}`: pinned request/versions, each category's status,

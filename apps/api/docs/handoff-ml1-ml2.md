@@ -32,6 +32,7 @@ BACKEND отвечает за DTO, HTTP, очередь, миграции, до�
 from a2_api.core.jobs import ClaimedJob, CalculationOutput, V2JobContext
 from a2_contracts.v2 import AnalysisResult, ScenarioResult
 
+
 def calculate(claim: ClaimedJob) -> AnalysisResult | ScenarioResult | CalculationOutput:
     # Trusted BACKEND adapter resolves immutable data by context.snapshot_id/hash.
     # Calls public engine functions, does not depend on FastAPI.

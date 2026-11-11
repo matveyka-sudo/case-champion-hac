@@ -28,6 +28,28 @@ class DemoTransportReceipt(ContractModel):
     limitations: tuple[str, ...]
 
 
+def verify_demo_snapshot(snapshot: AcceptedData) -> frozenset[str]:
+    """Check explicit model provenance after the runtime hash-registers a snapshot.
+
+    Snapshot names and city names confer no trust. The runtime binds this exact
+    snapshot to a server profile; these checks are also reused at output time so
+    ordinary accepted facts cannot accidentally acquire model-only privileges.
+    """
+    if os.environ.get("A2_DEMO_TRANSPORT_ENABLED", "").strip().lower() != "true":
+        raise ValueError("DEMO_TRANSPORT_DEPLOYMENT_DISABLED")
+    version = snapshot.source_versions.get(DEMO_SOURCE)
+    if DEMO_SOURCE not in snapshot.qa.checks or not version:
+        raise ValueError("DEMO_TRANSPORT_EXPLICIT_SYNTHETIC_LABEL_REQUIRED")
+    proof = frozenset(
+        row.evidence_id
+        for row in snapshot.evidence
+        if row.source_id == DEMO_SOURCE and row.source_version == version and row.verified
+    )
+    if not proof:
+        raise ValueError("DEMO_TRANSPORT_SYNTHETIC_EVIDENCE_REQUIRED")
+    return proof
+
+
 def verify_demo_model(
     snapshot: AcceptedData,
     table: Timetable,
@@ -40,25 +62,17 @@ def verify_demo_model(
     independently validated overlay. A changed after timetable is not a new
     accepted source and must not be supplied as the baseline receipt model.
     """
-    if os.environ.get("A2_DEMO_TRANSPORT_ENABLED", "").strip().lower() != "true":
-        raise ValueError("DEMO_TRANSPORT_DEPLOYMENT_DISABLED")
     snapshot = AcceptedData.model_validate(snapshot.model_dump(mode="json"))
     receipt = DemoTransportReceipt.model_validate(receipt.model_dump(mode="json"))
-    if not snapshot.snapshot_id.startswith("demo-moscow-"):
-        raise ValueError("DEMO_TRANSPORT_SNAPSHOT_REQUIRED")
+    proof = verify_demo_snapshot(snapshot)
     if (
         receipt.snapshot_hash != canonical_hash(snapshot.model_dump(mode="json"))
         or receipt.model != table
         or scenario_hash(receipt.model) != scenario_hash(table)
     ):
         raise ValueError("DEMO_TRANSPORT_RECEIPT_IDENTITY_MISMATCH")
-    if DEMO_SOURCE not in snapshot.qa.checks or not DEMO_LIMITATIONS <= set(receipt.limitations):
+    if not DEMO_LIMITATIONS <= set(receipt.limitations):
         raise ValueError("DEMO_TRANSPORT_EXPLICIT_SYNTHETIC_LABEL_REQUIRED")
-    proof = {
-        row.evidence_id
-        for row in snapshot.evidence
-        if row.source_id == DEMO_SOURCE and row.verified
-    }
     rows: list[TimetableScope | TimetableFootpath | TimetableTransfer | TimetableEvent] = [
         table.scope,
         *table.footpaths,

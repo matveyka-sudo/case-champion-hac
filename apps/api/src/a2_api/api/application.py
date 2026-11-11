@@ -6,7 +6,7 @@ import re
 import secrets
 import time
 from collections.abc import Awaitable, Callable
-from typing import Literal
+from typing import Any, Literal
 from uuid import uuid4
 
 import asyncpg  # type: ignore[import-untyped]
@@ -22,6 +22,7 @@ from starlette.exceptions import HTTPException
 from starlette.types import Lifespan
 
 from a2_api.api.v2 import build_router
+from a2_api.api.v2.examples import ANALYSIS_EXAMPLES
 from a2_api.core.errors import DomainError
 from a2_api.services.analyses import AnalysisService
 
@@ -146,4 +147,16 @@ def create_app(
 
     router = build_router()
     app.include_router(router)
+    original_openapi = app.openapi
+
+    def openapi_with_examples() -> dict[str, Any]:
+        schema = original_openapi()
+        # FastAPI's OpenAPI encoder drops null members in route examples. Keep
+        # nullable metric values and required null fields in the final document.
+        schema["paths"]["/api/v1/analyses/{analysis_id}"]["get"]["responses"]["200"]["content"][
+            "application/json"
+        ]["examples"] = ANALYSIS_EXAMPLES
+        return schema
+
+    app.openapi = openapi_with_examples  # type: ignore[method-assign]
     return app

@@ -42,7 +42,12 @@ from a2_api.adapters.product_projection import (
     project_intercity,
     project_urban,
 )
-from a2_api.adapters.product_scenario_inputs import ScenarioDocument, ScenarioPlan, validate_source
+from a2_api.adapters.product_scenario_inputs import (
+    ScenarioCatalogDocument,
+    ScenarioDocument,
+    ScenarioPlan,
+    validate_source,
+)
 from a2_api.core.errors import DomainError
 from a2_api.core.jobs import ClaimedJob, V2JobContext
 from a2_api.core.registry import ProductRegistry
@@ -83,15 +88,9 @@ def _project(
         project_intercity(out, intercity_result, job.reference, job.car)
     for _, cargo_result in computation.cargo:
         project_delivery(out, cargo_result)
-    # The admitted synthetic model uses the same numerical projection, but its
-    # saved scores must remain excluded from real-city rankings on both sides.
-    # A prefix alone cannot select this policy: the immutable saved result and
-    # every hash-pinned server plan must carry the explicit demo declarations.
-    if (
-        baseline.snapshot_id.startswith("demo-moscow-")
-        and DEMO_LIMITATIONS <= set(baseline.limitations)
-        and all(DEMO_LIMITATIONS <= set(plan.assumptions) for plan in document.plans)
-    ):
+    # Product analysis derives these labels from the verified snapshot, and
+    # saved scenario dispatch rechecks the baseline against that provenance.
+    if DEMO_LIMITATIONS <= set(baseline.limitations):
         out.scores = [score.model_copy(update={"ranking_eligible": False}) for score in out.scores]
         out.limitations.update(DEMO_LIMITATIONS)
     return out
@@ -328,12 +327,17 @@ def _proposal(
 def propose(
     context: V2JobContext,
     inputs: EngineInputs,
-    document: ScenarioDocument,
+    document: ScenarioCatalogDocument,
     baseline: AnalysisResult,
     *,
     profile_id: str,
 ) -> list[ScenarioProposal]:
     """Generate fixed proposals in the analysis worker; no effects are claimed."""
+    from a2_api.adapters.cargo_scenarios import CargoScenarioDocument
+    from a2_api.adapters.cargo_scenarios import propose as cargo_propose
+
+    if isinstance(document, CargoScenarioDocument):
+        return cargo_propose(context, inputs, document, baseline, profile_id=profile_id)
     prepared = _prepare(context, inputs, document, baseline, profile_id=profile_id)
     return [_proposal(context, baseline, document, plan, prepared) for plan in document.plans]
 
@@ -385,9 +389,16 @@ def calculate(
     *,
     baseline: AnalysisResult,
     inputs: EngineInputs,
-    document: ScenarioDocument,
+    document: ScenarioCatalogDocument,
     profile_id: str,
 ) -> ScenarioResult:
+    from a2_api.adapters.cargo_scenarios import CargoScenarioDocument
+    from a2_api.adapters.cargo_scenarios import calculate as cargo_calculate
+
+    if isinstance(document, CargoScenarioDocument):
+        return cargo_calculate(
+            claim, baseline=baseline, inputs=inputs, document=document, profile_id=profile_id
+        )
     """Run the exact saved operation; publication must retain repository fencing."""
     if (
         claim.kind != "scenario"
