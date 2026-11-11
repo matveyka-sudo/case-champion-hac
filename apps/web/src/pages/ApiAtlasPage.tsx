@@ -355,14 +355,27 @@ export function ApiAtlasPage() {
     });
   };
   const start = () => {
-    if (!caps) return;
+    if (!caps || unavailableReason) return;
     try {
       if (draft.kind === "urban_passenger" && draft.cityId && caps.urban_passenger_scopes != null &&
-        !caps.urban_passenger_scopes.some((scope) => scope.city_id === draft.cityId))
-        throw new DraftError("cityId", caps.urban_passenger_scopes.length ? "Для выбранного города нет зарегистрированного расчёта." : "Для городского расчёта нет зарегистрированных наборов параметров.");
+        !caps.urban_passenger_scopes.some((scope) => scope.city_id === draft.cityId)) {
+        setLocalError(new DraftError(
+          "cityId",
+          caps.urban_passenger_scopes.length
+            ? "Для выбранного города нет зарегистрированного расчёта."
+            : "Для городского расчёта нет зарегистрированных наборов параметров.",
+        ));
+        return;
+      }
       const profiles = matchingCargoProfiles(caps.cargo_profiles, cargoProfile);
       const profileId = cargo && !draft.pipeline ? draft.profileId || (profiles.length === 1 ? profiles[0].profile_id : "") : draft.profileId;
-      if (cargo && !draft.pipeline && !profileId) throw new DraftError("profileId", "Для выбранного профиля груза нет однозначно подтверждённых данных. Выбранные параметры сохранены.");
+      if (cargo && !draft.pipeline && !profileId) {
+        setLocalError(new DraftError(
+          "profileId",
+          "Для выбранного профиля груза нет однозначно подтверждённых данных. Выбранные параметры сохранены.",
+        ));
+        return;
+      }
       const request = toRequest({ ...draft, profileId, snapshotId: boundSnapshotId(draft, catalog, caps) }, catalog, caps);
       setLocalError(null);
       setRestoreMode(false);
@@ -501,6 +514,17 @@ export function ApiAtlasPage() {
       ) || [];
   const ready = caps?.analyses.find((a) => a.analysis_kind === draft.kind);
   const running = phase === "running";
+  const unavailableReason = ready?.calculation_available === false
+    ? ready.reason_code === "RUNTIME_INPUTS_UNAVAILABLE"
+      ? "На этом стенде нет входных данных для расчёта выбранного направления."
+      : reasonText(ready.reason_code) || "Сервер пока не поддерживает расчёт этого направления."
+    : null;
+  const runDisabled = !caps || running || unavailableReason !== null;
+  const requestErrorMessage = uiError instanceof ApiError && uiError.message === "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST"
+    ? urban
+      ? "Для этого города и выбранных условий на стенде нет набора расчёта. Измените режим, дату или категорию."
+      : "Для выбранного направления и вида транспорта на стенде нет набора расчёта. Выберите другую пару или измените условия."
+    : uiError ? errorText(uiError) : null;
   const progressText = jobProgressText(session.job, phase);
   const runLabel = urban ? "Рассчитать" : "Проанализировать";
   const draftInstructions = !cargo
@@ -753,7 +777,7 @@ export function ApiAtlasPage() {
   const moscowView = savedDemoModel || (result ? result.request.analysis_kind === "urban_passenger" && result.request.city_id === "moscow" : urban && draft.cityId === "moscow");
   const timeDock = (compact: boolean) => <TimeDockView date={draft.date} slot={draft.slot} timezoneLabel={origin?.timezone || "Выберите территорию"}
     min="1900-01-01" max="2100-12-31" dateInputId={compact ? "apiMobileDate" : "apiDate"} timeInputId={compact ? "apiMobileTime" : "apiTime"} mobile={compact}
-    onDateChange={(date) => change({ date })} onSlotChange={(slot) => change({ slot })} run={start} disabled={!caps || running} highlighted={dirty} />;
+    onDateChange={(date) => change({ date })} onSlotChange={(slot) => change({ slot })} run={start} disabled={runDisabled} highlighted={dirty} />;
   return (
     <AtlasShell className={demoModel ? "has-demo-model" : ""} label="Атлас Waydex — API"
       header={<AtlasHeader mode={draft.kind === "urban_passenger" ? "city" : draft.kind === "intercity_passenger" ? "pax" : "cargo"}
@@ -765,8 +789,8 @@ export function ApiAtlasPage() {
           onClose={() => setFiltersOpen(false)} onExpand={() => setFiltersCollapsed(false)}
           onToggle={() => { setFiltersCollapsed((value) => !value); if (filtersCollapsed && window.innerWidth < 1360) setChatOpen(false); }}
           railIcons={!cargo && urban ? ["map-pin", draft.travel === "pt" ? "tram-front" : draft.travel === "walk" ? "footprints" : "car-front", "list-checks"] : ["sliders-horizontal"]}
-          footer={<><button className="iconbtn primary runbtn" disabled={!caps || running} onClick={start}><Icon name="play" /><span>{runLabel}</span></button>
-            <small>{ready?.calculation_available ? "Данные проверяются для выбранных условий" : "Расчёт этого направления пока недоступен"}</small></>}>
+          footer={<><button className="iconbtn primary runbtn" disabled={runDisabled} onClick={start}><Icon name="play" /><span>{runLabel}</span></button>
+            <small>{unavailableReason || (caps ? "Данные проверяются для выбранных условий" : "Проверяем доступность расчёта")}</small></>}>
           {!caps && (
             <div className="stmsg">
               <span>
@@ -921,10 +945,10 @@ export function ApiAtlasPage() {
               {progressText ? <><br />{progressText}</> : running && ` · ${session.job ? statusText[session.job.status] || "Получаю результат" : "Отправляю запрос"}`}</>}
             actions={session.job && ["queued", "running"].includes(session.job.status) && <button className="iconbtn" onClick={() => void session.cancel()}>Отменить</button>} /></MapOverlay>
           {uiError && <StateCard role="alert" icon="cloud-off" title={uiError instanceof ApiError && uiError.code === "stored_result_incompatible" ? "Сохранённый результат несовместим — требуется новый расчёт" : "Новый результат не получен"}
-            description={errorText(uiError)} actions={<button className="iconbtn primary" onClick={bootError ? retryBootstrap : restoreMode ? retrySaved : start}>{result && !restoreMode && uiError instanceof ApiError && uiError.code === "incompatible_versions" ? "Пересчитать базу" : "Повторить"}</button>} />}
+            description={requestErrorMessage} actions={<button className="iconbtn primary" onClick={bootError ? retryBootstrap : restoreMode ? retrySaved : start}>{result && !restoreMode && uiError instanceof ApiError && uiError.code === "incompatible_versions" ? "Пересчитать базу" : "Повторить"}</button>} />}
           {!result && !uiError && <StateCard icon={running ? "loader-circle" : "circle-dashed"} loading={running}
-            title={running ? restoreMode && !session.job ? "Открываю сохранённый расчёт" : "Расчёт выполняется" : "Расчёт ещё не выполнялся"} description={running ? restoreMode && !session.job ? "Получаю результат с сервера без повторного запуска расчёта." : "Карту можно двигать — результат появится после завершения расчёта." : `${draftInstructions}, затем нажмите «${runLabel}». До расчёта карта не окрашивается.`}
-            actions={<button className="iconbtn primary" disabled={!caps || running} onClick={start}>{runLabel}</button>} />}
+            title={running ? restoreMode && !session.job ? "Открываю сохранённый расчёт" : "Расчёт выполняется" : unavailableReason ? "Расчёт пока недоступен" : "Расчёт ещё не выполнялся"} description={running ? restoreMode && !session.job ? "Получаю результат с сервера без повторного запуска расчёта." : "Карту можно двигать — результат появится после завершения расчёта." : unavailableReason || `${draftInstructions}, затем нажмите «${runLabel}». До расчёта карта не окрашивается.`}
+            actions={!unavailableReason && <button className="iconbtn primary" disabled={runDisabled} onClick={start}>{runLabel}</button>} />}
           {result &&
             (!result.map_data ||
               result.map_data.status !== "available" ||

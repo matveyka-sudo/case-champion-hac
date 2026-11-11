@@ -1,0 +1,52 @@
+{
+ "after": {
+  "departure_utc": "2026-11-13T08:00:00+00:00",
+  "total_s": 1148160,
+  "transshipment_s": 13800,
+  "wait_s": 169250
+ },
+ "before": {
+  "departure_utc": "2026-11-13T08:00:00+00:00",
+  "total_s": 1156560,
+  "transshipment_s": 22200,
+  "wait_s": 169250
+ },
+ "comparison_id": "cmp-demo-icc-kaliningrad--novorossiysk-reduce_transshipment_time",
+ "contract_status": "requires_contract_change: cargo operations are not in scenarios v2",
+ "created_ids": [],
+ "delta": {
+  "sign": "before_minus_after",
+  "total_s": 8400,
+  "wait_s": 0
+ },
+ "ids": {
+  "after": [
+   "demo-icf-kaliningrad--novorossiysk",
+   "demo-icf-kaliningrad--novorossiysk-1",
+   "demo-icf-kaliningrad--novorossiysk-2",
+   "demo-icf-kaliningrad--novorossiysk-3"
+  ],
+  "before": [
+   "demo-icf-kaliningrad--novorossiysk",
+   "demo-icf-kaliningrad--novorossiysk-1",
+   "demo-icf-kaliningrad--novorossiysk-2",
+   "demo-icf-kaliningrad--novorossiysk-3"
+  ]
+ },
+ "model_inputs": {
+  "node_id": "novorossiysk-port-way-1168951234",
+  "resource": {
+   "added": 1,
+   "evidence_id": "demo-model:intercity:resource",
+   "unit": "crane_shift",
+   "window_local": [
+    "08:00",
+    "20:00"
+   ]
+  },
+  "transshipment_after_s": 13800,
+  "transshipment_before_s": 22200
+ },
+ "operation_type": "reduce_transshipment_time",
+ "preset_id": "demo-icc-kaliningrad--novorossiysk"
+}

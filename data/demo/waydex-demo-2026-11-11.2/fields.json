@@ -1,0 +1,353 @@
+[
+ {
+  "field": "location",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_origins",
+  "origin": "real",
+  "seed": 20261111,
+  "table": "origins",
+  "template_source": "sample_points of the accepted city bundle",
+  "unit": "EPSG:4326"
+ },
+ {
+  "field": "population_persons",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_origins",
+  "origin": "real",
+  "seed": 20261111,
+  "table": "origins",
+  "template_source": "GHSL R2023A E2025 100 m via population_cells",
+  "unit": "persons"
+ },
+ {
+  "field": "access_node_id,physical_node_id",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "origins/destinations",
+  "template_source": "dedicated model nodes at each origin or destination location; zero-second boundary link",
+  "unit": "identifier"
+ },
+ {
+  "field": "location",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_destinations",
+  "origin": "real|synthetic",
+  "seed": 20261111,
+  "table": "destinations",
+  "template_source": "accepted destinations; model point snapped to a real walk node (rng key city:model-destination:category:index)",
+  "unit": "EPSG:4326"
+ },
+ {
+  "field": "location",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_stop_candidates",
+  "origin": "real|real_walk_node",
+  "seed": 20261111,
+  "table": "stops",
+  "template_source": "GTFS stops / gortrans39 stop lists / walk nodes",
+  "unit": "EPSG:4326"
+ },
+ {
+  "field": "route,sequence",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "stops",
+  "template_source": "nearest stop to three corridor origins, hub and three destinations",
+  "unit": "ordinal"
+ },
+ {
+  "field": "arrival_seconds",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "stop_times",
+  "template_source": "segment = straight*1.3/18.0 km/h, step 30 s, dwell 20 s",
+  "unit": "s since local service midnight"
+ },
+ {
+  "field": "departure_seconds",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "stop_times",
+  "template_source": "route A headway 600 s from 07:00, route B headway 900 s",
+  "unit": "s since local service midnight"
+ },
+ {
+  "field": "seconds",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "footpaths",
+  "template_source": "approach/egress within 2500.0 m; transfer and direct OD walk at 5.0 km/h with detour 1.3; co-located boundary link 0 s",
+  "unit": "s"
+ },
+ {
+  "field": "walk_s",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "transfers",
+  "template_source": "snapshot transfer walking seconds; 0 at the same stop",
+  "unit": "s"
+ },
+ {
+  "field": "minimum_seconds",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "transfers",
+  "template_source": "walk + 60 s change",
+  "unit": "s"
+ },
+ {
+  "field": "time_s",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_walk_s",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "walk_edges",
+  "template_source": "straight*1.3 at 5.0 km/h",
+  "unit": "s"
+ },
+ {
+  "field": "length_m",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "walk_edges",
+  "template_source": "straight*1.3",
+  "unit": "m"
+ },
+ {
+  "field": "time_s",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_road_s",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "car_edges",
+  "template_source": "straight*1.35 at city car_kmh + 120 s access",
+  "unit": "s"
+ },
+ {
+  "field": "length_m",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "car_edges",
+  "template_source": "straight*1.35",
+  "unit": "m"
+ },
+ {
+  "field": "demand_persons_per_hour",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "pt_demand",
+  "template_source": "route B capacity x load factor U(0.93, 1.07), rng key city:demand",
+  "unit": "persons/h"
+ },
+ {
+  "field": "capacity_persons",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "pt_resource",
+  "template_source": "reserve bus 80 persons, window 06:00-14:00",
+  "unit": "persons"
+ },
+ {
+  "field": "turnaround_s",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "pt_turnaround",
+  "template_source": "2 x route B run + 2 x 300 s layover",
+  "unit": "s"
+ },
+ {
+  "field": "location",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "real|synthetic",
+  "seed": 20261111,
+  "table": "freight_nodes",
+  "template_source": "accepted port; model node on a real road projection 6-14 km from centre (rng key city:model-freight-node:kind)",
+  "unit": "EPSG:4326"
+ },
+ {
+  "field": "base_wait_s",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "freight_nodes",
+  "template_source": "U(2100, 3300) step 60, rng key city:handling:index",
+  "unit": "s"
+ },
+ {
+  "field": "handling_s",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "freight_nodes",
+  "template_source": "U(1500, 2400) step 60",
+  "unit": "s"
+ },
+ {
+  "field": "equipment_units",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "freight_nodes",
+  "template_source": "randint(2, 4) reach stackers",
+  "unit": "units"
+ },
+ {
+  "field": "max_mass_t",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "freight_nodes",
+  "template_source": "port 40, others 30",
+  "unit": "t"
+ },
+ {
+  "field": "max_height_m",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "freight_nodes",
+  "template_source": "4.5",
+  "unit": "m"
+ },
+ {
+  "field": "time_s",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "real_observation|synthetic",
+  "seed": 20261111,
+  "table": "freight_edges",
+  "template_source": "Valhalla truck freeflow observation (handoff runtime) or straight*1.35 at 25.0 km/h",
+  "unit": "s"
+ },
+ {
+  "field": "length_m",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_city_part",
+  "origin": "real_observation|synthetic",
+  "seed": 20261111,
+  "table": "freight_edges",
+  "template_source": "as time_s",
+  "unit": "m"
+ },
+ {
+  "field": "departure_local",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:IC_SERVICES",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "departures",
+  "template_source": "fixed model clocks per mode and directed pair",
+  "unit": "local clock"
+ },
+ {
+  "field": "run_s",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_intercity_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "departures",
+  "template_source": "air: great-circle/780.0 km/h + 1800 s; rail/bus: real road length / 62-70 km/h or 68 km/h",
+  "unit": "s"
+ },
+ {
+  "field": "city_centre_to_origin_node_s,pre_boarding_s,slot_margin_s,slot_rounding_s",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_intercity_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "synthetic_departure_planning",
+  "template_source": "extra-slot planning only: centre -> node straight*1.35 at 35.0 km/h + process {'air': 5400, 'rail': 1200, 'road': 900}",
+  "unit": "s"
+ },
+ {
+  "field": "initial_wait_s,path_s,total_s",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_intercity_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "intercity_passenger_control",
+  "template_source": "chosen moment to first departure; first departure to terminal arrival including transfer; sum of both",
+  "unit": "s"
+ },
+ {
+  "field": "departure_utc,arrival_utc (passenger only)",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_utc_from_service_offset",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "intercity_passenger_control/intercity_cargo_control",
+  "template_source": "local model timetable converted relative to service-date UTC midnight",
+  "unit": "ISO 8601 UTC"
+ },
+ {
+  "field": "demand_persons",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_intercity_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "intercity_demand",
+  "template_source": "capacity x U(0.75, 0.95), rng key intercity:pair:demand",
+  "unit": "persons"
+ },
+ {
+  "field": "time_s",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:extract",
+  "origin": "real_observation",
+  "seed": 20261111,
+  "table": "road_observations",
+  "template_source": "Valhalla public freeflow auto (handoff threecity-road-observations-2026-11-11.1)",
+  "unit": "s"
+ },
+ {
+  "field": "run_s",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_intercity_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "chains",
+  "template_source": "distance / rail 40 km/h or water 26 km/h, step 600 s",
+  "unit": "s"
+ },
+ {
+  "field": "handling_at_end_s",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_intercity_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "chains",
+  "template_source": "origin handling U(7200, 10800), transshipment U(18000, 25200), rng key intercity-freight:pair",
+  "unit": "s"
+ },
+ {
+  "field": "distance_km",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_intercity_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "chains",
+  "template_source": "rail 1300/1440 km, sea 6900 km (model)",
+  "unit": "km"
+ },
+ {
+  "field": "demand_teu",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_intercity_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "chains",
+  "template_source": "randint(36, 60)",
+  "unit": "TEU"
+ },
+ {
+  "field": "capacity_t_per_day",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_pipeline_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "pipeline",
+  "template_source": "U(250000, 350000) step 1000, rng key pipeline",
+  "unit": "t/day"
+ },
+ {
+  "field": "volume_t_per_day",
+  "generator": "a2_data_pipeline.demo_dataset:waydex-demo-rules-v2:_pipeline_part",
+  "origin": "synthetic",
+  "seed": 20261111,
+  "table": "pipeline",
+  "template_source": "capacity x U(0.7, 0.9)",
+  "unit": "t/day"
+ }
+]

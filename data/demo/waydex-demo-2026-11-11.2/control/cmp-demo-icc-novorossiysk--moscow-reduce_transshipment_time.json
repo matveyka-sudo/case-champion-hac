@@ -1,0 +1,52 @@
+{
+ "after": {
+  "departure_utc": "2026-11-11T15:00:00+00:00",
+  "total_s": 178390,
+  "transshipment_s": 13200,
+  "wait_s": 22030
+ },
+ "before": {
+  "departure_utc": "2026-11-11T15:00:00+00:00",
+  "total_s": 186790,
+  "transshipment_s": 21600,
+  "wait_s": 22030
+ },
+ "comparison_id": "cmp-demo-icc-novorossiysk--moscow-reduce_transshipment_time",
+ "contract_status": "requires_contract_change: cargo operations are not in scenarios v2",
+ "created_ids": [],
+ "delta": {
+  "sign": "before_minus_after",
+  "total_s": 8400,
+  "wait_s": 0
+ },
+ "ids": {
+  "after": [
+   "demo-icf-novorossiysk--moscow",
+   "demo-icf-novorossiysk--moscow-1",
+   "demo-icf-novorossiysk--moscow-2",
+   "demo-icf-novorossiysk--moscow-3"
+  ],
+  "before": [
+   "demo-icf-novorossiysk--moscow",
+   "demo-icf-novorossiysk--moscow-1",
+   "demo-icf-novorossiysk--moscow-2",
+   "demo-icf-novorossiysk--moscow-3"
+  ]
+ },
+ "model_inputs": {
+  "node_id": "demo-moscow-rail-terminal-model",
+  "resource": {
+   "added": 1,
+   "evidence_id": "demo-model:intercity:resource",
+   "unit": "crane_shift",
+   "window_local": [
+    "08:00",
+    "20:00"
+   ]
+  },
+  "transshipment_after_s": 13200,
+  "transshipment_before_s": 21600
+ },
+ "operation_type": "reduce_transshipment_time",
+ "preset_id": "demo-icc-novorossiysk--moscow"
+}

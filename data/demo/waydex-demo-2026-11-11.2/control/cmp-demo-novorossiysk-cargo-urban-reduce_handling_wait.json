@@ -1,0 +1,48 @@
+{
+ "after": {
+  "handling_s": 1800,
+  "total_s": 3971.667,
+  "wait_s": 1740
+ },
+ "before": {
+  "handling_s": 1800,
+  "total_s": 4511.667,
+  "wait_s": 2280
+ },
+ "comparison_id": "cmp-demo-novorossiysk-cargo-urban-reduce_handling_wait",
+ "contract_status": "requires_contract_change: cargo operations are not in scenarios v2",
+ "created_ids": [],
+ "delta": {
+  "sign": "before_minus_after",
+  "total_s": 540.0,
+  "wait_s": 540
+ },
+ "ids": {
+  "after": [
+   "novorossiysk-site-way-31091391",
+   "novorossiysk-port-way-1168951234",
+   "outbound",
+   "demo-novorossiysk-truck:novorossiysk-site-way-31091391:novorossiysk-port-way-1168951234:outbound"
+  ],
+  "before": [
+   "novorossiysk-site-way-31091391",
+   "novorossiysk-port-way-1168951234",
+   "outbound",
+   "demo-novorossiysk-truck:novorossiysk-site-way-31091391:novorossiysk-port-way-1168951234:outbound"
+  ]
+ },
+ "model_inputs": {
+  "evidence_id": "demo-model:novorossiysk:handling",
+  "resource_change": {
+   "equipment": "reach_stacker",
+   "units_after": 4,
+   "units_before": 3,
+   "window_local": [
+    "08:00",
+    "12:00"
+   ]
+  }
+ },
+ "operation_type": "reduce_handling_wait",
+ "preset_id": "demo-novorossiysk-cargo-urban"
+}

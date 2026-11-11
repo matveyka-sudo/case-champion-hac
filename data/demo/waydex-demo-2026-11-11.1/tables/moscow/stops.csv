@@ -1,0 +1,9 @@
+node_id,route,sequence,name,lat,lon,location_origin,stop_origin,template_source
+demo-moscow-stop-A1,A,1,Метро «Дубровка»,55.7181824,37.6760721,real,synthetic,mos-ground-transport-gtfs-20261110:5387
+demo-moscow-stop-A2,A,2,Кинотеатр «Победа»,55.7352198,37.670266,real,synthetic,mos-ground-transport-gtfs-20261110:6014
+demo-moscow-stop-A3,A,3,Метро «Таганская»,55.743182,37.6526078,real,synthetic,mos-ground-transport-gtfs-20261110:5277
+demo-moscow-stop-A4,A,4,Красная площадь,55.7512189,37.6238921,real,synthetic,mos-ground-transport-gtfs-20261110:8184
+demo-moscow-stop-B1,B,1,Красная пл.,55.7524512,37.6262093,real,synthetic,mos-ground-transport-gtfs-20261110:18223
+demo-moscow-stop-B2,B,2,Сивцев Вражек,55.747213,37.5992441,real,synthetic,mos-ground-transport-gtfs-20261110:5233
+demo-moscow-stop-B3,B,3,Новый Арбат,55.7515247,37.5827547,real,synthetic,mos-ground-transport-gtfs-20261110:6557
+demo-moscow-stop-B4,B,4,Спиридоновка,55.7627946,37.5878478,real,synthetic,mos-ground-transport-gtfs-20261110:6200

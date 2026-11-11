@@ -1,0 +1,13 @@
+edge_id,site_id,freight_node_id,direction,length_m,time_s,origin
+demo-kaliningrad-truck:kaliningrad-site-relation-1307845:kaliningrad-port-relation-21031708:outbound,kaliningrad-site-relation-1307845,kaliningrad-port-relation-21031708,outbound,14132.0,988.506,real_observation
+demo-kaliningrad-truck:kaliningrad-site-relation-1307845:kaliningrad-port-relation-21031708:inbound,kaliningrad-site-relation-1307845,kaliningrad-port-relation-21031708,inbound,13772.0,967.197,real_observation
+demo-kaliningrad-truck:kaliningrad-site-relation-1307845:demo-kaliningrad-rail-terminal-model:outbound,kaliningrad-site-relation-1307845,demo-kaliningrad-rail-terminal-model,outbound,8364.3,1210.0,synthetic
+demo-kaliningrad-truck:kaliningrad-site-relation-1307845:demo-kaliningrad-rail-terminal-model:inbound,kaliningrad-site-relation-1307845,demo-kaliningrad-rail-terminal-model,inbound,8364.3,1210.0,synthetic
+demo-kaliningrad-truck:kaliningrad-site-way-1308996670:kaliningrad-port-relation-21031708:outbound,kaliningrad-site-way-1308996670,kaliningrad-port-relation-21031708,outbound,15152.0,1073.571,real_observation
+demo-kaliningrad-truck:kaliningrad-site-way-1308996670:kaliningrad-port-relation-21031708:inbound,kaliningrad-site-way-1308996670,kaliningrad-port-relation-21031708,inbound,15029.0,1086.335,real_observation
+demo-kaliningrad-truck:kaliningrad-site-way-1308996670:demo-kaliningrad-rail-terminal-model:outbound,kaliningrad-site-way-1308996670,demo-kaliningrad-rail-terminal-model,outbound,7661.6,1110.0,synthetic
+demo-kaliningrad-truck:kaliningrad-site-way-1308996670:demo-kaliningrad-rail-terminal-model:inbound,kaliningrad-site-way-1308996670,demo-kaliningrad-rail-terminal-model,inbound,7661.6,1110.0,synthetic
+demo-kaliningrad-truck:kaliningrad-site-relation-1308504:kaliningrad-port-relation-21031708:outbound,kaliningrad-site-relation-1308504,kaliningrad-port-relation-21031708,outbound,15732.0,1128.808,real_observation
+demo-kaliningrad-truck:kaliningrad-site-relation-1308504:kaliningrad-port-relation-21031708:inbound,kaliningrad-site-relation-1308504,kaliningrad-port-relation-21031708,inbound,15026.0,1074.866,real_observation
+demo-kaliningrad-truck:kaliningrad-site-relation-1308504:demo-kaliningrad-rail-terminal-model:outbound,kaliningrad-site-relation-1308504,demo-kaliningrad-rail-terminal-model,outbound,7373.1,1070.0,synthetic
+demo-kaliningrad-truck:kaliningrad-site-relation-1308504:demo-kaliningrad-rail-terminal-model:inbound,kaliningrad-site-relation-1308504,demo-kaliningrad-rail-terminal-model,inbound,7373.1,1070.0,synthetic

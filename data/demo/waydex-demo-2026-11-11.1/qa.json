@@ -1,0 +1,155 @@
+[
+ {
+  "check_id": "accepted_data_v2_valid",
+  "detail": [
+   "demo-moscow-2026-11-11.1",
+   "demo-kaliningrad-2026-11-11.1",
+   "demo-novorossiysk-2026-11-11.1",
+   "demo-intercity-2026-11-11.1",
+   "demo-pipeline-2026-11-11.1"
+  ],
+  "passed": true
+ },
+ {
+  "check_id": "demo_label_on_every_snapshot",
+  "detail": "qa.checks and source_versions",
+  "passed": true
+ },
+ {
+  "check_id": "timetables_valid_engine_model",
+  "detail": "a2_engine.Timetable",
+  "passed": true
+ },
+ {
+  "check_id": "synthetic_evidence_on_events_footpaths_transfers",
+  "detail": "every run, event, footpath and transfer cites DEMO evidence",
+  "passed": true
+ },
+ {
+  "check_id": "node_and_event_references_resolve",
+  "detail": [],
+  "passed": true
+ },
+ {
+  "check_id": "six_directed_pairs_each_tab",
+  "detail": [
+   "moscow--kaliningrad",
+   "kaliningrad--moscow",
+   "moscow--novorossiysk",
+   "novorossiysk--moscow",
+   "kaliningrad--novorossiysk",
+   "novorossiysk--kaliningrad"
+  ],
+  "passed": true
+ },
+ {
+  "check_id": "freight_directions_match_edges",
+  "detail": "outbound site->node, inbound node->site",
+  "passed": true
+ },
+ {
+  "check_id": "units_registered_for_numeric_fields",
+  "detail": [],
+  "passed": true
+ },
+ {
+  "check_id": "positive_durations",
+  "detail": "edges, segments, footpaths, handling, chain legs",
+  "passed": true
+ },
+ {
+  "check_id": "no_duplicate_ids",
+  "detail": {
+   "created": 10,
+   "presets_comparisons": 46,
+   "trips": 137
+  },
+  "passed": true
+ },
+ {
+  "check_id": "midnight_crossing_monotonic_utc",
+  "detail": {
+   "crossing_trips": [
+    "demo-ic-rail-moscow--kaliningrad-1650",
+    "demo-ic-rail-kaliningrad--moscow-1800",
+    "demo-ic-rail-moscow--novorossiysk-1240",
+    "demo-ic-rail-moscow--novorossiysk-1830",
+    "demo-ic-rail-novorossiysk--moscow-1340",
+    "demo-ic-rail-novorossiysk--moscow-2110",
+    "demo-ic-road-moscow--novorossiysk-0730",
+    "demo-ic-road-novorossiysk--moscow-1600"
+   ]
+  },
+  "passed": true
+ },
+ {
+  "check_id": "timezones_consistent",
+  "detail": {
+   "kaliningrad": "2026-11-11T06:30:00Z",
+   "moscow": "2026-11-11T05:30:00Z",
+   "novorossiysk": "2026-11-11T05:30:00Z"
+  },
+  "passed": true
+ },
+ {
+  "check_id": "cargo_and_resource_compatibility",
+  "detail": "profile vs node handling/mass/height; reserve vehicle window covers extra trip and turnaround",
+  "passed": true
+ },
+ {
+  "check_id": "matrix_24_base_presets",
+  "detail": 24,
+  "passed": true
+ },
+ {
+  "check_id": "matrix_21_comparisons",
+  "detail": 21,
+  "passed": true
+ },
+ {
+  "check_id": "comparison_ids_stable",
+  "detail": "after = before + created",
+  "passed": true
+ },
+ {
+  "check_id": "walk_car_presets_without_schedule_operations",
+  "detail": "in_city walk/car",
+  "passed": true
+ },
+ {
+  "check_id": "pt_problem_transfer_missed_then_fixed",
+  "detail": {
+   "kaliningrad": {
+    "additional_departure": 3220.0,
+    "base": 3670.0,
+    "coordinate_transfer": 2890.0
+   },
+   "moscow": {
+    "additional_departure": 3590.0,
+    "base": 4040.0,
+    "coordinate_transfer": 3260.0
+   },
+   "novorossiysk": {
+    "additional_departure": 3650.0,
+    "base": 4100.0,
+    "coordinate_transfer": 3320.0
+   }
+  },
+  "passed": true
+ },
+ {
+  "check_id": "engine_reports_no_missing_rules",
+  "detail": [],
+  "passed": true
+ },
+ {
+  "check_id": "every_comparison_changes_its_metric",
+  "detail": [],
+  "passed": true
+ },
+ {
+  "check_id": "pipeline_separate_from_delivery",
+  "detail": "pipeline only in demo-pipeline snapshot",
+  "passed": true
+ }
+]

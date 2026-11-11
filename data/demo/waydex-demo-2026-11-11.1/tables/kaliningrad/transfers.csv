@@ -1,0 +1,11 @@
+rule_id,from_node_id,to_node_id,minimum_seconds,walk_s,origin
+demo-kaliningrad-minimum-A1-same,demo-kaliningrad-stop-A1,demo-kaliningrad-stop-A1,60.0,110,synthetic
+demo-kaliningrad-minimum-A2-same,demo-kaliningrad-stop-A2,demo-kaliningrad-stop-A2,60.0,110,synthetic
+demo-kaliningrad-minimum-A3-same,demo-kaliningrad-stop-A3,demo-kaliningrad-stop-A3,60.0,110,synthetic
+demo-kaliningrad-minimum-A4-B1,demo-kaliningrad-stop-A4,demo-kaliningrad-stop-B1,170.0,110,synthetic
+demo-kaliningrad-minimum-A4-same,demo-kaliningrad-stop-A4,demo-kaliningrad-stop-A4,60.0,110,synthetic
+demo-kaliningrad-minimum-B1-A4,demo-kaliningrad-stop-B1,demo-kaliningrad-stop-A4,170.0,110,synthetic
+demo-kaliningrad-minimum-B1-same,demo-kaliningrad-stop-B1,demo-kaliningrad-stop-B1,60.0,110,synthetic
+demo-kaliningrad-minimum-B2-same,demo-kaliningrad-stop-B2,demo-kaliningrad-stop-B2,60.0,110,synthetic
+demo-kaliningrad-minimum-B3-same,demo-kaliningrad-stop-B3,demo-kaliningrad-stop-B3,60.0,110,synthetic
+demo-kaliningrad-minimum-B4-same,demo-kaliningrad-stop-B4,demo-kaliningrad-stop-B4,60.0,110,synthetic

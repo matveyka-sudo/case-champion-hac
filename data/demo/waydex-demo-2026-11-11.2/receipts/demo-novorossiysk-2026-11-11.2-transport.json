@@ -1,0 +1,4491 @@
+{
+ "limitations": [
+  "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+  "NOT_A_REAL_CITY_RANKING"
+ ],
+ "model": {
+  "footpaths": [
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-airport-model-2",
+    "path_id": "demo-novorossiysk-endpoint:physical:destination:demo-novorossiysk-airport-model-2",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:demo-novorossiysk-airport-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-child_polyclinic-model-2",
+    "path_id": "demo-novorossiysk-endpoint:physical:destination:demo-novorossiysk-child_polyclinic-model-2",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:demo-novorossiysk-child_polyclinic-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-rail_terminal-model-2",
+    "path_id": "demo-novorossiysk-endpoint:physical:destination:demo-novorossiysk-rail_terminal-model-2",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:demo-novorossiysk-rail_terminal-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-a96a4f8aea02",
+    "path_id": "demo-novorossiysk-endpoint:physical:destination:novorossiysk-adult_polyclinic-a96a4f8aea02",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:novorossiysk-adult_polyclinic-a96a4f8aea02"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-d7725c0eca3f",
+    "path_id": "demo-novorossiysk-endpoint:physical:destination:novorossiysk-adult_polyclinic-d7725c0eca3f",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:novorossiysk-adult_polyclinic-d7725c0eca3f"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "demo-novorossiysk-access:destination:novorossiysk-airport-relation-1519974",
+    "path_id": "demo-novorossiysk-endpoint:physical:destination:novorossiysk-airport-relation-1519974",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:novorossiysk-airport-relation-1519974"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "demo-novorossiysk-access:destination:novorossiysk-bus_terminal-node-1877855052",
+    "path_id": "demo-novorossiysk-endpoint:physical:destination:novorossiysk-bus_terminal-node-1877855052",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:novorossiysk-bus_terminal-node-1877855052"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "demo-novorossiysk-access:destination:novorossiysk-bus_terminal-way-61808901",
+    "path_id": "demo-novorossiysk-endpoint:physical:destination:novorossiysk-bus_terminal-way-61808901",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:novorossiysk-bus_terminal-way-61808901"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "demo-novorossiysk-access:destination:novorossiysk-child_polyclinic-2fc149e7dc8a",
+    "path_id": "demo-novorossiysk-endpoint:physical:destination:novorossiysk-child_polyclinic-2fc149e7dc8a",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:novorossiysk-child_polyclinic-2fc149e7dc8a"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "demo-novorossiysk-access:destination:novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea",
+    "path_id": "demo-novorossiysk-endpoint:physical:destination:novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "demo-novorossiysk-access:destination:novorossiysk-college_university-way-483100861",
+    "path_id": "demo-novorossiysk-endpoint:physical:destination:novorossiysk-college_university-way-483100861",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:novorossiysk-college_university-way-483100861"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-17",
+    "path_id": "demo-novorossiysk-endpoint:physical:destination:novorossiysk-kindergarten-gorono-17",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:novorossiysk-kindergarten-gorono-17"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-56",
+    "path_id": "demo-novorossiysk-endpoint:physical:destination:novorossiysk-kindergarten-gorono-56",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:novorossiysk-kindergarten-gorono-56"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "demo-novorossiysk-access:destination:novorossiysk-rail_terminal-node-343446779",
+    "path_id": "demo-novorossiysk-endpoint:physical:destination:novorossiysk-rail_terminal-node-343446779",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:novorossiysk-rail_terminal-node-343446779"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f",
+    "path_id": "demo-novorossiysk-endpoint:physical:destination:novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160",
+    "path_id": "demo-novorossiysk-endpoint:physical:destination:novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-482887330",
+    "path_id": "demo-novorossiysk-endpoint:physical:destination:novorossiysk-shopping_center-way-482887330",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:novorossiysk-shopping_center-way-482887330"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-511814920",
+    "path_id": "demo-novorossiysk-endpoint:physical:destination:novorossiysk-shopping_center-way-511814920",
+    "seconds": 0.0,
+    "to_node_id": "physical:destination:novorossiysk-shopping_center-way-511814920"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "physical:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-endpoint:physical:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "seconds": 0.0,
+    "to_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "physical:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-endpoint:physical:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "seconds": 0.0,
+    "to_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "physical:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-endpoint:physical:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "seconds": 0.0,
+    "to_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "physical:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-endpoint:physical:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "seconds": 0.0,
+    "to_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "physical:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-endpoint:physical:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "seconds": 0.0,
+    "to_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:physical_endpoints"
+    ],
+    "from_node_id": "physical:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-endpoint:physical:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "seconds": 0.0,
+    "to_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-A4",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-A4->demo-novorossiysk-child_polyclinic-model-2",
+    "seconds": 640.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-child_polyclinic-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-A4",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-A4->demo-novorossiysk-stop-B1",
+    "seconds": 80.0,
+    "to_node_id": "demo-novorossiysk-stop-B1"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-A4",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-A4->novorossiysk-adult_polyclinic-a96a4f8aea02",
+    "seconds": 370.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-a96a4f8aea02"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-A4",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-A4->novorossiysk-bus_terminal-way-61808901",
+    "seconds": 470.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-bus_terminal-way-61808901"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-A4",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-A4->novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea",
+    "seconds": 470.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-A4",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-A4->novorossiysk-college_university-way-483100861",
+    "seconds": 30.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-college_university-way-483100861"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-A4",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-A4->novorossiysk-kindergarten-gorono-17",
+    "seconds": 540.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-17"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-A4",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-A4->novorossiysk-kindergarten-gorono-56",
+    "seconds": 610.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-56"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-A4",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-A4->novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f",
+    "seconds": 610.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-A4",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-A4->novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160",
+    "seconds": 260.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-A4",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-A4->novorossiysk-shopping_center-way-482887330",
+    "seconds": 150.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-482887330"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-A4",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-A4->novorossiysk-shopping_center-way-511814920",
+    "seconds": 440.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-511814920"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B1",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-B1->demo-novorossiysk-child_polyclinic-model-2",
+    "seconds": 570.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-child_polyclinic-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B1",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-B1->demo-novorossiysk-stop-A4",
+    "seconds": 80.0,
+    "to_node_id": "demo-novorossiysk-stop-A4"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B1",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-B1->novorossiysk-adult_polyclinic-a96a4f8aea02",
+    "seconds": 310.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-a96a4f8aea02"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B1",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-B1->novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea",
+    "seconds": 410.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B1",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-B1->novorossiysk-college_university-way-483100861",
+    "seconds": 90.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-college_university-way-483100861"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B1",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-B1->novorossiysk-kindergarten-gorono-56",
+    "seconds": 540.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-56"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B1",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-B1->novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160",
+    "seconds": 260.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B1",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-B1->novorossiysk-shopping_center-way-482887330",
+    "seconds": 90.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-482887330"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B1",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-B1->novorossiysk-shopping_center-way-511814920",
+    "seconds": 370.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-511814920"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B2",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-B2->novorossiysk-adult_polyclinic-d7725c0eca3f",
+    "seconds": 280.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-d7725c0eca3f"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B2",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-B2->novorossiysk-bus_terminal-way-61808901",
+    "seconds": 450.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-bus_terminal-way-61808901"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B2",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-B2->novorossiysk-child_polyclinic-2fc149e7dc8a",
+    "seconds": 20.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-child_polyclinic-2fc149e7dc8a"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B2",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-B2->novorossiysk-kindergarten-gorono-17",
+    "seconds": 580.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-17"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B2",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-B2->novorossiysk-rail_terminal-node-343446779",
+    "seconds": 1250.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-rail_terminal-node-343446779"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B3",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-B3->novorossiysk-adult_polyclinic-d7725c0eca3f",
+    "seconds": 10.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-d7725c0eca3f"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B3",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-B3->novorossiysk-child_polyclinic-2fc149e7dc8a",
+    "seconds": 280.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-child_polyclinic-2fc149e7dc8a"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B3",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-B3->novorossiysk-rail_terminal-node-343446779",
+    "seconds": 1270.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-rail_terminal-node-343446779"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B4",
+    "path_id": "demo-novorossiysk-fp:demo-novorossiysk-stop-B4->novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f",
+    "seconds": 60.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-fp:novorossiysk-utm37n-1km-v1-e400-n4953-p->demo-novorossiysk-stop-B2",
+    "seconds": 1730.0,
+    "to_node_id": "demo-novorossiysk-stop-B2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-fp:novorossiysk-utm37n-1km-v1-e400-n4953-p->demo-novorossiysk-stop-B3",
+    "seconds": 1480.0,
+    "to_node_id": "demo-novorossiysk-stop-B3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-fp:novorossiysk-utm37n-1km-v1-e402-n4949-p->demo-novorossiysk-stop-A1",
+    "seconds": 20.0,
+    "to_node_id": "demo-novorossiysk-stop-A1"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-fp:novorossiysk-utm37n-1km-v1-e402-n4949-p->demo-novorossiysk-stop-A2",
+    "seconds": 1330.0,
+    "to_node_id": "demo-novorossiysk-stop-A2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-fp:novorossiysk-utm37n-1km-v1-e402-n4952-p->demo-novorossiysk-stop-A4",
+    "seconds": 80.0,
+    "to_node_id": "demo-novorossiysk-stop-A4"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-fp:novorossiysk-utm37n-1km-v1-e402-n4952-p->demo-novorossiysk-stop-B1",
+    "seconds": 10.0,
+    "to_node_id": "demo-novorossiysk-stop-B1"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-fp:novorossiysk-utm37n-1km-v1-e403-n4950-p->demo-novorossiysk-stop-A2",
+    "seconds": 20.0,
+    "to_node_id": "demo-novorossiysk-stop-A2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-fp:novorossiysk-utm37n-1km-v1-e403-n4950-p->demo-novorossiysk-stop-A3",
+    "seconds": 950.0,
+    "to_node_id": "demo-novorossiysk-stop-A3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-fp:novorossiysk-utm37n-1km-v1-e403-n4951-p->demo-novorossiysk-stop-A2",
+    "seconds": 940.0,
+    "to_node_id": "demo-novorossiysk-stop-A2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-fp:novorossiysk-utm37n-1km-v1-e403-n4951-p->demo-novorossiysk-stop-A3",
+    "seconds": 20.0,
+    "to_node_id": "demo-novorossiysk-stop-A3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-fp:novorossiysk-utm37n-1km-v1-e403-n4954-p->demo-novorossiysk-stop-B2",
+    "seconds": 1680.0,
+    "to_node_id": "demo-novorossiysk-stop-B2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-fp:novorossiysk-utm37n-1km-v1-e403-n4954-p->demo-novorossiysk-stop-B3",
+    "seconds": 1750.0,
+    "to_node_id": "demo-novorossiysk-stop-B3"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e400-n4953-p->demo-novorossiysk-airport-model-2",
+    "seconds": 3210.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-airport-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e400-n4953-p->demo-novorossiysk-child_polyclinic-model-2",
+    "seconds": 2470.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-child_polyclinic-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e400-n4953-p->demo-novorossiysk-rail_terminal-model-2",
+    "seconds": 7140.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-rail_terminal-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e400-n4953-p->novorossiysk-adult_polyclinic-a96a4f8aea02",
+    "seconds": 2380.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-a96a4f8aea02"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e400-n4953-p->novorossiysk-adult_polyclinic-d7725c0eca3f",
+    "seconds": 1490.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-d7725c0eca3f"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e400-n4953-p->novorossiysk-airport-relation-1519974",
+    "seconds": 24930.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-airport-relation-1519974"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e400-n4953-p->novorossiysk-bus_terminal-node-1877855052",
+    "seconds": 16530.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-bus_terminal-node-1877855052"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e400-n4953-p->novorossiysk-bus_terminal-way-61808901",
+    "seconds": 1590.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-bus_terminal-way-61808901"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e400-n4953-p->novorossiysk-child_polyclinic-2fc149e7dc8a",
+    "seconds": 1730.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-child_polyclinic-2fc149e7dc8a"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e400-n4953-p->novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea",
+    "seconds": 2500.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e400-n4953-p->novorossiysk-college_university-way-483100861",
+    "seconds": 2030.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-college_university-way-483100861"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e400-n4953-p->novorossiysk-kindergarten-gorono-17",
+    "seconds": 1520.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-17"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e400-n4953-p->novorossiysk-kindergarten-gorono-56",
+    "seconds": 2450.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-56"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e400-n4953-p->novorossiysk-rail_terminal-node-343446779",
+    "seconds": 2450.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-rail_terminal-node-343446779"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e400-n4953-p->novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f",
+    "seconds": 2210.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e400-n4953-p->novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160",
+    "seconds": 2290.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e400-n4953-p->novorossiysk-shopping_center-way-482887330",
+    "seconds": 2090.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-482887330"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e400-n4953-p->novorossiysk-shopping_center-way-511814920",
+    "seconds": 2440.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-511814920"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4949-p->demo-novorossiysk-airport-model-2",
+    "seconds": 6300.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-airport-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4949-p->demo-novorossiysk-child_polyclinic-model-2",
+    "seconds": 3110.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-child_polyclinic-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4949-p->demo-novorossiysk-rail_terminal-model-2",
+    "seconds": 2970.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-rail_terminal-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4949-p->novorossiysk-adult_polyclinic-a96a4f8aea02",
+    "seconds": 2780.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-a96a4f8aea02"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4949-p->novorossiysk-adult_polyclinic-d7725c0eca3f",
+    "seconds": 3590.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-d7725c0eca3f"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4949-p->novorossiysk-airport-relation-1519974",
+    "seconds": 21370.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-airport-relation-1519974"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4949-p->novorossiysk-bus_terminal-node-1877855052",
+    "seconds": 13260.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-bus_terminal-node-1877855052"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4949-p->novorossiysk-bus_terminal-way-61808901",
+    "seconds": 3100.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-bus_terminal-way-61808901"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4949-p->novorossiysk-child_polyclinic-2fc149e7dc8a",
+    "seconds": 3410.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-child_polyclinic-2fc149e7dc8a"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4949-p->novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea",
+    "seconds": 2740.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4949-p->novorossiysk-college_university-way-483100861",
+    "seconds": 2800.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-college_university-way-483100861"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4949-p->novorossiysk-kindergarten-gorono-17",
+    "seconds": 3040.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-17"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4949-p->novorossiysk-kindergarten-gorono-56",
+    "seconds": 3090.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-56"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4949-p->novorossiysk-rail_terminal-node-343446779",
+    "seconds": 4510.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-rail_terminal-node-343446779"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4949-p->novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f",
+    "seconds": 2230.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4949-p->novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160",
+    "seconds": 2580.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4949-p->novorossiysk-shopping_center-way-482887330",
+    "seconds": 2890.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-482887330"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4949-p->novorossiysk-shopping_center-way-511814920",
+    "seconds": 2800.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-511814920"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4952-p->demo-novorossiysk-airport-model-2",
+    "seconds": 3500.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-airport-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4952-p->demo-novorossiysk-child_polyclinic-model-2",
+    "seconds": 570.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-child_polyclinic-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4952-p->demo-novorossiysk-rail_terminal-model-2",
+    "seconds": 5690.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-rail_terminal-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4952-p->novorossiysk-adult_polyclinic-a96a4f8aea02",
+    "seconds": 300.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-a96a4f8aea02"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4952-p->novorossiysk-adult_polyclinic-d7725c0eca3f",
+    "seconds": 870.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-d7725c0eca3f"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4952-p->novorossiysk-airport-relation-1519974",
+    "seconds": 22850.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-airport-relation-1519974"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4952-p->novorossiysk-bus_terminal-node-1877855052",
+    "seconds": 14430.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-bus_terminal-node-1877855052"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4952-p->novorossiysk-bus_terminal-way-61808901",
+    "seconds": 520.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-bus_terminal-way-61808901"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4952-p->novorossiysk-child_polyclinic-2fc149e7dc8a",
+    "seconds": 640.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-child_polyclinic-2fc149e7dc8a"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4952-p->novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea",
+    "seconds": 410.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4952-p->novorossiysk-college_university-way-483100861",
+    "seconds": 90.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-college_university-way-483100861"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4952-p->novorossiysk-kindergarten-gorono-17",
+    "seconds": 590.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-17"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4952-p->novorossiysk-kindergarten-gorono-56",
+    "seconds": 540.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-56"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4952-p->novorossiysk-rail_terminal-node-343446779",
+    "seconds": 1750.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-rail_terminal-node-343446779"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4952-p->novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f",
+    "seconds": 670.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4952-p->novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160",
+    "seconds": 250.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4952-p->novorossiysk-shopping_center-way-482887330",
+    "seconds": 100.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-482887330"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e402-n4952-p->novorossiysk-shopping_center-way-511814920",
+    "seconds": 370.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-511814920"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4950-p->demo-novorossiysk-airport-model-2",
+    "seconds": 5440.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-airport-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4950-p->demo-novorossiysk-child_polyclinic-model-2",
+    "seconds": 2190.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-child_polyclinic-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4950-p->demo-novorossiysk-rail_terminal-model-2",
+    "seconds": 3730.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-rail_terminal-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4950-p->novorossiysk-adult_polyclinic-a96a4f8aea02",
+    "seconds": 1950.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-a96a4f8aea02"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4950-p->novorossiysk-adult_polyclinic-d7725c0eca3f",
+    "seconds": 2960.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-d7725c0eca3f"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4950-p->novorossiysk-airport-relation-1519974",
+    "seconds": 21040.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-airport-relation-1519974"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4950-p->novorossiysk-bus_terminal-node-1877855052",
+    "seconds": 12740.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-bus_terminal-node-1877855052"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4950-p->novorossiysk-bus_terminal-way-61808901",
+    "seconds": 2540.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-bus_terminal-way-61808901"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4950-p->novorossiysk-child_polyclinic-2fc149e7dc8a",
+    "seconds": 2720.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-child_polyclinic-2fc149e7dc8a"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4950-p->novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea",
+    "seconds": 1870.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4950-p->novorossiysk-college_university-way-483100861",
+    "seconds": 2130.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-college_university-way-483100861"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4950-p->novorossiysk-kindergarten-gorono-17",
+    "seconds": 2550.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-17"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4950-p->novorossiysk-kindergarten-gorono-56",
+    "seconds": 2180.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-56"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4950-p->novorossiysk-rail_terminal-node-343446779",
+    "seconds": 3590.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-rail_terminal-node-343446779"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4950-p->novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f",
+    "seconds": 1770.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4950-p->novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160",
+    "seconds": 1860.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4950-p->novorossiysk-shopping_center-way-482887330",
+    "seconds": 2170.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-482887330"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4950-p->novorossiysk-shopping_center-way-511814920",
+    "seconds": 1930.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-511814920"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4951-p->demo-novorossiysk-airport-model-2",
+    "seconds": 4510.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-airport-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4951-p->demo-novorossiysk-child_polyclinic-model-2",
+    "seconds": 1270.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-child_polyclinic-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4951-p->demo-novorossiysk-rail_terminal-model-2",
+    "seconds": 4680.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-rail_terminal-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4951-p->novorossiysk-adult_polyclinic-a96a4f8aea02",
+    "seconds": 1100.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-a96a4f8aea02"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4951-p->novorossiysk-adult_polyclinic-d7725c0eca3f",
+    "seconds": 2160.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-d7725c0eca3f"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4951-p->novorossiysk-airport-relation-1519974",
+    "seconds": 21560.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-airport-relation-1519974"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4951-p->novorossiysk-bus_terminal-node-1877855052",
+    "seconds": 13170.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-bus_terminal-node-1877855052"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4951-p->novorossiysk-bus_terminal-way-61808901",
+    "seconds": 1820.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-bus_terminal-way-61808901"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4951-p->novorossiysk-child_polyclinic-2fc149e7dc8a",
+    "seconds": 1900.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-child_polyclinic-2fc149e7dc8a"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4951-p->novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea",
+    "seconds": 1000.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4951-p->novorossiysk-college_university-way-483100861",
+    "seconds": 1380.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-college_university-way-483100861"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4951-p->novorossiysk-kindergarten-gorono-17",
+    "seconds": 1860.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-17"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4951-p->novorossiysk-kindergarten-gorono-56",
+    "seconds": 1270.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-56"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4951-p->novorossiysk-rail_terminal-node-343446779",
+    "seconds": 2660.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-rail_terminal-node-343446779"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4951-p->novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f",
+    "seconds": 1270.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4951-p->novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160",
+    "seconds": 1100.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4951-p->novorossiysk-shopping_center-way-482887330",
+    "seconds": 1370.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-482887330"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4951-p->novorossiysk-shopping_center-way-511814920",
+    "seconds": 1060.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-511814920"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4954-p->demo-novorossiysk-airport-model-2",
+    "seconds": 1830.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-airport-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4954-p->demo-novorossiysk-child_polyclinic-model-2",
+    "seconds": 1680.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-child_polyclinic-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4954-p->demo-novorossiysk-rail_terminal-model-2",
+    "seconds": 7490.0,
+    "to_node_id": "demo-novorossiysk-access:destination:demo-novorossiysk-rail_terminal-model-2"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4954-p->novorossiysk-adult_polyclinic-a96a4f8aea02",
+    "seconds": 2030.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-a96a4f8aea02"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4954-p->novorossiysk-adult_polyclinic-d7725c0eca3f",
+    "seconds": 1740.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-d7725c0eca3f"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4954-p->novorossiysk-airport-relation-1519974",
+    "seconds": 23270.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-airport-relation-1519974"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4954-p->novorossiysk-bus_terminal-node-1877855052",
+    "seconds": 14720.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-bus_terminal-node-1877855052"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4954-p->novorossiysk-bus_terminal-way-61808901",
+    "seconds": 2130.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-bus_terminal-way-61808901"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4954-p->novorossiysk-child_polyclinic-2fc149e7dc8a",
+    "seconds": 1700.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-child_polyclinic-2fc149e7dc8a"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4954-p->novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea",
+    "seconds": 2050.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4954-p->novorossiysk-college_university-way-483100861",
+    "seconds": 2150.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-college_university-way-483100861"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4954-p->novorossiysk-kindergarten-gorono-17",
+    "seconds": 2260.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-17"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4954-p->novorossiysk-kindergarten-gorono-56",
+    "seconds": 1700.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-56"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4954-p->novorossiysk-rail_terminal-node-343446779",
+    "seconds": 510.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-rail_terminal-node-343446779"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4954-p->novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f",
+    "seconds": 2760.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4954-p->novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160",
+    "seconds": 2280.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4954-p->novorossiysk-shopping_center-way-482887330",
+    "seconds": 2010.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-482887330"
+   },
+   {
+    "confirmed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:edges",
+     "demo-model:novorossiysk:footpaths"
+    ],
+    "from_node_id": "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "path_id": "demo-novorossiysk-walk:novorossiysk-utm37n-1km-v1-e403-n4954-p->novorossiysk-shopping_center-way-511814920",
+    "seconds": 2000.0,
+    "to_node_id": "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-511814920"
+   }
+  ],
+  "runs": [
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T04:20:00Z",
+      "departure_at": "2026-11-11T04:20:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T04:26:30Z",
+      "departure_at": "2026-11-11T04:26:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T04:31:20Z",
+      "departure_at": "2026-11-11T04:31:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T04:38:10Z",
+      "departure_at": "2026-11-11T04:38:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-0720"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T04:40:00Z",
+      "departure_at": "2026-11-11T04:40:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T04:46:30Z",
+      "departure_at": "2026-11-11T04:46:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T04:51:20Z",
+      "departure_at": "2026-11-11T04:51:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T04:58:10Z",
+      "departure_at": "2026-11-11T04:58:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-0740"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:44:30Z",
+      "departure_at": "2026-11-11T06:44:30Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:47:30Z",
+      "departure_at": "2026-11-11T06:47:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:49:20Z",
+      "departure_at": "2026-11-11T06:49:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:56:10Z",
+      "departure_at": "2026-11-11T06:56:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-B-0944"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T04:30:00Z",
+      "departure_at": "2026-11-11T04:30:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T04:36:30Z",
+      "departure_at": "2026-11-11T04:36:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T04:41:20Z",
+      "departure_at": "2026-11-11T04:41:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T04:48:10Z",
+      "departure_at": "2026-11-11T04:48:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-0730"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:00:00Z",
+      "departure_at": "2026-11-11T06:00:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:06:30Z",
+      "departure_at": "2026-11-11T06:06:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:11:20Z",
+      "departure_at": "2026-11-11T06:11:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:18:10Z",
+      "departure_at": "2026-11-11T06:18:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-0900"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:14:30Z",
+      "departure_at": "2026-11-11T05:14:30Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:17:30Z",
+      "departure_at": "2026-11-11T05:17:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:19:20Z",
+      "departure_at": "2026-11-11T05:19:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:26:10Z",
+      "departure_at": "2026-11-11T05:26:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-B-0814"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T04:59:30Z",
+      "departure_at": "2026-11-11T04:59:30Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:02:30Z",
+      "departure_at": "2026-11-11T05:02:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:04:20Z",
+      "departure_at": "2026-11-11T05:04:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:11:10Z",
+      "departure_at": "2026-11-11T05:11:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-B-0759"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:50:00Z",
+      "departure_at": "2026-11-11T05:50:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:56:30Z",
+      "departure_at": "2026-11-11T05:56:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:01:20Z",
+      "departure_at": "2026-11-11T06:01:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:08:10Z",
+      "departure_at": "2026-11-11T06:08:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-0850"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:30:00Z",
+      "departure_at": "2026-11-11T05:30:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:36:30Z",
+      "departure_at": "2026-11-11T05:36:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:41:20Z",
+      "departure_at": "2026-11-11T05:41:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:48:10Z",
+      "departure_at": "2026-11-11T05:48:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-0830"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:00:00Z",
+      "departure_at": "2026-11-11T07:00:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:06:30Z",
+      "departure_at": "2026-11-11T07:06:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:11:20Z",
+      "departure_at": "2026-11-11T07:11:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:18:10Z",
+      "departure_at": "2026-11-11T07:18:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-1000"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:10:00Z",
+      "departure_at": "2026-11-11T05:10:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:16:30Z",
+      "departure_at": "2026-11-11T05:16:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:21:20Z",
+      "departure_at": "2026-11-11T05:21:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:28:10Z",
+      "departure_at": "2026-11-11T05:28:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-0810"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:10:00Z",
+      "departure_at": "2026-11-11T06:10:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:16:30Z",
+      "departure_at": "2026-11-11T06:16:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:21:20Z",
+      "departure_at": "2026-11-11T06:21:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:28:10Z",
+      "departure_at": "2026-11-11T06:28:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-0910"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:40:00Z",
+      "departure_at": "2026-11-11T05:40:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:46:30Z",
+      "departure_at": "2026-11-11T05:46:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:51:20Z",
+      "departure_at": "2026-11-11T05:51:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:58:10Z",
+      "departure_at": "2026-11-11T05:58:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-0840"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:20:00Z",
+      "departure_at": "2026-11-11T07:20:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:26:30Z",
+      "departure_at": "2026-11-11T07:26:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:31:20Z",
+      "departure_at": "2026-11-11T07:31:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:38:10Z",
+      "departure_at": "2026-11-11T07:38:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-1020"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:44:30Z",
+      "departure_at": "2026-11-11T07:44:30Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:47:30Z",
+      "departure_at": "2026-11-11T07:47:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:49:20Z",
+      "departure_at": "2026-11-11T07:49:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:56:10Z",
+      "departure_at": "2026-11-11T07:56:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-B-1044"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:59:30Z",
+      "departure_at": "2026-11-11T06:59:30Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:02:30Z",
+      "departure_at": "2026-11-11T07:02:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:04:20Z",
+      "departure_at": "2026-11-11T07:04:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:11:10Z",
+      "departure_at": "2026-11-11T07:11:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-B-0959"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:00:00Z",
+      "departure_at": "2026-11-11T05:00:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:06:30Z",
+      "departure_at": "2026-11-11T05:06:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:11:20Z",
+      "departure_at": "2026-11-11T05:11:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:18:10Z",
+      "departure_at": "2026-11-11T05:18:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-0800"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:14:30Z",
+      "departure_at": "2026-11-11T07:14:30Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:17:30Z",
+      "departure_at": "2026-11-11T07:17:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:19:20Z",
+      "departure_at": "2026-11-11T07:19:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:26:10Z",
+      "departure_at": "2026-11-11T07:26:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-B-1014"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T08:29:30Z",
+      "departure_at": "2026-11-11T08:29:30Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T08:32:30Z",
+      "departure_at": "2026-11-11T08:32:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T08:34:20Z",
+      "departure_at": "2026-11-11T08:34:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:41:10Z",
+      "departure_at": "2026-11-11T08:41:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-B-1129"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T04:10:00Z",
+      "departure_at": "2026-11-11T04:10:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T04:16:30Z",
+      "departure_at": "2026-11-11T04:16:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T04:21:20Z",
+      "departure_at": "2026-11-11T04:21:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T04:28:10Z",
+      "departure_at": "2026-11-11T04:28:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-0710"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T04:50:00Z",
+      "departure_at": "2026-11-11T04:50:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T04:56:30Z",
+      "departure_at": "2026-11-11T04:56:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:01:20Z",
+      "departure_at": "2026-11-11T05:01:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:08:10Z",
+      "departure_at": "2026-11-11T05:08:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-0750"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:10:00Z",
+      "departure_at": "2026-11-11T07:10:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:16:30Z",
+      "departure_at": "2026-11-11T07:16:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:21:20Z",
+      "departure_at": "2026-11-11T07:21:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:28:10Z",
+      "departure_at": "2026-11-11T07:28:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-1010"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:59:30Z",
+      "departure_at": "2026-11-11T07:59:30Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T08:02:30Z",
+      "departure_at": "2026-11-11T08:02:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T08:04:20Z",
+      "departure_at": "2026-11-11T08:04:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:11:10Z",
+      "departure_at": "2026-11-11T08:11:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-B-1059"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T04:44:30Z",
+      "departure_at": "2026-11-11T04:44:30Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T04:47:30Z",
+      "departure_at": "2026-11-11T04:47:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T04:49:20Z",
+      "departure_at": "2026-11-11T04:49:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T04:56:10Z",
+      "departure_at": "2026-11-11T04:56:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-B-0744"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:40:00Z",
+      "departure_at": "2026-11-11T06:40:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:46:30Z",
+      "departure_at": "2026-11-11T06:46:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:51:20Z",
+      "departure_at": "2026-11-11T06:51:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:58:10Z",
+      "departure_at": "2026-11-11T06:58:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-0940"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:44:30Z",
+      "departure_at": "2026-11-11T05:44:30Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:47:30Z",
+      "departure_at": "2026-11-11T05:47:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:49:20Z",
+      "departure_at": "2026-11-11T05:49:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:56:10Z",
+      "departure_at": "2026-11-11T05:56:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-B-0844"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T08:14:30Z",
+      "departure_at": "2026-11-11T08:14:30Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T08:17:30Z",
+      "departure_at": "2026-11-11T08:17:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T08:19:20Z",
+      "departure_at": "2026-11-11T08:19:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:26:10Z",
+      "departure_at": "2026-11-11T08:26:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-B-1114"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:29:30Z",
+      "departure_at": "2026-11-11T06:29:30Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:32:30Z",
+      "departure_at": "2026-11-11T06:32:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:34:20Z",
+      "departure_at": "2026-11-11T06:34:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:41:10Z",
+      "departure_at": "2026-11-11T06:41:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-B-0929"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:40:00Z",
+      "departure_at": "2026-11-11T07:40:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:46:30Z",
+      "departure_at": "2026-11-11T07:46:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:51:20Z",
+      "departure_at": "2026-11-11T07:51:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:58:10Z",
+      "departure_at": "2026-11-11T07:58:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-1040"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:30:00Z",
+      "departure_at": "2026-11-11T06:30:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:36:30Z",
+      "departure_at": "2026-11-11T06:36:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:41:20Z",
+      "departure_at": "2026-11-11T06:41:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:48:10Z",
+      "departure_at": "2026-11-11T06:48:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-0930"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:50:00Z",
+      "departure_at": "2026-11-11T07:50:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:56:30Z",
+      "departure_at": "2026-11-11T07:56:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T08:01:20Z",
+      "departure_at": "2026-11-11T08:01:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T08:08:10Z",
+      "departure_at": "2026-11-11T08:08:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-1050"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:14:30Z",
+      "departure_at": "2026-11-11T06:14:30Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:17:30Z",
+      "departure_at": "2026-11-11T06:17:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:19:20Z",
+      "departure_at": "2026-11-11T06:19:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:26:10Z",
+      "departure_at": "2026-11-11T06:26:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-B-0914"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T04:00:00Z",
+      "departure_at": "2026-11-11T04:00:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T04:06:30Z",
+      "departure_at": "2026-11-11T04:06:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T04:11:20Z",
+      "departure_at": "2026-11-11T04:11:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T04:18:10Z",
+      "departure_at": "2026-11-11T04:18:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-0700"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:50:00Z",
+      "departure_at": "2026-11-11T06:50:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:56:30Z",
+      "departure_at": "2026-11-11T06:56:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:01:20Z",
+      "departure_at": "2026-11-11T07:01:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:08:10Z",
+      "departure_at": "2026-11-11T07:08:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-0950"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:20:00Z",
+      "departure_at": "2026-11-11T05:20:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:26:30Z",
+      "departure_at": "2026-11-11T05:26:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:31:20Z",
+      "departure_at": "2026-11-11T05:31:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:38:10Z",
+      "departure_at": "2026-11-11T05:38:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-0820"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T06:20:00Z",
+      "departure_at": "2026-11-11T06:20:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:26:30Z",
+      "departure_at": "2026-11-11T06:26:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:31:20Z",
+      "departure_at": "2026-11-11T06:31:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:38:10Z",
+      "departure_at": "2026-11-11T06:38:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-0920"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:59:30Z",
+      "departure_at": "2026-11-11T05:59:30Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T06:02:30Z",
+      "departure_at": "2026-11-11T06:02:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T06:04:20Z",
+      "departure_at": "2026-11-11T06:04:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T06:11:10Z",
+      "departure_at": "2026-11-11T06:11:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-B-0859"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:30:00Z",
+      "departure_at": "2026-11-11T07:30:00Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:36:30Z",
+      "departure_at": "2026-11-11T07:36:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:41:20Z",
+      "departure_at": "2026-11-11T07:41:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:48:10Z",
+      "departure_at": "2026-11-11T07:48:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-A4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-A-1030"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T07:29:30Z",
+      "departure_at": "2026-11-11T07:29:30Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T07:32:30Z",
+      "departure_at": "2026-11-11T07:32:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T07:34:20Z",
+      "departure_at": "2026-11-11T07:34:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T07:41:10Z",
+      "departure_at": "2026-11-11T07:41:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-B-1029"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T05:29:30Z",
+      "departure_at": "2026-11-11T05:29:30Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T05:32:30Z",
+      "departure_at": "2026-11-11T05:32:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T05:34:20Z",
+      "departure_at": "2026-11-11T05:34:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T05:41:10Z",
+      "departure_at": "2026-11-11T05:41:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-B-0829"
+   },
+   {
+    "active": true,
+    "calendar_evidence_refs": [
+     "demo-model:novorossiysk:calendar",
+     "demo-model:novorossiysk:schedule"
+    ],
+    "events": [
+     {
+      "arrival_at": "2026-11-11T04:29:30Z",
+      "departure_at": "2026-11-11T04:29:30Z",
+      "dropoff": false,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B1",
+      "pickup": true,
+      "sequence": 0
+     },
+     {
+      "arrival_at": "2026-11-11T04:32:30Z",
+      "departure_at": "2026-11-11T04:32:50Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B2",
+      "pickup": true,
+      "sequence": 1
+     },
+     {
+      "arrival_at": "2026-11-11T04:34:20Z",
+      "departure_at": "2026-11-11T04:34:40Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B3",
+      "pickup": true,
+      "sequence": 2
+     },
+     {
+      "arrival_at": "2026-11-11T04:41:10Z",
+      "departure_at": "2026-11-11T04:41:10Z",
+      "dropoff": true,
+      "evidence_refs": [
+       "demo-model:novorossiysk:schedule"
+      ],
+      "node_id": "demo-novorossiysk-stop-B4",
+      "pickup": false,
+      "sequence": 3
+     }
+    ],
+    "service_date": "2026-11-11",
+    "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+    "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+    "timezone": "Europe/Moscow",
+    "transport_type": "bus",
+    "trip_id": "demo-novorossiysk-trip-B-0729"
+   }
+  ],
+  "scope": {
+   "calendar_complete": true,
+   "calendar_version": "demo-novorossiysk-2026-11-11.2:calendar",
+   "continuations_complete": true,
+   "end_at": "2026-11-11T21:00:00Z",
+   "evidence_refs": [
+    "demo-model:novorossiysk:schedule"
+   ],
+   "footpath_version": "demo-novorossiysk-2026-11-11.2:footpaths",
+   "footpaths_complete": true,
+   "graph_version": "demo-novorossiysk-2026-11-11.2:graph",
+   "limitations": [],
+   "node_ids": [
+    "demo-novorossiysk-access:destination:demo-novorossiysk-airport-model-2",
+    "demo-novorossiysk-access:destination:demo-novorossiysk-child_polyclinic-model-2",
+    "demo-novorossiysk-access:destination:demo-novorossiysk-rail_terminal-model-2",
+    "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-a96a4f8aea02",
+    "demo-novorossiysk-access:destination:novorossiysk-adult_polyclinic-d7725c0eca3f",
+    "demo-novorossiysk-access:destination:novorossiysk-airport-relation-1519974",
+    "demo-novorossiysk-access:destination:novorossiysk-bus_terminal-node-1877855052",
+    "demo-novorossiysk-access:destination:novorossiysk-bus_terminal-way-61808901",
+    "demo-novorossiysk-access:destination:novorossiysk-child_polyclinic-2fc149e7dc8a",
+    "demo-novorossiysk-access:destination:novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea",
+    "demo-novorossiysk-access:destination:novorossiysk-college_university-way-483100861",
+    "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-17",
+    "demo-novorossiysk-access:destination:novorossiysk-kindergarten-gorono-56",
+    "demo-novorossiysk-access:destination:novorossiysk-rail_terminal-node-343446779",
+    "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f",
+    "demo-novorossiysk-access:destination:novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160",
+    "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-482887330",
+    "demo-novorossiysk-access:destination:novorossiysk-shopping_center-way-511814920",
+    "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "demo-novorossiysk-access:point:novorossiysk-utm37n-1km-v1-e403-n4954-p",
+    "demo-novorossiysk-stop-A1",
+    "demo-novorossiysk-stop-A2",
+    "demo-novorossiysk-stop-A3",
+    "demo-novorossiysk-stop-A4",
+    "demo-novorossiysk-stop-B1",
+    "demo-novorossiysk-stop-B2",
+    "demo-novorossiysk-stop-B3",
+    "demo-novorossiysk-stop-B4",
+    "physical:destination:demo-novorossiysk-airport-model-2",
+    "physical:destination:demo-novorossiysk-child_polyclinic-model-2",
+    "physical:destination:demo-novorossiysk-rail_terminal-model-2",
+    "physical:destination:novorossiysk-adult_polyclinic-a96a4f8aea02",
+    "physical:destination:novorossiysk-adult_polyclinic-d7725c0eca3f",
+    "physical:destination:novorossiysk-airport-relation-1519974",
+    "physical:destination:novorossiysk-bus_terminal-node-1877855052",
+    "physical:destination:novorossiysk-bus_terminal-way-61808901",
+    "physical:destination:novorossiysk-child_polyclinic-2fc149e7dc8a",
+    "physical:destination:novorossiysk-college_university-obrnadzor_accreditation-4623a4701fcec5f9149a6db44d36e2ea",
+    "physical:destination:novorossiysk-college_university-way-483100861",
+    "physical:destination:novorossiysk-kindergarten-gorono-17",
+    "physical:destination:novorossiysk-kindergarten-gorono-56",
+    "physical:destination:novorossiysk-rail_terminal-node-343446779",
+    "physical:destination:novorossiysk-school-obrnadzor_accreditation-6f586a56-6cb0-4ca4-b197-03cfe93c8f1f",
+    "physical:destination:novorossiysk-school-obrnadzor_accreditation-732eba6a-aa35-7d1b-e988-bf8a3f8f9160",
+    "physical:destination:novorossiysk-shopping_center-way-482887330",
+    "physical:destination:novorossiysk-shopping_center-way-511814920",
+    "physical:point:novorossiysk-utm37n-1km-v1-e400-n4953-p",
+    "physical:point:novorossiysk-utm37n-1km-v1-e402-n4949-p",
+    "physical:point:novorossiysk-utm37n-1km-v1-e402-n4952-p",
+    "physical:point:novorossiysk-utm37n-1km-v1-e403-n4950-p",
+    "physical:point:novorossiysk-utm37n-1km-v1-e403-n4951-p",
+    "physical:point:novorossiysk-utm37n-1km-v1-e403-n4954-p"
+   ],
+   "schedule_complete": true,
+   "snapshot_id": "demo-novorossiysk-2026-11-11.2",
+   "start_at": "2026-11-11T03:00:00Z",
+   "timetable_version": "demo-novorossiysk-2026-11-11.2:timetable",
+   "timezone": "Europe/Moscow",
+   "transfer_version": "demo-novorossiysk-2026-11-11.2:transfers",
+   "transfers_complete": true
+  },
+  "transfers": [
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:transfers"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-A1",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-novorossiysk-minimum-A1-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-novorossiysk-stop-A1",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:transfers"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-A2",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-novorossiysk-minimum-A2-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-novorossiysk-stop-A2",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:transfers"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-A3",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-novorossiysk-minimum-A3-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-novorossiysk-stop-A3",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:transfers"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-A4",
+    "from_run_id": null,
+    "minimum_seconds": 140.0,
+    "rule_id": "demo-novorossiysk-minimum-A4-B1",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-novorossiysk-stop-B1",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:transfers"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-A4",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-novorossiysk-minimum-A4-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-novorossiysk-stop-A4",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:transfers"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B1",
+    "from_run_id": null,
+    "minimum_seconds": 140.0,
+    "rule_id": "demo-novorossiysk-minimum-B1-A4",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-novorossiysk-stop-A4",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:transfers"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B1",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-novorossiysk-minimum-B1-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-novorossiysk-stop-B1",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:transfers"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B2",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-novorossiysk-minimum-B2-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-novorossiysk-stop-B2",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:transfers"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B3",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-novorossiysk-minimum-B3-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-novorossiysk-stop-B3",
+    "to_run_id": null
+   },
+   {
+    "allowed": true,
+    "evidence_refs": [
+     "demo-model:novorossiysk:transfers"
+    ],
+    "from_node_id": "demo-novorossiysk-stop-B4",
+    "from_run_id": null,
+    "minimum_seconds": 60.0,
+    "rule_id": "demo-novorossiysk-minimum-B4-same",
+    "semantics": "alight_to_departure",
+    "to_node_id": "demo-novorossiysk-stop-B4",
+    "to_run_id": null
+   }
+  ]
+ },
+ "schema_version": "waydex-demo-closed-transport/1",
+ "snapshot_hash": "ec9accb4bbdc3fcb11e31de52b1ff3b8a3b3cccd9d02a74ce1c508379eae5755"
+}

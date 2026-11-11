@@ -1,0 +1,76 @@
+scope,direction,coverage,tab,mode,status,real,synthetic,note
+moscow,,model,in_city,walk,model,"6 origins (GHSL cells), 18 destinations","0 destinations, 108 edge times",speed 5 km/h from the accepted walking profile
+moscow,,model,in_city,private_car,model,same origins/destinations,"108 edge times, 24.0 km/h",no traffic data; static
+moscow,,model,in_city,public_transport,model,stop positions: mos_ground_transport GTFS stops (transit_stops.json),"2 routes, 40 trips, 42 footpaths, 2 transfer rules",OD reached 65/108
+moscow,,model,cargo_in_city,road,model,3 sites,"logistics_terminal node, rail_terminal node, handling, resource",truck-model-20t-container-nonfood-ordinary
+moscow,,model,cargo_between,pipeline,not_applicable,,,NO_PIPELINE_PROFILE
+kaliningrad,,model,in_city,walk,model,"6 origins (GHSL cells), 17 destinations","1 destinations, 108 edge times",speed 5 km/h from the accepted walking profile
+kaliningrad,,model,in_city,private_car,model,same origins/destinations,"108 edge times, 30.0 km/h",no traffic data; static
+kaliningrad,,model,in_city,public_transport,model,stop positions: gortrans39 stop lists (stop_frequencies.json),"2 routes, 40 trips, 46 footpaths, 2 transfer rules",OD reached 80/108
+kaliningrad,,model,cargo_in_city,road,real+model,"3 sites, port location, truck observations","port operations, rail_terminal node, handling, resource",truck-model-20t-container-nonfood-ordinary
+kaliningrad,,model,cargo_between,pipeline,not_applicable,,,NO_PIPELINE_PROFILE
+novorossiysk,,model,in_city,walk,model,"6 origins (GHSL cells), 15 destinations","3 destinations, 108 edge times",speed 5 km/h from the accepted walking profile
+novorossiysk,,model,in_city,private_car,model,same origins/destinations,"108 edge times, 30.0 km/h",no traffic data; static
+novorossiysk,,model,in_city,public_transport,model,stop positions: real walk-network projections (no accepted stop table),"2 routes, 41 trips, 42 footpaths, 2 transfer rules",OD reached 68/108
+novorossiysk,,model,cargo_in_city,road,real+model,"3 sites, port location, truck observations","port operations, rail_terminal node, handling, resource",truck-model-20t-container-nonfood-ordinary
+novorossiysk,,model,cargo_between,pipeline,model,pipeline terminal locations (OSM),"connections, direction, capacity/volume per day","separate profile, not in the delivery index"
+moscow--kaliningrad,moscow→kaliningrad,model,passenger_links,air,model_schedule,nodes (intercity directory),schedule/chain,
+moscow--kaliningrad,moscow→kaliningrad,model,passenger_links,rail,model_schedule,nodes (intercity directory),schedule/chain,
+moscow--kaliningrad,moscow→kaliningrad,real_observation,passenger_links,road_car,real_observation,Valhalla freeflow observation,,
+moscow--kaliningrad,moscow→kaliningrad,not_applicable,passenger_links,road_bus,not_applicable,,,INTERNATIONAL_TRANSIT_BUS_NOT_MODELLED
+moscow--kaliningrad,moscow→kaliningrad,not_applicable,passenger_links,water,not_applicable,,,NO_SCHEDULED_PASSENGER_WATER_LINK_BETWEEN_THESE_CITIES
+moscow--kaliningrad,moscow→kaliningrad,not_applicable,cargo_between,road,not_applicable,,,LONG_HAUL_ROAD_NOT_IN_DEMO_CHAIN
+moscow--kaliningrad,moscow→kaliningrad,model,cargo_between,rail,model_chain,sites and ports (accepted bundles),schedule/chain,
+moscow--kaliningrad,moscow→kaliningrad,not_applicable,cargo_between,water,not_applicable,,,NO_WATER_LINK_MODELLED
+moscow--kaliningrad,moscow→kaliningrad,not_applicable,cargo_between,air,not_applicable,,,AIR_CARGO_NOT_MODELLED_FOR_CONTAINER_PROFILE
+moscow--kaliningrad,moscow→kaliningrad,not_applicable,cargo_between,pipeline,not_applicable,,,NO_PIPELINE_LINK
+kaliningrad--moscow,kaliningrad→moscow,model,passenger_links,air,model_schedule,nodes (intercity directory),schedule/chain,
+kaliningrad--moscow,kaliningrad→moscow,model,passenger_links,rail,model_schedule,nodes (intercity directory),schedule/chain,
+kaliningrad--moscow,kaliningrad→moscow,real_observation,passenger_links,road_car,real_observation,Valhalla freeflow observation,,
+kaliningrad--moscow,kaliningrad→moscow,not_applicable,passenger_links,road_bus,not_applicable,,,INTERNATIONAL_TRANSIT_BUS_NOT_MODELLED
+kaliningrad--moscow,kaliningrad→moscow,not_applicable,passenger_links,water,not_applicable,,,NO_SCHEDULED_PASSENGER_WATER_LINK_BETWEEN_THESE_CITIES
+kaliningrad--moscow,kaliningrad→moscow,not_applicable,cargo_between,road,not_applicable,,,LONG_HAUL_ROAD_NOT_IN_DEMO_CHAIN
+kaliningrad--moscow,kaliningrad→moscow,model,cargo_between,rail,model_chain,sites and ports (accepted bundles),schedule/chain,
+kaliningrad--moscow,kaliningrad→moscow,not_applicable,cargo_between,water,not_applicable,,,NO_WATER_LINK_MODELLED
+kaliningrad--moscow,kaliningrad→moscow,not_applicable,cargo_between,air,not_applicable,,,AIR_CARGO_NOT_MODELLED_FOR_CONTAINER_PROFILE
+kaliningrad--moscow,kaliningrad→moscow,not_applicable,cargo_between,pipeline,not_applicable,,,NO_PIPELINE_LINK
+moscow--novorossiysk,moscow→novorossiysk,model,passenger_links,air,model_schedule,nodes (intercity directory),schedule/chain,
+moscow--novorossiysk,moscow→novorossiysk,model,passenger_links,rail,model_schedule,nodes (intercity directory),schedule/chain,
+moscow--novorossiysk,moscow→novorossiysk,real_observation,passenger_links,road_car,real_observation,Valhalla freeflow observation,,
+moscow--novorossiysk,moscow→novorossiysk,model,passenger_links,road_bus,model_schedule,nodes (intercity directory),schedule/chain,
+moscow--novorossiysk,moscow→novorossiysk,not_applicable,passenger_links,water,not_applicable,,,NO_SCHEDULED_PASSENGER_WATER_LINK_BETWEEN_THESE_CITIES
+moscow--novorossiysk,moscow→novorossiysk,not_applicable,cargo_between,road,not_applicable,,,LONG_HAUL_ROAD_NOT_IN_DEMO_CHAIN
+moscow--novorossiysk,moscow→novorossiysk,model,cargo_between,rail,model_chain,sites and ports (accepted bundles),schedule/chain,
+moscow--novorossiysk,moscow→novorossiysk,not_applicable,cargo_between,water,not_applicable,,,NO_WATER_LINK_MODELLED
+moscow--novorossiysk,moscow→novorossiysk,not_applicable,cargo_between,air,not_applicable,,,AIR_CARGO_NOT_MODELLED_FOR_CONTAINER_PROFILE
+moscow--novorossiysk,moscow→novorossiysk,separate_profile,cargo_between,pipeline,separate_profile,,,demo-novorossiysk-pipeline
+novorossiysk--moscow,novorossiysk→moscow,model,passenger_links,air,model_schedule,nodes (intercity directory),schedule/chain,
+novorossiysk--moscow,novorossiysk→moscow,model,passenger_links,rail,model_schedule,nodes (intercity directory),schedule/chain,
+novorossiysk--moscow,novorossiysk→moscow,real_observation,passenger_links,road_car,real_observation,Valhalla freeflow observation,,
+novorossiysk--moscow,novorossiysk→moscow,model,passenger_links,road_bus,model_schedule,nodes (intercity directory),schedule/chain,
+novorossiysk--moscow,novorossiysk→moscow,not_applicable,passenger_links,water,not_applicable,,,NO_SCHEDULED_PASSENGER_WATER_LINK_BETWEEN_THESE_CITIES
+novorossiysk--moscow,novorossiysk→moscow,not_applicable,cargo_between,road,not_applicable,,,LONG_HAUL_ROAD_NOT_IN_DEMO_CHAIN
+novorossiysk--moscow,novorossiysk→moscow,model,cargo_between,rail,model_chain,sites and ports (accepted bundles),schedule/chain,
+novorossiysk--moscow,novorossiysk→moscow,not_applicable,cargo_between,water,not_applicable,,,NO_WATER_LINK_MODELLED
+novorossiysk--moscow,novorossiysk→moscow,not_applicable,cargo_between,air,not_applicable,,,AIR_CARGO_NOT_MODELLED_FOR_CONTAINER_PROFILE
+novorossiysk--moscow,novorossiysk→moscow,separate_profile,cargo_between,pipeline,separate_profile,,,demo-novorossiysk-pipeline
+kaliningrad--novorossiysk,kaliningrad→novorossiysk,model,passenger_links,air,model_schedule_via_moscow,nodes (intercity directory),schedule/chain,
+kaliningrad--novorossiysk,kaliningrad→novorossiysk,not_applicable,passenger_links,rail,not_applicable,,,NO_DIRECT_RAIL_LINK_AND_CROSS_TERMINAL_TRANSFER_IN_MOSCOW_NOT_MODELLED
+kaliningrad--novorossiysk,kaliningrad→novorossiysk,ROAD_OBSERVATION_UNAVAILABLE,passenger_links,road_car,ROAD_OBSERVATION_UNAVAILABLE,,,154:Path distance exceeds the max distance limit: 1500000 meters
+kaliningrad--novorossiysk,kaliningrad→novorossiysk,not_applicable,passenger_links,road_bus,not_applicable,,,INTERNATIONAL_TRANSIT_BUS_NOT_MODELLED
+kaliningrad--novorossiysk,kaliningrad→novorossiysk,not_applicable,passenger_links,water,not_applicable,,,NO_SCHEDULED_PASSENGER_WATER_LINK_BETWEEN_THESE_CITIES
+kaliningrad--novorossiysk,kaliningrad→novorossiysk,unknown,cargo_between,road,unknown,,,ROAD_OBSERVATION_UNAVAILABLE
+kaliningrad--novorossiysk,kaliningrad→novorossiysk,not_applicable,cargo_between,rail,not_applicable,,,NO_DIRECT_RAIL_LINK
+kaliningrad--novorossiysk,kaliningrad→novorossiysk,model,cargo_between,water,model_chain,sites and ports (accepted bundles),schedule/chain,
+kaliningrad--novorossiysk,kaliningrad→novorossiysk,not_applicable,cargo_between,air,not_applicable,,,AIR_CARGO_NOT_MODELLED_FOR_CONTAINER_PROFILE
+kaliningrad--novorossiysk,kaliningrad→novorossiysk,separate_profile,cargo_between,pipeline,separate_profile,,,demo-novorossiysk-pipeline
+novorossiysk--kaliningrad,novorossiysk→kaliningrad,model,passenger_links,air,model_schedule_via_moscow,nodes (intercity directory),schedule/chain,
+novorossiysk--kaliningrad,novorossiysk→kaliningrad,not_applicable,passenger_links,rail,not_applicable,,,NO_DIRECT_RAIL_LINK_AND_CROSS_TERMINAL_TRANSFER_IN_MOSCOW_NOT_MODELLED
+novorossiysk--kaliningrad,novorossiysk→kaliningrad,ROAD_OBSERVATION_UNAVAILABLE,passenger_links,road_car,ROAD_OBSERVATION_UNAVAILABLE,,,154:Path distance exceeds the max distance limit: 1500000 meters
+novorossiysk--kaliningrad,novorossiysk→kaliningrad,not_applicable,passenger_links,road_bus,not_applicable,,,INTERNATIONAL_TRANSIT_BUS_NOT_MODELLED
+novorossiysk--kaliningrad,novorossiysk→kaliningrad,not_applicable,passenger_links,water,not_applicable,,,NO_SCHEDULED_PASSENGER_WATER_LINK_BETWEEN_THESE_CITIES
+novorossiysk--kaliningrad,novorossiysk→kaliningrad,unknown,cargo_between,road,unknown,,,ROAD_OBSERVATION_UNAVAILABLE
+novorossiysk--kaliningrad,novorossiysk→kaliningrad,not_applicable,cargo_between,rail,not_applicable,,,NO_DIRECT_RAIL_LINK
+novorossiysk--kaliningrad,novorossiysk→kaliningrad,model,cargo_between,water,model_chain,sites and ports (accepted bundles),schedule/chain,
+novorossiysk--kaliningrad,novorossiysk→kaliningrad,not_applicable,cargo_between,air,not_applicable,,,AIR_CARGO_NOT_MODELLED_FOR_CONTAINER_PROFILE
+novorossiysk--kaliningrad,novorossiysk→kaliningrad,separate_profile,cargo_between,pipeline,separate_profile,,,demo-novorossiysk-pipeline

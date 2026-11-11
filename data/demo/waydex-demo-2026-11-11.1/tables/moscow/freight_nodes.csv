@@ -1,0 +1,3 @@
+freight_node_id,kind,lat,lon,access_node_id,origin,handling_types,max_mass_t,max_height_m,base_wait_s,handling_s,equipment_units,slots_per_hour
+demo-moscow-logistics-terminal-model,logistics_terminal,55.7386034,37.786881,road:way:1356264705:314.1,model,container|pallet,30.0,4.5,2160,1680,4,12
+demo-moscow-rail-terminal-model,rail_terminal,55.8094854,37.598348,road:way:846849720:72.9,model,container,30.0,4.5,2400,1860,3,9

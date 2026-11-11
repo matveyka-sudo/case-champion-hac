@@ -2,6 +2,7 @@
 
 from collections.abc import Iterable
 from datetime import datetime
+from itertools import groupby
 
 from a2_engine.routing.road import RoadResult, road_hash
 from a2_engine.routing.timetable import solve_timetable
@@ -116,13 +117,15 @@ class UrbanODCollector:
         slices = []
         zone = city_zone(plan.scope.timezone)
         # Missing pair rows are interpreted by calculate_urban_tau as unknown.
+        rows_by_departure = {
+            departure: tuple(observation.pair for _, observation in group)
+            for departure, group in groupby(
+                sorted(self.observations.items()), key=lambda item: item[0][0]
+            )
+        }
         for departure in plan.departures:
             local = departure.astimezone(zone)
-            rows = tuple(
-                observation.pair
-                for key, observation in sorted(self.observations.items())
-                if key[0] == departure
-            )
+            rows = rows_by_departure.get(departure, ())
             evidence = references(
                 plan.evidence_refs + tuple(e for row in rows for e in row.evidence_refs)
             )

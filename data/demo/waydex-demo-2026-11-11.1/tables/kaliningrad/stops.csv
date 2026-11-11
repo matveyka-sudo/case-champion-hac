@@ -1,0 +1,9 @@
+node_id,route,sequence,name,lat,lon,location_origin,stop_origin,template_source
+demo-kaliningrad-stop-A1,A,1,Улица Еловая аллея,54.7250235,20.5420763,real,synthetic,kaliningrad-gortrans39-av11-10-weekdays
+demo-kaliningrad-stop-A2,A,2,Улица Сергея Тюленина,54.7091703,20.5214835,real,synthetic,kaliningrad-gortrans39-av35-6-weekdays
+demo-kaliningrad-stop-A3,A,3,Центральный рынок,54.7199792,20.508689,real,synthetic,kaliningrad-gortrans39-av11-15-weekdays
+demo-kaliningrad-stop-A4,A,4,ТЦ «Маяк»,54.7165059,20.5019434,real,synthetic,kaliningrad-gortrans39-av35-11-weekdays
+demo-kaliningrad-stop-B1,B,1,Ленинский проспект,54.7175134,20.5021323,real,synthetic,kaliningrad-gortrans39-av11-16-weekdays
+demo-kaliningrad-stop-B2,B,2,Сбербанк,54.7106425,20.4974885,real,synthetic,kaliningrad-gortrans39-tb2-17-weekdays
+demo-kaliningrad-stop-B3,B,3,Улица Огарёва,54.7170504,20.4697277,real,synthetic,kaliningrad-gortrans39-av32-17-weekdays
+demo-kaliningrad-stop-B4,B,4,Улица Чайковского,54.7265127,20.4787034,real,synthetic,kaliningrad-gortrans39-tb2-11-weekdays

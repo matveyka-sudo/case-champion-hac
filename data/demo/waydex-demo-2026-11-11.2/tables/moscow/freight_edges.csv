@@ -1,0 +1,13 @@
+edge_id,site_id,freight_node_id,direction,length_m,time_s,origin
+demo-moscow-truck:moscow-site-relation-9975357:demo-moscow-logistics-terminal-model:outbound,moscow-site-relation-9975357,demo-moscow-logistics-terminal-model,outbound,13252.6,1910.0,synthetic
+demo-moscow-truck:moscow-site-relation-9975357:demo-moscow-logistics-terminal-model:inbound,moscow-site-relation-9975357,demo-moscow-logistics-terminal-model,inbound,13252.6,1910.0,synthetic
+demo-moscow-truck:moscow-site-relation-9975357:demo-moscow-rail-terminal-model:outbound,moscow-site-relation-9975357,demo-moscow-rail-terminal-model,outbound,9648.9,1390.0,synthetic
+demo-moscow-truck:moscow-site-relation-9975357:demo-moscow-rail-terminal-model:inbound,moscow-site-relation-9975357,demo-moscow-rail-terminal-model,inbound,9648.9,1390.0,synthetic
+demo-moscow-truck:moscow-site-relation-13573687:demo-moscow-logistics-terminal-model:outbound,moscow-site-relation-13573687,demo-moscow-logistics-terminal-model,outbound,14746.9,2130.0,synthetic
+demo-moscow-truck:moscow-site-relation-13573687:demo-moscow-logistics-terminal-model:inbound,moscow-site-relation-13573687,demo-moscow-logistics-terminal-model,inbound,14746.9,2130.0,synthetic
+demo-moscow-truck:moscow-site-relation-13573687:demo-moscow-rail-terminal-model:outbound,moscow-site-relation-13573687,demo-moscow-rail-terminal-model,outbound,10069.6,1460.0,synthetic
+demo-moscow-truck:moscow-site-relation-13573687:demo-moscow-rail-terminal-model:inbound,moscow-site-relation-13573687,demo-moscow-rail-terminal-model,inbound,10069.6,1460.0,synthetic
+demo-moscow-truck:moscow-site-relation-13573686:demo-moscow-logistics-terminal-model:outbound,moscow-site-relation-13573686,demo-moscow-logistics-terminal-model,outbound,14719.9,2120.0,synthetic
+demo-moscow-truck:moscow-site-relation-13573686:demo-moscow-logistics-terminal-model:inbound,moscow-site-relation-13573686,demo-moscow-logistics-terminal-model,inbound,14719.9,2120.0,synthetic
+demo-moscow-truck:moscow-site-relation-13573686:demo-moscow-rail-terminal-model:outbound,moscow-site-relation-13573686,demo-moscow-rail-terminal-model,outbound,10102.4,1460.0,synthetic
+demo-moscow-truck:moscow-site-relation-13573686:demo-moscow-rail-terminal-model:inbound,moscow-site-relation-13573686,demo-moscow-rail-terminal-model,inbound,10102.4,1460.0,synthetic

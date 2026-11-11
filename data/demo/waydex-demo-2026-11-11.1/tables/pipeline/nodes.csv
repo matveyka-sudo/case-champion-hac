@@ -1,0 +1,4 @@
+freight_node_id,role,origin
+novorossiysk-pipeline_terminal-relation-3569335,intake,real_location_model_role
+novorossiysk-pipeline_terminal-way-183488914,tank_farm,real_location_model_role
+novorossiysk-pipeline_terminal-way-126416704,delivery,real_location_model_role
