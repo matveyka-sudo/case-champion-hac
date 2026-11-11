@@ -1,6 +1,8 @@
 """Transfer regressions use tiny local files; no services or graph inputs required."""
 
+import hashlib
 import importlib.util
+import json
 import os
 import tempfile
 import unittest
@@ -94,6 +96,71 @@ class GraphTransferTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "checked v2 metadata"):
             transfer.copy_sources(self.sources, self.manifest, output)
         self.assertFalse(output.exists())
+
+    def test_status_comes_from_hash_checked_runtime_not_build_only_graph_parent(self):
+        seconds = 1700000000
+        tiles = self.source / "tiles"
+        tiles.mkdir()
+        (tiles / "tile.gph").write_bytes(b"reviewed nested tile")
+        os.utime(tiles, ns=(seconds * 10**9, seconds * 10**9))
+        build_only = {"build": {"graph_version": "TEST_ONLY"}}
+        (self.source / "parent-artifact.json").write_text(json.dumps(build_only))
+        runtime = self.root / "runtime"
+        payloads = {
+            "manifest.json": {},
+            "moscow/artifact.json": {"status_expectation": {"tileset_last_modified": seconds}},
+            "novorossiysk/artifact.json": {
+                "status_expectation": {"tileset_last_modified": seconds}
+            },
+            "kaliningrad/native/artifact.json": build_only,
+        }
+        rows = []
+        for name, payload in payloads.items():
+            file = runtime / name
+            file.parent.mkdir(parents=True, exist_ok=True)
+            file.write_text(json.dumps(payload))
+            rows.append({"path": name, **transfer.read_file(file)})
+        body = transfer.encoded({"schema_version": "waydex-runtime-bundle/1", "files": rows})
+        bundle_sha = hashlib.sha256(body).hexdigest()
+        (runtime / "bundle-manifest.json").write_bytes(body)
+        (runtime / ".bundle-ready.json").write_text(json.dumps({"manifest_sha256": bundle_sha}))
+        contents = transfer.inventory(self.source)
+        pin = (
+            len(contents),
+            sum(row["bytes"] for row in contents),
+            hashlib.sha256(transfer.encoded(contents)).hexdigest(),
+        )
+        sources = {group: self.source for group in transfer.ARGUMENTS}
+        checked_parents = []
+
+        class GraphChecker:
+            def graph_check(self, graph, parent):
+                checked_parents.append(parent)
+                return "TEST_ONLY_GRAPH"
+
+        original_loader = transfer.load_module
+
+        def load(name, path):
+            return GraphChecker() if name == "four_profile_runtime" else original_loader(name, path)
+
+        with (
+            patch.object(transfer, "load_module", side_effect=load),
+            patch.object(transfer, "PINS", {group: pin for group in sources}),
+            patch.object(transfer, "BUNDLE_SHA", bundle_sha),
+            patch.object(
+                transfer, "PRODUCT_SHA", transfer.read_file(runtime / "manifest.json")["sha256"]
+            ),
+        ):
+            manifest = transfer.verify_sources(runtime, sources)
+            self.assertEqual(checked_parents[1], build_only)
+            self.assertEqual(
+                manifest["router_tileset_metadata"]["graphs/novorossiysk"]["mtime_seconds"], seconds
+            )
+            # The alternate status artifact must remain under the real bundle hash gate.
+            (runtime / "novorossiysk/artifact.json").write_text("{}")
+            with self.assertRaisesRegex(ValueError, "differs from its manifest"):
+                transfer.verify_sources(runtime, sources)
+            self.assertEqual(len(checked_parents), 3)
 
     def test_existing_destination_is_never_replaced(self):
         output = self.root / "transfer"

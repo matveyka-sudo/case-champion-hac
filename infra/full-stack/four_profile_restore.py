@@ -175,9 +175,11 @@ def verify_sources(runtime, sources):
             if city != "kaliningrad":
                 # Valhalla 3.5.1 /status uses tile_dir's mtime, not tile bytes.
                 # Capture the source value and require its existing bound status.
+                # N's graph-check parent is build-only; the pinned runtime owns status.
+                status_artifact = json.loads((runtime / city / "artifact.json").read_bytes())
                 tiles = checked_path(sources[f"graphs/{city}"] / "tiles")
                 seconds = tiles.stat().st_mtime_ns // 10**9
-                if seconds != artifact["status_expectation"]["tileset_last_modified"]:
+                if seconds != status_artifact["status_expectation"]["tileset_last_modified"]:
                     raise ValueError("Source tile directory differs from the bound build status")
                 router_tileset_metadata[f"graphs/{city}"] = {
                     "path": "tiles",
