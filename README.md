@@ -13,6 +13,7 @@
 | Проверенные функции и ограничения | [Матрица приёмки](docs/full-product/ACCEPTANCE_MATRIX.md) |
 
 - Рабочая версия проекта — [код в ветке `dev`](https://github.com/matveyka-sudo/case-champion-hac/tree/dev).
+- Для локального запуска полного стека скачайте [комплект данных и графов Waydex с Google Drive](https://drive.google.com/file/d/1h6ELgxhIfETgfzp20sgPqH2AZrQ5scKO/view?usp=share_link) и следуйте разделу «Чистый запуск» в `START-HERE.md`.
 - После локального запуска откройте атлас по адресу Vite с `/?data=demo#atlas`. [Инструкция по запуску](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/apps/web/README.md#запуск)
 - Методика и примеры расчётов — [формулы индексов](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/docs/FORMULAS.md) и [расчётное ядро](https://github.com/matveyka-sudo/case-champion-hac/tree/dev/packages/engine).
 - Подготовленные данные по городам — [наборы данных](https://github.com/matveyka-sudo/case-champion-hac/tree/dev/data/bundles) и [реестр источников](https://github.com/matveyka-sudo/case-champion-hac/blob/dev/docs/SOURCE_REGISTRY.md).
