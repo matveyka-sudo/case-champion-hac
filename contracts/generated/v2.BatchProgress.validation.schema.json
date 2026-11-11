@@ -1,0 +1,35 @@
+{
+  "additionalProperties": false,
+  "description": "Persisted admitted OD batches, not route validity or numerical coverage.\n\nAll batches can be saved while calculation/validation/publication is still\npending. No duration, ETA or percentage of the whole calculation is implied.",
+  "properties": {
+    "completed_batches": {
+      "maximum": 4096,
+      "minimum": 0,
+      "title": "Completed Batches",
+      "type": "integer"
+    },
+    "phase": {
+      "enum": [
+        "routing",
+        "finalizing",
+        "published",
+        "stopped"
+      ],
+      "title": "Phase",
+      "type": "string"
+    },
+    "total_batches": {
+      "maximum": 4096,
+      "minimum": 1,
+      "title": "Total Batches",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "completed_batches",
+    "total_batches",
+    "phase"
+  ],
+  "title": "BatchProgress",
+  "type": "object"
+}

@@ -7,7 +7,7 @@ from uuid import uuid4
 from a2_assistant import FlashAssistant
 from a2_contracts.api import Job
 from a2_contracts.common import canonical_hash
-from a2_contracts.v2.api import Capabilities, ErrorDetail, JobAccepted, JobView
+from a2_contracts.v2.api import BatchProgress, Capabilities, ErrorDetail, JobAccepted, JobView
 from a2_contracts.v2.assistant import Explanation, ExplanationRequest
 from a2_contracts.v2.base import VersionRefs
 from a2_contracts.v2.dataset import AcceptedData
@@ -147,11 +147,19 @@ class AnalysisService:
         )
         return JobAccepted(job_id=accepted.job_id, status=accepted.status, request_id=request_id)
 
-    async def job(self, job_id: str, scope: str) -> JobView:
-        job = await self._repository().get_job(job_id, scope=scope)
-        return await self._view(job, scope)
+    async def job(self, job_id: str, scope: str, *, include_progress: bool = False) -> JobView:
+        progress = None
+        if include_progress:
+            from a2_api.db.repositories.job_progress import job_with_progress
 
-    async def _view(self, job: Job, scope: str) -> JobView:
+            job, progress = await job_with_progress(self._repository(), job_id, scope)
+        else:
+            job = await self._repository().get_job(job_id, scope=scope)
+        return await self._view(job, scope, progress=progress)
+
+    async def _view(
+        self, job: Job, scope: str, *, progress: BatchProgress | None = None
+    ) -> JobView:
         analysis_id = scenario_run_id = None
         if job.status == "succeeded":
             assert job.run_id is not None
@@ -183,6 +191,7 @@ class AnalysisService:
             analysis_id=analysis_id,
             scenario_run_id=scenario_run_id,
             error=error,
+            progress=progress,
         )
 
     async def cancel(self, job_id: str, scope: str) -> JobView:

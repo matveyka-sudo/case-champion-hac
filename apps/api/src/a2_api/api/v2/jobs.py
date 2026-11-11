@@ -11,7 +11,9 @@ router = APIRouter()
 
 
 @router.get("/jobs/{job_id}")
-async def job(job_id: str, request: Request) -> JobView:
+async def job(job_id: str, request: Request, include_progress: bool = False) -> JobView:
+    if include_progress:
+        return await backend(request).job(job_id, request.state.access_scope, include_progress=True)
     return await backend(request).job(job_id, request.state.access_scope)
 
 
