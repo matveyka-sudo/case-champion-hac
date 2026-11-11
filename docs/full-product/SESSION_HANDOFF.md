@@ -1,5 +1,40 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Integrated map/progress and real scenario — 2026-11-11
+
+Live 5193 remains e5e067e. Root source 8271ca1 now includes the selected-route
+map repair, opt-in persisted batch progress, four-profile restoration, and the
+approved SQL architecture inventory extension. Root combined frontend tests:
+246 unit tests, build/API freshness, and 69 browser tests PASS. The browser
+suite uses fixtures and is separate from the actual runs below. Root's own
+architecture suite: 37 PASS in 4.79s. CI on e5 had 2 inventory failures with
+1831 passes/9 skips; the new inventory fix is pushed for fresh CI, not assumed
+green. Historical SQL baselines are unchanged; named progress-query parameter
+bindings and five mutation regressions are now covered.
+
+The e5 Moscow public-transit baseline and scenario also passed actual UI →
+worker → PostgreSQL → React. Baseline 31aac2c2-148f-4560-aaee-38f0816a93d8;
+scenario job cdc8e79f-e9d8-4535-8642-d2db68c1c8d0; saved run
+ eb050b17-f70f-5783-83a8-19b8c5b56703. Exact route time changes from 5595.143
+ to 5235.143 seconds. Root validated canonical DTO, equal repeat GET, unchanged
+baseline bytes, exact saved-before values, UUID5 job identity and foreign-session
+404. Status remains partial, feasibility unverified, affected population null;
+canonical minimum/index deltas remain unknown. Private evidence:
+`root-fourprofile-ui-187158e3-20261111/moscow-transit-e5e067e-*`.
+
+The separate clean four-profile stand started all services on 5293 with fresh
+volumes and copied graph bytes, but its first Novorossiysk job failed before
+routing: Valhalla's status tileset timestamp differs. The pinned 3.5.1 source
+uses the tiles directory mtime, which the transport helper did not preserve.
+DEVOPS owns the narrow metadata-preserving restore repair; do not weaken the
+runtime status check or relabel the graph. This is a failed clean real replay,
+not one-command-startup acceptance. Preserve its job, receipts and volumes.
+
+Moscow's bounded native frontier experiment remains research-only. A network
+bound on a same-building pair is not a physical-trip minimum or numerical city
+index. ML2 is auditing physical approaches and a distinct-building candidate.
+No extra paid Alice/Rasp calls, no dev merge, no full-product readiness claim.
+
 ## First complete Moscow campaign through React — 2026-11-11 03:46 MSK
 
 Live5193 is now e5e067e1b4d2a9021ddfa1d91bf918957a94a203. Root activation

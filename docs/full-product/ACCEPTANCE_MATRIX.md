@@ -9,6 +9,20 @@ must be assessed independently. Earlier Phase2 evidence is historical until repl
 
 ## Three-city priority — 2026-11-10 continuation
 
+### Latest gate update — map/progress integrated; clean replay defect confirmed
+
+- Live e5 Moscow walk and PT/scenario E2E passed. The actual scenario preserves
+  baseline and unknown/proof states while changing route time 5595.143→5235.143s.
+- Integrated map selection/progress: 246 root unit and 69 browser fixture tests
+  pass; next-image actual map/progress replay is pending.
+- Root 37 architecture guards pass after the scoped CI inventory correction.
+  New remote CI is pending; e5's backend CI failed two inventory guards.
+- Fresh four-profile copy starts, but first N route fails the pinned Valhalla
+  status check because tiles-directory mtime was not transported. Restore fix
+  is RUNNING. Exact byte inventories alone did not prove runnable restoration.
+- All city indices remain unknown. Research network bounds do not certify
+  physical approaches, complete catalogs or population aggregation.
+
 ### Current gate update — 2026-11-11, real Moscow campaign success
 
 - e5e067e is LIVE on5193. Actual React-created job1f246d5e succeeds and saves
