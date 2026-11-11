@@ -3,6 +3,8 @@ name = "a2-data-pipeline"
 version = "0.1.0"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "a2-contracts",
+    "a2-engine",
     "beautifulsoup4>=4,<5",
     "httpx",
     "lxml",
@@ -17,5 +19,10 @@ dependencies = [
     "shapely>=2,<3",
 ]
 
-[tool.uv]
-package = false
+[build-system]
+requires = ["uv_build==0.12.17"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+a2-contracts = { workspace = true }
+a2-engine = { workspace = true }

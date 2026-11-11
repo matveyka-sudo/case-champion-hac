@@ -329,6 +329,7 @@ from a2_engine.urban.walk import (
     WalkInputs,
     WalkPlanIssue,
     WalkRoutePlan,
+    analyze_normalized_walk_routes,
     analyze_walk_responses,
     plan_walk_routes,
     prepare_walk_inputs,
@@ -623,3 +624,6 @@ __all__ += [
     "apply_scenario_overlay",
     "execution_hash",
 ]
+
+# Additions append to preserve the versioned public export order.
+__all__ += ["analyze_normalized_walk_routes"]

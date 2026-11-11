@@ -10,6 +10,7 @@ from a2_api.providers.departures import RaspDepartureGateway, RaspPlaceBinding
 from a2_api.providers.rasp import RaspProvider
 from a2_contracts.v2.dataset import AcceptedData
 from pydantic import ValidationError
+from rasp_quota_helpers import TestOnlyQuota
 from test_rasp_provider import page, segment
 
 START = datetime(2026, 11, 10, 8, 30, tzinfo=UTC)
@@ -52,7 +53,9 @@ async def test_approved_mapping_queries_fixed_provider_and_returns_separate_part
         return httpx.Response(200, json=page([] if empty else [segment()], request=request))
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:
-        provider = RaspProvider(client, api_key="synthetic", requests_per_second=1000)
+        provider = RaspProvider(
+            client, api_key="synthetic", requests_per_second=1000, wire_quota=TestOnlyQuota()
+        )
         gateway = RaspDepartureGateway(provider, bindings(saved), transport_types=("train",))
         observed = await gateway.get_departures(
             "city-1", "city-2", START, snapshots=[saved], source_ids=frozenset({"source-1"})
@@ -132,7 +135,9 @@ async def test_unapproved_mapping_never_performs_http(change, reason):
         pytest.fail("Unapproved mapping performed HTTP")
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(no_http)) as client:
-        gateway = RaspDepartureGateway(RaspProvider(client, api_key="synthetic"), mapped)
+        gateway = RaspDepartureGateway(
+            RaspProvider(client, api_key="synthetic", wire_quota=TestOnlyQuota()), mapped
+        )
         observed = await gateway.get_departures(
             "city-1", "city-2", departure, snapshots=snapshots, source_ids=sources
         )
@@ -158,6 +163,7 @@ async def test_provider_errors_are_typed_and_safe(failure):
             api_key=None if failure == "disabled" else "synthetic",
             request_quota=1,
             requests_per_second=1000,
+            wire_quota=TestOnlyQuota(),
         )
         observed = await RaspDepartureGateway(provider, bindings(saved)).get_departures(
             "city-1", "city-2", START, snapshots=[saved], source_ids=frozenset({"source-1"})
@@ -206,7 +212,10 @@ async def test_rejected_provider_rows_never_reach_observation_or_cache(failure):
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:
         gateway = RaspDepartureGateway(
-            RaspProvider(client, api_key="synthetic", requests_per_second=1000), place_bindings
+            RaspProvider(
+                client, api_key="synthetic", requests_per_second=1000, wire_quota=TestOnlyQuota()
+            ),
+            place_bindings,
         )
         for _ in range(2):
             observation = await gateway.get_departures(

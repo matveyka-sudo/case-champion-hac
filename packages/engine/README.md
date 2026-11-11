@@ -12,6 +12,9 @@ Scenario Engine выполняет immutable изменения расписан
 Загрузки внешних расписаний, сетки, построения реальных OD-матриц, HTTP и LLM здесь нет.
 
 Независимые находки, измерения и границы проверки: [AUDIT.md](AUDIT.md).
+Независимый точный oracle конечного пешего state graph и условия реального
+доказательства minimum elapsed time: [FINITE_WALK_MINIMUM.md](FINITE_WALK_MINIMUM.md).
+Это reference/test support; он не подтверждает реальный minimum или available индекс.
 Завершение критических oracle/stress-проверок: **922 tests passed**,
 **READY WITH EXTERNAL DEPENDENCIES**; установка пакета, DTO supplements,
 accepted data/executor и совместный E2E остаются условиями интеграции.
@@ -35,7 +38,7 @@ a2_engine/
     validation.py              # общая проверка точек для analysis и tau
     analysis/                  # models.py, validation.py, calculation.py
     valhalla/                  # models.py, requests.py, responses.py, codec.py
-    walk/                      # models.py, inputs.py, analysis.py
+    walk/                      # models.py, inputs.py, analysis.py, finite_oracle.py (reference)
     car/                       # models.py, analysis.py, traffic.py
     transit/                   # models.py, journeys.py, search.py, last_return.py
     tau/                       # models.py, calendar.py, calculation.py
@@ -3204,3 +3207,25 @@ performance/E2E и атомарное backend хранение; SLA на стр�
 (138 files), strict mypy src/tests/examples135 files clean; frozen lock/pip/product
 config/diff checks пройдены. Все16 README controls и12 standalone examples
 исполнены. Прежнее pytest-asyncio fixture-scope warning не изменялось.
+
+### Explicit Valhalla endpoint serialization uncertainty
+
+Valhalla 3.5.1's `src/tyr/locate_serializer.cc` writes projected coordinates with
+six decimal places. A seven-decimal ML2 access location can therefore differ from
+an otherwise compatible serialized `/locate` result. `ValhallaCorrelation` retains
+both original `source_location` and actual serialized `correlated_location`.
+The default still requires exact equality. Optional `coordinate_precision_digits=6`
+requires nonempty `serialization_evidence_refs`, six-decimal output coordinates,
+and at most half a unit in the last decimal place in either coordinate.
+This represents an explicitly evidenced serialization interval; it does not prove
+exact subprecision equality. Larger shifts require a separately accepted revised
+access connector and remain rejected.
+
+The route request keeps the original access coordinate; connectors and their
+seconds remain unchanged and enter the journey exactly once at each endpoint.
+The response envelope must retain the actual serialized endpoints and their
+locate evidence. Such inputs carry `ENDPOINT_SERIALIZATION_PRECISION_6`; numeric
+best-known route time is retained, while minimum-time and unreachable proofs are
+disabled for the uncertain endpoints. A complete city score is not implied.
+Executors must retain the pinned serializer source, build, raw locate/route
+request and response hashes, and resolve their evidence IDs to real artifacts.

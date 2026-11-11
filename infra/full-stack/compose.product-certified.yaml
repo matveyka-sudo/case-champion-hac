@@ -1,0 +1,37 @@
+# The certified executor replays native evidence; it never invokes an HTTP actor.
+x-certified-environment: &certified-environment
+  A2_CODE_VERSION: full-${WAYDEX_REVISION:?}-${WAYDEX_PRODUCT_SHA256:?}-${WAYDEX_CERTIFIED_SHA256:?}
+  A2_CERTIFIED_WALK_MODEL_PATH: /runtime/${WAYDEX_CERTIFIED_MANIFEST:-certified-model.json}
+  A2_CERTIFIED_WALK_MODEL_SHA256: ${WAYDEX_CERTIFIED_SHA256:?}
+  WAYDEX_RUNTIME_BUNDLE_PATH: /runtime
+  WAYDEX_RUNTIME_BUNDLE_SHA256: ${WAYDEX_BUNDLE_MANIFEST_SHA256:?}
+  WAYDEX_GRAPH_PATH: /data
+  WAYDEX_GRAPH_BINDING_PATH: ${WAYDEX_GRAPH_BINDING_PATH:-}
+  WAYDEX_GRAPH_BINDING_SHA256: ${WAYDEX_GRAPH_BINDING_SHA256:-}
+
+x-graph-volume: &graph-volume
+  type: bind
+  source: ${WAYDEX_GRAPH_DIR:?}
+  target: /data
+  read_only: true
+  bind: {create_host_path: false}
+
+services:
+  runtime-check:
+    environment: *certified-environment
+    volumes: [*graph-volume]
+
+  migrate:
+    environment: *certified-environment
+
+  api:
+    environment: *certified-environment
+    volumes: [*graph-volume]
+
+  worker:
+    environment: *certified-environment
+    volumes: [*graph-volume]
+    mem_limit: ${WAYDEX_WORKER_MEMORY:-1g}
+
+  web:
+    ports: ["127.0.0.1:${WAYDEX_HTTP_PORT:?choose an unused loopback port}:8080"]

@@ -296,6 +296,7 @@ async def test_departure_tool_integrates_real_gateway_through_mock_http_without_
     import httpx
     from a2_api.providers.departures import RaspDepartureGateway
     from a2_api.providers.rasp import RaspProvider
+    from rasp_quota_helpers import TestOnlyQuota
     from test_departure_gateway import START, bindings, snapshot
     from test_rasp_provider import page
 
@@ -330,7 +331,9 @@ async def test_departure_tool_integrates_real_gateway_through_mock_http_without_
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as client:
         gateway = RaspDepartureGateway(
-            RaspProvider(client, api_key="synthetic", requests_per_second=1000),
+            RaspProvider(
+                client, api_key="synthetic", requests_per_second=1000, wire_quota=TestOnlyQuota()
+            ),
             bindings(snapshot()),
             transport_types=("train",),
         )

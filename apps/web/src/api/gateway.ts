@@ -15,7 +15,7 @@ export class BackendGateway {
       signal,
     });
   job = (id: string, signal?: AbortSignal) =>
-    this.client.request("/jobs/" + encodeURIComponent(id), "JobView", {
+    this.client.request("/jobs/" + encodeURIComponent(id) + "?include_progress=true", "JobView", {
       signal,
     });
   cancel = (id: string, signal?: AbortSignal) =>
@@ -61,16 +61,18 @@ export class BackendGateway {
       { signal },
     );
   async wait(
-    accepted: Schemas["JobAccepted"],
+    accepted: Schemas["JobAccepted"] | Schemas["JobView"],
     signal: AbortSignal,
     onJob: (j: Schemas["JobAccepted"] | Schemas["JobView"]) => void,
   ) {
     onJob(accepted);
-    let j = await this.job(accepted.job_id, signal);
+    let j = "created_at" in accepted ? accepted : await this.job(accepted.job_id, signal);
+    if (j.job_id !== accepted.job_id) throw new ApiError(0, "invalid_response", "Ответ относится к другому заданию");
     onJob(j);
     while (j.status === "queued" || j.status === "running") {
       await pause((j.poll_after_seconds ?? 2) * 1000, signal);
       j = await this.job(j.job_id, signal);
+      if (j.job_id !== accepted.job_id) throw new ApiError(0, "invalid_response", "Ответ относится к другому заданию");
       onJob(j);
     }
     if (j.status === "failed")

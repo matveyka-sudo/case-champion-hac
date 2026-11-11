@@ -19,7 +19,7 @@ def make_route_request(
         raise ValueError("CORRELATION_BUILD_MISMATCH")
     locations = [
         dict(
-            c.correlated_location.location(),
+            c.source_location.location(),
             type="break",
             radius=0,
             search_cutoff=1,
@@ -58,5 +58,11 @@ def make_route_request(
         origin,
         destination,
         canonical_json(payload),
-        references(build.evidence_refs + origin.evidence_refs + destination.evidence_refs),
+        references(
+            build.evidence_refs
+            + origin.evidence_refs
+            + destination.evidence_refs
+            + origin.serialization_evidence_refs
+            + destination.serialization_evidence_refs
+        ),
     )

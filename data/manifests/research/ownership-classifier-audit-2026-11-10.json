@@ -1,0 +1,467 @@
+{
+  "schema": "waydex-reviewed-legal-entity-ownership-audit/1",
+  "date": "2026-11-10",
+  "classifier_commit": "fc7e4da",
+  "classifier_source_sha256": "6182341951952eaf59c3abcf18fbc5526cb4480d20d4f2d5672082fb939aedcb",
+  "source_url": "https://isga.obrnadzor.gov.ru/api/spa/accredreestr/opendata/filezip",
+  "source_observation": {
+    "schema": "waydex-official-registry-capture/1",
+    "url": "https://isga.obrnadzor.gov.ru/api/spa/accredreestr/opendata/filezip",
+    "http_status": 200,
+    "received_bytes": 352528352,
+    "sha256": "d309fa2396aa28c3c7a69bebff8e98be027528d555a60fdf370719608277fa68",
+    "elapsed_seconds": 120.247899,
+    "finished_at": "2026-11-10T17:58:11.314427+00:00",
+    "historical_hash_matches": false,
+    "state": "observed_quarantined_not_a_historical_source_replacement",
+    "request_start_timestamp": "not captured; local metadata initializer failed; curl elapsed and completion retained",
+    "retries": 0,
+    "paid_or_yandex_calls": 0,
+    "raw_PII_logged_or_added_to_Git": false
+  },
+  "source_xml_member": "data-20261110-structure-20160713.xml",
+  "historical_source_dataset_id": "obrnadzor_accreditation.20261108",
+  "historical_archive_sha256": "116ecc476619a89de6d2aea2b9eec9802e9f341374bb52cb5cd9bbc862d91bc6",
+  "audit_artifact_sha256": "1c8268fb659e0c81bb9ccbcfa18297f240b33581e149ba6942a5f3fed4e046c9",
+  "record_join_method": "Unchanged original EduOrg record_hash over orgid, legal fullname/shortname, branch/head, public institution address, INN/OGRN and sorted accredited levels; no persons/contact fields read. Exact hashes support same original factual record despite changed bulk archive.",
+  "city_summaries": [
+    {
+      "city_id": "moscow",
+      "bundle_id": "moscow-urban-2026-11-10.3",
+      "manifest_sha256": "d8145d929c2cf6148ae7204d4b456fb14fbbb7466124280f27457a204064f906",
+      "accepted_target_categories": {
+        "adult_polyclinic": 284,
+        "child_polyclinic": 232,
+        "school": 874,
+        "kindergarten": 742,
+        "college_university": 446
+      },
+      "ownership_source_category_counts": [
+        {
+          "category": "adult_polyclinic",
+          "source_id": "mgfoms_med_org",
+          "count": 284
+        },
+        {
+          "category": "child_polyclinic",
+          "source_id": "mgfoms_med_org",
+          "count": 232
+        },
+        {
+          "category": "college_university",
+          "source_id": "obrnadzor_accreditation",
+          "count": 446
+        },
+        {
+          "category": "kindergarten",
+          "source_id": "obrnadzor_accreditation",
+          "count": 742
+        },
+        {
+          "category": "school",
+          "source_id": "obrnadzor_accreditation",
+          "count": 874
+        }
+      ],
+      "registry_org_count": 765,
+      "registry_destination_count": 2062,
+      "exact_current_to_historical_record_join_org_count": 764,
+      "unresolved_org_count": 1,
+      "confirmed_affected_org_count": 4,
+      "confirmed_affected_destination_count": 5,
+      "confirmed_affected_by_category": {
+        "college_university": 5
+      },
+      "unconfirmed_observed_classifier_risk_org_count": 0,
+      "medical_and_other_sources": "Source joins inventoried from accepted immutable records; the Rosobrnadzor classifier is not used by MGФОМС/TRMO/founder-list adapters. Their raw documents were not independently re-retrieved in this audit."
+    },
+    {
+      "city_id": "kaliningrad",
+      "bundle_id": "kaliningrad-urban-2026-11-10.5",
+      "manifest_sha256": "bf26c9b75d1b424f5c13ea2461b14d8619a812b207d219707ea0c2790062c32c",
+      "accepted_target_categories": {
+        "kindergarten": 93,
+        "school": 79,
+        "adult_polyclinic": 16,
+        "child_polyclinic": 12,
+        "college_university": 26
+      },
+      "ownership_source_category_counts": [
+        {
+          "category": "adult_polyclinic",
+          "source_id": "tfoms39_trmo",
+          "count": 16
+        },
+        {
+          "category": "child_polyclinic",
+          "source_id": "tfoms39_trmo",
+          "count": 12
+        },
+        {
+          "category": "college_university",
+          "source_id": "obrnadzor_accreditation",
+          "count": 26
+        },
+        {
+          "category": "kindergarten",
+          "source_id": "klgd_education",
+          "count": 93
+        },
+        {
+          "category": "school",
+          "source_id": "klgd_education",
+          "count": 76
+        },
+        {
+          "category": "school",
+          "source_id": "klgd_school_campuses",
+          "count": 2
+        },
+        {
+          "category": "school",
+          "source_id": "klgd_school_sites",
+          "count": 1
+        }
+      ],
+      "registry_org_count": 11,
+      "registry_destination_count": 26,
+      "exact_current_to_historical_record_join_org_count": 11,
+      "unresolved_org_count": 0,
+      "confirmed_affected_org_count": 0,
+      "confirmed_affected_destination_count": 0,
+      "confirmed_affected_by_category": {},
+      "unconfirmed_observed_classifier_risk_org_count": 0,
+      "medical_and_other_sources": "Source joins inventoried from accepted immutable records; the Rosobrnadzor classifier is not used by MGФОМС/TRMO/founder-list adapters. Their raw documents were not independently re-retrieved in this audit."
+    },
+    {
+      "city_id": "novorossiysk",
+      "bundle_id": "novorossiysk-urban-2026-11-10.2",
+      "manifest_sha256": "82fd4ca03dbdfbcd44ab8f28d969b0f998bf58fad4eb787d5add83fffa85638a",
+      "accepted_target_categories": {
+        "adult_polyclinic": 5,
+        "child_polyclinic": 1,
+        "kindergarten": 45,
+        "school": 25,
+        "college_university": 12
+      },
+      "ownership_source_category_counts": [
+        {
+          "category": "adult_polyclinic",
+          "source_id": "admnvrsk_health",
+          "count": 5
+        },
+        {
+          "category": "child_polyclinic",
+          "source_id": "admnvrsk_health",
+          "count": 1
+        },
+        {
+          "category": "college_university",
+          "source_id": "obrnadzor_accreditation",
+          "count": 12
+        },
+        {
+          "category": "kindergarten",
+          "source_id": "nvr_gorono",
+          "count": 45
+        },
+        {
+          "category": "school",
+          "source_id": "obrnadzor_accreditation",
+          "count": 25
+        }
+      ],
+      "registry_org_count": 34,
+      "registry_destination_count": 37,
+      "exact_current_to_historical_record_join_org_count": 34,
+      "unresolved_org_count": 0,
+      "confirmed_affected_org_count": 1,
+      "confirmed_affected_destination_count": 1,
+      "confirmed_affected_by_category": {
+        "school": 1
+      },
+      "unconfirmed_observed_classifier_risk_org_count": 0,
+      "medical_and_other_sources": "Source joins inventoried from accepted immutable records; the Rosobrnadzor classifier is not used by MGФОМС/TRMO/founder-list adapters. Their raw documents were not independently re-retrieved in this audit."
+    }
+  ],
+  "affected_orgs": [
+    {
+      "city_id": "moscow",
+      "org_id": "0b10130f-120a-110d-0a0b-120c120a0b1112120c0d",
+      "full_name": "НЕГОСУДАРСТВЕННОЕ ОБРАЗОВАТЕЛЬНОЕ УЧРЕЖДЕНИЕ ВЫСШЕГО ОБРАЗОВАНИЯ \"ШКОЛА УПРАВЛЕНИЯ СКОЛКОВО\"",
+      "short_name": "ШКОЛА УПРАВЛЕНИЯ СКОЛКОВО",
+      "record_hash_observed": "80be7245e9d6f9bff29abd47fa6b23a3e6fe2c99a7d7eb07e17c239975dba4d6",
+      "record_hash_historical_expected": [
+        "80be7245e9d6f9bff29abd47fa6b23a3e6fe2c99a7d7eb07e17c239975dba4d6"
+      ],
+      "historical_record_fields_match_observed_exactly": true,
+      "old_classifier_on_observed_full_name": "regional",
+      "corrected_classifier_on_observed_full_name": "private",
+      "accepted_ownership": [
+        "regional"
+      ],
+      "destinations": [
+        {
+          "destination_id": "moscow-college_university-relation-6698051",
+          "category": "college_university",
+          "name": "Московская школа управления «Сколково»",
+          "accepted_ownership": "regional",
+          "evidence_id": "obrnadzor_accreditation:0b10130f-120a-110d-0a0b-120c120a0b1112120c0d"
+        }
+      ],
+      "state": "exact_record_join",
+      "source_archive_sha256": "d309fa2396aa28c3c7a69bebff8e98be027528d555a60fdf370719608277fa68",
+      "impact_state": "confirmed_original_record_false_public_classification"
+    },
+    {
+      "city_id": "moscow",
+      "org_id": "080d0f03-a658-e3ff-e91b-ed97cd76582d",
+      "full_name": "Негосударственное образовательное учреждение высшего образования «Российская экономическая школа» (институт)",
+      "short_name": "НОУ ВО РЭШ, Российская экономическая школа, РЭШ",
+      "record_hash_observed": "c3d27176a4c6c8756abf2f52550749f7841107f61456bbe641de5bce8d70f7c2",
+      "record_hash_historical_expected": [
+        "c3d27176a4c6c8756abf2f52550749f7841107f61456bbe641de5bce8d70f7c2"
+      ],
+      "historical_record_fields_match_observed_exactly": true,
+      "old_classifier_on_observed_full_name": "regional",
+      "corrected_classifier_on_observed_full_name": "private",
+      "accepted_ownership": [
+        "regional"
+      ],
+      "destinations": [
+        {
+          "destination_id": "moscow-college_university-way-112552993",
+          "category": "college_university",
+          "name": "Колледж РосНОУ",
+          "accepted_ownership": "regional",
+          "evidence_id": "obrnadzor_accreditation:080d0f03-a658-e3ff-e91b-ed97cd76582d"
+        },
+        {
+          "destination_id": "moscow-college_university-obrnadzor_accreditation-080d0f03-a658-e3ff-e91b-ed97cd76582d",
+          "category": "college_university",
+          "name": "НОУ ВО РЭШ, Российская экономическая школа, РЭШ",
+          "accepted_ownership": "regional",
+          "evidence_id": "obrnadzor_accreditation:080d0f03-a658-e3ff-e91b-ed97cd76582d"
+        }
+      ],
+      "state": "exact_record_join",
+      "source_archive_sha256": "d309fa2396aa28c3c7a69bebff8e98be027528d555a60fdf370719608277fa68",
+      "impact_state": "confirmed_original_record_false_public_classification"
+    },
+    {
+      "city_id": "moscow",
+      "org_id": "6e979e64-e80a-a289-216e-fedb24892cd6",
+      "full_name": "Негосударственное образовательное учреждение высшего образования «Московский социально-педагогический институт»",
+      "short_name": "НОУ ВО «МСПИ»",
+      "record_hash_observed": "dd3d143a0e96bf7d064859d544fd7ab0c38bff6a8d88bbce81fa456a3ab9fe36",
+      "record_hash_historical_expected": [
+        "dd3d143a0e96bf7d064859d544fd7ab0c38bff6a8d88bbce81fa456a3ab9fe36"
+      ],
+      "historical_record_fields_match_observed_exactly": true,
+      "old_classifier_on_observed_full_name": "regional",
+      "corrected_classifier_on_observed_full_name": "private",
+      "accepted_ownership": [
+        "regional"
+      ],
+      "destinations": [
+        {
+          "destination_id": "moscow-college_university-obrnadzor_accreditation-6e979e64-e80a-a289-216e-fedb24892cd6",
+          "category": "college_university",
+          "name": "НОУ ВО «МСПИ»",
+          "accepted_ownership": "regional",
+          "evidence_id": "obrnadzor_accreditation:6e979e64-e80a-a289-216e-fedb24892cd6"
+        }
+      ],
+      "state": "exact_record_join",
+      "source_archive_sha256": "d309fa2396aa28c3c7a69bebff8e98be027528d555a60fdf370719608277fa68",
+      "impact_state": "confirmed_original_record_false_public_classification"
+    },
+    {
+      "city_id": "moscow",
+      "org_id": "8196ae9d-b444-a224-d022-446c10babdae",
+      "full_name": "Негосударственное образовательное учреждение высшего образования «Институт театрального искусства им. П.М. Ершова»",
+      "short_name": "НОУ ВО «Институт театрального искусства им. П.М. Ершова»",
+      "record_hash_observed": "bc7a39942dce75e1999a0704729e09072be48de6a771ca19eb9ff4698eccc635",
+      "record_hash_historical_expected": [
+        "bc7a39942dce75e1999a0704729e09072be48de6a771ca19eb9ff4698eccc635"
+      ],
+      "historical_record_fields_match_observed_exactly": true,
+      "old_classifier_on_observed_full_name": "regional",
+      "corrected_classifier_on_observed_full_name": "private",
+      "accepted_ownership": [
+        "regional"
+      ],
+      "destinations": [
+        {
+          "destination_id": "moscow-college_university-obrnadzor_accreditation-8196ae9d-b444-a224-d022-446c10babdae",
+          "category": "college_university",
+          "name": "НОУ ВО «Институт театрального искусства им. П.М. Ершова»",
+          "accepted_ownership": "regional",
+          "evidence_id": "obrnadzor_accreditation:8196ae9d-b444-a224-d022-446c10babdae"
+        }
+      ],
+      "state": "exact_record_join",
+      "source_archive_sha256": "d309fa2396aa28c3c7a69bebff8e98be027528d555a60fdf370719608277fa68",
+      "impact_state": "confirmed_original_record_false_public_classification"
+    },
+    {
+      "city_id": "novorossiysk",
+      "org_id": "44585b8c-a1cd-a430-c68a-00f6365c33e6",
+      "full_name": "негосударственное общеобразовательное учреждение \"Новороссийский политехнический лицей\"",
+      "short_name": "НОУ «НПЛ»",
+      "record_hash_observed": "165c036f13b3aea5632acf3360957bb911a8a1a2b1da3028365a2d8d5a6b7972",
+      "record_hash_historical_expected": [
+        "165c036f13b3aea5632acf3360957bb911a8a1a2b1da3028365a2d8d5a6b7972"
+      ],
+      "historical_record_fields_match_observed_exactly": true,
+      "old_classifier_on_observed_full_name": "regional",
+      "corrected_classifier_on_observed_full_name": "private",
+      "accepted_ownership": [
+        "regional"
+      ],
+      "destinations": [
+        {
+          "destination_id": "novorossiysk-school-obrnadzor_accreditation-44585b8c-a1cd-a430-c68a-00f6365c33e6",
+          "category": "school",
+          "name": "НОУ «НПЛ»",
+          "accepted_ownership": "regional",
+          "evidence_id": "obrnadzor_accreditation:44585b8c-a1cd-a430-c68a-00f6365c33e6"
+        }
+      ],
+      "state": "exact_record_join",
+      "source_archive_sha256": "d309fa2396aa28c3c7a69bebff8e98be027528d555a60fdf370719608277fa68",
+      "impact_state": "confirmed_original_record_false_public_classification"
+    }
+  ],
+  "verified_route_candidates": [
+    {
+      "city_id": "moscow",
+      "org_id": "66a77940-1a35-a95d-b2ac-74e23d05047d",
+      "full_name": "ГОСУДАРСТВЕННОЕ БЮДЖЕТНОЕ ПРОФЕССИОНАЛЬНОЕ ОБРАЗОВАТЕЛЬНОЕ УЧРЕЖДЕНИЕ ГОРОДА МОСКВЫ \"МОСКОВСКИЙ ТЕХНОЛОГИЧЕСКИЙ КОЛЛЕДЖ ИМЕНИ И.А. ЛИХАЧЁВА\"",
+      "short_name": "ГБПОУ МТК ИМ. И.А. ЛИХАЧЁВА",
+      "record_hash_observed": "918363a4159bdd772f59d66ea3a5dee695e347466f3985505c3c1530a653dde6",
+      "record_hash_historical_expected": [
+        "918363a4159bdd772f59d66ea3a5dee695e347466f3985505c3c1530a653dde6"
+      ],
+      "historical_record_fields_match_observed_exactly": true,
+      "old_classifier_on_observed_full_name": "regional",
+      "corrected_classifier_on_observed_full_name": "regional",
+      "accepted_ownership": [
+        "regional"
+      ],
+      "destinations": [
+        {
+          "destination_id": "moscow-college_university-way-56460834",
+          "category": "college_university",
+          "name": "Московский технологический колледж имени Лихачева",
+          "accepted_ownership": "regional",
+          "evidence_id": "obrnadzor_accreditation:66a77940-1a35-a95d-b2ac-74e23d05047d"
+        }
+      ],
+      "state": "exact_record_join",
+      "source_archive_sha256": "d309fa2396aa28c3c7a69bebff8e98be027528d555a60fdf370719608277fa68"
+    },
+    {
+      "city_id": "novorossiysk",
+      "org_id": "44585b8c-a1cd-a430-c68a-00f6365c33e6",
+      "full_name": "негосударственное общеобразовательное учреждение \"Новороссийский политехнический лицей\"",
+      "short_name": "НОУ «НПЛ»",
+      "record_hash_observed": "165c036f13b3aea5632acf3360957bb911a8a1a2b1da3028365a2d8d5a6b7972",
+      "record_hash_historical_expected": [
+        "165c036f13b3aea5632acf3360957bb911a8a1a2b1da3028365a2d8d5a6b7972"
+      ],
+      "historical_record_fields_match_observed_exactly": true,
+      "old_classifier_on_observed_full_name": "regional",
+      "corrected_classifier_on_observed_full_name": "private",
+      "accepted_ownership": [
+        "regional"
+      ],
+      "destinations": [
+        {
+          "destination_id": "novorossiysk-school-obrnadzor_accreditation-44585b8c-a1cd-a430-c68a-00f6365c33e6",
+          "category": "school",
+          "name": "НОУ «НПЛ»",
+          "accepted_ownership": "regional",
+          "evidence_id": "obrnadzor_accreditation:44585b8c-a1cd-a430-c68a-00f6365c33e6"
+        }
+      ],
+      "state": "exact_record_join",
+      "source_archive_sha256": "d309fa2396aa28c3c7a69bebff8e98be027528d555a60fdf370719608277fa68",
+      "impact_state": "confirmed_original_record_false_public_classification"
+    },
+    {
+      "city_id": "novorossiysk",
+      "org_id": "db4e3b31-de6b-0fff-d650-6878b692d69c",
+      "full_name": "муниципальное бюджетное общеобразовательное учреждение средняя общеобразовательная школа № 17 муниципального образования город Новороссийск имени Героя Советского Союза В.А. Маркова",
+      "short_name": "МБОУ СОШ № 17",
+      "record_hash_observed": "df4cb9bd9becccd3db5c05046027861c4f173afe589dfe6f0e62439232bfbfb5",
+      "record_hash_historical_expected": [
+        "df4cb9bd9becccd3db5c05046027861c4f173afe589dfe6f0e62439232bfbfb5"
+      ],
+      "historical_record_fields_match_observed_exactly": true,
+      "old_classifier_on_observed_full_name": "municipal",
+      "corrected_classifier_on_observed_full_name": "municipal",
+      "accepted_ownership": [
+        "municipal"
+      ],
+      "destinations": [
+        {
+          "destination_id": "novorossiysk-school-obrnadzor_accreditation-db4e3b31-de6b-0fff-d650-6878b692d69c",
+          "category": "school",
+          "name": "МБОУ СОШ № 17",
+          "accepted_ownership": "municipal",
+          "evidence_id": "obrnadzor_accreditation:db4e3b31-de6b-0fff-d650-6878b692d69c"
+        }
+      ],
+      "state": "exact_record_join",
+      "source_archive_sha256": "d309fa2396aa28c3c7a69bebff8e98be027528d555a60fdf370719608277fa68"
+    }
+  ],
+  "unresolved_records": [
+    {
+      "city_id": "moscow",
+      "org_id": "15a60264-0f9e-6fd8-205d-dd9f4619f6e2",
+      "full_name": "Государственное бюджетное профессиональное образовательное учреждение города Москвы «Политехнический Колледж № 50 имени дважды Героя Социалистического Труда Н.А. Злобина»",
+      "short_name": "ГБПОУ ПК № 50 ИМЕНИ ДВАЖДЫ ГЕРОЯ СОЦИАЛИСТИЧЕСКОГО ТРУДА Н.А. ЗЛОБИНА",
+      "record_hash_observed": "68d5b4ac66d00530ce547aa6e151cbae26b353a0ed64fc6f720eb84dc1773152",
+      "record_hash_historical_expected": [
+        "badb629b0dadf2d71a58da8f1173e0bc9231814d031dc2fa786d1921310c1178"
+      ],
+      "historical_record_fields_match_observed_exactly": false,
+      "old_classifier_on_observed_full_name": "regional",
+      "corrected_classifier_on_observed_full_name": "regional",
+      "accepted_ownership": [
+        "regional"
+      ],
+      "destinations": [
+        {
+          "destination_id": "moscow-college_university-relation-21604812",
+          "category": "college_university",
+          "name": "Политехнический Колледж № 50 имени дважды Героя Социалистического Труда Н.А. Злобина. Площадка Малино",
+          "accepted_ownership": "regional",
+          "evidence_id": "obrnadzor_accreditation:15a60264-0f9e-6fd8-205d-dd9f4619f6e2"
+        },
+        {
+          "destination_id": "moscow-college_university-obrnadzor_accreditation-15a60264-0f9e-6fd8-205d-dd9f4619f6e2",
+          "category": "college_university",
+          "name": "ГБПОУ ПК № 50",
+          "accepted_ownership": "regional",
+          "evidence_id": "obrnadzor_accreditation:15a60264-0f9e-6fd8-205d-dd9f4619f6e2"
+        }
+      ],
+      "state": "changed_record_or_scope_requires_review",
+      "source_archive_sha256": "d309fa2396aa28c3c7a69bebff8e98be027528d555a60fdf370719608277fa68"
+    }
+  ],
+  "identity_join_uncertain_destination_ids": [
+    "moscow-college_university-way-112552993"
+  ],
+  "limits": [
+    "Observed10Nov2026 archive differs from accepted08Nov archive; never silently substituted as a historical source version.",
+    "Only exact canonical individual-record hash matches establish unchanged historical fields. Other joins remain unresolved.",
+    "No original bundles, identities, physical coordinates, population or connectors changed by this audit.",
+    "Source legalform determines classification; candidate names alone do not establish ownership.",
+    "New immutable data revisions require independent review and root approval."
+  ],
+  "no_raw_or_personal_contact_data_redistributed": true
+}

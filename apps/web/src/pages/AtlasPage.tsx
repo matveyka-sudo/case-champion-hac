@@ -1,15 +1,13 @@
-import { NavigationLink } from "../shared/NavigationLink";
 import { useLayoutEffect, useEffect, useRef, useState } from "react";
 import { useModalFocus } from "../features/accessibility";
 import {
   useAtlas,
   currentStatus,
   type Status,
-  type Mode,
 } from "../features/state";
 import { fixtures, categoryById } from "../mocks/model";
 import { mockGateway } from "../mocks/gateway";
-import { Icon, Wordmark, Demo } from "../shared/ui";
+import { Icon, Demo } from "../shared/ui";
 import { timeLabel } from "../shared/format";
 import { FiltersPanel } from "../widgets/FiltersPanel";
 import { RussiaMap } from "../widgets/RussiaMap";
@@ -17,6 +15,9 @@ import { CityMap } from "../widgets/CityMap";
 import { ResultCard } from "../widgets/ResultCard";
 import { AgentChat, type ChatHandle } from "../widgets/AgentChat";
 import { TimeDock } from "../widgets/TimeDock";
+import { AtlasHeader } from "../widgets/AtlasHeader";
+import { AtlasShell } from "../widgets/AtlasShell";
+import { MapViewport, MapCanvas, MapOverlay, MapControls, AtlasLegend, AtlasMobileSheet, AtlasStatus } from "../widgets/AtlasMapView";
 import { timezone } from "../shared/timezone";
 const states: [Status, string, string][] = [
   ["idle", "circle-dashed", "До расчёта"],
@@ -252,80 +253,12 @@ export function AtlasPage() {
           ? "Грузовой доступ к узлам"
           : "Грузовая связь А → Б";
   return (
-    <div id="atlas" className="atlas" aria-label="Атлас Waydex">
-      <header className="at-top">
-        <NavigationLink
-          className="at-back"
-          to="top"
-          aria-label="Вернуться на главную"
-        >
-          <Icon name="arrow-left" />
-        </NavigationLink>
-        <Wordmark small />
-        <div
-          className="modes"
-          role="tablist"
-          aria-label="Режим анализа"
-          id="modeTabs"
-          onKeyDown={(e) => {
-            if (!["ArrowLeft", "ArrowRight"].includes(e.key)) return;
-            e.preventDefault();
-            const items: Mode[] = ["city", "pax", "cargo"],
-              next =
-                items[
-                  (items.indexOf(p.mode) + (e.key === "ArrowRight" ? 1 : 2)) % 3
-                ];
-            dispatch({ type: "mode", mode: next });
-            document.getElementById("mode-" + next)?.focus();
-          }}
-        >
-          {(
-            [
-              ["city", "building-2", "В городе", "В городе"],
-              ["pax", "waypoints", "Пассажирские связи", "Пассажиры"],
-              ["cargo", "container", "Грузовые связи", "Грузы"],
-            ] as const
-          ).map(([mode, icon, long, short]) => (
-            <button
-              id={"mode-" + mode}
-              key={mode}
-              role="tab"
-              aria-selected={p.mode === mode}
-              tabIndex={p.mode === mode ? 0 : -1}
-              onClick={() => dispatch({ type: "mode", mode })}
-            >
-              <Icon name={icon} />
-              <span className="lbl">
-                <span className="l-full">{long}</span>
-                <span className="l-short">{short}</span>
-              </span>
-            </button>
-          ))}
-        </div>
-        <div className="crumbs">
-          <Icon name="map" />
-          <span>Россия</span>
-          {title !== "Россия · выберите город" && (
-            <>
-              <Icon name="chevron-right" />
-              <b>{title}</b>
-            </>
-          )}
-        </div>
-        <div className="at-sp" />
-        <div className="theme-seg" role="group" aria-label="Тема оформления">
-          {(["auto", "light", "dark"] as const).map((v, i) => (
-            <button
-              key={v}
-              aria-label={`Тема: ${["авто", "светлая", "тёмная"][i]}`}
-              aria-pressed={s.themeMode === v}
-              title={["Авто: по времени на шкале", "Светлая", "Тёмная"][i]}
-              onClick={() => dispatch({ type: "ui", patch: { themeMode: v } })}
-            >
-              <Icon name={["sun-moon", "sun", "moon"][i]} />
-            </button>
-          ))}
-        </div>
+    <AtlasShell header={<>
+      <AtlasHeader mode={p.mode} title={title} theme={s.themeMode} onModeChange={(mode) => dispatch({ type: "mode", mode })}
+        onThemeChange={(themeMode) => dispatch({ type: "ui", patch: { themeMode } })}
+        filtersButtonRef={filtersButton} chatButtonRef={chatButton} onFilters={() => dispatch({ type: "ui", patch: { mobileFilters: true } })}
+        chatOpen={s.chatOpen} onChat={() => dispatch({ type: "ui", patch: { chatOpen: !s.chatOpen, ...(width < 1520 ? { collapsed: !s.chatOpen } : {}) } })}
+        controls={<>
         <div className="dropdown d-only">
           <button
             className="iconbtn"
@@ -368,83 +301,21 @@ export function AtlasPage() {
             </ul>
           )}
         </div>
-        <button
-          ref={filtersButton}
-          className="iconbtn m-only"
-          aria-label="Фильтры"
-          onClick={() =>
-            dispatch({ type: "ui", patch: { mobileFilters: true } })
-          }
-        >
-          <Icon name="sliders-horizontal" />
-        </button>
-        <button
-          ref={chatButton}
-          className="iconbtn"
-          id="chatToggle"
-          aria-pressed={s.chatOpen}
-          aria-expanded={s.chatOpen}
-          aria-controls="chat"
-          onClick={() =>
-            dispatch({
-              type: "ui",
-              patch: {
-                chatOpen: !s.chatOpen,
-                ...(width < 1520 ? { collapsed: !s.chatOpen } : {}),
-              },
-            })
-          }
-        >
-          <Icon name="sparkles" />
-          <span className="d-only">Агент</span>
-        </button>
-      </header>
-      <div className="at-body">
+        </>} />
+ </>}>
+
         <FiltersPanel run={() => void run()} />
-        <section
-          className={`at-map ${cardVisible && !mobile ? "has-card" : ""} ${s.chatOpen && !mobile ? "chat-open" : ""} ${["stale", "run", "demoonly"].includes(st) ? "dimmed" : ""}`}
-          id="mapArea"
-          ref={mapArea}
-          aria-label="Карта"
-        >
-          <div className="map-wrapper">
+        <MapViewport className={`${cardVisible && !mobile ? "has-card" : ""} ${s.chatOpen && !mobile ? "chat-open" : ""} ${["stale", "run", "demoonly"].includes(st) ? "dimmed" : ""}`} mapRef={mapArea}>
+          <MapCanvas>
             {cityView ? (
               <CityMap zoomAction={zoom} />
             ) : (
               <RussiaMap zoomAction={zoom} />
             )}
-          </div>
-          <div className="ov ov-tl">
-            <div
-              className="status panelc"
-              data-s={
-                ["stale", "demoonly", "partial"].includes(st)
-                  ? "stale"
-                  : ["srcerr", "baddate", "noroute"].includes(st)
-                    ? "err"
-                    : st === "run"
-                      ? "run"
-                      : ["nd", "pending", "idle"].includes(st)
-                        ? "nd"
-                        : "ok"
-              }
-              role="status"
-              aria-live="polite"
-            >
-              <span className="sdot" aria-hidden="true" />
-              <span className="st">
-                <b>
-                  {statusTitle[st]}
-                  {["ok", "agentoff"].includes(st) && (
-                    <>
-                      {" "}
-                      <Demo />
-                    </>
-                  )}
-                </b>
-                <span>{statusSub}</span>
-              </span>
-              {["stale", "demoonly"].includes(st) && (
+          </MapCanvas>
+          <MapOverlay position="tl"><AtlasStatus kind={["stale", "demoonly", "partial"].includes(st) ? "stale" : ["srcerr", "baddate", "noroute"].includes(st) ? "err" : st === "run" ? "run" : ["nd", "pending", "idle"].includes(st) ? "nd" : "ok"}
+            title={<>{statusTitle[st]}{["ok", "agentoff"].includes(st) && <> <Demo /></>}</>} subtitle={statusSub}
+            actions={<>              {["stale", "demoonly"].includes(st) && (
                 <button
                   className="iconbtn primary"
                   style={{ height: 38 }}
@@ -482,8 +353,7 @@ export function AtlasPage() {
                   ))}
                 </div>
               )}
-            </div>
-          </div>
+</>} /></MapOverlay>
           {central && (
             <div className="ov ov-center">
               <div className="statecard panelc" role="status">
@@ -530,49 +400,11 @@ export function AtlasPage() {
               </div>
             </div>
           )}
-          <div className="ov ov-r">
-            {!mobile && cardVisible && <ResultCard analyze={analyze} />}
-          </div>
-          <div className="ov ov-bottom">
-            <div
-              className={`legend panelc ${scale && s.legendOpen ? "open" : ""}`}
-            >
-              <h3>
-                <span className="t">{legendTitle}</span>
-                {scale && (
-                  <button
-                    className="lg-toggle"
-                    aria-expanded={s.legendOpen}
-                    aria-label="Подробнее о легенде"
-                    onClick={() =>
-                      dispatch({
-                        type: "ui",
-                        patch: { legendOpen: !s.legendOpen },
-                      })
-                    }
-                  >
-                    <Icon name={s.legendOpen ? "chevron-down" : "info"} />
-                  </button>
-                )}
-              </h3>
-              {scale ? (
-                <>
-                  <div className="lg-bar" />
-                  <div className="lg-ticks tnum">
-                    {s.layers.pop ? (
-                      <>
-                        <span>меньше жителей</span>
-                        <span>больше</span>
-                      </>
-                    ) : (
-                      [0, 25, 50, 75, 100].map((n) => <span key={n}>{n}</span>)
-                    )}
-                  </div>
-                  <p className="lg-note" style={{ marginTop: 6 }}>
-                    ячейки 1 км · при приближении — точки
-                  </p>
-                  {s.legendOpen && (
-                    <div className="lg-more panelc">
+          <MapOverlay position="r">{!mobile && cardVisible && <ResultCard analyze={analyze} />}</MapOverlay>
+          <MapOverlay position="bottom"><AtlasLegend title={legendTitle} scale={!!scale} open={s.legendOpen}
+            onToggle={() => dispatch({ type: "ui", patch: { legendOpen: !s.legendOpen } })}
+            ticks={s.layers.pop ? ["меньше жителей", "больше"] : [0, 25, 50, 75, 100]} note="ячейки 1 км · при приближении — точки"
+            details={<>
                       <div className="lg-items">
                         <span>
                           <i className="sw nd" />
@@ -587,17 +419,8 @@ export function AtlasPage() {
                           Объект категории (пример)
                         </span>
                       </div>
-                      <p className="lg-note">
-                        Шкала 0–100 одинакова днём и ночью: ниже 50 — низкая
-                        доступность, от 75 — зелёная зона. Показаны заранее
-                        подготовленные демо-значения. Масштаб меняет
-                        отображение, не методику.
-                      </p>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="lg-items" style={{ marginTop: 10 }}>
+                      <p className="lg-note">Шкала 0–100 одинакова днём и ночью: ниже 50 — низкая доступность, от 75 — зелёная зона. Показаны заранее подготовленные демо-значения. Масштаб меняет отображение, не методику.</p>
+  </>} items={<>
                   {p.mode === "city" ? (
                     <>
                       <span>
@@ -647,68 +470,14 @@ export function AtlasPage() {
                       </span>
                     </>
                   )}
-                </div>
-              )}
-            </div>
+</>} />
             <TimeDock run={() => void run()} />
-            <div
-              className="zgroup panelc"
-              role="group"
-              aria-label="Масштаб карты"
-            >
-              {[
-                ["in", "plus", "Приблизить"],
-                ["out", "minus", "Отдалить"],
-                ["home", "globe", "Показать всю территорию"],
-                ...(cityView
-                  ? [["city", "locate-fixed", "К выбранному городу"]]
-                  : []),
-              ].map(([kind, icon, label]) => (
-                <button
-                  className="zbtn"
-                  key={kind}
-                  aria-label={label}
-                  onClick={() => setZoom((v) => ({ kind, id: v.id + 1 }))}
-                >
-                  <Icon name={icon} />
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="m-sheet" ref={sheet}>
-            <span className="grab" aria-hidden="true" />
-            <div className="m-sum">
-              <div>
-                <b>
-                  {title}
-                  {p.mode === "city" && mobileCell ? " · выбрана ячейка" : ""}
-                </b>
-                <span>{mobileDescription}</span>
-              </div>
-              <Demo />
-            </div>
-            <TimeDock mobile run={() => void run()} />
-            <div className="m-btns">
-              <button
-                className="iconbtn"
-                onClick={() =>
-                  dispatch({ type: "ui", patch: { mobileFilters: true } })
-                }
-              >
-                <Icon name="sliders-horizontal" />
-                Фильтры
-              </button>
-              <button
-                className="iconbtn primary"
-                onClick={() =>
-                  dispatch({ type: "ui", patch: { chatOpen: true } })
-                }
-              >
-                <Icon name="sparkles" />
-                Агент
-              </button>
-            </div>
-          </div>
+            <MapControls items={[["in", "plus", "Приблизить"], ["out", "minus", "Отдалить"], ["home", "globe", "Показать всю территорию"], ...(cityView ? [["city", "locate-fixed", "К выбранному городу"]] : [])]}
+              onAction={(kind) => setZoom((value) => ({ kind, id: value.id + 1 }))} />
+          </MapOverlay>
+          <AtlasMobileSheet title={<>{title}{p.mode === "city" && mobileCell ? " · выбрана ячейка" : ""}</>} description={mobileDescription} tag={<Demo />} sheetRef={sheet}
+            timeDock={<TimeDock mobile run={() => void run()} />} onFilters={() => dispatch({ type: "ui", patch: { mobileFilters: true } })}
+            onChat={() => dispatch({ type: "ui", patch: { chatOpen: true } })} />
           <svg
             width="0"
             height="0"
@@ -736,9 +505,8 @@ export function AtlasPage() {
               </pattern>
             </defs>
           </svg>
-        </section>
+        </MapViewport>
         <AgentChat key={s.revision} handle={chat} />
-      </div>
-    </div>
+    </AtlasShell>
   );
 }

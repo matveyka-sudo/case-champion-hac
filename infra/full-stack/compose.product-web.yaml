@@ -1,0 +1,6 @@
+# Deploy a separately reviewed SPA without changing the API/worker revision.
+services:
+  web:
+    image: waydex-full-web:${WAYDEX_WEB_REVISION:?}
+    build:
+      context: ${WAYDEX_WEB_SOURCE_DIR:?}

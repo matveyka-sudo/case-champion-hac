@@ -35,6 +35,9 @@ GHSL_CRS = "ESRI:54009"
 GHSL_NODATA_BELOW = 0.0
 POPULATION_METHOD = "ghsl_r2023a_e2025_100m_pixel_centroid"
 POPULATION_YEAR = 2025
+# Conservative allowance for a few rounding steps in projection and overlay.
+# This is a coordinate precision budget, not a minimum meaningful land area.
+_EXCLUSION_OVERLAY_ULPS = 8
 
 
 @dataclass
@@ -138,6 +141,22 @@ class GridResult:
     pixels_invalid: int = 0  # nodata or outside the raster: their cells are unknown
 
 
+def _water_only_within_roundoff(clipped: shapely.Geometry, water: shapely.Geometry) -> bool:
+    """Classify on a tiny precision grid without changing geometry or measured area.
+
+    Coincident boundaries can differ by a few projected-coordinate ULPs after
+    WGS84/UTM conversion and overlay. Eight ULPs allow those rounding steps;
+    around northing 6,060,000 m the grid is 7.45 nm, not a geographic buffer.
+    Fixed-precision overlay preserves resolvable strips and small land islands,
+    unlike an area cutoff. land_area_km2 deliberately retains the original
+    unquantized area, including a possible positive roundoff residual.
+    """
+    if water.is_empty:
+        return False
+    precision = _EXCLUSION_OVERLAY_ULPS * max(math.ulp(value) for value in clipped.bounds)
+    return bool(shapely.difference(clipped, water, grid_size=precision).area <= 0)
+
+
 def build_grid(layers: OsmLayers, utm_epsg: int, spacing_m: int = 1000) -> GridResult:
     crs = f"EPSG:{utm_epsg}"
     city_utm = shapely.make_valid(to_crs(layers.city, "EPSG:4326", crs))
@@ -172,7 +191,8 @@ def build_grid(layers: OsmLayers, utm_epsg: int, spacing_m: int = 1000) -> GridR
             cell = CellResult(ix=ix, iy=iy, clipped=clipped, land_area_km2=land.area / 1e6)
             _place_point(cell, square.centroid, tree, building_geoms, building_refs)
             if cell.point is None:
-                cell.exclusion_reason = "WATER_ONLY" if land.area <= 0 else "NO_BUILDING"
+                water_only = land.area <= 0 or _water_only_within_roundoff(clipped, water_union)
+                cell.exclusion_reason = "WATER_ONLY" if water_only else "NO_BUILDING"
             cells[(ix, iy)] = cell
     return GridResult(
         crs=crs,

@@ -53,6 +53,17 @@ jobs:
         run: node scripts/check_web_layout.mjs
       - name: Validate current product configuration
         run: python3 scripts/check_product_config.py
+      - name: Validate deployment graph source guards
+        run: |
+          .venv/bin/ruff check infra/full-stack
+          .venv/bin/ruff format --check infra/full-stack
+          .venv/bin/python -m unittest discover -s infra/full-stack -p 'test_*.py'
+          docker compose --env-file infra/full-stack/.env.product.example \
+            -f infra/full-stack/compose.product.yaml config --quiet
+      - name: Check saved-result compression in Nginx
+        env:
+          WAYDEX_NGINX_TEST_IMAGE: nginx:1.28.0-alpine@sha256:30f1c0d78e0ad60901648be663a710bdadf19e4c10ac6782c235200619158284
+        run: .venv/bin/python infra/full-stack/test_nginx.py -v
       - name: Verify installed API entrypoint
         env:
           UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/a2-api-smoke
@@ -70,8 +81,50 @@ jobs:
           routes = build_app().openapi()["paths"]
           assert "/health" in routes and "/api/v1/capabilities" in routes
           PYTHON
+      - name: Verify isolated data pipeline CLI dependencies
+        env:
+          UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/a2-data-pipeline-smoke
+        run: |
+          uv sync --frozen --package a2-data-pipeline --no-default-groups
+          workspace_python="$UV_PROJECT_ENVIRONMENT/bin/python"
+          uv pip check --python "$workspace_python"
+          "$workspace_python" -I - <<'PYTHON'
+          import importlib.util
+
+          import a2_contracts
+          import a2_data_pipeline.gtfs_inputs
+          import a2_engine
+
+          assert importlib.util.find_spec("a2_api") is None
+          PYTHON
+          "$workspace_python" -I -m a2_data_pipeline.gtfs_inputs --help
       - name: Validate PostgreSQL Compose configuration
         run: docker compose --env-file .env.example config --quiet
+
+  frontend-browser:
+    name: Chromium UI checks with API fixtures
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: apps/web
+    env:
+      CI: "true"
+      VITE_DATA_MODE: api
+      PLAYWRIGHT_WEB_PORT: "5176"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Install locked frontend dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install Chromium revision selected by the locked Playwright package
+        run: npx --no-install playwright install chromium --with-deps
+      - name: Run fixture-backed API browser suite
+        run: npm run test:e2e -- api.spec.ts --browser=chromium --workers=1 --retries=0 --forbid-only --run-agents=none --global-timeout=300000
 
   backend:
     name: Backend checks with PostgreSQL

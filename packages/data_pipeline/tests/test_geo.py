@@ -1,5 +1,7 @@
 """Grid and sample point rules on a synthetic city (synthetic geometry, not real data)."""
 
+import math
+
 import numpy as np
 import pytest
 
@@ -66,6 +68,52 @@ def test_point_never_moves_to_another_cell() -> None:
     assert second.point.x >= X0 + 1000 - 1e-6
     third = grid.cells[(502, 6060)]
     assert third.point is None and third.exclusion_reason == "NO_BUILDING"
+
+
+@pytest.mark.parametrize(
+    ("land_kind", "expected_reason"),
+    [
+        ("roundoff_strip", "WATER_ONLY"),
+        ("micrometre_strip", "NO_BUILDING"),
+        ("millimetre_island", "NO_BUILDING"),
+        ("no_water", "NO_BUILDING"),
+    ],
+)
+def test_water_exclusion_roundoff_preserves_resolvable_land(
+    monkeypatch: pytest.MonkeyPatch, land_kind: str, expected_reason: str
+) -> None:
+    # Bypass CRS conversion only here to inject a deterministic, already
+    # projected residual on every platform. The preceding test retains the
+    # real WGS84/UTM round trip that originally failed on Linux.
+    monkeypatch.setattr("a2_data_pipeline.geo.to_crs", lambda geometries, src, dst: geometries)
+    city = box(X0, Y0, X0 + 1000, Y0 + 1000)
+    if land_kind == "no_water":
+        water = []
+    elif land_kind == "millimetre_island":
+        island = box(X0 + 500, Y0 + 500, X0 + 500.001, Y0 + 500.001)
+        water = [shapely.difference(city, island)]
+    else:
+        width = 2 * math.ulp(Y0) if land_kind == "roundoff_strip" else 1e-6
+        water = [box(X0 + width, Y0, X0 + 1000, Y0 + 1000)]
+    source = OsmLayers(
+        city=city,
+        city_ref="relation/1",
+        city_name="Synthetic projected residual",
+        city_population_tag=None,
+        districts=[],
+        buildings=np.array([], dtype=object),
+        building_refs=[],
+        water=np.array(water, dtype=object),
+    )
+    grid = build_grid(source, utm_epsg=32634)
+    assert set(grid.cells) == {(500, 6060)}
+    cell = grid.cells[(500, 6060)]
+    assert cell.point is None and cell.exclusion_reason == expected_reason
+    raw_area = shapely.difference(city, shapely.union_all(water)).area
+    assert raw_area > 0
+    # Classifying the roundoff-only sliver does not quantize reported land area.
+    assert cell.land_area_km2 == raw_area / 1e6
+    assert grid.city_utm.equals_exact(city, tolerance=0)
 
 
 def write_ghsl(tmp_path, value_at, cover_until_x: float = 3800.0):  # type: ignore[no-untyped-def]

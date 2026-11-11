@@ -145,7 +145,10 @@ export class ApiClient {
             ? seconds * 1000
             : Math.max(0, Date.parse(text) - Date.now());
         }
-        const value: unknown = await response.json().catch(() => null);
+        const value: unknown = await response.json().catch(() => {
+          signal.throwIfAborted();
+          return null;
+        });
         if (response.ok) return value;
         let error: Schemas["ErrorDetail"] | null = null;
         try {

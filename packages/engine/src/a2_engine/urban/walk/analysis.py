@@ -14,7 +14,7 @@ from a2_engine.urban.models import (
     UrbanThreshold,
     references,
 )
-from a2_engine.urban.valhalla.models import WalkResponseEnvelope
+from a2_engine.urban.valhalla.models import WalkResponseEnvelope, WalkRouteResult
 from a2_engine.urban.valhalla.requests import make_route_request
 from a2_engine.urban.valhalla.responses import normalize_walk_response
 from a2_engine.urban.walk.models import WalkAnalysisResult, WalkInputs, WalkPlanIssue, WalkRoutePlan
@@ -80,7 +80,6 @@ def analyze_walk_responses(
 ) -> WalkAnalysisResult:
     if set(selected_categories) != set(plan.categories):
         raise ValueError("PLAN_CATEGORY_SELECTION_MISMATCH")
-    inputs = plan.inputs
     requests = {request.request_id: request for request in plan.requests}
     envelopes = {response.request_id: response for response in responses}
     if len(envelopes) != len(responses) or envelopes.keys() - requests.keys():
@@ -90,10 +89,50 @@ def analyze_walk_responses(
         for request in plan.requests
         if request.request_id in envelopes
     )
+    return analyze_normalized_walk_routes(
+        plan,
+        routes,
+        selected_categories=selected_categories,
+        config=config,
+        rules=rules,
+        thresholds=thresholds,
+    )
+
+
+def analyze_normalized_walk_routes(
+    plan: WalkRoutePlan,
+    normalized_routes: Sequence[WalkRouteResult],
+    *,
+    selected_categories: Mapping[str, str],
+    config: UrbanConfig,
+    rules: UrbanJourneyRules,
+    thresholds: Sequence[UrbanThreshold] = (),
+) -> WalkAnalysisResult:
+    """Reduce trusted normalized responses without retaining their raw JSON.
+
+    The adapter must normalize each source-bound response with
+    ``normalize_walk_response`` first. This seam verifies exact planned request
+    identity and deterministic order; it does not create provenance or minimum proof.
+    Missing responses keep the same incomplete coverage as the envelope entry point.
+    """
+    if set(selected_categories) != set(plan.categories):
+        raise ValueError("PLAN_CATEGORY_SELECTION_MISMATCH")
+    inputs = plan.inputs
+    requests = {request.request_id: request for request in plan.requests}
+    by_id = {route.request.request_id: route for route in normalized_routes}
+    if len(by_id) != len(normalized_routes) or by_id.keys() - requests.keys():
+        raise ValueError("DUPLICATE_OR_UNKNOWN_NORMALIZED_ROUTE")
+    if any(route.request != requests[identity] for identity, route in by_id.items()):
+        raise ValueError("NORMALIZED_ROUTE_PLAN_MISMATCH")
+    routes = tuple(
+        by_id[request.request_id] for request in plan.requests if request.request_id in by_id
+    )
     results = {(r.request.point_id, r.request.destination_id): r for r in routes}
     point_endpoints = {p.entity_id: p for p in inputs.point_endpoints}
+    input_points = {p.point_id: p for p in inputs.points}
     dest_endpoints = {d.entity_id: d for d in inputs.destination_endpoints}
     candidates = []
+    unusable_approaches: set[tuple[str, str]] = set()
     for route in routes:
         if route.state != "reachable":
             continue
@@ -102,6 +141,16 @@ def analyze_walk_responses(
         assert origin.connector and destination.connector
         assert origin.connector.seconds is not None and destination.connector.seconds is not None
         assert route.network_seconds is not None
+        if (
+            origin.nonzero_approach_has_zero_time(
+                access_distance_m=input_points[origin.entity_id].access_distance_m
+            )
+            or destination.nonzero_approach_has_zero_time()
+        ):
+            # Keep the immutable network observation, but do not manufacture a
+            # complete physical chain from an approach rounded down to zero.
+            unusable_approaches.add((origin.entity_id, destination.entity_id))
+            continue
         departure = inputs.context.requested_departure_at
         legs = []
         for start_node, end_node, seconds, evidence in (
@@ -178,6 +227,7 @@ def analyze_walk_responses(
             complete = all(
                 r is not None
                 and r.minimum_proven
+                and (point_id, r.request.destination_id) not in unusable_approaches
                 and r.state in ("reachable", "confirmed_unreachable")
                 for r in relevant
             )

@@ -1,0 +1,35 @@
+{
+  "dataset_id": "favt_registry.20261110",
+  "source_id": "favt_registry",
+  "source_url": "https://favt.gov.ru/public/materials//7/2/3/9/c/7239c479220bfdaaf016834c51e3fb63.pdf",
+  "retrieved_at": "2026-11-10T14:28:33.888783Z",
+  "publication_date": "2026-11-09",
+  "valid_from": "2026-11-10",
+  "valid_to": "2026-11-10",
+  "geography": "Калининград: официально обслуживающие город пассажирские аэропорты",
+  "license": {
+    "name": "Factual identifiers and observed roster/operation facts only; source documents not redistributed",
+    "url": "https://favt.gov.ru/public/materials//7/2/3/9/c/7239c479220bfdaaf016834c51e3fb63.pdf",
+    "status": "permitted",
+    "attribution": "favt_registry"
+  },
+  "access_method": "manual",
+  "raw_path": "airport-official-20261110/favt-civil-airfields-pdf-20261109-d462c6de77a24dd3.pdf",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "d462c6de77a24dd324cc0450782ea84e86c5fc189c1f67b3b345f88191d802c2",
+    "size_bytes": 190480
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "pdf:page1:row8": "Kaliningrad(Khrabrovo), registration109 dated02.02.2015, operatorAOAirportKhrabrovo"
+  },
+  "coverage": "Observed current official city-serving passenger-airport roster,10Nov2026 only",
+  "limitations": [
+    "No historical or future completeness is inferred from an undated publication",
+    "No raw source documents redistributed in Git; accepted outputs contain factual identifiers/provenance",
+    "No distance cutoff used as completeness proof"
+  ],
+  "status": "accepted",
+  "qa_report": "data/bundles/kaliningrad-urban-2026-11-10.5/qa_report.json"
+}

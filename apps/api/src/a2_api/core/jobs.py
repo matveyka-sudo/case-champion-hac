@@ -7,9 +7,14 @@ from a2_contracts.common import ContractModel, Identifier, ProfileId, Version, c
 from a2_contracts.scenarios import ScenarioRequest
 from a2_contracts.v2.base import Timestamp, VersionRefs
 from a2_contracts.v2.requests import AnalysisRequest as V2AnalysisRequest
+from a2_contracts.v2.requests import UrbanPassengerRequest
 from a2_contracts.v2.results import AnalysisResult
 from a2_contracts.v2.scenarios import ScenarioProposal, ScenarioRunRequest
 from pydantic import Field, model_validator
+
+from a2_api.core.batches import BatchExecution
+from a2_api.core.private_sources import PrivateSourceBinding
+from a2_api.core.scenario_scope import ScenarioEndpointScope
 
 JobKind = Literal["analysis", "scenario"]
 JobRequest = AnalysisRequest | ScenarioRequest | V2AnalysisRequest | ScenarioRunRequest
@@ -37,6 +42,15 @@ class V2JobContext(ContractModel):
     access_scope: Identifier
     scenario_proposal: ScenarioProposal | None = None
     cache_valid_until: Timestamp | None = None
+    private_source_bindings: tuple[PrivateSourceBinding, ...] = Field(
+        default=(), max_length=8, exclude_if=lambda value: not value
+    )
+    scenario_endpoint_scope: ScenarioEndpointScope | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+    batch_execution: BatchExecution | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     @property
     def bundle_id(self) -> str:
@@ -49,6 +63,15 @@ class V2JobContext(ContractModel):
     @model_validator(mode="after")
     def immutable_inputs(self) -> Self:
         request = self.normalized_request
+        if len({binding.source.episode_id for binding in self.private_source_bindings}) != len(
+            self.private_source_bindings
+        ) or any(
+            binding.source.snapshot_id != self.snapshot_id
+            or binding.source.snapshot_hash != self.snapshot_hash
+            or binding.grant.access_scope != self.access_scope
+            for binding in self.private_source_bindings
+        ):
+            raise ValueError("Private source permission differs from frozen job inputs")
         if request.snapshot_id != self.snapshot_id or self.versions.snapshot_id != self.snapshot_id:
             raise ValueError("Normalized request and versions must bind the accepted snapshot")
         if request.methodology is None or (
@@ -61,7 +84,41 @@ class V2JobContext(ContractModel):
             or self.scenario_proposal.versions != self.versions
         ):
             raise ValueError("Scenario proposal must bind the baseline identity and versions")
+        endpoint_scope = self.scenario_endpoint_scope
+        if endpoint_scope is not None and (
+            self.scenario_proposal is None
+            or not isinstance(request, UrbanPassengerRequest)
+            or endpoint_scope.snapshot_id != self.snapshot_id
+            or endpoint_scope.snapshot_hash != self.snapshot_hash
+            or endpoint_scope.city_id != request.city_id
+        ):
+            raise ValueError("Scenario endpoint scope differs from its immutable baseline context")
+        execution = self.batch_execution
+        if execution is not None and self.private_source_bindings:
+            raise ValueError("Private Rasp observations require their independent source execution")
+        if execution is not None and (
+            self.scenario_proposal is not None
+            or execution.snapshot_id != self.snapshot_id
+            or execution.snapshot_hash != self.snapshot_hash
+            or execution.source_graph_version != self.versions.graph_version
+            or execution.access_scope != self.access_scope
+            or execution.context_fingerprint != batch_context_fingerprint(self)
+        ):
+            raise ValueError("Batch execution differs from its immutable job context")
         return self
+
+
+def batch_context_fingerprint(context: V2JobContext) -> str:
+    return canonical_hash(
+        context.model_dump(
+            mode="json",
+            exclude={
+                "analysis_id",
+                "cache_valid_until",
+                "batch_execution",
+            },
+        )
+    )
 
 
 JobContextUnion = JobContext | V2JobContext

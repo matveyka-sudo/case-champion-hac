@@ -3,11 +3,17 @@
 import hashlib
 import json
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Any, Literal
 
 from a2_engine.shared.results import finite_number
 from a2_engine.urban.models import UrbanGeometry, identifier, references
-from a2_engine.urban.valhalla.codec import canonical_json, digest
+from a2_engine.urban.valhalla.codec import (
+    ROUTE_ECHO_TRUNC6_EVIDENCE_REF,
+    _valhalla351_route_echo,
+    canonical_json,
+    digest,
+)
 
 
 @dataclass(frozen=True)
@@ -105,14 +111,59 @@ class ValhallaCorrelation:
     correlated_location: WalkCoordinate
     correlation_id: str
     evidence_refs: tuple[str, ...]
+    coordinate_precision_digits: int | None = None
+    serialization_evidence_refs: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         identifier(self.access_node_id, "access_node_id")
         identifier(self.correlation_id, "correlation_id")
         object.__setattr__(self, "evidence_refs", references(self.evidence_refs, required=True))
-        # Pilot requires a separately accepted connector if Valhalla re-snaps elsewhere.
-        if self.source_location != self.correlated_location:
+        object.__setattr__(
+            self, "serialization_evidence_refs", references(self.serialization_evidence_refs)
+        )
+        # Valhalla 3.5.1's locate serializer renders projected coordinates at six
+        # decimals. Explicit evidence may establish compatibility with that bin,
+        # never an exact subprecision match or a revised physical connector.
+        if self.coordinate_precision_digits is not None:
+            if (
+                type(self.coordinate_precision_digits) is not int
+                or self.coordinate_precision_digits != 6
+                or not self.serialization_evidence_refs
+            ):
+                raise ValueError("SUPPORTED_COORDINATE_SERIALIZATION_EVIDENCE_REQUIRED")
+            quantum = Decimal("0.000001")
+            for source, rendered in (
+                (self.source_location.lon, self.correlated_location.lon),
+                (self.source_location.lat, self.correlated_location.lat),
+            ):
+                original, serialized = Decimal(str(source)), Decimal(str(rendered))
+                if (
+                    serialized != serialized.quantize(quantum)
+                    or abs(original - serialized) > quantum / 2
+                ):
+                    raise ValueError("REVISED_ACCESS_CONNECTOR_REQUIRED")
+        elif self.source_location != self.correlated_location:
             raise ValueError("REVISED_ACCESS_CONNECTOR_REQUIRED")
+
+    def matches_response_location(self, location: WalkCoordinate) -> bool:
+        if location == self.source_location or (
+            self.coordinate_precision_digits == 6 and location == self.correlated_location
+        ):
+            return True
+        # /route echoes original inputs through RapidJSON, while /locate uses
+        # fixed_t rounding for projections. Accept only this explicitly evidenced
+        # 3.5.1 codec result; the correlated location and its half-quantum check,
+        # actual endpoint attestations, and minimum-proof rules stay unchanged.
+        return (
+            self.build.engine_version == "3.5.1"
+            and self.coordinate_precision_digits == 6
+            and ROUTE_ECHO_TRUNC6_EVIDENCE_REF in self.serialization_evidence_refs
+            and (location.lon, location.lat)
+            == (
+                _valhalla351_route_echo(self.source_location.lon),
+                _valhalla351_route_echo(self.source_location.lat),
+            )
+        )
 
 
 @dataclass(frozen=True)

@@ -2,6 +2,7 @@
 
 import copy
 import json
+import math
 from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -24,7 +25,12 @@ from a2_engine import (
     prepare_walk_inputs,
 )
 from a2_engine.urban.valhalla import digest
+from a2_engine.urban.valhalla.codec import (
+    ROUTE_ECHO_TRUNC6_EVIDENCE_REF,
+    _valhalla351_route_echo,
+)
 from a2_engine.urban.walk import WalkInputs, WalkRoutePlan
+from a2_engine.urban.walk.observed import assess_observed_walk_route
 
 FIXTURE = Path(__file__).parent / "fixtures" / "kaliningrad_walk_canonical_subset.json"
 DEPARTURE = datetime(2026, 11, 8, 12, tzinfo=UTC)
@@ -213,6 +219,254 @@ def test_full_time_counts_both_connectors_once(canonical: dict[str, Any]) -> Non
         for point in result.analysis.modes[0].points
     )
     assert not result.analysis.modes[0].ranking_eligible  # Real excluded population retained.
+
+
+def test_observed_estimate_is_separate_from_unproven_category_index(
+    canonical: dict[str, Any],
+) -> None:
+    inputs = synthetic_inputs(canonical)
+    request = plan(inputs).requests[0]
+    envelope = response(request, search_complete=False, minimum_time_evidence_refs=())
+    route = normalize_walk_response(request, envelope)
+    result = assess_observed_walk_route(
+        inputs,
+        route,
+        category="airport",
+        config=load_urban_config(),
+        rules=load_urban_journey_rules(),
+    )
+    assert not route.minimum_proven
+    assert result.observed_total_seconds == 60 + 1620 + 120
+    assert result.h_seconds.value == 1800
+    assert result.observed_route_accessibility.value == 50
+    assert result.observed_route_accessibility.reason_code == "MINIMUM_NOT_PROVEN"
+    assert result.canonical_category_index.value is None
+    assert result.canonical_category_index.reason_code == "MINIMUM_NOT_PROVEN"
+    assert not result.minimum_proven and not result.ranking_eligible
+    assert not result.certified_index_lower_bound and result.completeness == "partial"
+    assert result.projection_offset_seconds == 0
+    assert "SINGLE_FOUND_OBJECT_NOT_CATEGORY_MINIMUM" in result.limitations
+    assert "REPORTED_DURATION_NOT_CERTIFIED_UPPER_BOUND" in result.limitations
+    assert analyze(plan(inputs), [envelope]).analysis.modes[0].points[0].index.value is None
+
+
+@pytest.mark.parametrize("change", ["missing", "passability", "seconds", "zero"])
+def test_observed_estimate_never_fills_an_unknown_physical_approach(
+    canonical: dict[str, Any], change: str
+) -> None:
+    inputs = synthetic_inputs(canonical)
+    request = plan(inputs).requests[0]
+    route = normalize_walk_response(request, response(request))
+    endpoint = inputs.destination_endpoints[0]
+    assert endpoint.connector
+    changes: dict[str, Any] = {
+        "passability": {"traversable": None},
+        "seconds": {"seconds": None},
+        "zero": {"seconds": 0},
+    }
+    connector = None if change == "missing" else replace(endpoint.connector, **changes[change])
+    inputs = replace(inputs, destination_endpoints=(replace(endpoint, connector=connector),))
+    result = assess_observed_walk_route(
+        inputs,
+        route,
+        category="airport",
+        config=load_urban_config(),
+        rules=load_urban_journey_rules(),
+    )
+    assert result.observed_total_seconds is None
+    assert result.observed_route_accessibility.value is None
+    assert result.projection_offset_seconds is None
+
+
+@pytest.mark.parametrize("endpoint_kind", ["origin", "destination", "source_distance"])
+def test_rounded_zero_approach_keeps_routes_and_population_but_not_a_physical_journey(
+    canonical: dict[str, Any], endpoint_kind: str
+) -> None:
+    inputs = synthetic_inputs(canonical)
+    original = analyze(plan(inputs))
+    endpoint = (
+        inputs.destination_endpoints[0]
+        if endpoint_kind == "destination"
+        else inputs.point_endpoints[0]
+    )
+    assert endpoint.connector is not None
+    connector = replace(endpoint.connector, seconds=0.0)
+    if endpoint_kind == "source_distance":
+        # Even equal coordinates do not erase a positive accepted approach distance.
+        endpoint = replace(endpoint, location=endpoint.access_location)
+        connector = replace(connector, physical_location=endpoint.location)
+    endpoint = replace(endpoint, connector=connector)
+    if endpoint_kind == "destination":
+        inputs = replace(inputs, destination_endpoints=(endpoint,))
+    else:
+        points = tuple(
+            replace(point, access_distance_m=0.02)
+            if point.point_id == endpoint.entity_id
+            else point
+            for point in inputs.points
+        )
+        inputs = replace(
+            inputs, points=points, point_endpoints=(endpoint, *inputs.point_endpoints[1:])
+        )
+    planned = plan(inputs)
+    envelopes = [response(request) for request in planned.requests]
+    # These TEST_ONLY envelopes claim search/minimum closure. A physically
+    # unusable approach must still prevent a false proven zero/complete chain.
+    calculated = analyze(planned, envelopes)
+    assert len(calculated.routes) == len(planned.requests) == 2
+    assert all(route.state == "reachable" and route.minimum_proven for route in calculated.routes)
+    assert tuple(point.point for point in calculated.analysis.modes[0].points) == inputs.points
+    assert calculated.analysis.population_coverage == inputs.population_coverage
+    affected = [
+        row
+        for row in calculated.routes
+        if endpoint_kind == "destination" or row.request.point_id == endpoint.entity_id
+    ]
+    assert len(calculated.analysis.journeys) == 2 - len(affected)
+    previous = {row.candidate.journey_id: row for row in original.analysis.journeys}
+    assert all(row == previous[row.candidate.journey_id] for row in calculated.analysis.journeys)
+    for route in affected:
+        point = next(
+            row
+            for row in calculated.analysis.modes[0].points
+            if row.point.point_id == route.request.point_id
+        )
+        assert point.categories[0].best is None
+        assert point.categories[0].index.value is None
+        assert not point.categories[0].minimum_proven
+        assert point.categories[0].coverage is not None
+        assert not point.categories[0].coverage.search_complete
+        observed = assess_observed_walk_route(
+            inputs,
+            route,
+            category="airport",
+            config=load_urban_config(),
+            rules=load_urban_journey_rules(),
+        )
+        assert observed.observed_total_seconds is None
+        assert observed.observed_route_accessibility.value is None
+        assert observed.observed_route_accessibility.reason_code == "NONZERO_APPROACH_ZERO_TIME"
+
+
+def test_true_colocated_zero_approach_remains_a_valid_physical_chain(
+    canonical: dict[str, Any],
+) -> None:
+    inputs = synthetic_inputs(canonical)
+    origin = inputs.point_endpoints[0]
+    assert origin.connector is not None
+    origin = replace(
+        origin,
+        location=origin.access_location,
+        connector=replace(origin.connector, physical_location=origin.access_location, seconds=0.0),
+    )
+    inputs = replace(
+        inputs,
+        points=tuple(
+            replace(point, access_distance_m=0.0) if point.point_id == origin.entity_id else point
+            for point in inputs.points
+        ),
+        point_endpoints=(origin, *inputs.point_endpoints[1:]),
+    )
+    calculated = analyze(plan(inputs))
+    assert len(calculated.routes) == len(calculated.analysis.journeys) == 2
+    route = next(row for row in calculated.routes if row.request.point_id == origin.entity_id)
+    observed = assess_observed_walk_route(
+        inputs,
+        route,
+        category="airport",
+        config=load_urban_config(),
+        rules=load_urban_journey_rules(),
+    )
+    assert observed.observed_total_seconds == 1620 + 120
+    assert observed.observed_route_accessibility.value is not None
+
+
+def test_observed_quantized_endpoint_is_an_uncertain_estimate_not_a_zero_offset(
+    canonical: dict[str, Any],
+) -> None:
+    inputs = synthetic_inputs(canonical)
+
+    def quantized(endpoint: Any) -> Any:
+        correlation = endpoint.correlation
+        assert correlation
+        return replace(
+            endpoint,
+            correlation=replace(
+                correlation,
+                correlated_location=WalkCoordinate(
+                    round(correlation.source_location.lon, 6),
+                    round(correlation.source_location.lat, 6),
+                ),
+                coordinate_precision_digits=6,
+                serialization_evidence_refs=("synthetic-pinned-serialization-audit",),
+            ),
+        )
+
+    inputs = replace(
+        inputs,
+        point_endpoints=tuple(quantized(ep) for ep in inputs.point_endpoints),
+        destination_endpoints=tuple(quantized(ep) for ep in inputs.destination_endpoints),
+    )
+    request = plan(inputs).requests[0]
+    route = normalize_walk_response(request, response(request))
+    result = assess_observed_walk_route(
+        inputs,
+        route,
+        category="airport",
+        config=load_urban_config(),
+        rules=load_urban_journey_rules(),
+    )
+    assert result.observed_route_accessibility.value == 50
+    assert result.projection_offset_seconds is None
+    assert not result.complete_physical_time_confirmed
+    assert not result.certified_index_lower_bound
+    assert "COORDINATE_QUANTIZATION_UNCERTAINTY" in result.limitations
+    assert "PHYSICAL_CORRELATION_OFFSET_UNMEASURED" in result.limitations
+
+
+@pytest.mark.parametrize("eligible", [False, None])
+def test_observed_estimate_requires_an_accepted_eligible_object(
+    canonical: dict[str, Any], eligible: bool | None
+) -> None:
+    inputs = synthetic_inputs(canonical)
+    request = plan(inputs).requests[0]
+    route = normalize_walk_response(request, response(request))
+    inputs = replace(inputs, destinations=(replace(inputs.destinations[0], eligible=eligible),))
+    result = assess_observed_walk_route(
+        inputs,
+        route,
+        category="airport",
+        config=load_urban_config(),
+        rules=load_urban_journey_rules(),
+    )
+    assert result.observed_route_accessibility.value is None
+    assert result.observed_route_accessibility.reason_code == "DESTINATION_ELIGIBILITY_UNCONFIRMED"
+
+
+def test_observed_estimate_rejects_foreign_request_and_preserves_city_h(
+    canonical: dict[str, Any],
+) -> None:
+    inputs = synthetic_inputs(canonical)
+    request = plan(inputs).requests[0]
+    route = normalize_walk_response(request, response(request))
+    inputs = replace(inputs, area=replace(inputs.area, area_km2=2562.625))
+    result = assess_observed_walk_route(
+        inputs,
+        route,
+        category="airport",
+        config=load_urban_config(),
+        rules=load_urban_journey_rules(),
+    )
+    assert result.h_seconds.value == 3600
+    assert result.observed_route_accessibility.value == 100 * 2 ** (-1800 / 3600)
+    with pytest.raises(ValueError, match="OBSERVED_ROUTE_REQUEST_SOURCE_MISMATCH"):
+        assess_observed_walk_route(
+            inputs,
+            replace(route, request=replace(request, search_parameters_id="foreign-search")),
+            category="airport",
+            config=load_urban_config(),
+            rules=load_urban_journey_rules(),
+        )
 
 
 def test_legacy_destination_constructor_remains_valid() -> None:
@@ -632,3 +886,295 @@ def test_positive_submicrosecond_duration_never_silently_becomes_zero(
         ]
     with pytest.raises(ValueError, match="WALK_DURATION_BELOW_TIMESTAMP_RESOLUTION"):
         analyze(p, envelopes)
+
+
+def test_explicit_six_decimal_serialization_preserves_physical_connectors(
+    canonical: dict[str, Any],
+) -> None:
+    base = synthetic_inputs(canonical)
+    assert base.build is not None
+    endpoints = (*base.point_endpoints, *base.destination_endpoints)
+    connectors = tuple(ep.connector for ep in endpoints if ep.connector)
+    original = {ep.correlation.access_node_id: ep.correlation for ep in endpoints if ep.correlation}
+    correlations = tuple(
+        replace(
+            correlation,
+            correlated_location=WalkCoordinate(
+                round(correlation.source_location.lon, 6),
+                round(correlation.source_location.lat, 6),
+            ),
+            coordinate_precision_digits=6,
+            serialization_evidence_refs=("synthetic-pinned-locate-serializer",),
+        )
+        for correlation in original.values()
+    )
+    inputs = prepare(canonical, build=base.build, connectors=connectors, correlations=correlations)
+    assert "ENDPOINT_SERIALIZATION_PRECISION_6" in inputs.limitations
+    p = plan(inputs)
+    for request in p.requests:
+        assert request.payload()["locations"][0]["lon"] == request.origin.source_location.lon
+        assert "synthetic-pinned-locate-serializer" in request.evidence_refs
+    result = analyze(p)
+    assert all(r.state == "reachable" and not r.minimum_proven for r in result.routes)
+    assert all(r.reason_code == "MINIMUM_TIME_UNPROVEN" for r in result.routes)
+    assert not result.analysis.modes[0].ranking_eligible
+    assert result.analysis.modes[0].index.value is None
+    assert result.analysis.journeys
+    for journey in result.analysis.journeys:
+        assert [leg.duration_seconds for leg in journey.candidate.legs] == [60, 1620, 120]
+        assert journey.total_seconds == 1800
+    with pytest.raises(ValueError, match="SOURCE_MISMATCH"):
+        prepare(canonical, build=replace(base.build, source_graph_version="foreign"))
+    request = p.requests[0]
+    with pytest.raises(ValueError, match="ACTUAL_ENDPOINT_MISMATCH"):
+        normalize_walk_response(
+            request, response(request, matched_origin=request.origin.source_location)
+        )
+    no_route = response(
+        request,
+        response_json=json.dumps({"id": request.request_id, "error_code": 442}),
+        unreachable_evidence_refs=("synthetic-global-no-route-proof",),
+    )
+    assert normalize_walk_response(request, no_route).state == "unknown"
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"coordinate_precision_digits": 6},
+        {"coordinate_precision_digits": 5, "serialization_evidence_refs": ("proof",)},
+        {"coordinate_precision_digits": True, "serialization_evidence_refs": ("proof",)},
+    ],
+)
+def test_coordinate_precision_requires_supported_explicit_evidence(
+    canonical: dict[str, Any], changes: dict[str, Any]
+) -> None:
+    correlation = plan(synthetic_inputs(canonical)).requests[0].origin
+    with pytest.raises(ValueError, match="SERIALIZATION_EVIDENCE_REQUIRED"):
+        replace(correlation, **changes)
+
+
+def test_serialization_uncertainty_does_not_accept_real_resnap(canonical: dict[str, Any]) -> None:
+    correlation = plan(synthetic_inputs(canonical)).requests[0].origin
+    source = WalkCoordinate(20.4955871, 54.7087877)
+    rendered = WalkCoordinate(20.495587, 54.708788)
+    with pytest.raises(ValueError, match="REVISED_ACCESS_CONNECTOR_REQUIRED"):
+        replace(correlation, source_location=source, correlated_location=rendered)
+    precise = replace(
+        correlation,
+        source_location=source,
+        correlated_location=rendered,
+        coordinate_precision_digits=6,
+        serialization_evidence_refs=("synthetic-pinned-serializer",),
+    )
+    assert precise.correlated_location == rendered and precise.source_location == source
+    for shifted in (WalkCoordinate(20.495588, 54.708788), WalkCoordinate(20.4955871, 54.708788)):
+        with pytest.raises(ValueError, match="REVISED_ACCESS_CONNECTOR_REQUIRED"):
+            replace(precise, correlated_location=shifted)
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        (37.7356494, 37.735649),
+        (55.6927005, 55.6927),
+        (37.7196439, 37.719643),
+        (55.6916808, 55.69168),
+        (-37.7196439, -37.719643),
+        (-55.6916808, -55.69168),
+        (1.000001, 1.000001),
+        (-1.000001, -1.000001),
+        (-47.204542, -47.204541),
+        (146.048254, 146.048253),
+        (37.63487, 37.63487),
+        (55.648559, 55.648559),
+        (0.000000125, 0.000000125),
+        (-0.000000125, -0.000000125),
+        (0.00000001, 0.0),
+        (-0.00000001, -0.0),
+        (-0.0, -0.0),
+    ],
+)
+def test_pinned_route_writer_decimal_truncation_and_signed_zero(
+    source: float, expected: float | None
+) -> None:
+    # Pinned native writer expectations, including Grisu2 decimal boundaries.
+    actual = _valhalla351_route_echo(source)
+    assert actual == expected
+    if expected == 0:
+        assert actual is not None
+        assert math.copysign(1, actual) == math.copysign(1, expected)
+
+
+def test_gp109_echo_requires_exact_versioned_evidence_and_keeps_minimum_unknown(
+    canonical: dict[str, Any],
+) -> None:
+    request = plan(synthetic_inputs(canonical)).requests[0]
+
+    def correlation(original: ValhallaCorrelation, lon: float, lat: float) -> ValhallaCorrelation:
+        return replace(
+            original,
+            source_location=WalkCoordinate(lon, lat),
+            correlated_location=WalkCoordinate(round(lon, 6), round(lat, 6)),
+            coordinate_precision_digits=6,
+            serialization_evidence_refs=("synthetic-locate-source", ROUTE_ECHO_TRUNC6_EVIDENCE_REF),
+        )
+
+    request = replace(
+        request,
+        origin=correlation(request.origin, 37.7356494, 55.6927005),
+        destination=correlation(request.destination, 37.7196439, 55.6916808),
+    )
+    payload = request.payload()
+    for row, correlated in zip(
+        payload["locations"], (request.origin, request.destination), strict=True
+    ):
+        row.update(correlated.source_location.location())
+    request = replace(request, payload_json=json.dumps(payload, separators=(",", ":")))
+    envelope = response(request)
+    body = json.loads(envelope.response_json or "{}")
+    body["trip"]["locations"] = [
+        {"lon": 37.735649, "lat": 55.6927},
+        {"lon": 37.719643, "lat": 55.69168},
+    ]
+    envelope = replace(envelope, response_json=json.dumps(body))
+    observed = normalize_walk_response(request, envelope)
+    assert observed.state == "reachable" and observed.minimum_proven is False
+    assert observed.reason_code == "MINIMUM_TIME_UNPROVEN"
+    assert request.payload()["locations"][1]["lon"] == 37.7196439
+    assert request.destination.source_location == WalkCoordinate(37.7196439, 55.6916808)
+    assert request.destination.correlated_location == WalkCoordinate(37.719644, 55.691681)
+    for marker in (
+        "synthetic-locate-source",
+        "valhalla-3.5.1-route-echo-trunc5-v1",
+        "valhalla-3.5.2-route-echo-trunc6-v1",
+    ):
+        unapproved = replace(
+            request, destination=replace(request.destination, serialization_evidence_refs=(marker,))
+        )
+        assert not unapproved.destination.matches_response_location(
+            WalkCoordinate(37.719643, 55.69168)
+        )
+    for wrong in (
+        WalkCoordinate(37.719642, 55.69168),
+        WalkCoordinate(37.71964, 55.69168),
+        WalkCoordinate(37.719643, 55.691681),
+    ):
+        assert not request.destination.matches_response_location(wrong)
+    with pytest.raises(ValueError, match="ACTUAL_ENDPOINT_MISMATCH"):
+        normalize_walk_response(
+            request, replace(envelope, matched_destination=request.destination.source_location)
+        )
+    with pytest.raises(ValueError, match="UNSUPPORTED_VALHALLA_VERSION"):
+        replace(request.build, engine_version="3.5.2")
+    with pytest.raises(ValueError, match="SERIALIZATION_EVIDENCE_REQUIRED"):
+        replace(request.destination, coordinate_precision_digits=5)
+    boundary = correlation(request.destination, -47.204542, 55.6916808)
+    # Native Grisu2 serializes this exact six-place source below its decimal
+    # boundary. Only that exact mixed-coordinate echo is newly supported.
+    assert not boundary.matches_response_location(WalkCoordinate(-47.204542, 55.69168))
+    assert boundary.matches_response_location(WalkCoordinate(-47.204541, 55.69168))
+    assert not boundary.matches_response_location(WalkCoordinate(-47.20454, 55.69168))
+    assert boundary.matches_response_location(boundary.source_location)
+    assert boundary.matches_response_location(boundary.correlated_location)
+
+
+@pytest.mark.parametrize(
+    ("source", "native_echo"),
+    [
+        ((37.63487, 55.8346888), (37.63487, 55.834688)),
+        ((37.8295916, 55.648559), (37.829591, 55.648559)),
+        ((-47.204542, 55.6916808), (-47.204541, 55.69168)),
+        ((146.048254, -55.6916808), (146.048253, -55.69168)),
+    ],
+)
+def test_native_boundary_echo_keeps_exact_evidence_and_endpoint_guards(
+    canonical: dict[str, Any],
+    source: tuple[float, float],
+    native_echo: tuple[float, float],
+) -> None:
+    request = plan(synthetic_inputs(canonical)).requests[0]
+    origin = replace(
+        request.origin,
+        source_location=WalkCoordinate(*source),
+        correlated_location=WalkCoordinate(*(round(value, 6) for value in source)),
+        coordinate_precision_digits=6,
+        serialization_evidence_refs=("synthetic-pinned-locate", ROUTE_ECHO_TRUNC6_EVIDENCE_REF),
+    )
+    payload = request.payload()
+    payload["locations"][0].update(origin.source_location.location())
+    request = replace(
+        request,
+        origin=origin,
+        payload_json=json.dumps(payload, sort_keys=True, separators=(",", ":")),
+    )
+    envelope = response(request)
+    body = json.loads(envelope.response_json or "{}")
+    body["trip"]["locations"][0] = WalkCoordinate(*native_echo).location()
+    envelope = replace(envelope, response_json=json.dumps(body))
+    normalized = normalize_walk_response(request, envelope)
+    assert normalized.state == "reachable" and not normalized.minimum_proven
+    assert normalized.reason_code == "MINIMUM_TIME_UNPROVEN"
+    assert request.origin.source_location == WalkCoordinate(*source)
+    assert request.payload()["locations"][0]["lon"] == source[0]
+    for axis in ("lon", "lat"):
+        for offset in (-0.000001, 0.000001):
+            wrong = WalkCoordinate(*native_echo).location()
+            wrong[axis] = round(wrong[axis] + offset, 6)
+            location = WalkCoordinate(wrong["lon"], wrong["lat"])
+            if location in (origin.source_location, origin.correlated_location):
+                continue  # Existing exact source/locate acceptance is unchanged.
+            bad = json.loads(envelope.response_json or "{}")
+            bad["trip"]["locations"][0] = wrong
+            with pytest.raises(ValueError, match="RESPONSE_ENDPOINT_MISMATCH"):
+                normalize_walk_response(request, replace(envelope, response_json=json.dumps(bad)))
+    for marker in (
+        "synthetic-pinned-locate",
+        "valhalla-3.5.1-route-echo-trunc5-v1",
+        "valhalla-3.5.2-route-echo-trunc6-v1",
+    ):
+        unapproved = replace(request, origin=replace(origin, serialization_evidence_refs=(marker,)))
+        with pytest.raises(ValueError, match="RESPONSE_ENDPOINT_MISMATCH"):
+            normalize_walk_response(unapproved, envelope)
+    with pytest.raises(ValueError, match="ACTUAL_ENDPOINT_MISMATCH"):
+        normalize_walk_response(
+            request, replace(envelope, matched_origin=WalkCoordinate(*native_echo))
+        )
+
+
+def test_missing_route_for_positive_population_never_renormalizes_known_points(
+    canonical: dict[str, Any],
+) -> None:
+    # SYNTHETIC coverage and weights isolate route uncertainty from real excluded residents.
+    inputs = synthetic_inputs(canonical)
+    inputs = replace(
+        inputs,
+        points=tuple(
+            replace(p, population=100, population_year=2026, population_method="synthetic")
+            for p in inputs.points
+        ),
+        population_coverage=replace(
+            inputs.population_coverage, complete=True, excluded_population=0
+        ),
+    )
+    p = plan(inputs)
+    assert len(p.requests) == 2
+    result = analyze(p, [response(p.requests[0])])
+    territory = result.analysis.modes[0]
+    assert sorted(point.index.status for point in territory.points) == ["available", "unknown"]
+    assert territory.index.value is None and territory.index.status == "unknown"
+    assert not territory.ranking_eligible and territory.completeness == "partial"
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [{"matched_origin": None}, {"matched_destination": None}, {"endpoint_evidence_refs": ()}],
+)
+def test_successful_route_with_missing_actual_endpoint_remains_unknown(
+    canonical: dict[str, Any], changes: dict[str, Any]
+) -> None:
+    p = plan(synthetic_inputs(canonical))
+    result = analyze(p, [response(r, **changes) for r in p.requests])
+    assert all(r.state == "unknown" and not r.minimum_proven for r in result.routes)
+    assert all(r.reason_code == "ACTUAL_ENDPOINTS_UNCONFIRMED" for r in result.routes)
+    assert all(point.index.value is None for point in result.analysis.modes[0].points)

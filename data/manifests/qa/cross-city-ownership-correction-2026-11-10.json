@@ -1,0 +1,106 @@
+[
+  {
+    "source_snapshot_id": "moscow-urban-2026-11-10.3",
+    "target_snapshot_id": "moscow-urban-2026-11-10.4",
+    "source_manifest_sha256": "d8145d929c2cf6148ae7204d4b456fb14fbbb7466124280f27457a204064f906",
+    "audit_path": "manifests/research/ownership-classifier-audit-2026-11-10.json",
+    "audit_sha256": "8b6ad468c0f91ec9508615f8ffeca0faae83c7374ed91f7af80efd2eca0f029d",
+    "classifier_commit": "fc7e4da",
+    "classifier_source_sha256": "6182341951952eaf59c3abcf18fbc5526cb4480d20d4f2d5672082fb939aedcb",
+    "observed_source_archive_sha256": "d309fa2396aa28c3c7a69bebff8e98be027528d555a60fdf370719608277fa68",
+    "historical_source_archive_sha256_unchanged": "116ecc476619a89de6d2aea2b9eec9802e9f341374bb52cb5cd9bbc862d91bc6",
+    "changed_destination_ids": [
+      "moscow-college_university-obrnadzor_accreditation-080d0f03-a658-e3ff-e91b-ed97cd76582d",
+      "moscow-college_university-obrnadzor_accreditation-6e979e64-e80a-a289-216e-fedb24892cd6",
+      "moscow-college_university-obrnadzor_accreditation-8196ae9d-b444-a224-d022-446c10babdae",
+      "moscow-college_university-relation-6698051",
+      "moscow-college_university-way-112552993"
+    ],
+    "changed_ownership_unknown_physical_identity": [
+      "moscow-college_university-way-112552993"
+    ],
+    "quarantined_public_acceptance_count": 5,
+    "protected_collection_sha256": {
+      "evidence": "065dde007d445f38aaba9c545387cf8872c14a659bb53e04a2667bf92c8ea2a4",
+      "territories": "b8d6cb2970455c2a4652b70f773e59ef83f3df04faca806fac25b0fd55238236",
+      "population_cells": "755e5734efa97ef61b367fee45e0cbfa1156a0e6aa85b3b3e50e22db9d3fab48",
+      "sample_points": "81477f8d585c82c5c1e88c72b858bb65550772c58bb36ca25e6116de49be98a8",
+      "access_nodes": "9169bafd044d8a6522d599b8cebd441a1de31929aafba161eaf92738cef59614",
+      "freight_nodes": "6e798dcc7db2dd53b48aefa7a884f2d0b8126426257d52266352f3bdf6e56a3a",
+      "freight_sites": "fc6bd8b7a898de085d2822ca8dfe69ef3bbe740af52b8d72791f9a69d8f192a0",
+      "walk_connectors": "0336ecf935cdc4b3ff971db86f84be8e90f94665dd17bdcd022efcc08b3581c3",
+      "transit_stops": "6bd1918a5504733b573957860e95b14a06446d9e23739c508a12114e8f287538"
+    },
+    "unresolved_current_records_preserved": [
+      {
+        "city_id": "moscow",
+        "org_id": "15a60264-0f9e-6fd8-205d-dd9f4619f6e2",
+        "full_name": "Государственное бюджетное профессиональное образовательное учреждение города Москвы «Политехнический Колледж № 50 имени дважды Героя Социалистического Труда Н.А. Злобина»",
+        "short_name": "ГБПОУ ПК № 50 ИМЕНИ ДВАЖДЫ ГЕРОЯ СОЦИАЛИСТИЧЕСКОГО ТРУДА Н.А. ЗЛОБИНА",
+        "record_hash_observed": "68d5b4ac66d00530ce547aa6e151cbae26b353a0ed64fc6f720eb84dc1773152",
+        "record_hash_historical_expected": [
+          "badb629b0dadf2d71a58da8f1173e0bc9231814d031dc2fa786d1921310c1178"
+        ],
+        "historical_record_fields_match_observed_exactly": false,
+        "old_classifier_on_observed_full_name": "regional",
+        "corrected_classifier_on_observed_full_name": "regional",
+        "accepted_ownership": [
+          "regional"
+        ],
+        "destinations": [
+          {
+            "destination_id": "moscow-college_university-relation-21604812",
+            "category": "college_university",
+            "name": "Политехнический Колледж № 50 имени дважды Героя Социалистического Труда Н.А. Злобина. Площадка Малино",
+            "accepted_ownership": "regional",
+            "evidence_id": "obrnadzor_accreditation:15a60264-0f9e-6fd8-205d-dd9f4619f6e2"
+          },
+          {
+            "destination_id": "moscow-college_university-obrnadzor_accreditation-15a60264-0f9e-6fd8-205d-dd9f4619f6e2",
+            "category": "college_university",
+            "name": "ГБПОУ ПК № 50",
+            "accepted_ownership": "regional",
+            "evidence_id": "obrnadzor_accreditation:15a60264-0f9e-6fd8-205d-dd9f4619f6e2"
+          }
+        ],
+        "state": "changed_record_or_scope_requires_review",
+        "source_archive_sha256": "d309fa2396aa28c3c7a69bebff8e98be027528d555a60fdf370719608277fa68"
+      }
+    ],
+    "source_versions_coverage_geometry_population_and_connectors_unchanged": true,
+    "new_promotions": 0,
+    "index_ready": false,
+    "manifest_sha256": "6d07257576dc8b42925141eac482ceb340db25e4ba3e98f85ab33c2b638b54a2"
+  },
+  {
+    "source_snapshot_id": "novorossiysk-urban-2026-11-10.2",
+    "target_snapshot_id": "novorossiysk-urban-2026-11-10.3",
+    "source_manifest_sha256": "82fd4ca03dbdfbcd44ab8f28d969b0f998bf58fad4eb787d5add83fffa85638a",
+    "audit_path": "manifests/research/ownership-classifier-audit-2026-11-10.json",
+    "audit_sha256": "8b6ad468c0f91ec9508615f8ffeca0faae83c7374ed91f7af80efd2eca0f029d",
+    "classifier_commit": "fc7e4da",
+    "classifier_source_sha256": "6182341951952eaf59c3abcf18fbc5526cb4480d20d4f2d5672082fb939aedcb",
+    "observed_source_archive_sha256": "d309fa2396aa28c3c7a69bebff8e98be027528d555a60fdf370719608277fa68",
+    "historical_source_archive_sha256_unchanged": "116ecc476619a89de6d2aea2b9eec9802e9f341374bb52cb5cd9bbc862d91bc6",
+    "changed_destination_ids": [
+      "novorossiysk-school-obrnadzor_accreditation-44585b8c-a1cd-a430-c68a-00f6365c33e6"
+    ],
+    "changed_ownership_unknown_physical_identity": [],
+    "quarantined_public_acceptance_count": 1,
+    "protected_collection_sha256": {
+      "evidence": "f2136ca4da1853dd5bcaa9a362b672995cd7bf5d1b8a0a248abf18816fb83a28",
+      "territories": "c4d75a44d9bde9e4e7e041a35c5a28ed999e251a442eb4bd125f4cc49a731570",
+      "population_cells": "2fad9b3a6df7f5348c3fcf67d68463e23a28c4020e04b26f50b0e5b4359b335c",
+      "sample_points": "73b5e93112983473a0ac83d23a88a9b42124906c2033f472733fa78f6a9b7916",
+      "access_nodes": "8b69833518174b8cb907a39ce813326bc49b8ed60e9e9af8365d5476e8543c71",
+      "freight_nodes": "5688edc74cbda9e1f6afd240b8cb7ecabd04d461f879ffbb15949b8da9c8a55a",
+      "freight_sites": "f12afaf33ed3a6514e248e886c314cf0f015dd769569214d01dff2c666182bcd",
+      "walk_connectors": "f3559ebbcbd954392ab6957ce510cc6789608c87167ce1354d5e93f3de26e7d2"
+    },
+    "unresolved_current_records_preserved": [],
+    "source_versions_coverage_geometry_population_and_connectors_unchanged": true,
+    "new_promotions": 0,
+    "index_ready": false,
+    "manifest_sha256": "b883b55618afd7eeb0f2e93b58702d954efaad989ef7a9e0ea9ba71edf11a0ba"
+  }
+]

@@ -40,6 +40,30 @@ class JobAccepted(ContractModel):
     poll_after_seconds: Annotated[int, Field(strict=True, ge=1)] = 2
 
 
+class BatchProgress(ContractModel):
+    """Persisted admitted OD batches, not route validity or numerical coverage.
+
+    All batches can be saved while calculation/validation/publication is still
+    pending. No duration, ETA or percentage of the whole calculation is implied.
+    """
+
+    completed_batches: Annotated[int, Field(strict=True, ge=0, le=4096)]
+    total_batches: Annotated[int, Field(strict=True, ge=1, le=4096)]
+    phase: Literal["routing", "finalizing", "published", "stopped"]
+
+    @model_validator(mode="after")
+    def coherent_counts(self) -> Self:
+        if self.completed_batches > self.total_batches:
+            raise ValueError("Completed batch count exceeds its plan")
+        if self.phase == "routing" and self.completed_batches == self.total_batches:
+            raise ValueError("A complete batch inventory is finalizing")
+        if self.phase in ("finalizing", "published") and (
+            self.completed_batches != self.total_batches
+        ):
+            raise ValueError("Finalizing/published requires every planned batch")
+        return self
+
+
 class JobView(ContractModel):
     job_id: Identifier
     status: Literal["queued", "running", "succeeded", "failed", "cancelled"]
@@ -51,6 +75,7 @@ class JobView(ContractModel):
     scenario_run_id: Identifier | None
     error: ErrorDetail | None
     poll_after_seconds: Annotated[int, Field(strict=True, ge=1)] = 2
+    progress: BatchProgress | None = Field(default=None, exclude_if=lambda value: value is None)
 
     @model_validator(mode="after")
     def coherent_state(self) -> Self:
@@ -70,6 +95,18 @@ class JobView(ContractModel):
             raise ValueError("Running job requires start time")
         if self.status == "queued" and self.started_at is not None:
             raise ValueError("Queued job cannot be started")
+        if (
+            self.progress is not None
+            and self.progress.phase
+            not in {
+                "queued": (),
+                "running": ("routing", "finalizing"),
+                "succeeded": ("published",),
+                "failed": ("stopped",),
+                "cancelled": ("stopped",),
+            }[self.status]
+        ):
+            raise ValueError("Batch progress phase differs from job state")
         return self
 
 
@@ -106,6 +143,37 @@ class SnapshotAvailability(ContractModel):
     calendar_version: Identifier
 
 
+class UrbanPassengerScope(ContractModel):
+    """One registered input scope, not a promise of complete metrics or admission.
+
+    All selections must match the same scope; unions across scopes are unsafe.
+    ``whole_city`` permits an absent request area_id, not a full-city rating.
+    The time interval includes valid_from and excludes valid_to.
+    """
+
+    scope_id: Identifier
+    snapshot_id: Identifier
+    city_id: Identifier
+    passenger_modes: list[Literal["walk", "public_transport", "private_car"]] = Field(min_length=1)
+    categories: list[Category] = Field(min_length=1)
+    traffic_modes: list[TrafficMode] = Field(min_length=1)
+    valid_from: Timestamp
+    valid_to: Timestamp
+    whole_city: bool = Field(strict=True)
+    area_ids: list[Identifier] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def coherent_scope(self) -> Self:
+        if self.valid_from >= self.valid_to:
+            raise ValueError("Runtime scope requires a nonempty validity interval")
+        if not self.whole_city and not self.area_ids:
+            raise ValueError("Runtime scope requires an allowed area selection")
+        for values in (self.passenger_modes, self.categories, self.traffic_modes, self.area_ids):
+            if len(values) != len(set(values)):
+                raise ValueError("Runtime scope selections must be unique")
+        return self
+
+
 class Capabilities(ContractModel):
     schema_version: Literal["2"]
     spec_version: Literal["2026-11-08.1"]
@@ -122,3 +190,5 @@ class Capabilities(ContractModel):
     limitations: list[Identifier]
     snapshots: list[SnapshotAvailability] = Field(default_factory=list)
     areas: list[AreaOption] = Field(default_factory=list)
+    # None: legacy registry does not publish detailed constraints; []: none registered.
+    urban_passenger_scopes: list[UrbanPassengerScope] | None = None

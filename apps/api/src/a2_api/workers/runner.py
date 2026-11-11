@@ -8,8 +8,11 @@ from a2_contracts.api import ErrorDetail
 
 from a2_api.core.errors import DomainError
 from a2_api.core.jobs import CalculationOutput, ClaimedJob, V2JobContext
+from a2_api.db.repositories.checkpoints import CheckpointRepository
 from a2_api.db.repositories.jobs import JobRepository
-from a2_api.workers.calculation import HandlerOutput, calculate
+from a2_api.db.repositories.private_sources import PrivateSourceRepository
+from a2_api.workers.calculation import HandlerOutput, calculate, calculate_batches
+from a2_api.workers.result_transport import DEFAULT_RESULT_BYTES, validate_decoded_limit
 
 logger = logging.getLogger("a2_api.workers.runner")
 
@@ -22,6 +25,7 @@ class Worker:
         handler: str,
         code_version: str,
         timeout_seconds: float = 600,
+        decoded_result_bytes: int = DEFAULT_RESULT_BYTES,
     ) -> None:
         if not 0 < timeout_seconds <= 600:
             raise ValueError("Job hard timeout must be positive and <=600 seconds")
@@ -31,6 +35,7 @@ class Worker:
         self.handler = handler
         self.timeout_seconds = timeout_seconds
         self.code_version = code_version
+        self.decoded_result_bytes = validate_decoded_limit(decoded_result_bytes)
 
     async def run_once(self) -> bool:
         lease_lost = asyncio.Event()
@@ -49,13 +54,21 @@ class Worker:
                     raise DomainError(
                         409, "incompatible_versions", "Queued job requires another code version"
                     )
-                result = await self._calculate_with_lease(claim, lease_lost)
-                if isinstance(result, CalculationOutput):
-                    await self.repository.succeed(
-                        claim, result.analysis, proposals=result.proposals
-                    )
+                remaining = await PrivateSourceRepository(self.repository.pool).remaining(
+                    claim.context
+                )
+                if remaining is None:
+                    await self._calculate_with_lease(claim, lease_lost)
                 else:
-                    await self.repository.succeed(claim, result)
+                    try:
+                        async with asyncio.timeout(remaining):
+                            await self._calculate_with_lease(claim, lease_lost)
+                    except TimeoutError:
+                        raise DomainError(
+                            410,
+                            "data_unavailable",
+                            "Private source permission expired during calculation",
+                        ) from None
             except asyncio.CancelledError:
                 error = ErrorDetail(
                     code="engine_unavailable",
@@ -99,26 +112,46 @@ class Worker:
                     claim.context.access_scope if isinstance(claim.context, V2JobContext) else None
                 )
                 job = await self.repository.get_job(claim.job.job_id, scope=scope)
+                # Atomic publication can finish just before this heartbeat.
+                # The scoped read verifies the committed run before returning.
+                if job.status == "succeeded":
+                    return
                 if job.status == "cancelled":
                     raise DomainError(503, "job_cancelled", "Calculation was cancelled")
                 raise DomainError(503, "engine_unavailable", "Calculation claim lease expired")
             await asyncio.sleep(min(1, self.repository.lease_seconds / 3))
 
     async def _calculate_with_lease(self, claim: ClaimedJob, lost: asyncio.Event) -> HandlerOutput:
-        calculation = asyncio.create_task(
-            self._calculate(claim, self.handler, self.timeout_seconds)
-        )
+        async def calculate_and_publish() -> HandlerOutput:
+            result = await self._calculate(claim, self.handler, self.timeout_seconds)
+            if isinstance(result, CalculationOutput):
+                await self.repository.succeed(claim, result.analysis, proposals=result.proposals)
+            else:
+                await self.repository.succeed(claim, result)
+            return result
+
+        calculation = asyncio.create_task(calculate_and_publish())
         lease = asyncio.create_task(lost.wait())
         heartbeat = asyncio.create_task(self._monitor_claim(claim))
+        deadline = asyncio.timeout(self.timeout_seconds)
         try:
-            done, _ = await asyncio.wait(
-                (calculation, lease, heartbeat), return_when=asyncio.FIRST_COMPLETED
-            )
-            if lease in done:
-                raise DomainError(503, "engine_unavailable", "Worker database lease was lost")
-            if heartbeat in done:
-                await heartbeat
-            return await calculation
+            async with deadline:
+                done, _ = await asyncio.wait(
+                    (calculation, lease, heartbeat), return_when=asyncio.FIRST_COMPLETED
+                )
+                # A completed publication wins a simultaneous post-commit
+                # heartbeat/session notification. Failures still propagate.
+                if calculation in done:
+                    return await calculation
+                if lease in done:
+                    raise DomainError(503, "engine_unavailable", "Worker database lease was lost")
+                if heartbeat in done:
+                    await heartbeat
+                return await calculation
+        except TimeoutError:
+            if deadline.expired():
+                raise DomainError(503, "job_timeout", "Calculation exceeded hard timeout") from None
+            raise
         finally:
             lease.cancel()
             heartbeat.cancel()
@@ -136,4 +169,20 @@ class Worker:
     async def _calculate(
         self, claim: ClaimedJob, handler: str, timeout_seconds: float
     ) -> HandlerOutput:
+        if (
+            isinstance(claim, ClaimedJob)
+            and isinstance(claim.context, V2JobContext)
+            and claim.context.batch_execution is not None
+        ):
+            return await calculate_batches(
+                claim,
+                handler,
+                timeout_seconds,
+                CheckpointRepository(self.repository),
+                decoded_result_bytes=self.decoded_result_bytes,
+            )
+        if self.decoded_result_bytes != DEFAULT_RESULT_BYTES:
+            return await calculate(
+                claim, handler, timeout_seconds, decoded_result_bytes=self.decoded_result_bytes
+            )
         return await calculate(claim, handler, timeout_seconds)

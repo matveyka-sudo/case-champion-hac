@@ -4,6 +4,7 @@ import json
 from datetime import date as Date
 from typing import Annotated, Literal, Protocol, cast
 
+from a2_contracts.v2.assistant import ExplanationSelection
 from a2_contracts.v2.base import ContractModel, Identifier, Timestamp
 from a2_contracts.v2.retrieval import EvidenceSearchRequest
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError
@@ -51,6 +52,12 @@ class AnalysisArgs(ContractModel):
     analysis_id: Identifier
 
 
+class AnalysisFactsArgs(AnalysisArgs):
+    selection: ExplanationSelection | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+
+
 class MetricArgs(AnalysisArgs):
     metric_id: Identifier
 
@@ -80,7 +87,7 @@ class CalendarArgs(ContractModel):
 
 
 _MODELS: dict[ToolName, type[ContractModel]] = {
-    "get_analysis": AnalysisArgs,
+    "get_analysis": AnalysisFactsArgs,
     "get_metric_details": MetricArgs,
     "search_evidence": EvidenceArgs,
     "get_source_status": SourceArgs,

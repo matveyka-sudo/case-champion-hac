@@ -5,6 +5,8 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "a2-assistant",
     "a2-contracts",
+    "a2-data-pipeline",
+    "a2-engine",
     "alembic>=1,<2",
     "asyncpg>=0.30,<1",
     "fastapi>=0.115,<1",
@@ -23,3 +25,5 @@ build-backend = "uv_build"
 [tool.uv.sources]
 a2-assistant = { workspace = true }
 a2-contracts = { workspace = true }
+a2-data-pipeline = { workspace = true }
+a2-engine = { workspace = true }

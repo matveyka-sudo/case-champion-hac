@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from a2_contracts.common import canonical_hash
 from a2_contracts.v2.api import JobAccepted
+from a2_contracts.v2.requests import UrbanPassengerRequest
 from a2_contracts.v2.scenarios import (
     ScenarioProposal,
     ScenarioResult,
@@ -14,6 +16,7 @@ from a2_contracts.v2.scenarios import (
 
 from a2_api.core.errors import DomainError
 from a2_api.core.jobs import V2JobContext
+from a2_api.core.scenario_scope import build_scenario_endpoint_scope
 
 if TYPE_CHECKING:
     from a2_api.services.analyses import AnalysisService
@@ -68,7 +71,27 @@ async def scenario(
     context = V2JobContext.model_validate(parameters["context"])
     if context.scenario_proposal is not None:
         raise DomainError(409, "incompatible_versions", "Scenario requires an analysis baseline")
-    context = context.model_copy(update={"scenario_proposal": proposal})
+    endpoint_scope = None
+    if isinstance(baseline.request, UrbanPassengerRequest):
+        snapshot = await service.accepted_snapshot(baseline, scope)
+        if (
+            snapshot is None
+            or canonical_hash(snapshot.model_dump(mode="json")) != context.snapshot_hash
+        ):
+            raise DomainError(
+                409, "incompatible_versions", "Scenario accepted snapshot is unavailable or changed"
+            )
+        endpoint_scope = build_scenario_endpoint_scope(snapshot, baseline.request)
+    payload = context.model_dump(mode="json")
+    payload.update(
+        scenario_proposal=proposal.model_dump(mode="json"),
+        scenario_endpoint_scope=endpoint_scope.model_dump(mode="json")
+        if endpoint_scope is not None
+        else None,
+    )
+    if "batch_execution" in V2JobContext.model_fields:
+        payload["batch_execution"] = None
+    context = V2JobContext.model_validate(payload)
     accepted = await repository.enqueue(
         "scenario", request, context, scoped_key, request_id, scope=scope
     )

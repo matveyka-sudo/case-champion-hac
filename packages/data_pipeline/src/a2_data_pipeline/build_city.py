@@ -2518,15 +2518,19 @@ def _coverage(
             status = "unknown"
             reason = "Кандидаты OSM в карантине: форма собственности не подтверждена реестром"
         elif category == "airport":
+            # The finite extraction radius and OurAirports membership do not
+            # establish the complete roster of airports serving the city.
+            status = "partial" if accepted else "unknown"
             if config.airport_service_unverified:
-                status = "partial" if accepted else "unknown"
                 reason = (
                     "Аэродромы с IATA в 60 км по OurAirports; регулярность рейсов не проверена "
-                    "по расписаниям (ограничения полётов на юге России)"
+                    "по расписаниям; полный перечень обслуживающих город аэропортов не подтверждён"
                 )
             else:
-                status = "complete" if accepted else "unknown"
-                reason = "Аэродромы с IATA в 60 км, регулярные рейсы подтверждены OurAirports"
+                reason = (
+                    "Кандидаты с IATA в 60 км и признаком scheduled_service в OurAirports; "
+                    "полный перечень обслуживающих город аэропортов не подтверждён"
+                )
         else:
             status = "partial"
             reason = (

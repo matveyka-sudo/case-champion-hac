@@ -1,0 +1,9 @@
+{
+  "reason": "Approved additive after_journeys inventory for actual scenario route publication; historical relocation and ScoreClaim expectations preserved.",
+  "replaced": {
+    "manifest.json": "bc3087c1a02122f64f74b72d5f99f51297dd7d8ee27c9b14d6771640789f2f87",
+    "openapi.json": "21df96071b899bbf65c541a1d8541c2968c5bf48574930f875ac0ef2d0e8955a",
+    "v2.ScenarioResult.serialization.schema.json": "02ab0fa49b04a3f3b44d47fd7f38a7b1d98038458c6107ce1e09b30b3613ed32",
+    "v2.ScenarioResult.validation.schema.json": "02ab0fa49b04a3f3b44d47fd7f38a7b1d98038458c6107ce1e09b30b3613ed32"
+  }
+}

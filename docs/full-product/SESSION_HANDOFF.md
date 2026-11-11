@@ -1,0 +1,1210 @@
+# Waydex Full Product — restart checkpoint, 2026-11-10
+
+## Latest delivery and priority — 2026-11-11
+
+See [delivery evidence and remaining work](DELIVERY_20261111.md). Live backend
+is b1dab1a; all six checks on that revision passed. The user now authorizes the
+reviewed merge into dev and prioritizes working categories in three cities,
+intercity, cargo and Alice over further proof research. Preserve the main README.
+Older checkpoints below are historical. Subagents are currently usage-limited.
+
+## Current checkpoint — 2026-11-11, after source47a8 deployment
+
+This section supersedes historical live-source and concurrency statements below.
+Main stand is http://127.0.0.1:5193/ on source47a8e782f5e9b5d519290e30b8fb9d4ae89168cf.
+Root integration branch remains separate from dev; remote PR29 is draft/open,
+base dev91ed5262. No protected-branch merge or history rewriting occurred.
+Current runtime has seven slots including root. Active engineering agents use
+Sol6.1/ultra and full filesystem/network access, approval policy never; no
+restart is needed for those permissions. Original work branches remain intact.
+
+Real Moscow job983784ec-ccd4-47c8-896b-e9f9e42a4914 saved analysis
+09bf842f-a9b7-4dcb-81fc-691584f84281 (hashcf227c5faef238bd0da52959b95b5c9e44020d64b802405757b09fa4905c6f09).
+The first browser admission failed; explicit Retry recovered the SAME job.
+Do not call it first-attempt success. Actual progress and selected-route colors
+were observed;1394 valid journeys/194 clinics, all2361 points,967 unknown.
+Worker282.614745s, peak1,858,297,856B, zeroOOM. Root canonical validation,
+repeat GET equality, foreign404 and independent saved-route equality pass.
+All canonical indices remain null. Local evidence is outside Git under
+`/Users/kirito/waydex-full-runtime/root-moscow-map-progress-47a8-20261111/`,
+especially `root-combined-e2e-receipt.json` and the overview/selection screenshots.
+
+Clean restore is also replayed successfully: graph transportv2 preserves tiles
+directory mtimes required by pinned Valhalla3.5.1/status. Fresh Nschool/walk
+UI job6ed8179c saved analysis6c60fe66;601.315s route,84.1 preliminary score,
+canonical indices null. Root DTO/repeat GET/foreign404 passed. Evidence:
+`root-clean-fourprofile-ui-20261111-v2/root-clean-e2e-receipt.json`.
+Clean web/API/worker are stopped, with their volumes/results and the first
+failed job preserved. Main5193 continues running.
+
+Remote47a8 has five green checks and one backend failure: deadline regression
+test timed out before its intended publication phase (1919pass/9skip/1fail).
+Repair10d00ab+253d805 is integrated; root21 actual-PG tests pass17.84s. Saved
+analysis/job navigation plus af72714 stale-navigation fix are integrated;
+root27 focused UI tests pass. These source changes are not yet on live5193.
+BACKEND6a9bd3e admission correction and FE7e21d6b scenario restore are separate
+deliveries undergoing root verification before the next immutable release.
+
+Next: independently finish those reviews, run combined tests, push and inspect
+CI, then build/source-verify/resource-test and activate a new frozen image.
+Replay automatic cold admission plus GET-only saved analysis/scenario refresh.
+Continue six-profile K/N clinic expansion, real physical-approach audits and
+distinct-building native minimum research in their isolated worktrees. The
+first physical audit stopped before geometry due to missing libexpat.so.1;
+repair the audit image and review its new immutable plan before scanning again.
+No paid Alice/Rasp calls are authorized by this checkpoint; keep the prior
+budget ledger, raw inputs and all PostgreSQL/observation volumes intact.
+
+## Integrated map/progress and real scenario — 2026-11-11
+
+Live 5193 remains e5e067e. Root source 8271ca1 now includes the selected-route
+map repair, opt-in persisted batch progress, four-profile restoration, and the
+approved SQL architecture inventory extension. Root combined frontend tests:
+246 unit tests, build/API freshness, and 69 browser tests PASS. The browser
+suite uses fixtures and is separate from the actual runs below. Root's own
+architecture suite: 37 PASS in 4.79s. CI on e5 had 2 inventory failures with
+1831 passes/9 skips; the new inventory fix is pushed for fresh CI, not assumed
+green. Historical SQL baselines are unchanged; named progress-query parameter
+bindings and five mutation regressions are now covered.
+
+The e5 Moscow public-transit baseline and scenario also passed actual UI →
+worker → PostgreSQL → React. Baseline 31aac2c2-148f-4560-aaee-38f0816a93d8;
+scenario job cdc8e79f-e9d8-4535-8642-d2db68c1c8d0; saved run
+ eb050b17-f70f-5783-83a8-19b8c5b56703. Exact route time changes from 5595.143
+ to 5235.143 seconds. Root validated canonical DTO, equal repeat GET, unchanged
+baseline bytes, exact saved-before values, UUID5 job identity and foreign-session
+404. Status remains partial, feasibility unverified, affected population null;
+canonical minimum/index deltas remain unknown. Private evidence:
+`root-fourprofile-ui-187158e3-20261111/moscow-transit-e5e067e-*`.
+
+The separate clean four-profile stand started all services on 5293 with fresh
+volumes and copied graph bytes, but its first Novorossiysk job failed before
+routing: Valhalla's status tileset timestamp differs. The pinned 3.5.1 source
+uses the tiles directory mtime, which the transport helper did not preserve.
+DEVOPS owns the narrow metadata-preserving restore repair; do not weaken the
+runtime status check or relabel the graph. This is a failed clean real replay,
+not one-command-startup acceptance. Preserve its job, receipts and volumes.
+
+Moscow's bounded native frontier experiment remains research-only. A network
+bound on a same-building pair is not a physical-trip minimum or numerical city
+index. ML2 is auditing physical approaches and a distinct-building candidate.
+No extra paid Alice/Rasp calls, no dev merge, no full-product readiness claim.
+
+## First complete Moscow campaign through React — 2026-11-11 03:46 MSK
+
+Live5193 is now e5e067e1b4d2a9021ddfa1d91bf918957a94a203. Root activation
+took48.017s; protected services and all volumes stayed unchanged. Final-image
+Worker+real-PG replay passed at1CPU/2GiB,10s query timeout/30s lease, with
+882,487,296B cgroup peak. The initial container test failed in its migration
+harness before reaching Worker; corrected v2 passed and both receipts remain.
+
+Root submitted a NEW Moscow/walk/adult-polyclinic request through React, not a
+fixture or manual SQL job. Job1f246d5e-afae-4ea1-8578-e03777ba94ab succeeded;
+saved analysis6664f4e0-0749-4dba-a176-f33225bf60fc has result hash
+4ab16ac3ac21fbb951357a86abf2d671a84e7e86c16fcd60bf62d4f04ee81837.
+One POST admitted in10.179s; worker293.364917s;88 checkpoints/1401 pairs;
+worker peak1,847,713,792B, zero OOM. The page displayed the saved result without
+JavaScript errors. Root independently validated canonical DTO, equal repeat GET,
+foreign-session404, all2361 accepted point IDs, and exact route-time agreement
+with the earlier independent saved-observation replay.
+
+Published1394 valid journeys reach194 distinct clinics. Observed-route scores:
+391 red,487 amber,516 green,967 unknown. Both rounded-zero approaches remain
+unknown. All canonical indices remain null; no city or district minimum/rating
+was gained. API response25,563,052B. Evidence and screenshot:
+`root-fourprofile-ui-187158e3-20261111/moscow-full-e5e067e-*` outside Git.
+
+Visual review found that drawing all1394 purple paths obscures the map's score
+colors. FRONTEND owns a separate overview/selected-route correction preserving
+the prototype design, unknown points and full result inventory. Persisted
+progress frontend24274bf is ready with schema dependency8e609d4; backend final
+delivery/review are pending. Four-profile restoration4c0e576 is under review;
+its documented offline checker must include a writable observation directory.
+Moscow PT/scenario replay on e5 is the next live acceptance step. No extra paid
+Alice or Rasp calls, no dev merge, no full-product completion claim.
+
+## Publication fixes integrated — 2026-11-11 03:35 MSK
+
+Integration source `e5e067e1b4d2a9021ddfa1d91bf918957a94a203` includes two
+independently checked corrections. It is a release candidate, not yet the live
+source. Production remains1839 on5193 until the final-image gates pass.
+
+- `09a073c`: raw checkpoint validation runs outside job-row write locks;
+  short transactions recheck the complete captured inventory, scope, claim,
+  execution and fresh expiry. Worker heartbeat, cancellation and the original
+  hard deadline remain active through atomic publication. Root55 real-PG tests
+  passed; independent reviewer44 focused PG tests plus3 additional cancellation
+  checks passed. The original e472 incident was reproduced RED with actual88
+  saved checkpoints, then GREEN using the actual Worker, spawned23,985,971-byte
+  result and PostgreSQL publication in62.723s. No routes were recomputed for
+  this diagnosis. The final Linux image must still pass this database boundary
+  at1CPU/2GiB with the original10s query timeout and30s lease.
+- `180d0ac`: persisted scenario run IDs are UUID5 of the durable job ID, while
+  physical engine IDs and calculations remain unchanged. Root32 scenario PG
+  tests passed before integration;40 combined scenario/worker tests passed on
+  e5. This corrects actual UI scenario job24b63712-b9f5-4037-834c-655ac579cff2,
+  which failed with `Run identity already published`. Its saved baseline
+  dbc2e51b-2434-461d-94ba-57eae4eaaad1 remains unchanged:5595.143s and34.051579
+  observed-route estimate, with canonical indices null.
+
+Distinct private Kaliningrad router now runs at valhalla-kaliningrad:8002,
+512MiB cap, pinned121 tiles, Valhalla3.5.1/tileset1794312452. One bounded status
+call passed; no new route was calculated. Deployment evidence is outside Git:
+`devops/kaliningrad-router-deployment-20261111-v1/`. New K profile activation
+still requires fresh binding/executor/source approval.
+
+ML2 independently verified original and checkout ZIP hashes, all6 internal
+checksums, installed GTFS/Rasp bindings, current165-file archive and all3 graph
+closures. The archive alone does not restore graphs or current deployment
+settings. A sanitized four-profile restoration recipe is being implemented in
+an isolated branch. Optional persisted batch progress is also a separate next
+delivery, with opt-in GET semantics so existing strict clients keep working.
+Neither delivery is included in e5. PT name binding224da53 remains pending.
+No additional paid Alice or Yandex calls; no merge into dev.
+
+## Live 1839 and confirmed parent-lock incident — 2026-11-11 03:15 MSK
+
+Live5193 now runs `1839d8b894f8c069c367e67db052140fcfa5e8bb`; root activation
+passed in47.64s, PostgreSQL/observation volumes unchanged, demo transport false.
+API/worker imageee9031784e05132d1f5cc4b125a20c2f07bbdce82f46707818c506837ebbf895;
+web168c4e5224adca39a2419068e707dd6581a3811f13e56ea51406f0be3aba5b38.
+All six GitHub checks passed at this exact SHA. Root1193 engine tests,214 frontend
+units and74 focused backend checks passed; the last group has2 explicit PG skips.
+Old unused5192 applications/PostgreSQL and standalone N8028 were stopped without
+removing volumes;5193 and test/budget databases remain running.
+
+Integrated repairs: unusable rounded-zero physical approaches remain unknown
+(7830342); scenario comparisons/assumptions (e840043), friendly approach reason
+(0219ee4), and per-binding TypeAdapter reuse (c7a52a4). Root independently replayed
+all1401 saved observations:1394 valid journeys,2361 map points,5589 features;
+all canonical indices remain null. These are offline acceptance counts, not a
+successfully published Moscow result. Final-image combined4profile initialization,
+saved1401 reduction and public IPC passed with1,899,843,584B peak under2GiB.
+One observed score differs by1ULP between macOS and Linux (`100*2**(-1002.26/3600)`);
+all other leaves match. Repeated fixed-Linux-image result hash is exact. No formula
+or rounding policy changed. Candidate gates/activation receipts:
+`candidate-threecity-code-1839d8b894f8-20261111-v3/` outside Git.
+
+Actual fresh React full-Moscow job `e47231a9-b2b2-4139-b48c-66b2cba8b8b2`
+was admitted once in11.216s, saved88checkpoints/1401observations, then FAILED.
+No OOM; worker peak1,839,099,904B. Generic parent error masked a real lock race:
+CheckpointRepository.finalize holds the jobs row while validating all raw files,
+but heartbeat UPDATE waits on that row with the pool's10s command timeout.
+Root independently reproduced TimeoutError in11.1015s with the actual88rows and
+isolated PostgreSQL, without adding delay. The successful prior IPC harness used
+a stub finalize and therefore did not cover this actual database boundary.
+Keep the failed job and immutable observations. Do NOT reroute for diagnosis.
+Incident capture: `backend-parent-publication-incident-e47231a9-20261112-v1/`
+(folder spelling retained); root proof `root-parent-lock-repro-20261111-v1/`.
+
+BACKEND owns the approved two-phase validation/fencing fix across checkpoints,
+jobs and worker runner: raw validation outside long row locks, exact inventory
+recheck in short publication transactions, heartbeat/cancellation through atomic
+publication, original timeouts retained. Independent reviewer agreed. Before a
+new production campaign, require actual saved1401 Worker+PostgreSQL publication,
+not only engine reduction or a stubbed checkpoint repository.
+
+Source-bound PT names224da53 are independently reviewed but NOT integrated/live.
+All284 names match the accepted parent; host single-calculation peak2.080GB leaves
+little room below2GiB. Six-profile deployment remains unverified. Public persisted
+batch-progress DTO is only a pending design, not implemented. K extra-router and
+fresh six-profile assembly remain next-wave work. No additional paid Alice calls.
+
+## Full campaign and real scenario checkpoint — 2026-11-11 02:30 MSK
+
+Live5193 now runs frozen `d085256ae668e4ed97c626bccc43bfd2febe9d37`.
+API image5a2534e2738990a2e3f617a434a54d9bd64c688d58b62955d08d254f2db55b5a,
+web4582c5f6c981095c184b5adeac22c4ac3b846f433281afc36265dcacf35ce346.
+The original165-file runtime and graph closure are reused byte-for-byte.
+Activation succeeded in61.55s, volume preserved. Candidate receipts are in
+`waydex-full-runtime/candidate-threecity-code-d085256ae668-20261111-v3/`.
+
+Moscow's fresh UI job `d1c0b9ce-dfdd-4267-8fb8-b9b3dc4023bf` retained ALL1401
+observations in88 PostgreSQL checkpoints, then FAILED during ML1 reduction.
+The previously corrected coordinate boundary no longer blocks the campaign.
+Exact new cause: point `moscow-utm37n-1km-v1-e377-n6125-p` has a positive0.02m
+accepted approach whose source rounds its duration to0.0s. Strict ML1 raises
+`ACCESS_CONNECTOR_REQUIRED`. BACKEND owns a narrow unknown-state correction;
+do not weaken the guard or invent an epsilon. All2361 points/population must
+remain. Preserve the failed job and its immutable raw observations; no final
+Moscow walking result or full-city index has been published.
+The real UI recovered two15s admission aborts with the same idempotency key:
+one PostgreSQL job only. This is a measured latency gap under load.
+
+The timezone correction now passes actual live React → scenario → PostgreSQL:
+baseline analysis `85f5259d-bdb1-4120-849a-0d409293df39`, proposal
+`3d5e6bd5-384d-57bf-a260-3602f933325d`, scenario job
+`beb49e52-6ec2-4f58-a882-b29d663f330a`; run
+`pending:scenario:0d8584335daa98ad6eadf9b7863f363c2438d71a95065b16cad95f3d79abc16e`.
+UI shows93.3→87.3minutes for the selected route; exact5595.143→5235.143seconds.
+Canonical minimum delta remains unknown, affected population null, feasibility
+unverified. Root checked ScenarioResult, exact saved-before values, unchanged
+baseline bytes, repeat GET equality and foreign-session404. Response17,943,282B.
+Receipts/actual files: `root-fourprofile-ui-187158e3-20261111/`, scenario-d085 names.
+
+One authorized live Alice probe charged0.3434RUB and returned safe template
+fallback `INVALID_EXPLANATION`; exact raw cause remains unproven. Ledger now
+charged1.1257RUB/500, held3.2RUB unchanged. No second paid probe. An independent
+offline paragraph-expansion defect was fixed, along with safe diagnostic rules
+and proof-aware wording. Root274assistant tests pass; new code is not live yet.
+
+Current integration afterd085 includes PT accepted-map metadata and correctly
+scoped nonranking estimates (556bf30), sanitized worker diagnostics, and Alice
+fixes (d1c4488). Root219 combined scenario/PG/map/geometry tests pass, including
+proof transitions;274assistant tests pass. Root1189engine tests pass. Test-only
+typing correction2ac4e58 fixes d085's CI test annotations without runtime changes.
+Await the second Moscow incident fix before the next immutable deployment.
+
+ML2 finished a new immutable local expansion audit, not a routing run:
+K154strictly correlated points/136destinations, N303/86;20944/26058 metadata
+pairs respectively.127 ambiguous/displaced endpoints remain unknown. Two
+explicit adult-clinic pairs per city are prepared for backend review; no new
+minimum proof. Packet `ml2/city-walk-expansion-audit-20261111-v1/HANDOFF.md`,
+manifest6ae702c3e9456ad85c456b32a364b2f4b60f459117ab505511af672c56431e10.
+BACKEND scenario_timezone owns new approval candidates. K additionally needs
+a separate graph router; the active generic Valhalla contains Moscow's graph.
+
+## Live four-profile acceptance — 2026-11-11 02:07 MSK
+
+Root activated frozen release `187158e3c554887e54fd276da32e1b95a627d382`
+on http://127.0.0.1:5193/. Existing PostgreSQL volume and results are preserved.
+The explicit 128 MiB source / 32 MiB decoded-result policies passed final-image
+offline loading and HTTP admission; these policies do not imply calculation success.
+Receipts: ignored `waydex-full-runtime/candidate-threecity-187158e3c554-20261111-v2/`.
+
+Independent root browser runs, without intercepted API responses:
+
+- Novorossiysk `.3`, walk/school: job `bdb71ae3-90a9-469d-935b-597f550b3627`,
+  analysis `e6ea7388-40d3-42da-a64c-9da3e5ca1128`, 601.315 s, one observed
+  estimate displayed as 84.1/100, 409 points retained, city index unknown.
+  The network segment has geometry; physical approach geometry remains absent.
+- Kaliningrad `.5`, historical November 10 airport query: job
+  `42335ff2-7da0-4233-9b72-8e94d8c41e51`, analysis
+  `28a76bc7-f03c-4e70-ae68-4eb255df91e4`, 13773.627798 s; one numeric point
+  index shown as 0.5/100. This is the certified bounded model, not a city index.
+- Moscow derived PT snapshot, November 11 08:45 local: job
+  `e165c48e-b76e-493b-91e9-f208a50c971f`, analysis
+  `1e8f28ba-bdde-4308-a29d-700d1128e4f0`, 5595.143 s, 47 legs. Saved result
+  reaches React; this release has no PT map features or full route geometry.
+  Scenario proposals incorrectly disappear because equivalent `08:45+03:00`
+  and `05:45Z` requests have different serialized hashes. Repair is RUNNING.
+- Moscow walk full 1401-pair campaign FAILED: job
+  `6fb08617-dac0-4c76-862f-d4adbd486e4e`. 29 checkpoints (464 pairs) persisted;
+  16 additional raw observations were retained before checkpoint 30 failed.
+  Root independently replayed `GEOMETRY_ENDPOINT_MISMATCH`: binary subtraction
+  rejects an exact decimal 0.000001-degree boundary. Repair is RUNNING without
+  increasing tolerance. No final result or full campaign success is claimed.
+
+For each successful analysis, root validated the canonical DTO, repeated GET
+equality and foreign-session 404. Local receipts and actual response bodies:
+`waydex-full-runtime/root-fourprofile-ui-187158e3-20261111/`. Browser session
+file is private; do not print or commit it. All raw datasets remain outside Git.
+
+PR29 CI at187158e3 failed Linux nginx fixture permissions; dependent backend
+PG check was skipped. DevOps938e02c fixes test-only permissions, independently
+verified by root (3 tests, 10 subtests) and merged as8b59d6e. Remote rerun pending.
+Independent review rejected unconditional PT observed scores on proven minima;
+the owner must preserve FULL canonical results and remove false unproven labels.
+Goal remains ACTIVE. No merge into dev and no new paid-provider calls.
+
+## Transport and rendering checkpoint — 2026-11-11
+
+Root33b70f74706f5cb97fe62fe9d88519111083d0cc now includes reviewed worker
+transport580ca78/09b787f, saved-analysis nginx compression9ce47e8/265d9d6,
+and map/client performance33b70f7/fcd482a. Root126targeted tests with PostgreSQL
+PASS60.29s; independent reviewer found no remaining transport defect after
+malformed-stream/allocation/deadline/cancellation probes. Ordinary wire16MiB
+and default decoded16MiB remain; explicit worker setting
+`A2_WORKER_RESULT_DECODED_MIB=32` enables the separately bounded larger result.
+
+Root actual Nginx Docker regressions3PASS4.18s; identity/gzip content equality,
+session/Host/Origin/Vary/no-store preservation and exclusion of chat/auth/POST
+verified. Root current-source M16 packing on prior dependency image with
+network disabled and2GiB cap:2.663s,478,879,744B cgroup peak, no OOM. This does
+not substitute for final-image full worker/init resource acceptance.
+
+Root208frontend units/buildPASS. Root actual saved-M16 offline browser replay:
+631ms response-to-paint,114ms selection,5605initial geometries,0new/cleared
+layers on selection,0JS errors. All APIs were intercepted for this performance
+check: it is not a live E2E. Owner63API+legacy browser regressions also pass.
+Root receipts: runtime/root-map-scaling-20261111.{json,log,mjs} and
+root-packed-m16-memory-20261111.json. Temporary root5199 preview stopped.
+
+Next confirmed blocker: composing all four profiles exceeds the current96MiB
+cumulative runtime input read budget. Exact old-code replay: Moscow walk
+source verification receives47,826,138B remaining then fails with
+DERIVED_GRAPH_CUMULATIVE_BYTE_BUDGET_EXCEEDED; Nov/PT subsequently fail. Four
+main snapshots plus PT inputs/scenario are65,230,857B before immutable walk
+bundle verification. BACKEND is diagnosing unique reads versus duplication;
+no input validation or byte budget has been bypassed. A bounded explicit
+deployment policy requires exact byte/memory evidence before enabling it.
+
+Private four-profile assembler is
+runtime/threecity-fourprofile-builder-20261111-v2/assemble.py (8a9e67c0...);
+source binding8155e753... pins24unchanged PT files. V1 artifacts are preserved;
+only FileRef prefixes change in the composed manifest. New runner/overlay
+expects decoded32,timeout600,2GiB,5193 and existing volumes. Do not freeze/build
+until input-budget correction is reviewed; then run final image checks and
+full1401 campaign only under the final executor identity, avoiding reroutes.
+Live5193 remains unchanged and healthy; no paid calls/production writes were
+made in this checkpoint. Last pushed a93ff5c has5CI checks passed, backendPG
+still running at the last poll. Later local commits need final CI.
+
+## Lossless result integration checkpoint — 2026-11-11
+
+Goal ACTIVE. Root integration680973c includes canonical groups, Alice consumers,
+frontend3d22a93, backendc401ca9, and independent-review corrections044f75e and
+95afe5f. Live5193 remains the old API f448ed15/web d07d584; health GET passes.
+No new image or runtime has been activated. Dev remains91ed5262; PR26/27 are
+still open drafts at their known SHAs. PR29 is an open draft at2fa8382 with all
+six checks successful; that CI does not cover these newer local commits.
+
+Root independently recomputed the real saved16-route and public-transit
+artifacts without network. Lossless equality covers17,398 reference edges and
+447,848 other scalar values for Moscow16; PT baseline11,856 edges/246,127 scalars
+and scenario18,944 edges/541,307 scalars. Every leaf definition is retained.
+Actual child output sizes are10,864,271B for Moscow16,7,666,048B for PT analysis
+and15,557,576B for PT scenario. Original PT envelopes were175,781,577B and
+267,776,802B. Independent receipts are outside Git under
+`/Users/kirito/waydex-full-runtime/root-evidence-packing-20261111-v1/`.
+
+Root also repeated real-source PT PostgreSQL baseline/scenario roundtrip in a
+new isolated55447 schema:2361points/284clinics/300datedruns retained; exact saved
+before/baseline, cache/replay, two forged-publication rejections and foreign-scope
+denial pass in12.26s. Receipt `root-packed-pt-pg-roundtrip-20261111.json` is in
+the same ignored runtime parent. This is adapter/DB verification, not live UI E2E.
+
+Root checks:1168enginePASS8.91s;729contracts/assistant/group-consumerPASS1.13s;
+49focusedAPI tests including actualPG PASS7.84s after final packer correction;
+200frontend units/build/API freshness PASS; new grouped browser casePASS3.3s.
+Frontend owner additionally ran47API Chromium tests. Independent reviewer
+verified65Python/7packing/22frontend tests and all M16 evidence equivalence.
+Its findings were fixed: publication lacked group context, repeated citations
+caused superlinear expansion, and the packer changed hash on a second pass.
+Root repeated4000x4096 group expansion:1.91s before,0.0008s after; legacy leaf
+order/duplicates remain unchanged. Real M16 repeated packing is byte-equivalent.
+
+Next release gate is now full1401 output scaling, not evidence loss. Measured
+M16 journeys total105,195B; full1401 extrapolates above20MB with fixed catalog,
+so16-route success is not a full campaign size guarantee. BACKEND is implementing
+a separately reviewed versioned lossless compressed IPC: ordinary wire16MiB,
+default decoded16MiB, explicit operator-enabled decoded32MiB, strict declared
+length/ratio/truncation/trailing-data checks. No transport change is integrated
+yet. FRONTEND measured full map recreation at each selection (~1.6s/5605layers)
+and is optimizing joins/style updates without redesign. DEVOPS is testing GET
+saved-analysis-only nginx compression and preparing a NEW private assembler
+with three cities/four profiles (Moscow walk + actual public-transit scenario).
+Existing immutable v1 runtime3609e204 stays inactive and must not be overwritten.
+Final freeze must include all reviewed consumers, transport and fingerprint;
+then image memory/admission checks and root real UI/worker/PG replay are required.
+
+All three active engineering agents explicitly confirmed full filesystem/network
+access and approval never; no session restart is needed. No provider/paid calls,
+production data deletion or protected-branch merge occurred in this checkpoint.
+
+## Real route and integration checkpoint — 2026-11-11 01:00 MSK
+
+Goal ACTIVE. Root integrated source is cbfa33c6465b3b2fe25598eade3f605c165d3dfc.
+New commits: sparse-scenario boundary c34844b, exact native coordinate serializer
+4675f4c, bounded transit/scenario semantics4dc1ac4, full serializer dependency
+fingerprints6adb4cd, local frontend help/mobile9e61c84, separate chat errors70f38e1.
+
+Root ran the actual first16 Moscow routes on the pinned private Valhalla. The
+files-only checkpoint was retained but canonical validation initially failed for
+2 of16 mixed exact/truncated coordinate echoes. No SQL result was published.
+The correction reproduces the pinned Grisu2 writer, not a geographic tolerance.
+Root independently executed the native binary network-disabled over100708
+binary64 values, all bit-equal, and replayed the original16 raw responses:
+16reachable, all minima unknown. Both failed run and later offline proof remain
+in ignored runtime/root-first16-20261111-v1 and
+ml1-route-echo-boundary-351-20261111-v1. No reroutes were used for this proof.
+
+Root checks after relevant changes:46 API Chromium cases PASS1.2m, frontend
+build PASS;1161 engine tests PASS8.27s before the final serializer delivery;
+102 serializer/evidence tests PASS1.84s after it;118 timetable/scenario/contracts
+and real PostgreSQL publication tests PASS9.33s. Independent reviewer ran104
+offline checks without additional actionable defects in its explicitly scoped
+review. Its review did not cover live routing or the later representation work.
+GitHub54cebe6 exposed two global/chat error collisions;70f38e1 fixes their
+product cause, and the full root46browser suite passes. Fresh CI is required;
+older green jobs do not cover the final local revision.
+
+New immutable three-city runtime3609e204f36efb92d23c56129b6b202b9b378f61522e852070ee1cc427e71e70
+is inactive. It retains original full catalogs: Moscow2361points/2931cells,
+Kaliningrad216/286, Novorossiysk409/968. Approved requests are Moscow1401candidate
+walk pairs to adult clinics, Kaliningrad's unchanged historical Nov10 certified
+airport scope, and one Nov11 Novorossiysk school17 pair. Image
+sha256:a5413e9bc4c6f002d3871b9c94c7dc78dd49e513d55be731487c0d30828f9ff2
+is frozen from cbfa33c. A2_CODE_VERSION includes full git revision, manifest,
+certified-proof and executor identities. Exact-image admission/HTTP latency and
+a new first16 bounded operator run precede promotion. Live5193 remains unchanged
+API f448ed15/shared web d07d584 until those checks pass.
+
+Real full-catalog GTFS scenario now computes5595.143->5235.143 seconds but its
+minimum delta remains unknown. A genuine size blocker was measured:
+175781577-byte analysis envelope and267776847-byte scenario envelope, chiefly
+millions of repeated evidence links. Do not raise the16MiB ceiling or drop points.
+Approved next contract: optional leaf-only content-hashed evidence_groups,
+lossless expanded leaf sets, all original definitions retained, legacy empty
+serialization/hash unchanged. BACKEND owns contracts/API packing; FRONTEND owns
+browser resolution; alice_evidence_groups owns assistant/tools/explanations.
+This work is not merged or activated and does not block the independent walk
+three-city release. Full product/city/national readiness remains unproven.
+
+## Verified integration update — 2026-11-11 00:33 MSK
+
+Goal remains ACTIVE. This section supersedes older deployment/checkpoint claims.
+Root independently integrated compact checkpoints1451ab2, evidence compaction
+ac45d17, private Novorossiysk overlay2cc5951, frontend guidance2f9320d, and
+saved-result explanation modes3480e36/8d2efdf. No merge into dev or active
+runtime promotion occurred for these deliveries.
+
+Root verification: actual PostgreSQL checkpoint/artifact suite39PASS37.94s;
+reference-preserving evidence compaction5PASS1.90s; saved-result freeform bridge
+25PASS0.62s. Earlier root ordinary backend/contracts/assistant suite completed
+1213PASS/276SKIP348.68s before these last deliveries. Skipped PostgreSQL tests
+are not treated as database acceptance. Root API browser migration42PASS and
+frontend176unitPASS are synthetic interface regressions, not real E2E.
+
+Shared prototype web d07d584 is now LIVE at http://127.0.0.1:5193/; image
+sha256:b61fc14eb3f95602b86776f75c03e9edfb6ced34cccd900373ceeeb4d99a0617.
+Root independently opened the landing and atlas in isolated Chromium on5193:
+expected shared presenters, Moscow selection and no desktop horizontal overflow.
+This was GET-only inspection; the earlier real UI admission timeout remains
+unresolved until a new API image passes an actual UI replay. API/worker remain
+f448ed15, old single-pair manifest214b1247; newer code is not live yet.
+
+Candidate Moscow1401v2 manifest ce508816bc544c6aa4be2934ab2c0df02b819de41247faf9db9b561cb792c6da
+is immutable and inactive. It retains2361points/2931cells/284clinics,1401approved
+candidate pairs; max eligibility is not a nearest-time/minimum proof. A fresh
+API image and bounded real16-pair resource check precede wider activation.
+
+Real November11 transit packet633fec6fe315dcc271a96221a1b7895d6063d0e2a2383121561b33269c292a65
+under ignored runtime/ml2/moscow-transit-public-nov11-v2 is independently verified:
+root matched50 selected trip events directly to restored source GTFS ZIP;
+ML1 checked all300 bounded runs and public scenario baseline5595.143s ->5235.143s.
+Whole-run hypothetical advancement360s also causes a verified adverse query
++1320s. No minimum, city index, passenger demand or operational feasibility
+is inferred. Full retained-catalog runtime exposed missing-boundary handling
+in scenario recomputation and excessive nominal pair budgeting: separate ML1
+and backend owners are fixing these with negative regressions before deployment.
+
+Active engineering threads have verified danger-full-access/approval never.
+Settings persisted in ~/.codex-pro/config.toml, prior config backed up; new
+BACKEND/FRONTEND/DEVOPS/Alice threads preserve old worktrees and WIP. A new
+ML1 transit thread has the same actual policy. Full access does not authorize
+merging dev, destructive database changes or removing the500RUB Alice ledger.
+
+## Verified continuation — 2026-11-11
+
+Goal remains ACTIVE; the sections below are historical checkpoints. Local
+integration now includes shared prototype presenters c3bd03f, lazy/paginated
+source disclosure 1487be3, and manual lost-response recovery 3bec3b6. Root
+verified 170 frontend tests plus the source disclosure regression, build and
+lint; the final browser changes are still with FRONTEND. These changes are not
+yet on the live web image. Root inspected the shared desktop view through a
+temporary 5198 proxy to the real 5193 backend, without API interception.
+
+Root's actual Calculate click exposed a real acceptance failure: the initial
+HTTP request exceeded the browser's 15-second deadline; retries returned
+RUNTIME_INPUTS_BUSY while the original preflight continued. PostgreSQL job
+94f0dfa2-8024-4348-be33-b09f4c586f66 subsequently succeeded, with saved analysis
+93bd5f9f-7989-4613-a72d-f3a0362cd180 and real journey 1029.051 seconds. Root
+independently fetched both through the same isolated browser session (HTTP200).
+The UI did not receive/display this result: this is NOT a successful full UI
+E2E. Evidence is in the ignored runtime directory under
+root-shared-ui-real-replay-20261111.json and real-preflight-timeout-20261111-v1/.
+No jobs remained queued/running, no provider/LLM replay was needed for the GETs.
+BACKEND is removing repeated source parsing; FRONTEND now retains the original
+submission key for recoverable manual retries, pending final browser validation.
+
+Root full engine suite found an append-order regression in new export
+analyze_normalized_walk_routes. Fixed in 6cc1f43 without changing historical
+signature fixtures or mathematics: 1145 engine tests PASS, Ruff PASS. Reviewed
+source-inventory helper dc3cec0 preserves original Kaliningrad graph authority;
+47 inventory tests PASS. Compact batch/artifact delivery remains under review.
+
+External ML2 ZIP restoration is implemented (ad67488/f33c4a5): place
+ml2-handoff-2026-11-10.zip in the checkout root, install dependencies, run
+.venv/bin/python scripts/restore-ml2-handoff.py. Archive and extracted data stay
+ignored. The ZIP contains Moscow GTFS and Rasp node bindings, not graph tiles,
+PBFs, database state, API keys or dated intercity schedules. README and the
+existing graph RESTORE.md distinguish these requirements.
+
+## Latest correction: keep the prototype frontend and implement its backend
+
+Goal remains ACTIVE. The user explicitly requires the existing demo/prototype
+design AND intended functionality unchanged; backend limitations must be repaired,
+not used to replace the frontend with a reduced API dashboard. Frontend owns
+shared presenters/actions; backend owns real adapters and workflow completion.
+No generated Moscow transport may be reactivated on the active stand.
+
+At this checkpoint root b15ae961 includes observed mapper 393c7c7 and engine
+01033a9. The root runtime regression found a duplicate source-ref map validation
+failure; BACKEND is fixing it plus multiple-candidate journey linking. Do not
+deploy this mapper until those checks pass. FRONTEND phases 5897ce2/59d0403/
+230b0e6 are still under review; shared card/map/mobile work continues. Review
+also requires disabled-priority guards, chat length/submit guards, offscreen
+mobile filter inertness and generated-model warnings in fullscreen panels.
+
+Live 5193 is real Moscow .4, manifest 214b1247, one GP109 pair; API f448ed15,
+web 8f8ba849. Full 2361 points retained. Real source/native capture gives 1401
+currently supported candidate pairs, not 1836: preserve the 435 unresolved
+pairs and all other unknown points. Native supplement ac95047d has 211 files
+independently rehashed by root. Compact checkpoint implementation and first
+full bounded campaign are pending. See current ACCEPTANCE_MATRIX section.
+
+Alice remains live with the authorized total 500 RUB ledger; do not reset holds.
+Observed adac60bf job has unknown browser actor and is not root E2E evidence.
+Root must personally repeat real UI -> saved result after reviewed deployment.
+Do not count historical generated transport scenarios as real-data completion.
+
+## Latest continuation — three mandatory cities and source corrections
+
+Goal ACTIVE; user explicitly requires Moscow, Kaliningrad and Novorossiysk in
+parallel through one shared urban pipeline. Root before this note a7397e0,
+integration/full-product-20261110. No dev merge. DraftPR29 remains open/draft.
+Published1e67d67 has six successful CI checks; later local integrations below
+are not covered by that CI head. Detailed city inventory is at the top of
+ACCEPTANCE_MATRIX.md; it distinguishes source counts from verified route coverage.
+
+Integrated after independent review:
+- Certified geometry3704f1d and transport732f3f6: root49 actual-artifact tests PASS;
+  exact index operand untouched, separate rounded display Journey. Frontend223e52b
+  explains precision; actual changed Chromium case passed.
+- Moscow conservative .3 correction3171c07, pure connector helper01da36d and
+  inventory selector6abdbf5. Root3/9/13 focused tests PASS. All old factual rows
+  preserved; old .2-derived c894 timetable remains inactive and must not be retagged.
+- afdd2dc city reset: root7 Chromium cases PASS13.4s, owner110 unit/build/static
+  checks PASS. City change removes old result/map/job context and filters presets;
+  no new capabilities are fabricated.
+- Private-source4a032+fdc9+b92: reviewer found multigrant-read race and later
+  private-model egress after revoke. Both reproduced and fixed; all private LLM
+  transmission now disabled even with opt-in. Public Alice unchanged. Root91
+  integrated PG/migration/module/scenario/focus tests PASS15.84s. Private Step2 HOLD.
+- Graph source binding95e379a: operator-only snapshot/source/graph refs and exact
+  exhaustive tiles; old Kaliningrad verifier unchanged. Root46 infra tests PASS.
+- Classifierfc7e4da: reject negated state/nonstate legal forms first. Root31 tests
+  PASS; independently rehashed official observed ZIP and seven exact institutional
+  records. Five Moscow college objects and one Nov school need new quarantine
+  revisions; no old snapshot mutation. Two ПК50 objects have separate changed
+  current-record uncertainty. Medical source adapters were not re-retrieved.
+
+Real new-city evidence:
+- Moscow exact central261107 PBF884829631B, SHAd28d118c...b77f2 restored outsideGit.
+  Bounded standard osmium1.16.0 smart extraction/build approved after ML1 window;
+  preserve restrictions, parent/extract hashes, and explicit outside-path unknown.
+- Nov exact south261107 PBF317285835B SHAe867508d...a57da; graph manifestd2f41ce0...
+  independently rehashed by root:1126tiles/326987664B. Build84.614s,2.236GB peak,
+  no OOM under4GiB cgroup. Endpoint127.0.0.1:8028 isolated from5190/91/92.
+  Root actual route replay to officially verified school17:582.215network seconds,
+  responseb285179b...888a4,29.7ms. Adapter-rounded approaches yield601.315s,
+  unrounded exploratory length/speed yields601.295s; do not mix receipts. Null
+  index, no minimum proof. Final .3 binding and actual browser E2E still pending.
+- K n6068 adjacent-source/native proof and new physical proof completed by ML1;
+  root replay pending. Exact reported total14353.058459449967s, research indexnull.
+  Source builder RSS1.565GB but Darwin footprint2.240GB exceeded2GiB: record the
+  resource exception, never label this run a clean total-memory-cap pass.
+
+Current ownership: BACKEND product_runtime/product/walk_runtime/batches and
+  test_module_boundaries.py; finishing generic per-profile bindings with96MiB
+  cumulative source-verified startup budget (actual three-city inputs~78MiB),
+  unchanged32MiB document/4096pair/16MiB checkpoint caps. Must measure peakRSS.
+ML2 ownership_revision.py/.4Moscow/.3Nov corrections; no GTFS retagging.
+DEVOPS Moscow standard-tool/extract/build and final corrected runtime artifacts.
+SCENARIOS only additive optional omitted Leg.geometry contract/evidence checks;
+  no private-provider Step2. Network leg geometry must not masquerade as a full
+  physical Journey; frontend segmented rendering follows reviewed contract.
+ML1 freezing adjacent physical proof; root/reviewer replays before eligibility.
+Root public readiness DTO/projection is reserved but not implemented yet.
+
+## Latest continuation — Draft PR29 and calculated-point UI acceptance
+
+Goal ACTIVE. Root candidate72a624830604887b12d19c3c47f5e290616a04b0 before this
+note. Draft PR29 created: https://github.com/matveyka-sudo/case-champion-hac/pull/29.
+Initial published head d6c9c0a; remote dev independently rechecked unchanged at
+91ed5262b62c16afa3ca619f8140c43917cf8325. PR26 ancestorPR27 ancestorintegration
+verified again. No dev merge. Old notes saying no push/PR are now historical.
+
+- FRONTEND60dfcd8+d7bfabf accepted and integrated. Explicit calculated-point list,
+  numerical point totals includingzero, citynull retained, actualsample inventory
+  denominator. Reviewer found P2: one mappedknownpoint plus215unmappedunknown tasks
+  misleadingly showed1of1. Fixed by requiring all saved point-total IDs in inventory
+  or omitting ratio. Root actual mobile screenshot exposed a separate native
+  details/state race; fixed by synchronous native closure before selection.
+  Root104unit/buildPASS,30ChromiumbrowsercasesPASS48.8s; desktop/mobile screenshot
+  inspected after final fix. Reviewer29focused+actualsavedresult partialinventory
+  replay PASS. These browser responses are synthetic; newclean real5193 pending.
+- Earlier zoom replay suspicion was NOT a defect: existing consumed-command-ID
+  guard already prevented it. Root checked surrounding code and withdrew finding;
+  regression now covers changed effect dependencies.
+- DEVOPS2686f8a accepted/integrated: separate bounded Chromium fixture CI job,
+  locked Node/npm/Playwright, CI=true, one worker, no retries/agents,300s global/
+  10min job. Owner27localcasesPASS43.2s; root30cases cover final frontend.
+  Linux run of this new job still pending updated PR head.
+- Initial PR29 CI observed engine/ML2/PostGIS/environment SUCCESS, backend/PG
+  still running at last observation; do not infer newhead checks from oldhead.
+- BACKEND geometry implementation and source/precision/actualreplay tests ongoing;
+  DEVOPS supplement transport checker/package awaiting final backend source.
+- Approved SCENARIOS private-source implementation in apps/api: omitted empty
+  context bindings, independent from freshness TTL;0007 episodes+grants tables and
+  nullable runs.private_source_bindings trusted copy. Final DB clock publication
+  fence, fresh post-RR read authorization, revoke/purge denial, scoped capabilities,
+  private external-LLM disabled unless explicitly granted. Only disposable tests;
+  no production migration/purge/provider activation. Source attribution UI separate.
+- ML1 read-only next-scope audit: adjacent n6068+n6069 whole-cell weights total
+ 4390.421; zeroadditional origins covered by oldpair certificate. Fresh native
+  endpoint/turn/physical/geometry proof required. Hcity1800 unchanged; no city or
+  administrative district completeness. ML2 independently auditing n6068 source
+  geometry/maincomponent/obstacles. Important correction: accessID suffix180.7 is
+  along-way OFFSET, not approach distance; accepted approach21.12m (connector21.1).
+  n6069 districtshare661.233 vswholecell661.234 uses distinct floor/round conventions;
+  preserve discrepancy, never normalize silently. No new native/matrixcalls yet.
+
+## Latest continuation — reviewed quota integration and full backend verification
+
+Supersedes older task statuses below. Goal ACTIVE. Integration candidate before
+this note is54ce057d54c5b33c1fa2a5cff907cb026e3b0747. No push or dev merge.
+
+- Integrated3090cef+1e138ec after root source review and independent reviewer
+  acceptance. Shared PostgreSQL account/day quota includes every retry/copyright
+  wire attempt; no default fresh allowance, no uncertain refunds. Decoded/raw
+  credential echoes and duplicate JSON keys rejected before capture/DTO/cache.
+  Reviewer26 independent attacks +48 provider regressions PASS. Root185 focused
+  provider/PG/migration tests PASS28.59s. No actual provider calls or initialized
+  production quota. Migration0006 creates tables only.
+- Root full API/contracts/assistant suite on merged54ce057:1237PASS172.31s with
+  real disposable PostgreSQL schemas. Mypy100sources, Ruff, formatting196files,
+  schema export freshness, web layout/API freshness and product config all PASS.
+  No pending root test sessions at this checkpoint. New geometry/UI changes will
+  still need their own checks and integrated replay.
+- BACKEND implementing approved optional ProofBinding.geometry FileRef to typed
+  geometry-supplement.json (schema waydex-certified-walk-geometry-binding/1,
+  receipt and original_snapshot FileRefs). Original proof binding remains copied
+  unchanged and core equality excludes the optional field. Reuse live verified
+  graph/access/minimum; no second native graph parse. Exact time/index operand
+  stays unchanged and unlinked; separate partial total_seconds metric binds a
+  single walking Journey with microsecond-rounded timeline and explicit precision
+  limitation. No public DTO/formula/tolerance edits approved.
+- DEVOPS found and root independently confirmed hash convention correction:
+  snapshot raw file SHA f616122d81a297917d49fa64bec39a9876c20ef385469a3f4a7cbdf9b271b82d;
+  API canonical e3ac08680e52b9938d4f816690aefd6d15054ccf308cbc780918b4c8d61e4930
+  matches old proof binding and geometry receipt. ML1 compatibility7c57ada uses
+  ensure_ascii=True and is separate. Do not confuse these authorities. Preserve
+  original manifest753efeee in new archive provenance. Geometry staging verified
+  33files/2730733B; old189-file archive and5190/5191/5192 unchanged.
+- FRONTEND implementing explicit calculated-point overview, distinct numeric
+  point totals (zero included), denominator from actual sample inventory, citynull
+  visible, no automatic selection/draft changes. Await delivery and root browser
+  review. DEVOPS preparing fixture-only Chromium CI to close missing browser job;
+  final5193 clean build waits integrated geometry/UI source SHA.
+- SCENARIOS has new read-only design task: carry private Rasp cache validity and
+  authorization through frozen-job admission/execution/publication/result reuse.
+  No implementation approved yet; no provider activation or invented timetable.
+
+## Latest continuation — scope UI, scenarios, geometry and private ingestion
+
+Supersedes older status below. Goal ACTIVE. Root clean candidate before this note
+68e444f690aff2addf56d7be273146c9b62f2e9f, integration/full-product-20261110.
+Still no push/Draft PR/dev merge for this completion wave.
+
+Accepted and integrated since the preceding note:
+- FRONTEND8b074f1: runtime scope guards/preset/human names; root93unit/build/
+  API freshness and27 actual browser cases PASS(1min). Browser fixtures synthetic.
+- SCENARIOSbf7849d: product registry/preflight/worker saved-baseline scenario path,
+  one readonly RR connection, closure before CPU, hash/version/token/proposal checks.
+  Runtime scopes derived without extra proof reread, template inventory empty unless
+  source-bound scenario documents registered. Root actual installed .5 runtime
+  exposes only airport/walk/static localNov10 and no scenario templates.
+- SCENARIOSa616822: full AND partial numeric aggregates cannot omit unknown inputs;
+  mixed known-positive + confirmed-absence category0 stays valid (root identified
+  an initial false rejection before final commit). H stays immutable. Reviewer
+  independently accepted. Root123 scenario/PG/runtime tests PASS8.36s after this
+  final fix; prior161 broader runtime/projection/module tests PASS10.08s.
+- ML21c750fa+9a06234: private expiring direct-rail observation normalizer, zero HTTP.
+  ReviewerP2 fixes0700/0600 final modes +future captures<=now committed; owner315
+  and root315 tests PASS14.44s, reviewer11 focused fixes PASS. Pure preparation,
+  NOT runtime activation: cache-policy frozen-job admission/publication/reuse seam
+  still required; actual key/known allowance and licensed captures absent.
+- ML1a3c549c: exact97-edge geometry supplement, root source review, all32hashes,
+  full native minimum recomputation+geometry replay PASS12.749s/901496832BmacOSRSS.
+  Root1071enginePASS5.93s. Reviewer26geometry/executor+actual independent replay
+  PASS (reviewer did not rerun351562pair proof; root did).392 physical vertices,
+  96 exact network joins, oldtime/index unchanged. Source shape6digit precision;
+  DirectedEdge.forward attested authority, node lattice only necessary sanity,
+  no invented snapping/interpolation/new coverage claim.
+  Actual artifact: /Users/kirito/waydex-phase2-runtime/source-bound-walk/
+  geometry-builds/airport-directed-v2-20261110/runs/airport-geometry-final-20261110-v1.
+  receiptSHA89dcd9238cf1289e243030611303bb2a964b819a978e51aba9bf83a2045a4eab.
+  Root evidence /Users/kirito/waydex-full-runtime/root-certified-geometry-replay.json.
+
+Open owners / next operations:
+- BACKEND3090cef quota NOT integrated yet: reviewerP1 raw-byte key echo scan misses
+  JSON unicode escaped secret in copyright/capture, including no-callback path.
+  Owner fixing decoded keys/values+duplicate JSON keys, no capture/cache on failure,
+  consumed reservation retained.184 ownerPG/mock+70 revieweroffline tests otherwise
+  positive. Migration0006/centralDB explicit policy is not activated anywhere.
+  After separate security commit, BACKEND must propose geometry→Journey precision
+  bridge before edits: Python datetime microseconds vs exact13773.627798430474s.
+  No canonical DTO weakening or formula change. Optional ProofBinding.geometry
+  FileRef is preferred; originalgeometry/proof-binding.json pinned d527… core
+  fields must match new binding excludinggeometry (avoid circular receipt hash).
+  Reuse verifiedgraph/minimum/access; no double100MBparse in production.
+- FRONTEND next task RUNNING: explicit calculated-point overview/selection for
+ 433score result. Distinct available point TOTALs (zero included), notknowncategory
+  withunknowntotal; preservecitynull/allunknown access; no silent selection/draft
+  changes. Own apps/web. No redesign. Root will rerun browser after delivery.
+- DEVOPS RUNNING only geometry packaging/checker plan+exclusive staging; await exact
+  backendoptionalfield and finalsourceSHA before new5193. Preserve5192/oldarchive.
+- Reviewer available after acceptedpartial/ML2/geometry; recheck quota securityfix.
+- ML1/ML2/scenario threads briefly errored403; resumed once, completed clean
+  commits listed above. Original /root/backend remains pending_init ghost even
+  afterinterrupt; realbackendowner is concurrency_backend. Do not recreate work.
+
+Root current static checks PASS: Ruffallareas, mypyAPI/contracts/assistant95files,
+engine157files, ML239files. No pending root exec sessions at this note.
+Actual5192 browser isolatedcontext tab2 denied foreignsavedanalysis/job404; all
+nonwalk/pipeline forms disable unavailable launches. OSMtile errors show honest
+basemap fallback. Tab1 retains original owning real result; latestimage8fc49fe.
+Need final fullAPI/PG afterquota+geometrybridge, freshcleanstack5193, browseractual
+scope/route/pointoverview/Alice replay, finalCI and DraftPR. Fullproduct scope
+remains unmet where genuine accepted transport inputs/coverage are absent.
+
+## Latest continuation — numerical browser acceptance and runtime scopes
+
+This section supersedes older status below. Goal remains ACTIVE; no dev merge.
+Root candidate before the latest update: dbb0de639ed561928951da897b19059f4d112fcd,
+branch integration/full-product-20261110.
+
+- Real root browser5192 job46c9aba0-cdd2-499d-8ac0-48df59f7b453 succeeded;
+  analysis5bf81f85-5787-495b-bee0-8bbc8d4e04a0, saved hash
+  b28fa99fab0123d0c0cfb46dfcdd55e21cb68258a7940dadd5bc76d3c40baefe.
+  Root clicked northpoint on map and visually inspected0.5 red,229.6min,partial,
+  population661.234. Saved API exact0.4971801994143471, citynull. Fresh owning
+  session GET after DEVOPS restart matches. Evidence root-certified-analysis.json
+  and root-certified-ui.png outside Git. Runtime still clean8fc49fe, not latest code.
+- DEVOPSdf33d0a integrated, independent code review of evidence. Six services
+  healthy; dump/restore+restart confirmed. Post-root cgroup peak1009315840B,
+  limit1073741824B, zeroOOM. Private189-file archive restored, no remote upload.
+- Engine1045PASS5.87s; ML2271PASS12.81s. Prior pending sessions completed.
+- SCENARIOS1f6f342 now integrated: exact category/point operand inventory guard,
+  duplicate/substituted/foreign subjects rejected; zero-population unknown task
+  remains visible but is excluded from territorial weighted dependencies.
+  Root95 focused tests PASS4.59s including realPG publication. Reviewer inspected
+  WIP63tests with no finding; committed-SHA confirmation still pending. Runtime
+  hooks WIP. Scenarios remain disabled on actual certified profile.
+- Rootcdf1bad+91d7824: UrbanPassengerScope DTO/generated schemas/pure
+  product_capabilities.urban_passenger_scopes(runtime, certified_service_date=None).
+  None legacy vs[] registered none; no completeness claim, one matching scope.
+  Scope windows are profile/snapshot/proof-day intersection with local timezone.
+  11scope+421contract+41module/scope checks PASS, Ruff/mypy PASS. Runtime hook
+  owned by SCENARIOS, frontend implementation owned by concurrency_frontend.
+  Root reserves bootstrap AnalysisService registered_template_ids hook later.
+- Rootb7aa963 assistant bounded overview fixes live433-score result omitting its
+  only numeric point and citynull.99assistant+1API focus PASS; actual saved-result
+  offline replay+renderer PASS without mutation/calls. Reviewer currently checks
+  scopes and assistant: both subsequently ACCEPTED by independent reviewer
+  (12scope/schema +99assistant tests and actual saved-result replay).
+  Real UI had template/DISABLED, no external AI credentials.
+- BACKEND quota in progress: shared central account/day allowance<=500, explicit
+  already_used/operator baseline, retries and copyright count, no auto-reset or
+  app-DB fallback. Owns test_module_boundaries.py again after root91d7824;
+  private0006 and migration head fixture pending. Nested quota audit consumes slot.
+- ML2 private expiring Rasp observation normalization implemented in owner tree,
+  synthetic tests only, no real requests/data accepted. Key and known quota absent.
+  Official cache/attribution limitations preserved; no invented lifetime or license.
+- FRONTEND mergescdf1bad then scopes UI/tests, preserves user draft, explicit
+  preset action only, exactly1 matching profile, no cross-profile category unions.
+  Also localizing raw metric names seen in actual UI. Agent work not yet accepted.
+- GitHub freshly checked PR26/27 OPEN/DRAFT/CLEAN fiveSUCCESS each; dev unchanged
+  91ed5262b62c16afa3ca619f8140c43917cf8325. Current integration still unpublished.
+- ML1 existing thread resumed on NEW clean worktree
+  /Users/kirito/waydex-full-ml1-geometry, work/full-ml1-geometry, base4b8c26c.
+  Approved separate geometry exporter/verifier for exactly97 certified directed
+  traversals from the pinned local tiles; preserve old artifacts/weights/proofs.
+  Clip using actual pinned Loki projection algorithm/bits, not percent*geodesic;
+  no arbitrary tolerance or actor92-edge polyline. Honest network-only components
+  if physical continuity cannot be verified. Backend handoff after real receipt.
+  New spawn and reviewer reactivation hit thread limit; existing ML1 followup
+  succeeded. Old /root/backend stays pending_init even after interrupt attempt;
+  do not mistake it for active backend implementation (concurrency_backend owns it).
+
+Next: accept scenario omission fix, integrate runtime scopes/templates hooks and
+frontend; independently review quota/ingestion, full backend/PG/static/current
+frontend checks, clean final rebuild and actual browser rerun. Keep full product
+scope: non-walk real data, physical entrance completeness, city indices and public
+artifact restoration remain unmet; independent engineering continues.
+
+## Latest continuation — 18:28 MSK (supersedes all older sections)
+
+Goal remains ACTIVE. Root candidate HEAD before this note is
+`8fc49fe5607f3077c22771c8a9debb50ee4f6e02`. User asked which problems remain;
+answered honestly: city completeness, numerical UI E2E, map selection, missing
+certified route geometry, non-walk transport inputs and scenario integration.
+
+New integrated/independently checked deliveries:
+- Batch b069beb+09108af+2151884: reviewer accepted all three expiry/cache/provider
+  budget fixes and final SQL-clock race. Root63 PG/checkpoint/HTTP/module tests PASS
+  in42.48s. No real production batches activated.
+- ML1 63992f2: explicit .3→.5 canonical point model projection. Reviewer16 controls
+  and actual date/category cases PASS. Root combined scenario/projection114PASS.
+- BACKEND e4d83a2 certified_walk_model: full native+turn+physical recomputation,
+  scoped category/point0.4971801994143471, citynull,215otherpointsunknown, no route
+  geometry/journeys. Root actual adapter5testsPASS11.86s; independent final review
+  still RUNNING. Product hooks released to SCENARIOS after this commit.
+- External actual runtime: `/Users/kirito/waydex-full-runtime/certified-walk-model-v1`;
+  product manifest SHA753efeeeff293196e56208faa8d082c401922167924ff505a51fb768220aa546;
+  proof-binding SHAd52715d0617d53895db04f22695c055667c6c1a3abd250c13c0f5eb200cd0cd2.
+  Relative native/physical/metadata refs preserved; five settings in runtime-settings.json.
+- FRONTEND through aebe756: root83unit/build and20browser tests PASS40.9s. Final
+  screenshot visually inspected with accessible color legend. Canonical urban
+  scores MUST keep calculation_kind=None (aggregate kind forbidden by contract).
+  Map now chooses unique category-free same-subject total, preserving null total
+  over a known category; point scores cannot color the whole territory. Actual
+  e4 production-shaped category+point0.497/unit map case covered. Live5191 remains old.
+- DEVOPS8c8cee5: restored proof/graph allowlist bundle, certified overlay, checker;
+  root19infra tests PASS. Agent preparing clean archived8fc49fe build for isolated
+ 5192/waydex-full-index-1110; wait final reviewer/root approval before first job.
+  Existing5190/5191 preserved. Record actual worker cgroup memory.peak/OOM; approved
+  bounded2GiB override if needed. Root host proof replay previously peaked831799296B.
+- ML2 6418fb3+b31dc90: non-walk blocker matrix integrated. Real3730 Moscow runs
+  source-matched, but no endpoint chains.341 real cargo source-only features and
+  four pipeline locations do not establish transport coverage. No invented vehicle
+  or active non-walk profile; parameterized external builder requires reviewed facts.
+
+SCENARIOS through340ad27 integrated for testing, NOT ACCEPTED. Root114 combined
+focused controls PASS; owner broad1003 passed with two stale migration expectations
+subsequently fixed by ec5fcc0. Reviewer found a new P1: remove point after-journeys,
+change its raw time metric subject.kind to territory (or unit away from seconds),
+mark raw deltas unknown, and full point scores could survive without chain proof.
+Owner is fixing immutable task classification/scope/dependency checks with exact
+pure and PG regressions, separate from uncommitted runtime hook work. This blocks
+scenario acceptance, not numerical profile (no scenario documents enabled there).
+Next runtime integration: Profile.scenarios bounded16 FileRefs, normalized request
+and input hashes, source-valid templates, worker-only proposals; read-only bounded
+baseline repository load, close before engine. Shared product/runtime/bootstrap
+edits must stay with one owner after BACKEND handoff.
+
+Agents: BACKEND completed e4 assembly; FRONTEND completed aebe; ML2 completed b31;
+DEVOPS preparing archive/build; SCENARIOS fixing P1 then runtime module; reviewer
+reviewing e4+8c. ML1 errored403 during remote compaction AFTER clean639 commit and
+successful handoff; work preserved, no need restart/recreate engine implementation.
+
+Pending root tests at checkpoint: engine pytest session67177 and ML2 pytest92674.
+Contracts+assistant517PASS0.65s. An attempted combined engine+ML2 pytest collection
+hit duplicate test_freight module names; rerun separately as CI does, not a code bug.
+Final full API/PG/static/CI, real5192 UI→PG numerical result, scenario runtime/E2E,
+clean restore and Draft PR remain open. No dev merge or paid/Rasp calls.
+
+## Latest checkpoint — index display and source proof (17:55 MSK)
+
+This section supersedes the older checkpoint below. Full objective remains ACTIVE;
+no dev merge, paid provider call or full-product/nationwide readiness is claimed.
+Root branch is `integration/full-product-20261110`, HEAD before this note
+`3c6da54f842f5d71dc2696b16373c86d7a1720e8`. Six Sol6.1/ultra slots remain available;
+no session restart is required. Latest user priority: numerical indices and colors.
+
+- FRONTEND `2c264fd`, `c30d0cd`, `d66ee83`, `b1f6fd0` integrated. Thresholds:
+  <50 red, [50,75) amber, >=75 green; zero numeric, null neutral, partial dotted
+  map boundary and explicit point/territory label. Saved Alice score references
+  and scenario after-journey inventory display integrated. Root independently ran
+  72 unit tests, build, lint and OpenAPI freshness check: PASS. Native Node24 browser
+  runner import failure was fixed by b1f6fd0. Actual browser suite ran 13 PASS then
+  rejected an invalid synthetic last-return fixture (empty source_refs); owner is
+  correcting fixture without weakening validation. Remaining six browser tests
+  were not run. Chromium needs approved unsandboxed launch on macOS; MCP works for
+  root, other agent profile is locked. These UI fixtures are not real-data E2E.
+- ML2 `0897c1c`, `c317980`, `3b8c26f` integrated and reviewed. Immutable .5:
+  79 accepted/51 quarantined schools, unchanged 216 points, geometry/population/
+  connectors. Official city-serving airport catalogue full ONLY 2026-11-10, partial
+  other November days. Root 271 ML2 tests PASS (14.61s). .3→.5 compatibility receipt
+  SHA794149d884066093bc61f985d899fd895b83b33f3ed0b13cc489a14118b670d0.
+- ML1 `14c2bd6`, `5701b75` integrated; root 1029 engine tests PASS (7.04s).
+  Independent reviewer rechecked all native/physical hashes, 351562 turn pairs,
+  97-edge network optimum, four physical binding alternatives, eight segment
+  lengths and pinned 68777-way canonical access policy. Airport model total
+  13773.627798430474s, H1800, existing category formula0.4971801994143471.
+  This is a canonical-access MODEL partial-point proof, not all physical entrances
+  or city completeness. Ordinary Valhalla actor route uses DIFFERENT 92-edge path;
+  do not attach its polyline to certified97-edge duration. Geometry stays null.
+  Final receipts under external `source-bound-walk/builds/closed-turn-v3-0b4724e549/
+  runs/airport-{network,physical}-final-20261110-v4/`. Numerical production
+  projection/runtime/persistence/UI replay remain pending ML1+BACKEND delivery.
+- BACKEND source guards through4d3e4e9 and private scope428af78 integrated; root24
+  source guard/timetable/runtime tests PASS. Batchb069beb integrated for testing,
+  root58 checkpoint/HTTP/migration/module tests PASS with isolated real PG (28.93s),
+  but acceptance is CHANGES_REQUIRED. Reviewer found approval/retention expiry can
+  pass between separate finalize and succeed, and cache reuse can outlive retained
+  observations. BACKEND is fixing final publication under the same transaction and
+  cache expiry bounds. No production batch enabled. Afterwards BACKEND resumes
+  distinct certified_walk_model executor, recomputing the proof in the child.
+- SCENARIOS owns new bridge/projection and trusted scope wiring in services/scenarios,
+  db/validation, db/scenario_journeys, repositories/runs+scenarios. Root c1d3a93
+  after_journeys extension is CHANGES_REQUIRED until these deliveries land. Root
+  e3ef00d scope factory is integrated. Agent fixes through0c0cc8c remain unmerged:
+  source-bound origins/category/leg modes, valid closest-object changes, missing
+  chain proof. Its latest real PG roundtrip/forgery tests12PASS; full wiring commit
+  and root review pending. Scenario runtime hook registration remains outstanding.
+- DEVOPS preparing separate5192/waydex-full-index-1110 clean deployment with fresh
+  volumes and external proof restoration. Preserve5190/5191 unchanged. Await final
+  certified executor/manifest and source SHA before building. Root reserves this
+  handoff and ACCEPTANCE_MATRIX; DEVOPS owns infra and other build instructions.
+
+Live5191 still fee4112d: root personally repeated school547.404s partial/null UI job
+`a153ec33-7b5e-4251-b177-9582c153f3dd`, stored analysis
+`068ac102-9fe3-4ff3-b018-d85dcf19fa7d`, hash
+`07a075bcce1b27745898d9567c3ed1ae7acb95741218f7b2d70424a53e3b6759`.
+Do not claim new frontend or airport index deployed there. Private test PG env:
+`/Users/kirito/waydex-full-runtime/backend-tests.env`, never print secrets; every
+test creates disposable schemas. Final broad tests/real numerical browser E2E,
+scenario hooks/E2E, available profile runtime integrations, clean restore and PR
+remain required. Continue autonomous work after this checkpoint.
+
+## Current execution checkpoint (supersedes the historical restart sections below)
+
+The full objective remains ACTIVE. The runtime now grants seven total slots;
+six Sol6.1/ultra child threads were created and observed active together. No
+further restart is needed for concurrency. Root integration HEAD before this
+checkpoint is `b6d97a299b59b48267c652aa5459bae58699e4e6`.
+
+Integrated, with root review and targeted checks:
+- `a220985`: selected metric #21+ and selection-aware Alice fallback;
+- `140da8c` + `ef826f7`: canonical ScoreClaim/Finding score references,
+  grounded score-only explanation, partial-label validation, combined bounded
+  prompt facts. Independent reviewer accepted after two corrections; 96 assistant
+  tests pass. Frontend score rendering is still a separate pending delivery.
+- ML2 `4bc4087` + `3945011`: checksum-verified local restore and bounded real GTFS
+  normalization. Independent review found and owner fixed frequency-template
+  fabrication and interrupted directory publication. Root reran 25 targeted tests.
+- DEVOPS through `6de315f`: isolated full-stack Compose plus generic product
+  stack/optional walk overlay; pinned images, clean archive build, real PG job,
+  restart and backup/restore. ML2 dependencies declared, lock changes only four
+  workspace edges; isolated package and wheel import smoke passed.
+- BACKEND `a46801d` + `1ec1b2d`: dynamic dispatcher and canonical projections for
+  four kinds/pipeline. Root returned false catalog/population completeness and
+  car-mode/retiming issues; owner fixed, root reran 20 targeted tests. Independent
+  reviewer is now checking these commits. No synthetic production profile enabled.
+- BACKEND `9358da7`: narrowly approved ScoreClaim schema hash extension; original
+  relocation baseline unchanged, root's 30 module-boundary checks pass.
+
+Actual independent root evidence:
+- Real browser UI at `http://127.0.0.1:5190`: school/walk/static request created
+  job `07325501-0125-4f2c-8ed5-658eaa7b22eb`, persisted analysis
+  `7e92ac42-e14f-4e51-98ec-b999906bb20d`, result hash
+  `607fa5d6c97859fb4c8e91d7fffe3b1bca5dd463555a285d033247b7b92d1029`.
+  547.404 seconds, partial, null index, ranking false; two actual map points,
+  no fabricated full route geometry. Browser console had no errors.
+  Screenshot `/Users/kirito/waydex-full-root-real-pilot.png`.
+- Root restored official Moscow GTFS and private Rasp bindings into ignored
+  `waydex-full/data/processed`; no network/provider calls and no raw Git files.
+- Root independently normalized real c894 Nov5–30 (3,730 runs) and called engine:
+  Nov10 09:00 Moscow stop1010377→6930 =2,280s (300wait+1,980ride), 87states,
+  search0.262s, normalization5.354s. Still unknown/minimumfalse/indexnull. Evidence
+  `/Users/kirito/waydex-full-runtime/root-moscow-replay.json`.
+- Broad root API/contracts/assistant+real PG run: 929passed, one schema-baseline
+  failure, 65.85s. That exact failure was corrected via9358da7 and targeted30PASS;
+  final broad integrated rerun remains required after outstanding changes.
+
+Live deployment:
+- DEVOPS isolated walk project on5190 (old baseline containers unchanged).
+- New unified product project `waydex-full-product-1110` on5191, clean source
+  `8ee59ff`; owner real job71670d40-d779-4221-a0c3-2c201b10b6e8 → analysis
+  f1804c26-1393-46c3-bb6d-60a370420b77, partial/null; root has not replayed5191 yet.
+- Pinned generic real walk manifest:
+  `/Users/kirito/waydex-full-runtime/product-walk-v1/manifest.json`, SHA
+  `740fe3ff685b12daca3d9ebad9d719f7bea7994b5a8c00f62706297087a0ae73`.
+  Real .3 snapshot + unchanged derivative walk artifact; no new data/proof claimed.
+- Private test env `/Users/kirito/waydex-full-runtime/backend-tests.env` (0600)
+  supplies A2_TEST_DATABASE_URL; tests must create their own disposable schemas.
+
+Currently running/next deliveries:
+1. BACKEND / work/full-backend: approved bounded durable OD batches, private0005
+   schema/checkpoint IPC, parent-only fenced SQL and atomic final publication.
+   Batches not integrated. Public progress DTO changes require agreement.
+2. FRONTEND / work/full-frontend: five original form/map fixes still uncommitted
+   at last root check. Request current process/checkpoint before assuming stopped.
+   Next merge root ScoreClaim schemas, regenerate own types, render score claims;
+   correct API-mode landing's obsolete "all data demo" copy while retaining labels
+   on illustrative examples. Do not overwrite its worktree.
+3. ML1 / work/full-ml1: b5b30fe NOT ACCEPTED. Reviewer found scalar physical-offset
+   false minimum, overwriteable proof run evidence, and unbound config/alternate
+   tile source. Owner fixing all three, using exclusive versioned run directories.
+   Actual zero-turn network bounds496.3959–535.3959; later min-turn tightening
+  514.4841–520.4841, still not equal. Physical minimum/index remain unknown.
+   Original main receipt was overwritten during exploration; do not cite it as
+   immutable b5b30fe evidence. Require final source/binary/config/tile-bound receipt.
+4. DEVOPS / work/full-devops: source-guard follow-up in progress. GraphReader
+   prioritizes `/data/tiles.tar` over verified directory tiles; reject unexpected
+   archive/remote sources, validate exact tile_dir. Current graph checked read-only:
+   archive absent. Rebuild5191 checker after correction; preserve5190.
+5. ML2 / work/full-ml2: official school entrance plans and NUTEP physical/operational
+   sources. Gym32 official gate is conditional phone-assisted access and differs
+   from mapped south foot=yes gate. Preserve unknown; no unproved bundle promotion.
+6. Reviewer: independent backend review now; re-review final ML1 and infra guards.
+
+Required remaining waves are NOT satisfied by these deliveries: complete numerical
+scope proof, full OD execution/progress, real scenario backend, all available real
+profile integrations, full React acceptance, final clean integrated QA and draft
+PR. Read ACCEPTANCE_MATRIX.md and continue independent implementation. No dev merge,
+paid provider calls or nationwide-readiness claim is authorized by this checkpoint.
+
+## Historical pre-restart checkpoint
+
+## Active user objective
+
+Continue autonomous FULL PRODUCT COMPLETION, not another partial-pilot report.
+Implement all available approved product flows: urban passenger, intercity
+passenger, urban cargo, intercity cargo, separate pipeline, real scenarios,
+saved-result Alice, full API UI, bounded resumable OD execution and reproducible
+stack. Pursue verified numerical indices without weakening input coverage or
+minimum-time proof. If external data blocks one direction, continue independent
+directions. Do not stop after planning or the first successful E2E.
+
+Requirements: docs/PRODUCT_SPEC.md > FORMULAS.md > IMPLEMENTATION.md > contracts.
+Preserve asyncpg/raw SQL, pure ML1, ML2 provenance, existing design and formulas.
+No merge to dev/main without explicit approval, no force push, no permanent
+work-branch deletion. Ordinary commits/push/Draft PR are explicitly authorized.
+No additional paid services without cost estimate and permission. Yandex Rasp
+quota remains 500/day; this new stage has made zero provider/paid calls.
+Do not enable the excluded arbitrary user scenario constructor: use approved
+server templates and explicit separate user execution instead.
+
+## Current branch and baseline
+
+- New root worktree: `/Users/kirito/waydex-full`
+- Branch: `integration/full-product-20261110`
+- Base HEAD: `297accd35fb99f816c2a4d857da09df6ea6b0eda` (PR #27)
+- dev: `91ed5262b62c16afa3ca619f8140c43917cf8325`
+- PR #26: OPEN/DRAFT, `dd46659f2500844285b3c8849b756fe88664a39a`
+- PR #27: OPEN/DRAFT, `297accd35fb99f816c2a4d857da09df6ea6b0eda`
+- PR #26 is an ancestor of #27: symmetric rev-list count `0 15`.
+  Do not merge/cherry-pick #26 a second time.
+- `.venv` in the new worktree installed successfully using pinned uv 0.12.17.
+- No product implementation edits have yet been made in this new stage.
+- Previous proven work is documented in `docs/phase2/REPORT.md`; do not redo it
+  merely to reconstruct history. Reverify mutable environment when needed.
+
+## Concurrency configuration and practical result
+
+User explicitly requests GPT-6.1 Sol **ultra**, up to six simultaneous subagents.
+Chief requested GPT-6 Astra High. Use real collaboration tools, no manual relay.
+
+Observed local runtime: Codex CLI/app-server **0.167.0**;
+`CODEX_HOME=/Users/kirito/.codex-pro`. Mechanism: `collaboration.spawn_agent`.
+`~/.codex/config.toml` had `[agents] max_concurrent_threads_per_session = 2`;
+active-home `.codex-pro/config.toml` had no agents section. No project config
+was present in the repository paths inspected.
+
+Both config files now contain, without disturbing other sections:
+
+```toml
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 6
+default_subagent_model = "gpt-6.1-sol"
+default_subagent_reasoning_effort = "ultra"
+```
+
+`codex app-server --strict-config --print-startup-config` passed before and
+after the write. Both local model catalogs explicitly list Sol `ultra`.
+Backups (0600) and verification JSON are outside Git:
+`/Users/kirito/waydex-full-runtime/config-backups/`,
+`/Users/kirito/waydex-full-runtime/concurrency-verification.json`.
+
+Practical Test A in the OLD session:
+- `/root/concurrency_frontend`: created with Sol/ultra, RUNNING >90s;
+- `/root/concurrency_backend`: created with Sol/ultra, RUNNING concurrently >90s;
+- third `/root/concurrency_ml1`: rejected `agent thread limit reached`;
+- list_agents confirmed root + two RUNNING children;
+- Test B was not run because A failed.
+
+The file change did not change the old session's live limit. Do not claim six
+already worked. After restart/new session, repeat A with three simultaneous
+read-only tasks and, only if successful, B with five. Record actual active
+counts, accepted model/effort and errors. Do not bypass a platform/server cap
+using unrelated tasks or paid APIs. If still capped, continue useful waves.
+
+Official key reference:
+https://learn.chatgpt.com/docs/config-file/config-reference
+
+## Read-only initial findings (need implementation, not merely documentation)
+
+FRONTEND audit completed, no edits/tests/children:
+
+1. `apps/web/src/pages/ApiAtlasPage.tsx:305` and
+   `src/api/adapters/request.ts:114`: urban city dropdown/request ignores
+   `caps.urban_city_names`; national catalog can offer unsupported urban cities.
+2. `request.ts:40`: no snapshot selection/submission even though capabilities
+   publish snapshot coverage and backend `core/registry.py:241` rejects
+   overlapping snapshots unless explicitly selected.
+3. `ApiAtlasPage.tsx:391`: pipeline profile options filter kind but not selected
+   product, causing predictable validation rejection at `request.ts:225`.
+4. `widgets/ApiMap.tsx:71`: available partial scores get same visual treatment
+   as complete ones; distinguish completeness on map/tooltips.
+5. `ApiAtlasPage.tsx:1084`: last_returns render all rows rather than the selected
+   point/destination's rows.
+6. No production comparable-territory ranking renderer; needs contract/backend
+   review before frontend implementation.
+7. `App.tsx:12`: default is demo unless query/env selects API. Production launcher
+   must explicitly choose API; demo cannot represent production analysis.
+
+Existing frontend already supports four forms, separate pipeline controls,
+server scenario proposals/runs, saved-result assistant, date/time/IANA, jobs,
+cancellation, before/after. Reuse these components instead of redesign.
+
+BACKEND initial audit:
+- Only production engine boundary is `apps/api/src/a2_api/adapters/walk_pilot.py`:
+  Kaliningrad, static, walk, school, one point. Full product dispatch absent.
+- Stable seam to retain: `registry()`, async
+  `preflight(AnalysisRequest, AcceptedData) -> None`, sync
+  `calculate(ClaimedJob) -> AnalysisResult | CalculationOutput | ScenarioResult`.
+- Worker already accepts canonical analysis/scenario results, uses subprocess
+  execution, leases and atomic publication. Reuse it.
+- ML1 public engine already has walk/car/traffic/transit/tau/districts,
+  intercity passenger/reference, urban/intercity cargo, pipeline and Scenario
+  Engine v3. Main gap is real input/orchestration/result integration, not formulas.
+- Scenario wire lacks dated event/execution/physical/resource supplements;
+  canonical feasibility only verified/unverified, while engine can produce
+  infeasible; ServiceChange requires whole_trip=True while engine can express
+  departure_tail. Architecture agreement needed before contract edits.
+- `apps/api/docs/phase2-batches.md` is a proposal; no checkpoint runtime exists.
+
+## Next execution order
+
+1. Verify new-session concurrency without product edits; report actual result.
+2. Finish full acceptance matrix from specs, actual entrypoints, real accepted
+   bundles and available runtime; keep independent functional/data/index/nationwide
+   readiness columns. Continue to implementation immediately after contracts.
+3. Give isolated worktrees to BACKEND (dispatcher + batches), ML1 (real graph
+   minimum proof/exporter interface + input adapters), ML2 (data for all profiles
+   + source coverage), DEVOPS (one stack + executors), FRONTEND (verified gaps
+   above + integrated flows). Use reviewer after meaningful deliveries.
+4. Assign one owner to canonical/shared contracts and lockfiles. Reuse approved
+   algorithms; avoid simultaneous edits of shared files.
+5. Keep first numerical index as P0, but do not let catalog/route-proof external
+   blockers stop handlers, scenarios, batches, UI and deployment.
+
+## Existing useful local environment
+
+- Previous worktrees remain: `/Users/kirito/waydex-phase2`, `waydex-real-e2e`,
+  `waydex-phase2-{backend,data,ml1}`; never delete permanent work branches.
+- Pinned uv binary:
+  `/Users/kirito/.cache/uv/archive-v0/6qHRHWN-oUgk86kx/uv-0.12.17.data/scripts/uv`
+- Node/npm pins: node24.22.2 / npm11.19.1 via npm exec packages.
+- Baseline external runtime: `/Users/kirito/waydex-e2e-runtime`.
+- Phase2 fresh graph and evidence: `/Users/kirito/waydex-phase2-runtime/clean-graph`.
+- PBF SHA: `769a6a6ac552b534057f2480b88f1c2d0709636761ab6d08483efe69c1e97b69`.
+- `.3` AcceptedData hash: `882030e7dc77f1216bd4ef2c289e65946af814d8b25c4332ddc7cb1f496b416f`.
+- PostgreSQL container `waydex-real-e2e-postgres-1`, port55447, local dev database
+  a2; isolate new work in a unique schema or Compose project. Do not alter old
+  data destructively. Existing migration head0004.
+- Existing Valhalla ports8007 (baseline),8027 (fresh phase2); inspect before use.
+- Previous Phase2 UI5189/API8038/schemaa2_phase2_revision3 may still run;
+  runtime processes are not a reproducible deployment contract.
+- Existing ignored ML2 handoff at
+  `/Users/kirito/Desktop/chemp-case/ml2-handoff-2026-11-10`; GTFS/bindings raw files
+  were copied into old worktrees' ignored data/processed, not this new checkout.
+- Raw data, keys, tiles, database files remain outside Git.
+
+The user suggested restarting now to load the updated concurrency. Preserve
+this checkpoint and continue the full mission; do not treat restart as completion.

@@ -31,6 +31,14 @@ class WalkEndpoint:
     correlation: ValhallaCorrelation | None
     evidence_refs: tuple[str, ...]
 
+    def nonzero_approach_has_zero_time(self, *, access_distance_m: float = 0.0) -> bool:
+        """A rounded zero cannot establish time for a known physical approach."""
+        return (
+            self.connector is not None
+            and self.connector.seconds == 0
+            and (access_distance_m > 0 or self.location != self.access_location)
+        )
+
 
 @dataclass(frozen=True)
 class WalkCatalog:

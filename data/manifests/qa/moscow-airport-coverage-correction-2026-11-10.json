@@ -1,0 +1,275 @@
+{
+  "schema": "waydex-moscow-airport-coverage-correction/1",
+  "source_snapshot_id": "moscow-urban-2026-11-10.2",
+  "target_snapshot_id": "moscow-urban-2026-11-10.3",
+  "source_manifest_sha256": "84df02d264702906319b5db9f82235c1f3b221a5dcf27edb9facc6d52d950fa5",
+  "reason": "IATA и регулярное сообщение OurAirports в радиусе60км подтверждают кандидатов, но не полный официальный перечень пассажирских аэропортов, обслуживающих Москву, включая объекты за границей и за радиусом выгрузки. Официальное исчерпывающее основание и его применимость к датам01–30.11.2026 не подтверждены; полнота категории, ближайший объект по всей категории и индекс unknown.",
+  "source_roles": {
+    "osm": "Physical candidate identity/location and deterministic access projection",
+    "ourairports": "Candidate IATA and scheduled-service flag, not a city-serving roster",
+    "60km_radius": "Engineering candidate extraction policy, not an absence proof"
+  },
+  "airport_candidate_ids_preserved": [
+    "moscow-airport-relation-2673994",
+    "moscow-airport-relation-2855902",
+    "moscow-airport-relation-3300255",
+    "moscow-airport-relation-9375998",
+    "moscow-airport-relation-9772442"
+  ],
+  "airport_candidate_statuses_preserved": {
+    "moscow-airport-relation-2673994": "accepted",
+    "moscow-airport-relation-2855902": "accepted",
+    "moscow-airport-relation-3300255": "quarantined",
+    "moscow-airport-relation-9375998": "accepted",
+    "moscow-airport-relation-9772442": "accepted"
+  },
+  "original_airport_coverage": [
+    {
+      "collection": "destinations",
+      "city_id": "moscow",
+      "category": "airport",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "complete",
+      "confirmed_absence": false,
+      "reason": "Аэродромы с IATA в 60 км, регулярные рейсы подтверждены OurAirports",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107",
+        "ourairports:dataset:ourairports.airports-20261108"
+      ]
+    }
+  ],
+  "corrected_airport_coverage": [
+    {
+      "collection": "destinations",
+      "city_id": "moscow",
+      "category": "airport",
+      "freight_kind": null,
+      "mode": null,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-11-30",
+      "status": "partial",
+      "confirmed_absence": false,
+      "reason": "IATA и регулярное сообщение OurAirports в радиусе60км подтверждают кандидатов, но не полный официальный перечень пассажирских аэропортов, обслуживающих Москву, включая объекты за границей и за радиусом выгрузки. Официальное исчерпывающее основание и его применимость к датам01–30.11.2026 не подтверждены; полнота категории, ближайший объект по всей категории и индекс unknown.",
+      "evidence_ids": [
+        "osm:dataset:osm_geofabrik.central-fed-district-261107",
+        "ourairports:dataset:ourairports.airports-20261108"
+      ]
+    }
+  ],
+  "unchanged_collection_sha256": {
+    "evidence": "065dde007d445f38aaba9c545387cf8872c14a659bb53e04a2667bf92c8ea2a4",
+    "territories": "b8d6cb2970455c2a4652b70f773e59ef83f3df04faca806fac25b0fd55238236",
+    "population_cells": "755e5734efa97ef61b367fee45e0cbfa1156a0e6aa85b3b3e50e22db9d3fab48",
+    "sample_points": "81477f8d585c82c5c1e88c72b858bb65550772c58bb36ca25e6116de49be98a8",
+    "destinations": "9b084db3f7bea5ae26b6bcd5079dca5b7f46b721f5f61e701608b2db07eb98ba",
+    "category_ownership": "fdcae39c96bbac75406e3fd2ada7e00d9cdd460b2242b0ab74c2a55fa28f526e",
+    "access_nodes": "9169bafd044d8a6522d599b8cebd441a1de31929aafba161eaf92738cef59614",
+    "freight_nodes": "6e798dcc7db2dd53b48aefa7a884f2d0b8126426257d52266352f3bdf6e56a3a",
+    "freight_sites": "fc6bd8b7a898de085d2822ca8dfe69ef3bbe740af52b8d72791f9a69d8f192a0",
+    "walk_connectors": "0336ecf935cdc4b3ff971db86f84be8e90f94665dd17bdcd022efcc08b3581c3",
+    "transit_stops": "6bd1918a5504733b573957860e95b14a06446d9e23739c508a12114e8f287538"
+  },
+  "source_versions_unchanged": [
+    {
+      "source_id": "osm_geofabrik",
+      "dataset_id": "osm_geofabrik.central-fed-district-261107",
+      "retrieved_at": "2026-11-08T20:44:13.056842Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "d28d118c9269138ae33ea6561d4e29e492bd9954e6dd088f80b7a3b1372b77f2",
+        "size_bytes": 884829631
+      },
+      "license": {
+        "name": "ODbL-1.0",
+        "url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "status": "permitted",
+        "attribution": "© OpenStreetMap contributors"
+      },
+      "publication_date": "2026-11-07"
+    },
+    {
+      "source_id": "ghsl_pop",
+      "dataset_id": "ghsl_pop.e2025-r2023a-100m-r3c21",
+      "retrieved_at": "2026-11-08T20:43:58.174941Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "31605219ef3125f41f5ed016fe3fe99985d6ea1e1cad601f44b9650eed1413d2",
+        "size_bytes": 25487186
+      },
+      "license": {
+        "name": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "status": "permitted",
+        "attribution": "Schiavina M. et al., GHS-POP R2023A, European Commission JRC"
+      },
+      "publication_date": "2023-04-01"
+    },
+    {
+      "source_id": "ourairports",
+      "dataset_id": "ourairports.airports-20261108",
+      "retrieved_at": "2026-11-08T13:42:04.183446Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "5754df21f25cb08d2def8a80b3eb609ddc52a4217afa8eb48280b6428c06e78f",
+        "size_bytes": 12758284
+      },
+      "license": {
+        "name": "Public Domain",
+        "url": "https://ourairports.com/data/",
+        "status": "permitted",
+        "attribution": null
+      },
+      "publication_date": null
+    },
+    {
+      "source_id": "mgfoms_med_org",
+      "dataset_id": "mgfoms_med_org.20261108",
+      "retrieved_at": "2026-11-08T20:46:10.485465Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "18ca95c06f275b9256dbf61481c3dd4d4f6a9c7c49b0fec6aada753a074d17c0",
+        "size_bytes": 2838103
+      },
+      "license": {
+        "name": "Общедоступная официальная информация государственного учреждения: используются только факты (ст. 1259 ГК РФ)",
+        "url": "https://www.mgfoms.ru/",
+        "status": "permitted",
+        "attribution": "МГФОМС, mgfoms.ru"
+      },
+      "publication_date": null
+    },
+    {
+      "source_id": "obrnadzor_accreditation",
+      "dataset_id": "obrnadzor_accreditation.20261108",
+      "retrieved_at": "2026-11-08T15:47:36.873635Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "116ecc476619a89de6d2aea2b9eec9802e9f341374bb52cb5cd9bbc862d91bc6",
+        "size_bytes": 352506550
+      },
+      "license": {
+        "name": "Открытые данные федерального органа исполнительной власти: используются только факты (ст. 1259 ГК РФ)",
+        "url": "https://isga.obrnadzor.gov.ru/",
+        "status": "permitted",
+        "attribution": "Рособрнадзор, ИС ГА"
+      },
+      "publication_date": "2026-11-08"
+    },
+    {
+      "source_id": "mos_ground_transport",
+      "dataset_id": "mos_ground_transport.60663-20260504",
+      "retrieved_at": "2026-11-09T20:46:27Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "2f23c19f89addf9f6bbb4fa9d51b8cee5de034d9b84905ea61f9a25005d72d40",
+        "size_bytes": 440
+      },
+      "license": {
+        "name": "Открытые данные Правительства Москвы (data.mos.ru), Методические рекомендации по публикации открытых данных v3.0; лицензия в паспорте не указана — общедоступная информация (149-ФЗ, ст. 7), источник указывается",
+        "url": "https://data.mos.ru/",
+        "status": "permitted",
+        "attribution": "Департамент транспорта и развития дорожно-транспортной инфраструктуры города Москвы, data.mos.ru"
+      },
+      "publication_date": "2026-05-04"
+    },
+    {
+      "source_id": "mos_ground_transport",
+      "dataset_id": "mos_ground_transport.60662-20261005",
+      "retrieved_at": "2026-11-09T20:46:06Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "85f5e1241854b3b1c012ae4ab78d2cf3400020147135b2984970dddf2c012199",
+        "size_bytes": 655461
+      },
+      "license": {
+        "name": "Открытые данные Правительства Москвы (data.mos.ru), Методические рекомендации по публикации открытых данных v3.0; лицензия в паспорте не указана — общедоступная информация (149-ФЗ, ст. 7), источник указывается",
+        "url": "https://data.mos.ru/",
+        "status": "permitted",
+        "attribution": "Департамент транспорта и развития дорожно-транспортной инфраструктуры города Москвы, data.mos.ru"
+      },
+      "publication_date": "2026-10-05"
+    },
+    {
+      "source_id": "mos_ground_transport",
+      "dataset_id": "mos_ground_transport.60664-20261005",
+      "retrieved_at": "2026-11-09T20:46:02Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "2e90d587d7d1ccc63717c63f2eb51ba243d507bda34e7b2eeabc23eb2b2de7d4",
+        "size_bytes": 24612
+      },
+      "license": {
+        "name": "Открытые данные Правительства Москвы (data.mos.ru), Методические рекомендации по публикации открытых данных v3.0; лицензия в паспорте не указана — общедоступная информация (149-ФЗ, ст. 7), источник указывается",
+        "url": "https://data.mos.ru/",
+        "status": "permitted",
+        "attribution": "Департамент транспорта и развития дорожно-транспортной инфраструктуры города Москвы, data.mos.ru"
+      },
+      "publication_date": "2026-10-05"
+    },
+    {
+      "source_id": "mos_ground_transport",
+      "dataset_id": "mos_ground_transport.60665-20261005",
+      "retrieved_at": "2026-11-09T20:46:23Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "d43604a6aa024838cd4db6e06d9b7e28f8d04932ac92da6cbb7b8592ff9b0fb3",
+        "size_bytes": 1349323
+      },
+      "license": {
+        "name": "Открытые данные Правительства Москвы (data.mos.ru), Методические рекомендации по публикации открытых данных v3.0; лицензия в паспорте не указана — общедоступная информация (149-ФЗ, ст. 7), источник указывается",
+        "url": "https://data.mos.ru/",
+        "status": "permitted",
+        "attribution": "Департамент транспорта и развития дорожно-транспортной инфраструктуры города Москвы, data.mos.ru"
+      },
+      "publication_date": "2026-10-05"
+    },
+    {
+      "source_id": "mos_ground_transport",
+      "dataset_id": "mos_ground_transport.60666-20261005",
+      "retrieved_at": "2026-11-09T20:45:59Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "c2e462715926986340ee795eeefecff963c3e7ae6fbfa6309de1c469f0a2d069",
+        "size_bytes": 15483
+      },
+      "license": {
+        "name": "Открытые данные Правительства Москвы (data.mos.ru), Методические рекомендации по публикации открытых данных v3.0; лицензия в паспорте не указана — общедоступная информация (149-ФЗ, ст. 7), источник указывается",
+        "url": "https://data.mos.ru/",
+        "status": "permitted",
+        "attribution": "Департамент транспорта и развития дорожно-транспортной инфраструктуры города Москвы, data.mos.ru"
+      },
+      "publication_date": "2026-10-05"
+    },
+    {
+      "source_id": "mos_ground_transport",
+      "dataset_id": "mos_ground_transport.60661-20261023",
+      "retrieved_at": "2026-11-09T20:47:02Z",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "dfa4230968f16270b751d707a826a23a882685fa6bbaf69a659ccf928e2bebea",
+        "size_bytes": 144495574
+      },
+      "license": {
+        "name": "Открытые данные Правительства Москвы (data.mos.ru), Методические рекомендации по публикации открытых данных v3.0; лицензия в паспорте не указана — общедоступная информация (149-ФЗ, ст. 7), источник указывается",
+        "url": "https://data.mos.ru/",
+        "status": "permitted",
+        "attribution": "Департамент транспорта и развития дорожно-транспортной инфраструктуры города Москвы, data.mos.ru"
+      },
+      "publication_date": "2026-10-23"
+    }
+  ],
+  "all_other_category_coverage_unchanged": true,
+  "original_bundle_unchanged": true,
+  "raw_source_retrievals": 0,
+  "new_accepted_objects": 0,
+  "category_minimum_proven": false,
+  "index_ready": false,
+  "needed_before_full": [
+    "Authoritative exhaustive city-serving passenger-airport roster, including outside the boundary",
+    "Official destination identity joins and dated scheduled-passenger applicability",
+    "Separately reviewed complete model routing/physical proofs for any numerical index"
+  ]
+}

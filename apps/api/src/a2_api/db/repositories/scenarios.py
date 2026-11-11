@@ -1,5 +1,6 @@
 """Transactional PostgreSQL jobs and immutable runs; no ORM at runtime."""
 
+import json
 from collections.abc import Sequence
 from uuid import NAMESPACE_URL, uuid5
 
@@ -19,12 +20,97 @@ from a2_api.core.errors import DomainError
 from a2_api.core.jobs import (
     ClaimedJob,
     V2JobContext,
+    cache_fingerprint,
+    request_hash,
 )
+from a2_api.core.private_sources import validate_bindings
+from a2_api.db.repositories.private_sources import PrivateSourceRepository, decoded
 from a2_api.db.repositories.runs import RunsRepository
-from a2_api.db.rows import RunResult, _proposal_from_row
+from a2_api.db.rows import RunResult, _check_scope, _proposal_from_row
 
 
 class ScenariosRepository(RunsRepository):
+    async def load_scenario_baseline(self, claim: ClaimedJob) -> AnalysisResult:
+        """Bounded read-only child-worker lookup; close before route calculation."""
+        context = claim.context
+        request = claim.request
+        if (
+            claim.kind != "scenario"
+            or not isinstance(context, V2JobContext)
+            or not isinstance(request, ScenarioRunRequest)
+            or context.scenario_proposal is None
+        ):
+            raise DomainError(422, "unsupported_scenario", "Saved scenario command required")
+        async with self.pool.acquire() as connection:
+            async with connection.transaction(isolation="repeatable_read", readonly=True):
+                row = await connection.fetchrow(
+                    "SELECT *,lease_expires_at>now() AS lease_active FROM jobs "
+                    "WHERE job_id=$1 AND kind='scenario' AND status='running' AND access_scope=$2",
+                    claim.job.job_id,
+                    context.access_scope,
+                )
+                if row is None:
+                    raise DomainError(404, "unknown_id", "Scenario calculation job not found")
+                _check_scope(row, context.access_scope)
+                payload = json.loads(row["payload"])
+                if (
+                    not row["lease_active"]
+                    or row["claim_token"] != claim.claim_token
+                    or payload
+                    != {
+                        "request": request.model_dump(mode="json"),
+                        "context": context.model_dump(mode="json"),
+                    }
+                    or row["input_hash"] != request_hash(request)
+                    or row["cache_key"] != claim.cache_key
+                    or row["cache_key"] != cache_fingerprint("scenario", request, context)
+                    or row["code_version"] != context.code_version
+                    or row["schema_version"] != "2"
+                    or row["bundle_id"] != context.snapshot_id
+                    or request.baseline_analysis_id != context.analysis_id
+                    or request.scenario_id != context.scenario_proposal.scenario_id
+                ):
+                    raise DomainError(
+                        409, "incompatible_versions", "Scenario calculation context changed"
+                    )
+                command_row = await connection.fetchrow(
+                    "SELECT payload,content_hash FROM scenario_proposals WHERE scenario_id=$1 AND access_scope=$2",
+                    request.scenario_id,
+                    context.access_scope,
+                )
+                if (
+                    command_row is None
+                    or _proposal_from_row(command_row) != context.scenario_proposal
+                ):
+                    raise DomainError(
+                        409, "incompatible_versions", "Saved scenario proposal changed"
+                    )
+                baseline = await self._read_run(
+                    connection, context.analysis_id, context.access_scope
+                )
+                original, _, _ = await self._frozen_job_context(
+                    connection, context.analysis_id, context.access_scope, "analysis"
+                )
+                if (
+                    not isinstance(baseline, AnalysisResult)
+                    or original.scenario_proposal is not None
+                    or original.analysis_id != context.analysis_id
+                    or original.normalized_request != context.normalized_request
+                    or original.versions != context.versions
+                    or original.snapshot_hash != context.snapshot_hash
+                    or original.private_source_bindings != context.private_source_bindings
+                    or baseline.request != context.normalized_request
+                    or baseline.versions != context.versions
+                    or baseline.result_hash != context.scenario_proposal.baseline_result_hash
+                ):
+                    raise DomainError(
+                        409, "incompatible_versions", "Saved scenario baseline changed"
+                    )
+        await PrivateSourceRepository(self.pool).read_access(
+            baseline.analysis_id, context.access_scope, expected_hash=baseline.result_hash
+        )
+        return baseline
+
     async def _check_scenario_inputs(
         self, connection: asyncpg.Connection, request: ScenarioRunRequest, context: V2JobContext
     ) -> AnalysisResult:
@@ -45,6 +131,16 @@ class ScenariosRepository(RunsRepository):
         )
         if not isinstance(baseline, AnalysisResult):
             raise DomainError(404, "unknown_id", "Analysis not found")
+        metadata = await connection.fetchval(
+            "SELECT private_source_bindings FROM runs WHERE run_id=$1", baseline.analysis_id
+        )
+        bindings = validate_bindings(decoded(metadata)) if metadata is not None else ()
+        if bindings != context.private_source_bindings:
+            raise DomainError(
+                409,
+                "incompatible_versions",
+                "Scenario private source binding differs from baseline",
+            )
         if (
             baseline.request != context.normalized_request
             or baseline.versions != context.versions
@@ -80,7 +176,13 @@ class ScenariosRepository(RunsRepository):
             raise DomainError(409, "incompatible_versions", "Scenario result differs from job kind")
         baseline = await self._check_scenario_inputs(connection, claim.request, context)
         assert context.scenario_proposal is not None
-        self._validate_scenario_semantics(result, baseline, context.scenario_proposal)
+        self._validate_scenario_semantics(
+            result,
+            baseline,
+            context.scenario_proposal,
+            endpoint_scope=context.scenario_endpoint_scope,
+            expected_snapshot_hash=context.snapshot_hash,
+        )
 
     async def get_proposal(self, scenario_id: str, scope: str) -> ScenarioProposal:
         row = await self.pool.fetchrow(
@@ -90,7 +192,9 @@ class ScenariosRepository(RunsRepository):
         )
         if row is None:
             raise DomainError(404, "unknown_id", "Scenario proposal not found")
-        return _proposal_from_row(row)
+        proposal = _proposal_from_row(row)
+        await PrivateSourceRepository(self.pool).read_access(proposal.baseline_analysis_id, scope)
+        return proposal
 
     async def get_proposals(self, analysis_id: str, scope: str) -> list[ScenarioProposal]:
         baseline = await self.get_run(analysis_id, scope)
@@ -101,6 +205,9 @@ class ScenariosRepository(RunsRepository):
             "ORDER BY created_at,scenario_id",
             analysis_id,
             scope,
+        )
+        await PrivateSourceRepository(self.pool).read_access(
+            analysis_id, scope, expected_hash=baseline.result_hash
         )
         return [_proposal_from_row(row) for row in rows]
 

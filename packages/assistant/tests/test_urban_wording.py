@@ -1,0 +1,132 @@
+"""TEST_ONLY saved facts; server wording makes no network or formula calls."""
+
+import json
+from copy import deepcopy
+
+import pytest
+from a2_assistant import core
+from a2_contracts.v2.results import AnalysisResult
+from test_assistant import analysis, assistant, explain_saved, reply, score_analysis
+
+
+@pytest.mark.parametrize("value,partial", [(25.0, False), (0.497, True), (None, True)])
+def test_saved_walk_formula_and_completeness_preserve_claims(value, partial):
+    saved = score_analysis(value=value, partial=partial)
+    original = saved.model_dump_json()
+    answer = core.template_explanation(saved, "request", "DISABLED")
+    text = core.render_explanation(answer, saved)
+    assert "Индекс городской категории: I = 100 × 2^(−T/H)" in text
+    assert "по классу площади города" in text
+    assert "T — подтверждённое минимальное полное время пути в принятой модели" in text
+    assert "Чем дольше путь, тем ниже индекс" in text
+    assert "отдельного разрешённого сценария" in text
+    assert ("Предварительная оценка" in text) == partial
+    assert ("а не нулевую доступность" in text) == (value is None)
+    assert ("Одного наблюдаемого маршрута недостаточно" in text) == (value is None)
+    assert answer.status == "template" and answer.model_id is None
+    assert answer.proposals == []
+    assert answer.findings[0].score_claims[0].value == value
+    assert saved.model_dump_json() == original
+
+
+def test_generated_walk_wording_remains_fixed_and_exact_saved_time():
+    saved = analysis()
+    selection = core._ModelSelection.model_validate(
+        {"findings": [{"metric_id": "travel-time", "explanation_code": "travel_time"}]}
+    )
+    built = core._build_content(selection, saved, frozenset())
+    core._validate_content(built, saved, frozenset())
+    assert built.findings[0].claims[0].value == 1800.0
+    assert core._URBAN_FORMULA_NOTE in built.limitations
+    assert built.proposals == []
+    forged = built.model_copy(update={"limitations": ["H = 3600 секунд"]})
+    with pytest.raises(ValueError, match="limitation_invalid"):
+        core._validate_content(forged, saved, frozenset())
+
+
+def test_walk_notes_cannot_be_copied_to_other_mode_or_missing_selected_facts():
+    saved = analysis()
+    payload = deepcopy(saved.model_dump(mode="json"))
+    payload["request"]["passenger_mode"] = "private_car"
+    other = AnalysisResult.model_validate(payload)
+    assert not core._urban_passenger_notes(other)
+    selection = core._ModelSelection.model_validate(
+        {"findings": [{"metric_id": "travel-time", "explanation_code": "travel_time"}]}
+    )
+    built = core._build_content(selection, other, frozenset())
+    built.limitations.append(core._URBAN_FORMULA_NOTE)
+    with pytest.raises(ValueError, match="limitation_invalid"):
+        core._validate_content(built, other, frozenset())
+    context = core.ExplanationRequest(
+        selection={"entity_kind": "sample_point", "entity_id": "TEST_ONLY-no-facts"}
+    )
+    answer = core.template_explanation(saved, "request", "NO_SELECTED_METRICS", context=context)
+    assert not answer.findings and core._URBAN_FORMULA_NOTE not in answer.limitations
+
+
+def test_saved_limitations_remain_bounded_with_readable_notes():
+    saved = analysis().model_copy(update={"limitations": [f"TEST_ONLY-{i}" for i in range(20)]})
+    answer = core.template_explanation(saved, "request", "DISABLED")
+    assert len(answer.limitations) <= 20
+    assert core._URBAN_FORMULA_NOTE in answer.limitations
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("value,partial", [(25.0, False), (0.497, True), (None, True)])
+async def test_prompt_supplies_exact_saved_status_code_for_scores(value, partial):
+    saved = score_analysis(value=value, partial=partial)
+    code = "saved_value" if value is not None else "unknown"
+    agent, transport, *_ = assistant(
+        [reply({"findings": [{"score_id": "accessibility", "explanation_code": code}]})]
+    )
+    answer = await explain_saved(agent, saved, point="point")
+    assert answer.status == "generated"
+    messages = transport.calls[0]["messages"]
+    facts = json.loads(messages[1]["content"])["saved_facts"]
+    assert facts["scores"][0]["required_explanation_code"] == code
+    assert "COPY explanation_code EXACTLY" in messages[0]["content"]
+    assert "Never use completeness, reason_code" in messages[0]["content"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "status", ["available", "unknown", "not_applicable", "methodology_pending", "pending"]
+)
+async def test_prompt_supplies_exact_saved_status_code_for_metrics(status):
+    saved = analysis()
+    if status != "available":
+        payload = saved.model_dump(mode="json")
+        payload["status"] = "partial"
+        payload["metrics"][0].update(status=status, value=None, reason_code="TEST_ONLY-unavailable")
+        if status == "pending":
+            payload["metrics"][0]["dependency_job_id"] = "TEST_ONLY-dependent-job"
+        saved = AnalysisResult.model_validate(payload)
+    code = "saved_value" if status == "available" else status
+    agent, transport, *_ = assistant(
+        [reply({"findings": [{"metric_id": "travel-time", "explanation_code": code}]})]
+    )
+    answer = await explain_saved(agent, saved, point="point")
+    assert answer.status == "generated"
+    facts = json.loads(transport.calls[0]["messages"][1]["content"])["saved_facts"]
+    assert facts["metrics"][0]["required_explanation_code"] == code
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("value,partial", [(25.0, False), (0.497, True), (None, True)])
+async def test_public_transport_generated_and_fallback_use_saved_category_formula(value, partial):
+    payload = score_analysis(value=value, partial=partial).model_dump(mode="json")
+    payload["request"]["passenger_mode"] = "public_transport"
+    saved = AnalysisResult.model_validate(payload)
+    original = saved.model_dump_json()
+    fallback = core.template_explanation(saved, "request", "DISABLED")
+    assert core._URBAN_FORMULA_NOTE in fallback.limitations
+    assert (core._URBAN_UNKNOWN_NOTE in fallback.limitations) == (value is None)
+    code = "saved_value" if value is not None else "unknown"
+    agent, *_ = assistant(
+        [reply({"findings": [{"score_id": "accessibility", "explanation_code": code}]})]
+    )
+    generated = await explain_saved(agent, saved, point="point")
+    assert generated.status == "generated" and fallback.status == "template"
+    assert core._URBAN_FORMULA_NOTE in generated.limitations
+    assert generated.findings[0].score_claims[0].value == value
+    assert saved.model_dump_json() == original

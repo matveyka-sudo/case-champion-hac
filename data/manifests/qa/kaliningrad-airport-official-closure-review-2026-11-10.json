@@ -1,0 +1,198 @@
+{
+  "schema": "a2-kaliningrad-airport-official-closure-review-v1",
+  "review_date": "2026-11-10",
+  "acceptance_state": "awaiting_independent_scope_review",
+  "accepted_bundle_promotion": false,
+  "index_ready": false,
+  "source_manifest": "data/manifests/research/kaliningrad-airport-official-sources-2026-11-10.json",
+  "legacy_coverage_issue": {
+    "bundles": [
+      "kaliningrad-urban-2026-11-10.3",
+      "kaliningrad-urban-2026-11-10.4"
+    ],
+    "unchanged": true,
+    "old_rule": "nonempty accepted airport subset with IATA and scheduled_service flag within60km => complete",
+    "finding": "The engineering distance cutoff does not prove an exhaustive city-serving passenger-airport roster. OurAirports flag alone is not an operational timetable.",
+    "future_ingestion": "partial if at least one airport is accepted, otherwise unknown; official source closure requires separate review"
+  },
+  "proposed_category_membership": {
+    "city_id": "kaliningrad",
+    "category": "airport",
+    "criterion": "Officially identified passenger airports serving the city, including airports outside its municipal boundary.",
+    "proposed_destination_ids": [
+      "kaliningrad-airport-way-59178160"
+    ],
+    "roster_count": 1,
+    "radius_used_as_completeness_proof": false,
+    "municipal_boundary_used_as_exclusion": false,
+    "facts": [
+      {
+        "source_observation_id": "tic-airport-roster",
+        "locator": "Page heading and first paragraph of main article",
+        "fact": "The regional TIC identifies Khrabrovo as the only passenger airport in Kaliningrad Region and directly describes travel from Kaliningrad.",
+        "supports": "Exhaustive regional passenger-airport assertion and city service, independent of60km geometry."
+      },
+      {
+        "source_observation_id": "tic-publisher-documents",
+        "locator": "Информация об учреждении",
+        "fact": "The publisher identifies itself as АНО КО «Туристский информационный центр Калининградской области» and lists this domain as its official page.",
+        "supports": "Publisher identity, not roster closure alone."
+      },
+      {
+        "source_observation_id": "tic-charter-2026",
+        "locator": "PDFp1 approval24.02.2026№51-ОД; p2§1.5",
+        "fact": "The charter identifies Kaliningrad Region, represented by its Ministry of Culture and Tourism, as the founder.",
+        "supports": "Authority of the regional tourism publisher.",
+        "inspection": "PDF rendered and visually inspected; no claim of cryptographic signature verification."
+      },
+      {
+        "source_observation_id": "tic-founder-order",
+        "locator": "PDFp1, ministry order09.04.2020№121-ОД, paragraphs1and4",
+        "fact": "The regional ministry established the TIC and assigned tourist information services as its primary activity.",
+        "supports": "Publisher founding and information role.",
+        "inspection": "PDF rendered and visually inspected."
+      },
+      {
+        "source_observation_id": "favt-civil-airfields-pdf-20261109",
+        "locator": "PDFp1, Северо-ЗападноеМТУ, row8; p9 helicopter section",
+        "fact": "The complete national civil registry dated09.11.2026 lists Калининград(Храброво), registration№109 dated02.02.2015, operatorАО«Аэропорт«Храброво», classБ. The separate state-complexYantar entry is under heliports.",
+        "supports": "Current official civil-airfield identity. The table alone does not classify every airport as passenger or prove service by a distance radius."
+      },
+      {
+        "source_observation_id": "favt-federal-airports",
+        "locator": "Full federal-airport table, row24",
+        "fact": "Калининград(Храброво) is explicitly classified as the airport of a regional administrative center and an international airport.",
+        "supports": "Official Kaliningrad city-service designation, outside municipal-boundary restriction."
+      },
+      {
+        "source_observation_id": "khrabrovo-current-board-web-extraction",
+        "locator": "Extracted operator pageL49–L60 date;L62–L114 flightsSU6334andSU1005;L170–L184S71212",
+        "fact": "The operator page reports10November2026 and scheduled passenger departures from Kaliningrad to SaintPetersburg and Moscow.",
+        "supports": "Observed current passenger-flight operation; no travel time or frequency fed into accessibility weights.",
+        "limitations": "Web extraction may be cached. DirectHTTP13,602-byte spinner is not used as board evidence."
+      }
+    ],
+    "scope_questions_for_independent_reviewer": [
+      "The TIC exhaustiveness assertion is regional. Together with federal city designation, does it close the product roster of officially city-serving passenger airports?",
+      "The proof does not assert that every foreign airport a Kaliningrad resident might use is officially serving Kaliningrad. No foreign airport is excluded merely by60km distance.",
+      "The published TIC page is undated; registry publication is09.11.2026 and operator observation is10.11.2026. Validity must remain explicit."
+    ]
+  },
+  "existing_designated_access_policy": {
+    "policy_commit": "0897c1c",
+    "receipt": {
+      "local_artifact": "/Users/kirito/waydex-full-runtime/ml2/designated-access-2026-11-10/airport-canonical-access-policy-replay.json",
+      "sha256": "acb9a9ec103e81d8365ce987b38a092a4a47d53fe8991500a972d660a86b206b",
+      "size_bytes": 2326
+    },
+    "policy": {
+      "schema": "a2-canonical-access-policy-replay-v1",
+      "snapshot_id": "kaliningrad-urban-2026-11-10.3",
+      "source_graph_version": "osm_geofabrik.kaliningrad-261107:osm-walk-network-v1:main-component",
+      "walk_rules": "osm-walk-network-v1",
+      "metric_crs": "EPSG:32634",
+      "component_selection": "maximum sum of metric way lengths; equal totals choose smallest union-component root",
+      "nearest_way_policy": "minimum metric point-to-way distance; ties within1e-3m choose smallest numeric OSM way ID",
+      "tie_tolerance_m": 0.001,
+      "offset_policy": "round(projected along-way offset in metres,1), then interpolate on selected metric way",
+      "stored_coordinate_policy": "inverse-project then round longitude and latitude to7decimal places",
+      "implementation_sha256": {
+        "access.py": "6f0cdff601e8da05d330fdc4f7c56f0b18a37467c9a0b7f9df72199e83358ac6",
+        "build_city.py": "488eebef1b506cb9cde77021a96fe0095ef21626a333f501a9b16a64219a36e6",
+        "osm.py": "70a7d668fd6ed4bda78d998bd0dfd102bf7bb70677cda6ce6615094325c2fa12"
+      },
+      "walk_ways_table_sha256": "c3a26ec9e9a27a5d79e3fcc139037bfc4c43d87009249f80145d3774cf3a2770",
+      "main_component_way_refs_sha256": "24bd2996d504d80ea7cbcff8f9aa755f99c797447d4abcb07b052222071960d0",
+      "main_component_stats": {
+        "rules": "osm-walk-network-v1",
+        "ways_total": 71094,
+        "ways_main_component": 68777,
+        "components": 871,
+        "main_component_length_share": 0.9654
+      },
+      "endpoint_replays": [
+        {
+          "physical_node_id": "physical:point:kaliningrad-utm34n-1km-v1-e468-n6069-p",
+          "selected_access_node_id": "walk:way:1446727254:7.6",
+          "selected_way": "way/1446727254",
+          "offset_m": 7.6,
+          "source_coordinates_replayed": {
+            "lon": 20.5101437,
+            "lat": 54.771198
+          },
+          "distance_tie_candidates": [
+            [
+              "way/1446727254",
+              4.596257077393164
+            ]
+          ]
+        },
+        {
+          "physical_node_id": "physical:destination:kaliningrad-airport-way-59178160",
+          "selected_access_node_id": "walk:way:724608365:60.5",
+          "selected_way": "way/724608365",
+          "offset_m": 60.5,
+          "source_coordinates_replayed": {
+            "lon": 20.5847735,
+            "lat": 54.8828675
+          },
+          "distance_tie_candidates": [
+            [
+              "way/724608365",
+              53.13737659220876
+            ]
+          ]
+        }
+      ]
+    },
+    "main_component_roster": {
+      "local_artifact": "/Users/kirito/waydex-full-runtime/ml2/designated-access-2026-11-10/canonical-main-component-way-refs.json",
+      "sha256": "24bd2996d504d80ea7cbcff8f9aa755f99c797447d4abcb07b052222071960d0",
+      "size_bytes": 1115643
+    },
+    "meaning": "Complete only for existing versioned designated-access model, not all real-world doors."
+  },
+  "physical_and_native_handoff": {
+    "receipt": {
+      "local_artifact": "/Users/kirito/waydex-full-runtime/ml2/designated-access-2026-11-10/point-airport-receipt.json",
+      "sha256": "0d0af39b4e536f14000bae235346e44c69c74a3cb6914af74261d7165c241203",
+      "size_bytes": 17388
+    },
+    "snapshot_id": "kaliningrad-urban-2026-11-10.3",
+    "source_scope_id": "4a6be39e9cc9c04fa19e082b46a4203b10233d9b8543a55d9adfc8031d274de8",
+    "native_export_sha256": "c57b91ad0615c892933fafc99376b74a6683aca1607ee0fb8d283ee3d8a64994",
+    "point_id": "kaliningrad-utm34n-1km-v1-e468-n6069-p",
+    "destination_id": "kaliningrad-airport-way-59178160",
+    "native_alternatives": [
+      2,
+      2
+    ],
+    "exact_external_binary64_weights": [
+      {
+        "endpoint": 0,
+        "physical_seconds": 3.3072961250236115,
+        "physical_ratio": "7447368798130111/2251799813685248",
+        "offset_seconds": 0.005680946649544263,
+        "offset_ratio": "3274842779391899/576460752303423488"
+      },
+      {
+        "endpoint": 1,
+        "physical_seconds": 38.28325998332795,
+        "physical_ratio": "1346972464026903/35184372088832",
+        "offset_seconds": 0.02675008854766382,
+        "offset_ratio": "7710188084184739/288230376151711744"
+      }
+    ],
+    "full_physical_entrance_roster_complete": false,
+    "no_intermediate_decimal_rounding": true,
+    "city_score": null,
+    "retained_other_sample_points": 215,
+    "school_catalogue_remains_partial": true
+  },
+  "promotion_requirements": [
+    "Independent reviewer accepts exact category membership and source identity binding.",
+    "Any revised accepted coverage/source set uses a new immutable snapshot; published originals remain unchanged.",
+    "Final weighted receipt binds official roster evidence and exact existing designated-access policy to accepted source/build/profile/native endpoint identities.",
+    "ML1 engine validates exact weighted minimum; no standalone ML2-computed index is a product output."
+  ]
+}

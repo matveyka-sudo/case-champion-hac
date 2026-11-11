@@ -7,7 +7,7 @@ from uuid import uuid4
 from a2_assistant import FlashAssistant
 from a2_contracts.api import Job
 from a2_contracts.common import canonical_hash
-from a2_contracts.v2.api import Capabilities, ErrorDetail, JobAccepted, JobView
+from a2_contracts.v2.api import BatchProgress, Capabilities, ErrorDetail, JobAccepted, JobView
 from a2_contracts.v2.assistant import Explanation, ExplanationRequest
 from a2_contracts.v2.base import VersionRefs
 from a2_contracts.v2.dataset import AcceptedData
@@ -20,8 +20,10 @@ from a2_contracts.v2.scenarios import (
 )
 
 from a2_api.assistant.explanations import explain as _explain
+from a2_api.core.batches import BatchExecution, BatchPlan
 from a2_api.core.errors import DomainError, unavailable
-from a2_api.core.jobs import V2JobContext
+from a2_api.core.job_admission import Admission
+from a2_api.core.jobs import V2JobContext, batch_context_fingerprint, request_hash
 from a2_api.core.registry import ProductRegistry
 from a2_api.core.scope import territory_ids as territory_ids
 from a2_api.db.repositories.jobs import JobRepository
@@ -29,7 +31,7 @@ from a2_api.services.scenarios import proposals as _proposals
 from a2_api.services.scenarios import scenario as _scenario
 from a2_api.services.scenarios import scenario_result as _scenario_result
 
-Preflight = Callable[[AnalysisRequest, AcceptedData], Awaitable[None]]
+Preflight = Callable[[AnalysisRequest, AcceptedData], Awaitable[BatchPlan | None]]
 DEFAULT_TEMPLATES = frozenset({"coordinate_transfer", "additional_departure"})
 
 
@@ -52,6 +54,7 @@ class AnalysisService:
         self.preflight = preflight
         self.assistant = assistant
         self.registered_template_ids = registered_template_ids
+        self._admission: Admission[JobAccepted] = Admission()
 
     def capabilities(self) -> Capabilities:
         result = self.registry.capabilities()
@@ -91,13 +94,37 @@ class AnalysisService:
         replay = await repository.replay("analysis", request, scoped_key, scope=scope)
         if replay is not None:
             return JobAccepted(job_id=replay.job_id, status=replay.status, request_id=request_id)
+        accepted = await self._admission.run(
+            (scope, scoped_key),
+            request_hash(request),
+            lambda: self._admit(repository, request, scoped_key, request_id, scope),
+        )
+        return accepted.model_copy(update={"request_id": request_id})
+
+    async def close_admission(self) -> None:
+        await self._admission.close()
+
+    async def _admit(
+        self,
+        repository: JobRepository,
+        request: AnalysisRequest,
+        scoped_key: str,
+        request_id: str,
+        scope: str,
+    ) -> JobAccepted:
+        # An outer replay can return a captured miss after the previous producer
+        # has committed and released its slot. Recheck after reserving this one.
+        replay = await repository.replay("analysis", request, scoped_key, scope=scope)
+        if replay is not None:
+            return JobAccepted(job_id=replay.job_id, status=replay.status, request_id=request_id)
         self._engine(request.analysis_kind)
         normalized = self.registry.normalize(request)
         snapshot = self.registry.resolve_snapshot(normalized)
         normalized = normalized.model_copy(update={"snapshot_id": snapshot.snapshot_id})
+        batch_plan = None
         if self.preflight is not None:
             # I/O readiness only. CPU calculations stay in the separate worker process.
-            await asyncio.wait_for(self.preflight(normalized, snapshot), timeout=30)
+            batch_plan = await asyncio.wait_for(self.preflight(normalized, snapshot), timeout=30)
         assert self.code_version is not None
         context = V2JobContext(
             schema_version="2",
@@ -117,16 +144,47 @@ class AnalysisService:
             access_scope=scope,
             cache_valid_until=self.registry.required_cache_valid_until(normalized, snapshot),
         )
+        if batch_plan is not None:
+            plan = BatchPlan.model_validate(batch_plan.model_dump(mode="json"))
+            context = context.model_copy(
+                update={
+                    "cache_valid_until": min(
+                        plan.valid_until,
+                        context.cache_valid_until or plan.valid_until,
+                    )
+                }
+            )
+            execution = BatchExecution.model_validate(
+                {
+                    **plan.model_dump(mode="json"),
+                    "access_scope": scope,
+                    "context_fingerprint": batch_context_fingerprint(context),
+                }
+            )
+            context = V2JobContext.model_validate(
+                {
+                    **context.model_dump(mode="json"),
+                    "batch_execution": execution.model_dump(mode="json"),
+                }
+            )
         accepted = await repository.enqueue(
             "analysis", request, context, scoped_key, request_id, scope=scope
         )
         return JobAccepted(job_id=accepted.job_id, status=accepted.status, request_id=request_id)
 
-    async def job(self, job_id: str, scope: str) -> JobView:
-        job = await self._repository().get_job(job_id, scope=scope)
-        return await self._view(job, scope)
+    async def job(self, job_id: str, scope: str, *, include_progress: bool = False) -> JobView:
+        progress = None
+        if include_progress:
+            from a2_api.db.repositories.job_progress import job_with_progress
 
-    async def _view(self, job: Job, scope: str) -> JobView:
+            job, progress = await job_with_progress(self._repository(), job_id, scope)
+        else:
+            job = await self._repository().get_job(job_id, scope=scope)
+        return await self._view(job, scope, progress=progress)
+
+    async def _view(
+        self, job: Job, scope: str, *, progress: BatchProgress | None = None
+    ) -> JobView:
         analysis_id = scenario_run_id = None
         if job.status == "succeeded":
             assert job.run_id is not None
@@ -158,6 +216,7 @@ class AnalysisService:
             analysis_id=analysis_id,
             scenario_run_id=scenario_run_id,
             error=error,
+            progress=progress,
         )
 
     async def cancel(self, job_id: str, scope: str) -> JobView:

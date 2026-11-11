@@ -1,4 +1,50 @@
 {
+  "$defs": {
+    "LineGeometry": {
+      "additionalProperties": false,
+      "properties": {
+        "coordinates": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "minItems": 2,
+          "title": "Coordinates",
+          "type": "array"
+        },
+        "evidence_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "type": {
+          "const": "LineString",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "coordinates",
+        "evidence_refs"
+      ],
+      "title": "LineGeometry",
+      "type": "object"
+    }
+  },
   "additionalProperties": false,
   "properties": {
     "duration_seconds": {
@@ -23,6 +69,18 @@
       "minLength": 1,
       "title": "From Node Id",
       "type": "string"
+    },
+    "geometry": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LineGeometry"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Actual geometry of this movement leg only; does not establish approach or whole-journey geometry."
     },
     "kind": {
       "enum": [

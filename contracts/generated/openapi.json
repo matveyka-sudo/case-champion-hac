@@ -76,6 +76,14 @@
             "title": "Counts",
             "type": "array"
           },
+          "evidence_groups": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceGroup"
+            },
+            "maxItems": 8192,
+            "title": "Evidence Groups",
+            "type": "array"
+          },
           "evidence_refs": {
             "items": {
               "$ref": "#/components/schemas/EvidenceRef"
@@ -249,6 +257,41 @@
         "title": "AreaOption",
         "type": "object"
       },
+      "BatchProgress": {
+        "additionalProperties": false,
+        "description": "Persisted admitted OD batches, not route validity or numerical coverage.\n\nAll batches can be saved while calculation/validation/publication is still\npending. No duration, ETA or percentage of the whole calculation is implied.",
+        "properties": {
+          "completed_batches": {
+            "maximum": 4096.0,
+            "minimum": 0.0,
+            "title": "Completed Batches",
+            "type": "integer"
+          },
+          "phase": {
+            "enum": [
+              "routing",
+              "finalizing",
+              "published",
+              "stopped"
+            ],
+            "title": "Phase",
+            "type": "string"
+          },
+          "total_batches": {
+            "maximum": 4096.0,
+            "minimum": 1.0,
+            "title": "Total Batches",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "completed_batches",
+          "total_batches",
+          "phase"
+        ],
+        "title": "BatchProgress",
+        "type": "object"
+      },
       "BoundaryNodeSets": {
         "additionalProperties": false,
         "properties": {
@@ -412,6 +455,20 @@
             },
             "title": "Urban City Names",
             "type": "array"
+          },
+          "urban_passenger_scopes": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/UrbanPassengerScope"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Urban Passenger Scopes"
           }
         },
         "required": [
@@ -651,6 +708,32 @@
           "error"
         ],
         "title": "ErrorEnvelope",
+        "type": "object"
+      },
+      "EvidenceGroup": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 4096,
+            "minItems": 2,
+            "title": "Evidence Ids",
+            "type": "array"
+          },
+          "group_id": {
+            "pattern": "^evidence-group:[a-f0-9]{64}$",
+            "title": "Group Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "group_id",
+          "evidence_ids"
+        ],
+        "title": "EvidenceGroup",
         "type": "object"
       },
       "EvidenceRef": {
@@ -943,8 +1026,24 @@
               "type": "string"
             },
             "maxItems": 20,
-            "minItems": 1,
             "title": "Metric Ids",
+            "type": "array"
+          },
+          "score_claims": {
+            "items": {
+              "$ref": "#/components/schemas/ScoreClaim"
+            },
+            "maxItems": 20,
+            "title": "Score Claims",
+            "type": "array"
+          },
+          "score_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Score Ids",
             "type": "array"
           },
           "text": {
@@ -1426,6 +1525,16 @@
             "minimum": 1.0,
             "title": "Poll After Seconds",
             "type": "integer"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BatchProgress"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "request_id": {
             "minLength": 1,
@@ -1928,6 +2037,17 @@
             "minLength": 1,
             "title": "From Node Id",
             "type": "string"
+          },
+          "geometry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LineGeometry"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Actual geometry of this movement leg only; does not establish approach or whole-journey geometry."
           },
           "kind": {
             "enum": [
@@ -2895,6 +3015,14 @@
             "title": "Editable Local Graph",
             "type": "boolean"
           },
+          "evidence_groups": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceGroup"
+            },
+            "maxItems": 8192,
+            "title": "Evidence Groups",
+            "type": "array"
+          },
           "evidence_refs": {
             "items": {
               "$ref": "#/components/schemas/EvidenceRef"
@@ -3002,6 +3130,14 @@
           "after": {
             "$ref": "#/components/schemas/ScenarioValues"
           },
+          "after_journeys": {
+            "items": {
+              "$ref": "#/components/schemas/JourneyResult"
+            },
+            "maxItems": 10000,
+            "title": "After Journeys",
+            "type": "array"
+          },
           "assumptions": {
             "items": {
               "minLength": 1,
@@ -3034,6 +3170,14 @@
           "editable_local_graph": {
             "title": "Editable Local Graph",
             "type": "boolean"
+          },
+          "evidence_groups": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceGroup"
+            },
+            "maxItems": 8192,
+            "title": "Evidence Groups",
+            "type": "array"
           },
           "evidence_refs": {
             "items": {
@@ -3377,6 +3521,35 @@
           "ranking_eligible"
         ],
         "title": "Score",
+        "type": "object"
+      },
+      "ScoreClaim": {
+        "additionalProperties": false,
+        "properties": {
+          "score_id": {
+            "minLength": 1,
+            "title": "Score Id",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "score_id",
+          "value"
+        ],
+        "title": "ScoreClaim",
         "type": "object"
       },
       "ServiceChange": {
@@ -3983,6 +4156,108 @@
           "priorities"
         ],
         "title": "UrbanPassengerRequest",
+        "type": "object"
+      },
+      "UrbanPassengerScope": {
+        "additionalProperties": false,
+        "description": "One registered input scope, not a promise of complete metrics or admission.\n\nAll selections must match the same scope; unions across scopes are unsafe.\n``whole_city`` permits an absent request area_id, not a full-city rating.\nThe time interval includes valid_from and excludes valid_to.",
+        "properties": {
+          "area_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Area Ids",
+            "type": "array"
+          },
+          "categories": {
+            "items": {
+              "enum": [
+                "adult_polyclinic",
+                "child_polyclinic",
+                "kindergarten",
+                "school",
+                "college_university",
+                "rail_terminal",
+                "bus_terminal",
+                "airport",
+                "shopping_center"
+              ],
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Categories",
+            "type": "array"
+          },
+          "city_id": {
+            "minLength": 1,
+            "title": "City Id",
+            "type": "string"
+          },
+          "passenger_modes": {
+            "items": {
+              "enum": [
+                "walk",
+                "public_transport",
+                "private_car"
+              ],
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Passenger Modes",
+            "type": "array"
+          },
+          "scope_id": {
+            "minLength": 1,
+            "title": "Scope Id",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "minLength": 1,
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "traffic_modes": {
+            "items": {
+              "enum": [
+                "static",
+                "typical",
+                "live",
+                "historical"
+              ],
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Traffic Modes",
+            "type": "array"
+          },
+          "valid_from": {
+            "format": "date-time",
+            "title": "Valid From",
+            "type": "string"
+          },
+          "valid_to": {
+            "format": "date-time",
+            "title": "Valid To",
+            "type": "string"
+          },
+          "whole_city": {
+            "title": "Whole City",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "scope_id",
+          "snapshot_id",
+          "city_id",
+          "passenger_modes",
+          "categories",
+          "traffic_modes",
+          "valid_from",
+          "valid_to",
+          "whole_city"
+        ],
+        "title": "UrbanPassengerScope",
         "type": "object"
       },
       "VehicleConstraints": {
@@ -4646,6 +4921,16 @@
             "schema": {
               "title": "Job Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_progress",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Progress",
+              "type": "boolean"
             }
           }
         ],

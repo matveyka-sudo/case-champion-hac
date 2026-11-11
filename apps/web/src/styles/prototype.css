@@ -2159,6 +2159,9 @@ body.mode-atlas {
   background: var(--surface-2);
   gap: 2px;
 }
+.segc[aria-label="Город"] {
+  grid-auto-columns: minmax(0, 1fr);
+}
 .segc button {
   display: flex;
   align-items: center;
@@ -2175,6 +2178,11 @@ body.mode-atlas {
   line-height: 1.2;
   cursor: pointer;
   text-align: center;
+}
+.segc[aria-label="Город"] button,
+.segc[aria-label="Город"] button > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .segc button .lucide {
   font-size: 16px;

@@ -4,9 +4,14 @@ import json
 from datetime import date, datetime
 from typing import cast
 
+from a2_assistant.evidence import leaf_references
+from a2_assistant.focus import focused_metrics, focused_scores
 from a2_assistant.tools import AccessScope, ToolName, ToolRejected, validate_tool
 from a2_contracts.common import canonical_hash
+from a2_contracts.v2.assistant import ExplanationRequest, ExplanationSelection
 from a2_contracts.v2.dataset import AcceptedData
+from a2_contracts.v2.evidence import EvidenceResolver, require_result_evidence
+from a2_contracts.v2.results import Metric, Score
 from a2_contracts.v2.retrieval import EvidenceSearchRequest, EvidenceSearchResult
 from pydantic import JsonValue, TypeAdapter
 
@@ -72,6 +77,10 @@ class SavedTools:
         ]
         if not saved:
             raise ToolRejected()
+        try:
+            resolvers = {result.analysis_id: require_result_evidence(result) for result in saved}
+        except ValueError:
+            raise ToolRejected() from None
         allowed_territories = frozenset(
             t for result in saved for t in self._territories(result.request)
         )
@@ -115,20 +124,40 @@ class SavedTools:
                 metric = next((m for m in result.metrics if m.metric_id == args["metric_id"]), None)
                 if metric is None:
                     raise DomainError(404, "unknown_id", "Metric not found")
-                payload = metric.model_dump(mode="json")
-                payload["source_refs"] = metric.source_refs[:20]
-                payload["references_truncated"] = len(metric.source_refs) > 20
-                return cast(JsonValue, payload)
+                return self._fact(metric, resolvers[result.analysis_id], limit=20)
+            focus = (
+                ExplanationRequest(selection=ExplanationSelection.model_validate(args["selection"]))
+                if args.get("selection") is not None
+                else None
+            )
+            selected_metrics = focused_metrics(result, focus)
+            selected_scores = focused_scores(result, focus)
+            if (
+                focus is not None
+                and focus.selection is not None
+                and focus.selection.entity_kind != "territory"
+            ):
+                selected_scores.sort(
+                    key=lambda score: (
+                        score.subject.category is not None,
+                        score.status != "available",
+                    )
+                )
+                selected_metrics.sort(
+                    key=lambda metric: (metric.journey_id is None, metric.status != "available")
+                )
             return {
                 "analysis_id": result.analysis_id,
                 "status": result.status,
                 "metrics": [
-                    cast(JsonValue, m.model_dump(mode="json")) for m in result.metrics[:20]
+                    self._fact(m, resolvers[result.analysis_id]) for m in selected_metrics[:10]
                 ],
-                "scores": [cast(JsonValue, s.model_dump(mode="json")) for s in result.scores[:20]],
+                "scores": [
+                    self._fact(s, resolvers[result.analysis_id]) for s in selected_scores[:10]
+                ],
                 "limitations": list(result.limitations[:20]),
-                "truncated": len(result.metrics) > 20
-                or len(result.scores) > 20
+                "truncated": len(selected_metrics) > 10
+                or len(selected_scores) > 10
                 or len(result.limitations) > 20,
                 "result_hash": result.result_hash,
             }
@@ -261,6 +290,22 @@ class SavedTools:
             ][:10],
             "saved_results_only": True,
         }
+
+    @staticmethod
+    def _fact(
+        fact: Metric | Score, resolver: EvidenceResolver, *, limit: int | None = None
+    ) -> JsonValue:
+        payload = fact.model_dump(mode="json")
+        field = "source_refs" if isinstance(fact, Metric) else "evidence_refs"
+        refs = fact.source_refs if isinstance(fact, Metric) else fact.evidence_refs
+        leaves = leaf_references(refs, resolver)
+        # Keep legacy get_analysis bytes; bound expanded groups before the existing tool byte cap.
+        grouped = any(ref not in resolver.leaf_ids for ref in refs)
+        if limit is not None or grouped:
+            maximum = 20 if limit is None else limit
+            payload[field] = leaves[:maximum]
+            payload["references_truncated"] = len(leaves) > maximum
+        return cast(JsonValue, payload)
 
     @staticmethod
     def _territories(request: object) -> frozenset[str]:

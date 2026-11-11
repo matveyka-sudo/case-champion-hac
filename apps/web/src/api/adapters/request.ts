@@ -7,6 +7,8 @@ import type {
   Territory,
 } from "../types";
 import { decode } from "../validation";
+import { urbanScopeAvailability } from "./urbanScopes";
+export const passengerModes = { pt: "public_transport", walk: "walk", car: "private_car" } as const;
 export const categoryIds = {
   c01: "adult_polyclinic",
   c02: "child_polyclinic",
@@ -44,16 +46,17 @@ export interface ApiDraft {
   originId: string;
   destinationId: string;
   areaId: string;
+  snapshotId: string;
   date: string;
   slot: number;
   traffic: Schemas["Capabilities"]["traffic_modes"][number];
-  travel: "pt" | "walk" | "car";
+  travel: "" | "pt" | "walk" | "car";
   cats: Partial<Record<keyof typeof categoryIds, number>>;
   paxModes: string[];
   cargoModes: string[];
   profileId: string;
   pipeline: boolean;
-  pipelineProduct: "oil" | "oilprod" | "gas";
+  pipelineProduct: "" | "oil" | "oilprod" | "gas";
   direction: "out" | "in";
 }
 export function initialDraft(): ApiDraft {
@@ -64,6 +67,7 @@ export function initialDraft(): ApiDraft {
     originId: "",
     destinationId: "",
     areaId: "",
+    snapshotId: "",
     date: new Date().toISOString().slice(0, 10),
     slot: 34,
     traffic: "static",
@@ -73,9 +77,59 @@ export function initialDraft(): ApiDraft {
     cargoModes: ["road", "rail", "air", "water"],
     profileId: "",
     pipeline: false,
-    pipelineProduct: "oilprod",
+    pipelineProduct: "",
     direction: "out",
   };
+}
+export const pipelineProducts = {
+  oil: "oil",
+  oilprod: "oil_products",
+  gas: "gas",
+} as const;
+export function isUrbanCity(t: Territory, caps: Schemas["Capabilities"]) {
+  return t.level === "city" && caps.urban_city_names.includes(t.name);
+}
+export function eligibleSnapshots(
+  d: ApiDraft,
+  territories: Territory[],
+  caps: Schemas["Capabilities"],
+): Schemas["SnapshotAvailability"][] {
+  const urban = d.kind.startsWith("urban_");
+  const ids = urban ? [d.cityId] : [d.originId, d.destinationId];
+  const places = ids.map((id) =>
+    territories.find(
+      (t) => t.territory_id === id && t.level === (urban ? "city" : d.level),
+    ),
+  );
+  if (
+    places.some((t) => !t) ||
+    (!urban && d.originId === d.destinationId) ||
+    (urban && !isUrbanCity(places[0]!, caps))
+  )
+    return [];
+  try {
+    const instant = Temporal.Instant.from(
+      departureAt(d.date, d.slot, places[0]!.timezone),
+    );
+    const days = places.map((t) =>
+      instant.toZonedDateTimeISO(t!.timezone).toPlainDate().toString(),
+    );
+    return (caps.snapshots || []).filter(
+      (s) =>
+        s.valid_from !== null &&
+        s.valid_to !== null &&
+        ids.every((id) => s.territory_ids.includes(id)) &&
+        days.every((day) => day >= s.valid_from! && day <= s.valid_to!),
+    );
+  } catch {
+    return [];
+  }
+}
+export function resolvedSnapshotId(
+  d: ApiDraft,
+  eligible: Schemas["SnapshotAvailability"][],
+) {
+  return d.snapshotId || (eligible.length === 1 ? eligible[0].snapshot_id : "");
 }
 export function departureAt(date: string, slot: number, zone: string) {
   if (!Number.isInteger(slot) || slot < 0 || slot > 95)
@@ -121,6 +175,8 @@ export function toRequest(
       urban ? "cityId" : "originId",
       "Выберите территорию из серверного каталога",
     );
+  if (urban && !isUrbanCity(origin, caps))
+    throw new DraftError("cityId", "Город не поддерживает городской анализ");
   if (
     !urban &&
     (!territories.some(
@@ -140,10 +196,29 @@ export function toRequest(
     !caps.areas?.some((a) => a.city_id === d.cityId && a.area_id === d.areaId)
   )
     throw new DraftError("areaId", "Район не принадлежит выбранному городу");
+  const departure = departureAt(d.date, d.slot, origin.timezone);
+  let snapshotId: string | undefined = d.snapshotId || undefined;
+  if (caps.snapshots !== undefined) {
+    const eligible = eligibleSnapshots(d, territories, caps);
+    snapshotId = resolvedSnapshotId(d, eligible);
+    if (!eligible.length)
+      throw new DraftError(
+        "snapshotId",
+        "Нет подтверждённого набора данных для выбранных территорий и даты",
+      );
+    if (!snapshotId)
+      throw new DraftError("snapshotId", "Выберите один из доступных наборов данных");
+    if (!eligible.some((s) => s.snapshot_id === snapshotId))
+      throw new DraftError(
+        "snapshotId",
+        "Выбранный набор данных не покрывает территории и дату — выберите другой",
+      );
+  }
   const base = {
     schema_version: "2" as const,
-    departure_at: departureAt(d.date, d.slot, origin.timezone),
+    departure_at: departure,
     traffic_mode: d.traffic,
+    ...(snapshotId ? { snapshot_id: snapshotId } : {}),
   };
   const city = {
     city_id: d.cityId,
@@ -155,6 +230,7 @@ export function toRequest(
     destination_id: d.destinationId,
   };
   if (d.kind === "urban_passenger") {
+    if (!d.travel) throw new DraftError("travel", "Выберите способ передвижения для выбранного города");
     const entries = Object.entries(d.cats) as [
       keyof typeof categoryIds,
       number,
@@ -173,16 +249,18 @@ export function toRequest(
         { 1: "low", 2: "medium", 3: "high" } as const
       )[weight as 1 | 2 | 3];
     }
-    return decode("UrbanPassengerRequest", {
+    const request = decode("UrbanPassengerRequest", {
       ...base,
       ...city,
       analysis_kind: d.kind,
-      passenger_mode: (
-        { pt: "public_transport", walk: "walk", car: "private_car" } as const
-      )[d.travel],
+      passenger_mode: passengerModes[d.travel],
       categories: Object.keys(priorities),
       priorities,
     });
+    const scope = urbanScopeAvailability({ cityId: request.city_id, snapshotId: snapshotId || "", departureAt: request.departure_at,
+      areaId: request.area_id || "", mode: request.passenger_mode, traffic: request.traffic_mode, categories: request.categories }, caps.urban_passenger_scopes);
+    if (scope.problem) throw new DraftError(scope.problem.field, scope.problem.message);
+    return request;
   }
   if (d.kind === "intercity_passenger") {
     const modes: Record<string, string> = {
@@ -223,11 +301,10 @@ export function toRequest(
     });
   }
   if (d.pipeline) {
-    const product = (
-      { oil: "oil", oilprod: "oil_products", gas: "gas" } as const
-    )[d.pipelineProduct];
+    const product = d.pipelineProduct && pipelineProducts[d.pipelineProduct];
+    if (!product || !caps.pipeline_products.includes(product))
+      throw new DraftError("pipelineProduct", "Выберите доступный продукт трубопровода");
     if (
-      !caps.pipeline_products.includes(product) ||
       profile.kind !== "pipeline" ||
       profile.product !== product
     )

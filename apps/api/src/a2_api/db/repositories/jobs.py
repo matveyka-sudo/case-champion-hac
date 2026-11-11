@@ -34,6 +34,7 @@ from a2_api.core.jobs import (
     cache_fingerprint,
     request_hash,
 )
+from a2_api.db.repositories.private_sources import PrivateSourceRepository
 from a2_api.db.repositories.scenarios import ScenariosRepository
 from a2_api.db.rows import (
     RunResult,
@@ -113,6 +114,10 @@ class JobRepository(ScenariosRepository):
         schema_version = "2" if isinstance(context, V2JobContext) else "1"
         async with self.pool.acquire() as connection:
             async with connection.transaction():
+                if isinstance(context, V2JobContext) and context.private_source_bindings:
+                    await PrivateSourceRepository.check(
+                        connection, context.private_source_bindings, context.access_scope
+                    )
                 if isinstance(context, V2JobContext) and isinstance(request, ScenarioRunRequest):
                     await self._check_scenario_inputs(connection, request, context)
                 cached_row = await connection.fetchrow(
@@ -242,6 +247,18 @@ class JobRepository(ScenariosRepository):
         payload["result_hash"] = canonical_hash(payload)
         # Revalidate metadata before publishing it; backend owns the saved content hash.
         saved = type(result).model_validate(payload)
+        checkpoint_repository = checkpoint_receipt = None
+        if (
+            isinstance(claim.context, V2JobContext)
+            and claim.context.batch_execution is not None
+            and not claim.context.private_source_bindings
+        ):
+            from a2_api.db.repositories.checkpoints import CheckpointRepository
+
+            checkpoint_repository = CheckpointRepository(self)
+            # Raw files are freshly verified before the publication transaction,
+            # while heartbeat and cancellation can still update the job row.
+            checkpoint_receipt = await checkpoint_repository.prepare_publication(claim)
         try:
             async with self._publication_connection() as connection:
                 async with connection.transaction():
@@ -285,16 +302,36 @@ class JobRepository(ScenariosRepository):
                         if isinstance(saved, ProfileResult)
                         else "comparison"
                     )
-                    await connection.execute(
-                        "INSERT INTO runs(run_id,result_kind,payload,result_hash,schema_version,access_scope) "
-                        "VALUES($1,$2,$3::jsonb,$4,$5,$6)",
-                        run_id,
-                        result_kind,
-                        saved.model_dump_json(),
-                        saved.result_hash,
-                        "2" if isinstance(claim.context, V2JobContext) else "1",
-                        owner,
-                    )
+                    if (
+                        isinstance(claim.context, V2JobContext)
+                        and claim.context.private_source_bindings
+                    ):
+                        await connection.execute(
+                            "INSERT INTO runs(run_id,result_kind,payload,result_hash,schema_version,access_scope,private_source_bindings) "
+                            "VALUES($1,$2,$3::jsonb,$4,'2',$5,$6::jsonb)",
+                            run_id,
+                            result_kind,
+                            saved.model_dump_json(),
+                            saved.result_hash,
+                            owner,
+                            json.dumps(
+                                [
+                                    b.model_dump(mode="json")
+                                    for b in claim.context.private_source_bindings
+                                ]
+                            ),
+                        )
+                    else:
+                        await connection.execute(
+                            "INSERT INTO runs(run_id,result_kind,payload,result_hash,schema_version,access_scope) "
+                            "VALUES($1,$2,$3::jsonb,$4,$5,$6)",
+                            run_id,
+                            result_kind,
+                            saved.model_dump_json(),
+                            saved.result_hash,
+                            "2" if isinstance(claim.context, V2JobContext) else "1",
+                            owner,
+                        )
                     if proposals:
                         if not isinstance(saved, AnalysisResult) or owner is None:
                             raise DomainError(
@@ -312,11 +349,25 @@ class JobRepository(ScenariosRepository):
                             for proposal in proposals
                         ]
                         await self._save_proposals(connection, rebound, owner)
-                    await connection.execute(
-                        "UPDATE jobs SET status='succeeded',run_id=$2,finished_at=now() WHERE job_id=$1",
-                        claim.job.job_id,
-                        run_id,
-                    )
+                    if (
+                        isinstance(claim.context, V2JobContext)
+                        and claim.context.private_source_bindings
+                    ):
+                        await PrivateSourceRepository.publish_fence(connection, claim, run_id)
+                    elif (
+                        isinstance(claim.context, V2JobContext)
+                        and claim.context.batch_execution is not None
+                    ):
+                        assert checkpoint_repository is not None and checkpoint_receipt is not None
+                        await checkpoint_repository.publish(
+                            connection, claim, run_id, checkpoint_receipt
+                        )
+                    else:
+                        await connection.execute(
+                            "UPDATE jobs SET status='succeeded',run_id=$2,finished_at=now() WHERE job_id=$1",
+                            claim.job.job_id,
+                            run_id,
+                        )
         except asyncpg.UniqueViolationError as exc:
             raise DomainError(
                 409, "incompatible_versions", "Run identity already published"
@@ -344,6 +395,7 @@ class JobRepository(ScenariosRepository):
                 return job
 
     async def heartbeat(self, claim: ClaimedJob) -> bool:
+        await PrivateSourceRepository(self.pool).remaining(claim.context)
         updated = await self.pool.fetchval(
             "UPDATE jobs SET heartbeat_at=now(),lease_expires_at=now()+"
             "$3::double precision*interval '1 second' WHERE job_id=$1 AND claim_token=$2 AND status='running' "

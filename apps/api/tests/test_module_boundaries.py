@@ -22,6 +22,132 @@ from fastapi.testclient import TestClient
 SOURCE = Path(__file__).parents[1] / "src/a2_api"
 ROOT = SOURCE.parents[3]
 BASELINE = json.loads((Path(__file__).parent / "fixtures/refactor_baseline.json").read_text())
+BATCH_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/od_checkpoint_extension.json").read_text()
+)
+CHECKPOINT_PUBLICATION_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/checkpoint_publication_extension.json").read_text()
+)
+JOB_PROGRESS_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/job_progress_extension.json").read_text()
+)
+SCENARIO_SCOPE_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/scenario_scope_extension.json").read_text()
+)
+RASP_QUOTA_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/rasp_quota_extension.json").read_text()
+)
+PRIVATE_SOURCES_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/private_sources_extension.json").read_text()
+)
+WALK_RUNTIME_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/walk_runtime_extension.json").read_text()
+)
+RESULT_TRANSPORT_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/result_transport_extension.json").read_text()
+)
+RUNTIME_SOURCE_BUDGET_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/runtime_source_budget_extension.json").read_text()
+)
+
+
+def private_sources_counter(expected, kind):
+    assert set(PRIVATE_SOURCES_EXTENSION["modules"]) == {
+        "db/repositories/private_sources.py",
+        "db/repositories/jobs.py",
+        "db/repositories/runs.py",
+        "db/repositories/scenarios.py",
+    }
+    removed = collections.Counter(PRIVATE_SOURCES_EXTENSION["removed_" + kind])
+    assert removed <= expected
+    expected.subtract(removed)
+    expected.update(PRIVATE_SOURCES_EXTENSION["added_" + kind])
+    return +expected
+
+
+def scenario_scope_counter(expected, kind):
+    removed = collections.Counter(SCENARIO_SCOPE_EXTENSION["removed_" + kind])
+    added = collections.Counter(SCENARIO_SCOPE_EXTENSION["added_" + kind])
+    assert removed <= expected
+    expected.subtract(removed)
+    expected.update(added)
+    return +expected
+
+
+def checkpoint_publication_counter(expected, kind):
+    assert CHECKPOINT_PUBLICATION_EXTENSION["module"] == "db/repositories/checkpoints.py"
+    removed = collections.Counter(CHECKPOINT_PUBLICATION_EXTENSION["removed_" + kind])
+    assert removed <= expected
+    expected.subtract(removed)
+    expected.update(CHECKPOINT_PUBLICATION_EXTENSION["added_" + kind])
+    return +expected
+
+
+def approved_sql_counter(kind):
+    expected = private_sources_counter(
+        scenario_scope_counter(
+            collections.Counter(BASELINE[kind])
+            + collections.Counter(BATCH_EXTENSION[kind])
+            + collections.Counter(RASP_QUOTA_EXTENSION[kind]),
+            kind,
+        ),
+        kind,
+    )
+    assert JOB_PROGRESS_EXTENSION["module"] == "db/repositories/job_progress.py"
+    return checkpoint_publication_counter(expected, kind) + collections.Counter(
+        JOB_PROGRESS_EXTENSION[kind]
+    )
+
+
+def sql_literals(tree):
+    return [
+        node.value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and re.match(r"^\s*(SELECT|UPDATE|INSERT|DELETE|WITH)\b", node.value)
+    ]
+
+
+def sql_calls(tree):
+    # Preserve every inline-query/transaction fingerprint and also cover the
+    # progress query's direct module-level constant binding. Its SQL body and
+    # positional parameters must both remain part of the reviewed inventory.
+    named_sql = {
+        node.targets[0].id
+        for node in tree.body
+        if isinstance(node, ast.Assign)
+        and len(node.targets) == 1
+        and isinstance(node.targets[0], ast.Name)
+        and isinstance(node.value, ast.Constant)
+        and sql_literals(node.value)
+    }
+    return [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and (
+            node.func.attr == "transaction"
+            or (
+                node.args
+                and (
+                    sql_literals(node.args[0])
+                    or isinstance(node.args[0], ast.Name)
+                    and node.args[0].id in named_sql
+                )
+            )
+        )
+    ]
+
+
+def sql_call_hashes(tree):
+    return [
+        hashlib.sha256(ast.dump(node, include_attributes=False).encode()).hexdigest()
+        for node in sql_calls(tree)
+    ]
+
+
 RETIRED_ROOT_MODULES = frozenset(
     "alice analysis_service api_v2 app budget_cli budget_hook configuration "
     "deployment_budget env_settings evidence_search export job_services jobs "
@@ -31,6 +157,7 @@ RETIRED_ROOT_MODULES = frozenset(
 
 def test_root_package_contains_only_canonical_subpackages():
     expected = {
+        "adapters",
         "__init__.py",
         "py.typed",
         "api",
@@ -95,7 +222,56 @@ def normalize_signature(value):
 
 
 def test_all_185_existing_signatures_and_defaults():
-    for path, signature in BASELINE["signatures"].items():
+    assert set(JOB_PROGRESS_EXTENSION["signatures"]) == {
+        "a2_api.services.analyses:AnalysisService.job",
+        "a2_api.services.analyses:AnalysisService._view",
+    }
+    assert set(RUNTIME_SOURCE_BUDGET_EXTENSION["signatures"]) == {
+        "a2_api.core.config:RuntimeSettings",
+    }
+    assert set(RESULT_TRANSPORT_EXTENSION["signatures"]) == {
+        "a2_api.workers.calculation:calculate",
+        "a2_api.workers.runner:Worker",
+        "a2_api.workers.runner:Worker.__init__",
+        "a2_api.core.config:RuntimeSettings",
+    }
+    assert WALK_RUNTIME_EXTENSION["module"] == "adapters/walk_runtime.py"
+    assert set(WALK_RUNTIME_EXTENSION["signatures"]) == {
+        "a2_api.adapters.walk_runtime:load_binding",
+        "a2_api.adapters.walk_batches:load_approval",
+        "a2_api.adapters.walk_batches:preflight",
+        "a2_api.adapters.walk_batches:calculate",
+        "a2_api.core.walk_observations:observation_directory",
+    }
+    assert set(PRIVATE_SOURCES_EXTENSION["signatures"]) == {"a2_api.core.jobs:V2JobContext"}
+    assert set(BATCH_EXTENSION["signatures"]) == {
+        "a2_api.core.jobs:V2JobContext",
+        "a2_api.services.analyses:AnalysisService",
+        "a2_api.services.analyses:AnalysisService.__init__",
+    }
+    assert set(SCENARIO_SCOPE_EXTENSION["signatures"]) == {
+        "a2_api.db.validation:_validate_scenario_semantics",
+        "a2_api.db.scenario_journeys:scenario_journeys",
+        "a2_api.db.repositories.jobs:JobRepository._validate_scenario_semantics",
+    }
+    assert set(RASP_QUOTA_EXTENSION["signatures"]) == {
+        "a2_api.providers.rasp:RaspError",
+        "a2_api.providers.rasp:RaspError.__init__",
+        "a2_api.providers.rasp:RaspIssue",
+        "a2_api.providers.rasp:RaspProvider",
+        "a2_api.providers.rasp:RaspProvider.__init__",
+    }
+    for path, signature in (
+        BASELINE["signatures"]
+        | BATCH_EXTENSION["signatures"]
+        | SCENARIO_SCOPE_EXTENSION["signatures"]
+        | RASP_QUOTA_EXTENSION["signatures"]
+        | PRIVATE_SOURCES_EXTENSION["signatures"]
+        | WALK_RUNTIME_EXTENSION["signatures"]
+        | RESULT_TRANSPORT_EXTENSION["signatures"]
+        | RUNTIME_SOURCE_BUDGET_EXTENSION["signatures"]
+        | JOB_PROGRESS_EXTENSION["signatures"]
+    ).items():
         module, qualified = path.split(":")
         obj = importlib.import_module(module)
         for name in qualified.split("."):
@@ -107,26 +283,97 @@ def test_all_185_existing_signatures_and_defaults():
         )
 
 
-def test_all_293_exported_artifacts_remain_byte_identical(tmp_path):
+def test_exported_artifacts_match_baseline_and_approved_contract_extensions(tmp_path):
     export_schemas(tmp_path)
     actual = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in tmp_path.glob("*.json")}
-    assert actual == BASELINE["schemas"]
+    # Preserve the historical relocation baseline. Only this reviewed additive
+    # contract migration may replace its listed artifact hashes or add schemas.
+    extension = json.loads(
+        (Path(__file__).parent / "fixtures/score_explanation_schema_extension.json").read_text()
+    )
+    replaced = {"manifest.json", "openapi.json"} | {
+        f"v2.{model}.{mode}.schema.json"
+        for model in ("Explanation", "ExplanationContent", "Finding")
+        for mode in ("serialization", "validation")
+    }
+    added = {f"v2.ScoreClaim.{mode}.schema.json" for mode in ("serialization", "validation")}
+    assert set(extension["replaced"]) == replaced
+    assert set(extension["added"]) == added
+    assert replaced <= BASELINE["schemas"].keys()
+    assert added.isdisjoint(BASELINE["schemas"])
+    expected = BASELINE["schemas"] | extension["replaced"] | extension["added"]
+    scenario_extension = json.loads(
+        (Path(__file__).parent / "fixtures/scenario_journeys_schema_extension.json").read_text()
+    )
+    assert set(scenario_extension["replaced"]) == {"manifest.json", "openapi.json"} | {
+        f"v2.ScenarioResult.{mode}.schema.json" for mode in ("serialization", "validation")
+    }
+    expected.update(scenario_extension["replaced"])
+    scopes_extension = json.loads(
+        (Path(__file__).parent / "fixtures/urban_scopes_schema_extension.json").read_text()
+    )
+    assert set(scopes_extension["replaced"]) == {"manifest.json", "openapi.json"} | {
+        f"v2.Capabilities.{mode}.schema.json" for mode in ("serialization", "validation")
+    }
+    assert set(scopes_extension["added"]) == {
+        f"v2.UrbanPassengerScope.{mode}.schema.json" for mode in ("serialization", "validation")
+    }
+    assert set(scopes_extension["added"]).isdisjoint(expected)
+    expected.update(scopes_extension["replaced"])
+    expected.update(scopes_extension["added"])
+    leg_extension = json.loads(
+        (ROOT / "packages/contracts/tests/fixtures/leg_geometry_schema_extension.json").read_text()
+    )
+    assert leg_extension["added"] == {}
+    assert set(leg_extension["replaced"]) == {"manifest.json", "openapi.json"} | {
+        f"v2.{model}.{mode}.schema.json"
+        for model in ("Leg", "JourneyResult", "AnalysisResult", "ScenarioResult")
+        for mode in ("serialization", "validation")
+    }
+    expected.update(leg_extension["replaced"])
+    groups_extension = json.loads(
+        (Path(__file__).parent / "fixtures/evidence_groups_schema_extension.json").read_text()
+    )
+    assert set(groups_extension["replaced"]) == {"manifest.json", "openapi.json"} | {
+        f"v2.{model}.{mode}.schema.json"
+        for model in ("AnalysisResult", "ScenarioProposal", "ScenarioResult")
+        for mode in ("serialization", "validation")
+    }
+    assert set(groups_extension["added"]) == {
+        f"v2.EvidenceGroup.{mode}.schema.json" for mode in ("serialization", "validation")
+    }
+    assert set(groups_extension["added"]).isdisjoint(expected)
+    expected.update(groups_extension["replaced"])
+    expected.update(groups_extension["added"])
+    progress_extension = JOB_PROGRESS_EXTENSION["schemas"]
+    assert set(progress_extension["replaced"]) == {"manifest.json", "openapi.json"} | {
+        f"v2.JobView.{mode}.schema.json" for mode in ("serialization", "validation")
+    }
+    assert set(progress_extension["added"]) == {
+        f"v2.BatchProgress.{mode}.schema.json" for mode in ("serialization", "validation")
+    }
+    assert set(progress_extension["replaced"]) <= expected.keys()
+    assert set(progress_extension["added"]).isdisjoint(expected)
+    expected.update(progress_extension["replaced"])
+    expected.update(progress_extension["added"])
+    assert actual == expected
 
 
 def test_sql_literals_unchanged_and_confined_to_database_layer():
     strings = []
     for path in SOURCE.rglob("*.py"):
-        found = [
-            n.value
-            for n in ast.walk(ast.parse(path.read_text()))
-            if isinstance(n, ast.Constant)
-            and isinstance(n.value, str)
-            and re.match(r"^\s*(SELECT|UPDATE|INSERT|DELETE|WITH)\b", n.value)
-        ]
+        found = sql_literals(ast.parse(path.read_text()))
         if found:
             assert path.is_relative_to(SOURCE / "db"), path
         strings.extend(found)
-    assert collections.Counter(strings) == BASELINE["sql_literals"]
+    assert BATCH_EXTENSION["module"] == "db/repositories/checkpoints.py"
+    assert SCENARIO_SCOPE_EXTENSION["module"] == "db/repositories/runs.py"
+    if "additional_modules" in SCENARIO_SCOPE_EXTENSION:
+        assert set(SCENARIO_SCOPE_EXTENSION["additional_modules"]) == {
+            "db/repositories/scenarios.py"
+        }
+    assert RASP_QUOTA_EXTENSION["module"] == "db/repositories/rasp_quota.py"
+    assert collections.Counter(strings) == approved_sql_counter("sql_literals")
 
 
 @pytest.mark.parametrize(
@@ -251,17 +498,90 @@ def test_fresh_canonical_import_orders_outside_checkout(tmp_path):
 def test_sql_parameter_binding_and_transaction_options_unchanged():
     hashes = []
     for path in SOURCE.rglob("*.py"):
-        for node in ast.walk(ast.parse(path.read_text())):
-            if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
-                continue
-            sql = node.args and any(
-                isinstance(value, ast.Constant)
-                and isinstance(value.value, str)
-                and re.match(r"^\s*(SELECT|UPDATE|INSERT|DELETE|WITH)\b", value.value)
-                for value in ast.walk(node.args[0])
+        hashes.extend(sql_call_hashes(ast.parse(path.read_text())))
+    assert collections.Counter(hashes) == approved_sql_counter("sql_call_hashes")
+
+
+@pytest.mark.parametrize("module", ["checkpoints", "job_progress"])
+def test_reviewed_sql_extensions_remain_in_their_owned_modules(module):
+    tree = ast.parse((SOURCE / f"db/repositories/{module}.py").read_text())
+    for kind, actual in (
+        ("sql_literals", sql_literals(tree)),
+        ("sql_call_hashes", sql_call_hashes(tree)),
+    ):
+        expected = (
+            checkpoint_publication_counter(collections.Counter(BATCH_EXTENSION[kind]), kind)
+            if module == "checkpoints"
+            else collections.Counter(JOB_PROGRESS_EXTENSION[kind])
+        )
+        assert collections.Counter(actual) == expected
+        if module == "checkpoints":
+            assert (
+                sum(collections.Counter(BATCH_EXTENSION[kind]).values())
+                == (CHECKPOINT_PUBLICATION_EXTENSION["before_counts"][kind])
             )
-            if node.func.attr == "transaction" or sql:
-                hashes.append(
-                    hashlib.sha256(ast.dump(node, include_attributes=False).encode()).hexdigest()
-                )
-    assert collections.Counter(hashes) == BASELINE["sql_call_hashes"]
+            assert len(actual) == CHECKPOINT_PUBLICATION_EXTENSION["after_counts"][kind]
+    transactions = collections.Counter(
+        hashlib.sha256(ast.dump(node, include_attributes=False).encode()).hexdigest()
+        for node in sql_calls(tree)
+        if node.func.attr == "transaction"
+    )
+    assert transactions == (
+        CHECKPOINT_PUBLICATION_EXTENSION["unchanged_transaction_call_hashes"]
+        if module == "checkpoints"
+        else JOB_PROGRESS_EXTENSION["transaction_call_hashes"]
+    )
+    if module == "checkpoints":
+        assert (
+            sum(transactions.values())
+            == (CHECKPOINT_PUBLICATION_EXTENSION["before_counts"]["transaction_call_hashes"])
+            == CHECKPOINT_PUBLICATION_EXTENSION["after_counts"]["transaction_call_hashes"]
+        )
+
+
+@pytest.mark.parametrize(
+    ("module", "before", "after", "kind"),
+    [
+        (
+            "checkpoints",
+            "WHERE access_scope=$1 AND execution_identity=$2 FOR UPDATE",
+            "WHERE access_scope=$1 AND execution_identity=$2 FOR SHARE",
+            "sql_literals",
+        ),
+        (
+            "checkpoints",
+            "claim.job.job_id,",
+            "claim.job.trace_id,",
+            "sql_call_hashes",
+        ),
+        (
+            "checkpoints",
+            "connection.transaction()",
+            'connection.transaction(isolation="serializable")',
+            "sql_call_hashes",
+        ),
+        (
+            "job_progress",
+            "j.access_scope=$2",
+            "j.access_scope=$1",
+            "sql_literals",
+        ),
+        (
+            "job_progress",
+            "JOB_PROGRESS_SQL, job_id, scope",
+            "JOB_PROGRESS_SQL, scope, job_id",
+            "sql_call_hashes",
+        ),
+    ],
+)
+def test_sql_inventory_rejects_unapproved_mutations(module, before, after, kind):
+    source = (SOURCE / f"db/repositories/{module}.py").read_text()
+    assert before in source
+    mutated = source.replace(before, after, 1)
+    extract = sql_literals if kind == "sql_literals" else sql_call_hashes
+    original = collections.Counter(extract(ast.parse(source)))
+    changed = collections.Counter(extract(ast.parse(mutated)))
+    assert changed != original
+    expected = approved_sql_counter(kind)
+    assert original <= expected
+    assert expected - original + changed != expected

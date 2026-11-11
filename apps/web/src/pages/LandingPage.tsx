@@ -5,7 +5,7 @@ import { css } from "../shared/format";
 import { MiniGrid, TransportShowcase } from "../widgets/TransportShowcase";
 import { PreviewMap } from "../widgets/RussiaMap";
 import { useLandingMotion } from "../features/motion";
-export function LandingPage() {
+export function LandingPage({ dataMode = "demo" }: { dataMode?: "demo" | "api" }) {
   const [group, setGroup] = useState("pax");
   useLandingMotion();
   return (
@@ -922,7 +922,9 @@ export function LandingPage() {
                   }
                 </b>
                 {
-                  " В этом прототипе все числа демонстрационные. Источники — открытые данные и расписания, перечисленные в постановке; наличие города в справочнике не означает полного расчёта."
+                  dataMode === "api"
+                    ? " Числа в примерах на этой странице демонстрационные. В атласе показаны результаты API с их источниками и ограничениями; наличие города в справочнике не означает полного расчёта."
+                    : " В этом прототипе все числа демонстрационные. Источники — открытые данные и расписания, перечисленные в постановке; наличие города в справочнике не означает полного расчёта."
                 }
               </div>
             </div>
@@ -977,7 +979,9 @@ export function LandingPage() {
             <NavigationLink to="atlas">{"Атлас"}</NavigationLink>
           </nav>
           <span>
-            {"Дизайн-прототип · кейс A2 · 2026. Данные — демонстрационные."}
+            {dataMode === "api"
+              ? "Waydex · кейс A2 · 2026. Атлас — результаты API; примеры на странице — демонстрационные."
+              : "Дизайн-прототип · кейс A2 · 2026. Данные — демонстрационные."}
           </span>
         </div>
       </footer>

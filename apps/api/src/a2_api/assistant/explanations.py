@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from a2_assistant import AccessScope
 from a2_assistant.core import template_explanation
 from a2_contracts.v2.assistant import Explanation, ExplanationRequest
+from a2_contracts.v2.evidence import require_result_evidence
 from a2_contracts.v2.results import Metric, Score
 
 from a2_api.core.errors import DomainError
@@ -24,6 +25,7 @@ async def explain(
     body: ExplanationRequest | None = None,
 ) -> Explanation:
     result = await service.analysis(analysis_id, scope)
+    require_result_evidence(result)
     context = body or ExplanationRequest()
     if context.selection is not None:
         kind, identifier = context.selection.entity_kind, context.selection.entity_id
@@ -70,7 +72,18 @@ async def explain(
                 404, "unknown_id", "Selected entity is not part of the saved analysis"
             )
     if service.assistant is None:
-        return template_explanation(result, request_id, "DISABLED")
+        explanation = template_explanation(result, request_id, "DISABLED", context=context)
+        await service.analysis(analysis_id, scope)
+        return explanation
+    bindings = await service._repository().private_source_bindings(analysis_id, scope)
+    # A grant opt-in cannot fence budget waits, retries and every model attempt.
+    # Keep all private facts local until that separate egress gate is reviewed.
+    if bindings:
+        explanation = template_explanation(
+            result, request_id, "PRIVATE_SOURCE_EXTERNAL_MODEL_DISABLED", context=context
+        )
+        await service.analysis(analysis_id, scope)
+        return explanation
     snapshot = await service.accepted_snapshot(result, scope)
     permitted_sources = {e.source_id for e in result.evidence_refs}
     if snapshot is not None:
@@ -83,10 +96,12 @@ async def explain(
         snapshot_ids=frozenset({result.snapshot_id}),
     )
     proposals = await service.proposals(analysis_id, scope)
-    return await service.assistant.explain(
+    explanation = await service.assistant.explain(
         result,
         access_scope=access,
         registered_template_ids={p.template_id for p in proposals},
         request_id=request_id,
         context=context,
     )
+    await service.analysis(analysis_id, scope)
+    return explanation

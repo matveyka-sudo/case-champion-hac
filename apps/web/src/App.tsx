@@ -8,16 +8,13 @@ import {
   type ReactNode,
 } from "react";
 import { LandingPage } from "./pages/LandingPage";
+import { atlasLocation, subscribeAtlasLocation } from "./features/analysis/savedPointer";
 const dataMode = new URLSearchParams(window.location.search).get("data") || import.meta.env.VITE_DATA_MODE || "demo";
 const AtlasPage = lazy(() => dataMode === "api"
   ? import("./pages/ApiAtlasPage").then(m => ({default:m.ApiAtlasPage}))
   : import("./pages/AtlasPage").then(m => ({default:m.AtlasPage})),
 );
 import { AtlasProvider } from "./features/AtlasProvider";
-const subscribe = (cb: () => void) => {
-  window.addEventListener("hashchange", cb);
-  return () => window.removeEventListener("hashchange", cb);
-};
 class Boundary extends Component<{ children: ReactNode }, { error: boolean }> {
   state = { error: false };
   static getDerivedStateFromError() {
@@ -37,8 +34,8 @@ class Boundary extends Component<{ children: ReactNode }, { error: boolean }> {
 }
 export default function App() {
   const hash = useSyncExternalStore(
-      subscribe,
-      () => location.hash,
+      subscribeAtlasLocation,
+      atlasLocation,
       () => "",
     ),
     atlas = hash.startsWith("#atlas"),
@@ -59,12 +56,15 @@ export default function App() {
         );
         return () => cancelAnimationFrame(raf);
       }
-    } else {
+    }
+  }, [hash, atlas]);
+  useEffect(() => {
+    if (atlas) {
       savedScroll.current = window.scrollY;
       window.scrollTo(0, 0);
       return () => window.scrollTo(0, savedScroll.current);
     }
-  }, [hash, atlas]);
+  }, [atlas]);
   return (
     <Boundary>
       <AtlasProvider>
@@ -91,7 +91,7 @@ export default function App() {
             <AtlasPage />
           </Suspense>
         ) : (
-          <LandingPage />
+          <LandingPage dataMode={dataMode === "api" ? "api" : "demo"} />
         )}
       </AtlasProvider>
     </Boundary>

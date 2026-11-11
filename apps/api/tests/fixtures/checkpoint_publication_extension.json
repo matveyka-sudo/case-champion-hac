@@ -1,0 +1,59 @@
+{
+  "approval": "Accepted publication fence 09a073c: raw validation precedes short exact-inventory transactions; historical baseline and OD extension remain unchanged.",
+  "previous_commit": "1839d8b894f8c069c367e67db052140fcfa5e8bb",
+  "approved_commit": "09a073cc9bed55ca7e58e0473ef8a9c53662604c",
+  "module": "db/repositories/checkpoints.py",
+  "before_counts": {
+    "sql_literals": 16,
+    "sql_call_hashes": 19,
+    "transaction_call_hashes": 3
+  },
+  "after_counts": {
+    "sql_literals": 12,
+    "sql_call_hashes": 15,
+    "transaction_call_hashes": 3
+  },
+  "unchanged_transaction_call_hashes": {
+    "0def6c45fe581d1ba599ed15883c733541eaf7faf47625d3e48ef69913911439": 3
+  },
+  "removed_sql_literals": {
+    "SELECT * FROM od_executions WHERE access_scope=$1 AND execution_identity=$2 FOR UPDATE": 1,
+    "SELECT *,lease_expires_at>clock_timestamp() AS lease_active,clock_timestamp() AS checked_at FROM jobs WHERE job_id=$1 FOR UPDATE": 1,
+    "SELECT COALESCE(sum((item->>'retained_bytes')::bigint),0) FROM od_checkpoints CROSS JOIN LATERAL jsonb_array_elements(payload->'observations') AS item WHERE access_scope=$1 AND execution_identity=$2": 1,
+    "SELECT COALESCE(sum(payload_bytes),0) FROM od_checkpoints WHERE access_scope=$1 AND execution_identity=$2": 2,
+    "SELECT content_hash FROM od_checkpoints WHERE access_scope=$1 AND execution_identity=$2 AND batch_id=$3": 1,
+    "SELECT execution_identity FROM od_executions WHERE access_scope=$1 AND execution_identity=$2 FOR UPDATE": 1,
+    "SELECT min(created_at) FROM od_checkpoints WHERE access_scope=$1 AND execution_identity=$2": 1,
+    "SELECT payload,content_hash,created_at FROM od_checkpoints WHERE access_scope=$1 AND execution_identity=$2 ORDER BY batch_id": 1
+  },
+  "added_sql_literals": {
+    "SELECT *,lease_expires_at>clock_timestamp() AS lease_active,clock_timestamp() AS checked_at FROM jobs WHERE job_id=$1": 1,
+    "SELECT attempts,reserved_calls FROM od_executions WHERE access_scope=$1 AND execution_identity=$2": 1,
+    "SELECT batch_id,payload,content_hash,payload_bytes,created_at,source_job_id,source_claim_token FROM od_checkpoints WHERE access_scope=$1 AND execution_identity=$2 ORDER BY batch_id": 1,
+    "SELECT payload FROM od_executions WHERE access_scope=$1 AND execution_identity=$2": 1,
+    "SELECT payload FROM od_executions WHERE access_scope=$1 AND execution_identity=$2 FOR UPDATE": 1
+  },
+  "removed_sql_call_hashes": {
+    "0a71b095a2cf54d77414d3c69d0ea903c24b8abc2eb06e21826be01549fc463e": 1,
+    "1632b846df91ceaebc1dccc20e2e5e2f6d3a5fa14aa8a428bec5fd2e9a8a4232": 1,
+    "1a4c3cd93b31b6e0514e20b5ab39c4988c832df29402729093829d7132f5d807": 1,
+    "24c1092952c82e863cc00740b83895375c8ce1899807645dc98b06a51659d1f1": 1,
+    "5bfbbecbde4ab857d730cfc6d5f037724d47703f7fbbd798dda5674c1979c4de": 1,
+    "7718486bfbbd0fb97c94375fbd688bfe07f80c19be498170a3e7cfe071cfffec": 1,
+    "a3993ebeedc40f0d815108201ed8d1c5276201f8eb2252312aef6935774c4d5d": 2,
+    "a4c613efb096a1e5b7d7441bc04917beb427e75f7ec7352f217e503d9b7e1e26": 1,
+    "c6866f61d1bf522d8212ee8d4b00041ed352e0ae62459453989afffc5971e499": 1,
+    "d117b892f4e0f8e1fb51aea5191e810ad34f802b86faf844c3ef5fb6085784b0": 1,
+    "fb142d829ac995d1350559a79dc9cb39493bd5ed9de70f0885e965585778b4ed": 1
+  },
+  "added_sql_call_hashes": {
+    "03a359a597533d42ef7f04e0909f31223f1e1fc0dc058e4c1f9089c3a14ef3cd": 1,
+    "1157335020728b4bb0d16029aaca7cf2ae56566e88282535ddb29e40ae9acba8": 1,
+    "425c11c10da0b058cef646df0732a438581cd1606178041f9b2fc14ea101b505": 1,
+    "612e84bc597421b977da0800860fdae6f452c812fd8b4600380c346181a332c3": 1,
+    "62abc64ee567eeaa61ee726897f2ecee5372a8e2a8d59d9b4706ae0f17e26d29": 1,
+    "85317b7aa48a361e553b87d84b1c9a99c786e8cfa29781ed27802bc1f662eadb": 1,
+    "98594cf44333276abc429ae1dc5ee6f10d9fc0be0cff220057bbffc84c973ef9": 1,
+    "f2d766b0c1d69c681d09960d1ed94bb6906efe00df14fe8fb9585925f04a33f6": 1
+  }
+}

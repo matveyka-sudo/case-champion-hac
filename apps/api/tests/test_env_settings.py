@@ -94,4 +94,4 @@ def test_alembic_reads_local_dotenv(database, tmp_path):
         check=False,
     )
     assert result.returncode == 0, result.stderr.splitlines()[-3:]
-    assert "0004_alice_budget" in result.stdout
+    assert "0007_private_sources" in result.stdout

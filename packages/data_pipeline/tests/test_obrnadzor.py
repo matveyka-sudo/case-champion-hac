@@ -76,6 +76,40 @@ def test_ownership_from_legal_form() -> None:
 
 
 @pytest.mark.parametrize(
+    "name",
+    [
+        "Негосударственное образовательное учреждение «Лицей»",
+        "НЕГОСУДАРСТВЕННЫЙ УНИВЕРСИТЕТ",
+        "не государственное образовательное учреждение",
+        "не-государственная образовательная организация",
+        "Негосударственное учреждение «Федеральный университет»",
+        "НОУ «Лицей»",
+        "«НОУ» Федеральный университет",
+        "ЧОУ высшего образования «Государственный университет»",
+        "АНПОО «Колледж»",
+        "АНО ВО «Институт»",
+        "Частное общеобразовательное учреждение",
+    ],
+)
+def test_private_legal_forms_never_gain_public_ownership(name: str) -> None:
+    assert ob.ownership(name) == "private"
+    assert ob.classify(replace(UNIVERSITY, full_name=name)) == "NOT_PUBLIC"
+    school = replace(
+        UNIVERSITY,
+        full_name=name,
+        levels=("Среднее общее образование",),
+    )
+    assert ob.school_reason(school) is not None
+
+
+def test_private_abbreviations_are_tokens_and_do_not_change_state_legal_forms() -> None:
+    assert ob.ownership("Государственное учреждение «Ноутбук»") == "regional"
+    assert ob.ownership("Государственное учреждение «НОУ»") == "regional"
+    assert ob.ownership("Муниципальное автономное общеобразовательное учреждение") == "municipal"
+    assert ob.ownership(UNIVERSITY.full_name) == "federal"
+
+
+@pytest.mark.parametrize(
     ("name", "expected"),
     [
         ("Инженерно-технический институт БФУ им. И. Канта", "1"),  # abbreviation

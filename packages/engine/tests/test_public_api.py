@@ -19,6 +19,28 @@ import pytest
 
 SOURCE = Path(__file__).resolve().parents[1] / "src"
 
+
+def historical_signature(obj: Any) -> inspect.Signature:
+    """Check every old parameter while permitting only the reviewed correlation additions."""
+    signature = inspect.signature(obj)
+    if obj is a2_engine.ValhallaCorrelation:
+        signature = signature.replace(
+            parameters=[
+                p
+                for name, p in signature.parameters.items()
+                if name not in {"coordinate_precision_digits", "serialization_evidence_refs"}
+            ]
+        )
+    return signature
+
+
+def historical_field(name: str, field_name: str) -> bool:
+    return name != "ValhallaCorrelation" or field_name not in {
+        "coordinate_precision_digits",
+        "serialization_evidence_refs",
+    }
+
+
 # Captured from the pre-refactor API. Only relocated type-module prefixes are omitted.
 PUBLIC_SIGNATURES: dict[str, str] = {
     "AreaHBand": "(max_area_km2: float | None, h_seconds: float) -> None",
@@ -221,7 +243,8 @@ PUBLIC_SIGNATURES: dict[str, str] = {
     "tuple[str, ...]) -> None",
     "ValhallaCorrelation": "(build: ValhallaBuild, access_node_id: str, source_location: WalkCoordinate, "
     "correlated_location: WalkCoordinate, correlation_id: str, evidence_refs: tuple[str, "
-    "...]) -> None",
+    "...], coordinate_precision_digits: int | None = None, serialization_evidence_refs: "
+    "tuple[str, ...] = ()) -> None",
     "WalkCoordinate": "(lon: float, lat: float) -> None",
     "WalkConnector": "(snapshot_id: str, source_graph_version: str, physical_node_id: str, access_node_id: "
     "str, physical_location: WalkCoordinate, access_location: WalkCoordinate, seconds: float "
@@ -425,7 +448,11 @@ CANONICAL_MODULES = {
         "WalkAnalysisResult",
     ),
     "a2_engine.urban.walk.inputs": ("prepare_walk_inputs",),
-    "a2_engine.urban.walk.analysis": ("plan_walk_routes", "analyze_walk_responses"),
+    "a2_engine.urban.walk.analysis": (
+        "plan_walk_routes",
+        "analyze_walk_responses",
+        "analyze_normalized_walk_routes",
+    ),
     "a2_engine.urban.districts.models": (
         "UrbanOriginalCell",
         "UrbanDistrict",
@@ -767,6 +794,21 @@ for _module, _names in SCENARIO_EXPORT_MODULES.items():
     NEW_PUBLIC_NAMES.update(_names)
 
 
+NEW_PUBLIC_NAMES.add("analyze_normalized_walk_routes")
+
+
+def test_normalized_walk_reducer_is_an_append_only_public_addition() -> None:
+    assert a2_engine.__all__[-1] == "analyze_normalized_walk_routes"
+    signature = str(inspect.signature(a2_engine.analyze_normalized_walk_routes))
+    signature = re.sub(r"\ba2_engine(?:\.[a-z_]+)+\.([A-Z][A-Za-z0-9_]*)", r"\1", signature)
+    assert signature == (
+        "(plan: WalkRoutePlan, normalized_routes: collections.abc.Sequence[WalkRouteResult], "
+        "*, selected_categories: collections.abc.Mapping[str, str], config: UrbanConfig, "
+        "rules: UrbanJourneyRules, thresholds: collections.abc.Sequence[UrbanThreshold] = ()) "
+        "-> WalkAnalysisResult"
+    )
+
+
 def test_public_names_signatures_and_defaults_are_unchanged() -> None:
     assert tuple(a2_engine.__all__[: len(PUBLIC_SIGNATURES)]) == tuple(PUBLIC_SIGNATURES)
     assert set(a2_engine.__all__) == set(PUBLIC_SIGNATURES) | NEW_PUBLIC_NAMES
@@ -969,7 +1011,7 @@ def test_all_141_pre_structure_signatures_fields_and_defaults() -> None:
         def normalize(value: str) -> str:
             return re.sub(r"\ba2_engine(?:\.[a-z_]+)+\.([A-Z][A-Za-z0-9_]*)", r"\1", value)
 
-        assert normalize(str(inspect.signature(obj))) == saved["signature"], name
+        assert normalize(str(historical_signature(obj))) == saved["signature"], name
         metadata = []
         if is_dataclass(obj):
             metadata = [
@@ -984,6 +1026,7 @@ def test_all_141_pre_structure_signatures_fields_and_defaults() -> None:
                     "init": f.init,
                 }
                 for f in fields(obj)
+                if historical_field(name, f.name)
             ]
             assert getattr(obj, "__dataclass_params__").frozen == saved["frozen"], name
         assert (
@@ -1012,7 +1055,7 @@ for module in json.loads(sys.argv[1]):
 for legacy,name,canonical in json.loads(sys.argv[2]):
     assert getattr(importlib.import_module(legacy),name) is getattr(importlib.import_module(canonical),name)
 import a2_engine
-assert len(a2_engine.__all__)==268
+assert len(a2_engine.__all__)==269
 """
     for order in (modules, list(reversed(modules)), modules[::2] + modules[1::2]):
         subprocess.run(
@@ -1055,7 +1098,7 @@ def test_previous_exports_signatures_fields_and_defaults(count: int) -> None:
     assert len(expected) == count
     for name, saved in expected.items():
         obj = getattr(a2_engine, name)
-        assert str(inspect.signature(obj)) == saved["signature"], name
+        assert str(historical_signature(obj)) == saved["signature"], name
         metadata = (
             [
                 [
@@ -1067,6 +1110,7 @@ def test_previous_exports_signatures_fields_and_defaults(count: int) -> None:
                     f.kw_only,
                 ]
                 for f in fields(obj)
+                if historical_field(name, f.name)
             ]
             if is_dataclass(obj)
             else []

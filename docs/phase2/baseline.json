@@ -1,0 +1,71 @@
+{
+  "phase": "2",
+  "baseline_head": "dd46659f2500844285b3c8849b756fe88664a39a",
+  "dev_head": "91ed5262b62c16afa3ca619f8140c43917cf8325",
+  "pr": 26,
+  "pr_merged": false,
+  "bundle_id": "kaliningrad-urban-2026-11-10.2",
+  "source_graph_version": "osm_geofabrik.kaliningrad-261107:osm-walk-network-v1:main-component",
+  "routing_build": {
+    "build_id": "waydex-klgd-351-eb0b02ad151966d1",
+    "engine_version": "3.5.1",
+    "evidence_refs": [
+      "osm-geofabrik-pbf-769a6a6ac552b534057f2480b88f1c2d0709636761ab6d08483efe69c1e97b69",
+      "valhalla-build-eb0b02ad151966d1b49acfd30adfeaf28c310fc35296c3b5f50e084c1c66ea69",
+      "walking-profile-83652166416f2f1fcdf5911d6d862d6e22a2b4964b710fd130623b3bb1370c5c"
+    ],
+    "graph_version": "valhalla-351-tiles-eb0b02ad151966d1b49acfd30adfeaf28c310fc35296c3b5f50e084c1c66ea69",
+    "pedestrian_options_json": "{\"shortest\":false,\"type\":\"foot\",\"use_ferry\":0,\"walking_speed\":5}",
+    "profile_version": "waydex-walk-static-5kmh-v1",
+    "snapshot_id": "kaliningrad-urban-2026-11-10.2",
+    "source_graph_version": "osm_geofabrik.kaliningrad-261107:osm-walk-network-v1:main-component"
+  },
+  "runtime_files": {
+    "walk-pilot-artifact-v2.json": "dd2e79b097d69bae7214edd08cbeeb71c192ad27c92e1d55403225972d4c1594",
+    "valhalla-build-manifest.json": "eb0b02ad151966d1b49acfd30adfeaf28c310fc35296c3b5f50e084c1c66ea69",
+    "walking-profile.json": "83652166416f2f1fcdf5911d6d862d6e22a2b4964b710fd130623b3bb1370c5c",
+    "valhalla.json": "3599bacf15b583bc4638179cc965969cfea670b02d0573bfc0caa810a5688eba",
+    "kaliningrad-261107.osm.pbf": "769a6a6ac552b534057f2480b88f1c2d0709636761ab6d08483efe69c1e97b69"
+  },
+  "contract_schema_version": "2",
+  "methodology_version": "a2-methodology-v3",
+  "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+  "saved_analysis_id": "e5e3da3b-435f-44ef-ab4c-aac4b0bd4f55",
+  "saved_result_hash": "e2b94a2b76a76e5fcabe3e64308cbdecc8aef7c83b5464dd756fd3ec52a05e91",
+  "pilot_point_ids": [
+    "kaliningrad-utm34n-1km-v1-e468-n6061-p"
+  ],
+  "pilot_destination_ids": [
+    "kaliningrad-school-klgd_education-4409878"
+  ],
+  "pilot_journey_seconds": [
+    547.404
+  ],
+  "pilot_status": "partial",
+  "pilot_scores": [
+    {
+      "value": null,
+      "status": "unknown",
+      "ranking_eligible": false
+    }
+  ],
+  "tracked_bundle_files": {
+    "access_nodes.json": "9e98a1abda1ff2bb9309dd8fd07d1f5ac45473ca760dbacbf25e5d7a929fd4a3",
+    "category_ownership.json": "70857cd5e9931a97a8a2a06dddccd6c8a2d2a5e3798823dfacab6c86480fed26",
+    "destinations.json": "5740ea91e3bd0a06200c23228c4dfd370dc4457446339d9623eb2c44d9e585eb",
+    "evidence.json": "31c29e46c8293cbf6843de3894ace1a97a3f765476003800b87f12db173bf741",
+    "freight_nodes.json": "ef68db6babc1a68c07d42314df1e04b32dfc33152448c44d936f50865c4df964",
+    "freight_sites.json": "50072523b566f8c7d32289eea27dd975885e3ddf3b56b015a33606949b676e33",
+    "manifest.json": "35c30c4cb96e20a72faa4a8087282cece4704753d785da10319ae90f2edd33fa",
+    "population_cells.json": "ae595419a29e03882f5cf9d63a0682869ecb81a0090addbf023169f4a407fd8e",
+    "qa_report.json": "c701fb2d560ad4205b8edf7c41d3724a7fcf7ed510824f7eb9543a0c0665d149",
+    "sample_points.json": "44bbb5b3d883201d127c131a5cea78c5bd4c5b08412bfd1b9d3583e929cbfc0f",
+    "stop_frequencies.json": "645583cf4da446341a4ae6ab1237bfbfa7709f0e0567e67e2d22afe5a1292fcc",
+    "territories.json": "b78ee130a3024fb4f6066e6e804493f14065e7bf19673c930dce08ee5a5350bd",
+    "walk_connectors.json": "b5b681a03cb89e57c2c537c2c4a4c8aa18eb43773d5b37f672a870c4253dce59"
+  },
+  "dependency_locks": {
+    "uv.lock": "cb5469434a6431472c9273394bc48cdc63112a2d084468d4be35ed1dfb057f0e",
+    "apps/web/package-lock.json": "1dc8dc3ec64553f2b624feb9197ca5877029a0b0beabf4f1cb11ba540b880376"
+  }
+}

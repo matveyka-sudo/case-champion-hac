@@ -11,15 +11,19 @@ from pydantic import Field, StrictBool, model_validator
 
 from a2_contracts.common import canonical_hash
 from a2_contracts.v2.base import ContractModel, Count, Identifier, NonNegative, VersionRefs
+from a2_contracts.v2.evidence import MAX_EVIDENCE_GROUPS, EvidenceGroup, EvidenceResolver
+from a2_contracts.v2.journeys import JourneyResult
 from a2_contracts.v2.results import EvidenceRef, Metric, Score, validate_score_dependencies
 
 Feasibility = Literal["verified", "unverified"]
 
 
-def _evidence_ids(evidence: list[EvidenceRef], references: list[Identifier]) -> None:
-    identifiers = {item.evidence_id for item in evidence}
-    if len(identifiers) != len(evidence) or not set(references) <= identifiers:
-        raise ValueError("Duplicate evidence identity or unresolved evidence reference")
+def _evidence_ids(
+    evidence: list[EvidenceRef],
+    references: list[Identifier],
+    groups: list[EvidenceGroup] | None = None,
+) -> None:
+    EvidenceResolver((item.evidence_id for item in evidence), groups or ()).require(references)
 
 
 def _check_feasibility(
@@ -79,6 +83,9 @@ class ScenarioProposal(ContractModel):
     operation_type: Literal["coordinate_transfer", "additional_departure"]
     fixed_parameters: FixedParameters
     evidence_refs: list[EvidenceRef]
+    evidence_groups: list[EvidenceGroup] = Field(
+        default_factory=list, max_length=MAX_EVIDENCE_GROUPS, exclude_if=lambda value: not value
+    )
     assumptions: list[Identifier]
     status: Literal["proposed"]
     feasibility: Feasibility
@@ -97,6 +104,7 @@ class ScenarioProposal(ContractModel):
                 *params.resource_evidence,
                 *params.turnaround_evidence,
             ],
+            self.evidence_groups,
         )
         if self.operation_type == "additional_departure" and (
             not params.demand_evidence or not params.resource_evidence
@@ -136,7 +144,7 @@ class ScenarioValues(ContractModel):
         scores = {s.score_id for s in self.scores}
         if len(scores) != len(self.scores):
             raise ValueError("Duplicate score identity in scenario values")
-        validate_score_dependencies(self.metrics, self.scores)
+        validate_score_dependencies(self.metrics, self.scores, allow_deferred_groups=True)
         return self
 
 
@@ -240,6 +248,15 @@ def _numeric_change(old: Metric | Score, new: Metric | Score) -> bool:
         and old.value != new.value
         and old.value is not None
         and new.value is not None
+    )
+
+
+def _unproven_minimum(value: Metric | Score) -> bool:
+    return (
+        isinstance(value, Metric)
+        and value.name == "minimum_journey_seconds"
+        and value.status == "available"
+        and value.reason_code == "MINIMUM_TIME_UNPROVEN"
     )
 
 
@@ -358,6 +375,14 @@ def _check_effect_coverage(
         for old_id, new_id in pairs.items():
             old, new = old_values[old_id], new_values[new_id]
             task_effect = covered.get((old_id, new_id))
+            if _unproven_minimum(old) or _unproven_minimum(new):
+                if (
+                    task_effect is None
+                    or task_effect.outcome != "unknown"
+                    or task_effect.delta is not None
+                ):
+                    raise ValueError("Unproven minimum requires an explicit unknown effect")
+                continue
             if _is_time_or_index(old) or _is_time_or_index(new):
                 changed_state = (
                     old.status != new.status
@@ -442,11 +467,17 @@ class ScenarioResult(ContractModel):
     params_hash: Identifier
     operations_hash: Identifier
     evidence_refs: list[EvidenceRef]
+    evidence_groups: list[EvidenceGroup] = Field(
+        default_factory=list, max_length=MAX_EVIDENCE_GROUPS, exclude_if=lambda value: not value
+    )
     turnaround_evidence: list[Identifier]
     resource_evidence: list[Identifier] = Field(default_factory=list)
     assumptions: list[Identifier]
     limitations: list[Identifier]
     editable_local_graph: StrictBool
+    after_journeys: list[JourneyResult] = Field(
+        default_factory=list, max_length=10000, exclude_if=lambda value: not value
+    )
 
     @model_validator(mode="after")
     def comparable_effects(self) -> Self:
@@ -478,7 +509,52 @@ class ScenarioResult(ContractModel):
         for values in (self.before, self.after):
             refs.extend(ref for metric in values.metrics for ref in metric.source_refs)
             refs.extend(ref for score in values.scores for ref in score.evidence_refs)
-        _evidence_ids(self.evidence_refs, refs)
+            for metric in values.metrics:
+                if _unproven_minimum(metric) and (
+                    metric.completeness != "partial"
+                    or not metric.source_refs
+                    or metric.journey_id is None
+                ):
+                    raise ValueError("Unproven minimum requires a partial evidence-bound journey")
+        resolver = EvidenceResolver(
+            (row.evidence_id for row in self.evidence_refs), self.evidence_groups
+        )
+        resolver.require(refs)
+        for values in (self.before, self.after):
+            validate_score_dependencies(values.metrics, values.scores, evidence_resolver=resolver)
+        after_journeys = {journey.journey_id: journey for journey in self.after_journeys}
+        if len(after_journeys) != len(self.after_journeys):
+            raise ValueError("Duplicate after journey identity")
+        for metric in self.after.metrics:
+            if _unproven_minimum(metric):
+                journey = after_journeys.get(metric.journey_id or "")
+                if (
+                    journey is None
+                    or journey.status != "available"
+                    or journey.completeness != "partial"
+                    or journey.scope != "urban"
+                    or journey.point_id != metric.subject.point_id
+                    or journey.time_kind != metric.time_kind
+                    or journey.total_seconds != metric.value
+                ):
+                    raise ValueError("Unproven after minimum requires its matching partial journey")
+        used_journeys = {metric.journey_id for metric in self.after.metrics}
+        if not after_journeys.keys() <= used_journeys:
+            raise ValueError("After journey must support a saved after metric")
+        for journey in self.after_journeys:
+            if journey.snapshot_id != self.versions.snapshot_id:
+                raise ValueError("After journey snapshot differs from scenario")
+            journey_refs = [*journey.evidence_refs]
+            journey_refs.extend(ref for leg in journey.legs for ref in leg.evidence_refs)
+            journey_refs.extend(
+                ref
+                for leg in journey.legs
+                if leg.geometry is not None
+                for ref in leg.geometry.evidence_refs
+            )
+            if journey.geometry is not None:
+                journey_refs.extend(journey.geometry.evidence_refs)
+            resolver.require(journey_refs)
         if len({s.service_id for s in self.service_changes}) != len(self.service_changes):
             raise ValueError("Duplicate service change")
         if len({d.effect_id for d in self.deltas}) != len(self.deltas):

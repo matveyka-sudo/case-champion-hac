@@ -1,0 +1,121 @@
+# Accepted-input profiles run without a walk artifact or physical routing graph.
+x-logs: &logs
+  driver: json-file
+  options: {max-size: 10m, max-file: "3"}
+
+x-app: &app
+  image: waydex-full-api:${WAYDEX_REVISION:?}
+  build:
+    context: ${WAYDEX_SOURCE_DIR:?}
+    dockerfile: infra/full-stack/api.Dockerfile
+  init: true
+  read_only: true
+  tmpfs: ["/tmp:size=128m,mode=1777"]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  mem_limit: 1g
+  cpus: 2
+  pids_limit: 128
+  logging: *logs
+  environment:
+    DATABASE_URL: postgresql://waydex:${POSTGRES_PASSWORD:?}@postgres:5432/waydex
+    DATABASE_SCHEMA: waydex_full
+    A2_DATA_DIR: /app/data
+    A2_CONTRACT_VERSION: "2"
+    A2_REGISTRY_HOOK: a2_api.adapters.product:registry
+    A2_PREFLIGHT_HOOK: a2_api.adapters.product:preflight
+    A2_CALCULATION_HANDLER: a2_api.adapters.product:calculate
+    A2_CODE_VERSION: full-${WAYDEX_REVISION:?}-${WAYDEX_PRODUCT_SHA256:?}
+    A2_PRODUCT_RUNTIME_PATH: /runtime/${WAYDEX_PRODUCT_MANIFEST:-manifest.json}
+    A2_PRODUCT_RUNTIME_SHA256: ${WAYDEX_PRODUCT_SHA256:?}
+    A2_WALK_PILOT_EVIDENCE_DIR: /observations
+  volumes:
+    - type: bind
+      source: ${WAYDEX_DEPLOYMENT_DIR:?}
+      target: /runtime
+      read_only: true
+      bind: {create_host_path: false}
+    - observations:/observations
+
+services:
+  runtime-check:
+    <<: *app
+    command: [/app/.venv/bin/python, infra/full-stack/runtime.py, product-check]
+    restart: "no"
+
+  postgres:
+    image: postgis/postgis:17-3.7@sha256:e11c40a6b74adfcdc703ab92094a0d36254eb3e4e2e3e0981b39dbfbff8cca56
+    platform: linux/amd64
+    environment:
+      POSTGRES_DB: waydex
+      POSTGRES_USER: waydex
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -h 127.0.0.1 -U waydex -d waydex]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    mem_limit: 768m
+    cpus: 2
+    pids_limit: 128
+    logging: *logs
+    restart: unless-stopped
+
+  migrate:
+    <<: *app
+    command: [/app/.venv/bin/alembic, -c, /app/apps/api/alembic.ini, upgrade, head]
+    depends_on:
+      postgres: {condition: service_healthy}
+      runtime-check: {condition: service_completed_successfully}
+    restart: "no"
+
+  api:
+    <<: *app
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    healthcheck:
+      test: [CMD, /app/.venv/bin/python, -c, "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/health', timeout=2).read()"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+  worker:
+    <<: *app
+    command: [/app/.venv/bin/python, -m, a2_api.workers.cli, worker]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    healthcheck:
+      test: [CMD, /app/.venv/bin/python, infra/full-stack/runtime.py, worker-health]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+  web:
+    image: waydex-full-web:${WAYDEX_REVISION:?}
+    build:
+      context: ${WAYDEX_SOURCE_DIR:?}
+      dockerfile: infra/full-stack/web.Dockerfile
+    ports: ["127.0.0.1:${WAYDEX_HTTP_PORT:-5191}:8080"]
+    depends_on:
+      api: {condition: service_healthy}
+      worker: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, http://127.0.0.1:8080/health]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    mem_limit: 128m
+    cpus: 1
+    pids_limit: 64
+    logging: *logs
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  observations:

@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 import httpx
 import pytest
 from a2_api.providers.rasp import RaspError, RaspProvider
+from rasp_quota_helpers import TestOnlyQuota
 from test_rasp_provider import page, segment
 
 
@@ -53,7 +54,9 @@ async def test_single_chunk_gzip_bomb_is_rejected_before_decompression(status):
         )
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
-        provider = RaspProvider(client, api_key="synthetic", max_response_bytes=2048)
+        provider = RaspProvider(
+            client, api_key="synthetic", max_response_bytes=2048, wire_quota=TestOnlyQuota()
+        )
         tracemalloc.start()
         try:
             with pytest.raises(RaspError, match="invalid_response"):
@@ -84,7 +87,7 @@ async def test_actual_nonidentity_encoding_is_rejected_even_for_small_body(encod
         )
     ) as client:
         with pytest.raises(RaspError, match="invalid_response"):
-            await query(RaspProvider(client, api_key="synthetic"))
+            await query(RaspProvider(client, api_key="synthetic", wire_quota=TestOnlyQuota()))
     assert stream.closed
     assert stream.read_chunks == 0
 
@@ -102,7 +105,11 @@ async def test_uncompressed_wire_limit_and_control_response(encoding):
             )
         ) as client:
             provider = RaspProvider(
-                client, api_key="synthetic", max_pages=1, max_response_bytes=len(body)
+                client,
+                api_key="synthetic",
+                max_pages=1,
+                max_response_bytes=len(body),
+                wire_quota=TestOnlyQuota(),
             )
             if extra:
                 with pytest.raises(RaspError, match="invalid_response"):
@@ -122,7 +129,9 @@ async def test_single_large_identity_chunk_is_rejected_without_rechunk_buffer(st
             lambda request: httpx.Response(status, headers={"Content-Length": "1"}, stream=stream)
         )
     ) as client:
-        provider = RaspProvider(client, api_key="synthetic", max_response_bytes=2048)
+        provider = RaspProvider(
+            client, api_key="synthetic", max_response_bytes=2048, wire_quota=TestOnlyQuota()
+        )
         tracemalloc.start()
         try:
             with pytest.raises(RaspError, match="invalid_response"):

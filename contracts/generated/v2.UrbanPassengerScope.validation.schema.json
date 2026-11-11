@@ -1,0 +1,102 @@
+{
+  "additionalProperties": false,
+  "description": "One registered input scope, not a promise of complete metrics or admission.\n\nAll selections must match the same scope; unions across scopes are unsafe.\n``whole_city`` permits an absent request area_id, not a full-city rating.\nThe time interval includes valid_from and excludes valid_to.",
+  "properties": {
+    "area_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Area Ids",
+      "type": "array"
+    },
+    "categories": {
+      "items": {
+        "enum": [
+          "adult_polyclinic",
+          "child_polyclinic",
+          "kindergarten",
+          "school",
+          "college_university",
+          "rail_terminal",
+          "bus_terminal",
+          "airport",
+          "shopping_center"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Categories",
+      "type": "array"
+    },
+    "city_id": {
+      "minLength": 1,
+      "title": "City Id",
+      "type": "string"
+    },
+    "passenger_modes": {
+      "items": {
+        "enum": [
+          "walk",
+          "public_transport",
+          "private_car"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Passenger Modes",
+      "type": "array"
+    },
+    "scope_id": {
+      "minLength": 1,
+      "title": "Scope Id",
+      "type": "string"
+    },
+    "snapshot_id": {
+      "minLength": 1,
+      "title": "Snapshot Id",
+      "type": "string"
+    },
+    "traffic_modes": {
+      "items": {
+        "enum": [
+          "static",
+          "typical",
+          "live",
+          "historical"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Traffic Modes",
+      "type": "array"
+    },
+    "valid_from": {
+      "format": "date-time",
+      "title": "Valid From",
+      "type": "string"
+    },
+    "valid_to": {
+      "format": "date-time",
+      "title": "Valid To",
+      "type": "string"
+    },
+    "whole_city": {
+      "title": "Whole City",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "scope_id",
+    "snapshot_id",
+    "city_id",
+    "passenger_modes",
+    "categories",
+    "traffic_modes",
+    "valid_from",
+    "valid_to",
+    "whole_city"
+  ],
+  "title": "UrbanPassengerScope",
+  "type": "object"
+}

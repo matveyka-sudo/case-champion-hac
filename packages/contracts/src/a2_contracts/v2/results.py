@@ -19,6 +19,12 @@ from a2_contracts.v2.base import (
     TrafficMode,
     VersionRefs,
 )
+from a2_contracts.v2.evidence import (
+    EVIDENCE_GROUP_PREFIX,
+    MAX_EVIDENCE_GROUPS,
+    EvidenceGroup,
+    EvidenceResolver,
+)
 from a2_contracts.v2.journeys import CountResult, JourneyResult, LastReturn, ReferenceResult
 from a2_contracts.v2.map_data import AnalysisMapData
 from a2_contracts.v2.requests import AnalysisRequest, IntercityBase
@@ -162,6 +168,12 @@ class Score(ContractModel):
             return
         if self.calculation_kind is None:
             raise ValueError("Full intercity index requires explicit calculation semantics")
+        if _absence_score(self):
+            # An exhaustive no-route result is a separate boundary outcome;
+            # there is no observed time/reference ratio to supply as an operand.
+            if self.components or self.reference_ids:
+                raise ValueError("Confirmed absence cannot claim numerical calculation operands")
+            return
         if self.calculation_kind == "aggregate":
             if not self.components or any(c.kind != "score" for c in self.components):
                 raise ValueError("Full aggregate requires score operands")
@@ -225,12 +237,46 @@ class Score(ContractModel):
         return self
 
 
-def validate_score_dependencies(metrics: list[Metric], scores: list[Score]) -> None:
+def _absence_score(score: Score) -> bool:
+    """Canonical boundary state, not a substitute for the executor's route proof."""
+    return (
+        score.calculation_kind is not None
+        and score.reason_code == "NO_FEASIBLE_ROUTE"
+        and score.status == "available"
+        and score.value == 0
+        and score.completeness == "full"
+        and bool(score.evidence_refs)
+    )
+
+
+def validate_score_dependencies(
+    metrics: list[Metric],
+    scores: list[Score],
+    *,
+    evidence_resolver: EvidenceResolver | None = None,
+    allow_deferred_groups: bool = False,
+) -> None:
     """Shared analysis/scenario invariants, without computing any domain formula."""
     metric_map = {metric.metric_id: metric for metric in metrics}
     score_map = {score.score_id: score for score in scores}
     visiting: set[str] = set()
     visited: set[str] = set()
+
+    def source_subset(metric: Metric, score: Score) -> bool:
+        if evidence_resolver is not None:
+            return evidence_resolver.expand(metric.source_refs) <= evidence_resolver.expand(
+                score.evidence_refs
+            )
+        if any(
+            ref.startswith(EVIDENCE_GROUP_PREFIX)
+            for ref in (*metric.source_refs, *score.evidence_refs)
+        ):
+            # ScenarioValues has no evidence inventory. Its enclosing canonical
+            # ScenarioResult repeats this check with the validated resolver.
+            if allow_deferred_groups:
+                return True
+            raise ValueError("Grouped score evidence requires its owning resolver")
+        return set(metric.source_refs) <= set(score.evidence_refs)
 
     def visit(identifier: str) -> None:
         if identifier in visiting:
@@ -239,6 +285,23 @@ def validate_score_dependencies(metrics: list[Metric], scores: list[Score]) -> N
             return
         visiting.add(identifier)
         score = score_map[identifier]
+        if _absence_score(score):
+            if score.components or score.reference_ids:
+                raise ValueError("Confirmed absence cannot claim numerical calculation operands")
+            if not any(
+                metric.subject == score.subject
+                and metric.value is None
+                and metric.status == "not_applicable"
+                and metric.completeness == "full"
+                and metric.reason_code == "NO_FEASIBLE_ROUTE"
+                and metric.time_kind == "complete_chain"
+                and metric.unit == "seconds"
+                and metric.journey_id is None
+                and bool(metric.source_refs)
+                and source_subset(metric, score)
+                for metric in metrics
+            ):
+                raise ValueError("Confirmed absence requires its scoped complete-chain placeholder")
         for component in score.components:
             dependencies = metric_map if component.kind == "metric" else score_map
             if component.id not in dependencies:
@@ -258,6 +321,30 @@ def validate_score_dependencies(metrics: list[Metric], scores: list[Score]) -> N
     for identifier in score_map:
         visit(identifier)
 
+    numeric_leaves: dict[str, bool] = {}
+
+    def has_numeric_leaf(score: Score) -> bool:
+        if score.score_id not in numeric_leaves:
+            numeric_leaves[score.score_id] = not _absence_score(score) and (
+                score.calculation_kind != "aggregate"
+                or any(
+                    component.kind == "score" and has_numeric_leaf(score_map[component.id])
+                    for component in score.components
+                )
+            )
+        return numeric_leaves[score.score_id]
+
+    for score in scores:
+        if (
+            score.status == "available"
+            and score.completeness == "full"
+            and score.calculation_kind == "aggregate"
+            and not _absence_score(score)
+            and score.components
+            and not has_numeric_leaf(score)
+        ):
+            raise ValueError("Numeric aggregate requires a non-absence calculation operand")
+
 
 def validate_score_context(
     metrics: list[Metric], scores: list[Score], analysis_kind: AnalysisKind
@@ -269,9 +356,12 @@ def validate_score_context(
 
     def has_path_operand(score: Score) -> bool:
         if score.score_id not in path_operands:
-            path_operands[score.score_id] = score.calculation_kind == "reference_ratio" or any(
-                component.kind == "score" and has_path_operand(score_map[component.id])
-                for component in score.components
+            path_operands[score.score_id] = not _absence_score(score) and (
+                score.calculation_kind == "reference_ratio"
+                or any(
+                    component.kind == "score" and has_path_operand(score_map[component.id])
+                    for component in score.components
+                )
             )
         return path_operands[score.score_id]
 
@@ -282,6 +372,7 @@ def validate_score_context(
             full
             and analysis_kind == "intercity_passenger"
             and score.calculation_kind == "aggregate"
+            and not _absence_score(score)
             and not has_path_operand(score)
         ):
             raise ValueError("Passenger aggregate requires its path operand")
@@ -385,6 +476,9 @@ class AnalysisResult(ContractModel):
     metrics: list[Metric]
     scores: list[Score]
     evidence_refs: list[EvidenceRef]
+    evidence_groups: list[EvidenceGroup] = Field(
+        default_factory=list, max_length=MAX_EVIDENCE_GROUPS, exclude_if=lambda value: not value
+    )
     limitations: list[Identifier]
     versions: VersionRefs
     journeys: list[JourneyResult]
@@ -417,17 +511,20 @@ class AnalysisResult(ContractModel):
             raise ValueError("Saved methodology reference differs from result")
         metrics = {m.metric_id: m for m in self.metrics}
         scores = {s.score_id: s for s in self.scores}
-        evidence = {e.evidence_id for e in self.evidence_refs}
+        resolver = EvidenceResolver(
+            (e.evidence_id for e in self.evidence_refs), self.evidence_groups
+        )
+        evidence = resolver.reference_ids
         if (
             len(metrics) != len(self.metrics)
             or len(scores) != len(self.scores)
-            or len(evidence) != len(self.evidence_refs)
+            or len(resolver.leaf_ids) != len(self.evidence_refs)
         ):
             raise ValueError("Duplicate metric/score/evidence identity")
         for item in self.metrics:
             if not set(item.source_refs) <= evidence:
                 raise ValueError("Unknown metric evidence reference")
-        validate_score_dependencies(self.metrics, self.scores)
+        validate_score_dependencies(self.metrics, self.scores, evidence_resolver=resolver)
         complete_chain_operands: dict[str, bool] = {}
 
         def has_complete_chain_operand(score: Score) -> bool:
@@ -450,6 +547,7 @@ class AnalysisResult(ContractModel):
             if (
                 self.analysis_kind == "intercity_cargo"
                 and score.status == "available"
+                and not _absence_score(score)
                 and not has_complete_chain_operand(score)
             ):
                 raise ValueError("Cargo delivery score needs a complete-chain time operand")
@@ -475,6 +573,8 @@ class AnalysisResult(ContractModel):
             evidence_links(journey.evidence_refs)
             for leg in journey.legs:
                 evidence_links(leg.evidence_refs)
+                if leg.geometry is not None:
+                    evidence_links(leg.geometry.evidence_refs)
             if journey.geometry:
                 evidence_links(journey.geometry.evidence_refs)
             if journey.reference_id is not None:
@@ -511,6 +611,10 @@ class AnalysisResult(ContractModel):
             return evaluated_journeys[score.score_id]
 
         def check_required_dependencies(score: Score) -> None:
+            if _absence_score(score):
+                # The matching full absent chain was checked by the shared
+                # dependency validator. A nonexistent route has no denominator.
+                return
             full = score.status == "available" and score.completeness == "full"
             required_references = set(score.reference_ids)
             kind = score.calculation_kind
