@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef, type KeyboardEvent } from "react";
+import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Icon } from "./ui";
 import { usePopover } from "./usePopover";
 export interface SelectOption {
@@ -22,6 +22,11 @@ export function Select({
     id = useId();
   const active = useRef(value),
     search = useRef({ text: "", time: 0 });
+  const searchable = options.length > 20;
+  const [query, setQuery] = useState("");
+  const searchInput = useRef<HTMLInputElement>(null);
+  const visibleOptions = searchable && query.trim()
+    ? options.filter((option) => option.label.toLocaleLowerCase("ru").includes(query.trim().toLocaleLowerCase("ru"))) : options;
   const focusOption = (value: string) => {
     active.current = value;
     popup.current
@@ -29,8 +34,9 @@ export function Select({
       ?.focus();
   };
   useLayoutEffect(() => {
-    if (open) popup.current?.querySelector<HTMLElement>(`[data-value="${CSS.escape(active.current)}"]:not(:disabled)`)?.focus();
-  }, [open, popup]);
+    if (open && searchable) searchInput.current?.focus();
+    else if (open) popup.current?.querySelector<HTMLElement>(`[data-value="${CSS.escape(active.current)}"]:not(:disabled)`)?.focus();
+  }, [open, popup, searchable]);
   const select = (next: string) => {
     if (!options.some((option) => option.value === next && !option.disabled)) return;
     onChange(next);
@@ -38,7 +44,8 @@ export function Select({
     trigger.current?.focus();
   };
   const keyboard = (e: KeyboardEvent) => {
-    const enabled = options.filter((o) => !o.disabled);
+    if (e.target instanceof HTMLInputElement) return;
+    const enabled = visibleOptions.filter((o) => !o.disabled);
     if (!enabled.length) return;
     let i = enabled.findIndex((o) => o.value === active.current);
     if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
@@ -96,6 +103,7 @@ export function Select({
         aria-expanded={open}
         aria-haspopup="listbox"
         onClick={() => {
+          setQuery("");
           active.current = options.find((option) => option.value === value && !option.disabled)?.value ?? options.find((option) => !option.disabled)?.value ?? "";
           setOpen(!open);
         }}
@@ -108,14 +116,24 @@ export function Select({
       </button>
       <div
         ref={popup}
-        id={id}
+        id={searchable ? undefined : id}
         popover="manual"
         className="wx-popup wx-select-popup"
-        role="listbox"
+        role={searchable ? undefined : "listbox"}
         aria-label={label}
         onKeyDown={keyboard}
       >
-        {options.map((o) => (
+        {searchable && <div className="wx-select-search"><input ref={searchInput} className="api-input" type="search"
+          aria-label={`${label}: поиск`} placeholder="Найти город или субъект" value={query}
+          onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => {
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              const first = visibleOptions.find((option) => !option.disabled);
+              if (first) focusOption(first.value);
+            }
+          }} /></div>}
+        <div role={searchable ? "listbox" : "presentation"} id={searchable ? id : undefined} aria-label={searchable ? label : undefined}>
+        {visibleOptions.map((o) => (
           <button
             key={o.value}
             type="button"
@@ -137,6 +155,8 @@ export function Select({
             {o.value === value && <Icon name="check" />}
           </button>
         ))}
+        </div>
+        {searchable && !visibleOptions.length && <p role="status">Территория не найдена</p>}
       </div>
     </div>
   );
