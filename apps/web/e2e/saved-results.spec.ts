@@ -3,6 +3,8 @@ import type { AnalysisResult, Schemas, Territory } from "../src/api/types";
 import capsRaw from "../tests/fixtures/api/capabilities.json" with { type: "json" };
 import catalogRaw from "../tests/fixtures/api/territories.json" with { type: "json" };
 import baseRaw from "../tests/fixtures/api/urban_passenger.json" with { type: "json" };
+import scenarioRaw from "../tests/fixtures/api/scenario.json" with { type: "json" };
+import proposalRaw from "../tests/fixtures/api/proposal.json" with { type: "json" };
 
 // Offline browser regression fixtures. No live routing/provider requests.
 const catalog: Territory[] = [...catalogRaw as Territory[], { territory_id: "novorossiysk", name: "Новороссийск", level: "city", timezone: "Europe/Moscow", parent_region_id: null, capital_city_id: null }];
@@ -14,12 +16,12 @@ function saved(id: string, city = "city-1", offset = "+03:00"): AnalysisResult {
     passenger_mode: "walk", categories: ["school"], priorities: { school: "high" }, snapshot_id: value.snapshot_id };
   return value;
 }
-async function fixture(page: Page, options: { denied?: number; delayFirst?: boolean; running?: boolean; scenarioJob?: boolean; retired?: boolean } = {}) {
+async function fixture(page: Page, options: { denied?: number; delayFirst?: boolean; running?: boolean; scenarioJob?: boolean; retired?: boolean; scenario?: boolean; badHash?: boolean; scenarioDenied?: number } = {}) {
   const caps = structuredClone(capsRaw) as Schemas["Capabilities"];
   caps.snapshots![0].territory_ids.push("novorossiysk");
   if (options.retired) caps.snapshots![0].valid_from = "2099-01-01";
   const analyses = new Map(cities.map(([id, , offset]) => [id, saved(id, id, offset)]));
-  let posts = 0, getCount = 0, jobCount = 0, cancelCount = 0, cancelled = false;
+  let posts = 0, getCount = 0, jobCount = 0, cancelCount = 0, cancelled = false, scenarioPosts = 0, scenarioGets = 0;
   let deny = options.denied || 0;
   let after: AnalysisResult | null = null;
   const firstReply = Promise.withResolvers<void>();
@@ -40,12 +42,21 @@ async function fixture(page: Page, options: { denied?: number; delayFirst?: bool
       body = { job_id: "analysis-job", status: "queued", request_id: "trace", poll_after_seconds: 1 };
     } else if (path.endsWith("/cancel")) {
       cancelled = true; cancelCount++;
-      body = job("cancelled");
+      body = job("cancelled", path.split("/").at(-2));
     } else if (path.includes("/jobs/")) {
       jobCount++;
       const phase = options.running && jobCount === 1 ? "queued" : options.running && jobCount === 2 ? "running" : "succeeded";
-      body = job(cancelled ? "cancelled" : phase);
-    } else if (path.endsWith("/scenarios")) body = [];
+      body = job(cancelled ? "cancelled" : phase, path.split("/").at(-1));
+    } else if (path.includes("/scenario-runs/")) {
+      scenarioGets++;
+      if (options.scenarioDenied) { status = options.scenarioDenied; body = error("unknown_id"); }
+      else body = { ...scenarioRaw, run_id: "pending:scenario:old", baseline_analysis_id: "city-1", baseline_result_hash: options.badHash ? "wrong-baseline" : baseRaw.result_hash };
+    } else if (path.endsWith("/scenarios")) body = options.scenario ? [{ ...proposalRaw, baseline_analysis_id: "city-1", baseline_result_hash: baseRaw.result_hash }] : [];
+    else if (path.includes("/scenarios/") && path.endsWith("/runs")) {
+      scenarioPosts++;
+      status = 202;
+      body = { job_id: "scenario-job", status: "queued", request_id: "trace", poll_after_seconds: 1 };
+    }
     else if (path.includes("/analyses/")) {
       getCount++;
       const id = decodeURIComponent(path.split("/").at(-1)!);
@@ -56,14 +67,15 @@ async function fixture(page: Page, options: { denied?: number; delayFirst?: bool
     } else { status = 404; body = error("unknown_id"); }
     await route.fulfill({ status, json: body });
   });
-  function job(state: string) {
-    return { job_id: "analysis-job", status: state, request_id: "trace", created_at: "2026-11-09T00:00:00Z",
+  function job(state: string, id = "analysis-job") {
+    const isScenario = options.scenarioJob || id === "scenario-job";
+    return { job_id: id, status: state, request_id: "trace", created_at: "2026-11-09T00:00:00Z",
       started_at: state === "queued" ? null : "2026-11-09T00:00:01Z", finished_at: ["queued", "running"].includes(state) ? null : "2026-11-09T00:00:02Z",
-      analysis_id: state === "succeeded" && !options.scenarioJob ? after?.analysis_id || "city-1" : null,
-      scenario_run_id: state === "succeeded" && options.scenarioJob ? "pending:scenario:old" : null, error: null, poll_after_seconds: 1,
-      ...(state === "running" ? { progress: { completed_batches: 88, total_batches: 88, phase: "finalizing" } } : {}) };
+      analysis_id: state === "succeeded" && !isScenario ? after?.analysis_id || "city-1" : null,
+      scenario_run_id: state === "succeeded" && isScenario ? "pending:scenario:old" : null, error: null, poll_after_seconds: 1,
+      ...(state === "running" && !isScenario ? { progress: { completed_batches: 88, total_batches: 88, phase: "finalizing" } } : {}) };
   }
-  return { get posts() { return posts; }, get gets() { return getCount; }, get jobs() { return jobCount; }, get cancels() { return cancelCount; }, allow: () => { deny = 0; }, release: () => firstReply.resolve() };
+  return { get posts() { return posts; }, get gets() { return getCount; }, get jobs() { return jobCount; }, get cancels() { return cancelCount; }, get scenarioPosts() { return scenarioPosts; }, get scenarioGets() { return scenarioGets; }, allow: () => { deny = 0; }, release: () => firstReply.resolve() };
 }
 async function resultVisible(page: Page, city: string) {
   await expect(page.locator(".status")).toContainText("Результат получен");
@@ -197,4 +209,56 @@ test("recovered job cancellation is explicit and refresh never recreates the can
   await expect(page.locator(".status")).toContainText("Задание отменено");
   expect(mock.cancels).toBe(1);
   expect(mock.posts).toBe(0);
+});
+test("historical scenario opens by GET, survives refresh, and binds its baseline request", async ({ page }) => {
+  const mock = await fixture(page);
+  await page.goto("/?data=api#atlas?scenario=pending%3Ascenario%3Aold");
+  await resultVisible(page, "Москва");
+  await expect(page.locator("#apiResultCard")).toContainText("Сравнение до / после");
+  await expect(page.getByRole("button", { name: "Сценарий", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#apiDate")).toContainText("09.11.2026");
+  await page.reload();
+  await resultVisible(page, "Москва");
+  await expect(page.locator("#apiResultCard")).toContainText("Сравнение до / после");
+  expect(mock.scenarioGets).toBe(2);
+  expect(mock.gets).toBe(2);
+  expect(mock.posts + mock.scenarioPosts).toBe(0);
+});
+test("an explicit scenario run has its own job pointer and Back restores baseline without recomputation", async ({ page }) => {
+  const mock = await fixture(page, { scenario: true });
+  await page.goto("/?data=api#atlas?analysis=city-1");
+  await resultVisible(page, "Москва");
+  await page.getByRole("button", { name: "Агент", exact: true }).first().click();
+  await page.getByRole("button", { name: "Проверить сценарий", exact: true }).click();
+  await expect(page).toHaveURL(/scenario=pending%3Ascenario%3Aold$/);
+  await expect(page.locator("#apiResultCard")).toContainText("Сравнение до / после");
+  await page.reload();
+  await resultVisible(page, "Москва");
+  await page.goBack();
+  await expect(page).toHaveURL(/analysis=city-1$/);
+  await resultVisible(page, "Москва");
+  await expect(page.locator("#apiResultCard")).not.toContainText("Сравнение до / после");
+  expect(mock.posts).toBe(0);
+  expect(mock.scenarioPosts).toBe(1);
+});
+test("scenario job resumes GET polling and requires both scenario and baseline before showing after", async ({ page }) => {
+  const mock = await fixture(page, { running: true });
+  await page.goto("/?data=api#atlas?scenario_job=scenario-job");
+  await expect.poll(() => mock.jobs).toBeGreaterThanOrEqual(2);
+  await expect(page.locator(".status")).toContainText("Расчёт выполняется");
+  await expect(page.locator(".status")).not.toContainText("пакет");
+  await expect(page).toHaveURL(/scenario_job=scenario-job$/);
+  await expect(page.locator("#apiResultCard")).toHaveCount(0);
+  await resultVisible(page, "Москва");
+  await expect(page).toHaveURL(/scenario=pending%3Ascenario%3Aold$/);
+  await expect(page.getByRole("button", { name: "Сценарий", exact: true })).toHaveAttribute("aria-pressed", "true");
+  expect(mock.posts + mock.scenarioPosts).toBe(0);
+});
+for (const options of [{ badHash: true }, { scenarioDenied: 404 }, { denied: 404 }]) test(`scenario revalidation rejects unavailable or foreign baseline ${JSON.stringify(options)}`, async ({ page }) => {
+  const mock = await fixture(page, options);
+  await page.goto("/?data=api#atlas?scenario=pending%3Ascenario%3Aold");
+  await expect(page.locator(".statecard[role=alert]")).toBeVisible();
+  await expect(page.locator("#apiResultCard")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Сценарий", exact: true })).toHaveCount(0);
+  expect(mock.posts + mock.scenarioPosts).toBe(0);
 });

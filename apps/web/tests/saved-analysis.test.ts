@@ -33,7 +33,7 @@ describe("saved result pointers", () => {
     expect(parseSavedPointer("#atlas?job=a%252Fb")).toEqual({ kind: "job", id: "a%2Fb" });
     expect(parseSavedPointer("#atlas")).toBeNull();
   });
-  it.each(["#atlas?analysis=", "#atlas?analysis=a&analysis=b", "#atlas?analysis=a&job=b", "#atlas?scenario=a", "#atlas?analysis=%", "#atlas?analysis=%FF", "#atlas?analysis=%0Asecret", "#atlas?analysis=+a", `#atlas?analysis=${"a".repeat(257)}`, "#atlas-other"])("refuses malformed/unsupported pointer %s", (hash) => {
+  it.each(["#atlas?analysis=", "#atlas?analysis=a&analysis=b", "#atlas?analysis=a&job=b", "#atlas?unknown=a", "#atlas?analysis=%", "#atlas?analysis=%FF", "#atlas?analysis=%0Asecret", "#atlas?analysis=+a", `#atlas?analysis=${"a".repeat(257)}`, "#atlas-other"])("refuses malformed/unsupported pointer %s", (hash) => {
     expect(() => parseSavedPointer(hash)).toThrow(/некорректна|не поддерживается/);
   });
 });

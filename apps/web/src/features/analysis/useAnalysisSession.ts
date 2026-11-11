@@ -17,6 +17,7 @@ export interface ChatMessage {
   question: string;
   answer: Schemas["Explanation"];
 }
+export interface RestoredSnapshot { result: AnalysisResult; scenario: Schemas["ScenarioResult"] | null }
 export function useAnalysisSession(gateway: BackendGateway = backend) {
   const [result, setResult] = useState<AnalysisResult | null>(null),
     [scenario, setScenario] = useState<Schemas["ScenarioResult"] | null>(null),
@@ -161,7 +162,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
       }
     }
   };
-  const restore = async (hash: string, isCurrent = () => true): Promise<AnalysisResult | null> => {
+  const restore = async (hash: string, isCurrent = () => true): Promise<RestoredSnapshot | null> => {
     reset();
     const rev = revision.current;
     const controller = new AbortController();
@@ -173,7 +174,8 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
       if (!pointer) return null;
       setPhase("running");
       let id = pointer.id;
-      if (pointer.kind === "job") {
+      const scenarioPointer = pointer.kind === "scenario" || pointer.kind === "scenario_job";
+      if (pointer.kind === "job" || pointer.kind === "scenario_job") {
         const initial = await gateway.job(id, controller.signal);
         if (initial.job_id !== id) throw new ApiError(0, "invalid_response", "Ответ относится к другому заданию");
         const completed = await gateway.wait(initial, controller.signal, (j) => {
@@ -181,19 +183,29 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
         });
         if (!current()) return null;
         if (completed.status === "cancelled") { setPhase("cancelled"); return null; }
-        if (!completed.analysis_id || completed.scenario_run_id)
-          throw new ApiError(0, "invalid_saved_pointer", "Эта ссылка не относится к заданию анализа.");
-        id = completed.analysis_id;
+        if (scenarioPointer ? !completed.scenario_run_id || !!completed.analysis_id : !completed.analysis_id || !!completed.scenario_run_id)
+          throw new ApiError(0, "invalid_saved_pointer", scenarioPointer ? "Эта ссылка не относится к заданию сценария." : "Эта ссылка не относится к заданию анализа.");
+        id = (scenarioPointer ? completed.scenario_run_id : completed.analysis_id)!;
+      }
+      let scenarioValue: Schemas["ScenarioResult"] | null = null;
+      if (scenarioPointer) {
+        scenarioValue = await gateway.scenarioResult(id, controller.signal);
+        if (!current()) return null;
+        if (scenarioValue.run_id !== id) throw new ApiError(0, "invalid_response", "Ответ относится к другому сценарию");
+        id = scenarioValue.baseline_analysis_id;
       }
       const value = await gateway.result(id, controller.signal);
       if (!current()) return null;
       if (value.analysis_id !== id) throw new ApiError(0, "invalid_response", "Ответ относится к другому анализу");
+      if (scenarioValue && scenarioValue.baseline_result_hash !== value.result_hash)
+        throw new ApiError(409, "baseline_mismatch", "Сценарий относится к другой базе");
       currentResult.current = value;
       setResult(value);
+      setScenario(scenarioValue);
       setDirty(false);
       setPhase("done");
       loadProposals(value);
-      return value;
+      return { result: value, scenario: scenarioValue };
     } catch (e) {
       if (current()) {
         const unavailable = e instanceof ApiError && [404, 410].includes(e.status);
@@ -207,7 +219,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
       if (active.current === controller) busy.current = false;
     }
   };
-  const runScenario = async (proposal: Schemas["ScenarioProposal"]) => {
+  const runScenario = async (proposal: Schemas["ScenarioProposal"], navigate?: (kind: "scenario_job" | "scenario", id: string) => boolean | void) => {
     const base = currentResult.current;
     if (
       busy.current ||
@@ -232,6 +244,8 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
         crypto.randomUUID(),
         controller.signal,
       );
+      if (controller.signal.aborted || rev !== revision.current) return;
+      if (navigate?.("scenario_job", accepted.job_id) === false) { controller.abort(); return; }
       const j = await gateway.wait(accepted, controller.signal, (j) => {
         if (rev === revision.current && !controller.signal.aborted) setJob(j);
       });
@@ -257,6 +271,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
       );
       if (controller.signal.aborted || rev !== revision.current) return;
       if (
+        value.run_id !== j.scenario_run_id ||
         value.baseline_analysis_id !== base.analysis_id ||
         value.baseline_result_hash !== base.result_hash
       ) {
@@ -270,6 +285,7 @@ export function useAnalysisSession(gateway: BackendGateway = backend) {
         setPhase("failed");
         return;
       }
+      if (navigate?.("scenario", value.run_id) === false) { controller.abort(); return; }
       setScenario(value);
       setPhase("done");
     } catch (e) {
