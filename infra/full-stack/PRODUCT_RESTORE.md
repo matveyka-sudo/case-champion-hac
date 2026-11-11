@@ -16,8 +16,11 @@ The runtime contains accepted inputs, immutable supplements, graph metadata and
 the native certificate. Graph transfers contain the actual OSM/tile/config files
 and operator provenance bindings. Route observations belong to a separate Docker
 volume; copy that volume and PostgreSQL when migrating saved history. A fresh
-database needs no old calculation results: available routes are calculated on
-request. Missing catalogue objects and physical connections are not invented.
+database needs no old calculation results. Connected urban walking and truck
+profiles calculate missing route observations in the worker on request. Static
+intercity car profiles currently consume prepared observations from the runtime;
+arbitrary intercity routing is not yet connected. Missing catalogue objects and
+physical connections are not invented.
 
 Set shell variables to the actual checked release values; all paths below are
 absolute. No path from the original developer's Desktop is required.
@@ -88,3 +91,30 @@ intercity freight operations or comparable pipeline measurements.
 The native certificate artifact must match the container architecture. A replay
 on Docker Linux ARM64 does not establish AMD64 compatibility or a remote-server
 deployment; record those gates separately.
+
+## Verified isolated replay, 2026-11-11
+
+Source `c782e20032b8a7a3a9069d3b870bc2d7a1c824a3` was built from a clean
+detached checkout. The runtime archive and all five graph/binding transfer groups
+were restored to a new directory. A new project network, PostgreSQL volume and
+observation volume were used; existing stand containers remained unchanged.
+All bind mounts pointed to the restored tree, and all three Valhalla instances
+reported version 3.5.1 with their pinned tile timestamps. Startup took 91.298 s
+after image builds. This used an existing Docker host with cached base images,
+Linux ARM64 application containers and the configured AMD64 PostgreSQL image.
+
+Before the browser request, PostgreSQL contained zero jobs and zero runs. A real
+React request for outbound nonfood container freight in Novorossiysk created job
+`9dee75a1-282d-4c0d-8f76-ab844e62e474`. The worker calculated 172 network times
+in 39.111 s and published analysis `bc1731a4-0d2e-4d3d-9f75-243dbb27347f`.
+React displayed the persisted result and 88 map features. Canonical validation
+passed; repeat GET was byte-identical and an unrelated session received 404.
+The 484826-byte result had SHA256
+`beb21e20b687ef627dd82ef99ed9fbb88650787d6da9abc17f81a561d975deff`.
+No operator precomputation command or paid provider was used.
+
+This proves the isolated restore and one real partial freight flow, not every
+profile or a deployment to a remote server. Strict freight indices remain null:
+approaches, compatibility and complete catalogue/minimum proof remain unknown.
+Live Alice was disabled in this replay. AMD64 native-certificate execution,
+public HTTPS deployment and remote artifact distribution remain separate gates.
