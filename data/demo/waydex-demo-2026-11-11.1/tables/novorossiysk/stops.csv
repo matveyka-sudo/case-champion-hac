@@ -1,0 +1,9 @@
+node_id,route,sequence,name,lat,lon,location_origin,stop_origin,template_source
+demo-novorossiysk-stop-A1,A,1,,44.6922981,37.7696574,real_walk_node,synthetic,walk:way:1237214741:40.1
+demo-novorossiysk-stop-A2,A,2,,44.7013972,37.7819294,real_walk_node,synthetic,walk:way:42153012:48.8
+demo-novorossiysk-stop-A3,A,3,,44.7103208,37.7816501,real_walk_node,synthetic,walk:way:216929783:161.1
+demo-novorossiysk-stop-A4,A,4,,44.7189157,37.7680676,real_walk_node,synthetic,walk:way:488481554:385.7
+demo-novorossiysk-stop-B1,B,1,,44.7192386,37.7689359,real_walk_node,synthetic,walk:way:488637909:35.9
+demo-novorossiysk-stop-B2,B,2,,44.7250627,37.7665015,real_walk_node,synthetic,walk:way:297538349:42.5
+demo-novorossiysk-stop-B3,B,3,,44.7264047,37.7633539,real_walk_node,synthetic,walk:way:483265226:45.6
+demo-novorossiysk-stop-B4,B,4,,44.7131273,37.7646895,real_walk_node,synthetic,walk:way:49769078:64.9

@@ -1,0 +1,3 @@
+freight_node_id,kind,lat,lon,access_node_id,origin,handling_types,max_mass_t,max_height_m,base_wait_s,handling_s,equipment_units,slots_per_hour
+novorossiysk-port-way-1168951234,port,44.722339,37.7853162,road:way:106625466:109.8,real_location_model_operations,container|bulk,40.0,4.5,2280,1800,3,9
+demo-novorossiysk-rail-terminal-model,rail_terminal,44.7731002,37.6998512,road:way:1379038011:103.4,model,container,30.0,4.5,2880,1740,3,9

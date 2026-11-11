@@ -1,0 +1,214 @@
+{
+ "cargo_profile": {
+  "food_class": "nonfood",
+  "handling_requirements": [
+   "container"
+  ],
+  "kind": "delivery",
+  "profile_id": "truck-model-20t-container-nonfood-ordinary",
+  "temperature_requirements": {
+   "controlled": false,
+   "max_c": null,
+   "min_c": null
+  },
+  "urgency": "ordinary",
+  "vehicle_constraints": {
+   "max_height_m": 4.0,
+   "max_weight_tonnes": 20.0,
+   "restrictions": []
+  }
+ },
+ "freight_nodes": [
+  {
+   "approach_directions": [
+    "inbound",
+    "outbound"
+   ],
+   "base_wait_s": 2160,
+   "freight_node_id": "demo-moscow-logistics-terminal-model",
+   "gate_window_local": [
+    "06:00",
+    "22:00"
+   ],
+   "handling_s": 1680,
+   "handling_types": [
+    "container",
+    "pallet"
+   ],
+   "kind": "logistics_terminal",
+   "max_height_m": 4.5,
+   "max_mass_t": 30.0,
+   "origin": "model",
+   "resource": {
+    "equipment": "reach_stacker",
+    "slots_per_hour": 12,
+    "units": 4
+   }
+  },
+  {
+   "approach_directions": [
+    "inbound",
+    "outbound"
+   ],
+   "base_wait_s": 2400,
+   "freight_node_id": "demo-moscow-rail-terminal-model",
+   "gate_window_local": [
+    "06:00",
+    "22:00"
+   ],
+   "handling_s": 1860,
+   "handling_types": [
+    "container"
+   ],
+   "kind": "rail_terminal",
+   "max_height_m": 4.5,
+   "max_mass_t": 30.0,
+   "origin": "model",
+   "resource": {
+    "equipment": "reach_stacker",
+    "slots_per_hour": 9,
+    "units": 3
+   }
+  }
+ ],
+ "public_transport": {
+  "demand": {
+   "capacity_persons_per_hour": 320,
+   "catchment_population_persons": 125380.312,
+   "demand_persons_per_hour": 328,
+   "evidence_id": "demo-model:moscow:demand",
+   "load_factor": 1.026,
+   "route_id": "demo-moscow-route-B",
+   "window_local": [
+    "08:00",
+    "09:00"
+   ]
+  },
+  "extra_departure_slot": {
+   "departure_local": "09:15",
+   "new_trip_id": "demo-moscow-trip-B-0915-extra",
+   "shift_s": 450,
+   "template_trip_id": "demo-moscow-trip-B-0907"
+  },
+  "problem_transfer": {
+   "arrival_local": "09:04",
+   "arriving_trip_id": "demo-moscow-trip-A-0840",
+   "base_wait_s": 900,
+   "from_stop": "demo-moscow-stop-A4",
+   "min_change_s": 60,
+   "minimum_id": "demo-moscow-minimum-A4-B1",
+   "next_trip_id": "demo-moscow-trip-B-0922",
+   "planned_departure_local": "09:07",
+   "planned_trip_id": "demo-moscow-trip-B-0907",
+   "slack_after_coordinate_s": 60,
+   "slack_s": -60,
+   "to_stop": "demo-moscow-stop-B1",
+   "transfer_id": "demo-moscow-transfer-A4-B1",
+   "walk_s": 190
+  },
+  "resource": {
+   "assigned_trip_ids": [],
+   "capacity_persons": 80,
+   "evidence_id": "demo-model:moscow:resource",
+   "vehicle_id": "demo-moscow-vehicle-B-reserve-1",
+   "working_window_local": [
+    "06:00",
+    "14:00"
+   ]
+  },
+  "routes": [
+   {
+    "dwell_s": 20,
+    "headway_s": 600,
+    "route_id": "demo-moscow-route-A",
+    "segment_run_s": [
+     510,
+     390,
+     540
+    ],
+    "stops": [
+     "demo-moscow-stop-A1",
+     "demo-moscow-stop-A2",
+     "demo-moscow-stop-A3",
+     "demo-moscow-stop-A4"
+    ],
+    "trip_ids": [
+     "demo-moscow-trip-A-0700",
+     "demo-moscow-trip-A-0710",
+     "demo-moscow-trip-A-0720",
+     "demo-moscow-trip-A-0730",
+     "demo-moscow-trip-A-0740",
+     "demo-moscow-trip-A-0750",
+     "demo-moscow-trip-A-0800",
+     "demo-moscow-trip-A-0810",
+     "demo-moscow-trip-A-0820",
+     "demo-moscow-trip-A-0830",
+     "demo-moscow-trip-A-0840",
+     "demo-moscow-trip-A-0850",
+     "demo-moscow-trip-A-0900",
+     "demo-moscow-trip-A-0910",
+     "demo-moscow-trip-A-0920",
+     "demo-moscow-trip-A-0930",
+     "demo-moscow-trip-A-0940",
+     "demo-moscow-trip-A-0950",
+     "demo-moscow-trip-A-1000",
+     "demo-moscow-trip-A-1010",
+     "demo-moscow-trip-A-1020",
+     "demo-moscow-trip-A-1030",
+     "demo-moscow-trip-A-1040",
+     "demo-moscow-trip-A-1050"
+    ],
+    "vehicle_capacity_persons": 80
+   },
+   {
+    "dwell_s": 20,
+    "headway_s": 900,
+    "route_id": "demo-moscow-route-B",
+    "segment_run_s": [
+     480,
+     300,
+     360
+    ],
+    "stops": [
+     "demo-moscow-stop-B1",
+     "demo-moscow-stop-B2",
+     "demo-moscow-stop-B3",
+     "demo-moscow-stop-B4"
+    ],
+    "trip_ids": [
+     "demo-moscow-trip-B-0737",
+     "demo-moscow-trip-B-0752",
+     "demo-moscow-trip-B-0807",
+     "demo-moscow-trip-B-0822",
+     "demo-moscow-trip-B-0837",
+     "demo-moscow-trip-B-0852",
+     "demo-moscow-trip-B-0907",
+     "demo-moscow-trip-B-0922",
+     "demo-moscow-trip-B-0937",
+     "demo-moscow-trip-B-0952",
+     "demo-moscow-trip-B-1007",
+     "demo-moscow-trip-B-1022",
+     "demo-moscow-trip-B-1037",
+     "demo-moscow-trip-B-1052",
+     "demo-moscow-trip-B-1107",
+     "demo-moscow-trip-B-1122"
+    ],
+    "vehicle_capacity_persons": 80
+   }
+  ],
+  "target": {
+   "destination_id": "moscow-kindergarten-node-5332088797",
+   "origin_point_id": "moscow-utm37n-1km-v1-e416-n6175-p",
+   "ready_local": "08:30",
+   "selection": "pair with the largest a2_engine gain under both operations that rides the planned trip after a change"
+  },
+  "turnaround": {
+   "evidence_id": "demo-model:moscow:turnaround",
+   "layover_s": 300,
+   "route_id": "demo-moscow-route-B",
+   "run_s": 1180,
+   "turnaround_s": 2960
+  }
+ },
+ "stops_template": "mos_ground_transport GTFS stops (transit_stops.json)"
+}

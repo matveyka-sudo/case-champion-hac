@@ -1,0 +1,54 @@
+{
+ "after": {
+  "departure_utc": "2026-11-11T09:30:00+00:00",
+  "total_s": 165770,
+  "transshipment_s": 20400,
+  "wait_s": 2210
+ },
+ "before": {
+  "departure_utc": "2026-11-11T20:00:00+00:00",
+  "total_s": 203570,
+  "transshipment_s": 20400,
+  "wait_s": 40010
+ },
+ "comparison_id": "cmp-demo-icc-moscow--novorossiysk-add_compatible_departure",
+ "contract_status": "requires_contract_change: cargo operations are not in scenarios v2",
+ "created_ids": [
+  "demo-icf-rail-moscow--novorossiysk-extra"
+ ],
+ "delta": {
+  "sign": "before_minus_after",
+  "total_s": 37800,
+  "wait_s": 37800
+ },
+ "ids": {
+  "after": [
+   "demo-icf-moscow--novorossiysk",
+   "demo-icf-moscow--novorossiysk-1",
+   "demo-icf-moscow--novorossiysk-2",
+   "demo-icf-moscow--novorossiysk-3",
+   "demo-icf-rail-moscow--novorossiysk-extra"
+  ],
+  "before": [
+   "demo-icf-moscow--novorossiysk",
+   "demo-icf-moscow--novorossiysk-1",
+   "demo-icf-moscow--novorossiysk-2",
+   "demo-icf-moscow--novorossiysk-3"
+  ]
+ },
+ "model_inputs": {
+  "demand": {
+   "evidence_id": "demo-model:intercity:demand",
+   "teu": 38
+  },
+  "departure_utc": "2026-11-11T09:30:00+00:00",
+  "new_departure_id": "demo-icf-rail-moscow--novorossiysk-extra",
+  "resource": {
+   "capacity_teu": 70,
+   "evidence_id": "demo-model:intercity:resource",
+   "unit": "locomotive+wagons"
+  }
+ },
+ "operation_type": "add_compatible_departure",
+ "preset_id": "demo-icc-moscow--novorossiysk"
+}

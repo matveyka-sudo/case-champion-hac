@@ -1,0 +1,86 @@
+{
+ "after": {
+  "initial_wait_s": 2820,
+  "total_s": 33700,
+  "transfer_slack_s": 900,
+  "transfer_wait_s": 4500,
+  "trips": [
+   "demo-ic-air-novorossiysk--moscow-1145",
+   "demo-ic-air-moscow--kaliningrad-1320"
+  ]
+ },
+ "before": {
+  "initial_wait_s": 2820,
+  "total_s": 47800,
+  "transfer_slack_s": 15000,
+  "transfer_wait_s": 18600,
+  "trips": [
+   "demo-ic-air-novorossiysk--moscow-1145",
+   "demo-ic-air-moscow--kaliningrad-1905"
+  ]
+ },
+ "comparison_id": "cmp-demo-ic-novorossiysk--kaliningrad-coordinate_transfer",
+ "contract_status": "scenario_contract_v2_operation; intercity context not accepted by the current API",
+ "created_ids": [],
+ "delta": {
+  "initial_wait_s": 0,
+  "sign": "before_minus_after",
+  "total_s": 14100,
+  "transfer_wait_s": 14100
+ },
+ "fixed_parameters": {
+  "demand_evidence": [
+   "demo-model:intercity:demand"
+  ],
+  "resource_constraints": [
+   "demo-ic-aircraft-rotation-demo-ic-air-moscow--kaliningrad-1320"
+  ],
+  "resource_evidence": [
+   "demo-model:intercity:resource"
+  ],
+  "service_ids": [
+   "demo-ic-svc-air-moscow--kaliningrad-1320"
+  ],
+  "shift_seconds": 6600,
+  "turnaround_evidence": [
+   "demo-model:intercity:turnaround"
+  ]
+ },
+ "ids": {
+  "after": [
+   "novorossiysk--kaliningrad",
+   "demo-ic-svc-air-moscow--kaliningrad-1320"
+  ],
+  "before": [
+   "novorossiysk--kaliningrad",
+   "demo-ic-svc-air-moscow--kaliningrad-1320"
+  ]
+ },
+ "model_inputs": {
+  "demand": {
+   "connecting_persons": 32,
+   "evidence_id": "demo-model:intercity:demand"
+  },
+  "minimum_connection_s": 3600,
+  "neighbour_check": {
+   "affected_pair": "moscow--kaliningrad",
+   "note": "the shifted flight also serves moscow -> kaliningrad; its departure moves by shift_seconds",
+   "shared_trip_id": "demo-ic-air-moscow--kaliningrad-1320"
+  },
+  "resource": {
+   "evidence_id": "demo-model:intercity:resource",
+   "vehicle_id": "demo-ic-aircraft-rotation-demo-ic-air-moscow--kaliningrad-1320"
+  },
+  "service_ids": [
+   "demo-ic-svc-air-moscow--kaliningrad-1320"
+  ],
+  "shift_seconds": 6600,
+  "transfer_node_id": "node-wd-q192733",
+  "turnaround": {
+   "evidence_id": "demo-model:intercity:turnaround",
+   "turnaround_s": 3000
+  }
+ },
+ "operation_type": "coordinate_transfer",
+ "preset_id": "demo-ic-novorossiysk--kaliningrad"
+}

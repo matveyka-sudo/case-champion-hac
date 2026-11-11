@@ -1,0 +1,106 @@
+{
+ "after": {
+  "arrival_utc": "2026-11-11T10:15:00+00:00",
+  "departure_utc": "2026-11-11T08:20:00+00:00",
+  "from_node_id": "node-wd-q192733",
+  "initial_wait_s": 10200,
+  "path_s": 6900,
+  "to_node_id": "node-wd-q1431650",
+  "total_s": 17100,
+  "trips": [
+   "demo-ic-air-moscow--kaliningrad-1120-extra"
+  ]
+ },
+ "before": {
+  "arrival_utc": "2026-11-11T12:15:00+00:00",
+  "departure_utc": "2026-11-11T10:20:00+00:00",
+  "from_node_id": "node-wd-q192733",
+  "initial_wait_s": 17400,
+  "path_s": 6900,
+  "to_node_id": "node-wd-q1431650",
+  "total_s": 24300,
+  "trips": [
+   "demo-ic-air-moscow--kaliningrad-1320"
+  ]
+ },
+ "comparison_id": "cmp-demo-ic-moscow--kaliningrad-additional_departure",
+ "contract_status": "scenario_contract_v2_operation; intercity context not accepted by the current API",
+ "created_ids": [
+  "demo-ic-air-moscow--kaliningrad-1120-extra"
+ ],
+ "delta": {
+  "initial_wait_s": 7200,
+  "path_s": 0,
+  "sign": "before_minus_after",
+  "total_s": 7200,
+  "transfer_wait_s": 0
+ },
+ "fixed_parameters": {
+  "demand_evidence": [
+   "demo-model:intercity:demand"
+  ],
+  "resource_constraints": [
+   "demo-ic-aircraft-a320-reserve-moscow--kaliningrad"
+  ],
+  "resource_evidence": [
+   "demo-model:intercity:resource"
+  ],
+  "service_ids": [
+   "demo-ic-svc-air-moscow--kaliningrad-1320"
+  ],
+  "shift_seconds": -7200,
+  "turnaround_evidence": [
+   "demo-model:intercity:turnaround"
+  ]
+ },
+ "ids": {
+  "after": [
+   "moscow--kaliningrad",
+   "demo-ic-svc-air-moscow--kaliningrad-1320",
+   "demo-ic-air-moscow--kaliningrad-1120-extra"
+  ],
+  "before": [
+   "moscow--kaliningrad",
+   "demo-ic-svc-air-moscow--kaliningrad-1320"
+  ]
+ },
+ "model_inputs": {
+  "demand": {
+   "demand_persons": 140,
+   "evidence_id": "demo-model:intercity:demand",
+   "window_local": [
+    "08:30",
+    "13:20"
+   ]
+  },
+  "new_trip_id": "demo-ic-air-moscow--kaliningrad-1120-extra",
+  "resource": {
+   "capacity_persons": 180,
+   "evidence_id": "demo-model:intercity:resource",
+   "vehicle_id": "demo-ic-aircraft-a320-reserve-moscow--kaliningrad",
+   "working_window_local": [
+    "06:00",
+    "23:00"
+   ]
+  },
+  "service_ids": [
+   "demo-ic-svc-air-moscow--kaliningrad-1320"
+  ],
+  "shift_seconds": -7200,
+  "synthetic_departure_planning": {
+   "city_centre_to_origin_node_s": 3870,
+   "evidence_id": "demo-model:intercity:departure_planning",
+   "origin": "synthetic",
+   "pre_boarding_s": 5400,
+   "slot_margin_s": 900,
+   "slot_rounding_s": 300
+  },
+  "template_trip_id": "demo-ic-air-moscow--kaliningrad-1320",
+  "turnaround": {
+   "evidence_id": "demo-model:intercity:turnaround",
+   "turnaround_s": 3000
+  }
+ },
+ "operation_type": "additional_departure",
+ "preset_id": "demo-ic-moscow--kaliningrad"
+}

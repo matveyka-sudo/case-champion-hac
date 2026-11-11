@@ -1,0 +1,3 @@
+freight_node_id,kind,lat,lon,access_node_id,origin,handling_types,max_mass_t,max_height_m,base_wait_s,handling_s,equipment_units,slots_per_hour
+kaliningrad-port-relation-21031708,port,54.6978475,20.4650168,road:way:136575679:275.5,real_location_model_operations,container|bulk,40.0,4.5,2160,1740,3,9
+demo-kaliningrad-rail-terminal-model,rail_terminal,54.7607969,20.4400383,road:way:627871069:42.4,model,container,30.0,4.5,2760,2100,4,12

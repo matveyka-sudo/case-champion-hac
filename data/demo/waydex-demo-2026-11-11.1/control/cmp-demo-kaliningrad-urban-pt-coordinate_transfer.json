@@ -1,0 +1,167 @@
+{
+ "after": {
+  "initial_wait_s": 400.0,
+  "reasons": [],
+  "state": "reachable",
+  "total_s": 2890.0,
+  "transfer_wait_s": 120.0,
+  "transfers": 1,
+  "trip_ids": [
+   "demo-kaliningrad-trip-A-0840",
+   "demo-kaliningrad-trip-B-0902"
+  ]
+ },
+ "before": {
+  "initial_wait_s": 70.0,
+  "reasons": [],
+  "state": "reachable",
+  "total_s": 3670.0,
+  "transfer_wait_s": 80.0,
+  "transfers": 1,
+  "trip_ids": [
+   "demo-kaliningrad-trip-A-0850",
+   "demo-kaliningrad-trip-B-0917"
+  ]
+ },
+ "comparison_id": "cmp-demo-kaliningrad-urban-pt-coordinate_transfer",
+ "contract_status": "scenario_contract_v2",
+ "created_ids": [],
+ "delta": {
+  "sign": "before_minus_after",
+  "total_s": 780.0,
+  "waiting_s": -370.0
+ },
+ "expected_by": "a2_engine.solve_timetable(max_wait_seconds=3600), departure 08:30 local",
+ "fixed_parameters": {
+  "demand_evidence": [
+   "demo-model:kaliningrad:demand"
+  ],
+  "resource_constraints": [],
+  "resource_evidence": [
+   "demo-model:kaliningrad:resource"
+  ],
+  "service_ids": [
+   "demo-kaliningrad-svc-B-0902"
+  ],
+  "shift_seconds": 120,
+  "turnaround_evidence": [
+   "demo-model:kaliningrad:turnaround"
+  ]
+ },
+ "ids": {
+  "after": [
+   "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+   "kaliningrad-child_polyclinic-2732eb295a99",
+   "demo-kaliningrad-transfer-A4-B1",
+   "demo-kaliningrad-svc-B-0902"
+  ],
+  "before": [
+   "kaliningrad-utm34n-1km-v1-e470-n6064-p",
+   "kaliningrad-child_polyclinic-2732eb295a99",
+   "demo-kaliningrad-transfer-A4-B1",
+   "demo-kaliningrad-svc-B-0902"
+  ]
+ },
+ "model_inputs": {
+  "demand": {
+   "capacity_persons_per_hour": 320,
+   "catchment_population_persons": 64613.621,
+   "demand_persons_per_hour": 304,
+   "evidence_id": "demo-model:kaliningrad:demand",
+   "load_factor": 0.949,
+   "route_id": "demo-kaliningrad-route-B",
+   "window_local": [
+    "08:00",
+    "09:00"
+   ]
+  },
+  "extra_departure_slot": null,
+  "problem_transfer": {
+   "arrival_local": "09:00",
+   "arriving_trip_id": "demo-kaliningrad-trip-A-0840",
+   "base_wait_s": 900,
+   "from_stop": "demo-kaliningrad-stop-A4",
+   "min_change_s": 60,
+   "minimum_id": "demo-kaliningrad-minimum-A4-B1",
+   "next_trip_id": "demo-kaliningrad-trip-B-0917",
+   "planned_departure_local": "09:02",
+   "planned_trip_id": "demo-kaliningrad-trip-B-0902",
+   "slack_after_coordinate_s": 60,
+   "slack_s": -60,
+   "to_stop": "demo-kaliningrad-stop-B1",
+   "transfer_id": "demo-kaliningrad-transfer-A4-B1",
+   "walk_s": 110
+  },
+  "resource": {
+   "assigned_trip_ids": [],
+   "capacity_persons": 80,
+   "evidence_id": "demo-model:kaliningrad:resource",
+   "vehicle_id": "demo-kaliningrad-vehicle-B-reserve-1",
+   "working_window_local": [
+    "06:00",
+    "14:00"
+   ]
+  },
+  "turnaround": {
+   "evidence_id": "demo-model:kaliningrad:turnaround",
+   "layover_s": 300,
+   "route_id": "demo-kaliningrad-route-B",
+   "run_s": 1120,
+   "turnaround_s": 2840
+  }
+ },
+ "neighbour_worse": [
+  {
+   "after_s": 4100.0,
+   "before_s": 3980.0,
+   "destination_id": "kaliningrad-bus_terminal-way-1558947984",
+   "origin_point_id": "kaliningrad-utm34n-1km-v1-e467-n6064-p"
+  },
+  {
+   "after_s": 3970.0,
+   "before_s": 3850.0,
+   "destination_id": "kaliningrad-rail_terminal-way-45511034",
+   "origin_point_id": "kaliningrad-utm34n-1km-v1-e467-n6064-p"
+  },
+  {
+   "after_s": 3390.0,
+   "before_s": 3270.0,
+   "destination_id": "kaliningrad-child_polyclinic-24011a9a47d5",
+   "origin_point_id": "kaliningrad-utm34n-1km-v1-e468-n6061-p"
+  },
+  {
+   "after_s": 2890.0,
+   "before_s": 2770.0,
+   "destination_id": "kaliningrad-child_polyclinic-2732eb295a99",
+   "origin_point_id": "kaliningrad-utm34n-1km-v1-e468-n6061-p"
+  },
+  {
+   "after_s": 3390.0,
+   "before_s": 3270.0,
+   "destination_id": "kaliningrad-child_polyclinic-24011a9a47d5",
+   "origin_point_id": "kaliningrad-utm34n-1km-v1-e469-n6062-p"
+  },
+  {
+   "after_s": 2890.0,
+   "before_s": 2770.0,
+   "destination_id": "kaliningrad-child_polyclinic-2732eb295a99",
+   "origin_point_id": "kaliningrad-utm34n-1km-v1-e469-n6062-p"
+  }
+ ],
+ "operation_type": "coordinate_transfer",
+ "other_better": [
+  {
+   "after_s": 3390.0,
+   "before_s": 4170.0,
+   "destination_id": "kaliningrad-child_polyclinic-24011a9a47d5",
+   "origin_point_id": "kaliningrad-utm34n-1km-v1-e470-n6064-p"
+  },
+  {
+   "after_s": 2890.0,
+   "before_s": 3670.0,
+   "destination_id": "kaliningrad-child_polyclinic-2732eb295a99",
+   "origin_point_id": "kaliningrad-utm34n-1km-v1-e470-n6064-p"
+  }
+ ],
+ "preset_id": "demo-kaliningrad-urban-pt"
+}

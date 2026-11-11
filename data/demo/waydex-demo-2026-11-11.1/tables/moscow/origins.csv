@@ -1,0 +1,7 @@
+point_id,cell_id,lat,lon,access_node_id,population_persons,population_year,origin
+moscow-utm37n-1km-v1-e416-n6175-p,moscow-utm37n-1km-v1-e416-n6175,55.718097,37.6709044,walk:way:286563768:165.3,24231.987,2025,real
+moscow-utm37n-1km-v1-e411-n6178-p,moscow-utm37n-1km-v1-e411-n6178,55.7441074,37.5902471,walk:way:330507461:196.2,21241.052,2025,real
+moscow-utm37n-1km-v1-e416-n6177-p,moscow-utm37n-1km-v1-e416-n6177,55.7357767,37.6699487,walk:way:858425977:33.0,20860.907,2025,real
+moscow-utm37n-1km-v1-e415-n6178-p,moscow-utm37n-1km-v1-e415-n6178,55.7448205,37.6539443,walk:way:297087336:83.1,20582.023,2025,real
+moscow-utm37n-1km-v1-e411-n6181-p,moscow-utm37n-1km-v1-e411-n6181,55.7709699,37.5894105,walk:way:125295569:836.6,19260.269,2025,real
+moscow-utm37n-1km-v1-e415-n6180-p,moscow-utm37n-1km-v1-e415-n6180,55.7628343,37.6532483,walk:way:300783231:197.2,19204.074,2025,real

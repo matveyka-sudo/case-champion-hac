@@ -1,0 +1,11 @@
+rule_id,from_node_id,to_node_id,minimum_seconds,walk_s,origin
+demo-novorossiysk-minimum-A1-same,demo-novorossiysk-stop-A1,demo-novorossiysk-stop-A1,60.0,80,synthetic
+demo-novorossiysk-minimum-A2-same,demo-novorossiysk-stop-A2,demo-novorossiysk-stop-A2,60.0,80,synthetic
+demo-novorossiysk-minimum-A3-same,demo-novorossiysk-stop-A3,demo-novorossiysk-stop-A3,60.0,80,synthetic
+demo-novorossiysk-minimum-A4-B1,demo-novorossiysk-stop-A4,demo-novorossiysk-stop-B1,140.0,80,synthetic
+demo-novorossiysk-minimum-A4-same,demo-novorossiysk-stop-A4,demo-novorossiysk-stop-A4,60.0,80,synthetic
+demo-novorossiysk-minimum-B1-A4,demo-novorossiysk-stop-B1,demo-novorossiysk-stop-A4,140.0,80,synthetic
+demo-novorossiysk-minimum-B1-same,demo-novorossiysk-stop-B1,demo-novorossiysk-stop-B1,60.0,80,synthetic
+demo-novorossiysk-minimum-B2-same,demo-novorossiysk-stop-B2,demo-novorossiysk-stop-B2,60.0,80,synthetic
+demo-novorossiysk-minimum-B3-same,demo-novorossiysk-stop-B3,demo-novorossiysk-stop-B3,60.0,80,synthetic
+demo-novorossiysk-minimum-B4-same,demo-novorossiysk-stop-B4,demo-novorossiysk-stop-B4,60.0,80,synthetic

@@ -1,0 +1,104 @@
+[
+ {
+  "freight": {
+   "air": "not_applicable:AIR_CARGO_NOT_MODELLED_FOR_CONTAINER_PROFILE",
+   "pipeline": "not_applicable:NO_PIPELINE_LINK",
+   "rail": "model_chain",
+   "road": "not_applicable:LONG_HAUL_ROAD_NOT_IN_DEMO_CHAIN",
+   "water": "not_applicable:NO_WATER_LINK_MODELLED"
+  },
+  "pair": "moscow--kaliningrad",
+  "passenger": {
+   "air": "model_schedule",
+   "rail": "model_schedule",
+   "road_bus": "not_applicable:INTERNATIONAL_TRANSIT_BUS_NOT_MODELLED",
+   "road_car": "real_observation",
+   "water": "not_applicable:NO_SCHEDULED_PASSENGER_WATER_LINK_BETWEEN_THESE_CITIES"
+  }
+ },
+ {
+  "freight": {
+   "air": "not_applicable:AIR_CARGO_NOT_MODELLED_FOR_CONTAINER_PROFILE",
+   "pipeline": "not_applicable:NO_PIPELINE_LINK",
+   "rail": "model_chain",
+   "road": "not_applicable:LONG_HAUL_ROAD_NOT_IN_DEMO_CHAIN",
+   "water": "not_applicable:NO_WATER_LINK_MODELLED"
+  },
+  "pair": "kaliningrad--moscow",
+  "passenger": {
+   "air": "model_schedule",
+   "rail": "model_schedule",
+   "road_bus": "not_applicable:INTERNATIONAL_TRANSIT_BUS_NOT_MODELLED",
+   "road_car": "real_observation",
+   "water": "not_applicable:NO_SCHEDULED_PASSENGER_WATER_LINK_BETWEEN_THESE_CITIES"
+  }
+ },
+ {
+  "freight": {
+   "air": "not_applicable:AIR_CARGO_NOT_MODELLED_FOR_CONTAINER_PROFILE",
+   "pipeline": "separate_profile:demo-novorossiysk-pipeline",
+   "rail": "model_chain",
+   "road": "not_applicable:LONG_HAUL_ROAD_NOT_IN_DEMO_CHAIN",
+   "water": "not_applicable:NO_WATER_LINK_MODELLED"
+  },
+  "pair": "moscow--novorossiysk",
+  "passenger": {
+   "air": "model_schedule",
+   "rail": "model_schedule",
+   "road_bus": "model_schedule",
+   "road_car": "real_observation",
+   "water": "not_applicable:NO_SCHEDULED_PASSENGER_WATER_LINK_BETWEEN_THESE_CITIES"
+  }
+ },
+ {
+  "freight": {
+   "air": "not_applicable:AIR_CARGO_NOT_MODELLED_FOR_CONTAINER_PROFILE",
+   "pipeline": "separate_profile:demo-novorossiysk-pipeline",
+   "rail": "model_chain",
+   "road": "not_applicable:LONG_HAUL_ROAD_NOT_IN_DEMO_CHAIN",
+   "water": "not_applicable:NO_WATER_LINK_MODELLED"
+  },
+  "pair": "novorossiysk--moscow",
+  "passenger": {
+   "air": "model_schedule",
+   "rail": "model_schedule",
+   "road_bus": "model_schedule",
+   "road_car": "real_observation",
+   "water": "not_applicable:NO_SCHEDULED_PASSENGER_WATER_LINK_BETWEEN_THESE_CITIES"
+  }
+ },
+ {
+  "freight": {
+   "air": "not_applicable:AIR_CARGO_NOT_MODELLED_FOR_CONTAINER_PROFILE",
+   "pipeline": "separate_profile:demo-novorossiysk-pipeline",
+   "rail": "not_applicable:NO_DIRECT_RAIL_LINK",
+   "road": "unknown:ROAD_OBSERVATION_UNAVAILABLE",
+   "water": "model_chain"
+  },
+  "pair": "kaliningrad--novorossiysk",
+  "passenger": {
+   "air": "model_schedule_via_moscow",
+   "rail": "not_applicable:NO_DIRECT_RAIL_LINK_AND_CROSS_TERMINAL_TRANSFER_IN_MOSCOW_NOT_MODELLED",
+   "road_bus": "not_applicable:INTERNATIONAL_TRANSIT_BUS_NOT_MODELLED",
+   "road_car": "ROAD_OBSERVATION_UNAVAILABLE:154:Path distance exceeds the max distance limit: 1500000 meters",
+   "water": "not_applicable:NO_SCHEDULED_PASSENGER_WATER_LINK_BETWEEN_THESE_CITIES"
+  }
+ },
+ {
+  "freight": {
+   "air": "not_applicable:AIR_CARGO_NOT_MODELLED_FOR_CONTAINER_PROFILE",
+   "pipeline": "separate_profile:demo-novorossiysk-pipeline",
+   "rail": "not_applicable:NO_DIRECT_RAIL_LINK",
+   "road": "unknown:ROAD_OBSERVATION_UNAVAILABLE",
+   "water": "model_chain"
+  },
+  "pair": "novorossiysk--kaliningrad",
+  "passenger": {
+   "air": "model_schedule_via_moscow",
+   "rail": "not_applicable:NO_DIRECT_RAIL_LINK_AND_CROSS_TERMINAL_TRANSFER_IN_MOSCOW_NOT_MODELLED",
+   "road_bus": "not_applicable:INTERNATIONAL_TRANSIT_BUS_NOT_MODELLED",
+   "road_car": "ROAD_OBSERVATION_UNAVAILABLE:154:Path distance exceeds the max distance limit: 1500000 meters",
+   "water": "not_applicable:NO_SCHEDULED_PASSENGER_WATER_LINK_BETWEEN_THESE_CITIES"
+  }
+ }
+]
