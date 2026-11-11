@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useEffectEvent,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -45,6 +46,8 @@ import {
   scoreBand,
 } from "../api/adapters/result";
 import { useAnalysisSession } from "../features/analysis/useAnalysisSession";
+import { atlasLocation, savedPointerHash, subscribeAtlasLocation, writeSavedPointer } from "../features/analysis/savedPointer";
+import { savedRequestDraft } from "../api/adapters/savedRequest";
 import { scenarioJourneys } from "../api/adapters/scenario";
 import { scopeContainsTime, urbanScopeAvailability, type UrbanSelection } from "../api/adapters/urbanScopes";
 import { journeyLines } from "../api/adapters/journeyGeometry";
@@ -147,6 +150,9 @@ export function ApiAtlasPage() {
     [bootError, setBootError] = useState<Error | null>(null),
     [reload, setReload] = useState(0),
     [draft, setDraft] = useState(initialDraft),
+    [restoreAttempt, setRestoreAttempt] = useState(0),
+    [restoreMode, setRestoreMode] = useState(false),
+    [savedWarning, setSavedWarning] = useState(""),
     [localError, setLocalError] = useState<DraftError | null>(null),
     [search, setSearch] = useState(""),
     [searchError, setSearchError] = useState(""),
@@ -167,6 +173,8 @@ export function ApiAtlasPage() {
     [zoom, setZoom] = useState({ kind: "home", id: 0 });
   const session = useAnalysisSession();
   const draftTouched = useRef(false);
+  const hash = useSyncExternalStore(subscribeAtlasLocation, atlasLocation, () => "");
+  const handledPointer = useRef<string | null>(null);
   const resultCard = useRef<HTMLElement>(null), resultTitleRef = useRef<HTMLHeadingElement>(null);
   const demoBanner = useRef<HTMLElement>(null);
   const mapArea = useRef<HTMLElement>(null), mobileSheet = useRef<HTMLDivElement>(null);
@@ -206,6 +214,44 @@ export function ApiAtlasPage() {
       alive = false;
     };
   }, [reload]);
+  const restoreSaved = useEffectEvent(async () => {
+    if (!caps || handledPointer.current === hash) return;
+    const previous = handledPointer.current;
+    handledPointer.current = hash;
+    if (hash === "#atlas" || !hash) {
+      if (previous !== null) {
+        session.reset();
+        draftTouched.current = false;
+        setDraft(initialSourceDraft(initialDraft(), catalog, caps));
+      }
+      setRestoreMode(false);
+      return;
+    }
+    draftTouched.current = true;
+    setRestoreMode(true);
+    setLocalError(null);
+    setSavedWarning("");
+    setSelection(null);
+    setScenarioView(false);
+    setQuestion("");
+    setInterfaceMessages([]);
+    setCardHidden(false);
+    const value = await session.restore(hash, () => window.location.hash === hash);
+    if (!value || handledPointer.current !== hash || window.location.hash !== hash) return;
+    const restored = savedRequestDraft(value, catalog, caps);
+    setDraft(restored.draft);
+    setCargoProfile(restored.cargoProfile || { group: "", handling: "", limits: {} });
+    setSavedWarning(restored.warning);
+    setRestoreMode(false);
+    handledPointer.current = savedPointerHash({ kind: "analysis", id: value.analysis_id });
+    writeSavedPointer({ kind: "analysis", id: value.analysis_id }, true);
+  });
+  useEffect(() => {
+    const timer = setTimeout(() => { void restoreSaved(); }, 0);
+    return () => clearTimeout(timer);
+  }, [hash, caps, catalog, restoreAttempt]);
+  const retrySaved = () => { handledPointer.current = null; setRestoreAttempt((value) => value + 1); };
+  const retryBootstrap = () => { setBootError(null); setReload((value) => value + 1); };
   const level = urban ? "city" : draft.level;
   useEffect(() => {
     if (!caps || !search.trim()) return;
@@ -275,6 +321,8 @@ export function ApiAtlasPage() {
       setZoom((z) => ({ kind: "home", id: z.id + 1 }));
     } else session.changed();
     setLocalError(null);
+    setSavedWarning("");
+    setRestoreMode(false);
     setSelection(null);
     setScenarioView(false);
     setQuestion("");
@@ -310,14 +358,18 @@ export function ApiAtlasPage() {
         !caps.urban_passenger_scopes.some((scope) => scope.city_id === draft.cityId))
         throw new DraftError("cityId", caps.urban_passenger_scopes.length ? "Для выбранного города нет зарегистрированного расчёта." : "Для городского расчёта нет зарегистрированных наборов параметров.");
       const profiles = matchingCargoProfiles(caps.cargo_profiles, cargoProfile);
-      const profileId = cargo && !draft.pipeline ? profiles.length === 1 ? profiles[0].profile_id : "" : draft.profileId;
+      const profileId = cargo && !draft.pipeline ? draft.profileId || (profiles.length === 1 ? profiles[0].profile_id : "") : draft.profileId;
       if (cargo && !draft.pipeline && !profileId) throw new DraftError("profileId", "Для выбранного профиля груза нет однозначно подтверждённых данных. Выбранные параметры сохранены.");
       const request = toRequest({ ...draft, profileId, snapshotId: boundSnapshotId(draft, catalog, caps) }, catalog, caps);
       setLocalError(null);
+      setRestoreMode(false);
       setFiltersOpen(false);
       setScenarioView(false);
       setInterfaceMessages([]);
-      void session.run(request);
+      void session.run(request, (kind, id) => {
+        handledPointer.current = savedPointerHash({ kind, id });
+        writeSavedPointer({ kind, id }, kind === "analysis");
+      });
     } catch (e) {
       setLocalError(
         e instanceof DraftError
@@ -722,10 +774,7 @@ export function ApiAtlasPage() {
               </span>
               <button
                 className="iconbtn"
-                onClick={() => {
-                  setBootError(null);
-                  setReload((v) => v + 1);
-                }}
+                onClick={retryBootstrap}
               >
                 Повторить
               </button>
@@ -865,15 +914,15 @@ export function ApiAtlasPage() {
             category={mapMetric === "overall" ? null : categoryIds[mapMetric as keyof typeof categoryIds]} layers={layers}
           /></MapCanvas>
           <MapOverlay position="tl"><AtlasStatus kind={uiError ? "err" : running ? "run" : dirty || result?.status === "partial" ? "stale" : result ? "ok" : "nd"}
-            title={dirty ? "Параметры изменены — показан прежний результат" : phaseLabels[phase]}
-            subtitle={<>{result ? `${requestTitle} · ${timestampText(result.request.departure_at, savedOrigin?.timezone)} · ${trafficText[result.traffic_mode]} · ${statusText[result.status]}` : draftInstructions}
+            title={dirty ? "Параметры изменены — показан прежний результат" : restoreMode && running && !session.job ? "Открываю сохранённый расчёт" : phaseLabels[phase]}
+            subtitle={<>{result ? `${requestTitle} · ${timestampText(result.request.departure_at, savedOrigin?.timezone)} · ${trafficText[result.traffic_mode]} · ${statusText[result.status]}` : restoreMode ? "Исходные параметры появятся после получения результата." : draftInstructions}
               {progressText ? <><br />{progressText}</> : running && ` · ${session.job ? statusText[session.job.status] || "Получаю результат" : "Отправляю запрос"}`}</>}
             actions={session.job && ["queued", "running"].includes(session.job.status) && <button className="iconbtn" onClick={() => void session.cancel()}>Отменить</button>} /></MapOverlay>
           {uiError && <StateCard role="alert" icon="cloud-off" title={uiError instanceof ApiError && uiError.code === "stored_result_incompatible" ? "Сохранённый результат несовместим — требуется новый расчёт" : "Новый результат не получен"}
-            description={errorText(uiError)} actions={<button className="iconbtn primary" onClick={start}>Повторить</button>} />}
+            description={errorText(uiError)} actions={<button className="iconbtn primary" onClick={bootError ? retryBootstrap : restoreMode ? retrySaved : start}>Повторить</button>} />}
           {!result && !uiError && <StateCard icon={running ? "loader-circle" : "circle-dashed"} loading={running}
-            title={running ? "Расчёт выполняется" : "Расчёт ещё не выполнялся"} description={running ? "Карту можно двигать — результат появится после завершения расчёта." : `${draftInstructions}, затем нажмите «${runLabel}». До расчёта карта не окрашивается.`}
-            actions={<button className="iconbtn primary" disabled={!caps} onClick={start}>{runLabel}</button>} />}
+            title={running ? restoreMode && !session.job ? "Открываю сохранённый расчёт" : "Расчёт выполняется" : "Расчёт ещё не выполнялся"} description={running ? restoreMode && !session.job ? "Получаю результат с сервера без повторного запуска расчёта." : "Карту можно двигать — результат появится после завершения расчёта." : `${draftInstructions}, затем нажмите «${runLabel}». До расчёта карта не окрашивается.`}
+            actions={<button className="iconbtn primary" disabled={!caps || running} onClick={start}>{runLabel}</button>} />}
           {result &&
             (!result.map_data ||
               result.map_data.status !== "available" ||
@@ -953,6 +1002,7 @@ export function ApiAtlasPage() {
               </div>
             ))}
             {session.chatBusy && <p role="status">Получаю объяснение…</p>}
+            {savedWarning && <p role="alert">{savedWarning}</p>}
             {session.warning && <p role="alert">{session.warning}</p>}
             {session.proposals.map((p) => (
               <div className="proposal" key={p.scenario_id}>
