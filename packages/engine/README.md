@@ -3229,3 +3229,13 @@ best-known route time is retained, while minimum-time and unreachable proofs are
 disabled for the uncertain endpoints. A complete city score is not implied.
 Executors must retain the pinned serializer source, build, raw locate/route
 request and response hashes, and resolve their evidence IDs to real artifacts.
+
+## ML1 fix delivery, 2026-11-11
+
+[ML1_FIX_REPORT.md](ML1_FIX_REPORT.md) records the isolated `ml1-fix` delivery,
+confirmed routing/resource defects, exact performance changes, verification and
+owner handoffs. [DEMO.md](DEMO.md) contains the finite synthetic 24-baseline /
+21-row scenario matrix: 18 real recalculations and three unsupported urban cargo
+mutations. It also distinguishes those independent controls from the separately
+verified ML2 PR #34 inputs. Reproducible commands and raw benchmark/result files
+are linked there; synthetic acceptance does not certify real-city or UI E2E results.

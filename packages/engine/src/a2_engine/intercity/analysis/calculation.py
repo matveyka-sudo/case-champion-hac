@@ -160,7 +160,8 @@ def analyze_intercity_passenger(
                 True,
             )
         )
-    rows = tuple(sorted(candidates, key=lambda c: c.route.chain_id))
+    # Scheduled search already orders its candidates by this same chain ID.
+    rows = tuple(candidates)
     data_complete = (
         not (set(search.reasons) - {"RESOURCE_LIMIT_REACHED"})
         and "NONPOSITIVE_PASSENGER_PATH" not in reasons
@@ -183,7 +184,7 @@ def analyze_intercity_passenger(
                     c.route.path.arrival_at,
                     len(c.route.action_ids),
                     c.route.action_ids,
-                    c.route.chain_id,
+                    c.evaluation.chain.chain_id,
                 ),
             )
             if available

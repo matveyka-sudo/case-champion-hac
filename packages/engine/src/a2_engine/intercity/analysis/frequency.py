@@ -28,7 +28,7 @@ def departure_frequencies(
         reasons = set()
         if search.reasons or not modes_complete:
             reasons.add("FREQUENCY_SEARCH_INCOMPLETE")
-        if any(c.path.arrival_at <= c.path.boardings[0][2] for c in selected):
+        if "NONPOSITIVE_PASSENGER_PATH" in search.reasons:
             reasons.add("NONPOSITIVE_PASSENGER_PATH")
         if any(value is None for value in ids):
             reasons.add("PHYSICAL_DEPARTURE_IDENTITY_UNKNOWN")

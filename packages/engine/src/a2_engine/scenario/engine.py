@@ -1,7 +1,14 @@
 """Immutable baseline → overlay → real recomputation → complete effects."""
 
 from a2_engine.intercity.analysis.identity import normalize_physical_services
-from a2_engine.scenario.effects import compare_scenario_metrics, validate_effect_coverage
+from a2_engine.routing.timetable_models import TimetableRun
+from a2_engine.scenario.bindings import (
+    TimetableExecutionKey,
+    stop_pattern,
+    timetable_execution_key,
+    timetable_physical_ids,
+)
+from a2_engine.scenario.effects import compare_scenario_metrics
 from a2_engine.scenario.feasibility import check_scenario_feasibility
 from a2_engine.scenario.identity import collect_evidence, scenario_hash
 from a2_engine.scenario.impact import scenario_impact
@@ -19,19 +26,22 @@ from a2_engine.scenario.recompute import recompute
 def create_scenario_baseline(inputs: ScenarioInputs) -> ScenarioBaseline:
     if not isinstance(inputs, ScenarioInputs):
         raise ValueError("NORMALIZED_SCENARIO_INPUTS_REQUIRED")
-    runs_seen: dict[str, str] = {}
-    physical_ids: dict[str, str] = {}
+    runs_seen: dict[str, TimetableRun] = {}
+    physical_runs: dict[TimetableExecutionKey, TimetableRun] = {}
+    physical_ids = timetable_physical_ids(inputs.timetables)
     for dataset in inputs.timetables:
-        for group in dataset.physical_services:
-            for run_id in group.run_ids:
-                if run_id in physical_ids and physical_ids[run_id] != group.physical_service_id:
-                    raise ValueError("CONFLICTING_SCENARIO_PHYSICAL_IDENTITY")
-                physical_ids[run_id] = group.physical_service_id
         for run in dataset.timetable.runs:
-            fingerprint = scenario_hash(run)
-            if run.run_id in runs_seen and runs_seen[run.run_id] != fingerprint:
+            run_id = run.run_id
+            other = runs_seen.setdefault(run_id, run)
+            if other is not run and scenario_hash(other) != scenario_hash(run):
                 raise ValueError("INCONSISTENT_SCENARIO_EXECUTION_COPIES")
-            runs_seen[run.run_id] = fingerprint
+            if run_id in physical_ids:
+                key = timetable_execution_key(run, physical_ids)
+                other = physical_runs.setdefault(key, run)
+                if other is not run and (
+                    other.active != run.active or stop_pattern(other) != stop_pattern(run)
+                ):
+                    raise ValueError("INCONSISTENT_SCENARIO_PHYSICAL_EXECUTION_COPIES")
         normalize_physical_services(
             dataset.timetable, dataset.transport_modes, dataset.physical_services
         )
@@ -80,10 +90,11 @@ def simulate_scenario(
         raise ValueError("ADDITIONAL_DEPARTURE_REQUIRES_VERIFIED_RESOURCE_TURNAROUND")
     after = recompute(overlay.inputs, before_hash)
     effects = compare_scenario_metrics(baseline.before.metrics, after.metrics)
+    if len({effect.metric_id for effect in effects}) != len(effects):
+        raise ValueError("SCENARIO_EFFECTS_INCOMPLETE_OR_SUBSTITUTED")
     worsened = tuple(
         sorted(e.metric_id for e in effects if e.outcome in ("worsened", "lost_connection"))
     )
-    validate_effect_coverage(baseline.before.metrics, after.metrics, effects, worsened)
     impact = scenario_impact(baseline.inputs, effects)
     complete = all(effect.outcome != "unknown" for effect in effects)
     diagnostics = set(feasibility_result.reasons)

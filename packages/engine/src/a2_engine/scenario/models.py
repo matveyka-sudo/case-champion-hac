@@ -44,7 +44,7 @@ from a2_engine.shared.config import (
     UrbanConfig,
     UrbanJourneyRules,
 )
-from a2_engine.shared.normalized import checked_id, ids, utc
+from a2_engine.shared.normalized import checked_id, content_hash, ids, utc
 from a2_engine.shared.results import finite_number
 from a2_engine.urban.analysis.models import UrbanAnalysis
 from a2_engine.urban.districts.models import (
@@ -391,9 +391,9 @@ class ScenarioMeasure:
 
     @property
     def metric_id(self) -> str:
-        from a2_engine.scenario.identity import scenario_hash
-
-        return "metric:" + scenario_hash((self.key, self.unit, self.prefer_higher, self.scope_hash))
+        # This tuple contains only normalized strings and a bool, so direct JSON
+        # encoding yields the same canonical bytes as scenario_hash.
+        return "metric:" + content_hash((self.key, self.unit, self.prefer_higher, self.scope_hash))
 
 
 @dataclass(frozen=True)

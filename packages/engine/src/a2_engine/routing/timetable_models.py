@@ -4,6 +4,7 @@ import hashlib
 import json
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
+from functools import lru_cache
 from typing import Literal
 from zoneinfo import ZoneInfo
 
@@ -71,6 +72,12 @@ class TimetableEvent:
         object.__setattr__(self, "evidence_refs", refs(self.evidence_refs))
 
 
+@lru_cache(maxsize=4096)
+def _run_id(snapshot_id: str, source_id: str, trip_id: str, service_date: date) -> str:
+    identity = [snapshot_id, source_id, trip_id, service_date.isoformat()]
+    return hashlib.sha256(json.dumps(identity, ensure_ascii=True).encode()).hexdigest()
+
+
 @dataclass(frozen=True)
 class TimetableRun:
     snapshot_id: str
@@ -85,8 +92,7 @@ class TimetableRun:
 
     @property
     def run_id(self) -> str:
-        identity = [self.snapshot_id, self.source_id, self.trip_id, self.service_date.isoformat()]
-        return hashlib.sha256(json.dumps(identity, ensure_ascii=True).encode()).hexdigest()
+        return _run_id(self.snapshot_id, self.source_id, self.trip_id, self.service_date)
 
     def __post_init__(self) -> None:
         for name in ("snapshot_id", "source_id", "trip_id", "transport_type"):

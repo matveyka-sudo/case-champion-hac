@@ -268,9 +268,7 @@ def analyze_intercity_cargo(
         expanded += 1
         state = state_by_id[label.state_id]
         if state.stage == "completed":
-            if state.node_id in scope.destination_node_ids and label.first_departure_at is not None:
-                result = path(label)
-                complete_paths[result.path_id] = result
+            # Completed paths were materialized on enqueue, including under a search limit.
             continue
         for action in adjacency.get(label.state_id, ()):
             if action.action_id in label.used or not set(action.requires_operations) <= label.used:
