@@ -2,12 +2,7 @@
 
 from a2_engine.intercity.analysis.identity import normalize_physical_services
 from a2_engine.routing.timetable_models import TimetableRun
-from a2_engine.scenario.bindings import (
-    TimetableExecutionKey,
-    stop_pattern,
-    timetable_execution_key,
-    timetable_physical_ids,
-)
+from a2_engine.scenario.bindings import timetable_physical_ids
 from a2_engine.scenario.effects import compare_scenario_metrics
 from a2_engine.scenario.feasibility import check_scenario_feasibility
 from a2_engine.scenario.identity import collect_evidence, scenario_hash
@@ -27,21 +22,13 @@ def create_scenario_baseline(inputs: ScenarioInputs) -> ScenarioBaseline:
     if not isinstance(inputs, ScenarioInputs):
         raise ValueError("NORMALIZED_SCENARIO_INPUTS_REQUIRED")
     runs_seen: dict[str, TimetableRun] = {}
-    physical_runs: dict[TimetableExecutionKey, TimetableRun] = {}
-    physical_ids = timetable_physical_ids(inputs.timetables)
+    timetable_physical_ids(inputs.timetables)
     for dataset in inputs.timetables:
         for run in dataset.timetable.runs:
             run_id = run.run_id
             other = runs_seen.setdefault(run_id, run)
             if other is not run and scenario_hash(other) != scenario_hash(run):
                 raise ValueError("INCONSISTENT_SCENARIO_EXECUTION_COPIES")
-            if run_id in physical_ids:
-                key = timetable_execution_key(run, physical_ids)
-                other = physical_runs.setdefault(key, run)
-                if other is not run and (
-                    other.active != run.active or stop_pattern(other) != stop_pattern(run)
-                ):
-                    raise ValueError("INCONSISTENT_SCENARIO_PHYSICAL_EXECUTION_COPIES")
         normalize_physical_services(
             dataset.timetable, dataset.transport_modes, dataset.physical_services
         )

@@ -1,5 +1,95 @@
 # ML1 fix — verification and integration handoff
 
+## PR #36 review follow-up — 2026-11-11
+
+Implemented against `0d97963a3b64973c9cb50ab820e78ffaba3678c4` on `ml1-fix`.
+Fresh fetch still identifies `origin/dev` as
+`9557ee5d67e1883dd076cb5f6ad532b51fe44588`, already an ancestor. Two implementation
+agents worked on separate files in the isolated ML1 worktree; a third reviewed
+the final diff and ran independently constructed adversarial probes.
+
+- **P1 closed:** confirmed movement modes must agree across every occurrence of
+  a physical execution, scoped by snapshot and service date. An unbound first
+  copy cannot hide conflicting later bindings. The shared guard also checks
+  physical stop patterns and activity at baseline, overlay and occupancy entry
+  points. Equal raw run IDs remain checked even when a secondary extract omits
+  a redundant identity binding.
+- Additional departures retain their declared primary ID. Where another extract
+  has a different provider label, it receives a deterministic distinct run alias
+  under the same physical identity. This prevents a copied raw label from changing
+  road into rail, preserves full same-ID copy equality, and allows rebaselining
+  and a second scenario. Alias IDs are collision-checked, all changed executions
+  remain visible, and shared resource coverage requires matching occupancy plus
+  calendar/event proof for every alias. Forged dates reject; missing proof stays
+  unverified. Generated `physical:*` and `unmapped-physical:*` labels cannot grant
+  a raw provider record an unaccepted mode.
+- **P2 closed:** nonpositive passenger completions carry private mode/first-boarding
+  diagnostics. Frequency incompleteness applies only to the matching category and
+  public union in the half-open requested interval. Global source limitations,
+  missing mode coverage and resource exhaustion remain conservative. Overall
+  seven-day selection retains its incomplete diagnosis, and later valid positive
+  continuations remain candidates.
+
+Added **24 regression cases** in `test_pr36_physical_alias_modes.py` and
+`test_pr36_frequency_diagnostics.py`. Full engine: **1286 passed, zero skipped,
+25.81 s**. Ruff check/format: 191 files; mypy source/examples: 139 files; product
+config and diff checks passed. Public exports, signatures and dataclass fixtures
+passed unchanged; formulas, configuration, DTO and OpenAPI were not changed.
+New imports are absolute. Independent reviewer: **APPROVE**, 55 targeted tests
+including 12 independently authored probes and public API compatibility.
+
+Seven relevant API test modules passed **129 tests in 8.93 s**, with **35 skipped**
+because a dedicated PostgreSQL test database and the external v4 demo runtime
+artifact were not configured. This is an
+adapter compatibility check, not database or UI E2E acceptance. The first attempt
+using the pytest console entry point could not import `apps`; rerunning via
+`uv run python -m pytest` from the repository root resolved the runner path.
+
+Replayed the four stress workloads, 16-job scenario benchmark, 24 seeded scenario
+identities, synthetic demo matrix and pinned ML2 verifier. Stress full-result
+hashes and state counts are unchanged. The 24 scenario identities, complete demo
+matrix and ML2 verification JSON match the previously committed artifacts exactly.
+Raw follow-up measurements and artifact equality checks are retained in
+`benchmarks/pr36_followup_verification.json`. Timing differences on this shared
+machine are observations, not a claimed speedup from these correctness fixes.
+Three cold and three warm samples of the complete synthetic demo give median
+wall times of **1.077/0.930 s** for 24 baseline rows and **7.592/6.700 s** for
+18 supported scenario calculations including publication validation. The other
+three comparison rows remain explicit unsupported-operation controls. The 16-job
+scenario benchmark gives cold/warm medians **0.176/0.175 s** for simulation and
+**0.176/0.176 s** for validation. These are finite engine workloads, not frontend
+or provider latency measurements.
+
+ML2 remains `0225db8ed1f7ffbd50d3fdba7e895339f3544ca7`; manifest pin is unchanged.
+Its 77 declared file checksums were checked, with nine baseline rows and six
+comparison calculations replayed. This does not close the independent provenance,
+epoch, walking-access or endpoint-boundary findings on PR #34, nor certify all
+24/21 declared rows. The six replayed comparisons still have unproven effects;
+three coordination feasibility states remain unverified. No cross-owner changes
+or merges were performed. A corrected ML2 delivery and real API/worker/DB/UI
+integration are still separate acceptance gates.
+
+Reproduction (from repository root):
+
+```sh
+uv sync --frozen --all-packages --group dev
+uv run python -m pytest packages/engine/tests -q
+uv run ruff check packages/engine
+uv run ruff format --check packages/engine
+uv run mypy packages/engine/src packages/engine/examples
+uv run python scripts/check_product_config.py
+uv run python packages/engine/examples/benchmark_ml1_fix.py --repeats 3
+uv run python packages/engine/examples/benchmark_ml1_scenario.py --jobs 16 --repeats 3
+uv run python packages/engine/examples/benchmark_ml1_scenario.py --identity-check
+uv run python packages/engine/examples/ml1_demo_runner.py
+uv run python packages/engine/examples/ml1_demo_runner.py --benchmark
+uv run python packages/engine/examples/ml1_demo_runner.py --ml2-root "$ML2_DEMO_ROOT"
+```
+
+`ML2_DEMO_ROOT` must point to the exact pinned `data/demo/waydex-demo-2026-11-11.1`
+directory. API module names and commands are recorded in the follow-up JSON.
+The sections below preserve the earlier implementation measurements and history.
+
 Base: `9557ee5d67e1883dd076cb5f6ad532b51fe44588` (`origin/dev`, fetched 2026-11-11).
 Delivery branch: `ml1-fix`. Implementation is isolated from the user's main checkout.
 Review/implementation agents: GPT-6.1 Sol, reasoning effort ultra, each on a separate

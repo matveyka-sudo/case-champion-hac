@@ -24,7 +24,7 @@ from a2_engine.intercity.passenger import (
 from a2_engine.intercity.reference import ReferenceComparison, reference_time_from_result
 from a2_engine.routing.reference.search import ReferenceSearchResult
 from a2_engine.routing.road import road_hash
-from a2_engine.routing.scheduled import search_scheduled_chains
+from a2_engine.routing.scheduled import _search_scheduled_chains
 from a2_engine.routing.timetable_models import Timetable, utc
 from a2_engine.shared.config import IntercityPassengerRules, PassengerConfig
 
@@ -95,7 +95,7 @@ def analyze_intercity_passenger(
             and (r.to_run_id is None or r.to_run_id in selected_ids)
         ),
     )
-    search = search_scheduled_chains(
+    search_details = _search_scheduled_chains(
         normalized,
         context.origin_node_ids,
         context.destination_node_ids,
@@ -105,6 +105,7 @@ def analyze_intercity_passenger(
         ready_at=tuple((r.node_id, r.ready_at) for r in readiness),
         resource_limit=resource_limit,
     )
+    search = search_details.result
     reasons = set(search.reasons)
     if not scope.modes_complete:
         reasons.add("PUBLIC_MODE_COVERAGE_INCOMPLETE")
@@ -193,10 +194,10 @@ def analyze_intercity_passenger(
         return IntercityModeResult(category, winner, selection_complete, tuple(sorted(reasons)))
 
     public = select("public")
-    frequency_search = (
-        search
+    frequency_details = (
+        search_details
         if requested <= start < end <= window_end
-        else search_scheduled_chains(
+        else _search_scheduled_chains(
             normalized,
             context.origin_node_ids,
             context.destination_node_ids,
@@ -208,7 +209,7 @@ def analyze_intercity_passenger(
         )
     )
     frequencies = departure_frequencies(
-        frequency_search, physical_ids, categories, start, end, modes_complete=scope.modes_complete
+        frequency_details, physical_ids, categories, start, end, modes_complete=scope.modes_complete
     )
     car_result = None
     if car is not None:
@@ -272,7 +273,7 @@ def analyze_intercity_passenger(
         public,
         connection,
         search,
-        frequency_search,
+        frequency_details.result,
         reference.completeness,
         data_complete,
         scope.modes_complete,

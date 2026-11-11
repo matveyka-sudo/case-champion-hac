@@ -179,13 +179,13 @@ def apply_scenario_overlay(
     changed = []
     affected: set[str] = set()
     inputs = baseline.inputs
+    physical_ids = timetable_physical_ids(inputs.timetables)
     if operation.target_kind == "timetable":
         target = next(d for d in inputs.timetables if d.network_id == operation.target_id)
         source = next(r for r in target.timetable.runs if r.run_id == operation.execution_id)
         if source.service_date != operation.service_date:
             raise ValueError("SCENARIO_SERVICE_DATE_MISMATCH")
         replacements: dict[str, TimetableRun] = {}
-        physical_ids = timetable_physical_ids(inputs.timetables)
         target_key = timetable_execution_key(source, physical_ids)
         aliases = {
             run.run_id
@@ -232,8 +232,10 @@ def apply_scenario_overlay(
             ):
                 raise ValueError("INVALID_ADDITIONAL_EXECUTION")
 
-            if stop_pattern(new_run) != stop_pattern(expected) or any(
-                r.run_id == new_run.run_id for d in inputs.timetables for r in d.timetable.runs
+            occupied_run_ids = {r.run_id for d in inputs.timetables for r in d.timetable.runs}
+            if (
+                stop_pattern(new_run) != stop_pattern(expected)
+                or new_run.run_id in occupied_run_ids
             ):
                 raise ValueError("ADDITIONAL_EXECUTION_MUST_MATCH_APPROVED_TRIP_COPY")
             new_key = (
@@ -251,17 +253,44 @@ def apply_scenario_overlay(
             needed = {e.sequence for e in new_run.events[:-1] if e.pickup}
             if not needed <= {d.event_sequence for d in identity.departures}:
                 raise ValueError("COMPLETE_NEW_PHYSICAL_DEPARTURES_REQUIRED")
-            affected.add(new_run.run_id)
         datasets = []
         for dataset in inputs.timetables:
             runs = tuple(replacements.get(r.run_id, r) for r in dataset.timetable.runs)
             physical = dataset.physical_services
-            if operation.template_id == "additional_departure" and any(
-                r.run_id in aliases for r in dataset.timetable.runs
-            ):
-                assert operation.new_run is not None and operation.new_physical_service is not None
-                runs += (operation.new_run,)
-                physical += (operation.new_physical_service,)
+            if operation.template_id == "additional_departure":
+                assert new_run is not None and identity is not None
+                local_aliases = [r for r in dataset.timetable.runs if r.run_id in aliases]
+                if local_aliases:
+                    local_new = new_run
+                    if dataset.network_id != target.network_id:
+                        local_modes = {
+                            binding.transport_type for binding in dataset.transport_modes
+                        }
+                        local_source = min(
+                            local_aliases,
+                            key=lambda run: (
+                                run.transport_type not in local_modes,
+                                run.transport_type != new_run.transport_type,
+                                run.run_id,
+                            ),
+                        )
+                        if local_source.transport_type != new_run.transport_type:
+                            # The approved run ID stays in the target. A local label
+                            # requires its own alias ID to preserve exact run copies.
+                            alias_source_id = "scenario-alias:" + scenario_hash(
+                                (new_run.run_id, dataset.network_id)
+                            )
+                            local_new = replace(
+                                new_run,
+                                source_id=alias_source_id,
+                                transport_type=local_source.transport_type,
+                            )
+                            if local_new.run_id in occupied_run_ids:
+                                raise ValueError("ADDITIONAL_EXECUTION_ALIAS_ID_COLLISION")
+                            occupied_run_ids.add(local_new.run_id)
+                    runs += (local_new,)
+                    physical += (replace(identity, run_ids=(local_new.run_id,)),)
+                    affected.add(local_new.run_id)
             if runs != dataset.timetable.runs:
                 before_runs = {r.run_id: r for r in dataset.timetable.runs}
                 for run in runs:

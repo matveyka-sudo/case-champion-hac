@@ -159,7 +159,32 @@ def check_scenario_feasibility(
     if not inputs.infrastructure_confirmed:
         reasons.add("INFRASTRUCTURE_CONSTRAINTS_UNVERIFIED")
     affected = set(overlay.affected_execution_ids)
-    if affected - set(inputs.covered_execution_ids):
+    covered = set(inputs.covered_execution_ids)
+    if (
+        operation.template_id == "additional_departure"
+        and operation.new_run is not None
+        and operation.new_physical_service is not None
+    ):
+        # Feed-local copies of the approved new execution use the same resource.
+        approved_id = operation.new_run.run_id
+        approved_identity = physical.get(approved_id)
+        if (
+            approved_id in covered
+            and approved_identity is not None
+            and identities.get(approved_id) == operation.new_physical_service.physical_service_id
+        ):
+            unverified_aliases = {
+                row.execution_id
+                for rows in networks.values()
+                for row in rows.values()
+                if row.physical_id == approved_identity and not row.definite
+            }
+            covered.update(
+                run_id
+                for run_id in affected - unverified_aliases
+                if physical.get(run_id) == approved_identity
+            )
+    if affected - covered:
         reasons.add("AFFECTED_EXECUTION_COVERAGE_UNVERIFIED")
     resource_rows: dict[str, dict[str, _Occupancy]] = {}
     resource_links: dict[str, dict[tuple[str, str], ScenarioResourceLink]] = {}
