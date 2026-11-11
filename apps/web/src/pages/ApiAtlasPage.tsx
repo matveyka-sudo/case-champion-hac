@@ -78,6 +78,7 @@ import { ChoiceChips, TerritoryPair, CargoProfileChoices } from "../widgets/Filt
 import { boundSnapshotId, initialSourceDraft } from "../api/adapters/sourceBinding";
 import { AgentChatView } from "../widgets/AgentChatView";
 import { evidenceResolver, explanationSources, journeyEvidenceReferences } from "../api/adapters/evidenceGroups";
+import { jobProgressText } from "../api/adapters/jobProgress";
 import { MapViewport, MapCanvas, MapOverlay, MapControls, AtlasLegend, AtlasMobileSheet, AtlasStatus, StateCard } from "../widgets/AtlasMapView";
 const phaseLabels: Record<string, string> = {
   idle: "Выберите условия и запустите анализ",
@@ -446,6 +447,7 @@ export function ApiAtlasPage() {
       ) || [];
   const ready = caps?.analyses.find((a) => a.analysis_kind === draft.kind);
   const running = phase === "running";
+  const progressText = jobProgressText(session.job, phase);
   const runLabel = urban ? "Рассчитать" : "Проанализировать";
   const draftInstructions = !cargo
     ? urban ? "Выберите город, передвижение и категории" : "Выберите территории и виды транспорта"
@@ -865,7 +867,7 @@ export function ApiAtlasPage() {
           <MapOverlay position="tl"><AtlasStatus kind={uiError ? "err" : running ? "run" : dirty || result?.status === "partial" ? "stale" : result ? "ok" : "nd"}
             title={dirty ? "Параметры изменены — показан прежний результат" : phaseLabels[phase]}
             subtitle={<>{result ? `${requestTitle} · ${timestampText(result.request.departure_at, savedOrigin?.timezone)} · ${trafficText[result.traffic_mode]} · ${statusText[result.status]}` : draftInstructions}
-              {running && ` · ${session.job ? statusText[session.job.status] || "Получаю результат" : "Отправляю запрос"}`}</>}
+              {progressText ? <><br />{progressText}</> : running && ` · ${session.job ? statusText[session.job.status] || "Получаю результат" : "Отправляю запрос"}`}</>}
             actions={session.job && ["queued", "running"].includes(session.job.status) && <button className="iconbtn" onClick={() => void session.cancel()}>Отменить</button>} /></MapOverlay>
           {uiError && <StateCard role="alert" icon="cloud-off" title={uiError instanceof ApiError && uiError.code === "stored_result_incompatible" ? "Сохранённый результат несовместим — требуется новый расчёт" : "Новый результат не получен"}
             description={errorText(uiError)} actions={<button className="iconbtn primary" onClick={start}>Повторить</button>} />}

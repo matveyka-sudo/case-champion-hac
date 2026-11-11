@@ -273,3 +273,88 @@ describe("saved analysis session boundaries", () => {
     );
   });
 });
+
+describe("batch progress operation boundaries", () => {
+  const runningJob = { job_id: "active-job", status: "running" as const, request_id: "r", created_at: "2026-11-11T00:00:00Z", started_at: "2026-11-11T00:00:01Z", finished_at: null, analysis_id: null, scenario_run_id: null, error: null };
+
+  it("clears a previous published job before a new submission response arrives", async () => {
+    const g = gateway();
+    g.analyze.mockImplementationOnce(async (_request, _key, _signal, onJob) => {
+      onJob({ ...runningJob, status: "succeeded", finished_at: "2026-11-11T00:01:00Z", analysis_id: base.analysis_id });
+      return base;
+    });
+    const { result } = renderHook(() => useAnalysisSession(g));
+    await act(() => result.current.run(base.request));
+    expect(result.current.job?.status).toBe("succeeded");
+    let finish!: (value: typeof base) => void;
+    g.analyze.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+    let pending!: Promise<void>;
+    act(() => { pending = result.current.run(base.request); });
+    expect(result.current.phase).toBe("running");
+    expect(result.current.job).toBeNull();
+    expect(result.current.result).toBe(base);
+    await act(async () => { finish(base); await pending; });
+  });
+
+  it("keeps finalizing and published jobs loading until the result is delivered", async () => {
+    const g = gateway();
+    let finish!: (value: typeof base) => void, onJob!: Parameters<BackendGateway["analyze"]>[3];
+    g.analyze.mockImplementationOnce((_request, _key, _signal, update) => { onJob = update; return new Promise(resolve => { finish = resolve; }); });
+    const { result } = renderHook(() => useAnalysisSession(g));
+    let pending!: Promise<void>;
+    act(() => { pending = result.current.run(base.request); });
+    act(() => onJob({ ...runningJob, progress: { completed_batches: 88, total_batches: 88, phase: "finalizing" } }));
+    expect(result.current.phase).toBe("running");
+    expect(result.current.result).toBeNull();
+    act(() => onJob({ ...runningJob, status: "succeeded", finished_at: "2026-11-11T00:01:00Z", analysis_id: base.analysis_id,
+      progress: { completed_batches: 88, total_batches: 88, phase: "published" } }));
+    expect(result.current.phase).toBe("running");
+    expect(result.current.result).toBeNull();
+    await act(async () => { finish(base); await pending; });
+    expect(result.current.phase).toBe("done");
+  });
+
+  it("does not borrow baseline batch progress while a scenario submission is pending", async () => {
+    const g = gateway();
+    g.analyze.mockImplementationOnce(async (_request, _key, _signal, onJob) => {
+      onJob({ ...runningJob, status: "succeeded", finished_at: "2026-11-11T00:01:00Z", analysis_id: base.analysis_id,
+        progress: { completed_batches: 88, total_batches: 88, phase: "published" } });
+      return base;
+    });
+    let accept!: (value: { job_id: string; request_id: string; status: "queued" }) => void;
+    g.scenario = vi.fn().mockImplementation(() => new Promise(resolve => { accept = resolve; }));
+    g.wait = vi.fn().mockResolvedValue({ job_id: "scenario-job", status: "succeeded", scenario_run_id: scenario.run_id });
+    g.scenarioResult = vi.fn().mockResolvedValue(scenario);
+    const { result } = renderHook(() => useAnalysisSession(g));
+    await act(() => result.current.run(base.request));
+    let pending!: Promise<void>;
+    act(() => { pending = result.current.runScenario(proposal); });
+    expect(result.current.phase).toBe("running");
+    expect(result.current.job).toBeNull();
+    await act(async () => { accept({ job_id: "scenario-job", request_id: "r", status: "queued" }); await pending; });
+    expect(result.current.scenario).toBe(scenario);
+  });
+
+  it("ignores a late cancellation reply belonging to the previous operation", async () => {
+    const g = gateway();
+    let finishFirst!: (value: null) => void, finishSecond!: (value: typeof base) => void;
+    let finishCancel!: (value: ReturnType<typeof cancelledJob>) => void;
+    const cancelledJob = () => ({ ...runningJob, status: "cancelled" as const, finished_at: "2026-11-11T00:01:00Z" });
+    g.analyze.mockImplementationOnce((_request, _key, _signal, onJob) => { onJob(runningJob); return new Promise(resolve => { finishFirst = resolve; }); });
+    g.cancel = vi.fn().mockImplementation(() => new Promise(resolve => { finishCancel = resolve; }));
+    const { result } = renderHook(() => useAnalysisSession(g));
+    let first!: Promise<void>, cancellation!: Promise<void>, second!: Promise<void>;
+    act(() => { first = result.current.run(base.request); });
+    act(() => { cancellation = result.current.cancel(); });
+    await act(async () => { finishFirst(null); await first; });
+    g.analyze.mockImplementationOnce(() => new Promise(resolve => { finishSecond = resolve; }));
+    act(() => { second = result.current.run(base.request); });
+    const newSignal = g.analyze.mock.calls[1][2];
+    await act(async () => { finishCancel(cancelledJob()); await cancellation; });
+    expect(newSignal.aborted).toBe(false);
+    expect(result.current.phase).toBe("running");
+    expect(result.current.job).toBeNull();
+    await act(async () => { finishSecond(base); await second; });
+    expect(result.current.result).toBe(base);
+  });
+});

@@ -1389,3 +1389,73 @@ test("API: mobile empty-state action stays clear of the sheet and map controls",
   }
   expect(mock.posts).toBe(0);
 });
+
+function progressJob(status: Schemas["JobView"]["status"], progress: Schemas["BatchProgress"]): Schemas["JobView"] {
+  return { job_id: "analysis-job", request_id: "synthetic-progress", status, created_at: "2026-11-11T00:00:00Z", started_at: "2026-11-11T00:00:01Z",
+    finished_at: ["succeeded", "failed", "cancelled"].includes(status) ? "2026-11-11T00:01:00Z" : null,
+    analysis_id: status === "succeeded" ? urban.analysis_id : null, scenario_run_id: null, poll_after_seconds: 1,
+    error: status === "failed" ? { code: "job_failed", message: "Synthetic stopped job", request_id: "r", field_errors: [], retryable: false } : null, progress };
+}
+
+for (const mobile of [false, true]) test(`API: persisted package counts distinguish finalization and result retrieval (${mobile ? "mobile" : "desktop"})`, async ({ page }) => {
+  if (mobile) await page.setViewportSize({ width: 390, height: 844 });
+  await mockApi(page, { running: true, emptyProposals: true });
+  let stage: "routing" | "finalizing" | "published" = "routing", optIn = false;
+  await page.route(url => url.pathname === "/api/v1/jobs/analysis-job", route => {
+    optIn = new URL(route.request().url()).searchParams.get("include_progress") === "true";
+    return route.fulfill({ json: progressJob(stage === "published" ? "succeeded" : "running", { completed_batches: stage === "routing" ? 31 : 88, total_batches: 88, phase: stage }) });
+  });
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  await page.route(url => url.pathname === `/api/v1/analyses/${urban.analysis_id}`, async route => {
+    await gate;
+    await route.fulfill({ json: urban });
+  });
+  try {
+    await page.goto("/?data=api#atlas");
+    if (mobile) await page.getByRole("button", { name: "Фильтры", exact: true }).first().click();
+    await cityRun(page);
+    const status = page.locator(".status");
+    await expect(status).toContainText("Пакеты 31 из 88 · Расчёт маршрутов");
+    expect(optIn).toBe(true);
+    stage = "finalizing";
+    await expect(status).toContainText("Пакеты 88 из 88 · Сохранение результата");
+    await expect(status).not.toContainText("Результат получен");
+    await expect(page.getByRole("button", { name: "Отменить", exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: `test-results/api-package-progress-${mobile ? "mobile" : "desktop"}.png` });
+    stage = "published";
+    await expect(status).toContainText("Пакеты 88 из 88 · Получение сохранённого результата");
+    await expect(status).not.toContainText("Результат получен");
+    release();
+    await expect(status).toContainText("Результат получен");
+    await expect(status).not.toContainText("Пакеты");
+  } finally { release(); }
+});
+
+test("API: cancellation during finalization never claims a published result or keeps old counters", async ({ page }) => {
+  const mock = await mockApi(page, { running: true });
+  await page.route(url => url.pathname === "/api/v1/jobs/analysis-job", route => route.fulfill({ json: progressJob("running", { completed_batches: 88, total_batches: 88, phase: "finalizing" }) }));
+  await page.goto("/?data=api#atlas");
+  await cityRun(page);
+  const status = page.locator(".status");
+  await expect(status).toContainText("Пакеты 88 из 88 · Сохранение результата");
+  await page.getByRole("button", { name: "Отменить", exact: true }).click();
+  await expect(status).toContainText("Задание отменено");
+  await expect(status).not.toContainText("Пакеты");
+  await expect(status).not.toContainText("Результат получен");
+  expect(mock.requests.filter(request => request.url.endsWith("/cancel"))).toHaveLength(1);
+  await expect(page.locator("#apiResultCard")).toHaveCount(0);
+});
+
+test("API: failed batch work keeps stopped counts distinct from result success", async ({ page }) => {
+  await mockApi(page, { running: true });
+  await page.route(url => url.pathname === "/api/v1/jobs/analysis-job", route => route.fulfill({ json: progressJob("failed", { completed_batches: 31, total_batches: 88, phase: "stopped" }) }));
+  await page.goto("/?data=api#atlas");
+  await cityRun(page);
+  const status = page.locator(".status");
+  await expect(status).toContainText("Новый результат не получен");
+  await expect(status).toContainText("Пакеты 31 из 88 · Расчёт остановлен");
+  await expect(status).not.toContainText("Результат получен");
+  await expect(page.locator("#apiResultCard")).toHaveCount(0);
+});
