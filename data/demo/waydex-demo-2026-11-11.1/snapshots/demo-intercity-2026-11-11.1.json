@@ -1,0 +1,1688 @@
+{
+ "access_nodes": [
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 55.750369,
+    "lon": 37.618441
+   },
+   "node_id": "kaliningrad--moscow--freeflow:destination-network",
+   "source_refs": [
+    "road-observation:19147ee38dcf4e1a0a3fee48e3483b4177f91afcf977a90618f0a55043dda29d"
+   ],
+   "territory_id": "moscow"
+  },
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 54.716693,
+    "lon": 20.499927
+   },
+   "node_id": "kaliningrad--moscow--freeflow:origin-network",
+   "source_refs": [
+    "road-observation:19147ee38dcf4e1a0a3fee48e3483b4177f91afcf977a90618f0a55043dda29d"
+   ],
+   "territory_id": "kaliningrad"
+  },
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 54.716693,
+    "lon": 20.499927
+   },
+   "node_id": "moscow--kaliningrad--freeflow:destination-network",
+   "source_refs": [
+    "road-observation:0b6204a8ec134ea7d985e7a35e0802c104311fe4819548d762eebc61d3289e74"
+   ],
+   "territory_id": "kaliningrad"
+  },
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 55.750369,
+    "lon": 37.618441
+   },
+   "node_id": "moscow--kaliningrad--freeflow:origin-network",
+   "source_refs": [
+    "road-observation:0b6204a8ec134ea7d985e7a35e0802c104311fe4819548d762eebc61d3289e74"
+   ],
+   "territory_id": "moscow"
+  },
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 44.71642,
+    "lon": 37.76627
+   },
+   "node_id": "moscow--novorossiysk--freeflow:destination-network",
+   "source_refs": [
+    "road-observation:bf278054f086b4f0eb8e6d05746627efd71d83dc1b7b4f07d9b0749b37c7edd9"
+   ],
+   "territory_id": "novorossiysk"
+  },
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 55.750369,
+    "lon": 37.618441
+   },
+   "node_id": "moscow--novorossiysk--freeflow:origin-network",
+   "source_refs": [
+    "road-observation:bf278054f086b4f0eb8e6d05746627efd71d83dc1b7b4f07d9b0749b37c7edd9"
+   ],
+   "territory_id": "moscow"
+  },
+  {
+   "kind": "intercity_bus_station",
+   "location": {
+    "lat": 44.721615,
+    "lon": 37.762996
+   },
+   "node_id": "node-osm-way-61808901",
+   "source_refs": [
+    "a2-directory:russia-intercity-nodes-2026-11-09.2"
+   ],
+   "territory_id": "novorossiysk"
+  },
+  {
+   "kind": "intercity_bus_station",
+   "location": {
+    "lat": 54.69353,
+    "lon": 20.50176
+   },
+   "node_id": "node-wd-q112735274",
+   "source_refs": [
+    "a2-directory:russia-intercity-nodes-2026-11-09.2"
+   ],
+   "territory_id": "kaliningrad"
+  },
+  {
+   "kind": "intercity_rail_station",
+   "location": {
+    "lat": 55.776375,
+    "lon": 37.581757
+   },
+   "node_id": "node-wd-q1367269",
+   "source_refs": [
+    "a2-directory:russia-intercity-nodes-2026-11-09.2"
+   ],
+   "territory_id": "moscow"
+  },
+  {
+   "kind": "intercity_airport",
+   "location": {
+    "lat": 54.89,
+    "lon": 20.5925
+   },
+   "node_id": "node-wd-q1431650",
+   "source_refs": [
+    "a2-directory:russia-intercity-nodes-2026-11-09.2"
+   ],
+   "territory_id": "kaliningrad"
+  },
+  {
+   "kind": "intercity_airport",
+   "location": {
+    "lat": 55.972778,
+    "lon": 37.414722
+   },
+   "node_id": "node-wd-q192733",
+   "source_refs": [
+    "a2-directory:russia-intercity-nodes-2026-11-09.2"
+   ],
+   "territory_id": "moscow"
+  },
+  {
+   "kind": "intercity_airport",
+   "location": {
+    "lat": 44.5725,
+    "lon": 38.009444
+   },
+   "node_id": "node-wd-q1997645",
+   "source_refs": [
+    "a2-directory:russia-intercity-nodes-2026-11-09.2"
+   ],
+   "territory_id": "novorossiysk"
+  },
+  {
+   "kind": "intercity_rail_station",
+   "location": {
+    "lat": 55.773611,
+    "lon": 37.656944
+   },
+   "node_id": "node-wd-q21844902",
+   "source_refs": [
+    "a2-directory:russia-intercity-nodes-2026-11-09.2"
+   ],
+   "territory_id": "moscow"
+  },
+  {
+   "kind": "intercity_rail_station",
+   "location": {
+    "lat": 44.736,
+    "lon": 37.772889
+   },
+   "node_id": "node-wd-q3728238",
+   "source_refs": [
+    "a2-directory:russia-intercity-nodes-2026-11-09.2"
+   ],
+   "territory_id": "novorossiysk"
+  },
+  {
+   "kind": "intercity_bus_station",
+   "location": {
+    "lat": 55.81104,
+    "lon": 37.80223
+   },
+   "node_id": "node-wd-q4304027",
+   "source_refs": [
+    "a2-directory:russia-intercity-nodes-2026-11-09.2"
+   ],
+   "territory_id": "moscow"
+  },
+  {
+   "kind": "intercity_rail_station",
+   "location": {
+    "lat": 54.693574,
+    "lon": 20.498633
+   },
+   "node_id": "node-wd-q800979",
+   "source_refs": [
+    "a2-directory:russia-intercity-nodes-2026-11-09.2"
+   ],
+   "territory_id": "kaliningrad"
+  },
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 55.750369,
+    "lon": 37.618441
+   },
+   "node_id": "novorossiysk--moscow--freeflow:destination-network",
+   "source_refs": [
+    "road-observation:a50a67c8b0c4c2b308ec0188b46740fb66efe31bf824896f8c2c87966ef704e0"
+   ],
+   "territory_id": "moscow"
+  },
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 44.71642,
+    "lon": 37.76627
+   },
+   "node_id": "novorossiysk--moscow--freeflow:origin-network",
+   "source_refs": [
+    "road-observation:a50a67c8b0c4c2b308ec0188b46740fb66efe31bf824896f8c2c87966ef704e0"
+   ],
+   "territory_id": "novorossiysk"
+  },
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 44.7307677,
+    "lon": 37.765416
+   },
+   "node_id": "road:way:1016201656:221.8",
+   "source_refs": [
+    "osm:way:1016201656"
+   ],
+   "territory_id": "novorossiysk"
+  },
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 44.7189477,
+    "lon": 37.7821525
+   },
+   "node_id": "road:way:106625466:109.8",
+   "source_refs": [
+    "osm:way:106625466"
+   ],
+   "territory_id": "novorossiysk"
+  },
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 55.7386034,
+    "lon": 37.786881
+   },
+   "node_id": "road:way:1356264705:314.1",
+   "source_refs": [
+    "osm:way:1356264705"
+   ],
+   "territory_id": "moscow"
+  },
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 54.6981067,
+    "lon": 20.4652104
+   },
+   "node_id": "road:way:136575679:275.5",
+   "source_refs": [
+    "osm:way:136575679"
+   ],
+   "territory_id": "kaliningrad"
+  },
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 44.7731002,
+    "lon": 37.6998512
+   },
+   "node_id": "road:way:1379038011:103.4",
+   "source_refs": [
+    "osm:way:1379038011"
+   ],
+   "territory_id": "novorossiysk"
+  },
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 54.7149569,
+    "lon": 20.4980891
+   },
+   "node_id": "road:way:386664478:11.6",
+   "source_refs": [
+    "osm:way:386664478"
+   ],
+   "territory_id": "kaliningrad"
+  },
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 55.7484036,
+    "lon": 37.6311049
+   },
+   "node_id": "road:way:46431772:279.6",
+   "source_refs": [
+    "osm:way:46431772"
+   ],
+   "territory_id": "moscow"
+  },
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 54.7607969,
+    "lon": 20.4400383
+   },
+   "node_id": "road:way:627871069:42.4",
+   "source_refs": [
+    "osm:way:627871069"
+   ],
+   "territory_id": "kaliningrad"
+  },
+  {
+   "kind": "road_network_projection",
+   "location": {
+    "lat": 55.8094854,
+    "lon": 37.598348
+   },
+   "node_id": "road:way:846849720:72.9",
+   "source_refs": [
+    "osm:way:846849720"
+   ],
+   "territory_id": "moscow"
+  }
+ ],
+ "category_ownership": [],
+ "confirmed_absence_scope": [],
+ "coverage_by_mode_date_category": [],
+ "destinations": [],
+ "evidence": [
+  {
+   "content_hash": "9f5b57eca5ddaee82efa8300cb01c0dffa1f81940759181dae19f58c1bc6cbdf",
+   "evidence_id": "a2-directory:russia-intercity-nodes-2026-11-09.2",
+   "license": "CC0-1.0+ODbL-1.0+Public Domain",
+   "retrieved_at": "2026-11-09T16:16:01.047923Z",
+   "source_id": "a2_intercity_nodes",
+   "source_version": "russia-intercity-nodes-2026-11-09.2",
+   "url": "https://github.com/matveyka-sudo/case-champion-hac/tree/dev/data/directories/russia-intercity-nodes-2026-11-09.2",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "89137756bd633b98da54b947206c68e36e16c3b8a21eb02ec797d6c7c322543b",
+   "evidence_id": "osm:relation:102269",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T20:44:13.056842Z",
+   "source_id": "osm_geofabrik:moscow",
+   "source_version": "osm_geofabrik.central-fed-district-261107",
+   "url": "https://www.openstreetmap.org/relation/102269",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "5840de7a6885850d71922a248daf868f329f5007c515a318c695aab3277d8c59",
+   "evidence_id": "osm:relation:1307845",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T13:36:59.619413Z",
+   "source_id": "osm_geofabrik:kaliningrad",
+   "source_version": "osm_geofabrik.kaliningrad-261107",
+   "url": "https://www.openstreetmap.org/relation/1307845",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "ed8e81eb17ca45011c38d0d1a7b593f186102e395d2c8c98f6aae9965d82c04c",
+   "evidence_id": "osm:relation:21031708",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T13:36:59.619413Z",
+   "source_id": "osm_geofabrik:kaliningrad",
+   "source_version": "osm_geofabrik.kaliningrad-261107",
+   "url": "https://www.openstreetmap.org/relation/21031708",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "e8070d890053b37a93624fa1743c3b2d8984c3cd953c2f7665970ed42c5f13f8",
+   "evidence_id": "osm:relation:331414",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T13:36:59.619413Z",
+   "source_id": "osm_geofabrik:kaliningrad",
+   "source_version": "osm_geofabrik.kaliningrad-261107",
+   "url": "https://www.openstreetmap.org/relation/331414",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "d65adb5d0304ce39cf66e153a6b744dd61a587440e5a42f1510fc5a23bc6036e",
+   "evidence_id": "osm:relation:364545",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T19:17:34.676135Z",
+   "source_id": "osm_geofabrik:novorossiysk",
+   "source_version": "osm_geofabrik.south-fed-district-261107",
+   "url": "https://www.openstreetmap.org/relation/364545",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "9eb3962689aa3990d1d53dc6bd6af585801a4ca1d9e164ffdc65057844c1f2a6",
+   "evidence_id": "osm:relation:9975357",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T20:44:13.056842Z",
+   "source_id": "osm_geofabrik:moscow",
+   "source_version": "osm_geofabrik.central-fed-district-261107",
+   "url": "https://www.openstreetmap.org/relation/9975357",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "2dbe80a2c1d691a3e73cc3be06a17405b41dcdbbc7f0913543612cd4be6116d9",
+   "evidence_id": "osm:way:1016201656",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T19:17:34.676135Z",
+   "source_id": "osm_geofabrik:novorossiysk",
+   "source_version": "osm_geofabrik.south-fed-district-261107",
+   "url": "https://www.openstreetmap.org/way/1016201656",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "1b2aa0db53f808f901b6d6a1349ff304448656e7df7e86d6a051bf56ede88a4e",
+   "evidence_id": "osm:way:106625466",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T19:17:34.676135Z",
+   "source_id": "osm_geofabrik:novorossiysk",
+   "source_version": "osm_geofabrik.south-fed-district-261107",
+   "url": "https://www.openstreetmap.org/way/106625466",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "e34012e184bb525a4c389b5ca8daee9d80892f76aad8e7653362bb344ceb879d",
+   "evidence_id": "osm:way:1168951234",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T19:17:34.676135Z",
+   "source_id": "osm_geofabrik:novorossiysk",
+   "source_version": "osm_geofabrik.south-fed-district-261107",
+   "url": "https://www.openstreetmap.org/way/1168951234",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "e878b247d2016e57ac8f4639825487774e388bde20c3c2a3ac3c1740a13f1ea2",
+   "evidence_id": "osm:way:1356264705",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T20:44:13.056842Z",
+   "source_id": "osm_geofabrik:moscow",
+   "source_version": "osm_geofabrik.central-fed-district-261107",
+   "url": "https://www.openstreetmap.org/way/1356264705",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "83313730d7974d017317070bcfd46c4f2be4defeedc7914a0e30a48ee1528961",
+   "evidence_id": "osm:way:136575679",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T13:36:59.619413Z",
+   "source_id": "osm_geofabrik:kaliningrad",
+   "source_version": "osm_geofabrik.kaliningrad-261107",
+   "url": "https://www.openstreetmap.org/way/136575679",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "08bb71689a0de55da1d2cce97741050cc43f367f528160250f779e7ffe4c6805",
+   "evidence_id": "osm:way:1379038011",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T19:17:34.676135Z",
+   "source_id": "osm_geofabrik:novorossiysk",
+   "source_version": "osm_geofabrik.south-fed-district-261107",
+   "url": "https://www.openstreetmap.org/way/1379038011",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "337ebb4e197899962db1af0c8bb164939290319004216be01aa438e551fd88bc",
+   "evidence_id": "osm:way:31091391",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T19:17:34.676135Z",
+   "source_id": "osm_geofabrik:novorossiysk",
+   "source_version": "osm_geofabrik.south-fed-district-261107",
+   "url": "https://www.openstreetmap.org/way/31091391",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "1c3359149973c020a7c50ff76f962700d9e9e64c07d0ec02ab31474ddf7bc121",
+   "evidence_id": "osm:way:386664478",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T13:36:59.619413Z",
+   "source_id": "osm_geofabrik:kaliningrad",
+   "source_version": "osm_geofabrik.kaliningrad-261107",
+   "url": "https://www.openstreetmap.org/way/386664478",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "8e62000d258fdf2302ab84c139be687953573d581efe65c384b0f148aada2cbd",
+   "evidence_id": "osm:way:46431772",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T20:44:13.056842Z",
+   "source_id": "osm_geofabrik:moscow",
+   "source_version": "osm_geofabrik.central-fed-district-261107",
+   "url": "https://www.openstreetmap.org/way/46431772",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "5b27f1f53475258fff8e3c0acee657fb7409b9de0530df7675ff2883853e24da",
+   "evidence_id": "osm:way:627871069",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T13:36:59.619413Z",
+   "source_id": "osm_geofabrik:kaliningrad",
+   "source_version": "osm_geofabrik.kaliningrad-261107",
+   "url": "https://www.openstreetmap.org/way/627871069",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "c16bf7cd242f26b1d205217a7bab2a368711f9cb548baa34ca674855220cafea",
+   "evidence_id": "osm:way:846849720",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-08T20:44:13.056842Z",
+   "source_id": "osm_geofabrik:moscow",
+   "source_version": "osm_geofabrik.central-fed-district-261107",
+   "url": "https://www.openstreetmap.org/way/846849720",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "0b6204a8ec134ea7d985e7a35e0802c104311fe4819548d762eebc61d3289e74",
+   "evidence_id": "road-observation:0b6204a8ec134ea7d985e7a35e0802c104311fe4819548d762eebc61d3289e74",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-11T07:41:45.721203Z",
+   "source_id": "valhalla_public",
+   "source_version": "fosgis-valhalla:3.9.1-9aac4da:tiles-1794364418",
+   "url": "https://valhalla1.openstreetmap.de/route",
+   "valid_period": {
+    "end": "2026-11-30",
+    "start": "2026-11-11"
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "19147ee38dcf4e1a0a3fee48e3483b4177f91afcf977a90618f0a55043dda29d",
+   "evidence_id": "road-observation:19147ee38dcf4e1a0a3fee48e3483b4177f91afcf977a90618f0a55043dda29d",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-11T07:41:42.960736Z",
+   "source_id": "valhalla_public",
+   "source_version": "fosgis-valhalla:3.9.1-9aac4da:tiles-1794364418",
+   "url": "https://valhalla1.openstreetmap.de/route",
+   "valid_period": {
+    "end": "2026-11-30",
+    "start": "2026-11-11"
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "a50a67c8b0c4c2b308ec0188b46740fb66efe31bf824896f8c2c87966ef704e0",
+   "evidence_id": "road-observation:a50a67c8b0c4c2b308ec0188b46740fb66efe31bf824896f8c2c87966ef704e0",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-11T07:41:49.953649Z",
+   "source_id": "valhalla_public",
+   "source_version": "fosgis-valhalla:3.9.1-9aac4da:tiles-1794364418",
+   "url": "https://valhalla1.openstreetmap.de/route",
+   "valid_period": {
+    "end": "2026-11-30",
+    "start": "2026-11-11"
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "bf278054f086b4f0eb8e6d05746627efd71d83dc1b7b4f07d9b0749b37c7edd9",
+   "evidence_id": "road-observation:bf278054f086b4f0eb8e6d05746627efd71d83dc1b7b4f07d9b0749b37c7edd9",
+   "license": "ODbL-1.0",
+   "retrieved_at": "2026-11-11T07:41:47.196537Z",
+   "source_id": "valhalla_public",
+   "source_version": "fosgis-valhalla:3.9.1-9aac4da:tiles-1794364418",
+   "url": "https://valhalla1.openstreetmap.de/route",
+   "valid_period": {
+    "end": "2026-11-30",
+    "start": "2026-11-11"
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "6b25c9612be4c3524662559af3a0c498c8aa0abe801cd34add4eb59dd8da9e75",
+   "evidence_id": "rosmorport:seaport-kaliningrad",
+   "license": "Используются только факты: перечень операторов и характеристики порта (ст. 1259 ГК РФ)",
+   "retrieved_at": "2026-11-08T20:27:58.451074Z",
+   "source_id": "rosmorport:kaliningrad",
+   "source_version": "rosmorport.seaports-kaliningrad-20261108",
+   "url": "https://www.rosmorport.ru/filials/spb_seaports/",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "3190ddaabc60ca63500c645ca8613ca47660aa8cfe469f2bfc0b4ecb1c1fea7b",
+   "evidence_id": "rosmorport:seaport-novorossiysk",
+   "license": "Используются только факты: перечень операторов и характеристики порта (ст. 1259 ГК РФ)",
+   "retrieved_at": "2026-11-08T19:40:38.141524Z",
+   "source_id": "rosmorport:novorossiysk",
+   "source_version": "rosmorport.seaports-novorossiysk-20261108",
+   "url": "https://www.rosmorport.ru/nvr_seaports.html",
+   "valid_period": {
+    "end": null,
+    "start": null
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "dfc98d17953ae49d188b1a9ca29be0fb96a34b32554efc7022154fe8bda693c2",
+   "evidence_id": "demo-model:intercity:schedule",
+   "license": "CC0-1.0 synthetic model data",
+   "retrieved_at": "2026-11-11T00:00:00Z",
+   "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "source_version": "waydex-demo-2026-11-11.1",
+   "url": "https://github.com/matveyka-sudo/case-champion-hac/tree/dev/data/demo/waydex-demo-2026-11-11.1",
+   "valid_period": {
+    "end": "2026-11-11",
+    "start": "2026-11-11"
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "122531f326477cb5c9713fcdcb9b0c0c7fb0f3417bf8377164c0410c3ef18d5f",
+   "evidence_id": "demo-model:intercity:calendar",
+   "license": "CC0-1.0 synthetic model data",
+   "retrieved_at": "2026-11-11T00:00:00Z",
+   "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "source_version": "waydex-demo-2026-11-11.1",
+   "url": "https://github.com/matveyka-sudo/case-champion-hac/tree/dev/data/demo/waydex-demo-2026-11-11.1",
+   "valid_period": {
+    "end": "2026-11-11",
+    "start": "2026-11-11"
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "459f7ffee41badb50cd60e10161ba45dca3476cbbb82da30ca128146fa1edb2b",
+   "evidence_id": "demo-model:intercity:transfers",
+   "license": "CC0-1.0 synthetic model data",
+   "retrieved_at": "2026-11-11T00:00:00Z",
+   "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "source_version": "waydex-demo-2026-11-11.1",
+   "url": "https://github.com/matveyka-sudo/case-champion-hac/tree/dev/data/demo/waydex-demo-2026-11-11.1",
+   "valid_period": {
+    "end": "2026-11-11",
+    "start": "2026-11-11"
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "aff227c4be38bef02c673e6795844dc1a3c97bb188cda7813caa3ad296eab54c",
+   "evidence_id": "demo-model:intercity:demand",
+   "license": "CC0-1.0 synthetic model data",
+   "retrieved_at": "2026-11-11T00:00:00Z",
+   "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "source_version": "waydex-demo-2026-11-11.1",
+   "url": "https://github.com/matveyka-sudo/case-champion-hac/tree/dev/data/demo/waydex-demo-2026-11-11.1",
+   "valid_period": {
+    "end": "2026-11-11",
+    "start": "2026-11-11"
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "26ee490ce0ac3a49e8af1005b4949f0c0e8b0acf1fad6ba47afcf94282c0fe51",
+   "evidence_id": "demo-model:intercity:resource",
+   "license": "CC0-1.0 synthetic model data",
+   "retrieved_at": "2026-11-11T00:00:00Z",
+   "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "source_version": "waydex-demo-2026-11-11.1",
+   "url": "https://github.com/matveyka-sudo/case-champion-hac/tree/dev/data/demo/waydex-demo-2026-11-11.1",
+   "valid_period": {
+    "end": "2026-11-11",
+    "start": "2026-11-11"
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "d001ca7a60769f6d77b91de8fc677ee216135269cf1c7ac4dfd570090bee653b",
+   "evidence_id": "demo-model:intercity:turnaround",
+   "license": "CC0-1.0 synthetic model data",
+   "retrieved_at": "2026-11-11T00:00:00Z",
+   "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "source_version": "waydex-demo-2026-11-11.1",
+   "url": "https://github.com/matveyka-sudo/case-champion-hac/tree/dev/data/demo/waydex-demo-2026-11-11.1",
+   "valid_period": {
+    "end": "2026-11-11",
+    "start": "2026-11-11"
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "ca74facb634b3b53381139953d98859840fcf8ed36b430346579c211f0384b80",
+   "evidence_id": "demo-model:intercity:freight",
+   "license": "CC0-1.0 synthetic model data",
+   "retrieved_at": "2026-11-11T00:00:00Z",
+   "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "source_version": "waydex-demo-2026-11-11.1",
+   "url": "https://github.com/matveyka-sudo/case-champion-hac/tree/dev/data/demo/waydex-demo-2026-11-11.1",
+   "valid_period": {
+    "end": "2026-11-11",
+    "start": "2026-11-11"
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "93cfc7e48e71013c7b19302581959dc74607ea2f87aedababb8bc70ac29e6b1d",
+   "evidence_id": "demo-model:intercity:handling",
+   "license": "CC0-1.0 synthetic model data",
+   "retrieved_at": "2026-11-11T00:00:00Z",
+   "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "source_version": "waydex-demo-2026-11-11.1",
+   "url": "https://github.com/matveyka-sudo/case-champion-hac/tree/dev/data/demo/waydex-demo-2026-11-11.1",
+   "valid_period": {
+    "end": "2026-11-11",
+    "start": "2026-11-11"
+   },
+   "verified": true
+  },
+  {
+   "content_hash": "1ed0df2df72dc1d420d97aa7e1e7c0f07e029fdadc7d8e8d6d766eeff88c4745",
+   "evidence_id": "demo-model:intercity:edges",
+   "license": "CC0-1.0 synthetic model data",
+   "retrieved_at": "2026-11-11T00:00:00Z",
+   "source_id": "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "source_version": "waydex-demo-2026-11-11.1",
+   "url": "https://github.com/matveyka-sudo/case-champion-hac/tree/dev/data/demo/waydex-demo-2026-11-11.1",
+   "valid_period": {
+    "end": "2026-11-11",
+    "start": "2026-11-11"
+   },
+   "verified": true
+  }
+ ],
+ "freight_compatibility": [],
+ "freight_nodes": [
+  {
+   "access_node_id": "road:way:1356264705:314.1",
+   "freight_node_id": "demo-moscow-logistics-terminal-model",
+   "kind": "logistics_terminal",
+   "location": {
+    "lat": 55.7386034,
+    "lon": 37.786881
+   },
+   "source_refs": [
+    "demo-model:intercity:freight"
+   ],
+   "territory_id": "moscow"
+  },
+  {
+   "access_node_id": "road:way:846849720:72.9",
+   "freight_node_id": "demo-moscow-rail-terminal-model",
+   "kind": "rail_terminal",
+   "location": {
+    "lat": 55.8094854,
+    "lon": 37.598348
+   },
+   "source_refs": [
+    "demo-model:intercity:freight"
+   ],
+   "territory_id": "moscow"
+  },
+  {
+   "access_node_id": "road:way:136575679:275.5",
+   "freight_node_id": "kaliningrad-port-relation-21031708",
+   "kind": "port",
+   "location": {
+    "lat": 54.6978475,
+    "lon": 20.4650168
+   },
+   "source_refs": [
+    "osm:relation:21031708",
+    "rosmorport:seaport-kaliningrad"
+   ],
+   "territory_id": "kaliningrad"
+  },
+  {
+   "access_node_id": "road:way:627871069:42.4",
+   "freight_node_id": "demo-kaliningrad-rail-terminal-model",
+   "kind": "rail_terminal",
+   "location": {
+    "lat": 54.7607969,
+    "lon": 20.4400383
+   },
+   "source_refs": [
+    "demo-model:intercity:freight"
+   ],
+   "territory_id": "kaliningrad"
+  },
+  {
+   "access_node_id": "road:way:106625466:109.8",
+   "freight_node_id": "novorossiysk-port-way-1168951234",
+   "kind": "port",
+   "location": {
+    "lat": 44.722339,
+    "lon": 37.7853162
+   },
+   "source_refs": [
+    "osm:way:1168951234",
+    "rosmorport:seaport-novorossiysk"
+   ],
+   "territory_id": "novorossiysk"
+  },
+  {
+   "access_node_id": "road:way:1379038011:103.4",
+   "freight_node_id": "demo-novorossiysk-rail-terminal-model",
+   "kind": "rail_terminal",
+   "location": {
+    "lat": 44.7731002,
+    "lon": 37.6998512
+   },
+   "source_refs": [
+    "demo-model:intercity:freight"
+   ],
+   "territory_id": "novorossiysk"
+  }
+ ],
+ "freight_sites": [
+  {
+   "access_node_id": "road:way:46431772:279.6",
+   "location": {
+    "lat": 55.7478723,
+    "lon": 37.6309111
+   },
+   "site_id": "moscow-site-relation-9975357",
+   "source_refs": [
+    "osm:relation:9975357"
+   ],
+   "territory_id": "moscow"
+  },
+  {
+   "access_node_id": "road:way:386664478:11.6",
+   "location": {
+    "lat": 54.7155646,
+    "lon": 20.4964002
+   },
+   "site_id": "kaliningrad-site-relation-1307845",
+   "source_refs": [
+    "osm:relation:1307845"
+   ],
+   "territory_id": "kaliningrad"
+  },
+  {
+   "access_node_id": "road:way:1016201656:221.8",
+   "location": {
+    "lat": 44.7303719,
+    "lon": 37.7650474
+   },
+   "site_id": "novorossiysk-site-way-31091391",
+   "source_refs": [
+    "osm:way:31091391"
+   ],
+   "territory_id": "novorossiysk"
+  }
+ ],
+ "geographic_scope": [
+  "moscow",
+  "kaliningrad",
+  "novorossiysk"
+ ],
+ "minimum_transfers": [
+  {
+   "applicability": [
+    "air",
+    "alight_to_departure"
+   ],
+   "from_node_id": "node-wd-q192733",
+   "minimum_id": "demo-ic-minimum-svo-air",
+   "seconds": 3600.0,
+   "source_refs": [
+    "demo-model:intercity:transfers"
+   ],
+   "to_node_id": "node-wd-q192733"
+  }
+ ],
+ "pipeline_connections": [],
+ "population_cells": [],
+ "provenance": {
+  "calendar_version": "demo-intercity-2026-11-11.1:calendar",
+  "geometry_version": "demo-intercity-2026-11-11.1:geometry",
+  "graph_version": "demo-intercity-2026-11-11.1:graph",
+  "population_version": null
+ },
+ "qa": {
+  "acceptance_state": "accepted",
+  "accepted_at": "2026-11-11T00:00:00Z",
+  "accepted_by": "ML2 waydex-demo-rules-v1 synthetic demo generator; model data, not a real acceptance",
+  "checks": [
+   "DEMO_SYNTHETIC_TRANSPORT_MODEL",
+   "NOT_A_REAL_CITY_RANKING",
+   "waydex-demo-rules-v1:qa"
+  ]
+ },
+ "reference_edges": [
+  {
+   "calibration_method": "valhalla-auto-freeflow-observation",
+   "edge_id": "demo-ic-road-observation:kaliningrad--moscow",
+   "from_node_id": "kaliningrad--moscow--freeflow:origin-network",
+   "geometry": null,
+   "length_m": 1249311.0,
+   "mode": "road",
+   "running_time_seconds": 62125.035,
+   "source_refs": [
+    "road-observation:19147ee38dcf4e1a0a3fee48e3483b4177f91afcf977a90618f0a55043dda29d"
+   ],
+   "to_node_id": "kaliningrad--moscow--freeflow:destination-network"
+  },
+  {
+   "calibration_method": "valhalla-auto-freeflow-observation",
+   "edge_id": "demo-ic-road-observation:moscow--kaliningrad",
+   "from_node_id": "moscow--kaliningrad--freeflow:origin-network",
+   "geometry": null,
+   "length_m": 1237242.0,
+   "mode": "road",
+   "running_time_seconds": 61799.265,
+   "source_refs": [
+    "road-observation:0b6204a8ec134ea7d985e7a35e0802c104311fe4819548d762eebc61d3289e74"
+   ],
+   "to_node_id": "moscow--kaliningrad--freeflow:destination-network"
+  },
+  {
+   "calibration_method": "valhalla-auto-freeflow-observation",
+   "edge_id": "demo-ic-road-observation:moscow--novorossiysk",
+   "from_node_id": "moscow--novorossiysk--freeflow:origin-network",
+   "geometry": null,
+   "length_m": 1482551.0,
+   "mode": "road",
+   "running_time_seconds": 71510.406,
+   "source_refs": [
+    "road-observation:bf278054f086b4f0eb8e6d05746627efd71d83dc1b7b4f07d9b0749b37c7edd9"
+   ],
+   "to_node_id": "moscow--novorossiysk--freeflow:destination-network"
+  },
+  {
+   "calibration_method": "valhalla-auto-freeflow-observation",
+   "edge_id": "demo-ic-road-observation:novorossiysk--moscow",
+   "from_node_id": "novorossiysk--moscow--freeflow:origin-network",
+   "geometry": null,
+   "length_m": 1482058.0,
+   "mode": "road",
+   "running_time_seconds": 71537.64,
+   "source_refs": [
+    "road-observation:a50a67c8b0c4c2b308ec0188b46740fb66efe31bf824896f8c2c87966ef704e0"
+   ],
+   "to_node_id": "novorossiysk--moscow--freeflow:destination-network"
+  },
+  {
+   "calibration_method": "waydex-demo-rules-v1:distance-speed",
+   "edge_id": "demo-icf-moscow--kaliningrad-2",
+   "from_node_id": "road:way:846849720:72.9",
+   "geometry": null,
+   "length_m": 1300000.0,
+   "mode": "rail",
+   "running_time_seconds": 117000.0,
+   "source_refs": [
+    "demo-model:intercity:freight"
+   ],
+   "to_node_id": "road:way:627871069:42.4"
+  },
+  {
+   "calibration_method": "waydex-demo-rules-v1:distance-speed",
+   "edge_id": "demo-icf-kaliningrad--moscow-2",
+   "from_node_id": "road:way:627871069:42.4",
+   "geometry": null,
+   "length_m": 1300000.0,
+   "mode": "rail",
+   "running_time_seconds": 117000.0,
+   "source_refs": [
+    "demo-model:intercity:freight"
+   ],
+   "to_node_id": "road:way:846849720:72.9"
+  },
+  {
+   "calibration_method": "waydex-demo-rules-v1:distance-speed",
+   "edge_id": "demo-icf-moscow--novorossiysk-2",
+   "from_node_id": "road:way:846849720:72.9",
+   "geometry": null,
+   "length_m": 1440000.0,
+   "mode": "rail",
+   "running_time_seconds": 129600.0,
+   "source_refs": [
+    "demo-model:intercity:freight"
+   ],
+   "to_node_id": "road:way:1379038011:103.4"
+  },
+  {
+   "calibration_method": "waydex-demo-rules-v1:distance-speed",
+   "edge_id": "demo-icf-novorossiysk--moscow-2",
+   "from_node_id": "road:way:1379038011:103.4",
+   "geometry": null,
+   "length_m": 1440000.0,
+   "mode": "rail",
+   "running_time_seconds": 129600.0,
+   "source_refs": [
+    "demo-model:intercity:freight"
+   ],
+   "to_node_id": "road:way:846849720:72.9"
+  },
+  {
+   "calibration_method": "waydex-demo-rules-v1:distance-speed",
+   "edge_id": "demo-icf-kaliningrad--novorossiysk-2",
+   "from_node_id": "road:way:136575679:275.5",
+   "geometry": null,
+   "length_m": 6900000.0,
+   "mode": "water",
+   "running_time_seconds": 955800.0,
+   "source_refs": [
+    "demo-model:intercity:freight"
+   ],
+   "to_node_id": "road:way:106625466:109.8"
+  },
+  {
+   "calibration_method": "waydex-demo-rules-v1:distance-speed",
+   "edge_id": "demo-icf-novorossiysk--kaliningrad-2",
+   "from_node_id": "road:way:106625466:109.8",
+   "geometry": null,
+   "length_m": 6900000.0,
+   "mode": "water",
+   "running_time_seconds": 955800.0,
+   "source_refs": [
+    "demo-model:intercity:freight"
+   ],
+   "to_node_id": "road:way:136575679:275.5"
+  }
+ ],
+ "registry_evidence": [],
+ "sample_points": [],
+ "scheduled_services": [
+  {
+   "mode": "air",
+   "service_dates": [
+    "2026-11-11"
+   ],
+   "service_id": "demo-ic-svc-air-kaliningrad--moscow-1240",
+   "source_refs": [
+    "demo-model:intercity:schedule"
+   ],
+   "stop_times": [
+    {
+     "arrival_seconds": 45600,
+     "departure_seconds": 45600,
+     "dropoff": false,
+     "node_id": "node-wd-q1431650",
+     "pickup": true,
+     "sequence": 0
+    },
+    {
+     "arrival_seconds": 52500,
+     "departure_seconds": 52500,
+     "dropoff": true,
+     "node_id": "node-wd-q192733",
+     "pickup": false,
+     "sequence": 1
+    }
+   ],
+   "timezone": "Europe/Kaliningrad",
+   "trip_id": "demo-ic-air-kaliningrad--moscow-1240",
+   "trip_identity_confirmed": true
+  },
+  {
+   "mode": "air",
+   "service_dates": [
+    "2026-11-11"
+   ],
+   "service_id": "demo-ic-svc-air-kaliningrad--moscow-1710",
+   "source_refs": [
+    "demo-model:intercity:schedule"
+   ],
+   "stop_times": [
+    {
+     "arrival_seconds": 61800,
+     "departure_seconds": 61800,
+     "dropoff": false,
+     "node_id": "node-wd-q1431650",
+     "pickup": true,
+     "sequence": 0
+    },
+    {
+     "arrival_seconds": 68700,
+     "departure_seconds": 68700,
+     "dropoff": true,
+     "node_id": "node-wd-q192733",
+     "pickup": false,
+     "sequence": 1
+    }
+   ],
+   "timezone": "Europe/Kaliningrad",
+   "trip_id": "demo-ic-air-kaliningrad--moscow-1710",
+   "trip_identity_confirmed": true
+  },
+  {
+   "mode": "air",
+   "service_dates": [
+    "2026-11-11"
+   ],
+   "service_id": "demo-ic-svc-air-moscow--kaliningrad-1320",
+   "source_refs": [
+    "demo-model:intercity:schedule"
+   ],
+   "stop_times": [
+    {
+     "arrival_seconds": 48000,
+     "departure_seconds": 48000,
+     "dropoff": false,
+     "node_id": "node-wd-q192733",
+     "pickup": true,
+     "sequence": 0
+    },
+    {
+     "arrival_seconds": 54900,
+     "departure_seconds": 54900,
+     "dropoff": true,
+     "node_id": "node-wd-q1431650",
+     "pickup": false,
+     "sequence": 1
+    }
+   ],
+   "timezone": "Europe/Moscow",
+   "trip_id": "demo-ic-air-moscow--kaliningrad-1320",
+   "trip_identity_confirmed": true
+  },
+  {
+   "mode": "air",
+   "service_dates": [
+    "2026-11-11"
+   ],
+   "service_id": "demo-ic-svc-air-moscow--kaliningrad-1905",
+   "source_refs": [
+    "demo-model:intercity:schedule"
+   ],
+   "stop_times": [
+    {
+     "arrival_seconds": 68700,
+     "departure_seconds": 68700,
+     "dropoff": false,
+     "node_id": "node-wd-q192733",
+     "pickup": true,
+     "sequence": 0
+    },
+    {
+     "arrival_seconds": 75600,
+     "departure_seconds": 75600,
+     "dropoff": true,
+     "node_id": "node-wd-q1431650",
+     "pickup": false,
+     "sequence": 1
+    }
+   ],
+   "timezone": "Europe/Moscow",
+   "trip_id": "demo-ic-air-moscow--kaliningrad-1905",
+   "trip_identity_confirmed": true
+  },
+  {
+   "mode": "air",
+   "service_dates": [
+    "2026-11-11"
+   ],
+   "service_id": "demo-ic-svc-air-moscow--novorossiysk-1450",
+   "source_refs": [
+    "demo-model:intercity:schedule"
+   ],
+   "stop_times": [
+    {
+     "arrival_seconds": 53400,
+     "departure_seconds": 53400,
+     "dropoff": false,
+     "node_id": "node-wd-q192733",
+     "pickup": true,
+     "sequence": 0
+    },
+    {
+     "arrival_seconds": 61200,
+     "departure_seconds": 61200,
+     "dropoff": true,
+     "node_id": "node-wd-q1997645",
+     "pickup": false,
+     "sequence": 1
+    }
+   ],
+   "timezone": "Europe/Moscow",
+   "trip_id": "demo-ic-air-moscow--novorossiysk-1450",
+   "trip_identity_confirmed": true
+  },
+  {
+   "mode": "air",
+   "service_dates": [
+    "2026-11-11"
+   ],
+   "service_id": "demo-ic-svc-air-moscow--novorossiysk-2040",
+   "source_refs": [
+    "demo-model:intercity:schedule"
+   ],
+   "stop_times": [
+    {
+     "arrival_seconds": 74400,
+     "departure_seconds": 74400,
+     "dropoff": false,
+     "node_id": "node-wd-q192733",
+     "pickup": true,
+     "sequence": 0
+    },
+    {
+     "arrival_seconds": 82200,
+     "departure_seconds": 82200,
+     "dropoff": true,
+     "node_id": "node-wd-q1997645",
+     "pickup": false,
+     "sequence": 1
+    }
+   ],
+   "timezone": "Europe/Moscow",
+   "trip_id": "demo-ic-air-moscow--novorossiysk-2040",
+   "trip_identity_confirmed": true
+  },
+  {
+   "mode": "air",
+   "service_dates": [
+    "2026-11-11"
+   ],
+   "service_id": "demo-ic-svc-air-novorossiysk--moscow-1145",
+   "source_refs": [
+    "demo-model:intercity:schedule"
+   ],
+   "stop_times": [
+    {
+     "arrival_seconds": 42300,
+     "departure_seconds": 42300,
+     "dropoff": false,
+     "node_id": "node-wd-q1997645",
+     "pickup": true,
+     "sequence": 0
+    },
+    {
+     "arrival_seconds": 50100,
+     "departure_seconds": 50100,
+     "dropoff": true,
+     "node_id": "node-wd-q192733",
+     "pickup": false,
+     "sequence": 1
+    }
+   ],
+   "timezone": "Europe/Moscow",
+   "trip_id": "demo-ic-air-novorossiysk--moscow-1145",
+   "trip_identity_confirmed": true
+  },
+  {
+   "mode": "air",
+   "service_dates": [
+    "2026-11-11"
+   ],
+   "service_id": "demo-ic-svc-air-novorossiysk--moscow-1745",
+   "source_refs": [
+    "demo-model:intercity:schedule"
+   ],
+   "stop_times": [
+    {
+     "arrival_seconds": 63900,
+     "departure_seconds": 63900,
+     "dropoff": false,
+     "node_id": "node-wd-q1997645",
+     "pickup": true,
+     "sequence": 0
+    },
+    {
+     "arrival_seconds": 71700,
+     "departure_seconds": 71700,
+     "dropoff": true,
+     "node_id": "node-wd-q192733",
+     "pickup": false,
+     "sequence": 1
+    }
+   ],
+   "timezone": "Europe/Moscow",
+   "trip_id": "demo-ic-air-novorossiysk--moscow-1745",
+   "trip_identity_confirmed": true
+  },
+  {
+   "mode": "rail",
+   "service_dates": [
+    "2026-11-11"
+   ],
+   "service_id": "demo-ic-svc-rail-kaliningrad--moscow-1800",
+   "source_refs": [
+    "demo-model:intercity:schedule"
+   ],
+   "stop_times": [
+    {
+     "arrival_seconds": 64800,
+     "departure_seconds": 64800,
+     "dropoff": false,
+     "node_id": "node-wd-q800979",
+     "pickup": true,
+     "sequence": 0
+    },
+    {
+     "arrival_seconds": 137400,
+     "departure_seconds": 137400,
+     "dropoff": true,
+     "node_id": "node-wd-q1367269",
+     "pickup": false,
+     "sequence": 1
+    }
+   ],
+   "timezone": "Europe/Kaliningrad",
+   "trip_id": "demo-ic-rail-kaliningrad--moscow-1800",
+   "trip_identity_confirmed": true
+  },
+  {
+   "mode": "rail",
+   "service_dates": [
+    "2026-11-11"
+   ],
+   "service_id": "demo-ic-svc-rail-moscow--kaliningrad-1650",
+   "source_refs": [
+    "demo-model:intercity:schedule"
+   ],
+   "stop_times": [
+    {
+     "arrival_seconds": 60600,
+     "departure_seconds": 60600,
+     "dropoff": false,
+     "node_id": "node-wd-q1367269",
+     "pickup": true,
+     "sequence": 0
+    },
+    {
+     "arrival_seconds": 132600,
+     "departure_seconds": 132600,
+     "dropoff": true,
+     "node_id": "node-wd-q800979",
+     "pickup": false,
+     "sequence": 1
+    }
+   ],
+   "timezone": "Europe/Moscow",
+   "trip_id": "demo-ic-rail-moscow--kaliningrad-1650",
+   "trip_identity_confirmed": true
+  },
+  {
+   "mode": "rail",
+   "service_dates": [
+    "2026-11-11"
+   ],
+   "service_id": "demo-ic-svc-rail-moscow--novorossiysk-1240",
+   "source_refs": [
+    "demo-model:intercity:schedule"
+   ],
+   "stop_times": [
+    {
+     "arrival_seconds": 45600,
+     "departure_seconds": 45600,
+     "dropoff": false,
+     "node_id": "node-wd-q21844902",
+     "pickup": true,
+     "sequence": 0
+    },
+    {
+     "arrival_seconds": 122100,
+     "departure_seconds": 122100,
+     "dropoff": true,
+     "node_id": "node-wd-q3728238",
+     "pickup": false,
+     "sequence": 1
+    }
+   ],
+   "timezone": "Europe/Moscow",
+   "trip_id": "demo-ic-rail-moscow--novorossiysk-1240",
+   "trip_identity_confirmed": true
+  },
+  {
+   "mode": "rail",
+   "service_dates": [
+    "2026-11-11"
+   ],
+   "service_id": "demo-ic-svc-rail-moscow--novorossiysk-1830",
+   "source_refs": [
+    "demo-model:intercity:schedule"
+   ],
+   "stop_times": [
+    {
+     "arrival_seconds": 66600,
+     "departure_seconds": 66600,
+     "dropoff": false,
+     "node_id": "node-wd-q21844902",
+     "pickup": true,
+     "sequence": 0
+    },
+    {
+     "arrival_seconds": 143100,
+     "departure_seconds": 143100,
+     "dropoff": true,
+     "node_id": "node-wd-q3728238",
+     "pickup": false,
+     "sequence": 1
+    }
+   ],
+   "timezone": "Europe/Moscow",
+   "trip_id": "demo-ic-rail-moscow--novorossiysk-1830",
+   "trip_identity_confirmed": true
+  },
+  {
+   "mode": "rail",
+   "service_dates": [
+    "2026-11-11"
+   ],
+   "service_id": "demo-ic-svc-rail-novorossiysk--moscow-1340",
+   "source_refs": [
+    "demo-model:intercity:schedule"
+   ],
+   "stop_times": [
+    {
+     "arrival_seconds": 49200,
+     "departure_seconds": 49200,
+     "dropoff": false,
+     "node_id": "node-wd-q3728238",
+     "pickup": true,
+     "sequence": 0
+    },
+    {
+     "arrival_seconds": 125700,
+     "departure_seconds": 125700,
+     "dropoff": true,
+     "node_id": "node-wd-q21844902",
+     "pickup": false,
+     "sequence": 1
+    }
+   ],
+   "timezone": "Europe/Moscow",
+   "trip_id": "demo-ic-rail-novorossiysk--moscow-1340",
+   "trip_identity_confirmed": true
+  },
+  {
+   "mode": "rail",
+   "service_dates": [
+    "2026-11-11"
+   ],
+   "service_id": "demo-ic-svc-rail-novorossiysk--moscow-2110",
+   "source_refs": [
+    "demo-model:intercity:schedule"
+   ],
+   "stop_times": [
+    {
+     "arrival_seconds": 76200,
+     "departure_seconds": 76200,
+     "dropoff": false,
+     "node_id": "node-wd-q3728238",
+     "pickup": true,
+     "sequence": 0
+    },
+    {
+     "arrival_seconds": 152700,
+     "departure_seconds": 152700,
+     "dropoff": true,
+     "node_id": "node-wd-q21844902",
+     "pickup": false,
+     "sequence": 1
+    }
+   ],
+   "timezone": "Europe/Moscow",
+   "trip_id": "demo-ic-rail-novorossiysk--moscow-2110",
+   "trip_identity_confirmed": true
+  },
+  {
+   "mode": "road",
+   "service_dates": [
+    "2026-11-11"
+   ],
+   "service_id": "demo-ic-svc-road-moscow--novorossiysk-0730",
+   "source_refs": [
+    "demo-model:intercity:schedule"
+   ],
+   "stop_times": [
+    {
+     "arrival_seconds": 27000,
+     "departure_seconds": 27000,
+     "dropoff": false,
+     "node_id": "node-wd-q4304027",
+     "pickup": true,
+     "sequence": 0
+    },
+    {
+     "arrival_seconds": 105600,
+     "departure_seconds": 105600,
+     "dropoff": true,
+     "node_id": "node-osm-way-61808901",
+     "pickup": false,
+     "sequence": 1
+    }
+   ],
+   "timezone": "Europe/Moscow",
+   "trip_id": "demo-ic-road-moscow--novorossiysk-0730",
+   "trip_identity_confirmed": true
+  },
+  {
+   "mode": "road",
+   "service_dates": [
+    "2026-11-11"
+   ],
+   "service_id": "demo-ic-svc-road-novorossiysk--moscow-1600",
+   "source_refs": [
+    "demo-model:intercity:schedule"
+   ],
+   "stop_times": [
+    {
+     "arrival_seconds": 57600,
+     "departure_seconds": 57600,
+     "dropoff": false,
+     "node_id": "node-osm-way-61808901",
+     "pickup": true,
+     "sequence": 0
+    },
+    {
+     "arrival_seconds": 136200,
+     "departure_seconds": 136200,
+     "dropoff": true,
+     "node_id": "node-wd-q4304027",
+     "pickup": false,
+     "sequence": 1
+    }
+   ],
+   "timezone": "Europe/Moscow",
+   "trip_id": "demo-ic-road-novorossiysk--moscow-1600",
+   "trip_identity_confirmed": true
+  }
+ ],
+ "schema_version": "2",
+ "snapshot_id": "demo-intercity-2026-11-11.1",
+ "source_versions": {
+  "DEMO_SYNTHETIC_TRANSPORT_MODEL": "waydex-demo-2026-11-11.1",
+  "a2_intercity_nodes": "russia-intercity-nodes-2026-11-09.2",
+  "osm_geofabrik:kaliningrad": "osm_geofabrik.kaliningrad-261107",
+  "osm_geofabrik:moscow": "osm_geofabrik.central-fed-district-261107",
+  "osm_geofabrik:novorossiysk": "osm_geofabrik.south-fed-district-261107",
+  "rosmorport:kaliningrad": "rosmorport.seaports-kaliningrad-20261108",
+  "rosmorport:novorossiysk": "rosmorport.seaports-novorossiysk-20261108",
+  "valhalla_public": "fosgis-valhalla:3.9.1-9aac4da:tiles-1794364418"
+ },
+ "territories": [
+  {
+   "area_km2": 2562.625,
+   "geometry": {
+    "bbox": {
+     "east": 37.967428,
+     "north": 56.021224,
+     "south": 55.142175,
+     "west": 36.803101
+    },
+    "geometry_id": "moscow:boundary",
+    "source_refs": [
+     "osm:relation:102269"
+    ],
+    "version": "osm_geofabrik.central-fed-district-261107:relation/102269"
+   },
+   "level": "city",
+   "name": "Москва",
+   "source_refs": [
+    "osm:relation:102269"
+   ],
+   "territory_id": "moscow",
+   "timezone": "Europe/Moscow"
+  },
+  {
+   "area_km2": 224.668,
+   "geometry": {
+    "bbox": {
+     "east": 20.653798,
+     "north": 54.778684,
+     "south": 54.630622,
+     "west": 20.293279
+    },
+    "geometry_id": "kaliningrad:boundary",
+    "source_refs": [
+     "osm:relation:331414"
+    ],
+    "version": "osm_geofabrik.kaliningrad-261107:relation/331414"
+   },
+   "level": "city",
+   "name": "Калининград",
+   "source_refs": [
+    "osm:relation:331414"
+   ],
+   "territory_id": "kaliningrad",
+   "timezone": "Europe/Kaliningrad"
+  },
+  {
+   "area_km2": 848.313,
+   "geometry": {
+    "bbox": {
+     "east": 37.921905,
+     "north": 45.011626,
+     "south": 44.649431,
+     "west": 37.424356
+    },
+    "geometry_id": "novorossiysk:boundary",
+    "source_refs": [
+     "osm:relation:364545"
+    ],
+    "version": "osm_geofabrik.south-fed-district-261107:relation/364545"
+   },
+   "level": "city",
+   "name": "Новороссийск",
+   "source_refs": [
+    "osm:relation:364545"
+   ],
+   "territory_id": "novorossiysk",
+   "timezone": "Europe/Moscow"
+  }
+ ],
+ "timezone": "Europe/Moscow",
+ "traffic_profiles": [],
+ "transfers": [
+  {
+   "from_node_id": "node-wd-q192733",
+   "seconds": 0.0,
+   "source_refs": [
+    "demo-model:intercity:transfers"
+   ],
+   "to_node_id": "node-wd-q192733",
+   "transfer_id": "demo-ic-transfer-svo-air",
+   "verification_state": "verified"
+  }
+ ],
+ "valid_period": {
+  "end": "2026-11-25",
+  "start": "2026-11-11"
+ }
+}

@@ -935,3 +935,25 @@ unavailable до принятия настоящих truck observations. Product
 временного кэша, отдельные физические идентичности и copyright capture.
 Полнота сети/минимум не выводятся из HTTP200; fixture cache не публикуется.
 Реальные ответы и новые production snapshot этим изменением не создавались.
+
+## Синтетический демо-набор `waydex-demo-2026-11-11.1` (11.11.2026)
+
+Отдельный versioned набор для демо-стенда: `data/demo/waydex-demo-2026-11-11.1/`, генератор
+`a2_data_pipeline.demo_dataset` (правила `waydex-demo-rules-v1`, seed 20261111). Это модель, а не
+принятые данные: каждый модельный ряд ссылается на evidence `DEMO_SYNTHETIC_TRANSPORT_MODEL`,
+у каждого поля в `fields.json` указаны генератор, seed, единица и шаблон.
+
+```sh
+python -m a2_data_pipeline.demo_dataset extract --archive <handoff>/runtime.tar.gz  # один раз, sha256 закреплён
+python -m a2_data_pipeline.demo_dataset build                                        # те же байты при повторе
+```
+
+- Реальные входы: принятые снимки `moscow-urban-2026-11-10.4`, `kaliningrad-urban-2026-11-10.5`,
+  `novorossiysk-urban-2026-11-10.3` из `data/bundles` (content hash сверяется с runtime manifest поставки),
+  каталог `russia-intercity-nodes-2026-11-09.2`, дорожные и грузовые наблюдения Valhalla из `runtime.tar.gz`
+  (выжимка `data/demo/inputs/waydex-handoff-2026-11-11-extract.json`).
+- Срез одной даты: 11.11.2026 08:30 местного (Калининград UTC+2, Москва/Новороссийск UTC+3).
+- 24 базовых пресета, 21 сравнение до/после, трубопровод отдельным профилем; таблица покрытия `coverage.md`.
+- Ожидаемые значения городских сценариев ОТ посчитаны `a2_engine.solve_timetable`; тест пересчитывает их.
+  Receipt Москвы проходит `verify_demo_model` API; Калининграду и Новороссийску нужен тот же opt-in в API
+  (сейчас допускается только префикс `demo-moscow-`).

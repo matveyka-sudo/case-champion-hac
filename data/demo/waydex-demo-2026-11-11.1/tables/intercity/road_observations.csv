@@ -1,0 +1,7 @@
+pair,http_status,response_sha256,edge_id,length_km,time_s,status,reason
+kaliningrad--moscow,200,19147ee38dcf4e1a0a3fee48e3483b4177f91afcf977a90618f0a55043dda29d,demo-ic-road-observation:kaliningrad--moscow,1249.311,62125.035,real_observation,
+kaliningrad--novorossiysk,400,d5d253f043137607e39482d14a51ab731f262ed63dd333cccb292bce8bf4b466,,,,unknown,ROAD_OBSERVATION_UNAVAILABLE:154:Path distance exceeds the max distance limit: 1500000 meters
+moscow--kaliningrad,200,0b6204a8ec134ea7d985e7a35e0802c104311fe4819548d762eebc61d3289e74,demo-ic-road-observation:moscow--kaliningrad,1237.242,61799.265,real_observation,
+moscow--novorossiysk,200,bf278054f086b4f0eb8e6d05746627efd71d83dc1b7b4f07d9b0749b37c7edd9,demo-ic-road-observation:moscow--novorossiysk,1482.551,71510.406,real_observation,
+novorossiysk--kaliningrad,400,d5d253f043137607e39482d14a51ab731f262ed63dd333cccb292bce8bf4b466,,,,unknown,ROAD_OBSERVATION_UNAVAILABLE:154:Path distance exceeds the max distance limit: 1500000 meters
+novorossiysk--moscow,200,a50a67c8b0c4c2b308ec0188b46740fb66efe31bf824896f8c2c87966ef704e0,demo-ic-road-observation:novorossiysk--moscow,1482.058,71537.64,real_observation,

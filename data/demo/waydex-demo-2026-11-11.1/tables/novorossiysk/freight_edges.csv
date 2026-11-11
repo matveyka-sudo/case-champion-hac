@@ -1,0 +1,13 @@
+edge_id,site_id,freight_node_id,direction,length_m,time_s,origin
+demo-novorossiysk-truck:novorossiysk-site-way-31091391:novorossiysk-port-way-1168951234:outbound,novorossiysk-site-way-31091391,novorossiysk-port-way-1168951234,outbound,2607.0,431.667,real_observation
+demo-novorossiysk-truck:novorossiysk-site-way-31091391:novorossiysk-port-way-1168951234:inbound,novorossiysk-site-way-31091391,novorossiysk-port-way-1168951234,inbound,2607.0,433.386,real_observation
+demo-novorossiysk-truck:novorossiysk-site-way-31091391:demo-novorossiysk-rail-terminal-model:outbound,novorossiysk-site-way-31091391,demo-novorossiysk-rail-terminal-model,outbound,9457.6,1370.0,synthetic
+demo-novorossiysk-truck:novorossiysk-site-way-31091391:demo-novorossiysk-rail-terminal-model:inbound,novorossiysk-site-way-31091391,demo-novorossiysk-rail-terminal-model,inbound,9457.6,1370.0,synthetic
+demo-novorossiysk-truck:novorossiysk-site-way-297508000:novorossiysk-port-way-1168951234:outbound,novorossiysk-site-way-297508000,novorossiysk-port-way-1168951234,outbound,3467.0,337.436,real_observation
+demo-novorossiysk-truck:novorossiysk-site-way-297508000:novorossiysk-port-way-1168951234:inbound,novorossiysk-site-way-297508000,novorossiysk-port-way-1168951234,inbound,4435.0,424.116,real_observation
+demo-novorossiysk-truck:novorossiysk-site-way-297508000:demo-novorossiysk-rail-terminal-model:outbound,novorossiysk-site-way-297508000,demo-novorossiysk-rail-terminal-model,outbound,8949.8,1290.0,synthetic
+demo-novorossiysk-truck:novorossiysk-site-way-297508000:demo-novorossiysk-rail-terminal-model:inbound,novorossiysk-site-way-297508000,demo-novorossiysk-rail-terminal-model,inbound,8949.8,1290.0,synthetic
+demo-novorossiysk-truck:novorossiysk-site-way-146643214:novorossiysk-port-way-1168951234:outbound,novorossiysk-site-way-146643214,novorossiysk-port-way-1168951234,outbound,3825.0,445.437,real_observation
+demo-novorossiysk-truck:novorossiysk-site-way-146643214:novorossiysk-port-way-1168951234:inbound,novorossiysk-site-way-146643214,novorossiysk-port-way-1168951234,inbound,3392.0,415.604,real_observation
+demo-novorossiysk-truck:novorossiysk-site-way-146643214:demo-novorossiysk-rail-terminal-model:outbound,novorossiysk-site-way-146643214,demo-novorossiysk-rail-terminal-model,outbound,9152.3,1320.0,synthetic
+demo-novorossiysk-truck:novorossiysk-site-way-146643214:demo-novorossiysk-rail-terminal-model:inbound,novorossiysk-site-way-146643214,demo-novorossiysk-rail-terminal-model,inbound,9152.3,1320.0,synthetic
