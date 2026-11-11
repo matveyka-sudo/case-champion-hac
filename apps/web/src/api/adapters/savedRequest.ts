@@ -37,7 +37,7 @@ export function savedRequestDraft(result: AnalysisResult, catalog: Territory[], 
   const cargoProfile: CargoProfileChoice | null = profile?.kind === "delivery" && profile.handling_requirements.length === 1 && profile.urgency !== "nonurgent"
     ? { group: profile.food_class, handling: profile.handling_requirements[0], limits: { temp: profile.temperature_requirements.controlled, urgent: profile.urgency === "urgent" } }
     : null;
-  return { draft, cargoProfile, warning: !origin || !exactSlot || ("cargo_profile_id" in r && !profile) || (r.analysis_kind === "intercity_passenger" && !draft.paxModes.length)
-    ? "Сохранённый результат открыт. Некоторые исходные условия нельзя точно представить текущими фильтрами; для нового расчёта проверьте территорию и время."
+  return { draft, cargoProfile, warning: !origin || !exactSlot || ("cargo_profile_id" in r && (!profile || (profile.kind === "delivery" && !cargoProfile))) || (r.analysis_kind === "intercity_passenger" && !draft.paxModes.length)
+    ? "Сохранённый результат открыт. Некоторые исходные условия нельзя точно представить текущими фильтрами; перед новым расчётом проверьте параметры."
     : "" };
 }
