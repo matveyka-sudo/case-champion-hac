@@ -162,6 +162,14 @@ API and worker. The ordinary result wire bound remains 16 MiB. Source documents
 retain their existing 32 MiB bound. Demo transport and paid providers are off.
 No provider key or assistant environment file is required for these profiles.
 
+Restore optional Alice separately using the [backend integration instructions](../../apps/api/docs/alice-integration.md).
+Keep its API credentials private and preserve the existing PostgreSQL budget and
+reservation ledger, including charged usage and outstanding holds. Do not use
+budget initialization or `set-limit` as a recovery reset. This template restores
+the four calculators with Alice off; it does not reproduce the live assistant.
+Enabling Alice requires a separately reviewed API-only configuration applied
+after this overlay, with its existing budget and explicit provider gates.
+
 Before starting databases or routers, run the real source checker in the image
 with networking disabled. This checks the fingerprint and all four profiles,
 the native/geometry packet and mounted Kaliningrad graph, without calculating
