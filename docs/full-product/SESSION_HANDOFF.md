@@ -1,5 +1,53 @@
 # Waydex Full Product — restart checkpoint, 2026-11-10
 
+## Live 1839 and confirmed parent-lock incident — 2026-11-11 03:15 MSK
+
+Live5193 now runs `1839d8b894f8c069c367e67db052140fcfa5e8bb`; root activation
+passed in47.64s, PostgreSQL/observation volumes unchanged, demo transport false.
+API/worker imageee9031784e05132d1f5cc4b125a20c2f07bbdce82f46707818c506837ebbf895;
+web168c4e5224adca39a2419068e707dd6581a3811f13e56ea51406f0be3aba5b38.
+All six GitHub checks passed at this exact SHA. Root1193 engine tests,214 frontend
+units and74 focused backend checks passed; the last group has2 explicit PG skips.
+Old unused5192 applications/PostgreSQL and standalone N8028 were stopped without
+removing volumes;5193 and test/budget databases remain running.
+
+Integrated repairs: unusable rounded-zero physical approaches remain unknown
+(7830342); scenario comparisons/assumptions (e840043), friendly approach reason
+(0219ee4), and per-binding TypeAdapter reuse (c7a52a4). Root independently replayed
+all1401 saved observations:1394 valid journeys,2361 map points,5589 features;
+all canonical indices remain null. These are offline acceptance counts, not a
+successfully published Moscow result. Final-image combined4profile initialization,
+saved1401 reduction and public IPC passed with1,899,843,584B peak under2GiB.
+One observed score differs by1ULP between macOS and Linux (`100*2**(-1002.26/3600)`);
+all other leaves match. Repeated fixed-Linux-image result hash is exact. No formula
+or rounding policy changed. Candidate gates/activation receipts:
+`candidate-threecity-code-1839d8b894f8-20261111-v3/` outside Git.
+
+Actual fresh React full-Moscow job `e47231a9-b2b2-4139-b48c-66b2cba8b8b2`
+was admitted once in11.216s, saved88checkpoints/1401observations, then FAILED.
+No OOM; worker peak1,839,099,904B. Generic parent error masked a real lock race:
+CheckpointRepository.finalize holds the jobs row while validating all raw files,
+but heartbeat UPDATE waits on that row with the pool's10s command timeout.
+Root independently reproduced TimeoutError in11.1015s with the actual88rows and
+isolated PostgreSQL, without adding delay. The successful prior IPC harness used
+a stub finalize and therefore did not cover this actual database boundary.
+Keep the failed job and immutable observations. Do NOT reroute for diagnosis.
+Incident capture: `backend-parent-publication-incident-e47231a9-20261112-v1/`
+(folder spelling retained); root proof `root-parent-lock-repro-20261111-v1/`.
+
+BACKEND owns the approved two-phase validation/fencing fix across checkpoints,
+jobs and worker runner: raw validation outside long row locks, exact inventory
+recheck in short publication transactions, heartbeat/cancellation through atomic
+publication, original timeouts retained. Independent reviewer agreed. Before a
+new production campaign, require actual saved1401 Worker+PostgreSQL publication,
+not only engine reduction or a stubbed checkpoint repository.
+
+Source-bound PT names224da53 are independently reviewed but NOT integrated/live.
+All284 names match the accepted parent; host single-calculation peak2.080GB leaves
+little room below2GiB. Six-profile deployment remains unverified. Public persisted
+batch-progress DTO is only a pending design, not implemented. K extra-router and
+fresh six-profile assembly remain next-wave work. No additional paid Alice calls.
+
 ## Full campaign and real scenario checkpoint — 2026-11-11 02:30 MSK
 
 Live5193 now runs frozen `d085256ae668e4ed97c626bccc43bfd2febe9d37`.
