@@ -29,6 +29,7 @@ async def saved(database, batch_context):
         url,
         min_size=2,
         max_size=5,
+        command_timeout=10,
         server_settings={"search_path": schema},
     )
     try:
