@@ -2,6 +2,7 @@
 
 from .api import (
     AreaOption,
+    BatchProgress,
     Capabilities,
     ErrorDetail,
     ErrorEnvelope,
@@ -32,6 +33,7 @@ __all__ = [
     "AnalysisRequest",
     "AnalysisResult",
     "AreaOption",
+    "BatchProgress",
     "Capabilities",
     "CargoProfile",
     "CountResult",

@@ -257,6 +257,41 @@
         "title": "AreaOption",
         "type": "object"
       },
+      "BatchProgress": {
+        "additionalProperties": false,
+        "description": "Persisted admitted OD batches, not route validity or numerical coverage.\n\nAll batches can be saved while calculation/validation/publication is still\npending. No duration, ETA or percentage of the whole calculation is implied.",
+        "properties": {
+          "completed_batches": {
+            "maximum": 4096.0,
+            "minimum": 0.0,
+            "title": "Completed Batches",
+            "type": "integer"
+          },
+          "phase": {
+            "enum": [
+              "routing",
+              "finalizing",
+              "published",
+              "stopped"
+            ],
+            "title": "Phase",
+            "type": "string"
+          },
+          "total_batches": {
+            "maximum": 4096.0,
+            "minimum": 1.0,
+            "title": "Total Batches",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "completed_batches",
+          "total_batches",
+          "phase"
+        ],
+        "title": "BatchProgress",
+        "type": "object"
+      },
       "BoundaryNodeSets": {
         "additionalProperties": false,
         "properties": {
@@ -1490,6 +1525,16 @@
             "minimum": 1.0,
             "title": "Poll After Seconds",
             "type": "integer"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BatchProgress"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "request_id": {
             "minLength": 1,
@@ -4876,6 +4921,16 @@
             "schema": {
               "title": "Job Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_progress",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Progress",
+              "type": "boolean"
             }
           }
         ],
