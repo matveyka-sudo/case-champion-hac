@@ -1,0 +1,121 @@
+{
+  "analysis_id": "demo-intercity_cargo",
+  "analysis_kind": "intercity_cargo",
+  "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+  "counts": [],
+  "evidence_refs": [
+    {
+      "evidence_id": "demo-evidence",
+      "observed_at": null,
+      "retrieved_at": "2026-11-08T09:00:00Z",
+      "section": "Synthetic test only",
+      "source_id": "demo-source",
+      "url": "https://example.org/synthetic"
+    }
+  ],
+  "journeys": [],
+  "last_returns": [],
+  "limitations": [
+    "synthetic_only"
+  ],
+  "methodology_version": "a2-methodology-v3",
+  "metrics": [
+    {
+      "completeness": "full",
+      "dependency_job_id": null,
+      "metric_id": "demo-time",
+      "name": "Synthetic complete delivery time",
+      "population_basis": null,
+      "reason_code": null,
+      "site_basis": null,
+      "source_refs": [
+        "demo-evidence"
+      ],
+      "status": "available",
+      "subject": {
+        "category": null,
+        "destination_id": "demo-b",
+        "kind": "city_pair",
+        "mode": "rail",
+        "node_id": null,
+        "origin_id": "demo-a",
+        "point_id": null,
+        "site_id": null,
+        "territory_id": null
+      },
+      "time_kind": "complete_chain",
+      "unit": "seconds",
+      "value": 1800.0
+    }
+  ],
+  "references": [],
+  "request": {
+    "analysis_kind": "intercity_cargo",
+    "cargo_modes": null,
+    "cargo_profile_id": "demo-general",
+    "cargo_transport": "multimodal",
+    "departure_at": "2026-11-09T08:15:00+03:00",
+    "destination_id": "demo-b",
+    "destination_node_ids": null,
+    "methodology": {
+      "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+      "reference_profile": "edge-calibrated-v1",
+      "version": "a2-methodology-v3"
+    },
+    "origin_id": "demo-a",
+    "origin_node_ids": null,
+    "pipeline_product": null,
+    "schema_version": "2",
+    "snapshot_id": "demo-snapshot",
+    "territory_level": "region",
+    "traffic_mode": "static"
+  },
+  "result_hash": "demo-hash",
+  "schema_version": "2",
+  "scores": [
+    {
+      "aggregation_basis": null,
+      "completeness": "full",
+      "components": [
+        {
+          "id": "demo-time",
+          "kind": "metric"
+        }
+      ],
+      "evidence_refs": [
+        "demo-evidence"
+      ],
+      "methodology_version": "a2-methodology-v3",
+      "name": "Synthetic category index",
+      "ranking_eligible": false,
+      "reason_code": null,
+      "score_id": "demo-score",
+      "status": "available",
+      "subject": {
+        "category": null,
+        "destination_id": "demo-b",
+        "kind": "city_pair",
+        "mode": "rail",
+        "node_id": null,
+        "origin_id": "demo-a",
+        "point_id": null,
+        "site_id": null,
+        "territory_id": null
+      },
+      "value": 50.0,
+      "calculation_kind": "delivery_deadline"
+    }
+  ],
+  "snapshot_id": "demo-snapshot",
+  "status": "available",
+  "traffic_mode": "static",
+  "versions": {
+    "calendar_version": "demo-calendar",
+    "code_version": "demo-code",
+    "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+    "graph_version": "demo-graph",
+    "methodology_version": "a2-methodology-v3",
+    "population_version": null,
+    "snapshot_id": "demo-snapshot"
+  }
+}

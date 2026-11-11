@@ -1,0 +1,1178 @@
+{
+  "$defs": {
+    "Applicability": {
+      "additionalProperties": false,
+      "description": "Known applicability facts; None means unverified, not unrestricted access.",
+      "properties": {
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "passenger_categories": {
+          "anyOf": [
+            {
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Passenger Categories"
+        },
+        "requires_referral": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Requires Referral"
+        },
+        "restrictions": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Restrictions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "passenger_categories",
+        "requires_referral",
+        "restrictions",
+        "evidence_ids"
+      ],
+      "title": "Applicability",
+      "type": "object"
+    },
+    "AvailabilityWindow": {
+      "additionalProperties": false,
+      "description": "Recurring local opening window, distinct from a passenger's activity window.\n\nWeekdays refer to the start date (Monday=0); end_day_offset=1 explicitly\nplaces the end on the following date. UTC conversion belongs to the engine.",
+      "properties": {
+        "end": {
+          "format": "time",
+          "title": "End",
+          "type": "string"
+        },
+        "end_day_offset": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "End Day Offset",
+          "type": "integer"
+        },
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "start": {
+          "format": "time",
+          "title": "Start",
+          "type": "string"
+        },
+        "timezone": {
+          "minLength": 1,
+          "title": "Timezone",
+          "type": "string"
+        },
+        "valid_period": {
+          "$ref": "#/$defs/ValidityPeriod"
+        },
+        "verification_state": {
+          "enum": [
+            "verified",
+            "absent",
+            "unknown"
+          ],
+          "title": "Verification State",
+          "type": "string"
+        },
+        "weekdays": {
+          "items": {
+            "maximum": 6,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "minItems": 1,
+          "title": "Weekdays",
+          "type": "array"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "end_day_offset",
+        "weekdays",
+        "valid_period",
+        "timezone",
+        "verification_state",
+        "evidence_ids"
+      ],
+      "title": "AvailabilityWindow",
+      "type": "object"
+    },
+    "Calendar": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "exceptions": {
+          "items": {
+            "$ref": "#/$defs/CalendarException"
+          },
+          "title": "Exceptions",
+          "type": "array"
+        },
+        "service_id": {
+          "minLength": 1,
+          "title": "Service Id",
+          "type": "string"
+        },
+        "timezone": {
+          "minLength": 1,
+          "title": "Timezone",
+          "type": "string"
+        },
+        "valid_period": {
+          "$ref": "#/$defs/ValidityPeriod"
+        },
+        "weekdays": {
+          "items": {
+            "maximum": 6,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "title": "Weekdays",
+          "type": "array"
+        }
+      },
+      "required": [
+        "service_id",
+        "valid_period",
+        "weekdays",
+        "exceptions",
+        "timezone",
+        "evidence_ids"
+      ],
+      "title": "Calendar",
+      "type": "object"
+    },
+    "CalendarException": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "operation": {
+          "enum": [
+            "add",
+            "remove"
+          ],
+          "title": "Operation",
+          "type": "string"
+        },
+        "service_date": {
+          "format": "date",
+          "title": "Service Date",
+          "type": "string"
+        }
+      },
+      "required": [
+        "service_date",
+        "operation",
+        "evidence_ids"
+      ],
+      "title": "CalendarException",
+      "type": "object"
+    },
+    "CompletenessScope": {
+      "additionalProperties": false,
+      "properties": {
+        "destination_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Destination Ids",
+          "type": "array"
+        },
+        "modes": {
+          "items": {
+            "enum": [
+              "rail",
+              "bus",
+              "walk"
+            ],
+            "type": "string"
+          },
+          "title": "Modes",
+          "type": "array"
+        },
+        "origin_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Origin Ids",
+          "type": "array"
+        },
+        "valid_period": {
+          "$ref": "#/$defs/ValidityPeriod"
+        }
+      },
+      "required": [
+        "origin_ids",
+        "destination_ids",
+        "modes",
+        "valid_period"
+      ],
+      "title": "CompletenessScope",
+      "type": "object"
+    },
+    "Coverage": {
+      "additionalProperties": false,
+      "properties": {
+        "is_complete": {
+          "title": "Is Complete",
+          "type": "boolean"
+        },
+        "missing_fields": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Missing Fields",
+          "type": "array"
+        },
+        "scope": {
+          "$ref": "#/$defs/CompletenessScope"
+        }
+      },
+      "required": [
+        "scope",
+        "is_complete",
+        "missing_fields"
+      ],
+      "title": "Coverage",
+      "type": "object"
+    },
+    "Destination": {
+      "additionalProperties": false,
+      "properties": {
+        "anchor_id": {
+          "minLength": 1,
+          "title": "Anchor Id",
+          "type": "string"
+        },
+        "city_id": {
+          "minLength": 1,
+          "title": "City Id",
+          "type": "string"
+        },
+        "destination_id": {
+          "minLength": 1,
+          "title": "Destination Id",
+          "type": "string"
+        },
+        "entrance_id": {
+          "minLength": 1,
+          "title": "Entrance Id",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "lat": {
+          "maximum": 90,
+          "minimum": -90,
+          "title": "Lat",
+          "type": "number"
+        },
+        "lon": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "Lon",
+          "type": "number"
+        },
+        "timezone": {
+          "minLength": 1,
+          "title": "Timezone",
+          "type": "string"
+        },
+        "type": {
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        },
+        "verification_state": {
+          "enum": [
+            "verified",
+            "absent",
+            "unknown"
+          ],
+          "title": "Verification State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "destination_id",
+        "city_id",
+        "anchor_id",
+        "entrance_id",
+        "lon",
+        "lat",
+        "timezone",
+        "type",
+        "verification_state",
+        "evidence_ids"
+      ],
+      "title": "Destination",
+      "type": "object"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "content_hash": {
+          "minLength": 1,
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "evidence_id": {
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "fetched_at": {
+          "format": "date-time",
+          "title": "Fetched At",
+          "type": "string"
+        },
+        "record_id": {
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "source_id": {
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "valid_period": {
+          "$ref": "#/$defs/ValidityPeriod"
+        },
+        "verification_state": {
+          "enum": [
+            "verified",
+            "absent",
+            "unknown"
+          ],
+          "title": "Verification State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "source_id",
+        "record_id",
+        "fetched_at",
+        "valid_period",
+        "content_hash",
+        "verification_state"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "Fare": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "minimum": 0,
+          "title": "Amount",
+          "type": "number"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "fare_id": {
+          "minLength": 1,
+          "title": "Fare Id",
+          "type": "string"
+        },
+        "passenger_category": {
+          "minLength": 1,
+          "title": "Passenger Category",
+          "type": "string"
+        },
+        "trip_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Trip Ids",
+          "type": "array"
+        },
+        "valid_from": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid From"
+        },
+        "valid_to": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid To"
+        }
+      },
+      "required": [
+        "valid_from",
+        "valid_to",
+        "fare_id",
+        "amount",
+        "currency",
+        "passenger_category",
+        "trip_ids",
+        "evidence_ids"
+      ],
+      "title": "Fare",
+      "type": "object"
+    },
+    "Origin": {
+      "additionalProperties": false,
+      "properties": {
+        "anchor_id": {
+          "minLength": 1,
+          "title": "Anchor Id",
+          "type": "string"
+        },
+        "city_id": {
+          "minLength": 1,
+          "title": "City Id",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "lat": {
+          "maximum": 90,
+          "minimum": -90,
+          "title": "Lat",
+          "type": "number"
+        },
+        "lon": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "Lon",
+          "type": "number"
+        },
+        "origin_id": {
+          "minLength": 1,
+          "title": "Origin Id",
+          "type": "string"
+        },
+        "timezone": {
+          "minLength": 1,
+          "title": "Timezone",
+          "type": "string"
+        },
+        "type": {
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "origin_id",
+        "city_id",
+        "anchor_id",
+        "lon",
+        "lat",
+        "timezone",
+        "type",
+        "evidence_ids"
+      ],
+      "title": "Origin",
+      "type": "object"
+    },
+    "ServiceOffering": {
+      "additionalProperties": false,
+      "properties": {
+        "applicability": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Applicability"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "availability_windows": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/AvailabilityWindow"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Availability Windows"
+        },
+        "destination_id": {
+          "minLength": 1,
+          "title": "Destination Id",
+          "type": "string"
+        },
+        "eligibility": {
+          "minLength": 1,
+          "title": "Eligibility",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "hours_verified": {
+          "enum": [
+            "verified",
+            "absent",
+            "unknown"
+          ],
+          "title": "Hours Verified",
+          "type": "string"
+        },
+        "service_type_id": {
+          "minLength": 1,
+          "title": "Service Type Id",
+          "type": "string"
+        },
+        "service_verified": {
+          "enum": [
+            "verified",
+            "absent",
+            "unknown"
+          ],
+          "title": "Service Verified",
+          "type": "string"
+        },
+        "valid_from": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid From"
+        },
+        "valid_to": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid To"
+        }
+      },
+      "required": [
+        "valid_from",
+        "valid_to",
+        "destination_id",
+        "service_type_id",
+        "eligibility",
+        "service_verified",
+        "hours_verified",
+        "evidence_ids"
+      ],
+      "title": "ServiceOffering",
+      "type": "object"
+    },
+    "SnapshotBundle": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance_state": {
+          "enum": [
+            "downloaded",
+            "parsed",
+            "validated",
+            "accepted",
+            "quarantined"
+          ],
+          "title": "Acceptance State",
+          "type": "string"
+        },
+        "accepted_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Accepted At"
+        },
+        "accepted_by": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Accepted By"
+        },
+        "bundle_id": {
+          "minLength": 1,
+          "title": "Bundle Id",
+          "type": "string"
+        },
+        "completeness_evidence": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Completeness Evidence",
+          "type": "array"
+        },
+        "completeness_scope": {
+          "$ref": "#/$defs/CompletenessScope"
+        },
+        "coverage": {
+          "$ref": "#/$defs/Coverage"
+        },
+        "destinations_snapshot": {
+          "minLength": 1,
+          "title": "Destinations Snapshot",
+          "type": "string"
+        },
+        "fares_snapshot": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Fares Snapshot"
+        },
+        "hashes": {
+          "additionalProperties": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "propertyNames": {
+            "minLength": 1
+          },
+          "title": "Hashes",
+          "type": "object"
+        },
+        "missing_fields": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Missing Fields",
+          "type": "array"
+        },
+        "parser_version": {
+          "minLength": 1,
+          "title": "Parser Version",
+          "type": "string"
+        },
+        "timetable_snapshot": {
+          "minLength": 1,
+          "title": "Timetable Snapshot",
+          "type": "string"
+        },
+        "transfer_snapshot": {
+          "minLength": 1,
+          "title": "Transfer Snapshot",
+          "type": "string"
+        }
+      },
+      "required": [
+        "bundle_id",
+        "timetable_snapshot",
+        "destinations_snapshot",
+        "fares_snapshot",
+        "transfer_snapshot",
+        "hashes",
+        "parser_version",
+        "acceptance_state",
+        "coverage",
+        "completeness_scope",
+        "completeness_evidence",
+        "missing_fields",
+        "accepted_by",
+        "accepted_at"
+      ],
+      "title": "SnapshotBundle",
+      "type": "object"
+    },
+    "Source": {
+      "additionalProperties": false,
+      "properties": {
+        "license_status": {
+          "enum": [
+            "permitted",
+            "restricted",
+            "unknown"
+          ],
+          "title": "License Status",
+          "type": "string"
+        },
+        "publisher": {
+          "minLength": 1,
+          "title": "Publisher",
+          "type": "string"
+        },
+        "source_id": {
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "url": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "publisher",
+        "url",
+        "license_status"
+      ],
+      "title": "Source",
+      "type": "object"
+    },
+    "Stop": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "parent_station_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Parent Station Id"
+        },
+        "stop_id": {
+          "minLength": 1,
+          "title": "Stop Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stop_id",
+        "parent_station_id",
+        "evidence_ids"
+      ],
+      "title": "Stop",
+      "type": "object"
+    },
+    "StopTime": {
+      "additionalProperties": false,
+      "properties": {
+        "arrival_seconds": {
+          "minimum": 0,
+          "title": "Arrival Seconds",
+          "type": "integer"
+        },
+        "departure_seconds": {
+          "minimum": 0,
+          "title": "Departure Seconds",
+          "type": "integer"
+        },
+        "dropoff_allowed": {
+          "title": "Dropoff Allowed",
+          "type": "boolean"
+        },
+        "pickup_allowed": {
+          "title": "Pickup Allowed",
+          "type": "boolean"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "service_id": {
+          "minLength": 1,
+          "title": "Service Id",
+          "type": "string"
+        },
+        "stop_id": {
+          "minLength": 1,
+          "title": "Stop Id",
+          "type": "string"
+        },
+        "trip_id": {
+          "minLength": 1,
+          "title": "Trip Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trip_id",
+        "stop_id",
+        "sequence",
+        "arrival_seconds",
+        "departure_seconds",
+        "service_id",
+        "pickup_allowed",
+        "dropoff_allowed"
+      ],
+      "title": "StopTime",
+      "type": "object"
+    },
+    "Transfer": {
+      "additionalProperties": false,
+      "properties": {
+        "access_state": {
+          "enum": [
+            "verified",
+            "absent",
+            "unknown"
+          ],
+          "title": "Access State",
+          "type": "string"
+        },
+        "basis": {
+          "enum": [
+            "scenario",
+            "verified"
+          ],
+          "title": "Basis",
+          "type": "string"
+        },
+        "duration_seconds": {
+          "minimum": 0,
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "from_id": {
+          "minLength": 1,
+          "title": "From Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "access",
+            "transfer",
+            "egress"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "restrictions": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Restrictions",
+          "type": "array"
+        },
+        "to_id": {
+          "minLength": 1,
+          "title": "To Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "from_id",
+        "to_id",
+        "duration_seconds",
+        "access_state",
+        "basis",
+        "kind",
+        "restrictions",
+        "evidence_ids"
+      ],
+      "title": "Transfer",
+      "type": "object"
+    },
+    "Trip": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "mode": {
+          "enum": [
+            "rail",
+            "bus",
+            "walk"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "operator_id": {
+          "minLength": 1,
+          "title": "Operator Id",
+          "type": "string"
+        },
+        "service_id": {
+          "minLength": 1,
+          "title": "Service Id",
+          "type": "string"
+        },
+        "trip_id": {
+          "minLength": 1,
+          "title": "Trip Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trip_id",
+        "service_id",
+        "operator_id",
+        "mode",
+        "evidence_ids"
+      ],
+      "title": "Trip",
+      "type": "object"
+    },
+    "ValidityPeriod": {
+      "additionalProperties": false,
+      "properties": {
+        "valid_from": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid From"
+        },
+        "valid_to": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid To"
+        }
+      },
+      "required": [
+        "valid_from",
+        "valid_to"
+      ],
+      "title": "ValidityPeriod",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Loaded tables with validated keys; acceptance remains an external QA decision.",
+  "properties": {
+    "bundle": {
+      "$ref": "#/$defs/SnapshotBundle"
+    },
+    "calendars": {
+      "items": {
+        "$ref": "#/$defs/Calendar"
+      },
+      "title": "Calendars",
+      "type": "array"
+    },
+    "destinations": {
+      "items": {
+        "$ref": "#/$defs/Destination"
+      },
+      "title": "Destinations",
+      "type": "array"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/Evidence"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "fares": {
+      "items": {
+        "$ref": "#/$defs/Fare"
+      },
+      "title": "Fares",
+      "type": "array"
+    },
+    "origins": {
+      "items": {
+        "$ref": "#/$defs/Origin"
+      },
+      "title": "Origins",
+      "type": "array"
+    },
+    "service_offerings": {
+      "items": {
+        "$ref": "#/$defs/ServiceOffering"
+      },
+      "title": "Service Offerings",
+      "type": "array"
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/Source"
+      },
+      "title": "Sources",
+      "type": "array"
+    },
+    "stop_times": {
+      "items": {
+        "$ref": "#/$defs/StopTime"
+      },
+      "title": "Stop Times",
+      "type": "array"
+    },
+    "stops": {
+      "items": {
+        "$ref": "#/$defs/Stop"
+      },
+      "title": "Stops",
+      "type": "array"
+    },
+    "transfers": {
+      "items": {
+        "$ref": "#/$defs/Transfer"
+      },
+      "title": "Transfers",
+      "type": "array"
+    },
+    "trips": {
+      "items": {
+        "$ref": "#/$defs/Trip"
+      },
+      "title": "Trips",
+      "type": "array"
+    }
+  },
+  "required": [
+    "bundle",
+    "sources",
+    "evidence",
+    "origins",
+    "destinations",
+    "service_offerings",
+    "stops",
+    "trips",
+    "stop_times",
+    "calendars",
+    "transfers",
+    "fares"
+  ],
+  "title": "AcceptedData",
+  "type": "object"
+}

@@ -1,0 +1,73 @@
+name: Calculation engine
+
+on:
+  push:
+    branches: [main, dev, 'work/**']
+    paths:
+      - '.github/workflows/engine.yml'
+      - '.python-version'
+      - 'config/product.json'
+      - 'packages/engine/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+  pull_request:
+    branches: [dev, main]
+    paths:
+      - '.github/workflows/engine.yml'
+      - '.python-version'
+      - 'config/product.json'
+      - 'packages/engine/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: '0.12.17'
+      - name: Install frozen workspace
+        run: |
+          uv lock --check
+          uv sync --frozen --all-packages --group dev
+          uv pip check
+      - name: Check engine style and types
+        run: |
+          .venv/bin/ruff check packages/engine
+          .venv/bin/ruff format --check packages/engine
+          .venv/bin/python -m mypy --strict \
+            packages/engine/src packages/engine/tests packages/engine/examples
+      - name: Run engine tests
+        run: |
+          .venv/bin/python -m pytest -q -rs -o asyncio_default_fixture_loop_scope=function \
+            packages/engine/tests
+      - name: Verify installed package and wheel
+        run: |
+          check_dir=$(mktemp -d)
+          trap 'rm -rf "$check_dir"' EXIT
+          workspace_python="$PWD/.venv/bin/python"
+          product_config="$PWD/config/product.json"
+          (cd "$check_dir" && "$workspace_python" -I -c 'import a2_engine')
+          uv build --package a2-engine --wheel --out-dir "$check_dir"
+          uv export --quiet --frozen --package a2-engine --no-dev --no-emit-workspace \
+            --output-file "$check_dir/requirements.txt"
+          uv venv --python "$workspace_python" "$check_dir/venv"
+          wheel_python="$check_dir/venv/bin/python"
+          uv pip sync --python "$wheel_python" "$check_dir/requirements.txt"
+          uv pip install --python "$wheel_python" --no-deps "$check_dir"/*.whl
+          cd "$check_dir"
+          "$wheel_python" -I - "$product_config" <<'PY'
+          from pathlib import Path
+          import sys
+
+          from a2_engine import category_index, load_urban_config
+
+          load_urban_config(Path(sys.argv[1]))
+          assert category_index(1200, 1200).value == 50
+          PY

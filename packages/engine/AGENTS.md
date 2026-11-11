@@ -1,3 +1,2 @@
 # ML1
-
-Own this module's routing, index, scenario logic, profiles, numerical tests, and local documentation. Keep the engine deterministic and independent of API, database, and model calls. Use the canonical snapshot, preserve the baseline, and keep unknown coverage distinct from no path. Send contract changes to BACKEND. All `pyproject.toml` files and the root `uv.lock` belong to DEVOPS.
+Own this package on work/ml1. Use docs/PRODUCT_SPEC.md and docs/tasks/ml1.md. Deterministic travel-time and scenario calculations consume accepted data. Implement docs/FORMULAS.md with versioned config/product.json parameters. Approved methodology does not imply available data; never load historical profiles or invent missing values. Data fetching and LLM calls stay outside engine. Preserve baseline versions and unknown values. DEVOPS owns manifests and lock.

@@ -1,0 +1,35 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "valid_from": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Valid From"
+    },
+    "valid_to": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Valid To"
+    }
+  },
+  "required": [
+    "valid_from",
+    "valid_to"
+  ],
+  "title": "ValidityPeriod",
+  "type": "object"
+}

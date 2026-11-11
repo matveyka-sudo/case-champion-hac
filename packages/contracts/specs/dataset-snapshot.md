@@ -1,31 +1,8 @@
-# DatasetSnapshot
+# AcceptedData
+snapshot_id, schema_version, source_versions, geographic_scope, valid_period, timezone, provenance, QA report.
+Коллекции: territories, population_cells, sample_points, destinations, access_nodes, scheduled_services, transfers, freight_sites, freight_nodes, freight_compatibility, pipeline_connections.
+Геометрия и сеть версионируются. FreightSite — физическая площадка; PipelineConnection содержит продукт, вход/выход, направление и подтверждение, capacity/volume с единицами и периодом при наличии.
+ML2 публикует только прошедший QA snapshot; unknown отдельно от confirmed_absence. Источники/лицензии/хэши остаются доступны технически, без отдельного пользовательского индекса покрытия.
 
-ML2 публикует неизменяемый набор после проверки. Engine читает его как вход расчёта. BACKEND регистрирует версию и получает данные для трассировки. Метаданные snapshot и хэши таблиц должны позволять восстановить использованный вход.
-
-Обязательные поля manifest
-
-| Поля | Содержание |
-| --- | --- |
-| `schema_version`, `dataset_version`, `normalizer_version`, `created_at` | Версия схемы, ID неизменяемого входа, версия нормализатора и время публикации в UTC. Изменение записей, покрытия, источников или правил нормализации требует новой версии. |
-| `timezone`, `scope`, `data_origin`, `status` | IANA timezone, заявленная область городов и видов транспорта, даты действия и предполагаемая граница событий. `data_origin` принимает `real`, `synthetic` или `mixed`. |
-| `tables` | Для каждой таблицы имя, относительный путь, SHA-256 и число строк. Пути разрешаются внутри набора. Таблицы Parquet, метаданные и источники фиксируются вместе. |
-
-Таблицы и обязательные поля записей
-
-| Таблица | Поля |
-| --- | --- |
-| `cities` | `city_id`, `name`, `anchor_id`, координаты опорной точки, `source_ids`. Муниципалитет — отдельная сущность. |
-| `stops` | `stop_id`, `name`, координаты, `source_ids`. Привязка к городу при наличии, платформы различаются по ID. |
-| `routes` | `route_id`, `mode` (`rail` или `bus`), `operator_id`, `name`, `source_ids`. |
-| `trips` | `trip_id`, `route_id`, `direction_id`, `service_id`, `source_ids`. Один `trip_id` означает допустимое продолжение поездки внутри этого рейса. Если сквозной проезд не подтверждён, нужен отдельный переход. |
-| `stop_times` | `trip_id`, `stop_id`, `stop_sequence`, `arrival_service_seconds`, `departure_service_seconds`, `pickup_allowed`, `dropoff_allowed`, `source_ids`. Секунды от начала локального дня обслуживания, значения могут быть ≥ 86400. `null` у времени допустим только на конце, где соответствующее событие отсутствует. |
-| `service_calendar` | `service_id`, включительные `start_date`, `end_date`, `weekdays` (ISO 1–7), `source_ids`. |
-| `calendar_exceptions` | `service_id`, `service_date`, `action` (`add` или `remove`), `source_ids`. Одно исключение на календарь и дату, приоритет над базовым правилом. |
-| `transfers` | `transfer_id`, `kind` (`access`, `interchange`, `egress`), типизированные `from_ref` и `to_ref` (городская опорная точка или остановка), `min_seconds`, `status`, `validity`, `source_ids`, `assumption_ids`. Направление обязательно. `status` принимает `allowed`, `forbidden` или `unknown`. `min_seconds` обязателен для `allowed`, иначе `null`. Ограничения платформ, линий или рейсов задаются явно, если применимы. |
-| `sources` | `source_id`, `publisher`, `page_url`, `file_url`, `retrieved_at`, `published_at`, `valid_from`, `valid_to`, `license`, `sha256`, `data_origin`. Неизвестные метаданные равны `null`. Для скачанной копии обязательны точный адрес и digest. Для синтетики фиксируется авторство и допущение, адрес источника допустимо оставить `null`. |
-| `assumptions` | `assumption_id`, описание, границы применения и ссылки на источники, если есть. Допущение не подтверждает реальное расписание. |
-| `coverage` | `coverage_id`, интервал событий и локальных дат обслуживания, область по городу, оператору, режиму, маршруту/остановкам или переходам, `status` (`verified`, `partial`, `unknown`), `source_ids`, `reason`. Описывает календарь, события посадки/высадки и покрытие переходов. Пропущенная область по умолчанию `unknown`. |
-
-Покрытие по P1 проверяется до конца последнего окна 17 ноября 2026, 20:00 по `Europe/Kaliningrad`, включая календарь предшествующих дат обслуживания, чьи события `24:00+` попадают в окно. Наличие записи рейса доказывает наличие этого рейса при соблюдении календаря. Полнота маршрутов, направлений, дат и пеших связей проверяется отдельно. Подтверждённое отсутствие пути допустимо, когда нет неучтённого участка, который может изменить вывод внутри области профиля.
-
-Статусы опубликованного snapshot — `ready`, `partial_data`. Частичный набор содержит явные пробелы и остаётся пригоден для ограниченных расчётов. Публикация отклоняется с `invalid_snapshot` при битых ссылках, дублировании ключей, конфликте календаря, непоследовательном времени или несовпадении хэша. `unsupported_schema` и `dataset_not_found` блокируют загрузку. Даты без подтверждённого срока действия остаются неизвестными.
+Добавить reference_edges (mode, from/to, geometry/length, running_time_seconds, calibration_method, evidence), minimum_transfers (nodes, seconds, applicability), traffic_profiles, category_ownership. Snapshot включает coverage_by_mode/date/category и confirmed_absence_scope; пустой список без scope не означает отсутствие связи.
+Acceptance QA: все внешние ключи разрешены, trip stop_sequence упорядочен, service day и >24h времена разобраны, отрицательных длительностей нет, геометрии валидны, лицензии и права хранения записаны. Не склеивать рейсы из независимых остановочных списков.

@@ -1,0 +1,491 @@
+{
+  "schema_version": "2",
+  "snapshot_id": "kaliningrad-urban-2026-11-08.2",
+  "source_versions": {
+    "osm_geofabrik": "osm_geofabrik.kaliningrad-261107",
+    "ghsl_pop": "ghsl_pop.e2025-r2023a-100m-r3c20",
+    "ourairports": "ourairports.airports-20261108"
+  },
+  "geographic_scope": [
+    "kaliningrad"
+  ],
+  "valid_period": {
+    "start": "2026-11-01",
+    "end": "2026-11-30"
+  },
+  "timezone": "Europe/Kaliningrad",
+  "provenance": {
+    "graph_version": "osm_geofabrik.kaliningrad-261107:osm-walk-network-v1:main-component",
+    "geometry_version": "osm_geofabrik.kaliningrad-261107:relation/331414+kaliningrad-utm34n-1km-v1",
+    "calendar_version": "not_collected",
+    "population_version": "ghsl_r2023a_e2025_100m_pixel_centroid:2025"
+  },
+  "qa": {
+    "acceptance_state": "accepted",
+    "accepted_by": "ML2 (№5)",
+    "accepted_at": "2026-11-08T14:37:53.276587Z",
+    "checks": [
+      "boundary_valid",
+      "area_geodesic_vs_utm",
+      "districts_partition_city",
+      "cells_partition_city",
+      "points_inside_own_cell",
+      "population_conserved",
+      "district_population_not_doubled",
+      "public_categories_need_registry",
+      "airport_outside_boundary_kept",
+      "walk_network_main_component",
+      "access_distance_points",
+      "access_distance_accepted_destinations"
+    ]
+  },
+  "evidence": [
+    {
+      "evidence_id": "ghsl:ghsl_pop.e2025-r2023a-100m-r3c20",
+      "source_id": "ghsl_pop",
+      "source_version": "ghsl_pop.e2025-r2023a-100m-r3c20",
+      "url": "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_R2023A/GHS_POP_E2025_GLOBE_R2023A_54009_100/V1-0/tiles/GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0_R3_C20.zip",
+      "retrieved_at": "2026-11-08T13:39:02.685586Z",
+      "valid_period": {
+        "start": null,
+        "end": null
+      },
+      "license": "CC-BY-4.0",
+      "content_hash": "1dfddf9e523c01fc23ad19f48339c41f158f9c0305aaf2dc6385d7340f8aa92f",
+      "verified": true
+    },
+    {
+      "evidence_id": "osm:dataset:osm_geofabrik.kaliningrad-261107",
+      "source_id": "osm_geofabrik",
+      "source_version": "osm_geofabrik.kaliningrad-261107",
+      "url": "https://download.geofabrik.de/russia/kaliningrad-261107.osm.pbf",
+      "retrieved_at": "2026-11-08T13:36:59.619413Z",
+      "valid_period": {
+        "start": null,
+        "end": null
+      },
+      "license": "ODbL-1.0",
+      "content_hash": "769a6a6ac552b534057f2480b88f1c2d0709636761ab6d08483efe69c1e97b69",
+      "verified": true
+    },
+    {
+      "evidence_id": "osm:relation:331414",
+      "source_id": "osm_geofabrik",
+      "source_version": "osm_geofabrik.kaliningrad-261107",
+      "url": "https://www.openstreetmap.org/relation/331414",
+      "retrieved_at": "2026-11-08T13:36:59.619413Z",
+      "valid_period": {
+        "start": null,
+        "end": null
+      },
+      "license": "ODbL-1.0",
+      "content_hash": "e8070d890053b37a93624fa1743c3b2d8984c3cd953c2f7665970ed42c5f13f8",
+      "verified": true
+    },
+    {
+      "evidence_id": "osm:way:102267182",
+      "source_id": "osm_geofabrik",
+      "source_version": "osm_geofabrik.kaliningrad-261107",
+      "url": "https://www.openstreetmap.org/way/102267182",
+      "retrieved_at": "2026-11-08T13:36:59.619413Z",
+      "valid_period": {
+        "start": null,
+        "end": null
+      },
+      "license": "ODbL-1.0",
+      "content_hash": "b65a6c6f5d9133b0519015eaa8c940f9dc73687a2ee59242bc26d6d3a19bb102",
+      "verified": true
+    },
+    {
+      "evidence_id": "osm:way:132404895",
+      "source_id": "osm_geofabrik",
+      "source_version": "osm_geofabrik.kaliningrad-261107",
+      "url": "https://www.openstreetmap.org/way/132404895",
+      "retrieved_at": "2026-11-08T13:36:59.619413Z",
+      "valid_period": {
+        "start": null,
+        "end": null
+      },
+      "license": "ODbL-1.0",
+      "content_hash": "83429aceb34ddfbaee236ddc47be09e5cb663ddee4de553e61baff62c854944c",
+      "verified": true
+    },
+    {
+      "evidence_id": "osm:way:1391308644",
+      "source_id": "osm_geofabrik",
+      "source_version": "osm_geofabrik.kaliningrad-261107",
+      "url": "https://www.openstreetmap.org/way/1391308644",
+      "retrieved_at": "2026-11-08T13:36:59.619413Z",
+      "valid_period": {
+        "start": null,
+        "end": null
+      },
+      "license": "ODbL-1.0",
+      "content_hash": "b9b5fd16c3254871525c646535af4735d3c71ea46e8de9bb5caed1ba01fa1c80",
+      "verified": true
+    },
+    {
+      "evidence_id": "osm:way:423793233",
+      "source_id": "osm_geofabrik",
+      "source_version": "osm_geofabrik.kaliningrad-261107",
+      "url": "https://www.openstreetmap.org/way/423793233",
+      "retrieved_at": "2026-11-08T13:36:59.619413Z",
+      "valid_period": {
+        "start": null,
+        "end": null
+      },
+      "license": "ODbL-1.0",
+      "content_hash": "7e4bd2ab059c7ae295c9c51d01cefd5155d71a447bf53f6384de2690893c0707",
+      "verified": true
+    },
+    {
+      "evidence_id": "osm:way:526927307",
+      "source_id": "osm_geofabrik",
+      "source_version": "osm_geofabrik.kaliningrad-261107",
+      "url": "https://www.openstreetmap.org/way/526927307",
+      "retrieved_at": "2026-11-08T13:36:59.619413Z",
+      "valid_period": {
+        "start": null,
+        "end": null
+      },
+      "license": "ODbL-1.0",
+      "content_hash": "bfee302330e0ce6d10a937ae3e095ca48613d0ddf03349b2aeb5b36cf28b1cd0",
+      "verified": true
+    },
+    {
+      "evidence_id": "osm:way:59178160",
+      "source_id": "osm_geofabrik",
+      "source_version": "osm_geofabrik.kaliningrad-261107",
+      "url": "https://www.openstreetmap.org/way/59178160",
+      "retrieved_at": "2026-11-08T13:36:59.619413Z",
+      "valid_period": {
+        "start": null,
+        "end": null
+      },
+      "license": "ODbL-1.0",
+      "content_hash": "3e33d585396b1012c394731204846059720ba4c6ba4fab180af0511ed6c4ee8e",
+      "verified": true
+    },
+    {
+      "evidence_id": "osm:way:724608365",
+      "source_id": "osm_geofabrik",
+      "source_version": "osm_geofabrik.kaliningrad-261107",
+      "url": "https://www.openstreetmap.org/way/724608365",
+      "retrieved_at": "2026-11-08T13:36:59.619413Z",
+      "valid_period": {
+        "start": null,
+        "end": null
+      },
+      "license": "ODbL-1.0",
+      "content_hash": "51b57d624bf444f86fb5b348d0276c319cee578a0f3457138effbb23989379cd",
+      "verified": true
+    },
+    {
+      "evidence_id": "ourairports:dataset:ourairports.airports-20261108",
+      "source_id": "ourairports",
+      "source_version": "ourairports.airports-20261108",
+      "url": "https://davidmegginson.github.io/ourairports-data/airports.csv",
+      "retrieved_at": "2026-11-08T13:42:04.183446Z",
+      "valid_period": {
+        "start": null,
+        "end": null
+      },
+      "license": "Public Domain",
+      "content_hash": "5754df21f25cb08d2def8a80b3eb609ddc52a4217afa8eb48280b6428c06e78f",
+      "verified": true
+    },
+    {
+      "evidence_id": "ourairports:umkk",
+      "source_id": "ourairports",
+      "source_version": "ourairports.airports-20261108",
+      "url": "https://ourairports.com/airports/UMKK/",
+      "retrieved_at": "2026-11-08T13:42:04.183446Z",
+      "valid_period": {
+        "start": null,
+        "end": null
+      },
+      "license": "Public Domain",
+      "content_hash": "17c021375f88abb5f2489173ea415e871bb79a0d35f65bacbb871d5a98f94451",
+      "verified": true
+    }
+  ],
+  "registry_evidence": [],
+  "territories": [
+    {
+      "source_refs": [
+        "osm:relation:331414"
+      ],
+      "territory_id": "kaliningrad",
+      "level": "city",
+      "name": "Калининград",
+      "timezone": "Europe/Kaliningrad",
+      "geometry": {
+        "source_refs": [
+          "osm:relation:331414"
+        ],
+        "geometry_id": "kaliningrad:boundary",
+        "version": "osm_geofabrik.kaliningrad-261107:relation/331414",
+        "bbox": {
+          "west": 20.293279,
+          "south": 54.630622,
+          "east": 20.653798,
+          "north": 54.778684
+        }
+      },
+      "area_km2": 224.668
+    }
+  ],
+  "population_cells": [
+    {
+      "source_refs": [
+        "ghsl:ghsl_pop.e2025-r2023a-100m-r3c20",
+        "osm:relation:331414"
+      ],
+      "cell_id": "kaliningrad-utm34n-1km-v1-e454-n6066",
+      "territory_id": "kaliningrad",
+      "grid_version": "kaliningrad-utm34n-1km-v1",
+      "grid_origin_m": [
+        0.0,
+        0.0
+      ],
+      "projection": "EPSG:32634",
+      "geometry": {
+        "source_refs": [
+          "osm:relation:331414"
+        ],
+        "geometry_id": "kaliningrad-utm34n-1km-v1-e454-n6066",
+        "version": "kaliningrad-utm34n-1km-v1",
+        "bbox": {
+          "west": 20.2853596,
+          "south": 54.7391579,
+          "east": 20.3010487,
+          "north": 54.7482346
+        }
+      },
+      "population": 19.261,
+      "population_year": 2025,
+      "population_method": "ghsl_r2023a_e2025_100m_pixel_centroid",
+      "unit": "persons",
+      "sample_status": "included",
+      "exclusion_reason": null
+    },
+    {
+      "source_refs": [
+        "ghsl:ghsl_pop.e2025-r2023a-100m-r3c20",
+        "osm:relation:331414"
+      ],
+      "cell_id": "kaliningrad-utm34n-1km-v1-e455-n6054",
+      "territory_id": "kaliningrad",
+      "grid_version": "kaliningrad-utm34n-1km-v1",
+      "grid_origin_m": [
+        0.0,
+        0.0
+      ],
+      "projection": "EPSG:32634",
+      "geometry": {
+        "source_refs": [
+          "osm:relation:331414"
+        ],
+        "geometry_id": "kaliningrad-utm34n-1km-v1-e455-n6054",
+        "version": "kaliningrad-utm34n-1km-v1",
+        "bbox": {
+          "west": 20.3027454,
+          "south": 54.6314138,
+          "east": 20.318389,
+          "north": 54.6404883
+        }
+      },
+      "population": 1068.548,
+      "population_year": 2025,
+      "population_method": "ghsl_r2023a_e2025_100m_pixel_centroid",
+      "unit": "persons",
+      "sample_status": "included",
+      "exclusion_reason": null
+    },
+    {
+      "source_refs": [
+        "ghsl:ghsl_pop.e2025-r2023a-100m-r3c20",
+        "osm:relation:331414"
+      ],
+      "cell_id": "kaliningrad-utm34n-1km-v1-e454-n6060",
+      "territory_id": "kaliningrad",
+      "grid_version": "kaliningrad-utm34n-1km-v1",
+      "grid_origin_m": [
+        0.0,
+        0.0
+      ],
+      "projection": "EPSG:32634",
+      "geometry": {
+        "source_refs": [
+          "osm:relation:331414"
+        ],
+        "geometry_id": "kaliningrad-utm34n-1km-v1-e454-n6060",
+        "version": "kaliningrad-utm34n-1km-v1",
+        "bbox": {
+          "west": 20.2863074,
+          "south": 54.685241,
+          "east": 20.3019754,
+          "north": 54.6943176
+        }
+      },
+      "population": 7.671,
+      "population_year": 2025,
+      "population_method": "ghsl_r2023a_e2025_100m_pixel_centroid",
+      "unit": "persons",
+      "sample_status": "excluded",
+      "exclusion_reason": "NO_BUILDING"
+    }
+  ],
+  "sample_points": [
+    {
+      "source_refs": [
+        "osm:way:1391308644"
+      ],
+      "territory_id": "kaliningrad",
+      "location": {
+        "lon": 20.2965237,
+        "lat": 54.7442677
+      },
+      "point_id": "kaliningrad-utm34n-1km-v1-e454-n6066-p",
+      "cell_id": "kaliningrad-utm34n-1km-v1-e454-n6066",
+      "building_id": "way/1391308644",
+      "initial_center": {
+        "lon": 20.293205,
+        "lat": 54.7436965
+      },
+      "access_node_id": "walk:way:526927307:26.7",
+      "access_distance_m": 12.53
+    },
+    {
+      "source_refs": [
+        "osm:way:423793233"
+      ],
+      "territory_id": "kaliningrad",
+      "location": {
+        "lon": 20.3104563,
+        "lat": 54.6360987
+      },
+      "point_id": "kaliningrad-utm34n-1km-v1-e455-n6054-p",
+      "cell_id": "kaliningrad-utm34n-1km-v1-e455-n6054",
+      "building_id": "way/423793233",
+      "initial_center": {
+        "lon": 20.310568,
+        "lat": 54.6359513
+      },
+      "access_node_id": "walk:way:132404895:88.2",
+      "access_distance_m": 11.68
+    }
+  ],
+  "destinations": [
+    {
+      "source_refs": [
+        "osm:way:59178160",
+        "osm:way:102267182",
+        "ourairports:umkk"
+      ],
+      "territory_id": "kaliningrad",
+      "location": {
+        "lon": 20.5855292,
+        "lat": 54.8830637
+      },
+      "destination_id": "kaliningrad-airport-way-59178160",
+      "categories": [
+        "airport"
+      ],
+      "access_node_id": "walk:way:724608365:60.5",
+      "object_identity": "osm:way/59178160"
+    }
+  ],
+  "access_nodes": [
+    {
+      "source_refs": [
+        "osm:way:132404895"
+      ],
+      "territory_id": "kaliningrad",
+      "location": {
+        "lon": 20.3103869,
+        "lat": 54.6361956
+      },
+      "node_id": "walk:way:132404895:88.2",
+      "kind": "walk_network_projection"
+    },
+    {
+      "source_refs": [
+        "osm:way:526927307"
+      ],
+      "territory_id": "kaliningrad",
+      "location": {
+        "lon": 20.2964875,
+        "lat": 54.7443784
+      },
+      "node_id": "walk:way:526927307:26.7",
+      "kind": "walk_network_projection"
+    },
+    {
+      "source_refs": [
+        "osm:way:724608365"
+      ],
+      "territory_id": "kaliningrad",
+      "location": {
+        "lon": 20.5847735,
+        "lat": 54.8828675
+      },
+      "node_id": "walk:way:724608365:60.5",
+      "kind": "walk_network_projection"
+    }
+  ],
+  "scheduled_services": [],
+  "transfers": [],
+  "freight_sites": [],
+  "freight_nodes": [],
+  "freight_compatibility": [],
+  "pipeline_connections": [],
+  "reference_edges": [],
+  "minimum_transfers": [],
+  "traffic_profiles": [],
+  "category_ownership": [],
+  "coverage_by_mode_date_category": [
+    {
+      "source_refs": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107",
+        "ourairports:dataset:ourairports.airports-20261108"
+      ],
+      "territory_ids": [
+        "kaliningrad"
+      ],
+      "modes": [
+        "walk"
+      ],
+      "categories": [
+        "airport"
+      ],
+      "valid_period": {
+        "start": "2026-11-01",
+        "end": "2026-11-30"
+      },
+      "completeness": "full"
+    },
+    {
+      "source_refs": [
+        "osm:dataset:osm_geofabrik.kaliningrad-261107"
+      ],
+      "territory_ids": [
+        "kaliningrad"
+      ],
+      "modes": [
+        "walk"
+      ],
+      "categories": [
+        "rail_terminal",
+        "bus_terminal",
+        "shopping_center"
+      ],
+      "valid_period": {
+        "start": "2026-11-01",
+        "end": "2026-11-30"
+      },
+      "completeness": "partial"
+    }
+  ],
+  "confirmed_absence_scope": []
+}

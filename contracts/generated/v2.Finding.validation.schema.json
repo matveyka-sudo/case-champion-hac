@@ -1,0 +1,126 @@
+{
+  "$defs": {
+    "NumericClaim": {
+      "additionalProperties": false,
+      "properties": {
+        "metric_id": {
+          "minLength": 1,
+          "title": "Metric Id",
+          "type": "string"
+        },
+        "unit": {
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "metric_id",
+        "value",
+        "unit"
+      ],
+      "title": "NumericClaim",
+      "type": "object"
+    },
+    "ScoreClaim": {
+      "additionalProperties": false,
+      "properties": {
+        "score_id": {
+          "minLength": 1,
+          "title": "Score Id",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "score_id",
+        "value"
+      ],
+      "title": "ScoreClaim",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "claims": {
+      "items": {
+        "$ref": "#/$defs/NumericClaim"
+      },
+      "maxItems": 20,
+      "title": "Claims",
+      "type": "array"
+    },
+    "evidence_refs": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 50,
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "metric_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Metric Ids",
+      "type": "array"
+    },
+    "score_claims": {
+      "items": {
+        "$ref": "#/$defs/ScoreClaim"
+      },
+      "maxItems": 20,
+      "title": "Score Claims",
+      "type": "array"
+    },
+    "score_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Score Ids",
+      "type": "array"
+    },
+    "text": {
+      "maxLength": 1000,
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+    }
+  },
+  "required": [
+    "text",
+    "metric_ids",
+    "evidence_refs",
+    "claims"
+  ],
+  "title": "Finding",
+  "type": "object"
+}

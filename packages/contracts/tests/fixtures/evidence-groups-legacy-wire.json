@@ -1,0 +1,40 @@
+{
+  "baseline_commit": "6adb4cd3464c146ff528d23925f18303e14cf2f1",
+  "models": {
+    "intercity_cargo-result": {
+      "canonical_hash": "c31b7ff5f0c0f984f9833c47c825e7f423eb4ddfe84868c7a49f42cecd4f3e45",
+      "json_sha256": "41568b724a531a2f2a93e9d9335b14c06530845370720dab9da81e86408cb0ce",
+      "result_hash": "demo-hash"
+    },
+    "intercity_passenger-result": {
+      "canonical_hash": "80ef93e05ac50667b6a15b3ae5ee8d364649341eb009212221e204c124488894",
+      "json_sha256": "232b354df379fe11d6f5a09482f5505880fa4c18c251e8f38ee3cb1498ad2262",
+      "result_hash": "demo-hash"
+    },
+    "nested_proposal": {
+      "canonical_hash": "f627b5ff87278881d9abcd81fb0716fe95cc1ae826402ae57bdc4e6b38cf77e8",
+      "json_sha256": "97d2afc81b91d0444cc9343909092c7c8142cca9b6b02f4f2f2d2b3640705fec",
+      "result_hash": null
+    },
+    "proposal": {
+      "canonical_hash": "ed95241cb104eacbfd4495ab6abea035e4e746a00d65359bd1be53057a1c8c67",
+      "json_sha256": "238f6c41bb67c9406f79d87854f3ed4545ececa905d4efc1fccb47e72f2b7e1a",
+      "result_hash": null
+    },
+    "scenario": {
+      "canonical_hash": "7242f10f22c0c46a47df54fe360d3fb82f1551d775693cce209130ed807c4aa2",
+      "json_sha256": "059f49fc2068e0c2336b08ef3b437752bfca7718e5d044a18d54c6f561ee955c",
+      "result_hash": "scenario-hash"
+    },
+    "urban_cargo-result": {
+      "canonical_hash": "967a8f0fa1922bf20e7a6803c8980a708de9fd932f168527adb91d9fa0740a05",
+      "json_sha256": "66bd6a79e58e0e8c1e909f029a4acb30413fcd43225e74ec190d635b2d5cd8dc",
+      "result_hash": "demo-hash"
+    },
+    "urban_passenger-result": {
+      "canonical_hash": "4d86b7006afb2a3a72644f49647e1fb616442461e49d5ec42278dc9090803ca7",
+      "json_sha256": "b9aa2f92588b0bbc4d2bd4c86c0304c00f28831218ea5ea52343856a193f00e3",
+      "result_hash": "demo-hash"
+    }
+  }
+}

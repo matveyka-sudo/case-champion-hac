@@ -1,0 +1,66 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "bundle_id": {
+      "minLength": 1,
+      "title": "Bundle Id",
+      "type": "string"
+    },
+    "code_version": {
+      "minLength": 1,
+      "title": "Code Version",
+      "type": "string"
+    },
+    "completeness_scope": {
+      "minLength": 1,
+      "title": "Completeness Scope",
+      "type": "string"
+    },
+    "network_complete": {
+      "title": "Network Complete",
+      "type": "boolean"
+    },
+    "profile_id": {
+      "enum": [
+        "regular",
+        "medical",
+        "intercity"
+      ],
+      "title": "Profile Id",
+      "type": "string"
+    },
+    "profile_version": {
+      "exclusiveMinimum": 0,
+      "title": "Profile Version",
+      "type": "integer"
+    },
+    "search_complete": {
+      "title": "Search Complete",
+      "type": "boolean"
+    },
+    "task_set_hash": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Task Set Hash"
+    }
+  },
+  "required": [
+    "bundle_id",
+    "profile_id",
+    "profile_version",
+    "code_version",
+    "completeness_scope",
+    "network_complete",
+    "search_complete"
+  ],
+  "title": "Provenance",
+  "type": "object"
+}

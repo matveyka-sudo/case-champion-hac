@@ -1,0 +1,77 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "amount": {
+      "minimum": 0,
+      "title": "Amount",
+      "type": "number"
+    },
+    "currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "evidence_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "fare_id": {
+      "minLength": 1,
+      "title": "Fare Id",
+      "type": "string"
+    },
+    "passenger_category": {
+      "minLength": 1,
+      "title": "Passenger Category",
+      "type": "string"
+    },
+    "trip_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Trip Ids",
+      "type": "array"
+    },
+    "valid_from": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Valid From"
+    },
+    "valid_to": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Valid To"
+    }
+  },
+  "required": [
+    "valid_from",
+    "valid_to",
+    "fare_id",
+    "amount",
+    "currency",
+    "passenger_category",
+    "trip_ids",
+    "evidence_ids"
+  ],
+  "title": "Fare",
+  "type": "object"
+}

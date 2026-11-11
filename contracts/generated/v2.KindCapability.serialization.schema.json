@@ -1,0 +1,43 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "analysis_kind": {
+      "enum": [
+        "urban_passenger",
+        "intercity_passenger",
+        "urban_cargo",
+        "intercity_cargo"
+      ],
+      "title": "Analysis Kind",
+      "type": "string"
+    },
+    "calculation_available": {
+      "title": "Calculation Available",
+      "type": "boolean"
+    },
+    "contract_available": {
+      "title": "Contract Available",
+      "type": "boolean"
+    },
+    "reason_code": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Reason Code"
+    }
+  },
+  "required": [
+    "analysis_kind",
+    "contract_available",
+    "calculation_available",
+    "reason_code"
+  ],
+  "title": "KindCapability",
+  "type": "object"
+}

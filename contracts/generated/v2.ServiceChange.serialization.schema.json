@@ -1,0 +1,30 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "service_id": {
+      "minLength": 1,
+      "title": "Service Id",
+      "type": "string"
+    },
+    "shift_seconds": {
+      "title": "Shift Seconds",
+      "type": "integer"
+    },
+    "subsequent_stops_updated": {
+      "title": "Subsequent Stops Updated",
+      "type": "boolean"
+    },
+    "whole_trip": {
+      "title": "Whole Trip",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "service_id",
+    "shift_seconds",
+    "whole_trip",
+    "subsequent_stops_updated"
+  ],
+  "title": "ServiceChange",
+  "type": "object"
+}

@@ -1,5 +1,117 @@
-# FRONTEND — первый экран профиля P1
+# FRONTEND
 
-В `apps/web/` поднимите React/Vite SPA и сделайте первый экран с картой или картографической областью, селектором города и карточкой профиля. Возьмите опубликованный `AnalysisProfile` из OpenAPI, сгенерируйте типы внутри `apps/web/` и подключите endpoint BACKEND через `openapi-fetch` и TanStack Query. Каркас можно делать параллельно с экспортом схемы. Настройте Vite, Tailwind 4, shadcn/ui, ESLint и Vitest по мере подключения рабочих точек входа. В стартовом lock есть библиотеки компонентов и стилей. Подключение CLI shadcn отложено: его текущая цепочка через Babel требует `gensync` beta. При добавлении компонентов проверьте совместимую установку и сохраните стабильное дерево зависимостей.
+Ветка work/frontend. Текущие пути: apps/web/. Исторические отчёты ниже сохраняют прежние пути; актуальные инструкции — apps/web/README.md и docs/FRONTEND_INTEGRATION.md.
 
-Готово, когда экран получает P1 и показывает шесть городов, часовой пояс и ревизию профиля. Для карты используйте только подтверждённые координаты из согласованного источника. Отсутствие координат, API или результатов имеет явное состояние без вымышленных баллов. `npm ci`, сборка, strict typecheck и тесты загрузки, ошибки и выбора города проходят. Зафиксируйте версию OpenAPI и команду генерации типов. Изменения схемы передайте BACKEND.
+Источник: ../PRODUCT_SPEC.md; контракты ../../packages/contracts/specs/README.md.
+
+**Приёмка и передача.** Показаны success, partial, unknown и error, включая 503 без выдуманного значения. Интервалы, источники и сценарные метки сверяются с типизированным ответом. После появления entrypoints проверьте `npm ci`, build, strict typecheck и тесты состояний. Передайте BACKEND замечания к контракту, DEVOPS — команды и демонстрационный путь.
+
+## Статус ранее созданного каркаса
+
+Каркас ниже создан по прежнему профилю P1; его API-адаптер и экраны требуют адаптации к ТЗ 1.1. Новые требования выше имеют приоритет.
+
+## Каркас Waydex — 7 ноября 2026
+
+Ветка `work/frontend`. Создан React/Vite/TypeScript каркас в `apps/web`: провайдер TanStack Query, hash-навигация, главная и атлас, временный валидируемый адаптер GET профиля, выбор города, loading/error/retry, error boundary и CSS-токены. Архитектура и запуск описаны в `apps/web/README.md`. По решению пользователя подключён Bootstrap CSS вместо активации Tailwind; общий архитектурный документ требует согласования с DEVOPS. Основной дизайн пока разрабатывается отдельно.
+
+OpenAPI отсутствует: генерация типов подготовлена, но не запускалась; версия схемы не выдумывается. BACKEND: опубликовать `contracts/generated/openapi.json` с GET профиля и согласованный каталог городов (ID, отображаемое имя, подтверждённые координаты, версия/источник). Приёмка: генерация `paths` без ручного изменения схемы и отображение городов принятого коридора D1. Координаты, индексы и карта пока не подменяются фиктивными данными. `openapi-fetch` подключается после публикации `paths`.
+
+Проверено на Node 24: typecheck, ESLint, 4 теста, production build. В браузере проверены ошибка реального недоступного API, retry/выбор города с перехватом тестового ответа, переход на главную, отсутствие горизонтального переполнения при 1440 и 390 px. Тестовый ответ существует только в проверке браузера и тестах. Полный npm audit сообщает 10 moderate предупреждений в инструментах разработки; `npm audit --omit=dev` — 0. Системный Node 26 не соответствует engines; использовать Node 24.
+Карта трёх городов, четыре analysis_kind, категории и приоритеты, дата/15 минут. Карточка точки с цепочкой. Грузовые площадки и узлы отдельно. Реальные индексы получать из API; unknown/partial показывать отдельно; demo fixtures не включать в рейтинг. Проверка сценария только по кнопке.
+
+Зависимости: BACKEND: DTO, fixtures и OpenAPI; ML2: геометрии через API.
+
+Приёмка: npm ci; npm run build; npm run lint. Проверить pending/unknown/error и запрет вымышленных чисел.
+
+Передача: commit, пути, команды/результаты проверок, контрактные изменения и ограничения. Формулы реализуются по FORMULAS.md и config/product.json; данные проверяются отдельно.
+
+
+## Перенос утверждённого Waydex HTML — 08.11.2026
+
+Реализовано в `frontend/` на `work/frontend`: React/TypeScript strict, исходные CSS/assets и движения, полный лендинг, atlas city/pax/cargo, Leaflet/d3, фильтры/15-минутный таймлайн/темы, моковый чат и scenario до/после, mobile sheet и состояния. Пользователь явно поручил перенос на моковых данных. Значения из дизайна сохранены в fixtures и маркированы demo; производственная формула/H в клиенте не исполняется. `apps/web/` не менялся. Описание и источник с SHA-256 — `frontend/README.md`, `frontend/src/mocks/source.json`; визуальный отчёт — `frontend/docs/VISUAL_QA.md`.
+
+Проверки на Node 24.22.2: `npm ci`, typecheck, lint, 11 unit-тестов, build, 9 Playwright-сценариев. Ручное сопоставление HTML/React на 1440×900, 1280×800, 768×1024, 390×844: страницы/карты/ночь/пассажиры/грузы; без JS-ошибок и горизонтального overflow. Production npm audit — 0; полный audit сохраняет 10 moderate в dev-зависимостях, без изменения major вслепую. Сборка разделена на landing/shared/atlas, каждый JS-chunk <500 kB.
+
+BACKEND handoff: текущие view models и mockGateway не канонический API; требуется опубликованный OpenAPI, DTO четырёх analysis_kind, async jobs/статусы, approved scenarios, версии и evidence. Приёмка интеграции: заменить gateway без изменения визуального дизайна, убрать mock fixtures только после проверки данных/методики, не превращать null в 0. ML2: подтверждённые геометрии/объекты/расписания вместо условной сетки. DEVOPS: `cd frontend && npm ci && npm run build`; запуск `npm run dev`, #atlas; внешние Google Fonts и городские тайлы требуют сети. Все реальные API/LLM/engine-интеграции не выполнялись и не объявлены завершёнными.
+
+
+## Проверка фронтенда — 8 ноября 2026
+
+Исправлены статусы при смене города/режима и возврате к применённым параметрам: неподдерживаемое время не становится успешным расчётом, частичный результат Калининграда сохраняется корректно. Карточки используют условия последнего расчёта, не смешивая их с несохранёнными фильтрами. Для отсутствующих данных и ожидающей утверждения методики мобильные подписи и карта больше не показывают подтверждённый индекс; минуты сохраняются при наличии данных.
+
+Демо-диалог привязан к версии параметров, прежние запросы отменяются; сценарий разрешён только для поддерживаемого контекста и готового результата. Ответ про авиасвязь не предлагается для неподдерживаемой пары или отключённого авиарежима. В межгородском диалоге убрана кнопка выбора московской ячейки.
+
+Исправлена гонка фокуса при клавиатурном выборе в списках, запрещён выбор отключённых пунктов; календарь переводит фокус на выбранный день. Обзорная карта сохраняет масштаб при закрытии карточки и перестроении размеров.
+
+Проверки: lint, strict typecheck в составе build, production build, 14 модульных и 15 браузерных тестов — успешно. В браузерные проверки добавлены смена контекста чата, отсутствие результатов на мобильном/межгородском экране, сохранение масштаба обзорной карты и сохранение прежнего результата до повторного расчёта. Контракты и backend не менялись. Расчёт и агент по-прежнему используют маркированные демо-данные. Коммит и push не выполнялись по указанию пользователя.
+
+
+## Подготовка API v2 — 9 ноября 2026
+
+Ветка work/frontend, исходный HEAD f57d359. После fetch прочитаны origin/dev 3446f7e и origin/work/backend 6ce4179; OpenAPI/router совпадают, в backend results.py усилена доменная проверка directed reference/journey operands без изменения wire-полей. Merge/переключение/commit/push не выполнялись. Изменения ограничены frontend/** и этим журналом.
+
+Добавлен явный API-режим с генерацией типов и runtime JSON Schema из contracts/generated/openapi.json (SHA256 a2e36eebe61c…), session bootstrap, same-origin proxy, устойчивым idempotency key, безопасными ошибками и ограниченными повторами. Реальные IDs/профили/areas/traffic из capabilities/catalog; четыре вида запросов, отдельный pipeline, IANA-время с отказом от неоднозначного local time. Draft revision защищает от поздних ответов; sequential jobs/cancel; предыдущий snapshot сохраняется. Карта и карточки используют только server geometry/metrics/scores/evidence; неизвестное не становится нулём, pending count не скрывает индекс. Saved explanation/hash/selection, template fallback, server proposals и отдельный scenario result с неизменной baseline и серверным знаком delta.
+
+API-composition использует существующий стиль и controls, отделена от demo-виджетов с прямыми fixture selectors; нового глобального state stack нет. Демо сохранено, API-ошибки не включают его автоматически. Подробнее об архитектуре, запуске и передаче — frontend/docs/API_INTEGRATION.md и frontend/README.md. .env.example не содержит угаданного backend-адреса или секретов.
+
+Проверки на Node 24.22.2: npm ci успешно, api:check успешно, strict typecheck в production build успешно, lint успешно, 36 unit-тестов успешно, 21 Playwright-тест успешно (15 прежних + 6 API; Chromium 1247 через PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH). Дополнительно проверены типы новых unit/E2E-файлов отдельным tsc --ignoreConfig; production npm audit — 0 уязвимостей. Изначальный запуск Playwright без переменной не смог найти Chromium 1254; все тесты повторены с установленным браузером. Baseline до изменений: 14 unit, lint и build проходили; реальные API-вызовы не использовались. Тестовые перехваты HTTP и fixtures явно synthetic-only.
+
+BACKEND: предоставить согласованный runtime с ready capabilities, принятыми данными, worker/storage и реальными проверяемыми условиями анализа; прогнать same-origin cookie→POST→job→result/cancel и scenario. ML1/ML2 через API: подтверждённые map_data/journey geometry/population/evidence; frontend не создаёт геометрию. DEVOPS: same-origin reverse proxy frontend + /api/v1, сохранение Host/Origin/cookie, VITE_DATA_MODE=api при сборке; ошибки API не должны превращаться в HTML SPA. Приёмка и точные границы ответственности записаны в frontend/docs/API_INTEGRATION.md. Live engine/data/LLM и настоящий proxy пока не проверены и не объявляются готовыми.
+
+Повторная установка по обновлённому lock-файлу: npm ci успешно. Полный audit сохраняет прежние 10 moderate в dev-инструментах; production audit — 0. Принудительное обновление major/обход peer-зависимостей не выполнялись.
+
+## Очистка пользовательских данных по пакету «от моти» — 9 ноября 2026
+
+Перечитаны восемь предоставленных PDF, PRODUCT_SPEC 2026-11-08.1 и действующие API handoff/OpenAPI. В пользовательском API-интерфейсе убраны служебные IDs, hashes, версии, операнды, model IDs и коды причин; они сохранены в исходных DTO и логике контроля baseline/jobs. Статусы, режимы, участки пути, грузовые профили и известные ограничения показаны понятными подписями. Неизвестные технические коды ограничений не выдаются за подтверждённые факты и не удаляются из DTO. Сохранены бизнес-метрики ТЗ: индексы, исходные времена, ожидания/пересадки, counts, last_returns, источники, условия/ограничения сценария и охват.
+
+В демо убраны расстояние по прямой из городской карточки, отдельная товарная группа raw и переключатель perish; исправлены устаревшие утверждения о неготовности методики в landing/atlas/карточках/чате/tooltip. Демо остаётся помеченным и не становится реальным расчётом. Обоснование по ответам API — frontend/docs/UI_SCOPE_REVIEW.md. Backend и контракты не менялись, commit/push не выполнялись.
+
+Проверки: production build/strict typecheck и lint — успешно; 36 unit — успешно; полный набор 21 E2E — успешно, затем после перевода дополнительных кодов ограничений повторно 6 API E2E — успешно. Визуально проверен desktop API-экран; E2E покрывает mobile и отсутствие служебных ID/hash в карточке/чате. HTTP-перехваты синтетические, live-интеграция этим не подтверждается.
+
+## Предупреждения WebStorm — 9 ноября 2026
+
+Исправлены указанные восемь предупреждений: лишняя переменная proposals, локально выбрасываемая и тут же перехватываемая HTTP-ошибка, три проверки сценария/объяснения с прямой записью ошибки в состояние, два comma-expression в HTTP-тестах и искусственный throw в тесте отклонённого результата. Сохранены retry/idempotency/abort, проверки baseline/hash и очистка busy/chatBusy через finally. Проверки: build/strict typecheck, lint, 36 unit, 6 API E2E — успешно. Один параллельный lint прервался на удалении каталога test-results самим Playwright; после окончания E2E lint повторён успешно. WebStorm-инспекция непосредственно из IDE не запускалась; причины со скриншота устранены в коде без suppression. Индекс Git, commit и push не изменялись.
+
+## Структурный перенос в apps/web — 09.11.2026
+
+По прямому поручению пользователя работа выполнена в `fix-fullstack` из основного
+PyCharm checkout. Исходный HEAD `bbef1b6637931293a476c1e35c720e575dd30f2f`
+совпадал с актуальным origin/dev. Рабочие ветки участников и dev не изменялись.
+
+115 tracked файлов активного `frontend/` учтены после переноса: React, CSS, assets,
+fixtures, исходные тесты, npm manifest/lock не изменены по содержимому. Прежний
+apps/web scaffold изучен: временный profile API, экраны-заглушки и неиспользуемые
+зависимости заменены рабочим приложением. Код/manifest/lock scaffold доступны в
+истории исходного SHA; README сохранён в docs/archive/2026-11-09/web-scaffold.md,
+.npmrc с engine-strict сохранён в активном apps/web. Второй React-пакет не оставлен.
+
+Общие API integration и UI scope review перенесены в docs/FRONTEND_INTEGRATION.md
+и docs/FRONTEND_UI_SCOPE_REVIEW.md. Фото и visual QA — apps/web/docs/.
+Code generation остаётся apps/web/scripts/generate-api.mjs; изменён только путь
+к canonical contracts/generated/openapi.json (SHA256 a2e36eebe61c5ba82c048aaa0d9b80b28b2d709cda53fdd666cffdde7b1ccf0c).
+Генерация и check дают прежние schema.ts/validation.json без изменений.
+
+CI environment.yml: apps/web working-directory и npm cache lock, api:check,
+typecheck, build, lint, tests; добавлен root scripts/check_web_layout.mjs и trigger
+fix-fullstack. Guard проверяет единственный tracked web root, manifest/lock,
+отсутствие tracked build outputs, CI paths и codegen из корня. Vite/TS/Playwright
+и runtime imports/URL не потребовали изменений. Dockerfile/web deployment в
+исходном дереве отсутствовали; Compose содержит только PostgreSQL и не менялся.
+
+Node24.22.2/npm11.19.1, чистый npm ci до и после. В обоих расположениях:
+api:check, strict typecheck, lint, build,36 unit/API tests и21 Playwright E2E PASS.
+После переноса также api:generate PASS. Браузер — установленный Google Chrome,
+через PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH, headless, исходные E2E mocks сохранены.
+Все42 production build files побайтно совпадают с исходной сборкой. Все34 public
+files отданы Vite по прежним URL с теми же SHA256. Локальный echo API подтвердил
+проксирование /api/v1 и /health с сохранением Host/Origin/cookie/body; это проверка
+proxy, не live engine/data/LLM E2E. Lock/pip/product config/diff checks PASS.
+
+В tracked tree frontend/ отсутствует. В старом локальном каталоге оставлены
+ignored node_modules/dist/test-results после исходных проверок; они не удалялись
+и не включались в Git. a2-dev.bundle сохранён вне коммита. Backend/ML1/ML2,
+canonical contracts, Python manifests и uv.lock не изменялись.
+
+Следующий backend этап в fix-fullstack: отдельно исследовать API/worker entrypoints,
+их установку/окружение и реальный same-origin analysis/scenario E2E по согласованным
+данным. Новых backend-дефектов этим структурным переносом не заявлено.

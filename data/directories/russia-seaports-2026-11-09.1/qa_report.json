@@ -1,0 +1,152 @@
+{
+  "directory_id": "russia-seaports-2026-11-09.1",
+  "result": "pass",
+  "checks": [
+    {
+      "check_id": "node_ids_unique",
+      "status": "pass",
+      "severity": "fail",
+      "details": {
+        "duplicates": []
+      }
+    },
+    {
+      "check_id": "roster_read",
+      "status": "pass",
+      "severity": "fail",
+      "details": {
+        "listed": 54,
+        "with_section": 42
+      }
+    },
+    {
+      "check_id": "pilot_ports_accepted",
+      "status": "pass",
+      "severity": "warn",
+      "details": {
+        "kaliningrad": "accepted",
+        "novorossiysk": "accepted"
+      }
+    },
+    {
+      "check_id": "ports_quarantined",
+      "status": "warn",
+      "severity": "warn",
+      "details": {
+        "NO_PORT_AREA_IN_CITY": 7,
+        "PASSENGER_PORT_NOT_FREIGHT": 1,
+        "CITY_NOT_ASSIGNED": 19,
+        "NO_PORT_SECTION": 12,
+        "NO_CITY_OUTLINE": 3,
+        "NO_REGISTRATION_NUMBER": 1
+      }
+    },
+    {
+      "check_id": "operator_lists_published",
+      "status": "warn",
+      "severity": "warn",
+      "details": {
+        "hidden": [
+          "Морской порт Анадырь",
+          "Морской порт Анапа",
+          "Морской порт Архангельск",
+          "Морской порт Большой порт Санкт-Петербург",
+          "Морской порт Варандей",
+          "Морской порт Владивосток",
+          "Морской порт Восточный",
+          "Морской порт Выборг",
+          "Морской порт Высоцк",
+          "Морской порт Де-Кастри",
+          "Морской порт Дудинка",
+          "Морской порт Зарубино",
+          "Морской порт Кавказ",
+          "Морской порт Калининград",
+          "Морской порт Кандалакша",
+          "Морской порт Корсаков",
+          "Морской порт Магадан",
+          "Морской порт Мурманск",
+          "Морской порт Находка",
+          "Морской порт Невельск",
+          "Морской порт Николаевск-на-Амуре",
+          "Морской порт Новороссийск",
+          "Морской порт Ольга",
+          "Морской порт Охотск",
+          "Морской порт Певек",
+          "Морской порт Петропавловск-Камчатский",
+          "Морской порт Посьет",
+          "Морской порт Пригородное",
+          "Морской порт Приморск",
+          "Морской порт Советская Гавань",
+          "Морской порт Сочи",
+          "Морской порт Таганрог",
+          "Морской порт Тамань",
+          "Морской порт Туапсе",
+          "Морской порт Усть-Луга",
+          "Морской порт Холмск",
+          "Морской порт Шахтёрск"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "listed": 54,
+    "with_section": 42,
+    "sections_not_listed": [],
+    "rules": "ru-seaports-rules-v1",
+    "status": {
+      "accepted": 17,
+      "quarantined": 37
+    },
+    "quarantine_reasons": {
+      "NO_PORT_AREA_IN_CITY": 7,
+      "PASSENGER_PORT_NOT_FREIGHT": 1,
+      "CITY_NOT_ASSIGNED": 19,
+      "NO_PORT_SECTION": 12,
+      "NO_CITY_OUTLINE": 3,
+      "NO_REGISTRATION_NUMBER": 1
+    },
+    "not_assigned": [
+      "Морской порт Ванино",
+      "Морской порт Варандей",
+      "Морской порт Восточный",
+      "Морской порт Де-Кастри",
+      "Морской порт Диксон",
+      "Морской порт Зарубино",
+      "Морской порт Кавказ",
+      "Морской порт Ольга",
+      "Морской порт Оля",
+      "Морской порт Охотск",
+      "Морской порт Посьет",
+      "Морской порт Пригородное",
+      "Морской порт Приморск",
+      "Морской порт Сабетта",
+      "Морской порт Тамань",
+      "Морской порт Тикси",
+      "Морской порт Усть-Луга",
+      "Морской порт Хатанга",
+      "Морской порт Шахтёрск"
+    ],
+    "coverage": {
+      "port": {
+        "status": "partial",
+        "reason": "ROSMORPORT_SEAPORTS_ONLY"
+      },
+      "rail_terminal": {
+        "status": "unknown",
+        "reason": "FREIGHT_OPERATIONS_SOURCE_UNAVAILABLE"
+      },
+      "logistics_terminal": {
+        "status": "not_collected",
+        "reason": "NOT_COLLECTED"
+      },
+      "airport": {
+        "status": "not_collected",
+        "reason": "NOT_COLLECTED"
+      },
+      "pipeline_terminal": {
+        "status": "not_collected",
+        "reason": "NOT_COLLECTED"
+      }
+    }
+  }
+}

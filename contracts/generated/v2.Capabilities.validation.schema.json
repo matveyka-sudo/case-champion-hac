@@ -1,0 +1,603 @@
+{
+  "$defs": {
+    "AreaOption": {
+      "additionalProperties": false,
+      "properties": {
+        "area_id": {
+          "minLength": 1,
+          "title": "Area Id",
+          "type": "string"
+        },
+        "city_id": {
+          "minLength": 1,
+          "title": "City Id",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "area_id",
+        "city_id",
+        "name"
+      ],
+      "title": "AreaOption",
+      "type": "object"
+    },
+    "DeliveryCargoProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "food_class": {
+          "enum": [
+            "food",
+            "nonfood"
+          ],
+          "title": "Food Class",
+          "type": "string"
+        },
+        "handling_requirements": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Handling Requirements",
+          "type": "array"
+        },
+        "kind": {
+          "const": "delivery",
+          "title": "Kind",
+          "type": "string"
+        },
+        "profile_id": {
+          "minLength": 1,
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "temperature_requirements": {
+          "$ref": "#/$defs/TemperatureRequirements"
+        },
+        "urgency": {
+          "enum": [
+            "urgent",
+            "ordinary",
+            "nonurgent"
+          ],
+          "title": "Urgency",
+          "type": "string"
+        },
+        "vehicle_constraints": {
+          "$ref": "#/$defs/VehicleConstraints"
+        }
+      },
+      "required": [
+        "profile_id",
+        "kind",
+        "food_class",
+        "urgency",
+        "temperature_requirements",
+        "handling_requirements",
+        "vehicle_constraints"
+      ],
+      "title": "DeliveryCargoProfile",
+      "type": "object"
+    },
+    "KindCapability": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis_kind": {
+          "enum": [
+            "urban_passenger",
+            "intercity_passenger",
+            "urban_cargo",
+            "intercity_cargo"
+          ],
+          "title": "Analysis Kind",
+          "type": "string"
+        },
+        "calculation_available": {
+          "title": "Calculation Available",
+          "type": "boolean"
+        },
+        "contract_available": {
+          "title": "Contract Available",
+          "type": "boolean"
+        },
+        "reason_code": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason Code"
+        }
+      },
+      "required": [
+        "analysis_kind",
+        "contract_available",
+        "calculation_available",
+        "reason_code"
+      ],
+      "title": "KindCapability",
+      "type": "object"
+    },
+    "MethodologyRef": {
+      "additionalProperties": false,
+      "properties": {
+        "config_hash": {
+          "minLength": 1,
+          "title": "Config Hash",
+          "type": "string"
+        },
+        "reference_profile": {
+          "const": "edge-calibrated-v1",
+          "default": "edge-calibrated-v1",
+          "title": "Reference Profile",
+          "type": "string"
+        },
+        "version": {
+          "const": "a2-methodology-v3",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "config_hash"
+      ],
+      "title": "MethodologyRef",
+      "type": "object"
+    },
+    "PipelineCargoProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "pipeline",
+          "title": "Kind",
+          "type": "string"
+        },
+        "product": {
+          "enum": [
+            "oil",
+            "oil_products",
+            "gas"
+          ],
+          "title": "Product",
+          "type": "string"
+        },
+        "profile_id": {
+          "minLength": 1,
+          "title": "Profile Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "profile_id",
+        "kind",
+        "product"
+      ],
+      "title": "PipelineCargoProfile",
+      "type": "object"
+    },
+    "SnapshotAvailability": {
+      "additionalProperties": false,
+      "description": "Accepted snapshot metadata, not proof of full route or mode coverage.",
+      "properties": {
+        "calendar_version": {
+          "minLength": 1,
+          "title": "Calendar Version",
+          "type": "string"
+        },
+        "graph_version": {
+          "minLength": 1,
+          "title": "Graph Version",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "minLength": 1,
+          "title": "Snapshot Id",
+          "type": "string"
+        },
+        "territory_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Territory Ids",
+          "type": "array"
+        },
+        "valid_from": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid From"
+        },
+        "valid_to": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid To"
+        }
+      },
+      "required": [
+        "snapshot_id",
+        "territory_ids",
+        "valid_from",
+        "valid_to",
+        "graph_version",
+        "calendar_version"
+      ],
+      "title": "SnapshotAvailability",
+      "type": "object"
+    },
+    "TemperatureRequirements": {
+      "additionalProperties": false,
+      "properties": {
+        "controlled": {
+          "title": "Controlled",
+          "type": "boolean"
+        },
+        "max_c": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Max C"
+        },
+        "min_c": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Min C"
+        }
+      },
+      "required": [
+        "controlled",
+        "min_c",
+        "max_c"
+      ],
+      "title": "TemperatureRequirements",
+      "type": "object"
+    },
+    "UrbanPassengerScope": {
+      "additionalProperties": false,
+      "description": "One registered input scope, not a promise of complete metrics or admission.\n\nAll selections must match the same scope; unions across scopes are unsafe.\n``whole_city`` permits an absent request area_id, not a full-city rating.\nThe time interval includes valid_from and excludes valid_to.",
+      "properties": {
+        "area_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Area Ids",
+          "type": "array"
+        },
+        "categories": {
+          "items": {
+            "enum": [
+              "adult_polyclinic",
+              "child_polyclinic",
+              "kindergarten",
+              "school",
+              "college_university",
+              "rail_terminal",
+              "bus_terminal",
+              "airport",
+              "shopping_center"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Categories",
+          "type": "array"
+        },
+        "city_id": {
+          "minLength": 1,
+          "title": "City Id",
+          "type": "string"
+        },
+        "passenger_modes": {
+          "items": {
+            "enum": [
+              "walk",
+              "public_transport",
+              "private_car"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Passenger Modes",
+          "type": "array"
+        },
+        "scope_id": {
+          "minLength": 1,
+          "title": "Scope Id",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "minLength": 1,
+          "title": "Snapshot Id",
+          "type": "string"
+        },
+        "traffic_modes": {
+          "items": {
+            "enum": [
+              "static",
+              "typical",
+              "live",
+              "historical"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Traffic Modes",
+          "type": "array"
+        },
+        "valid_from": {
+          "format": "date-time",
+          "title": "Valid From",
+          "type": "string"
+        },
+        "valid_to": {
+          "format": "date-time",
+          "title": "Valid To",
+          "type": "string"
+        },
+        "whole_city": {
+          "title": "Whole City",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "scope_id",
+        "snapshot_id",
+        "city_id",
+        "passenger_modes",
+        "categories",
+        "traffic_modes",
+        "valid_from",
+        "valid_to",
+        "whole_city"
+      ],
+      "title": "UrbanPassengerScope",
+      "type": "object"
+    },
+    "VehicleConstraints": {
+      "additionalProperties": false,
+      "properties": {
+        "max_height_m": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Max Height M"
+        },
+        "max_weight_tonnes": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Max Weight Tonnes"
+        },
+        "restrictions": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Restrictions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "max_height_m",
+        "max_weight_tonnes",
+        "restrictions"
+      ],
+      "title": "VehicleConstraints",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "analyses": {
+      "items": {
+        "$ref": "#/$defs/KindCapability"
+      },
+      "title": "Analyses",
+      "type": "array"
+    },
+    "areas": {
+      "items": {
+        "$ref": "#/$defs/AreaOption"
+      },
+      "title": "Areas",
+      "type": "array"
+    },
+    "cargo_profiles": {
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "delivery": "#/$defs/DeliveryCargoProfile",
+            "pipeline": "#/$defs/PipelineCargoProfile"
+          },
+          "propertyName": "kind"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/DeliveryCargoProfile"
+          },
+          {
+            "$ref": "#/$defs/PipelineCargoProfile"
+          }
+        ]
+      },
+      "title": "Cargo Profiles",
+      "type": "array"
+    },
+    "categories": {
+      "items": {
+        "enum": [
+          "adult_polyclinic",
+          "child_polyclinic",
+          "kindergarten",
+          "school",
+          "college_university",
+          "rail_terminal",
+          "bus_terminal",
+          "airport",
+          "shopping_center"
+        ],
+        "type": "string"
+      },
+      "title": "Categories",
+      "type": "array"
+    },
+    "default_traffic_mode": {
+      "enum": [
+        "static",
+        "typical",
+        "live",
+        "historical"
+      ],
+      "title": "Default Traffic Mode",
+      "type": "string"
+    },
+    "limitations": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "methodology": {
+      "$ref": "#/$defs/MethodologyRef"
+    },
+    "national_catalog_complete": {
+      "title": "National Catalog Complete",
+      "type": "boolean"
+    },
+    "pipeline_products": {
+      "items": {
+        "enum": [
+          "oil",
+          "oil_products",
+          "gas"
+        ],
+        "type": "string"
+      },
+      "title": "Pipeline Products",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "snapshots": {
+      "items": {
+        "$ref": "#/$defs/SnapshotAvailability"
+      },
+      "title": "Snapshots",
+      "type": "array"
+    },
+    "spec_version": {
+      "const": "2026-11-08.1",
+      "title": "Spec Version",
+      "type": "string"
+    },
+    "territory_catalog_available": {
+      "title": "Territory Catalog Available",
+      "type": "boolean"
+    },
+    "traffic_modes": {
+      "items": {
+        "enum": [
+          "static",
+          "typical",
+          "live",
+          "historical"
+        ],
+        "type": "string"
+      },
+      "title": "Traffic Modes",
+      "type": "array"
+    },
+    "urban_city_names": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Urban City Names",
+      "type": "array"
+    },
+    "urban_passenger_scopes": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/UrbanPassengerScope"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Urban Passenger Scopes"
+    }
+  },
+  "required": [
+    "schema_version",
+    "spec_version",
+    "methodology",
+    "analyses",
+    "urban_city_names",
+    "categories",
+    "traffic_modes",
+    "default_traffic_mode",
+    "pipeline_products",
+    "territory_catalog_available",
+    "national_catalog_complete",
+    "cargo_profiles",
+    "limitations"
+  ],
+  "title": "Capabilities",
+  "type": "object"
+}

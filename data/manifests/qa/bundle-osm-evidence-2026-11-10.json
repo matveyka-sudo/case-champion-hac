@@ -1,0 +1,63 @@
+{
+  "check": "bundle-osm-evidence-vs-source-extract",
+  "date": "2026-11-10",
+  "why": "ML1 review of PR #9 (P1): two builds could leave the metadata of source A over the tables of source B in one extract directory; extracts are now immutable directories per input published atomically (osm.ensure_extract)",
+  "rule": "every OSM evidence row of a bundle (record content hash) must equal the record of the extract of the bundle's own PBF (sha256 checked), rebuilt with ensure_extract",
+  "results": [
+    {
+      "bundle_id": "kaliningrad-urban-2026-11-10.1",
+      "osm_dataset_id": "osm_geofabrik.kaliningrad-261107",
+      "pbf_sha256": "769a6a6ac552b534057f2480b88f1c2d0709636761ab6d08483efe69c1e97b69",
+      "extract_key": "48f8c5c6d13cc7a1",
+      "evidence": {
+        "match": 2606
+      }
+    },
+    {
+      "bundle_id": "novorossiysk-urban-2026-11-10.1",
+      "osm_dataset_id": "osm_geofabrik.south-fed-district-261107",
+      "pbf_sha256": "e867508d9240743dea215f130dcfe441a0a53980558b7d5002db91a6b87a57da",
+      "extract_key": "cbde8c01353e7da1",
+      "evidence": {
+        "match": 1434
+      }
+    },
+    {
+      "bundle_id": "moscow-urban-2026-11-10.1",
+      "osm_dataset_id": "osm_geofabrik.central-fed-district-261107",
+      "pbf_sha256": "d28d118c9269138ae33ea6561d4e29e492bd9954e6dd088f80b7a3b1372b77f2",
+      "extract_key": "c44503eca6545b58",
+      "evidence": {
+        "match": 38480
+      }
+    },
+    {
+      "bundle_id": "kaliningrad-urban-2026-11-09.1",
+      "osm_dataset_id": "osm_geofabrik.kaliningrad-261107",
+      "pbf_sha256": "769a6a6ac552b534057f2480b88f1c2d0709636761ab6d08483efe69c1e97b69",
+      "extract_key": "48f8c5c6d13cc7a1",
+      "evidence": {
+        "match": 2606
+      }
+    },
+    {
+      "bundle_id": "novorossiysk-urban-2026-11-09.1",
+      "osm_dataset_id": "osm_geofabrik.south-fed-district-261107",
+      "pbf_sha256": "e867508d9240743dea215f130dcfe441a0a53980558b7d5002db91a6b87a57da",
+      "extract_key": "cbde8c01353e7da1",
+      "evidence": {
+        "match": 1434
+      }
+    },
+    {
+      "bundle_id": "moscow-urban-2026-11-09.2",
+      "osm_dataset_id": "osm_geofabrik.central-fed-district-261107",
+      "pbf_sha256": "d28d118c9269138ae33ea6561d4e29e492bd9954e6dd088f80b7a3b1372b77f2",
+      "extract_key": "c44503eca6545b58",
+      "evidence": {
+        "match": 28004
+      }
+    }
+  ],
+  "conclusion": "All OSM evidence of the six current and previous bundles matches the extract of its own PBF: the bundles were not built from a mixed extract"
+}

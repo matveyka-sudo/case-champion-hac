@@ -1,0 +1,63 @@
+{
+  "additionalProperties": false,
+  "description": "Accepted snapshot metadata, not proof of full route or mode coverage.",
+  "properties": {
+    "calendar_version": {
+      "minLength": 1,
+      "title": "Calendar Version",
+      "type": "string"
+    },
+    "graph_version": {
+      "minLength": 1,
+      "title": "Graph Version",
+      "type": "string"
+    },
+    "snapshot_id": {
+      "minLength": 1,
+      "title": "Snapshot Id",
+      "type": "string"
+    },
+    "territory_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Territory Ids",
+      "type": "array"
+    },
+    "valid_from": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Valid From"
+    },
+    "valid_to": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Valid To"
+    }
+  },
+  "required": [
+    "snapshot_id",
+    "territory_ids",
+    "valid_from",
+    "valid_to",
+    "graph_version",
+    "calendar_version"
+  ],
+  "title": "SnapshotAvailability",
+  "type": "object"
+}

@@ -1,0 +1,343 @@
+/* React host integration; visual tokens and layout remain in prototype.css. */
+.map-wrapper {
+  position: absolute;
+  inset: 0;
+  transition: opacity 280ms;
+}
+.map-wrapper.dim {
+  opacity: 0.65;
+}
+.tile-note {
+  position: absolute;
+  left: 50%;
+  top: 84px;
+  transform: translateX(-50%);
+  z-index: 600;
+  max-width: 420px;
+  background: var(--surface);
+}
+.dropdown-menu.show {
+  right: 0;
+  left: auto;
+  top: 100%;
+}
+@media (max-width: 767.98px) {
+  .at-chat.is-closed {
+    display: none;
+  }
+  .at-filters:not(.m-open) {
+    visibility: hidden;
+  }
+  .at-map {
+    --sheet-h: 220px;
+  }
+}
+/* Keep Leaflet panes and map overlays below the application header dropdown. */
+.at-map {
+  isolation: isolate;
+}
+
+/* Header branding sits directly on the page, without a white capsule. */
+.lp-header .wordmark,
+.at-top .wordmark,
+[data-theme="dark"] .at-top .wordmark {
+  background: transparent;
+  box-shadow: none;
+}
+.lp-header:not(.is-solid) .wordmark .wm-dex {
+  color: var(--wx-white);
+}
+[data-theme="dark"] .at-top .wordmark .wm-dex {
+  color: var(--text);
+}
+
+/* Align the wordmark itself with the header's outer inset. */
+.lp-header .wordmark,
+.at-top .wordmark {
+  padding-left: 0;
+}
+
+/* Waydex pickers: custom surfaces in the browser top layer, not OS menus. */
+.wx-select {
+  width: 100%;
+  min-width: 0;
+}
+.wx-select-trigger {
+  width: 100%;
+  min-height: 46px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 10px 12px 10px 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.wx-select-trigger span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wx-select-trigger > .lucide {
+  width: 16px;
+  height: 16px;
+  color: var(--text-3);
+  transition: transform var(--t-fast);
+}
+.wx-select-trigger[aria-expanded="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.wx-select-trigger[aria-expanded="true"] > .lucide {
+  transform: rotate(180deg);
+}
+.wx-popup {
+  margin: 0;
+  padding: 6px;
+  border: 1px solid var(--line-2);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-2);
+  overflow: auto;
+  font-family: var(--f-ui), sans-serif;
+  font-size: 14px;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.wx-popup:popover-open {
+  animation: wx-picker-in 140ms var(--ease);
+}
+.wx-select-popup > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  text-align: left;
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+}
+.wx-select-popup > button:hover,
+.wx-select-popup > button:focus-visible {
+  background: var(--surface-2);
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent-soft);
+}
+.wx-select-popup > button[aria-selected="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 800;
+}
+.wx-select-popup > button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.wx-select-popup > button.wx-option-unavailable:disabled{opacity:1;color:var(--text-3)}
+.wx-option-reason{display:block;margin-top:3px;font-size:12px;font-weight:400;line-height:1.4;color:var(--text-2)}
+.api-choice-reason{display:block;margin-top:4px;font-size:12px;line-height:1.4;color:var(--text-2)}
+.api-scope-help{margin:14px 0;padding:12px 0;border-block:1px solid var(--line)}
+.api-scope-help .iconbtn{width:100%;white-space:normal}
+.api-scope-preview{overflow-wrap:anywhere}
+.api-calculated-points{margin:12px 0}
+.api-point-territory{font-size:13px;color:var(--text-2);margin:8px 0}
+.api-card .api-calculated-points details{margin:8px 0 14px}
+.api-calculated-points summary{min-height:44px;padding:10px 0;cursor:pointer;font-size:13px;font-weight:700;color:var(--accent)}
+.api-calculated-points ul{list-style:none;margin:10px 0;padding:0;display:grid;gap:8px}
+.api-calculated-points .api-point-choice{width:100%;min-height:44px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin:0;padding:10px}
+.api-point-choice>span{color:var(--text);overflow-wrap:anywhere}
+.api-point-choice small{display:block;color:var(--text-2);font-size:12px;margin-top:4px}
+.api-point-choice b{white-space:nowrap;font-size:13px}
+.wx-select-popup .lucide {
+  width: 16px;
+  height: 16px;
+}
+.wx-date-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 32px;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  padding: 3px 0;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.wx-date-trigger:hover,
+.wx-date-trigger[aria-expanded="true"] {
+  color: var(--accent);
+}
+.wx-calendar {
+  padding: 14px;
+  max-height: none !important;
+}
+.wx-calendar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.wx-calendar-head b {
+  font-size: 14px;
+  text-transform: capitalize;
+}
+.wx-calendar-head button {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+.wx-calendar-head button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.wx-calendar-week,
+.wx-calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  text-align: center;
+}
+.wx-calendar-week {
+  font-size: 11px;
+  color: var(--text-3);
+  font-weight: 700;
+  margin-bottom: 7px;
+}
+.wx-calendar-days button {
+  aspect-ratio: 1;
+  min-height: 32px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+}
+.wx-calendar-days button:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.wx-calendar-days button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.wx-calendar-days button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.wx-calendar p {
+  margin: 12px 0 0;
+  font-size: 10.5px;
+  color: var(--text-3);
+  text-align: center;
+}
+@keyframes wx-picker-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wx-popup:popover-open {
+    animation: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .atlas .ov-bottom .zgroup {
+    display: flex;
+    position: fixed;
+    right: 12px;
+    bottom: calc(var(--sheet-h, 196px) + 86px);
+  }
+  .atlas .ov-bottom .zgroup .zbtn {
+    width: 36px;
+    height: 40px;
+  }
+  .atlas .has-empty-state .ov-center {
+    top: 88px;
+    bottom: calc(var(--sheet-h, 196px) + 148px);
+    width: calc(100% - 32px);
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+  }
+  .atlas .has-empty-state .statecard {
+    width: 100%;
+    max-height: 100%;
+    overflow: auto;
+    padding: 16px;
+  }
+  .atlas .has-empty-state .statecard .si {
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+  }
+  .atlas .has-empty-state .statecard h3 {
+    margin-top: 12px;
+  }
+  .atlas .has-empty-state .statecard .row-act {
+    margin-top: 12px;
+  }
+}
+
+.tr-stage-cargo .tr-list {
+  justify-content: center;
+}
+
+/* Canonical API facts and evidence; atlas layout uses the incumbent shared styles. */
+.api-map-note,.api-overlay-note{position:absolute;left:18px;bottom:112px;z-index:450;background:var(--surface);padding:10px 14px;border-radius:14px;max-width:calc(100% - 36px);font-size:12px;color:var(--text-2)}
+.api-partial-symbol{width:16px;height:16px;flex:none;border:2px dotted currentColor;border-radius:50%}
+.api-snapshot-coverage{overflow-wrap:anywhere}
+.api-index-legend{padding:12px 0;color:var(--text-2);font-size:12px}
+.api-index-legend ul{display:flex;flex-wrap:wrap;gap:8px 14px;list-style:none;margin:0;padding:0}
+.api-index-legend li,.api-index-legend p{display:flex;align-items:center;gap:6px}
+.api-index-legend p{margin:10px 0 0}
+.api-index-swatch{width:12px;height:12px;border-radius:3px;flex:none}
+.api-index-swatch[data-band="low"]{background:#c72d44}
+.api-index-swatch[data-band="medium"]{background:#d49520}
+.api-index-swatch[data-band="high"]{background:#0b8a5c}
+.api-index-swatch[data-band="unknown"]{background:#8990a7}
+.api-measure b[data-score-band="low"],.api-claim[data-score-band="low"],.api-readiness b[data-score-band="low"]{color:var(--err)}
+.api-measure b[data-score-band="medium"],.api-claim[data-score-band="medium"],.api-readiness b[data-score-band="medium"]{color:var(--warn)}
+.api-measure b[data-score-band="high"],.api-claim[data-score-band="high"],.api-readiness b[data-score-band="high"]{color:var(--ok)}
+.api-measure b[data-score-band="unknown"],.api-claim[data-score-band="unknown"],.api-readiness b[data-score-band="unknown"]{color:var(--text-2)}
+.api-readiness{margin:14px 0;font-size:11px}.api-readiness dl{margin:0}.api-readiness dt{margin-top:8px;font-weight:600}.api-readiness dd{margin:2px 0 0;color:var(--text-2);overflow-wrap:anywhere}
+.api-measure{display:grid;gap:7px;padding:13px 0;border-bottom:1px solid var(--line);font-size:13px}.api-measure span small{display:block;font-size:11px;color:var(--text-3);margin-top:4px}.api-measure b{font-size:21px;color:var(--text)}.api-measure>small{color:var(--text-3);font-size:11px}
+.api-demo-banner{position:relative;z-index:910;flex:none;padding:5px 16px;background:var(--warn-bg);border-bottom:1px solid var(--warn);color:var(--warn);font-size:11px;line-height:1.4}.api-demo-banner strong{display:block}.api-demo-banner span{display:block}.api-demo-banner summary{cursor:pointer}.has-demo-model{display:flex;flex-direction:column;height:100dvh}.has-demo-model>.at-top{flex:none}.has-demo-model>.at-body{height:auto;flex:1;min-height:0}
+.api-claim{border:0;border-radius:8px;background:var(--surface-2);color:var(--accent);padding:6px;text-align:left;font-size:12px;margin:3px}.api-field-error{display:block;font-size:12px;color:var(--err);margin:7px 0}.api-input{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;color:var(--text);padding:10px 12px;width:100%;font:inherit;font-size:13px}
+.api-map-key{position:absolute;left:18px;top:104px;z-index:430;display:flex;align-items:center;gap:8px;padding:8px 10px;max-width:calc(100% - 36px);border-radius:10px;background:var(--surface);color:var(--text-2);font-size:11px}
+.api-reopen{position:absolute;z-index:450;right:18px;top:170px}.api-point-territory,.api-population{font-size:12px;margin:8px 0}.api-calculated-points summary{min-height:38px;padding:8px 0;font-size:12px}
+.idxpill[data-score-band=low]{color:#c72d44}.idxpill[data-score-band=medium]{color:#9a6100}.idxpill[data-score-band=high]{color:#0b8a5c}.idxpill[data-score-band=unknown]{color:var(--text-2)}
+.api-scenario-comparison{margin:12px 0}.api-scenario-comparison>.segc{margin-bottom:10px}.api-comparison-row{margin:10px 0;padding:10px 0;border-bottom:1px solid var(--line);font-size:12px}.api-comparison-values{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.api-comparison-values>span{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:12px;background:var(--surface-2)}.api-comparison-values small{font-size:10px;color:var(--text-3)}.api-comparison-values strong{font-size:17px}.api-comparison-row[data-outcome=improved] .api-comparison-values>span:last-child strong{color:var(--ok)}.api-comparison-row[data-outcome=worsened] .api-comparison-values>span:last-child strong{color:var(--err)}.api-route-details>summary{font-size:12px;font-weight:800}

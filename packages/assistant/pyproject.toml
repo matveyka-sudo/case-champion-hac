@@ -2,7 +2,11 @@
 name = "a2-assistant"
 version = "0.1.0"
 requires-python = ">=3.12,<3.13"
-dependencies = ["openai"]
+dependencies = ["a2-contracts", "openai", "pydantic>=2,<3"]
 
-[tool.uv]
-package = false
+[build-system]
+requires = ["uv_build==0.12.17"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+a2-contracts = { workspace = true }

@@ -1,0 +1,106 @@
+{
+  "$defs": {
+    "ValidityPeriod": {
+      "additionalProperties": false,
+      "properties": {
+        "valid_from": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid From"
+        },
+        "valid_to": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid To"
+        }
+      },
+      "required": [
+        "valid_from",
+        "valid_to"
+      ],
+      "title": "ValidityPeriod",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Recurring local opening window, distinct from a passenger's activity window.\n\nWeekdays refer to the start date (Monday=0); end_day_offset=1 explicitly\nplaces the end on the following date. UTC conversion belongs to the engine.",
+  "properties": {
+    "end": {
+      "format": "time",
+      "title": "End",
+      "type": "string"
+    },
+    "end_day_offset": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "End Day Offset",
+      "type": "integer"
+    },
+    "evidence_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "start": {
+      "format": "time",
+      "title": "Start",
+      "type": "string"
+    },
+    "timezone": {
+      "minLength": 1,
+      "title": "Timezone",
+      "type": "string"
+    },
+    "valid_period": {
+      "$ref": "#/$defs/ValidityPeriod"
+    },
+    "verification_state": {
+      "enum": [
+        "verified",
+        "absent",
+        "unknown"
+      ],
+      "title": "Verification State",
+      "type": "string"
+    },
+    "weekdays": {
+      "items": {
+        "maximum": 6,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "minItems": 1,
+      "title": "Weekdays",
+      "type": "array"
+    }
+  },
+  "required": [
+    "start",
+    "end",
+    "end_day_offset",
+    "weekdays",
+    "valid_period",
+    "timezone",
+    "verification_state",
+    "evidence_ids"
+  ],
+  "title": "AvailabilityWindow",
+  "type": "object"
+}

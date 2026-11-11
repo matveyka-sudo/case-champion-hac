@@ -1,0 +1,468 @@
+{
+  "bundle_id": "kaliningrad-urban-2026-11-08.4",
+  "generated_at": "2026-11-08T15:56:02.111197+00:00",
+  "parser_version": "ml2-urban-0.2.0",
+  "category_rules": "osm-category-rules-v1",
+  "graph_version": "osm_geofabrik.kaliningrad-261107:osm-walk-network-v1:main-component",
+  "result": "pass",
+  "failed_checks": [],
+  "warnings": [
+    "registry_osm_distance",
+    "registry_map_points_listed",
+    "medical_registry_city_addresses_located",
+    "medical_registry_exact_addresses",
+    "access_distance_points"
+  ],
+  "checks": [
+    {
+      "check_id": "boundary_valid",
+      "status": "pass",
+      "detail": "City and district polygons are valid after make_valid"
+    },
+    {
+      "check_id": "area_geodesic_vs_utm",
+      "status": "pass",
+      "detail": "Geodesic area agrees with UTM area within 0.5%",
+      "geodesic_km2": 224.668,
+      "utm_km2": 224.496
+    },
+    {
+      "check_id": "districts_partition_city",
+      "status": "pass",
+      "detail": "Districts cover the city area without overlap (area sum within 0.5%)",
+      "district_sum_km2": 224.668
+    },
+    {
+      "check_id": "cells_partition_city",
+      "status": "pass",
+      "detail": "Clipped cells cover the city exactly once"
+    },
+    {
+      "check_id": "points_inside_own_cell",
+      "status": "pass",
+      "detail": "Every sample point lies in its own clipped cell"
+    },
+    {
+      "check_id": "population_conserved",
+      "status": "pass",
+      "detail": "All GHSL population inside the city is assigned to exactly one cell",
+      "cells_sum": 485776.4,
+      "raster_sum": 485776.4
+    },
+    {
+      "check_id": "district_population_not_doubled",
+      "status": "pass",
+      "detail": "District shares never exceed the city population",
+      "district_sum": 485776.3
+    },
+    {
+      "check_id": "registry_roster_complete",
+      "status": "pass",
+      "detail": "Every listed institution has building coordinates and a municipal legal form",
+      "institutions": {
+        "school": 45,
+        "kindergarten": 67
+      },
+      "buildings": {
+        "school": 76,
+        "kindergarten": 93
+      }
+    },
+    {
+      "check_id": "registry_points_in_city",
+      "status": "pass",
+      "detail": "Roster buildings lie inside the city boundary",
+      "outside": []
+    },
+    {
+      "check_id": "registry_osm_distance",
+      "status": "warn",
+      "detail": "Matched OSM objects lie within 150 m of the roster coordinate",
+      "over_limit": [
+        {
+          "distance_m": 296.6,
+          "name": "МАДОУ ЦРР-д/с № 134",
+          "map_id": "4424023"
+        },
+        {
+          "distance_m": 286.4,
+          "name": "МАДОУ ЦРР д/с № 2",
+          "map_id": "4423892"
+        },
+        {
+          "distance_m": 222.0,
+          "name": "МАДОУ д/с № 46",
+          "map_id": "4423939"
+        },
+        {
+          "distance_m": 152.9,
+          "name": "МАДОУ ЦРР д/с № 136",
+          "map_id": "4424025"
+        }
+      ]
+    },
+    {
+      "check_id": "registry_map_points_listed",
+      "status": "warn",
+      "detail": "Every map point belongs to an institution of the founder's lists",
+      "not_listed": [
+        {
+          "map_id": "4423921",
+          "kind": "kindergarten",
+          "name": "МАДОУ д/с № 22"
+        },
+        {
+          "map_id": "4423925",
+          "kind": "kindergarten",
+          "name": "МАДОУ д/с № 23"
+        },
+        {
+          "map_id": "4423924",
+          "kind": "kindergarten",
+          "name": "МАДОУ д/с № 23"
+        },
+        {
+          "map_id": "4423930",
+          "kind": "kindergarten",
+          "name": "МАДОУ д/с № 27"
+        },
+        {
+          "map_id": "4423903",
+          "kind": "kindergarten",
+          "name": "МАДОУ ЦРР-д/с № 7"
+        },
+        {
+          "map_id": "4423902",
+          "kind": "kindergarten",
+          "name": "МАДОУ ЦРР-д/с № 7"
+        },
+        {
+          "map_id": "4423916",
+          "kind": "kindergarten",
+          "name": "МБДОУ д/с № 16"
+        }
+      ]
+    },
+    {
+      "check_id": "medical_registry_city_addresses_located",
+      "status": "warn",
+      "detail": "Every register polyclinic of a settlement in the search area is found in OSM addresses",
+      "unlocated": [
+        {
+          "category": "adult_polyclinic",
+          "name": "Поликлиника, ул. Адмирала Егорова, зд 2",
+          "address": "236001, Калининградская область, городской округ город Калининград, г Калининград, ул. Адмирала Егорова, зд. 2"
+        },
+        {
+          "category": "child_polyclinic",
+          "name": "Детское поликлиническое отделение №6 (Адмирала Егорова, 2)",
+          "address": "236001, Калининградская область, городской округ город Калининград, г Калининград, ул. Адмирала Егорова, зд. 2"
+        }
+      ]
+    },
+    {
+      "check_id": "medical_registry_exact_addresses",
+      "status": "warn",
+      "detail": "Polyclinics are placed at the exact house (nearest same-parity number at most ±4 otherwise)",
+      "nearest_number": [
+        {
+          "destination_id": "kaliningrad-adult_polyclinic-e312a544dec7",
+          "address": "236017, Калининградская область, г.о. город Калининград, г Калининград, ул М.Расковой, д. 10"
+        }
+      ]
+    },
+    {
+      "check_id": "higher_education_registry_located",
+      "status": "pass",
+      "detail": "Every public college and university of the city has a building or a located address",
+      "unlocated": []
+    },
+    {
+      "check_id": "public_categories_need_registry",
+      "status": "pass",
+      "detail": "No medical/education object is accepted without registry confirmation",
+      "accepted_registry_objects": 223
+    },
+    {
+      "check_id": "airport_outside_boundary_kept",
+      "status": "pass",
+      "detail": "Scheduled airport outside the city boundary is kept (PRODUCT_SPEC §2)",
+      "airports": [
+        "Калининград (Храброво)"
+      ]
+    },
+    {
+      "check_id": "walk_network_main_component",
+      "status": "pass",
+      "detail": "Largest connected walk component holds at least 90% of walk length",
+      "share": 0.9654
+    },
+    {
+      "check_id": "access_distance_points",
+      "status": "warn",
+      "detail": "Sample points join the walk network within 500 m",
+      "over_limit": [
+        "kaliningrad-utm34n-1km-v1-e459-n6069-p",
+        "kaliningrad-utm34n-1km-v1-e460-n6069-p",
+        "kaliningrad-utm34n-1km-v1-e461-n6069-p"
+      ]
+    },
+    {
+      "check_id": "access_distance_accepted_destinations",
+      "status": "pass",
+      "detail": "Accepted destinations join the walk network within 500 m",
+      "over_limit": []
+    }
+  ],
+  "summary": {
+    "city_area_km2": 224.668,
+    "cells_total": 286,
+    "cells_sampled": 216,
+    "cells_excluded": {
+      "NO_BUILDING": 59,
+      "WATER_ONLY": 11
+    },
+    "population_total": 485776.4,
+    "population_in_excluded_cells": 277.8,
+    "population_method": "ghsl_r2023a_e2025_100m_pixel_centroid",
+    "population_year": 2025,
+    "sample_offset_m": {
+      "center_placements": 16,
+      "median": 59.8,
+      "max": 690.9
+    },
+    "walk_network": {
+      "walk_rules": "osm-walk-network-v1",
+      "ways_total": 71094,
+      "ways_main_component": 68777,
+      "components": 871,
+      "main_component_length_share": 0.9654
+    },
+    "access_distance_m": {
+      "sample_points": {
+        "median": 19.7,
+        "p95": 185.8,
+        "max": 838.5
+      },
+      "destinations": {
+        "median": 25.5,
+        "p95": 62.0,
+        "max": 116.2
+      }
+    },
+    "destinations_by_category": {
+      "adult_polyclinic": {
+        "accepted": 16,
+        "quarantined": 11
+      },
+      "child_polyclinic": {
+        "accepted": 12,
+        "quarantined": 4
+      },
+      "kindergarten": {
+        "accepted": 93,
+        "quarantined": 75
+      },
+      "school": {
+        "accepted": 76,
+        "quarantined": 54
+      },
+      "college_university": {
+        "accepted": 26,
+        "quarantined": 44
+      },
+      "rail_terminal": {
+        "accepted": 2,
+        "quarantined": 0
+      },
+      "bus_terminal": {
+        "accepted": 2,
+        "quarantined": 0
+      },
+      "airport": {
+        "accepted": 1,
+        "quarantined": 0
+      },
+      "shopping_center": {
+        "accepted": 34,
+        "quarantined": 14
+      }
+    },
+    "osm_rule_counts": {
+      "rail_station_not_terminal": 78,
+      "aerodrome_without_iata": 15,
+      "amenity=university": 54,
+      "shop=mall": 75,
+      "medical_not_polyclinic": 286,
+      "amenity=college": 23,
+      "amenity=school": 242,
+      "amenity=kindergarten": 278,
+      "medical+name:поликлиника": 36,
+      "bus_station_not_terminal": 10,
+      "amenity=bus_station+name:автовокзал": 13,
+      "passenger_station+name:<город>-": 2,
+      "school_additional_education": 16,
+      "station+name:вокзал": 3,
+      "not_a_category": 2,
+      "aerodrome+iata": 1,
+      "disused": 5,
+      "merged_duplicates": 43,
+      "airport_point_at_terminal": 1,
+      "registry_match": {
+        "rules": "registry-osm-match-v1",
+        "buildings": 169,
+        "buildings_with_osm": 121,
+        "osm_candidates_matched": 125,
+        "osm_candidates_unmatched": 129,
+        "near_but_other_number": 108,
+        "distance_m": {
+          "median": 0.0,
+          "max": 296.6
+        }
+      },
+      "medical_registry": {
+        "rules": "trmo-polyclinic-rules-v1",
+        "rows": 1045,
+        "rejected": {
+          "EXCLUDED_FROM_REGISTER": 9,
+          "NOT_A_POLYCLINIC": 894,
+          "NOT_OUTPATIENT": 1,
+          "NOT_REGIONAL_OR_MUNICIPAL": 3,
+          "NO_PRIMARY_PHYSICIAN_CARE": 53
+        },
+        "objects": {
+          "adult_polyclinic": 42,
+          "child_polyclinic": 50
+        },
+        "located_destinations": {
+          "adult_polyclinic": 16,
+          "child_polyclinic": 12
+        },
+        "city_addresses_not_in_osm": 2,
+        "osm_candidates_attached": 13,
+        "osm_candidates_unmatched": 15
+      },
+      "higher_education_registry": {
+        "rules": "obrnadzor-college-university-rules-v1",
+        "link_rules": "edu-name-link-v1",
+        "local_orgs": 30,
+        "public_orgs": 19,
+        "rejected": {
+          "DEPARTMENTAL_INSTITUTION": 3,
+          "SPECIAL_CLOSED_INSTITUTION": 1,
+          "NOT_PUBLIC": 6,
+          "SOCIAL_INSTITUTION": 1
+        },
+        "accepted_destinations": 26,
+        "osm_linked": [
+          {
+            "osm": "Колледж сервиса и туризма",
+            "org": "ГАУ КО ПОО КСТ",
+            "score": 2
+          },
+          {
+            "osm": "Петербуржский государственный университет путей сообщения",
+            "org": "Калининградский филиал ПГУПС",
+            "score": 3
+          },
+          {
+            "osm": "Балтийский федеральный университет имени И.Канта",
+            "org": "ФГАОУ ВО \"БФУ ИМ. И. КАНТА\"",
+            "score": 2
+          },
+          {
+            "osm": "Калининградский Бизнес Колледж",
+            "org": "АНО ПО КБК",
+            "score": 1
+          },
+          {
+            "osm": "Центр подготовки авиакассиров БФУ имени И.Канта",
+            "org": "ФГАОУ ВО \"БФУ ИМ. И. КАНТА\"",
+            "score": 3
+          },
+          {
+            "osm": "Колледж предпринимательства",
+            "org": "ГАУ КО \"Колледж предпринимательства\"",
+            "score": 1
+          },
+          {
+            "osm": "Академия народного хозяйства при правительстве РФ. Калининградский филиал",
+            "org": "Западный филиал РАНХиГС",
+            "score": 3
+          },
+          {
+            "osm": "Калининградский государственный технический университет",
+            "org": "ФГБОУ ВО \"КГТУ\"",
+            "score": 1
+          },
+          {
+            "osm": "Калининградский государственный технический университет",
+            "org": "ФГБОУ ВО \"КГТУ\"",
+            "score": 1
+          },
+          {
+            "osm": "Балтийский федеральный университет имени Иммануила Канта",
+            "org": "ФГАОУ ВО \"БФУ ИМ. И. КАНТА\"",
+            "score": 3
+          },
+          {
+            "osm": "Балтийский федеральный университет имени И.Канта",
+            "org": "ФГАОУ ВО \"БФУ ИМ. И. КАНТА\"",
+            "score": 2
+          },
+          {
+            "osm": "Инженерно-технический институт БФУ им. И. Канта",
+            "org": "ФГАОУ ВО \"БФУ ИМ. И. КАНТА\"",
+            "score": 3
+          },
+          {
+            "osm": "Западный филиал Российской академии народного хозяйства и государственной службы",
+            "org": "Западный филиал РАНХиГС",
+            "score": 3
+          },
+          {
+            "osm": "Калининградский областной музыкальный колледж им. С.В. Рахманинова",
+            "org": "ГБПОУ «Калининградский музыкальный колледж им. С.В. Рахманинова»",
+            "score": 2
+          },
+          {
+            "osm": "Колледж сервиса и туризма",
+            "org": "ГАУ КО ПОО КСТ",
+            "score": 2
+          },
+          {
+            "osm": "Институт природопользования, территориального развития и градостроительства БФУ им. И.Канта",
+            "org": "ФГАОУ ВО \"БФУ ИМ. И. КАНТА\"",
+            "score": 3
+          },
+          {
+            "osm": "Научно-технологический парк БФУ имени И.Канта",
+            "org": "ФГАОУ ВО \"БФУ ИМ. И. КАНТА\"",
+            "score": 3
+          },
+          {
+            "osm": "Калининградский юридический институт МВД России",
+            "org": "Калининградский филиал Санкт-Петербургского университета МВД России, КФ ФГКОУ ВО СПбУ МВД России, КФ СПбУ МВД России",
+            "score": 3
+          },
+          {
+            "osm": "Балтийский федеральный университет имени Иммануила Канта",
+            "org": "ФГАОУ ВО \"БФУ ИМ. И. КАНТА\"",
+            "score": 3
+          },
+          {
+            "osm": "Университетский колледж БФУ",
+            "org": "ФГАОУ ВО \"БФУ ИМ. И. КАНТА\"",
+            "score": 3
+          },
+          {
+            "osm": "Колледж сервиса и туризма",
+            "org": "ГАУ КО ПОО КСТ",
+            "score": 2
+          }
+        ],
+        "osm_unlinked": 42
+      }
+    }
+  }
+}

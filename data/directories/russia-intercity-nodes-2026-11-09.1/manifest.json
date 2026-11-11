@@ -1,0 +1,58 @@
+{
+  "format": "a2-ml2-intercity-node-directory",
+  "directory_id": "russia-intercity-nodes-2026-11-09.1",
+  "created_at": "2026-11-09T15:15:20.965490+00:00",
+  "rules": "ru-intercity-nodes-rules-v1",
+  "territory_directory": {
+    "directory_id": "russia-territories-2026-11-09.1",
+    "manifest_sha256": "c168dc5104a8babccacb921593fb8c8a99eb691b369da3d78b11e4f17476bd6b"
+  },
+  "sources": [
+    {
+      "source_id": "wikidata",
+      "dataset_id": "wikidata.ru-intercity-nodes-20261109",
+      "url": "https://query.wikidata.org/sparql",
+      "retrieved_at": "2026-11-09T15:12:52+00:00",
+      "raw_sha256": "7506de88429834d2855dadbc4d0fdb043e41a1aa1dd8e5a8f34ab60138570d5f",
+      "license": "CC0-1.0"
+    },
+    {
+      "source_id": "ourairports",
+      "dataset_id": "ourairports.airports-20261108",
+      "url": "https://davidmegginson.github.io/ourairports-data/airports.csv",
+      "retrieved_at": "2026-11-08T13:42:04.183446+00:00",
+      "raw_sha256": "5754df21f25cb08d2def8a80b3eb609ddc52a4217afa8eb48280b6428c06e78f",
+      "license": "Public Domain"
+    }
+  ],
+  "coverage": {
+    "rail_station": {
+      "status": "partial",
+      "reason": "COMMUNITY_DIRECTORY_PASSENGER_ROLE_UNVERIFIED"
+    },
+    "bus_station": {
+      "status": "partial",
+      "reason": "WIKIDATA_BUS_STATIONS_SPARSE"
+    },
+    "airport": {
+      "status": "partial",
+      "reason": "COMMUNITY_DIRECTORY_SERVICE_UNVERIFIED"
+    },
+    "ferry_terminal": {
+      "status": "not_collected",
+      "reason": "NOT_COLLECTED"
+    }
+  },
+  "files": {
+    "nodes": {
+      "path": "nodes.json",
+      "sha256": "d4990ad3ebff56fe650b5a2e0264520602b2a02692b08a1978e9691f89c12980",
+      "rows": 2509
+    },
+    "qa_report": {
+      "path": "qa_report.json",
+      "sha256": "26cafa16b097987fe5a273f8dbcb362c06c0fe502b1719dbd9b8ddb18ade1d4d",
+      "rows": 7
+    }
+  }
+}

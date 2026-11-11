@@ -1,9 +1,8 @@
-# AnalysisProfile
-
-ML1 определяет семантику и конфигурацию профиля, BACKEND публикует каноническую модель. Engine, API, SPA и инструменты ассистента используют одну неизменяемую ревизию.
-
-Обязательные поля — `schema_version`, `profile_id`, `profile_version`, `purpose`, `timezone`, `city_ids`, `modes`, `start_date`, `end_date`, `first_departure`, `last_departure`, `departure_step_minutes`, `horizon_hours`, `destination_weighting`, `slot_weighting`, `half_life_minutes`, `sensitivity_half_life_minutes`, `status`. `city_ids` — список уникальных городов и одновременно фиксированный пул целей. Собственный город исключается. Snapshot задаёт версионированные опорные точки для каждой цели. Дополнительные ограничения пригодности транспорта становятся полями профиля при изменении постановки.
-
-[P1 версии 1.0.0](../../engine/profiles/p1-v1.toml) — выбор команды для дневных межгородских поездок жителей без автомобиля. Города — Калининград, Зеленоградск, Светлогорск, Пионерский, Балтийск и Гурьевск. Разрешены железная дорога, автобусы с проверенным расписанием и явные пешие участки. Даты отправления 9–15 ноября 2026 включительно, старт каждого часа с 06:00 по 20:00 включительно, зона `Europe/Kaliningrad`. На каждый старт даётся 48 часов. 105 слотов, 30 направленных пар, 525 ячеек на город. Веса слотов и других городов одинаковы. Основной H — 60 минут, чувствительность H — 30, 60 и 120 минут.
-
-Параметры читаются из конфигурации. Меняется любой параметр — выпускается новая версия профиля, а результаты привязываются к использованной версии. `status` валидного профиля — `ready`. Канонические `schema_version` и `status` добавляет производитель DTO при публикации TOML. `invalid_profile` применяется к неизвестным или повторным городам, неподдерживаемой зоне или режиму, пустому множеству целей, невалидным датам, сетке, горизонту или H. `profile_not_found` применяется, когда запрошенная ревизия отсутствует.
+# AnalysisRequest
+analysis_kind: urban_passenger | intercity_passenger | urban_cargo | intercity_cargo.
+Городские запросы: city_id, optional area_id. Межгород: territory_level city|region, origin_id, destination_id; два разных объекта одного уровня.
+departure_at с offset; passenger_mode walk|public_transport|private_car только для urban_passenger; categories из config/product.json и priorities low|medium|high только для пассажирского города. cargo_profile_id для грузов. Не принимать пользовательские коэффициенты, H, цены или сценарные операции.
+MethodologyRef: version=a2-methodology-v3, config_hash, reference_profile=edge-calibrated-v1. Сервер разрешает только опубликованные версии config/product.json.
+traffic_mode=static|typical|live|historical, snapshot_id (server-resolved immutable), schema_version=2. Unsupported requested traffic mode → явная причина/доступные режимы, без незаметного fallback.
+CargoProfile: id, food_class=food|nonfood, urgency=urgent|ordinary|nonurgent, temperature_requirements, handling_requirements, vehicle_constraints. Pipeline product только отдельной веткой, не food_class.
+Для intercity: два разных ID одного уровня; optional fixed node sets, иначе явные server-resolved sets. Для urban: city_id из трёх, категории nonempty unique, priorities для каждой выбранной категории. Date/time aware, UI шаг 15 мин.

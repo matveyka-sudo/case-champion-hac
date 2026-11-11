@@ -1,22 +1,10 @@
-# AccessibilityResult
-
-ML1 рассчитывает сравнимую оценку городов. BACKEND хранит результаты и их версии, FRONTEND сравнивает города, ML2 объясняет вклад маршрутов и неопределённость.
-
-Обязательные поля — общие версии, `run_id`, `provenance`, `status`, `half_life_minutes`, `city_results`. У города обязательны `city_id`, `status`, `score`, `lower_bound`, `upper_bound`, `coverage`, `total_cells`, `resolved_cells`, `cells`. Ячейка содержит `destination_city_id`, `requested_departure_at` с offset, `route_result_id` (ссылка на сохранённый результат), статус маршрута, `contribution_lower` и `contribution_upper`. Результат связан с конкретным профилем и его временной зоной. Значения индекса 0–100, вклады и `coverage` 0–1.
-
-## Расчёт P1
-
-`I_i = 100 × mean_s(mean_{j != i}(2^(-C_ijs / H)))`.
-
-`C` — полное время в минутах от опорной точки отправления до опорной точки назначения, включая подход, ожидание, поездку, пересадки и конечный участок. `H` в минутах. Все заданные слоты и цели входят в знаменатель, включая неизвестные. Каждый слот учитывается один раз. Неполное покрытие публикуется как диапазон неопределённости данных.
-
-| Статус маршрута | Нижний и верхний вклад |
-| --- | --- |
-| `ok` | Оба равны вкладу подтверждённого `C`. |
-| `no_path_in_window` | Оба равны 0. |
-| `partial_data` | Нижняя граница равна вкладу известного допустимого пути. Верхняя равна 1, пока более тесная граница не доказана для всей области запроса. |
-| `missing_data` | Нижняя 0, верхняя 1. |
-
-Границы города — те же средние с фиксированным знаменателем, умноженные на 100. `coverage = resolved_cells / total_cells`, где resolved — `ok` и `no_path_in_window`. При полном покрытии города `status = ok`, `score` определён, границы совпадают. При хотя бы одной неразрешённой ячейке `score = null`. `status = partial_data`, если доступны точные вклады или известные пути хотя бы для части ячеек, иначе `missing_data`. Статус набора городов `ok`, если все `ok`, `missing_data`, если все `missing_data`, иначе `partial_data`. Порядок городов с перекрывающимися интервалами нельзя подавать как доказанный рейтинг.
-
-Ошибки `invalid_profile`, `unsupported_schema`, `dataset_not_found`, `profile_not_found` блокируют расчёт. Пустой знаменатель отклоняется как `invalid_profile`. Оценки при разных H публикуются раздельно с явно указанным H и той же сеткой. Повтор одного расчёта с теми же входами сохраняет значения и статусы.
+# AnalysisResult / Metric / Score — schema_version 2
+analysis_id, analysis_kind, request, snapshot_id, methodology_version, config_hash, traffic_mode, status, metrics[], scores[], evidence_refs[], limitations[].
+Metric: metric_id, name, value nullable, unit, status, reason_code, source_refs, population_basis/site_basis where applicable.
+Score: score_id, value nullable (0..100), status=available|unknown|not_applicable|methodology_pending, completeness=full|partial, methodology_version, reason_code, components[], evidence_refs[]. Для текущих четырёх методов version=a2-methodology-v3; methodology_pending не глобальное состояние.
+available допускается только для рассчитанного результата. unknown/not_applicable/methodology_pending требуют value=null. Partial score — результат только явно заявленного поднабора, отдельная карточка, не общий рейтинг.
+Подтверждённая недостижимость в полном графе/окне даёт value=0, available, reason_code=NO_FEASIBLE_ROUTE. Ошибка API/пустой неполный каталог даёт unknown, null, DATA_UNAVAILABLE. Нет выбранных категорий → validation error до запуска.
+Территориальный полный индекс отсутствует при unknown у любой точки с положительным весом или unknown населении. Нулевой знаменатель → not_applicable, ZERO_WEIGHT. Публиковать известные категории отдельно; не перенормировать пропуски как полноценный результат.
+Популяционная оценка хранит population_method, year, coverage и единицу persons. Отсутствие данных отличается от 0 жителей.
+JourneyResult, ReferenceResult и CountResult сохраняют собственные статусы: неизвестный τ не блокирует индекс H; неизвестный эталон блокирует только зависящий от него score.
+На экране 1 знак, сортировка по исходному float; NaN/Infinity запрещены. Demo вынесен из production dataset, не состояние доступности реального score.

@@ -1,0 +1,70 @@
+{
+  "$defs": {
+    "ExplanationSelection": {
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Entity Id",
+          "type": "string"
+        },
+        "entity_kind": {
+          "enum": [
+            "cell",
+            "sample_point",
+            "destination",
+            "freight_site",
+            "freight_node",
+            "access_node",
+            "territory"
+          ],
+          "title": "Entity Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "entity_kind",
+        "entity_id"
+      ],
+      "title": "ExplanationSelection",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "question": {
+      "anyOf": [
+        {
+          "maxLength": 2000,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Question"
+    },
+    "schema_version": {
+      "const": "2",
+      "default": "2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "selection": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ExplanationSelection"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "title": "ExplanationRequest",
+  "type": "object"
+}

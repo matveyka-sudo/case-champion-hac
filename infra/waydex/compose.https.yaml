@@ -1,0 +1,22 @@
+services:
+  api:
+    environment:
+      A2_SECURE_COOKIES: "true"
+
+  web:
+    volumes:
+      - ./nginx.https.conf:/etc/nginx/conf.d/default.conf:ro
+      - type: bind
+        source: ${WAYDEX_CERTBOT_DIR:-/etc/letsencrypt}/live/waydex.mhimf.net
+        target: /etc/letsencrypt/live/waydex.mhimf.net
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${WAYDEX_CERTBOT_DIR:-/etc/letsencrypt}/archive/waydex.mhimf.net
+        target: /etc/letsencrypt/archive/waydex.mhimf.net
+        read_only: true
+        bind:
+          create_host_path: false
+    ports:
+      - "${WAYDEX_HTTPS_BIND:-443}:443"

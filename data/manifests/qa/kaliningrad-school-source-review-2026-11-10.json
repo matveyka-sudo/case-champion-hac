@@ -1,0 +1,220 @@
+{
+  "schema": "a2-school-source-review-v1",
+  "acceptance_state": "research_only",
+  "sources": [
+    {
+      "url": "https://www.klgd.ru/activity/education/institutions/map/index.php",
+      "retrieved_at": "2026-11-10T11:56:27.138474+00:00",
+      "sha256": "b931fdd71a96d15636a16dac437465b71f3d3317f6d4b2e120e72b19aaab69f4",
+      "size_bytes": 322051,
+      "path": "/Users/kirito/waydex-phase2-runtime/ml2/official/klgd-map.html",
+      "raw_redistributed_in_git": false
+    },
+    {
+      "url": "https://www.klgd.ru/activity/education/institutions/schools/index.php?SHOWALL_1=1",
+      "retrieved_at": "2026-11-10T11:54:48.089276+00:00",
+      "sha256": "89808fa312acc81f470a39681c655e1c2f48aa345e6841b1ea2142efaaa54e2f",
+      "path": "/Users/kirito/waydex-phase2-runtime/ml2/official/klgd-schools-all.html",
+      "raw_redistributed_in_git": false
+    },
+    {
+      "url": "https://koiro.edu.ru/region/",
+      "retrieved_at": "2026-11-10T11:58:13.262924+00:00",
+      "sha256": "cc9abd464c518f6ed45ceb5e00ddd1cae6f7933aa1636f16da236f2f9e73f1b6",
+      "size_bytes": 1669956,
+      "path": "/Users/kirito/waydex-phase2-runtime/ml2/official/koiro-region.html",
+      "raw_redistributed_in_git": false
+    },
+    {
+      "url": "https://rostok39.ru/information/info-1.html",
+      "retrieved_at": "2026-11-10T11:56:31.016723+00:00",
+      "sha256": "9b11fae0546172d2775d84516f2351bc6b1fa34d050c341470eef8f87c66e221",
+      "size_bytes": 30247,
+      "path": "/Users/kirito/waydex-phase2-runtime/ml2/official/rostok-basic.html",
+      "raw_redistributed_in_git": false
+    }
+  ],
+  "founder_list_map_reconciliation": [
+    {
+      "institution_id": "4409865",
+      "name": "МАОУ гимназия № 1",
+      "kind": "STREET_NUMBER_CONFLICT",
+      "list_address": "236022, г. Калининград, ул. Кропоткина, 8-10 (корпус 1); ул. Чернышевского, 51 (корпус 2)",
+      "map_points": [
+        {
+          "map_id": "4409865",
+          "address_short": "Кропоткина, 8-10 (корпус 1);  Чернышевского, 61 (корпус 2)",
+          "coordinates": [
+            20.466429441109,
+            54.725707805136
+          ]
+        },
+        {
+          "map_id": "4409867",
+          "address_short": "Чернышевского, 61 (корпус 2)",
+          "coordinates": [
+            20.467161499999957,
+            54.72580006994392
+          ]
+        },
+        {
+          "map_id": "4409866",
+          "address_short": "Кропоткина, 8-10 (корпус 1);",
+          "coordinates": [
+            20.466429441109,
+            54.725707805136
+          ]
+        }
+      ],
+      "finding": "Founder list: Чернышевского51; map: Чернышевского61. Exact site identity needs reconciliation.",
+      "source_urls": [
+        "https://www.klgd.ru/activity/education/institutions/schools/index.php?SHOWALL_1=1",
+        "https://www.klgd.ru/activity/education/institutions/map/index.php"
+      ]
+    },
+    {
+      "institution_id": "4418372",
+      "name": "МАОУ лицей № 23",
+      "kind": "STREET_NUMBER_CONFLICT",
+      "list_address": "236006, г. Калининград, ул. Вагнера, 51",
+      "map_points": [
+        {
+          "map_id": "4418372",
+          "address_short": "Вагнера, 23",
+          "coordinates": [
+            20.499384559199,
+            54.711295378234
+          ]
+        }
+      ],
+      "finding": "Founder list: Вагнера51; map: Вагнера23. Coordinates cannot be silently moved.",
+      "source_urls": [
+        "https://www.klgd.ru/activity/education/institutions/schools/index.php?SHOWALL_1=1",
+        "https://www.klgd.ru/activity/education/institutions/map/index.php"
+      ]
+    },
+    {
+      "institution_id": "4418524",
+      "name": "МАОУ гимназия № 40 им. Ю.А. Гагарина",
+      "kind": "ADDITIONAL_PHYSICAL_SITE_OMITTED_BY_MAP",
+      "list_address": "236001, г. Калининград, ул. Ю. Маточкина, 4 (корпус 1), пер. Рассветный, 5 (корпус 2)",
+      "map_points": [
+        {
+          "map_id": "4418524",
+          "address_short": "Маточкина, д. 4,",
+          "coordinates": [
+            20.489449906983,
+            54.741258820281
+          ]
+        }
+      ],
+      "finding": "Founder list includes second campus Рассветный5; map only Маточкина4. Reviewed correction .3 accepts existing OSM site way1055458688.",
+      "source_urls": [
+        "https://www.klgd.ru/activity/education/institutions/schools/index.php?SHOWALL_1=1",
+        "https://www.klgd.ru/activity/education/institutions/map/index.php"
+      ]
+    },
+    {
+      "institution_id": "4409869",
+      "name": "МАОУ СОШ № 3",
+      "kind": "ADDITIONAL_PHYSICAL_SITE_OMITTED_BY_MAP",
+      "list_address": "236005, г. Калининград, ул. Октябрьская площадь, 28-30 (1 корпус), ул. Березовая, 2 (корпус 2)",
+      "map_points": [
+        {
+          "map_id": "4409869",
+          "address_short": "Октябрьская площадь, 28-30",
+          "coordinates": [
+            20.468836504727,
+            54.677880287469
+          ]
+        }
+      ],
+      "finding": "Founder list includes second campus Березовая2; map has only Октябрьская площадь28-30. Old school39 label is not identity proof.",
+      "source_urls": [
+        "https://www.klgd.ru/activity/education/institutions/schools/index.php?SHOWALL_1=1",
+        "https://www.klgd.ru/activity/education/institutions/map/index.php"
+      ]
+    },
+    {
+      "institution_id": "4409878",
+      "name": "МАОУ СОШ № 12",
+      "kind": "ADDITIONAL_PHYSICAL_SITE_OMITTED_BY_MAP",
+      "list_address": "236039, г. Калининград, ул. Б. Хмельницкого, 115 (корпус 1), ул. Багратиона, 107А (корпус 2)",
+      "map_points": [
+        {
+          "map_id": "4409878",
+          "address_short": "Б. Хмельницкого, 115",
+          "coordinates": [
+            20.51365201524,
+            54.697762535579
+          ]
+        }
+      ],
+      "finding": "Founder list includes Багратиона107А; map has only Б.Хмельницкого115. OSM municipal-name candidates do not by themselves establish site identity.",
+      "source_urls": [
+        "https://www.klgd.ru/activity/education/institutions/schools/index.php?SHOWALL_1=1",
+        "https://www.klgd.ru/activity/education/institutions/map/index.php"
+      ]
+    },
+    {
+      "institution_id": "4409908",
+      "name": "МАОУ лицей № 49",
+      "kind": "ADDITIONAL_PHYSICAL_SITE_OMITTED_BY_MAP",
+      "list_address": "Центральный 236022, г. Калининград, ул. Кирова, 28 (корпус 1); ул. Комсомольская, 67 (корпус 2), ул. Ш.Руставели, 2 (корпус 3)",
+      "map_points": [
+        {
+          "map_id": "4409908",
+          "address_short": "Кирова, 28 (корпус 1); Комсомольская, 67 (корпус 2)",
+          "coordinates": [
+            20.488490595695,
+            54.72685090815
+          ]
+        },
+        {
+          "map_id": "4409910",
+          "address_short": "Комсомольская, 67 (корпус 2)",
+          "coordinates": [
+            20.47779749999998,
+            54.73144056992897
+          ]
+        },
+        {
+          "map_id": "4409909",
+          "address_short": "Кирова, 28 (корпус 1);",
+          "coordinates": [
+            20.48844249999988,
+            54.72682906994656
+          ]
+        }
+      ],
+      "finding": "Founder list includes third campus Ш.Руставели2; map covers Кирова28 and Комсомольская67.",
+      "source_urls": [
+        "https://www.klgd.ru/activity/education/institutions/schools/index.php?SHOWALL_1=1",
+        "https://www.klgd.ru/activity/education/institutions/map/index.php"
+      ]
+    }
+  ],
+  "other_primary_source_findings": [
+    {
+      "source": "koiro-region",
+      "finding": "The relevant tables are federal ЦОС project participant lists dated2020/2021/2022. They identify research leads for regional special schools but cannot prove a current exhaustive roster. Do not promote current ownership/completeness from these old program lists."
+    },
+    {
+      "source": "rostok-basic",
+      "finding": "Own institution page identifies АНО СОШ Росток, individual founders and address Озерная31-А. It supports private-operation research, not acceptance in a public-school category. Names/coordinates alone do not verify exact OSM site identity."
+    }
+  ],
+  "source_fetch_failures": [
+    {
+      "url": "https://koiro.edu.ru/region/",
+      "attempt": 1,
+      "failure": "ReadTimeout",
+      "retry": "HTTP200,1669956bytes captured separately"
+    },
+    {
+      "url": "https://edu.gov.ru/activity/main_activities/limited_health/list_of_organizations/",
+      "failure": "TLS certificate verification failed; no source facts accepted from this attempt"
+    }
+  ],
+  "coverage_conclusion": "No independently established complete public-school physical-site roster for any city/district has been demonstrated. A single verified campus correction is not a complete-category scope."
+}

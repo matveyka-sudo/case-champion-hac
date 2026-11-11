@@ -1,0 +1,87 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "dependency_job_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Dependency Job Id"
+    },
+    "evidence_refs": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "metric_id": {
+      "minLength": 1,
+      "title": "Metric Id",
+      "type": "string"
+    },
+    "reason_code": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Reason Code"
+    },
+    "status": {
+      "enum": [
+        "available",
+        "unknown",
+        "not_applicable",
+        "pending"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "threshold_seconds": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Threshold Seconds"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Value"
+    }
+  },
+  "required": [
+    "metric_id",
+    "threshold_seconds",
+    "value",
+    "status",
+    "reason_code",
+    "dependency_job_id",
+    "evidence_refs"
+  ],
+  "title": "CountResult",
+  "type": "object"
+}

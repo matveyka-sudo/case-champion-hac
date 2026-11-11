@@ -1,0 +1,147 @@
+{
+  "$defs": {
+    "LineGeometry": {
+      "additionalProperties": false,
+      "properties": {
+        "coordinates": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "minItems": 2,
+          "title": "Coordinates",
+          "type": "array"
+        },
+        "evidence_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "type": {
+          "const": "LineString",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "coordinates",
+        "evidence_refs"
+      ],
+      "title": "LineGeometry",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "duration_seconds": {
+      "minimum": 0,
+      "title": "Duration Seconds",
+      "type": "number"
+    },
+    "end_at": {
+      "format": "date-time",
+      "title": "End At",
+      "type": "string"
+    },
+    "evidence_refs": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "from_node_id": {
+      "minLength": 1,
+      "title": "From Node Id",
+      "type": "string"
+    },
+    "geometry": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LineGeometry"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Actual geometry of this movement leg only; does not establish approach or whole-journey geometry."
+    },
+    "kind": {
+      "enum": [
+        "walk",
+        "ride",
+        "wait_initial",
+        "wait_transfer",
+        "handling",
+        "transfer_operation"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "walk",
+        "public_transport",
+        "private_car",
+        "road",
+        "rail",
+        "air",
+        "water",
+        "mixed"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "service_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Service Id"
+    },
+    "start_at": {
+      "format": "date-time",
+      "title": "Start At",
+      "type": "string"
+    },
+    "to_node_id": {
+      "minLength": 1,
+      "title": "To Node Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "mode",
+    "kind",
+    "from_node_id",
+    "to_node_id",
+    "start_at",
+    "end_at",
+    "duration_seconds",
+    "service_id",
+    "evidence_refs"
+  ],
+  "title": "Leg",
+  "type": "object"
+}

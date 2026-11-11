@@ -1,0 +1,45 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "waydex-private-source-validity/1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "observed_at": {
+      "format": "date-time",
+      "title": "Observed At",
+      "type": "string"
+    },
+    "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+    },
+    "usage_scope": {
+      "const": "temporary_provider_service_cache",
+      "title": "Usage Scope",
+      "type": "string"
+    },
+    "authorization_ref": {
+      "minLength": 1,
+      "title": "Authorization Ref",
+      "type": "string"
+    },
+    "purge_policy_ref": {
+      "minLength": 1,
+      "title": "Purge Policy Ref",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "observed_at",
+    "expires_at",
+    "usage_scope",
+    "authorization_ref",
+    "purge_policy_ref"
+  ],
+  "title": "PrivateCachePolicy",
+  "type": "object"
+}

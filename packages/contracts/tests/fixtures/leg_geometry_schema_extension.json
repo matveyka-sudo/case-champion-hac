@@ -1,0 +1,16 @@
+{
+  "added": {},
+  "approval": "Root-approved additive actual movement-leg geometry with evidence closure; omitted null preserves historical payload/result hashes. No journey/time/proof semantics changed.",
+  "replaced": {
+    "manifest.json": "1bf344cdba3fcbfd6bff632f32b24de8414794957154a81ca2601773a915f812",
+    "openapi.json": "28de6de8f49799fda5d81d433372f2eeccf6034e70df8263c4bb115e3ae67cae",
+    "v2.AnalysisResult.serialization.schema.json": "7d88abc7b857aa7e32bb4e4744d3b8aef075e8c13fbbbcd2d5f29dce88b2aa01",
+    "v2.AnalysisResult.validation.schema.json": "7d88abc7b857aa7e32bb4e4744d3b8aef075e8c13fbbbcd2d5f29dce88b2aa01",
+    "v2.JourneyResult.serialization.schema.json": "fb385832dbe198669794d413737555cfc87b38012087c229402d5fc205cc32a9",
+    "v2.JourneyResult.validation.schema.json": "fb385832dbe198669794d413737555cfc87b38012087c229402d5fc205cc32a9",
+    "v2.Leg.serialization.schema.json": "f806b284dfe578473a3ba4255bb746aaa78bd659e2669e8dfa52f2443be9a503",
+    "v2.Leg.validation.schema.json": "f806b284dfe578473a3ba4255bb746aaa78bd659e2669e8dfa52f2443be9a503",
+    "v2.ScenarioResult.serialization.schema.json": "e4abc88fb378b949dd97a4e6cb85b1cc897927000eab44847e72105c819afd3f",
+    "v2.ScenarioResult.validation.schema.json": "e4abc88fb378b949dd97a4e6cb85b1cc897927000eab44847e72105c819afd3f"
+  }
+}

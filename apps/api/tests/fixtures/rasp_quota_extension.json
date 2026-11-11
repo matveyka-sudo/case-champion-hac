@@ -1,0 +1,49 @@
+{
+  "approval": "Required durable Rasp wire guard and central account/day quota approved by integration architect; historical baseline unchanged.",
+  "module": "db/repositories/rasp_quota.py",
+  "signatures": {
+    "a2_api.providers.rasp:RaspError": "(code: Literal['disabled', 'invalid_request', 'quota_exceeded', 'quota_unavailable', 'timeout', 'rate_limited', 'upstream_error', 'invalid_response', 'redirect_rejected'], *, retryable: bool = False) -> None",
+    "a2_api.providers.rasp:RaspError.__init__": "(self, code: Literal['disabled', 'invalid_request', 'quota_exceeded', 'quota_unavailable', 'timeout', 'rate_limited', 'upstream_error', 'invalid_response', 'redirect_rejected'], *, retryable: bool = False) -> None",
+    "a2_api.providers.rasp:RaspIssue": "(*, code: Literal['disabled', 'invalid_request', 'quota_exceeded', 'quota_unavailable', 'timeout', 'rate_limited', 'upstream_error', 'invalid_response', 'redirect_rejected'], retryable: bool) -> None",
+    "a2_api.providers.rasp:RaspProvider": "(client: httpx.AsyncClient, *, api_key: str | pydantic.types.SecretStr | None, host: Literal['api.rasp.yandex-net.ru', 'api.rasp.yandex.net'] = 'api.rasp.yandex-net.ru', timeout_seconds: float = 10, operation_timeout_seconds: float = 60, requests_per_second: float = 1, max_concurrency: int = 1, request_quota: int = 100, max_pages: int = 32, page_size: int = 100, cache_ttl_seconds: float = 300, max_cache_entries: int = 128, max_response_bytes: int = 2097152, clock: collections.abc.Callable[[], float] = <built-in function monotonic>, sleep: collections.abc.Callable[[float], collections.abc.Awaitable[None]] = <function sleep at 0x10626bd80>, wire_quota: a2_api.core.rasp_quota.WireAttemptQuota | None = None, on_page_capture: collections.abc.Callable[[a2_api.providers.rasp_capture.PageCapture], collections.abc.Awaitable[None]] | None = None) -> None",
+    "a2_api.providers.rasp:RaspProvider.__init__": "(self, client: httpx.AsyncClient, *, api_key: str | pydantic.types.SecretStr | None, host: Literal['api.rasp.yandex-net.ru', 'api.rasp.yandex.net'] = 'api.rasp.yandex-net.ru', timeout_seconds: float = 10, operation_timeout_seconds: float = 60, requests_per_second: float = 1, max_concurrency: int = 1, request_quota: int = 100, max_pages: int = 32, page_size: int = 100, cache_ttl_seconds: float = 300, max_cache_entries: int = 128, max_response_bytes: int = 2097152, clock: collections.abc.Callable[[], float] = <built-in function monotonic>, sleep: collections.abc.Callable[[float], collections.abc.Awaitable[None]] = <function sleep at 0x10626bd80>, wire_quota: a2_api.core.rasp_quota.WireAttemptQuota | None = None, on_page_capture: collections.abc.Callable[[a2_api.providers.rasp_capture.PageCapture], collections.abc.Awaitable[None]] | None = None) -> None"
+  },
+  "sql_call_hashes": {
+    "036fcda1f4ec3ba4d18b76b72cfb21576ff0657f2d1a7ff35794d2075c23b78a": 1,
+    "0a9d70658faf5ab845d9c7a58d6e33ce028fae8ae1c037c504955976503f1f27": 1,
+    "0def6c45fe581d1ba599ed15883c733541eaf7faf47625d3e48ef69913911439": 2,
+    "0e2ff1712346431e4e07749b0396b1c9036b2750d9e4264d02f71f9e4a3ae2d6": 1,
+    "2f647d6c2ad05b4b5b33e937f3306f0926d795319403d7af15bfac86a264cc29": 1,
+    "3478a267add26002a300910c61c7ca2d5112bd5f2df97ef991c42bdb4fa50750": 1,
+    "3c429c4403df025a939e76874b58a7932c2a33f54ba7382bf2d686ccb97f6134": 1,
+    "4e752011e3888ef686f6804ab7c44410fbe261bd8700efc2439fe1c3c1966675": 1,
+    "57f500701e6042786e6edcca7e91a99ecff992026ec185605ddd175e016d86f4": 1,
+    "69798c3144132117017e526f1553c60569a98d4762bb2e8decd7361cb4fdf68c": 1,
+    "69cb72f49f5cf9ccb453890514391ea833127e244a94a4f97c58180a7281b43a": 2,
+    "7657e78b93d33e14d2d079d9b309d5770f19c0041eadb9e34f25c13e973f3832": 1,
+    "7e00fbc052422e42c676f955de8306c2a79033ba3c9e3dbc01a941d63b595f9c": 1,
+    "8075f7bd38515078c3804e93455deca4a5bcf2af2d229497f3439357bf00e4c6": 1,
+    "858b04a55dce21576ee92067b603efbcec14d9d643db3333f0935e7f851e9baf": 1,
+    "96c199e1574365f0008f53c7bd0c74d87de28cabfe19bde738e66cbf6dc0d5b1": 2,
+    "c632e00ca991636d612ae9d87d11579107aca639064f576a63e18f04e7fa891f": 1,
+    "ca41348dec7d3c8e384b37017f750f89fb976ea5efb0c43a86db988dcba05c10": 1,
+    "cd4d51af42417ce41c95c18d8962f2fefdf21f3ac81788bcb32cc69ca063b4c4": 1,
+    "d3552aba39fc88c226a6df14715d2a70cb55cb21544812be352c178fe6f5f556": 3
+  },
+  "sql_literals": {
+    "INSERT INTO rasp_quota_accounts(account_id,ledger_scope_id,quota_timezone) VALUES($1,$2,$3) ON CONFLICT DO NOTHING": 1,
+    "INSERT INTO rasp_quota_attempts(reservation_id,account_id,quota_day,credential_fingerprint,request_fingerprint,day_reserved_total,reserved_at) VALUES($1,$2,$3,$4,$5,$6,$7)": 1,
+    "INSERT INTO rasp_quota_credentials(credential_fingerprint,account_id) VALUES($1,$2) ON CONFLICT DO NOTHING": 1,
+    "INSERT INTO rasp_quota_days(account_id,quota_day,window_start,window_end,allowance,already_used,baseline_ref,exclusive_usage_attested) VALUES($1,$2,$3,$4,$5,$6,$7,true)": 1,
+    "SELECT * FROM rasp_quota_accounts WHERE account_id=$1": 2,
+    "SELECT * FROM rasp_quota_accounts WHERE account_id=$1 FOR UPDATE": 2,
+    "SELECT * FROM rasp_quota_days WHERE account_id=$1 AND quota_day=$2": 2,
+    "SELECT * FROM rasp_quota_days WHERE account_id=$1 AND quota_day=$2 FOR UPDATE": 2,
+    "SELECT 1 FROM rasp_quota_attempts WHERE reservation_id=$1": 1,
+    "SELECT account_id FROM rasp_quota_credentials WHERE credential_fingerprint=$1": 2,
+    "SELECT clock_timestamp()": 3,
+    "SELECT reservation_id,request_fingerprint,quota_day,reserved_at,day_reserved_total FROM rasp_quota_attempts WHERE account_id=$1 AND quota_day=$2 AND reservation_id=ANY($3::text[]) ORDER BY day_reserved_total": 1,
+    "UPDATE rasp_quota_days SET blocked=true WHERE account_id=$1 AND quota_day=$2": 1,
+    "UPDATE rasp_quota_days SET reserved_count=reserved_count+1 WHERE account_id=$1 AND quota_day=$2 AND NOT blocked AND already_used+reserved_count<allowance AND already_used+reserved_count<500 AND window_start<=clock_timestamp() AND clock_timestamp()+$3::double precision*interval '1 second'<window_end RETURNING already_used+reserved_count AS day_reserved_total,clock_timestamp() AS reserved_at,window_end": 1
+  }
+}

@@ -1,21 +1,12 @@
-# Спецификации контрактов A2
+# Контракты A2
+Канонические DTO реализованы в `a2_contracts.v2`; текущий HTTP и схемы публикуются в `contracts/generated`. Владельцы: BACKEND, семантика ML1/ML2. Канонический scope: ../../../docs/PRODUCT_SPEC.md.
+- analysis-profile.md: запрос и конфигурация
+- dataset-snapshot.md: входные данные
+- route-result.md: временная цепочка
+- accessibility-result.md: метрики, утверждённый индекс и состояния данных
+- scenario.md: предложение и пересчёт
+- assistant-result.md: объяснение
+- api.md: jobs и endpoints
+Datetime ISO8601 с offset; длительности seconds, отображение minutes; координаты lon/lat EPSG:4326; единицы у каждой метрики. null не ноль. Запрещены NaN/Infinity. Версия схемы независима от версии методики и snapshot.
 
-BACKEND владеет каноническими схемами. ML1 согласует смысл транспортных полей, ML2 согласует данные и ответы ассистента. Эти Markdown-спецификации задают первый интерфейс. Потребители согласуют изменения до генерации OpenAPI и JSON Schema.
-
-| Контракт | Производитель → потребители |
-| --- | --- |
-| [DatasetSnapshot](dataset-snapshot.md) | ML2 → ML1, BACKEND |
-| [AnalysisProfile](analysis-profile.md) | ML1 → engine, BACKEND, ML2, FRONTEND |
-| [RouteResult](route-result.md) | ML1 → BACKEND, FRONTEND, ML2 |
-| [AccessibilityResult](accessibility-result.md) | ML1 → BACKEND, FRONTEND, ML2 |
-| [ScenarioRequest / ScenarioResult](scenario.md) | BACKEND или ML2 формирует запрос → ML1 вычисляет → BACKEND, FRONTEND и ML2 читают результат |
-| [AssistantResult](assistant-result.md) | ML2 → BACKEND, FRONTEND, evals ML2 |
-
-## Общие правила представления
-
-- `schema_version` обязателен для верхнеуровневых объектов. Версия схемы, версия набора, версия алгоритма и версия профиля независимы. У результата расчёта обязательны `run_id`, `dataset_version`, `algorithm_version`, `profile_ref = {profile_id, profile_version}` и `provenance`. `run_id` ссылается на неизменяемый расчёт.
-- `provenance` расчёта содержит `data_origin`, `source_ids`, `assumption_ids` и `coverage_gap_ids`. Коллекции могут быть пусты, если ссылки соответствующего вида отсутствуют. Для синтетических и смешанных данных признак сохраняется на всех уровнях. Источники и допущения разрешаются в сохранённой версии snapshot или сценария.
-- ID — непустые стабильные строки в пределах типа. JSON не содержит `NaN` или `Infinity`. `null` разрешён там, где спецификация явно обозначает отсутствие значения. Порядок массивов значим для остановок, шагов маршрута и изменений сценария.
-- В API timestamp передаётся в RFC 3339 с offset. Моменты маршрута для пилота отображаются в `Europe/Kaliningrad`. `service_date` — локальная дата обслуживания по расписанию, которая может отличаться от календарной даты события. Технические timestamps хранения и загрузки в UTC.
-- Длительности расчёта хранятся в секундах, поля `*_minutes` выражают минуты; округление делается только для UI. Координаты WGS84 в порядке долгота, широта. Расстояния в метрах, разности индекса в пунктах шкалы 0–100, покрытие как доля 0–1.
-- Ошибка, препятствующая расчёту или публикации, возвращается отдельно в `Error` с обязательными `schema_version`, `code`, `message`, `trace_id` и `details`. `details` может содержать имена полей, ID версий или допущений. Коды задаются контрактами. Состояния данных и валидный `no_path_in_window` передаются в `status` результата. Технические причины диагностируются через `trace_id`.
+Версия контрактов 2: approved methodology и полнота данных разделены. OpenAPI строится из production router; наличие схемы не подтверждает готовность реальных данных и engine. Порядок интеграции — docs/IMPLEMENTATION.md.

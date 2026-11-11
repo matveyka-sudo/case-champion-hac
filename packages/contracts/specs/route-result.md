@@ -1,18 +1,8 @@
-# RouteResult
+# JourneyResult
+origin_node_id, destination_node_id, departure_at, arrival_at, total_seconds, legs, geometry, status, reason_code, snapshot_id.
+Leg: mode, from_node_id, to_node_id, start_at, end_at, duration_seconds, service_id при наличии. Начальное ожидание отдельно от ожидания пересадки; total включает каждый интервал один раз. Не добавлять второй штраф за пересадку.
+Карточка точки включает destination_object_id ближайшего подходящего объекта по времени. Межгород не включает путь из дома к первому узлу. Для грузов time_kind=movement|complete_chain; complete_chain допустим только при учёте всех этапов. Трубопровод не получает фиктивный дорожный JourneyResult.
 
-ML1 рассчитывает маршрут между опорными точками городов на версии snapshot и профиля. BACKEND публикует и сохраняет результат, FRONTEND показывает этапы поездки, ML2 использует их для обоснования ответа.
-
-Обязательные поля — общие версии, `run_id`, `route_result_id`, `provenance`, `origin_city_id`, `destination_city_id`, `requested_departure_at`, `deadline_at`, `status`, `arrival_at`, `total_minutes`, `components_minutes`, `legs`, `transfer_count`. Время запроса и этапов с offset, горизонт считается от `requested_departure_at`. Поездка должна завершиться в опорной точке назначения не позже `deadline_at`.
-
-`components_minutes` содержит `access`, `initial_wait`, `ride`, `interchange`, `egress`. В `interchange` входят обязательный путь, буфер и остаточное ожидание. Их сумма вместе с остальными компонентами равна `total_minutes`. Каждая секунда интервала учитывается один раз. Продолжение внутри того же рейса включает стоянку в `ride`, если пассажир может остаться на борту. `transfer_count` считает смены между транспортными рейсами, включая пересадки между остановками.
-
-Каждый `leg` содержит `kind`, `from_ref`, `to_ref`, `start_at`, `end_at`, `duration_minutes`, `source_ids`, `assumption_ids`. У транспортного участка также `mode`, `route_id`, `trip_id`, `service_date` и номера начального и конечного события остановок. У пешего перехода — ID перехода. Порядок этапов отражает порядок пути.
-
-| `status` | Смысл и заполнение |
-| --- | --- |
-| `ok` | Допустимый earliest-arrival путь подтверждён в области профиля. Заполнены время, этапы и компоненты. |
-| `partial_data` | Допустимый путь в подтверждённой части известен. Есть время и этапы этого пути, а пробелы могут скрывать более быстрый путь. `provenance.coverage_gap_ids` указывает пробелы. |
-| `missing_data` | Подтверждённого пути нет и неопределённость не даёт доказать его отсутствие. Времена прибытия, компоненты, `transfer_count` и `total_minutes` равны `null`, `legs` пуст. |
-| `no_path_in_window` | Достаточное покрытие доказывает отсутствие допустимого пути в заданном окне и области. Те же поля пути равны `null`, `legs` пуст. |
-
-`invalid_route_request` — невалидный старт, одинаковые города, отсутствующие ID или несовместимый профиль. Отсутствие snapshot или профиля возвращается как `dataset_not_found` или `profile_not_found`. Сервисный сбой и таймаут не интерпретируются как статус маршрута.
+Дополнительно: requested_departure_at, initial_wait_seconds, path_seconds, total_wait_seconds, time_kind, completeness, traffic_mode, reference_id, boundary_nodes, evidence_refs. Межгородской total=initial_wait+path; городской total=sum legs. Временные интервалы не пересекаются, transfer walk не повторяется как wait.
+ReferenceResult: reference_id, seconds nullable, status, completeness, profile_version, graph_version, boundary_node_sets, edges, necessary_operations, calibration_evidence.
+LastReturn: local service_date, leave_at, first_departure_at, arrival_at; first_departure в выбранный день, arrival может быть позже; walk_only → not_applicable.

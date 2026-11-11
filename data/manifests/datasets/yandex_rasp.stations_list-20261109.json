@@ -1,0 +1,38 @@
+{
+  "dataset_id": "yandex_rasp.stations_list-20261109",
+  "source_id": "yandex_rasp",
+  "source_url": "https://api.rasp.yandex.net/v3.0/stations_list/?lang=ru_RU&format=json",
+  "retrieved_at": "2026-11-09T20:32:09Z",
+  "publication_date": null,
+  "valid_from": null,
+  "valid_to": null,
+  "geography": "Все страны справочника; используется только Россия (l225)",
+  "license": {
+    "name": "Условия использования API Яндекс.Расписаний (https://yandex.ru/legal/rasp_api/): хранение только как кэш для работы сервиса (п. 3.2.4), обязательная ссылка «Данные предоставлены сервисом Яндекс.Расписания» (п. 2.3.5), только бесплатный открытый сайт (п. 2.3.2)",
+    "url": "https://yandex.ru/legal/rasp_api/",
+    "status": "restricted",
+    "attribution": "Данные предоставлены сервисом Яндекс.Расписания, https://rasp.yandex.ru/"
+  },
+  "access_method": "api",
+  "raw_path": "yandex_rasp/stations_list-20261109.json",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "18b7382af2eab939d230ce1d7c7ad21ee411d168ff9f6e7481bf0f7dbcd6e5c5",
+    "size_bytes": 34444834
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "countries[].regions[].settlements[].codes.yandex_code": "код населённого пункта c… для поиска рейсов",
+    "...stations[].codes.yandex_code": "код станции s…",
+    "...stations[].codes.esr_code": "код ЕСР (привязка ж/д узлов)",
+    "...stations[].station_type, transport_type, longitude, latitude": "вид станции и место (привязка аэропортов и автовокзалов)"
+  },
+  "coverage": "Ответ stations_list на дату загрузки: 94 109 станций в России, у 13 221 есть код ЕСР; IATA у аэропортов нет",
+  "limitations": [
+    "Скачан пользователем со своим ключом; ключ в репозитории не хранится",
+    "Кэш по условиям API: raw и привязки не кладутся в git",
+    "Справочник станций — не расписание: отправления подтверждает только запрос рейсов"
+  ],
+  "status": "validated",
+  "qa_report": "data/manifests/qa/rasp-bindings-2026-11-09.1.json"
+}

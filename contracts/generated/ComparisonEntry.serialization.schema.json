@@ -1,0 +1,232 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "after": {
+      "anyOf": [
+        {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            }
+          ],
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "After"
+    },
+    "base_run_id": {
+      "minLength": 1,
+      "title": "Base Run Id",
+      "type": "string"
+    },
+    "before": {
+      "anyOf": [
+        {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            }
+          ],
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Before"
+    },
+    "confirmed_improved_cases": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Confirmed Improved Cases"
+    },
+    "confirmed_worse_cases": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Confirmed Worse Cases"
+    },
+    "delta_interval_conservative": {
+      "anyOf": [
+        {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Delta Interval Conservative"
+    },
+    "lower_bound_change": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Lower Bound Change"
+    },
+    "origin_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Origin Id"
+    },
+    "profile_id": {
+      "enum": [
+        "regular",
+        "medical",
+        "intercity"
+      ],
+      "title": "Profile Id",
+      "type": "string"
+    },
+    "profile_version": {
+      "exclusiveMinimum": 0,
+      "title": "Profile Version",
+      "type": "integer"
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Reason"
+    },
+    "scenario_run_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Scenario Run Id"
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "partial",
+        "insufficient_data"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "task_set_hash": {
+      "minLength": 1,
+      "title": "Task Set Hash",
+      "type": "string"
+    },
+    "unresolved_cases": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Unresolved Cases"
+    },
+    "upper_bound_change": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Upper Bound Change"
+    },
+    "worst_worsened_case_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Worst Worsened Case Ids",
+      "type": "array"
+    }
+  },
+  "required": [
+    "profile_id",
+    "profile_version",
+    "task_set_hash",
+    "base_run_id",
+    "scenario_run_id",
+    "origin_id",
+    "status",
+    "before",
+    "after",
+    "lower_bound_change",
+    "upper_bound_change",
+    "delta_interval_conservative",
+    "confirmed_improved_cases",
+    "confirmed_worse_cases",
+    "unresolved_cases",
+    "worst_worsened_case_ids",
+    "reason"
+  ],
+  "title": "ComparisonEntry",
+  "type": "object"
+}

@@ -1,3 +1,3 @@
 # ML2
 
-Own source manifests, snapshots, fixtures, and local documentation. Keep raw sources immutable and preserve licenses, validity, digests, and retrieval timestamps. Store large or restricted inputs outside Git and keep small redistributable fixtures clearly labeled. All `pyproject.toml` files and the root `uv.lock` belong to DEVOPS.
+Own raw and normalized data, manifests, evidence and the coverage record. Keep original inputs immutable. Track rights, source record IDs, dates and hashes. Publish only small redistributable data in Git and label research and synthetic inputs. Coordinate accepted bundle and coverage claims with BACKEND and ML1. DEVOPS owns every Python manifest and the root lock.

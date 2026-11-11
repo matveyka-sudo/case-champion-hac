@@ -1,3 +1,2 @@
 # FRONTEND
-
-Own `apps/web/`, including its npm manifest, lock, tests, and local documentation. Use the published OpenAPI schema and generate client types under this directory. Show incomplete coverage and distinguish missing data from confirmed no path. Keep source links and run versions visible where they explain a result. Ask BACKEND for schema changes. Any `pyproject.toml` and the root `uv.lock` belong to DEVOPS.
+Own apps/web/ on work/frontend. Read docs/PRODUCT_SPEC.md and docs/tasks/frontend.md. Preserve null/pending/unknown states. No score formula in the client. Only backend-approved scenarios can be run. Generate client types from contracts/generated/openapi.json with npm run api:generate; check freshness with npm run api:check.
