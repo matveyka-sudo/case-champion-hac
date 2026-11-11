@@ -2,7 +2,7 @@
 
 from dataclasses import replace
 
-from a2_engine.intercity.analysis.models import PhysicalService, TransportModeBinding
+from a2_engine.intercity.analysis.models import PhysicalService, PublicMode, TransportModeBinding
 from a2_engine.routing.timetable_models import Timetable, TimetableRun, TimetableTransfer, refs
 
 
@@ -14,6 +14,8 @@ def normalize_physical_services(
     mode_map = {b.transport_type: b.mode for b in bindings}
     if len(mode_map) != len(bindings):
         raise ValueError("DUPLICATE_TRANSPORT_TYPE_BINDING")
+    provider_types = mode_map.keys() | {run.transport_type for run in timetable.runs}
+    generated_modes: dict[str, PublicMode] = {}
     runs = {r.run_id: r for r in timetable.runs}
     remap: dict[str, str] = {}
     normalized: list[TimetableRun] = []
@@ -52,10 +54,11 @@ def normalize_physical_services(
         kind = (
             "physical:" + mode if mode is not None else "unmapped-physical:" + first.transport_type
         )
-        if mode is not None and kind in mode_map and mode_map[kind] != mode:
+        # A generated label must not change the meaning of an input label.
+        if kind in provider_types and mode_map.get(kind) != mode:
             raise ValueError("RESERVED_PHYSICAL_TRANSPORT_TYPE")
         if mode is not None:
-            mode_map[kind] = mode
+            generated_modes[kind] = mode
         events = tuple(
             replace(
                 e,
@@ -119,6 +122,6 @@ def normalize_physical_services(
         rules[pattern] = mapped
     return (
         replace(timetable, runs=tuple(normalized), transfers=tuple(rules.values())),
-        tuple(sorted(mode_map.items())),
+        tuple(sorted((mode_map | generated_modes).items())),
         departures,
     )
