@@ -9,6 +9,7 @@ from a2_api.adapters.demo_map import attach_demo_result
 from a2_api.adapters.demo_transport import DEMO_LIMITATIONS
 from a2_api.adapters.product_runtime import FileRef
 from a2_contracts.common import canonical_hash
+from a2_contracts.v2.dataset import AcceptedData
 from test_demo_transport import CLOCK
 from test_demo_transport import demo as demo
 from test_product_runtime import claim_for, request_for
@@ -133,3 +134,25 @@ def test_demo_map_rejects_disabled_mode_and_foreign_city(transport_facts, demo, 
     monkeypatch.setenv("A2_DEMO_TRANSPORT_ENABLED", "false")
     with pytest.raises(ValueError, match="DEPLOYMENT_DISABLED"):
         attach_demo_result(result, snapshot)
+
+
+@pytest.mark.parametrize("collection", ["destinations", "population_cells"])
+def test_accepted_repeated_evidence_does_not_break_demo_map(
+    transport_facts, demo, monkeypatch, collection
+):
+    test_actual_product_output_keeps_model_labels_map_and_source_population(
+        transport_facts, demo, monkeypatch
+    )
+    snapshot = demo[0]
+    result = product.calculate(claim_for(snapshot, request_for(snapshot)))
+    payload = snapshot.model_dump(mode="json")
+    source_refs = payload[collection][0]["source_refs"]
+    source_refs.append(source_refs[0])
+    accepted = AcceptedData.model_validate(payload)
+    decorated = attach_demo_result(result, accepted)
+    assert decorated.map_data == result.map_data
+    assert decorated.result_hash == result.result_hash
+    assert all(
+        len(feature.source_refs) == len(set(feature.source_refs))
+        for feature in decorated.map_data.features
+    )

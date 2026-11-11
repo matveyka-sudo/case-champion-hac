@@ -66,7 +66,7 @@ def attach_demo_result(result: AnalysisResult, snapshot: AcceptedData) -> Analys
                 population_method=cell.population_method
                 if cell.cell_id not in represented_cells
                 else None,
-                source_refs=cell.source_refs,
+                source_refs=list(dict.fromkeys(cell.source_refs)),
             )
         )
     for destination in snapshot.destinations:
@@ -81,7 +81,7 @@ def attach_demo_result(result: AnalysisResult, snapshot: AcceptedData) -> Analys
                     type="Point", coordinates=(destination.location.lon, destination.location.lat)
                 ),
                 geometry_kind="actual",
-                source_refs=destination.source_refs,
+                source_refs=list(dict.fromkeys(destination.source_refs)),
             )
         )
     values = result.model_dump(mode="json")

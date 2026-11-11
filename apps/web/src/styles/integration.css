@@ -367,3 +367,90 @@
   fill: var(--surface);
   stroke: var(--line-2);
 }
+
+.api-preset-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.api-preset-options .iconbtn {
+  height: auto;
+  min-height: 40px;
+  padding: 8px 12px;
+  white-space: normal;
+}
+.api-preset-options .fhint {
+  flex-basis: 100%;
+}
+.api-quick-presets {
+  gap: 6px;
+}
+.api-quick-presets .iconbtn {
+  min-height: 34px;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+@media (max-width: 767px) {
+  .api-quick-presets .iconbtn {
+    min-height: 44px;
+  }
+}
+.api-workflow {
+  height: 100dvh;
+  overflow: auto;
+  padding-block: 24px 48px;
+}
+.api-workflow h1,
+.api-training-result h2 {
+  margin-block: 18px 10px;
+}
+.api-workflow-items,
+.api-training-controls,
+.api-training-values {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: 12px;
+}
+.api-workflow-items {
+  list-style: none;
+  padding: 0;
+}
+.api-workflow-items li,
+.api-training-result {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.api-workflow-items li {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  justify-items: start;
+}
+.api-training-controls {
+  align-items: end;
+  margin-block: 18px;
+}
+.api-training-controls select {
+  margin-top: 6px;
+}
+.api-training-route {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px;
+  list-style: none;
+  color: var(--text);
+  background: var(--accent-soft);
+  border-radius: var(--r-sm);
+}
+.api-training-route li + li::before {
+  content: "→";
+  margin-inline-end: 10px;
+}
+.api-training-values dd {
+  font-weight: 800;
+  margin: 4px 0 0;
+}

@@ -1,0 +1,1823 @@
+{
+  "analysis": {
+    "counts": [],
+    "scores": [
+      {
+        "name": "delivery_index",
+        "value": 0.0,
+        "status": "available",
+        "subject": {
+          "kind": "city_pair",
+          "mode": "air",
+          "node_id": null,
+          "site_id": null,
+          "category": null,
+          "point_id": null,
+          "origin_id": "territory-A",
+          "territory_id": null,
+          "destination_id": "territory-B"
+        },
+        "score_id": "delivery-air",
+        "components": [],
+        "reason_code": "NO_FEASIBLE_ROUTE",
+        "completeness": "full",
+        "evidence_refs": [
+          "synthetic-proof"
+        ],
+        "calculation_kind": "delivery_deadline",
+        "ranking_eligible": false,
+        "aggregation_basis": null,
+        "methodology_version": "a2-methodology-v3"
+      },
+      {
+        "name": "delivery_index",
+        "value": 0.0,
+        "status": "available",
+        "subject": {
+          "kind": "city_pair",
+          "mode": "rail",
+          "node_id": null,
+          "site_id": null,
+          "category": null,
+          "point_id": null,
+          "origin_id": "territory-A",
+          "territory_id": null,
+          "destination_id": "territory-B"
+        },
+        "score_id": "delivery-rail",
+        "components": [],
+        "reason_code": "NO_FEASIBLE_ROUTE",
+        "completeness": "full",
+        "evidence_refs": [
+          "synthetic-proof"
+        ],
+        "calculation_kind": "delivery_deadline",
+        "ranking_eligible": false,
+        "aggregation_basis": null,
+        "methodology_version": "a2-methodology-v3"
+      },
+      {
+        "name": "delivery_index",
+        "value": 0.0,
+        "status": "available",
+        "subject": {
+          "kind": "city_pair",
+          "mode": "road",
+          "node_id": null,
+          "site_id": null,
+          "category": null,
+          "point_id": null,
+          "origin_id": "territory-A",
+          "territory_id": null,
+          "destination_id": "territory-B"
+        },
+        "score_id": "delivery-road",
+        "components": [],
+        "reason_code": "NO_FEASIBLE_ROUTE",
+        "completeness": "full",
+        "evidence_refs": [
+          "synthetic-proof"
+        ],
+        "calculation_kind": "delivery_deadline",
+        "ranking_eligible": false,
+        "aggregation_basis": null,
+        "methodology_version": "a2-methodology-v3"
+      },
+      {
+        "name": "delivery_index",
+        "value": 0.0,
+        "status": "available",
+        "subject": {
+          "kind": "city_pair",
+          "mode": "water",
+          "node_id": null,
+          "site_id": null,
+          "category": null,
+          "point_id": null,
+          "origin_id": "territory-A",
+          "territory_id": null,
+          "destination_id": "territory-B"
+        },
+        "score_id": "delivery-water",
+        "components": [],
+        "reason_code": "NO_FEASIBLE_ROUTE",
+        "completeness": "full",
+        "evidence_refs": [
+          "synthetic-proof"
+        ],
+        "calculation_kind": "delivery_deadline",
+        "ranking_eligible": false,
+        "aggregation_basis": null,
+        "methodology_version": "a2-methodology-v3"
+      },
+      {
+        "name": "delivery_index",
+        "value": 50.0,
+        "status": "available",
+        "subject": {
+          "kind": "city_pair",
+          "mode": "mixed",
+          "node_id": null,
+          "site_id": null,
+          "category": null,
+          "point_id": null,
+          "origin_id": "territory-A",
+          "territory_id": null,
+          "destination_id": "territory-B"
+        },
+        "score_id": "delivery-mixed",
+        "components": [
+          {
+            "id": "delivery-mixed-time",
+            "kind": "metric"
+          }
+        ],
+        "reason_code": null,
+        "completeness": "full",
+        "evidence_refs": [
+          "synthetic-proof"
+        ],
+        "calculation_kind": "delivery_deadline",
+        "ranking_eligible": true,
+        "aggregation_basis": null,
+        "methodology_version": "a2-methodology-v3"
+      },
+      {
+        "name": "delivery_index",
+        "value": 50.0,
+        "status": "available",
+        "subject": {
+          "kind": "city_pair",
+          "mode": "mixed",
+          "node_id": null,
+          "site_id": null,
+          "category": null,
+          "point_id": null,
+          "origin_id": "territory-A",
+          "territory_id": null,
+          "destination_id": "territory-B"
+        },
+        "score_id": "delivery-overall",
+        "components": [
+          {
+            "id": "delivery-overall-time",
+            "kind": "metric"
+          }
+        ],
+        "reason_code": null,
+        "completeness": "full",
+        "evidence_refs": [
+          "synthetic-proof"
+        ],
+        "calculation_kind": "delivery_deadline",
+        "ranking_eligible": true,
+        "aggregation_basis": null,
+        "methodology_version": "a2-methodology-v3"
+      }
+    ],
+    "status": "available",
+    "metrics": [
+      {
+        "name": "complete_delivery_seconds",
+        "unit": "seconds",
+        "value": null,
+        "status": "not_applicable",
+        "subject": {
+          "kind": "city_pair",
+          "mode": "air",
+          "node_id": null,
+          "site_id": null,
+          "category": null,
+          "point_id": null,
+          "origin_id": "territory-A",
+          "territory_id": null,
+          "destination_id": "territory-B"
+        },
+        "metric_id": "delivery-air-time",
+        "time_kind": "complete_chain",
+        "journey_id": null,
+        "site_basis": null,
+        "reason_code": "NO_FEASIBLE_ROUTE",
+        "source_refs": [
+          "synthetic-proof"
+        ],
+        "completeness": "full",
+        "population_basis": null,
+        "dependency_job_id": null
+      },
+      {
+        "name": "movement_seconds",
+        "unit": "seconds",
+        "value": null,
+        "status": "not_applicable",
+        "subject": {
+          "kind": "city_pair",
+          "mode": "air",
+          "node_id": null,
+          "site_id": null,
+          "category": null,
+          "point_id": null,
+          "origin_id": "territory-A",
+          "territory_id": null,
+          "destination_id": "territory-B"
+        },
+        "metric_id": "delivery-air-movement",
+        "time_kind": "movement",
+        "journey_id": null,
+        "site_basis": null,
+        "reason_code": "NO_FEASIBLE_ROUTE",
+        "source_refs": [
+          "synthetic-proof"
+        ],
+        "completeness": "full",
+        "population_basis": null,
+        "dependency_job_id": null
+      },
+      {
+        "name": "complete_delivery_seconds",
+        "unit": "seconds",
+        "value": null,
+        "status": "not_applicable",
+        "subject": {
+          "kind": "city_pair",
+          "mode": "rail",
+          "node_id": null,
+          "site_id": null,
+          "category": null,
+          "point_id": null,
+          "origin_id": "territory-A",
+          "territory_id": null,
+          "destination_id": "territory-B"
+        },
+        "metric_id": "delivery-rail-time",
+        "time_kind": "complete_chain",
+        "journey_id": null,
+        "site_basis": null,
+        "reason_code": "NO_FEASIBLE_ROUTE",
+        "source_refs": [
+          "synthetic-proof"
+        ],
+        "completeness": "full",
+        "population_basis": null,
+        "dependency_job_id": null
+      },
+      {
+        "name": "movement_seconds",
+        "unit": "seconds",
+        "value": null,
+        "status": "not_applicable",
+        "subject": {
+          "kind": "city_pair",
+          "mode": "rail",
+          "node_id": null,
+          "site_id": null,
+          "category": null,
+          "point_id": null,
+          "origin_id": "territory-A",
+          "territory_id": null,
+          "destination_id": "territory-B"
+        },
+        "metric_id": "delivery-rail-movement",
+        "time_kind": "movement",
+        "journey_id": null,
+        "site_basis": null,
+        "reason_code": "NO_FEASIBLE_ROUTE",
+        "source_refs": [
+          "synthetic-proof"
+        ],
+        "completeness": "full",
+        "population_basis": null,
+        "dependency_job_id": null
+      },
+      {
+        "name": "complete_delivery_seconds",
+        "unit": "seconds",
+        "value": null,
+        "status": "not_applicable",
+        "subject": {
+          "kind": "city_pair",
+          "mode": "road",
+          "node_id": null,
+          "site_id": null,
+          "category": null,
+          "point_id": null,
+          "origin_id": "territory-A",
+          "territory_id": null,
+          "destination_id": "territory-B"
+        },
+        "metric_id": "delivery-road-time",
+        "time_kind": "complete_chain",
+        "journey_id": null,
+        "site_basis": null,
+        "reason_code": "NO_FEASIBLE_ROUTE",
+        "source_refs": [
+          "synthetic-proof"
+        ],
+        "completeness": "full",
+        "population_basis": null,
+        "dependency_job_id": null
+      },
+      {
+        "name": "movement_seconds",
+        "unit": "seconds",
+        "value": null,
+        "status": "not_applicable",
+        "subject": {
+          "kind": "city_pair",
+          "mode": "road",
+          "node_id": null,
+          "site_id": null,
+          "category": null,
+          "point_id": null,
+          "origin_id": "territory-A",
+          "territory_id": null,
+          "destination_id": "territory-B"
+        },
+        "metric_id": "delivery-road-movement",
+        "time_kind": "movement",
+        "journey_id": null,
+        "site_basis": null,
+        "reason_code": "NO_FEASIBLE_ROUTE",
+        "source_refs": [
+          "synthetic-proof"
+        ],
+        "completeness": "full",
+        "population_basis": null,
+        "dependency_job_id": null
+      },
+      {
+        "name": "complete_delivery_seconds",
+        "unit": "seconds",
+        "value": null,
+        "status": "not_applicable",
+        "subject": {
+          "kind": "city_pair",
+          "mode": "water",
+          "node_id": null,
+          "site_id": null,
+          "category": null,
+          "point_id": null,
+          "origin_id": "territory-A",
+          "territory_id": null,
+          "destination_id": "territory-B"
+        },
+        "metric_id": "delivery-water-time",
+        "time_kind": "complete_chain",
+        "journey_id": null,
+        "site_basis": null,
+        "reason_code": "NO_FEASIBLE_ROUTE",
+        "source_refs": [
+          "synthetic-proof"
+        ],
+        "completeness": "full",
+        "population_basis": null,
+        "dependency_job_id": null
+      },
+      {
+        "name": "movement_seconds",
+        "unit": "seconds",
+        "value": null,
+        "status": "not_applicable",
+        "subject": {
+          "kind": "city_pair",
+          "mode": "water",
+          "node_id": null,
+          "site_id": null,
+          "category": null,
+          "point_id": null,
+          "origin_id": "territory-A",
+          "territory_id": null,
+          "destination_id": "territory-B"
+        },
+        "metric_id": "delivery-water-movement",
+        "time_kind": "movement",
+        "journey_id": null,
+        "site_basis": null,
+        "reason_code": "NO_FEASIBLE_ROUTE",
+        "source_refs": [
+          "synthetic-proof"
+        ],
+        "completeness": "full",
+        "population_basis": null,
+        "dependency_job_id": null
+      },
+      {
+        "name": "complete_delivery_seconds",
+        "unit": "seconds",
+        "value": 86400.0,
+        "status": "available",
+        "subject": {
+          "kind": "city_pair",
+          "mode": "mixed",
+          "node_id": null,
+          "site_id": null,
+          "category": null,
+          "point_id": null,
+          "origin_id": "territory-A",
+          "territory_id": null,
+          "destination_id": "territory-B"
+        },
+        "metric_id": "delivery-mixed-time",
+        "time_kind": "complete_chain",
+        "journey_id": null,
+        "site_basis": null,
+        "reason_code": null,
+        "source_refs": [
+          "synthetic-proof"
+        ],
+        "completeness": "full",
+        "population_basis": null,
+        "dependency_job_id": null
+      },
+      {
+        "name": "movement_seconds",
+        "unit": "seconds",
+        "value": 57600.0,
+        "status": "available",
+        "subject": {
+          "kind": "city_pair",
+          "mode": "mixed",
+          "node_id": null,
+          "site_id": null,
+          "category": null,
+          "point_id": null,
+          "origin_id": "territory-A",
+          "territory_id": null,
+          "destination_id": "territory-B"
+        },
+        "metric_id": "delivery-mixed-movement",
+        "time_kind": "movement",
+        "journey_id": null,
+        "site_basis": null,
+        "reason_code": null,
+        "source_refs": [
+          "synthetic-proof"
+        ],
+        "completeness": "full",
+        "population_basis": null,
+        "dependency_job_id": null
+      },
+      {
+        "name": "complete_delivery_seconds",
+        "unit": "seconds",
+        "value": 86400.0,
+        "status": "available",
+        "subject": {
+          "kind": "city_pair",
+          "mode": "mixed",
+          "node_id": null,
+          "site_id": null,
+          "category": null,
+          "point_id": null,
+          "origin_id": "territory-A",
+          "territory_id": null,
+          "destination_id": "territory-B"
+        },
+        "metric_id": "delivery-overall-time",
+        "time_kind": "complete_chain",
+        "journey_id": null,
+        "site_basis": null,
+        "reason_code": null,
+        "source_refs": [
+          "synthetic-proof"
+        ],
+        "completeness": "full",
+        "population_basis": null,
+        "dependency_job_id": null
+      },
+      {
+        "name": "movement_seconds",
+        "unit": "seconds",
+        "value": 57600.0,
+        "status": "available",
+        "subject": {
+          "kind": "city_pair",
+          "mode": "mixed",
+          "node_id": null,
+          "site_id": null,
+          "category": null,
+          "point_id": null,
+          "origin_id": "territory-A",
+          "territory_id": null,
+          "destination_id": "territory-B"
+        },
+        "metric_id": "delivery-overall-movement",
+        "time_kind": "movement",
+        "journey_id": null,
+        "site_basis": null,
+        "reason_code": null,
+        "source_refs": [
+          "synthetic-proof"
+        ],
+        "completeness": "full",
+        "population_basis": null,
+        "dependency_job_id": null
+      }
+    ],
+    "request": {
+      "origin_id": "territory-A",
+      "cargo_modes": null,
+      "methodology": {
+        "version": "a2-methodology-v3",
+        "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+        "reference_profile": "edge-calibrated-v1"
+      },
+      "snapshot_id": "snapshot",
+      "departure_at": "2026-11-09T00:00:00Z",
+      "traffic_mode": "static",
+      "analysis_kind": "intercity_cargo",
+      "destination_id": "territory-B",
+      "schema_version": "2",
+      "cargo_transport": "multimodal",
+      "origin_node_ids": null,
+      "territory_level": "city",
+      "cargo_profile_id": "food-ambient",
+      "pipeline_product": null,
+      "destination_node_ids": null
+    },
+    "journeys": [],
+    "versions": {
+      "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+      "snapshot_id": "snapshot",
+      "code_version": "TEST_ONLY-d791604e81af3f978a07d4748549fbc412b34e1a61b97e66020c316287609bbb",
+      "graph_version": "cargo-graph",
+      "calendar_version": "calendar",
+      "population_version": null,
+      "methodology_version": "a2-methodology-v3"
+    },
+    "references": [],
+    "analysis_id": "b567350a-ddf9-4589-9e4b-0185cf18b467",
+    "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+    "limitations": [],
+    "result_hash": "ab08c6c5f35bc518f2dec91d833a2dd7c08cc386fe65e858dbe7fb32cbe4d4a4",
+    "snapshot_id": "snapshot",
+    "last_returns": [],
+    "traffic_mode": "static",
+    "analysis_kind": "intercity_cargo",
+    "evidence_refs": [
+      {
+        "url": "https://example.org/synthetic",
+        "section": "accepted-snapshot",
+        "source_id": "source-1",
+        "evidence_id": "e-1",
+        "observed_at": null,
+        "retrieved_at": "2026-11-08T10:00:00Z"
+      },
+      {
+        "url": "https://example.org/synthetic",
+        "section": "accepted-snapshot",
+        "source_id": "source-1",
+        "evidence_id": "synthetic-proof",
+        "observed_at": null,
+        "retrieved_at": "2026-11-08T10:00:00Z"
+      }
+    ],
+    "schema_version": "2",
+    "methodology_version": "a2-methodology-v3"
+  },
+  "proposal": {
+    "status": "proposed",
+    "versions": {
+      "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+      "snapshot_id": "snapshot",
+      "code_version": "TEST_ONLY-d791604e81af3f978a07d4748549fbc412b34e1a61b97e66020c316287609bbb",
+      "graph_version": "cargo-graph",
+      "calendar_version": "calendar",
+      "population_version": null,
+      "methodology_version": "a2-methodology-v3"
+    },
+    "assumptions": [
+      "TEST_ONLY",
+      "scenario-document:fa865f598c14c3231a5b3a8deb4d51ec65e489b962cd53e669b90a3b4a7e4807",
+      "scenario-plan:1c2005668a7c8a68b3182ff64833c8c74750a7f0cc3c946c8cd3333d6a64074e"
+    ],
+    "feasibility": "verified",
+    "limitations": [
+      "CARGO_RESOURCE_CONTRACT_PENDING_APPROVAL",
+      "MODELLED_CARGO_PROCESSING_RESOURCE"
+    ],
+    "scenario_id": "1d48b5d6-3059-56f6-96db-127193d844aa",
+    "template_id": "reduce_handling_wait_v1",
+    "evidence_refs": [
+      {
+        "url": "https://example.org/synthetic",
+        "section": "accepted-snapshot",
+        "source_id": "source-1",
+        "evidence_id": "e-1",
+        "observed_at": null,
+        "retrieved_at": "2026-11-08T10:00:00Z"
+      },
+      {
+        "url": "https://example.org/synthetic",
+        "section": "accepted-snapshot",
+        "source_id": "source-1",
+        "evidence_id": "synthetic-proof",
+        "observed_at": null,
+        "retrieved_at": "2026-11-08T10:00:00Z"
+      }
+    ],
+    "operation_type": "reduce_handling_wait",
+    "schema_version": "2",
+    "fixed_parameters": {
+      "service_ids": [],
+      "shift_seconds": 0,
+      "demand_evidence": [
+        "synthetic-proof"
+      ],
+      "handling_changes": [
+        {
+          "valid_to": "2026-11-12T00:00:00Z",
+          "action_id": "unload",
+          "valid_from": "2026-11-09T00:00:00Z",
+          "resource_id": "TEST_ONLY-crane",
+          "after_seconds": 3600.0,
+          "before_seconds": 7200.0,
+          "resource_units_after": 2,
+          "resource_units_before": 1
+        }
+      ],
+      "resource_evidence": [
+        "synthetic-proof"
+      ],
+      "turnaround_evidence": [],
+      "resource_constraints": [
+        "TEST_ONLY-crane"
+      ]
+    },
+    "baseline_analysis_id": "b567350a-ddf9-4589-9e4b-0185cf18b467",
+    "baseline_result_hash": "ab08c6c5f35bc518f2dec91d833a2dd7c08cc386fe65e858dbe7fb32cbe4d4a4",
+    "editable_local_graph": true
+  },
+  "scenario": {
+    "after": {
+      "scores": [
+        {
+          "name": "delivery_index",
+          "value": 0.0,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "air",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "score_id": "delivery-air",
+          "components": [],
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "completeness": "full",
+          "evidence_refs": [
+            "synthetic-proof"
+          ],
+          "calculation_kind": "delivery_deadline",
+          "ranking_eligible": false,
+          "aggregation_basis": null,
+          "methodology_version": "a2-methodology-v3"
+        },
+        {
+          "name": "delivery_index",
+          "value": 0.0,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "rail",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "score_id": "delivery-rail",
+          "components": [],
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "completeness": "full",
+          "evidence_refs": [
+            "synthetic-proof"
+          ],
+          "calculation_kind": "delivery_deadline",
+          "ranking_eligible": false,
+          "aggregation_basis": null,
+          "methodology_version": "a2-methodology-v3"
+        },
+        {
+          "name": "delivery_index",
+          "value": 0.0,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "road",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "score_id": "delivery-road",
+          "components": [],
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "completeness": "full",
+          "evidence_refs": [
+            "synthetic-proof"
+          ],
+          "calculation_kind": "delivery_deadline",
+          "ranking_eligible": false,
+          "aggregation_basis": null,
+          "methodology_version": "a2-methodology-v3"
+        },
+        {
+          "name": "delivery_index",
+          "value": 0.0,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "water",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "score_id": "delivery-water",
+          "components": [],
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "completeness": "full",
+          "evidence_refs": [
+            "synthetic-proof"
+          ],
+          "calculation_kind": "delivery_deadline",
+          "ranking_eligible": false,
+          "aggregation_basis": null,
+          "methodology_version": "a2-methodology-v3"
+        },
+        {
+          "name": "delivery_index",
+          "value": 51.46511183217461,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "mixed",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "score_id": "delivery-mixed",
+          "components": [
+            {
+              "id": "delivery-mixed-time",
+              "kind": "metric"
+            }
+          ],
+          "reason_code": null,
+          "completeness": "full",
+          "evidence_refs": [
+            "synthetic-proof"
+          ],
+          "calculation_kind": "delivery_deadline",
+          "ranking_eligible": true,
+          "aggregation_basis": null,
+          "methodology_version": "a2-methodology-v3"
+        },
+        {
+          "name": "delivery_index",
+          "value": 51.46511183217461,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "mixed",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "score_id": "delivery-overall",
+          "components": [
+            {
+              "id": "delivery-overall-time",
+              "kind": "metric"
+            }
+          ],
+          "reason_code": null,
+          "completeness": "full",
+          "evidence_refs": [
+            "synthetic-proof"
+          ],
+          "calculation_kind": "delivery_deadline",
+          "ranking_eligible": true,
+          "aggregation_basis": null,
+          "methodology_version": "a2-methodology-v3"
+        }
+      ],
+      "metrics": [
+        {
+          "name": "complete_delivery_seconds",
+          "unit": "seconds",
+          "value": null,
+          "status": "not_applicable",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "air",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-air-time",
+          "time_kind": "complete_chain",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "movement_seconds",
+          "unit": "seconds",
+          "value": null,
+          "status": "not_applicable",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "air",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-air-movement",
+          "time_kind": "movement",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "complete_delivery_seconds",
+          "unit": "seconds",
+          "value": null,
+          "status": "not_applicable",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "rail",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-rail-time",
+          "time_kind": "complete_chain",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "movement_seconds",
+          "unit": "seconds",
+          "value": null,
+          "status": "not_applicable",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "rail",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-rail-movement",
+          "time_kind": "movement",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "complete_delivery_seconds",
+          "unit": "seconds",
+          "value": null,
+          "status": "not_applicable",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "road",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-road-time",
+          "time_kind": "complete_chain",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "movement_seconds",
+          "unit": "seconds",
+          "value": null,
+          "status": "not_applicable",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "road",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-road-movement",
+          "time_kind": "movement",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "complete_delivery_seconds",
+          "unit": "seconds",
+          "value": null,
+          "status": "not_applicable",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "water",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-water-time",
+          "time_kind": "complete_chain",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "movement_seconds",
+          "unit": "seconds",
+          "value": null,
+          "status": "not_applicable",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "water",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-water-movement",
+          "time_kind": "movement",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "complete_delivery_seconds",
+          "unit": "seconds",
+          "value": 82800.0,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "mixed",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-mixed-time",
+          "time_kind": "complete_chain",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": null,
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "movement_seconds",
+          "unit": "seconds",
+          "value": 57600.0,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "mixed",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-mixed-movement",
+          "time_kind": "movement",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": null,
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "complete_delivery_seconds",
+          "unit": "seconds",
+          "value": 82800.0,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "mixed",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-overall-time",
+          "time_kind": "complete_chain",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": null,
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "movement_seconds",
+          "unit": "seconds",
+          "value": 57600.0,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "mixed",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-overall-movement",
+          "time_kind": "movement",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": null,
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        }
+      ]
+    },
+    "before": {
+      "scores": [
+        {
+          "name": "delivery_index",
+          "value": 0.0,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "air",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "score_id": "delivery-air",
+          "components": [],
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "completeness": "full",
+          "evidence_refs": [
+            "synthetic-proof"
+          ],
+          "calculation_kind": "delivery_deadline",
+          "ranking_eligible": false,
+          "aggregation_basis": null,
+          "methodology_version": "a2-methodology-v3"
+        },
+        {
+          "name": "delivery_index",
+          "value": 0.0,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "rail",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "score_id": "delivery-rail",
+          "components": [],
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "completeness": "full",
+          "evidence_refs": [
+            "synthetic-proof"
+          ],
+          "calculation_kind": "delivery_deadline",
+          "ranking_eligible": false,
+          "aggregation_basis": null,
+          "methodology_version": "a2-methodology-v3"
+        },
+        {
+          "name": "delivery_index",
+          "value": 0.0,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "road",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "score_id": "delivery-road",
+          "components": [],
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "completeness": "full",
+          "evidence_refs": [
+            "synthetic-proof"
+          ],
+          "calculation_kind": "delivery_deadline",
+          "ranking_eligible": false,
+          "aggregation_basis": null,
+          "methodology_version": "a2-methodology-v3"
+        },
+        {
+          "name": "delivery_index",
+          "value": 0.0,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "water",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "score_id": "delivery-water",
+          "components": [],
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "completeness": "full",
+          "evidence_refs": [
+            "synthetic-proof"
+          ],
+          "calculation_kind": "delivery_deadline",
+          "ranking_eligible": false,
+          "aggregation_basis": null,
+          "methodology_version": "a2-methodology-v3"
+        },
+        {
+          "name": "delivery_index",
+          "value": 50.0,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "mixed",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "score_id": "delivery-mixed",
+          "components": [
+            {
+              "id": "delivery-mixed-time",
+              "kind": "metric"
+            }
+          ],
+          "reason_code": null,
+          "completeness": "full",
+          "evidence_refs": [
+            "synthetic-proof"
+          ],
+          "calculation_kind": "delivery_deadline",
+          "ranking_eligible": true,
+          "aggregation_basis": null,
+          "methodology_version": "a2-methodology-v3"
+        },
+        {
+          "name": "delivery_index",
+          "value": 50.0,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "mixed",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "score_id": "delivery-overall",
+          "components": [
+            {
+              "id": "delivery-overall-time",
+              "kind": "metric"
+            }
+          ],
+          "reason_code": null,
+          "completeness": "full",
+          "evidence_refs": [
+            "synthetic-proof"
+          ],
+          "calculation_kind": "delivery_deadline",
+          "ranking_eligible": true,
+          "aggregation_basis": null,
+          "methodology_version": "a2-methodology-v3"
+        }
+      ],
+      "metrics": [
+        {
+          "name": "complete_delivery_seconds",
+          "unit": "seconds",
+          "value": null,
+          "status": "not_applicable",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "air",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-air-time",
+          "time_kind": "complete_chain",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "movement_seconds",
+          "unit": "seconds",
+          "value": null,
+          "status": "not_applicable",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "air",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-air-movement",
+          "time_kind": "movement",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "complete_delivery_seconds",
+          "unit": "seconds",
+          "value": null,
+          "status": "not_applicable",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "rail",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-rail-time",
+          "time_kind": "complete_chain",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "movement_seconds",
+          "unit": "seconds",
+          "value": null,
+          "status": "not_applicable",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "rail",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-rail-movement",
+          "time_kind": "movement",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "complete_delivery_seconds",
+          "unit": "seconds",
+          "value": null,
+          "status": "not_applicable",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "road",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-road-time",
+          "time_kind": "complete_chain",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "movement_seconds",
+          "unit": "seconds",
+          "value": null,
+          "status": "not_applicable",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "road",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-road-movement",
+          "time_kind": "movement",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "complete_delivery_seconds",
+          "unit": "seconds",
+          "value": null,
+          "status": "not_applicable",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "water",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-water-time",
+          "time_kind": "complete_chain",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "movement_seconds",
+          "unit": "seconds",
+          "value": null,
+          "status": "not_applicable",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "water",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-water-movement",
+          "time_kind": "movement",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": "NO_FEASIBLE_ROUTE",
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "complete_delivery_seconds",
+          "unit": "seconds",
+          "value": 86400.0,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "mixed",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-mixed-time",
+          "time_kind": "complete_chain",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": null,
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "movement_seconds",
+          "unit": "seconds",
+          "value": 57600.0,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "mixed",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-mixed-movement",
+          "time_kind": "movement",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": null,
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "complete_delivery_seconds",
+          "unit": "seconds",
+          "value": 86400.0,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "mixed",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-overall-time",
+          "time_kind": "complete_chain",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": null,
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        },
+        {
+          "name": "movement_seconds",
+          "unit": "seconds",
+          "value": 57600.0,
+          "status": "available",
+          "subject": {
+            "kind": "city_pair",
+            "mode": "mixed",
+            "node_id": null,
+            "site_id": null,
+            "category": null,
+            "point_id": null,
+            "origin_id": "territory-A",
+            "territory_id": null,
+            "destination_id": "territory-B"
+          },
+          "metric_id": "delivery-overall-movement",
+          "time_kind": "movement",
+          "journey_id": null,
+          "site_basis": null,
+          "reason_code": null,
+          "source_refs": [
+            "synthetic-proof"
+          ],
+          "completeness": "full",
+          "population_basis": null,
+          "dependency_job_id": null
+        }
+      ]
+    },
+    "deltas": [
+      {
+        "kind": "metric",
+        "unit": "seconds",
+        "delta": 0.0,
+        "scope": "transport",
+        "outcome": "unchanged",
+        "after_id": "delivery-mixed-movement",
+        "before_id": "delivery-mixed-movement",
+        "effect_id": "effect:60ec47e0711b8e0fb6da6b3bda478e390f59e2d9ff4bccbd1633084569e664de",
+        "reason_code": null,
+        "sign_convention": "before_minus_after"
+      },
+      {
+        "kind": "metric",
+        "unit": "seconds",
+        "delta": 3600.0,
+        "scope": "transport",
+        "outcome": "improved",
+        "after_id": "delivery-mixed-time",
+        "before_id": "delivery-mixed-time",
+        "effect_id": "effect:47a3c0a0debe29e82252b818b99ce0664b73fb5fe2ae64534fff7a52beb79ed3",
+        "reason_code": null,
+        "sign_convention": "before_minus_after"
+      },
+      {
+        "kind": "metric",
+        "unit": "seconds",
+        "delta": 0.0,
+        "scope": "transport",
+        "outcome": "unchanged",
+        "after_id": "delivery-overall-movement",
+        "before_id": "delivery-overall-movement",
+        "effect_id": "effect:9c40fa81c8a38a73e2c65bdbce77ef2fe7c76c65639d03ef907125779fb8e260",
+        "reason_code": null,
+        "sign_convention": "before_minus_after"
+      },
+      {
+        "kind": "metric",
+        "unit": "seconds",
+        "delta": 3600.0,
+        "scope": "transport",
+        "outcome": "improved",
+        "after_id": "delivery-overall-time",
+        "before_id": "delivery-overall-time",
+        "effect_id": "effect:da0e2f6009814bc5a9f86cf70607c44bcedd8d45aadcec718e09a115bf75c71e",
+        "reason_code": null,
+        "sign_convention": "before_minus_after"
+      },
+      {
+        "kind": "score",
+        "unit": "points_0_100",
+        "delta": 1.4651118321746068,
+        "scope": "transport",
+        "outcome": "improved",
+        "after_id": "delivery-mixed",
+        "before_id": "delivery-mixed",
+        "effect_id": "effect:a3c46aaf12d6cdb4a61599abd18e88cdc3b7afc1d5e88cba404c046496352ab7",
+        "reason_code": null,
+        "sign_convention": "after_minus_before"
+      },
+      {
+        "kind": "score",
+        "unit": "points_0_100",
+        "delta": 1.4651118321746068,
+        "scope": "transport",
+        "outcome": "improved",
+        "after_id": "delivery-overall",
+        "before_id": "delivery-overall",
+        "effect_id": "effect:474c7b3b403d18cf1605652d3f5557be6b5726bbe8df35cc01c93502878c09b4",
+        "reason_code": null,
+        "sign_convention": "after_minus_before"
+      }
+    ],
+    "run_id": "aa682431-2ab0-566f-b322-90e55d69c943",
+    "status": "available",
+    "versions": {
+      "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+      "snapshot_id": "snapshot",
+      "code_version": "TEST_ONLY-d791604e81af3f978a07d4748549fbc412b34e1a61b97e66020c316287609bbb",
+      "graph_version": "cargo-graph",
+      "calendar_version": "calendar",
+      "population_version": null,
+      "methodology_version": "a2-methodology-v3"
+    },
+    "assumptions": [
+      "TEST_ONLY",
+      "scenario-document:fa865f598c14c3231a5b3a8deb4d51ec65e489b962cd53e669b90a3b4a7e4807",
+      "scenario-plan:1c2005668a7c8a68b3182ff64833c8c74750a7f0cc3c946c8cd3333d6a64074e"
+    ],
+    "feasibility": "verified",
+    "limitations": [
+      "CARGO_RESOURCE_CONTRACT_PENDING_APPROVAL",
+      "MODELLED_CARGO_PROCESSING_RESOURCE"
+    ],
+    "params_hash": "2fa240f8eb7f1e1aa6289dc803f817a168cc09436014eb1f95bd72437ab3ccb3",
+    "result_hash": "fcfb10ad211e5c72de5d311295e777c39d403140825737cb692b62fdbe496310",
+    "scenario_id": "1d48b5d6-3059-56f6-96db-127193d844aa",
+    "evidence_refs": [
+      {
+        "url": "https://example.org/synthetic",
+        "section": "accepted-snapshot",
+        "source_id": "source-1",
+        "evidence_id": "e-1",
+        "observed_at": null,
+        "retrieved_at": "2026-11-08T10:00:00Z"
+      },
+      {
+        "url": "https://example.org/synthetic",
+        "section": "accepted-snapshot",
+        "source_id": "source-1",
+        "evidence_id": "synthetic-proof",
+        "observed_at": null,
+        "retrieved_at": "2026-11-08T10:00:00Z"
+      }
+    ],
+    "affected_sites": null,
+    "schema_version": "2",
+    "operations_hash": "a08cb1f7e6bd1d1aa7f1a53b4a6d4bff4883cd77eefdfe5404c33542e50159fa",
+    "service_changes": [],
+    "handling_changes": [
+      {
+        "valid_to": "2026-11-12T00:00:00Z",
+        "action_id": "unload",
+        "valid_from": "2026-11-09T00:00:00Z",
+        "resource_id": "TEST_ONLY-crane",
+        "after_seconds": 3600.0,
+        "before_seconds": 7200.0,
+        "resource_units_after": 2,
+        "resource_units_before": 1
+      }
+    ],
+    "overlay_graph_id": "cargo-processing-overlay:1c2005668a7c8a68b3182ff64833c8c74750a7f0cc3c946c8cd3333d6a64074e",
+    "resource_evidence": [
+      "synthetic-proof"
+    ],
+    "affected_population": null,
+    "turnaround_evidence": [],
+    "worsened_metric_ids": [],
+    "baseline_analysis_id": "b567350a-ddf9-4589-9e4b-0185cf18b467",
+    "baseline_result_hash": "ab08c6c5f35bc518f2dec91d833a2dd7c08cc386fe65e858dbe7fb32cbe4d4a4",
+    "editable_local_graph": true
+  }
+}

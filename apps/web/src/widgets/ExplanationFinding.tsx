@@ -10,9 +10,11 @@ export function ExplanationFinding({ finding, result, onSelect }: {
     .map((id) => ({ key: `metric:${id}`, kind: "metric", value: result?.metrics.find((v) => v.metric_id === id) }));
   const scores = [...new Set([...(finding.score_ids || []), ...(finding.score_claims || []).map((c) => c.score_id)])]
     .map((id) => ({ key: `score:${id}`, kind: "score", value: result?.scores.find((v) => v.score_id === id) }));
+  const description = [...metrics, ...scores].reduce((text, { value }) =>
+    value ? text.replaceAll(value.name, measureLabel(value.name)) : text, finding.text);
   return (
     <div>
-      <p>{finding.text}</p>
+      <p>{description}</p>
       {[...metrics, ...scores].map(({ key, kind, value }) => value ? (
         <button
           className="api-claim"

@@ -6,10 +6,9 @@ import type { GeoJsonObject } from "geojson";
 import type { AnalysisResult, Schemas, Selection } from "../api/types";
 import { selectionText } from "../api/adapters/result";
 import { journeyLines, segmentGeometryNotice } from "../api/adapters/journeyGeometry";
-import { isDemoModelSnapshot } from "../api/adapters/demoModel";
 import { displayedCategory, pointScorePresentation, observedScoreLabel } from "../api/adapters/scorePresentation";
 import type { Category } from "../api/types";
-const moscowCamera = (result: AnalysisResult | null) => isDemoModelSnapshot(result?.snapshot_id) || (result?.request.analysis_kind === "urban_passenger" && result.request.city_id === "moscow");
+const moscowCamera = (result: AnalysisResult | null) => (result?.request.analysis_kind === "urban_passenger" || result?.request.analysis_kind === "urban_cargo") && result.request.city_id === "moscow";
 
 // Map camera anchors for the three pilot cities, independent of routing inputs.
 const pilotCenters: Record<string, L.LatLngTuple> = {
@@ -17,7 +16,7 @@ const pilotCenters: Record<string, L.LatLngTuple> = {
   kaliningrad: [54.71, 20.51],
   novorossiysk: [44.72, 37.77],
 };
-const showDemoCenter = (map: L.Map) => map.setView(pilotCenters.moscow, 10, { animate: false });
+const showMoscowCenter = (map: L.Map) => map.setView(pilotCenters.moscow, 10, { animate: false });
 type FeatureLayer = { layer: L.GeoJSON; style: L.PathOptions; markers: L.CircleMarker[] };
 const featureKey = (kind: string, id: string) => `${kind}:${id}`;
 function selectLayer(item: FeatureLayer, selected: boolean) {
@@ -305,7 +304,7 @@ export function ApiMap({
     const shownView = `${result?.analysis_id}:${scenarioView ? viewId || "scenario" : "baseline"}`;
     if (result && last.current !== shownView) {
       if (moscowCamera(result)) {
-        if (lastAnalysis.current !== result.analysis_id) showDemoCenter(m);
+        if (lastAnalysis.current !== result.analysis_id) showMoscowCenter(m);
         last.current = shownView;
         lastAnalysis.current = result.analysis_id;
       } else if (bounds.isValid()) {
@@ -339,7 +338,7 @@ export function ApiMap({
       const bounds = L.latLngBounds(positions);
       if (bounds.isValid()) m.fitBounds(bounds, { padding: [30, 30], maxZoom: 14, animate: false });
     }
-    else if (zoomAction.kind === "home" && moscowCamera(result)) showDemoCenter(m);
+    else if (zoomAction.kind === "home" && moscowCamera(result)) showMoscowCenter(m);
     else if (zoomAction.kind === "home" && !result && cityId && pilotCenters[cityId]) {
       m.setView(pilotCenters[cityId], 10, { animate: false });
     }
