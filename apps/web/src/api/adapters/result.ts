@@ -216,6 +216,9 @@ export function profileLabel(
     parts.push(`высота до ${vehicle.max_height_m} м`);
   return parts.join(" · ");
 }
+function quantityUnit(unit: string, value: number) {
+  return unit === "runs" ? ({ one: "рейс", few: "рейса", many: "рейсов", other: "рейса" } as Record<string, string>)[new Intl.PluralRules("ru").select(value)] : unit;
+}
 export function measureText(m: Schemas["Metric"] | Schemas["Score"]) {
   if (m.value === null || m.status !== "available")
     return (
@@ -230,7 +233,7 @@ export function measureText(m: Schemas["Metric"] | Schemas["Score"]) {
     );
   const unit = "unit" in m ? m.unit : "points_0_100";
   const value = unit === "seconds" ? m.value / 60 : m.value;
-  const unitText = unit === "runs" ? ({ one: "рейс", few: "рейса", many: "рейсов", other: "рейса" } as Record<string, string>)[new Intl.PluralRules("ru").select(value)] : unit;
+  const unitText = quantityUnit(unit, value);
   return `${new Intl.NumberFormat("ru", { maximumFractionDigits: 1 }).format(value)} ${unit === "seconds" || unit === "minutes" ? "мин" : unit === "points_0_100" ? "из 100" : unit === "hours" ? "ч" : unitText}`;
 }
 export function scoreBand(score: Schemas["Score"]) {
@@ -355,7 +358,7 @@ export function deltaText(d: Schemas["ScenarioDelta"]) {
   const amount =
     d.delta === null
       ? "Без численной разности"
-      : `${(d.unit === "seconds" ? d.delta / 60 : d.delta).toLocaleString("ru", { maximumFractionDigits: 1 })} ${d.unit === "seconds" ? "мин" : d.unit === "points_0_100" ? "балл." : d.unit}`;
+      : `${(d.unit === "seconds" ? d.delta / 60 : d.delta).toLocaleString("ru", { maximumFractionDigits: 1 })} ${d.unit === "seconds" ? "мин" : d.unit === "points_0_100" ? "балл." : quantityUnit(d.unit, d.delta)}`;
   return `${outcome} · ${amount} · Δ: ${d.sign_convention === "before_minus_after" ? "база − сценарий" : "сценарий − база"}`;
 }
 
