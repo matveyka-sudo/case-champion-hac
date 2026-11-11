@@ -38,3 +38,16 @@ export function writeSavedPointer(pointer: SavedPointer, replace: boolean) {
   window.history[replace ? "replaceState" : "pushState"](null, "", hash);
   window.dispatchEvent(new Event("waydex:navigate"));
 }
+// Capture the logical operation's URL, including its own accepted-job transition.
+// A browser navigation can arrive before React's next restore/abort effect.
+export function savedPointerWriter(onWrite: (hash: string) => void) {
+  let expectedHash = window.location.hash;
+  return (kind: SavedPointer["kind"], id: string) => {
+    if (window.location.hash !== expectedHash) return false;
+    const pointer = { kind, id };
+    expectedHash = savedPointerHash(pointer);
+    onWrite(expectedHash);
+    writeSavedPointer(pointer, kind === "analysis");
+    return true;
+  };
+}
