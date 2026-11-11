@@ -706,6 +706,43 @@ test("API: scenario displays the changed nonwinner route and worsening, then res
   await expect(page.locator(".api-overlay-note")).toHaveCount(0);
 });
 
+test("API: urban overview keeps all points and route choices while drawing only the selected route", async ({ page }) => {
+  const { baseline } = scenarioRouteFixture();
+  baseline.journeys[1].point_id = "other-point";
+  baseline.metrics[1].subject.point_id = "other-point";
+  baseline.map_data!.features!.push({ ...baseline.map_data!.features![0], entity_id: "other-point", point_id: "other-point", geometry: { type: "Point", coordinates: [37.03, 55.01] } });
+  await mockApi(page, { result: baseline, emptyProposals: true });
+  await page.goto("/?data=api#atlas");
+  await page.waitForFunction(() => !!(window as unknown as { L?: unknown }).L);
+  await page.evaluate(() => {
+    type Layer = { _map?: unknown };
+    const scope = window as unknown as { L: { geoJSON: (data: { type?: string }, options: unknown) => Layer }; routeLayers: Layer[]; featureLayers: Layer[] };
+    scope.routeLayers = []; scope.featureLayers = [];
+    const original = scope.L.geoJSON.bind(scope.L);
+    scope.L.geoJSON = (data, options) => {
+      const layer = original(data, options);
+      if (data.type === "LineString") scope.routeLayers.push(layer);
+      if (data.type === "Feature") scope.featureLayers.push(layer);
+      return layer;
+    };
+  });
+  await cityRun(page);
+  await expect(page.locator(".status")).toContainText("Результат получен");
+  const liveRoutes = () => page.evaluate(() => (window as unknown as { routeLayers: { _map?: unknown }[] }).routeLayers.filter(layer => layer._map).length);
+  expect(await liveRoutes()).toBe(0);
+  const chooser = page.getByLabel("Обзор рассчитанных маршрутов");
+  await expect(chooser.locator("summary")).toHaveText("Рассчитанные маршруты (2)");
+  await chooser.locator("summary").click();
+  await chooser.getByRole("button").first().click();
+  await expect.poll(liveRoutes).toBe(1);
+  await expect(page.locator("#apiResultCard")).toContainText("До объекта: Ближайшая школа");
+  await page.getByRole("button", { name: "Все показатели", exact: true }).click();
+  await expect.poll(liveRoutes).toBe(0);
+  await expect(chooser.locator("summary")).toHaveText("Рассчитанные маршруты (2)");
+  expect(await page.evaluate(() => (window as unknown as { featureLayers: { _map?: unknown }[] }).featureLayers.filter(layer => layer._map).length)).toBe(4);
+  expect(await page.evaluate(() => (window as unknown as { featureLayers: unknown[] }).featureLayers.length)).toBe(4);
+});
+
 test("API: scenario without route geometry preserves after time and explicitly labels missing geometry", async ({ page }) => {
   const data = scenarioRouteFixture();
   data.baseline.journeys[0].geometry = null;
@@ -855,7 +892,7 @@ for (const mobile of [false, true]) test(`API: calculated point overview reveals
   await expect(page.getByRole("button", { name: "Все показатели", exact: true })).toHaveCount(0);
   await expect(card.locator("h3")).toHaveText("Калининград");
   const summary = overview.locator("summary");
-  await expect(summary).toHaveText("Рассчитанные точки (1 из 216)");
+  await expect(summary).toHaveText("Точки с общим индексом (1 из 216)");
   if (mobile) { await summary.focus(); await summary.press("Enter"); }
   else await summary.click();
   const point = overview.getByRole("button", { name: /Точка · 54.71500, 20.51500/ });
@@ -897,7 +934,7 @@ test("API: partial point inventory never presents the one known point as complet
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
   await expect(page.locator(".status")).toContainText("Результат получен");
   const overview = page.getByLabel("Обзор рассчитанных точек");
-  await expect(overview.locator("summary")).toHaveText("Рассчитанные точки (1)");
+  await expect(overview.locator("summary")).toHaveText("Точки с общим индексом (1)");
   await overview.locator("summary").click();
   await expect(overview).toContainText("Переданная карта содержит не все точки из результата. Соотношение не определено.");
   await expect(overview).not.toContainText("1 из 1");
@@ -921,7 +958,7 @@ test("API: calculated point reveals its partial walk route with a separate round
   if ((page.viewportSize()?.width || 1440) < 768) await page.getByText("Результат и рассчитанные точки", { exact: true }).click();
   const card = page.locator("#apiResultCard");
   const overview = page.getByLabel("Обзор рассчитанных точек");
-  await expect(overview.locator("summary")).toHaveText("Рассчитанные точки (1 из 3)");
+  await expect(overview.locator("summary")).toHaveText("Точки с общим индексом (1 из 3)");
   await overview.locator("summary").click();
   await overview.getByRole("button", { name: /Точка · 54.50200, 20.30200/ }).click();
   await expect(card.locator("h3")).toHaveText("Точка · 54.50200, 20.30200");
@@ -1022,7 +1059,7 @@ test("API: disjoint movement segments retain partial-route labels and clear on c
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
   await expect(page.locator(".status")).toContainText("Результат получен");
   const note = page.locator(".api-map-note");
-  await expect(note).toContainText("Показан участок маршрута; геометрия подходов не подтверждена");
+  await expect(note).toContainText("Геометрия маршрутов доступна частично.");
   const overview = page.getByLabel("Обзор рассчитанных точек");
   await expect(overview).toContainText("Индекс города: Нет данных");
   await overview.locator("summary").click();
@@ -1106,7 +1143,7 @@ test("API: a saved route remains easy to select when every point index is unknow
   await airportParameters(page);
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
   await expect(page.locator(".status")).toContainText("Результат получен");
-  await expect(page.getByLabel("Обзор рассчитанных точек")).toContainText("Рассчитанные точки (0 из 3)");
+  await expect(page.getByLabel("Обзор рассчитанных точек")).toContainText("Точки с общим индексом (0 из 3)");
   const routes = page.getByLabel("Обзор рассчитанных маршрутов");
   await routes.locator("summary").click();
   const choice = routes.getByRole("button", { name: /Синтетический аэропорт/ });
@@ -1235,7 +1272,7 @@ test("API: shared card and map distinguish an observed zero estimate from unknow
   await expect(page.locator(".status")).toContainText("Результат получен");
   await expect(page.locator(".legend h3")).toContainText("Предварительная оценка по найденному маршруту");
   const overview = page.getByLabel("Обзор рассчитанных точек");
-  await expect(overview.first()).toContainText("Рассчитанные точки (0 из 3)");
+  await expect(overview.first()).toContainText("Точки с общим индексом (0 из 3)");
   const estimates = overview.filter({ hasText: "Точки с предварительной оценкой" });
   await estimates.locator("summary").click();
   await estimates.getByRole("button", { name: /Точка · 54.50200, 20.30200/ }).click();

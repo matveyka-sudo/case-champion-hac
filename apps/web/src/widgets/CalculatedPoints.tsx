@@ -22,7 +22,7 @@ export function CalculatedPoints({ overview, selection, areaSelected, onSelect, 
         {territoryScore?.completeness === "partial" && " · частичная оценка"}
       </p>}
       <details ref={details} onToggle={(event) => setExpanded(event.currentTarget.open)}>
-        <summary>{estimate ? "Точки с предварительной оценкой" : "Рассчитанные точки"} ({count})</summary>
+        <summary>{estimate ? "Точки с предварительной оценкой" : "Точки с общим индексом"} ({count})</summary>
         <p className="fhint">{estimate ? "Предварительная оценка по найденному маршруту. Минимум не подтверждён; оценка не заменяет общий индекс точки или города." : "Общие численные индексы отдельных точек не заменяют индекс города. Неизвестные показатели остаются в общем результате."}</p>
         {overview.denominator === null && <p className="fhint">{overview.inventoryCount === null
           ? "Общее число точек для этого списка не предоставлено."

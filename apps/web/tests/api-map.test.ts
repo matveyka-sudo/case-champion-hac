@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiMap } from "../src/widgets/ApiMap";
 import { decode } from "../src/api/validation";
 import resultRaw from "./fixtures/api/urban_passenger.json";
+import intercityRaw from "./fixtures/api/intercity_passenger.json";
 import { scenarioJourneys } from "../src/api/adapters/scenario";
 import { scenarioRouteFixture } from "./fixtures/scenario-routes";
 import { partialWalkGeometryFixture } from "./fixtures/partial-walk-geometry";
@@ -15,6 +16,7 @@ const drawn = vi.hoisted(() => ({
   clears: 0,
   views: [] as { center: unknown; zoom: number }[],
   boundsInputs: [] as unknown[][],
+  order: [] as { geometry?: unknown }[],
 }));
 vi.mock("leaflet", () => ({
   default: {
@@ -27,7 +29,15 @@ vi.mock("leaflet", () => ({
       return map;
     },
     tileLayer: () => ({ on: () => ({ addTo: vi.fn() }) }),
-    layerGroup: () => ({ addTo: () => ({ clearLayers: () => { drawn.clears++; } }) }),
+    layerGroup: () => {
+      const members = new Set<typeof drawn.order[number]>();
+      const group = { members, addTo: () => group, clearLayers: () => {
+        drawn.clears++;
+        drawn.order = drawn.order.filter(item => !members.has(item));
+        members.clear();
+      } };
+      return group;
+    },
     latLngBounds: (positions: unknown[]) => { drawn.boundsInputs.push(positions); return { extend: vi.fn(), isValid: () => positions.length > 0 }; },
     circleMarker: (_position: unknown, style: Record<string, unknown>) => {
       const item = drawn.layers.at(-1)!;
@@ -44,7 +54,9 @@ vi.mock("leaflet", () => ({
       const layer = {
         bindTooltip: (tip: HTMLElement) => { item.tooltip = tip.textContent || ""; return layer; },
         on: (event: string, handler: () => void) => { if (event === "click") item.click = handler; return layer; },
-        addTo: () => layer,
+        addTo: (group: { members: Set<typeof drawn.order[number]> }) => { group.members.add(item); drawn.order.push(item); return layer; },
+        bringToBack: () => { drawn.order = [item, ...drawn.order.filter(value => value !== item)]; return layer; },
+        bringToFront: () => { drawn.order = [...drawn.order.filter(value => value !== item), item]; return layer; },
         getBounds: () => ({}),
         setStyle: (style: Record<string, unknown>) => {
           item.style = { ...item.style, ...style };
@@ -64,6 +76,7 @@ beforeEach(() => {
   drawn.clears = 0;
   drawn.views.length = 0;
   drawn.boundsInputs.length = 0;
+  drawn.order.length = 0;
   vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
 });
 describe("explicit calculated-point focus", () => {
@@ -149,7 +162,7 @@ describe("scenario map paths", () => {
   it("draws the changed nonwinner and reused route, then restores only baseline lines", () => {
     const { baseline, scenario } = scenarioRouteFixture();
     const routes = scenarioJourneys(baseline, scenario).journeys;
-    const props = { result: baseline, scores: scenario.after.scores, selection: null, onSelect: vi.fn(), zoomAction: { id: 0, kind: "home" } };
+    const props = { result: baseline, scores: scenario.after.scores, selection: { entity_kind: "sample_point" as const, entity_id: "demo-point" }, onSelect: vi.fn(), zoomAction: { id: 0, kind: "home" } };
     const view = render(createElement(ApiMap, { ...props, journeys: routes, scenarioView: true, viewId: scenario.run_id }));
     const lines = () => drawn.layers.filter((l) => (l.geometry as { type?: string })?.type === "LineString");
     expect(lines().map((l) => l.geometry)).toEqual(routes.map((j) => j.geometry));
@@ -177,7 +190,7 @@ describe("scenario map paths", () => {
 describe("partial walk map path", () => {
   it("draws disjoint leg segments separately, links their parent point, and leaves unknown indices neutral", () => {
     const result = legGeometryFixture(null), choose = vi.fn();
-    const props = { selection: null, onSelect: choose };
+    const props = { selection: { entity_kind: "sample_point" as const, entity_id: result.journeys[0].point_id! }, onSelect: choose };
     const view = render(createElement(ApiMap, { ...props, result, scores: result.scores, zoomAction: { id: 0, kind: "home" } }));
     const lines = drawn.layers.filter((layer) => (layer.geometry as { type?: string })?.type === "LineString");
     expect(lines.map((line) => line.geometry)).toEqual([result.journeys[0].legs[1].geometry, result.journeys[0].legs[3].geometry]);
@@ -205,13 +218,13 @@ describe("partial walk map path", () => {
   });
   it("clears the old city route and resets the viewport when its result context is removed", () => {
     const result = partialWalkGeometryFixture();
-    const props = { selection: null, onSelect: vi.fn() };
+    const props = { selection: { entity_kind: "sample_point" as const, entity_id: result.journeys[0].point_id! }, onSelect: vi.fn() };
     const view = render(createElement(ApiMap, { ...props, result, scores: result.scores, zoomAction: { id: 0, kind: "home" } }));
     expect(drawn.layers.some((layer) => (layer.geometry as { type?: string })?.type === "LineString")).toBe(true);
     const clears = drawn.clears;
     drawn.layers.length = 0;
     view.rerender(createElement(ApiMap, { ...props, result: null, scores: [], zoomAction: { id: 1, kind: "home" } }));
-    expect(drawn.clears).toBe(clears + 1);
+    expect(drawn.clears).toBe(clears + 2);
     expect(drawn.layers).toEqual([]);
     expect(drawn.commands.at(-1)).toBe("home");
   });
@@ -383,5 +396,52 @@ describe("map score completeness", () => {
     expect(drawn.layers[0].marker?.fillColor).toBe("#8990a7");
     expect(drawn.layers[0].tooltip).toContain("нет индекса");
     expect(drawn.layers[0].tooltip).not.toContain("0.0");
+  });
+});
+
+describe("urban overview route readability", () => {
+  it("preserves intercity route display without a point selection or point_id", () => {
+    const result = decode("AnalysisResult", structuredClone(intercityRaw));
+    const geometry = scenarioRouteFixture().baseline.journeys[0].geometry!;
+    result.journeys[0].geometry = geometry;
+    result.journeys[0].geometry_kind = "actual";
+    result.journeys[0].point_id = null;
+    render(createElement(ApiMap, { result, scores: result.scores, selection: null, onSelect: vi.fn(), zoomAction: { id: 0, kind: "home" } }));
+    expect(drawn.order.some(layer => layer.geometry === geometry)).toBe(true);
+  });
+  it("keeps territory fills behind every point and retains the full route inventory without drawing it at overview", () => {
+    const { baseline } = scenarioRouteFixture();
+    const point = baseline.map_data!.features![0];
+    const unknown = { ...point, entity_id: "unknown-point", geometry: { type: "Point" as const, coordinates: [37.03, 55] as [number, number] } };
+    const territory = { ...point, entity_kind: "territory" as const, entity_id: "city-1", geometry: { type: "Polygon" as const, coordinates: [[[37, 55], [37.1, 55], [37.1, 55.1], [37, 55]]] as [number, number][][] } };
+    baseline.map_data!.features!.push(unknown, territory);
+    const before = JSON.stringify(baseline);
+    render(createElement(ApiMap, { result: baseline, scores: baseline.scores, selection: null, onSelect: vi.fn(), zoomAction: { id: 0, kind: "home" } }));
+    expect(drawn.order.filter(layer => (layer.geometry as { type: string }).type === "LineString")).toHaveLength(0);
+    expect(drawn.order).toHaveLength(baseline.map_data!.features!.length);
+    expect(drawn.order.findIndex(layer => layer.geometry === territory.geometry)).toBeLessThan(drawn.order.findIndex(layer => layer.geometry === point.geometry));
+    expect(drawn.order.at(-1)?.geometry).toBe(unknown.geometry);
+    expect(baseline.journeys).toHaveLength(2);
+    expect(JSON.stringify(baseline)).toBe(before);
+  });
+
+  it("changes only the selected category's routes and clears them when selection is cleared", () => {
+    const { baseline } = scenarioRouteFixture();
+    if (baseline.request.analysis_kind !== "urban_passenger") throw new Error("fixture");
+    baseline.request.categories = ["school", "airport"];
+    baseline.metrics[0].subject.category = "school";
+    baseline.metrics[1].subject.category = "airport";
+    const selection = { entity_kind: "sample_point" as const, entity_id: "demo-point" };
+    const props = { result: baseline, scores: baseline.scores, selection, onSelect: vi.fn(), zoomAction: { id: 0, kind: "home" } };
+    const view = render(createElement(ApiMap, { ...props, category: "school" }));
+    const lines = () => drawn.order.filter(layer => (layer.geometry as { type: string }).type === "LineString").map(layer => layer.geometry);
+    expect(lines()).toEqual([baseline.journeys[0].geometry]);
+    view.rerender(createElement(ApiMap, { ...props, category: "airport" }));
+    expect(lines()).toEqual([baseline.journeys[1].geometry]);
+    const featureConstructions = drawn.layers.filter(layer => (layer.geometry as { type: string }).type !== "LineString").length;
+    view.rerender(createElement(ApiMap, { ...props, category: "airport", selection: null }));
+    expect(lines()).toEqual([]);
+    expect(drawn.layers.filter(layer => (layer.geometry as { type: string }).type !== "LineString")).toHaveLength(featureConstructions);
+    expect(drawn.order).toHaveLength(baseline.map_data!.features!.length);
   });
 });
