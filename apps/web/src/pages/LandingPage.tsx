@@ -181,7 +181,7 @@ export function LandingPage() {
                   </b>
                   <span className="demo-tag">
                     <Icon name="flask-conical" />
-                    {"Демонстрационный пример"}
+                    {"Пример поездки"}
                   </span>
                 </div>
                 <div className="pathcard-ends">
@@ -922,7 +922,7 @@ export function LandingPage() {
                   }
                 </b>
                 {
-                  " В этом прототипе все числа демонстрационные. Источники — открытые данные и расписания, перечисленные в постановке; наличие города в справочнике не означает полного расчёта."
+                  " Источники — открытые данные и расписания. Покрытие и полнота расчёта зависят от выбранной территории."
                 }
               </div>
             </div>
@@ -977,7 +977,7 @@ export function LandingPage() {
             <NavigationLink to="atlas">{"Атлас"}</NavigationLink>
           </nav>
           <span>
-            {"Дизайн-прототип · кейс A2 · 2026. Данные — демонстрационные."}
+            {"Waydex · кейс A2 · 2026."}
           </span>
         </div>
       </footer>

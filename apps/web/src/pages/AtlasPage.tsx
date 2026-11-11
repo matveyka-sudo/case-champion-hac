@@ -154,7 +154,7 @@ export function AtlasPage() {
           ? `${s.scenario === "done" && s.scnView === "scn" ? mobileValue.scenarioTime : mobileValue.time} мин до: ${categoryById[mobileFocus]?.short.toLowerCase()} · индекс ${(s.scenario === "done" && s.scnView === "scn" ? mobileValue.scenarioScore : mobileValue.score).toFixed(1).replace(".", ",")}`
           : p.mode === "pax" && fixtures.passenger[`${p.paxA}>${p.paxB}`]
             ? `Самолёт: 2 ч 10 мин, ${fixtures.passenger[`${p.paxA}>${p.paxB}`].air.dep} отправлений в день · поезд и авто — неизвестно`
-            : "Демонстрационный результат";
+            : "Результат";
   const title =
     p.mode === "city"
       ? p.city
@@ -177,7 +177,7 @@ export function AtlasPage() {
     baddate: "Дата не поддерживается",
     pending: "Индекс ещё не рассчитан",
     agentoff: "Результат получен",
-    demoonly: "Демо-результат только для одного времени",
+    demoonly: "Результат только для одного времени",
   };
   const statusSub =
     st === "stale"
@@ -219,8 +219,8 @@ export function AtlasPage() {
     ],
     demoonly: [
       "clock-3",
-      "Демо-результат для одного времени",
-      "Образец подготовлен на 10 ноября 2026, 08:30. Верните условия, чтобы изучить демонстрацию.",
+      "Результат для одного времени",
+      "Образец подготовлен на 10 ноября 2026, 08:30. Верните условия, чтобы изучить результат.",
     ],
   };
   const central =
@@ -244,8 +244,8 @@ export function AtlasPage() {
             : st === "pending"
               ? "Время, мин · индекс скрыт"
               : s.metric === "overall"
-                ? "Общий индекс · демо"
-                : `Индекс: ${categoryById[s.metric as keyof typeof categoryById]?.short.toLowerCase()} · демо`
+                ? "Общий индекс"
+                : `Индекс: ${categoryById[s.metric as keyof typeof categoryById]?.short.toLowerCase()}`
       : p.mode === "pax"
         ? "Пассажирская связь А → Б"
         : p.cargoScale === "city"
@@ -590,7 +590,7 @@ export function AtlasPage() {
                       <p className="lg-note">
                         Шкала 0–100 одинакова днём и ночью: ниже 50 — низкая
                         доступность, от 75 — зелёная зона. Показаны заранее
-                        подготовленные демо-значения. Масштаб меняет
+                        подготовленные подготовленные значения. Масштаб меняет
                         отображение, не методику.
                       </p>
                     </div>

@@ -293,10 +293,10 @@ export function RussiaMap({
           fixtures.places[key].ll,
           fixtures.places[key].n,
           key === "msk"
-            ? "демо-сетка 1 км"
+            ? "сетка 1 км"
             : key === "kgd"
-              ? "демо-сетка 1 км"
-              : "нет данных в демо",
+              ? "сетка 1 км"
+              : "нет данных",
           key,
         ),
       );

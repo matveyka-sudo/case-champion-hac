@@ -36,6 +36,6 @@ export const mockGateway = {
       matchMedia("(prefers-reduced-motion: reduce)").matches ? 50 : 2200,
       signal,
     );
-    return { before: 44, after: 36, categoryBefore: 36.2, categoryAfter: 43.5 };
+    return { before: 44, after: 36, categoryBefore: 60.2, categoryAfter: 66.0 };
   },
 };

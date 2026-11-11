@@ -984,6 +984,9 @@ a {
   padding-top: 28px;
 }
 .gchip {
+  max-width: 100%;
+  flex-shrink: 0;
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -4563,3 +4566,14 @@ details.more ul {
   transform: none !important;
   clip-path: none !important;
 }
+
+/* Fit all three city names inside the existing segmented control. */
+.segc[aria-label="Город"]{grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;padding:2px}
+.segc[aria-label="Город"] button{min-width:0;padding:4px 2px;gap:2px;font-size:11px;letter-spacing:-.2px}
+.segc[aria-label="Город"] button span{min-width:0}
+.geo-chips{gap:5px}.geo-chips .gchip{font-size:12px;padding:0 10px;gap:5px}
+
+.segc[aria-label="Передвижение"]{grid-template-columns:minmax(0,1.5fr) repeat(2,minmax(0,1fr));gap:1px;padding:2px}
+.segc[aria-label="Передвижение"] button{min-width:0;padding:4px 2px;gap:3px;font-size:11px;letter-spacing:-.2px}
+.segc[aria-label="Передвижение"] button span{min-width:0}
+.dropdown.d-only:has([aria-controls="statesMenu"]){display:none}

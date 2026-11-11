@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { LandingPage } from "./pages/LandingPage";
-const dataMode = new URLSearchParams(window.location.search).get("data") || import.meta.env.VITE_DATA_MODE || "demo";
+const dataMode = new URLSearchParams(window.location.search).get("data") || import.meta.env.VITE_DATA_MODE || "api";
 const AtlasPage = lazy(() => dataMode === "api"
   ? import("./pages/ApiAtlasPage").then(m => ({default:m.ApiAtlasPage}))
   : import("./pages/AtlasPage").then(m => ({default:m.AtlasPage})),

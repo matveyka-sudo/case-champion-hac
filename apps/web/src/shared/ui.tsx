@@ -30,7 +30,7 @@ export function Wordmark({ small = false }: { small?: boolean }) {
   );
 }
 export function Demo() {
-  return <span className="demo-tag">демо</span>;
+  return null;
 }
 export function Notice({
   children,

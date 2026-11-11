@@ -220,7 +220,7 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
           </p>
           <p>
             Свободные вопросы не обрабатываются, чтобы не выдавать выдуманный
-            ответ за настоящий. Доступны демо-ответы на вопросы-подсказки.
+            ответ за настоящий. Доступны ответы на подсказки на вопросы-подсказки.
           </p>
           <div className="acts">
             <button onClick={() => void answer(suggestions[0])}>
@@ -231,7 +231,7 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
         </div>
       );
     if (m.kind === "unavailable") return <div className="msg a">
-      <Demo /><p className="lead">Для выбранных условий нет готового демо-результата.</p>
+      <Demo /><p className="lead">Для выбранных условий нет готового результата.</p>
       <p>Дождитесь расчёта или вернитесь к поддерживаемому примеру. Агент не может подтвердить числа и эффект сценария без результата для этих условий.</p>
     </div>;
     if (m.kind === "wrong")
@@ -239,7 +239,7 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
         <div className="msg a">
           <Demo />
           <p className="lead" style={{ marginTop: 8 }}>
-            Демо-диалог подготовлен для Москвы и общественного транспорта.
+            Диалог подготовлен для Москвы и общественного транспорта.
           </p>
           <p>
             Включите категорию «Взрослые поликлиники» — там есть пример зоны с
@@ -256,12 +256,12 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
     if (m.kind === "city")
       return (
         <div className="msg a">
-          <span className="demo-tag">демо-диалог</span>
+          
           <p className="lead" style={{ marginTop: 8 }}>
             Главная причина — ожидание пересадки: 11 из 44 минут пути.
           </p>
           <p>
-            В этой зоне низкая доступность взрослых поликлиник. Здесь проживает
+            В этой зоне доступность взрослых поликлиник ограничивает ожидание пересадки. Здесь проживает
             примерно {f0(roundPop(pop))} человек (модельная оценка,{" "}
             {zone.length} ячеек). До ближайшей поликлиники 2,4 км по прямой, но
             полный путь — 44 мин: пешком 10, ожидание автобуса 4, автобус 9,
@@ -269,8 +269,8 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
           </p>
           <div className="facts tnum">
             <div>
-              <span>Индекс категории · демо</span>
-              <b>36,2</b>
+              <span>Индекс категории</span>
+              <b>60,2</b>
             </div>
             <div>
               <span>Отставание зоны от города</span>
@@ -297,7 +297,7 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
             </summary>
             <ul>
               <li>
-                Расписание общественного транспорта — демо-набор на 10 ноября
+                Расписание общественного транспорта — набор на 10 ноября
                 2026, 08:30
               </li>
               <li>
@@ -305,7 +305,7 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
                 (пример)
               </li>
               <li>Население: модельная сетка 1 км</li>
-              <li>Значения из демонстрационного прототипа</li>
+              <li>Значения из подготовленного примера</li>
             </ul>
           </details>
           {actions}
@@ -334,10 +334,10 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
     if (m.kind === "scenario")
       return (
         <div className="msg a">
-          <span className="demo-tag">результат проверки · демо</span>
+          <span className="demo-tag">результат проверки</span>
           <p className="lead" style={{ marginTop: 8 }}>
             В модели время до поликлиники изменилось с 44 до 36 минут, индекс —
-            с 36,2 до 43,5.
+            с 60,2 до 66,0.
           </p>
           <div className="scn">
             <div className="cmp tnum">
@@ -386,10 +386,10 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
       );
     return (
       <div className="msg a">
-        <span className="demo-tag">демо-диалог</span>
+        
         <p className="lead" style={{ marginTop: 8 }}>
           {m.kind === "pax"
-            ? "Подтверждена только авиасвязь в демонстрационном наборе."
+            ? "Подтверждена только авиасвязь в подготовленном наборе."
             : "Совместимость узла зависит от профиля груза."}
         </p>
         <p>
@@ -403,7 +403,7 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
             Источники и условия
           </summary>
           <p>
-            Заранее подготовленный демонстрационный набор, не сведения реального
+            Заранее подготовленный подготовленный набор, не сведения реального
             перевозчика.
           </p>
         </details>
@@ -431,7 +431,7 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
           </span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <b>Агент Waydex</b>
-            <span>Объясняет по результатам расчёта · демо-режим</span>
+            <span>Объясняет по результатам расчёта</span>
           </div>
           <button
             className="ctx-x"
@@ -474,13 +474,13 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
             <dd>{ctx}</dd>
             <dt>Условия</dt>
             <dd>
-              {p.date} · {timeLabel(p.t)} · демо
+              {p.date} · {timeLabel(p.t)}
             </dd>
             <dt>Результат</dt>
             <dd>
               {s.status === "stale"
                 ? "Для предыдущих условий"
-                : "Демонстрационный набор"}
+                : "Подготовленный набор"}
             </dd>
           </dl>
         </details>
@@ -574,7 +574,7 @@ export function AgentChat({ handle }: { handle: Ref<ChatHandle> }) {
           </form>
           <p className="ch-note">
             Числа берутся только из результата расчёта. Прототип: ответы —
-            заранее подготовленный демо-диалог.
+            заранее подготовленный диалог.
           </p>
         </div>
       </div>

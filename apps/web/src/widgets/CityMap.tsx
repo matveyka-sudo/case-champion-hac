@@ -98,7 +98,7 @@ export function CityMap({
         const entry = fixtures.city[id];
         const name = id === "msk" ? "Москва" : id === "kgd" ? "Калининград" : "Новороссийск";
         const label = document.createElement("span");
-        label.textContent = name + " · демо-данные";
+        label.textContent = name + "-данные";
         L.marker(entry.c, { title: name, icon: L.divIcon({ className: "stop-dot xfer", iconSize: [16, 16], iconAnchor: [8, 8] }) })
           .bindTooltip(label, { permanent: true, direction: "top", className: "wx-tip" })
           .on("click", () => {
@@ -240,14 +240,14 @@ export function CityMap({
       const tip = document.createElement("span");
       tip.textContent =
         cells.length > 1
-          ? `Агрегат 4×4 км · ${cells.length} ячеек · ${f1(v)} (демо)`
+          ? `Агрегат 4×4 км · ${cells.length} ячеек · ${f1(v)}`
           : unavailable(c)
             ? "Нет расписания — результата нет"
             : st === "pending" && !layers.pop
               ? `${c.values[p.travel][metric === "overall" ? (Object.keys(p.cats)[0] as CatId) : metric as CatId]?.time ?? "—"} мин · индекс ещё не рассчитан`
             : layers.pop
               ? `≈ ${c.pop} жит. · модель`
-              : `${metric === "overall" ? "Общий индекс" : `${c.values[p.travel][metric as CatId]?.time} мин · индекс`} ${f1(v)} · демо`;
+              : `${metric === "overall" ? "Общий индекс" : `${c.values[p.travel][metric as CatId]?.time} мин · индекс`} ${f1(v)}`;
       shape
         .bindTooltip(tip, { className: "wx-tip", sticky: true, opacity: 1 })
         .on("click", () => {
@@ -379,7 +379,7 @@ export function CityMap({
       />
       {tileFailed && (
         <div className="panelc stmsg unk tile-note" role="status">
-          Подложка OpenStreetMap не загрузилась. Слои демонстрационных данных
+          Подложка OpenStreetMap не загрузилась. Слои подготовленных данных
           остаются доступны.
         </div>
       )}

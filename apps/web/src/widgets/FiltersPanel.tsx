@@ -401,7 +401,7 @@ export function FiltersPanel({ run }: { run: () => void }) {
                     value="nvr"
                     onChange={() => {}}
                   />,
-                  "Демо-пример подготовлен для Новороссийска.",
+                  "Пример подготовлен для Новороссийска.",
                 )}
                 {field(
                   "Направление",
@@ -466,7 +466,7 @@ export function FiltersPanel({ run }: { run: () => void }) {
             )}
             <div className="fgroup">
               <p className="flabel">
-                Профиль груза <small>демо</small>
+                Профиль груза 
               </p>
               <p className="fhint" style={{ margin: "0 0 6px" }}>
                 Товарная группа
@@ -516,7 +516,7 @@ export function FiltersPanel({ run }: { run: () => void }) {
                   }),
               )}
               <p className="fhint">
-                Демонстрационные условия. В API-режиме выбирается готовый
+                Выбранные условия. В API-режиме выбирается готовый
                 профиль с заданными срочностью, температурой и обработкой.
               </p>
             </div>
@@ -583,7 +583,7 @@ export function FiltersPanel({ run }: { run: () => void }) {
         </button>
         <small>
           {p.mode === "city"
-            ? "Демо-результат: вт, 10 ноября, 08:30"
+            ? "Результат: вт, 10 ноября, 08:30"
             : "Расчёт пары запускается этой кнопкой"}
         </small>
       </div>
