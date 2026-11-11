@@ -5,7 +5,7 @@ import type { AnalysisResult, Schemas, Selection } from "../api/types";
 import { selectionText } from "../api/adapters/result";
 import { journeyLines, segmentGeometryNotice } from "../api/adapters/journeyGeometry";
 import { isDemoModelSnapshot } from "../api/adapters/demoModel";
-import { pointScorePresentation, observedScoreLabel } from "../api/adapters/scorePresentation";
+import { displayedCategory, pointScorePresentation, observedScoreLabel } from "../api/adapters/scorePresentation";
 import type { Category } from "../api/types";
 const moscowCamera = (result: AnalysisResult | null) => isDemoModelSnapshot(result?.snapshot_id) || (result?.request.analysis_kind === "urban_passenger" && result.request.city_id === "moscow");
 
@@ -45,6 +45,8 @@ export function ApiMap({
   const host = useRef<HTMLDivElement>(null),
     map = useRef<L.Map | null>(null),
     layers = useRef<L.LayerGroup | null>(null),
+    routeLayers = useRef<L.LayerGroup | null>(null),
+    featureBounds = useRef<L.LatLngBounds | null>(null),
     last = useRef(""),
     lastAnalysis = useRef(""),
     lastZoom = useRef(zoomAction.id),
@@ -52,10 +54,13 @@ export function ApiMap({
     featureLayers = useRef(new Map<string, FeatureLayer[]>()),
     selectedLayers = useRef<FeatureLayer[]>([]);
   const [tileError, setTileError] = useState(false);
+  const selectedKind = selection?.entity_kind, selectedId = selection?.entity_id;
+  const activeCategory = result ? displayedCategory(result, category) : null;
   const inventory = useMemo(() => {
     const features = result?.map_data?.features || [];
     const children = new Map<string, string[]>(), byId = new Map<string, { feature: Schemas["MapFeature"]; index: number }>();
     const points = new Map<string, Schemas["MapFeature"]>(), bySubject = new Map<string, number[]>();
+    const journeyCategories = new Map<string, Set<Category>>();
     let maxPopulation = 1;
     features.forEach((feature, index) => {
       if (!byId.has(feature.entity_id)) byId.set(feature.entity_id, { feature, index });
@@ -77,6 +82,11 @@ export function ApiMap({
         bySubject.set(id, indices);
       }
     });
+    for (const metric of result?.metrics || []) if (metric.journey_id && metric.subject.category) {
+      const categories = journeyCategories.get(metric.journey_id) || new Set<Category>();
+      categories.add(metric.subject.category);
+      journeyCategories.set(metric.journey_id, categories);
+    }
     const items = features.map((feature) => {
       const indices = new Set<number>();
       for (const id of [feature.entity_id, feature.point_id, ...(children.get(feature.entity_id) || [])])
@@ -85,7 +95,7 @@ export function ApiMap({
       const candidates = [...indices].sort((a, b) => a - b).map((index) => scores[index]);
       return { feature, candidates };
     });
-    return { features, items, points, byId, maxPopulation };
+    return { features, items, points, byId, children, journeyCategories, maxPopulation };
   }, [result, scores]);
   useEffect(() => {
     if (!host.current) return;
@@ -107,6 +117,7 @@ export function ApiMap({
       .on("tileerror", () => setTileError(true))
       .addTo(m);
     layers.current = L.layerGroup().addTo(m);
+    routeLayers.current = L.layerGroup().addTo(m);
     const ro = new ResizeObserver(() => m.invalidateSize({ pan: false }));
     ro.observe(host.current);
     return () => {
@@ -114,6 +125,7 @@ export function ApiMap({
       m.remove();
       map.current = null;
       layers.current = null;
+      routeLayers.current = null;
     };
   }, []);
   useEffect(() => {
@@ -129,6 +141,7 @@ export function ApiMap({
     featureLayers.current.clear();
     selectedLayers.current = [];
     const bounds = L.latLngBounds([]);
+    const foreground: L.GeoJSON[] = [];
     inventory.items.forEach(({ feature: f, candidates: linkedScores }) => {
       if (!f.geometry) return;
       const indexEntity = ["sample_point", "cell", "territory"].includes(f.entity_kind);
@@ -206,13 +219,35 @@ export function ApiMap({
           onSelect({ entity_kind: f.entity_kind, entity_id: f.entity_id }),
         )
         .addTo(g);
+      if (f.entity_kind === "territory") layer.bringToBack();
+      if (f.entity_kind === "sample_point") foreground.push(layer);
       bounds.extend(layer.getBounds());
     });
+    for (const layer of foreground) layer.bringToFront();
+    featureBounds.current = bounds;
+  }, [result, inventory, onSelect, category, visibleLayers.index, visibleLayers.objects, visibleLayers.pop]);
+  useEffect(() => {
+    const m = map.current, g = routeLayers.current;
+    if (!m || !g) return;
+    g.clearLayers();
+    const bounds = L.latLngBounds([]);
+    if (featureBounds.current?.isValid()) bounds.extend(featureBounds.current);
     const paths = journeys ?? (scenarioView ? [] : result?.journeys || []);
+    const selectedFeature = selectedId ? inventory.byId.get(selectedId)?.feature : undefined;
+    const selectedIds = new Set([selectedId, selectedFeature?.point_id, ...(selectedId ? inventory.children.get(selectedId) || [] : [])].filter((id): id is string => !!id));
     paths.forEach((j) => {
       const point = j.point_id ? inventory.points.get(j.point_id) : undefined;
       const destinations = [j.destination_object_id, j.destination_node_id].flatMap((id) => id && inventory.byId.has(id) ? [inventory.byId.get(id)!] : []);
       const destination = destinations.sort((a, b) => a.index - b.index)[0]?.feature;
+      if (result?.analysis_kind === "urban_passenger") {
+        if (!selectedKind || !selectedIds.size || ![j.point_id, point?.entity_id, j.origin_node_id, j.destination_node_id, j.destination_object_id].some((id) => id && selectedIds.has(id))) return;
+        if (activeCategory) {
+          const categories = inventory.journeyCategories.get(j.journey_id);
+          const matches = categories?.size ? categories.has(activeCategory) : destination?.categories?.length
+            ? destination.categories.includes(activeCategory) : result.request.analysis_kind === "urban_passenger" && result.request.categories.length === 1 && result.request.categories[0] === activeCategory;
+          if (!matches) return;
+        }
+      }
       const parentSelection: Selection | undefined = j.point_id
         ? { entity_kind: "sample_point", entity_id: point?.entity_id || j.point_id }
         : destination ? { entity_kind: destination.entity_kind, entity_id: destination.entity_id } : undefined;
@@ -235,6 +270,8 @@ export function ApiMap({
         bounds.extend(route.getBounds());
       });
     });
+    if (selectedKind && selectedId)
+      for (const item of featureLayers.current.get(featureKey(selectedKind, selectedId)) || []) item.layer.bringToFront();
     const shownView = `${result?.analysis_id}:${scenarioView ? viewId || "scenario" : "baseline"}`;
     if (result && last.current !== shownView) {
       if (moscowCamera(result)) {
@@ -252,7 +289,7 @@ export function ApiMap({
         lastAnalysis.current = result.analysis_id;
       }
     }
-  }, [result, inventory, onSelect, scenarioView, journeys, viewId, category, visibleLayers.index, visibleLayers.objects, visibleLayers.pop]);
+  }, [result, inventory, onSelect, scenarioView, journeys, viewId, activeCategory, selectedKind, selectedId]);
   useEffect(() => {
     for (const item of selectedLayers.current) selectLayer(item, false);
     const next = selection ? featureLayers.current.get(featureKey(selection.entity_kind, selection.entity_id)) || [] : [];

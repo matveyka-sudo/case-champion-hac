@@ -65,7 +65,7 @@ describe("calculated point overview", () => {
     expect(overview.inventoryCount).toBe(1);
     expect(overview.denominator).toBeNull();
     render(createElement(CalculatedPoints, { overview, selection: null, areaSelected: false, onSelect: vi.fn() }));
-    expect(screen.getByText("Рассчитанные точки (1)")).toBeTruthy();
+    expect(screen.getByText("Точки с общим индексом (1)")).toBeTruthy();
     expect(screen.getByText("Переданная карта содержит не все точки из результата. Соотношение не определено.")).toBeTruthy();
   });
   it("uses accepted names and coordinates instead of technical identifiers", () => {
@@ -82,7 +82,7 @@ describe("calculated point overview", () => {
     expect(screen.getByText(/Индекс города:/).textContent).toContain("Нет данных");
     expect(onSelect).not.toHaveBeenCalled();
     const detail = view.container.querySelector("details")!;
-    await user.click(screen.getByText("Рассчитанные точки (1 из 2)"));
+    await user.click(screen.getByText("Точки с общим индексом (1 из 2)"));
     expect(detail.open).toBe(true);
     expect(onSelect).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: /Точка · 54.50100, 20.30100/ }));

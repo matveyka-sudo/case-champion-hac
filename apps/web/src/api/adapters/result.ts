@@ -69,6 +69,7 @@ export function measureLabel(name: string) {
     waiting_index: "Индекс ожидания",
     passenger_index: "Индекс пассажирской связи",
     unique_physical_departures: "Число уникальных отправлений",
+    accepted_dated_service_runs: "Учтённые рейсы",
     minimum_truck_access_seconds: "Время грузового доступа",
     cargo_site_index: "Индекс грузового доступа площадки",
     cargo_access_index: "Индекс грузового доступа территории",
@@ -229,7 +230,8 @@ export function measureText(m: Schemas["Metric"] | Schemas["Score"]) {
     );
   const unit = "unit" in m ? m.unit : "points_0_100";
   const value = unit === "seconds" ? m.value / 60 : m.value;
-  return `${new Intl.NumberFormat("ru", { maximumFractionDigits: 1 }).format(value)} ${unit === "seconds" || unit === "minutes" ? "мин" : unit === "points_0_100" ? "из 100" : unit === "hours" ? "ч" : unit}`;
+  const unitText = unit === "runs" ? ({ one: "рейс", few: "рейса", many: "рейсов", other: "рейса" } as Record<string, string>)[new Intl.PluralRules("ru").select(value)] : unit;
+  return `${new Intl.NumberFormat("ru", { maximumFractionDigits: 1 }).format(value)} ${unit === "seconds" || unit === "minutes" ? "мин" : unit === "points_0_100" ? "из 100" : unit === "hours" ? "ч" : unitText}`;
 }
 export function scoreBand(score: Schemas["Score"]) {
   if (score.status !== "available" || score.value === null) return "unknown";

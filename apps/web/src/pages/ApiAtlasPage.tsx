@@ -47,7 +47,7 @@ import {
 import { useAnalysisSession } from "../features/analysis/useAnalysisSession";
 import { scenarioJourneys } from "../api/adapters/scenario";
 import { scopeContainsTime, urbanScopeAvailability, type UrbanSelection } from "../api/adapters/urbanScopes";
-import { journeyLines, segmentGeometryNotice } from "../api/adapters/journeyGeometry";
+import { journeyLines } from "../api/adapters/journeyGeometry";
 import { urbanReadiness } from "../api/adapters/urbanReadiness";
 import { UrbanReadiness } from "../widgets/UrbanReadiness";
 import { CalculatedJourneys } from "../widgets/CalculatedJourneys";
@@ -877,7 +877,7 @@ export function ApiAtlasPage() {
               result.map_data.status !== "available" ||
               result.map_data.completeness === "partial" || segmentGeometry) && (
               <div className="api-map-note">
-                {segmentGeometry ? `${segmentGeometryNotice}.` : result.map_data?.status === "available"
+                {segmentGeometry ? "Геометрия маршрутов доступна частично." : result.map_data?.status === "available"
                   ? "Геометрия доступна частично."
                   : "Геометрия недоступна."}{" "}
                 Доступные показатели сохранены.

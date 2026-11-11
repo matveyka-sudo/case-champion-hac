@@ -13,10 +13,12 @@ const fake = vi.hoisted(() => {
   group.addTo.mockReturnValue(group);
   const geoJSON = vi.fn((_data: unknown, options: { pointToLayer?: (data: unknown, position: unknown) => unknown; style?: object }) => {
     const marker = (_data as { geometry?: { type: string } }).geometry?.type === "Point" ? options.pointToLayer?.({}, {}) : undefined;
-    const layer = { bindTooltip: vi.fn(), on: vi.fn(), addTo: vi.fn(), getBounds: () => bounds, setStyle: vi.fn(), marker };
+    const layer = { bindTooltip: vi.fn(), on: vi.fn(), addTo: vi.fn(), bringToBack: vi.fn(), bringToFront: vi.fn(), getBounds: () => bounds, setStyle: vi.fn(), marker };
     layer.bindTooltip.mockReturnValue(layer);
     layer.on.mockReturnValue(layer);
     layer.addTo.mockReturnValue(layer);
+    layer.bringToBack.mockReturnValue(layer);
+    layer.bringToFront.mockReturnValue(layer);
     return layer;
   });
   return { map, group, bounds, geoJSON, circleMarker: vi.fn(() => ({ setRadius: vi.fn() })) };
@@ -36,7 +38,7 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe("saved map rendering", () => {
   it("retains every feature and disjoint route geometry when selection changes without rebuilding layers", () => {
     const result = legGeometryFixture(), onSelect = vi.fn(), zoomAction = { id: 0, kind: "home" };
-    const props = { result, scores: result.scores, onSelect, zoomAction, selection: null };
+    const props = { result, scores: result.scores, onSelect, zoomAction, selection: { entity_kind: "sample_point" as const, entity_id: result.journeys[0].point_id! } };
     const view = render(createElement(ApiMap, props));
     const featureCount = result.map_data!.features!.length, count = featureCount + 2;
     expect(fake.geoJSON).toHaveBeenCalledTimes(count);
@@ -57,7 +59,7 @@ describe("saved map rendering", () => {
     expect(point.setStyle).toHaveBeenLastCalledWith(expect.objectContaining({ color: "#2f5bff", weight: 3 }));
     expect(point.marker.setRadius).toHaveBeenLastCalledWith(10);
     expect(route.setStyle).not.toHaveBeenCalled();
-    view.rerender(createElement(ApiMap, props));
+    view.rerender(createElement(ApiMap, { ...props, selection: null }));
     expect(fake.geoJSON).toHaveBeenCalledTimes(count);
     expect(point.setStyle).toHaveBeenLastCalledWith(fake.geoJSON.mock.calls[pointIndex][1].style);
     expect(point.marker.setRadius).toHaveBeenLastCalledWith(7);

@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { errorText, measureLabel, noticeText, reasonText } from "../src/api/adapters/result";
+import { errorText, measureLabel, measureText, noticeText, reasonText } from "../src/api/adapters/result";
+import fixture from "./fixtures/api/urban_passenger.json";
+import { decode } from "../src/api/validation";
 
 describe("partial walk result explanations", () => {
+  it("localizes the supplied dated-service count without changing its identifier or unknown state", () => {
+    const metric = { ...decode("Metric", fixture.metrics[0]), metric_id: "accepted-dated-service-runs", name: "accepted_dated_service_runs", unit: "runs", value: 300 };
+    expect(measureLabel(metric.name)).toBe("Учтённые рейсы");
+    expect(measureText(metric)).toBe("300 рейсов");
+    expect(measureText({ ...metric, value: 1 })).toBe("1 рейс");
+    expect(measureText({ ...metric, value: null, status: "unknown" })).toBe("Нет данных");
+    expect(metric.metric_id).toBe("accepted-dated-service-runs");
+  });
   it("labels actual backend metrics without changing unknown names", () => {
     expect(measureLabel("urban_h_seconds")).toBe("Опорное время города");
     expect(measureLabel("best_observed_journey_seconds")).toBe("Время найденного пути");
