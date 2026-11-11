@@ -1,4 +1,4 @@
-export type SavedPointer = { kind: "analysis" | "job"; id: string };
+export type SavedPointer = { kind: "analysis" | "job" | "scenario" | "scenario_job"; id: string };
 const validIdentifier = (id: string) => id.length > 0 && id.length <= 256 && id.trim() === id &&
   [...id].every((character) => character.codePointAt(0)! >= 32 && character.codePointAt(0) !== 127);
 export function parseSavedPointer(hash: string): SavedPointer | null {
@@ -13,8 +13,8 @@ export function parseSavedPointer(hash: string): SavedPointer | null {
     id = decodeURIComponent(query.slice(separator + 1).replaceAll("+", " "));
     encodeURIComponent(id); // Reject invalid Unicode before it reaches a request path.
   } catch { throw invalid(); }
-  if ((kind !== "analysis" && kind !== "job") || !validIdentifier(id)) throw invalid();
-  return { kind, id };
+  if (!["analysis", "job", "scenario", "scenario_job"].includes(kind) || !validIdentifier(id)) throw invalid();
+  return { kind: kind as SavedPointer["kind"], id };
 }
 export function savedPointerHash(pointer: SavedPointer) {
   const hash = `#atlas?${pointer.kind}=${encodeURIComponent(pointer.id)}`;
@@ -47,7 +47,7 @@ export function savedPointerWriter(onWrite: (hash: string) => void) {
     const pointer = { kind, id };
     expectedHash = savedPointerHash(pointer);
     onWrite(expectedHash);
-    writeSavedPointer(pointer, kind === "analysis");
+    writeSavedPointer(pointer, kind === "analysis" || kind === "scenario");
     return true;
   };
 }

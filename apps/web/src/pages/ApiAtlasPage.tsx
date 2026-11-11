@@ -46,7 +46,7 @@ import {
   scoreBand,
 } from "../api/adapters/result";
 import { useAnalysisSession } from "../features/analysis/useAnalysisSession";
-import { atlasLocation, savedPointerHash, savedPointerWriter, subscribeAtlasLocation, writeSavedPointer } from "../features/analysis/savedPointer";
+import { atlasLocation, savedPointerHash, savedPointerWriter, subscribeAtlasLocation, writeSavedPointer, type SavedPointer } from "../features/analysis/savedPointer";
 import { savedRequestDraft } from "../api/adapters/savedRequest";
 import { scenarioJourneys } from "../api/adapters/scenario";
 import { scopeContainsTime, urbanScopeAvailability, type UrbanSelection } from "../api/adapters/urbanScopes";
@@ -236,15 +236,18 @@ export function ApiAtlasPage() {
     setQuestion("");
     setInterfaceMessages([]);
     setCardHidden(false);
-    const value = await session.restore(hash, () => window.location.hash === hash);
-    if (!value || handledPointer.current !== hash || window.location.hash !== hash) return;
+    const snapshot = await session.restore(hash, () => window.location.hash === hash);
+    if (!snapshot || handledPointer.current !== hash || window.location.hash !== hash) return;
+    const value = snapshot.result;
     const restored = savedRequestDraft(value, catalog, caps);
     setDraft(restored.draft);
     setCargoProfile(restored.cargoProfile || { group: "", handling: "", limits: {} });
     setSavedWarning(restored.warning);
     setRestoreMode(false);
-    handledPointer.current = savedPointerHash({ kind: "analysis", id: value.analysis_id });
-    writeSavedPointer({ kind: "analysis", id: value.analysis_id }, true);
+    setScenarioView(!!snapshot.scenario);
+    const pointer: SavedPointer = snapshot.scenario ? { kind: "scenario", id: snapshot.scenario.run_id } : { kind: "analysis", id: value.analysis_id };
+    handledPointer.current = savedPointerHash(pointer);
+    writeSavedPointer(pointer, true);
   });
   useEffect(() => {
     const timer = setTimeout(() => { void restoreSaved(); }, 0);
@@ -1026,7 +1029,7 @@ export function ApiAtlasPage() {
                 <button
                   className="iconbtn primary"
                   disabled={!p.editable_local_graph || dirty || running}
-                  onClick={() => void session.runScenario(p)}
+                  onClick={() => void session.runScenario(p, savedPointerWriter((hash) => { handledPointer.current = hash; }))}
                 >
                   Проверить сценарий
                 </button>
