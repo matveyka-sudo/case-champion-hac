@@ -544,7 +544,7 @@ def validate_inputs(
             raise ValueError("WATER_ACCESS_REQUIRES_A_MIXED_PROFILE_WITH_WATER")
         if inputs.road_access:
             start, end = inputs.road_access
-            nodes = {node.node_id for node in snapshot.access_nodes}
+            terminal_nodes = {node.node_id for node in snapshot.access_nodes}
             scope = inputs.scope.comparison_scope
             if (
                 not (inputs.aviation_with_ground_access or inputs.water_with_ground_access)
@@ -553,7 +553,8 @@ def validate_inputs(
                 or inputs.readiness
                 or (start.from_node_id,) != scope.origin_node_ids
                 or (end.to_node_id,) != scope.destination_node_ids
-                or {start.from_node_id, start.to_node_id, end.from_node_id, end.to_node_id} - nodes
+                or {start.from_node_id, start.to_node_id, end.from_node_id, end.to_node_id}
+                - terminal_nodes
             ):
                 raise ValueError("ROAD_ACCESS_SCOPE_MISMATCH")
         if inputs.car_geometry is not None:

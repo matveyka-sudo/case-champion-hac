@@ -526,7 +526,7 @@ def calculate(
                 ),
             )
         prebooked = "m4-booking-model" in snapshot.source_versions
-        readiness = (
+        delivery_readiness = (
             tuple(replace(item, ready_at=request.departure_at) for item in inputs.readiness)
             if prebooked
             else inputs.readiness
@@ -537,7 +537,7 @@ def calculate(
             inputs.profile,
             inputs.states,
             inputs.actions,
-            readiness,
+            delivery_readiness,
             config=load_freight_config(),
             rules=load_cargo_delivery_rules(),
             resource_limit=inputs.resource_limit,
