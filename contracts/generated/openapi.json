@@ -1,6 +1,161 @@
 {
   "components": {
     "schemas": {
+      "Address": {
+        "properties": {
+          "h_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "H Seconds"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          },
+          "region": {
+            "title": "Region",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lat",
+          "lon",
+          "id",
+          "label",
+          "region",
+          "h_seconds"
+        ],
+        "title": "Address",
+        "type": "object"
+      },
+      "AddressQuery": {
+        "properties": {
+          "query": {
+            "maxLength": 150,
+            "minLength": 3,
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "AddressQuery",
+        "type": "object"
+      },
+      "AddressRequest": {
+        "properties": {
+          "address_id": {
+            "pattern": "^(node|way|relation)/[0-9]+$",
+            "title": "Address Id",
+            "type": "string"
+          },
+          "categories": {
+            "items": {
+              "enum": [
+                "hospital",
+                "school",
+                "kindergarten",
+                "college",
+                "university",
+                "metro",
+                "mcd",
+                "mck"
+              ],
+              "type": "string"
+            },
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Categories",
+            "type": "array"
+          },
+          "priorities": {
+            "additionalProperties": {
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ],
+              "type": "string"
+            },
+            "propertyNames": {
+              "enum": [
+                "hospital",
+                "school",
+                "kindergarten",
+                "college",
+                "university",
+                "metro",
+                "mcd",
+                "mck"
+              ]
+            },
+            "title": "Priorities",
+            "type": "object"
+          }
+        },
+        "required": [
+          "address_id",
+          "categories"
+        ],
+        "title": "AddressRequest",
+        "type": "object"
+      },
+      "AddressResult": {
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryResult"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "index": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "address",
+          "index",
+          "categories",
+          "source"
+        ],
+        "title": "AddressResult",
+        "type": "object"
+      },
       "AnalysisGroupItem": {
         "additionalProperties": false,
         "properties": {
@@ -783,6 +938,68 @@
         "title": "CargoHandlingChange",
         "type": "object"
       },
+      "CategoryResult": {
+        "properties": {
+          "category": {
+            "enum": [
+              "hospital",
+              "school",
+              "kindergarten",
+              "college",
+              "university",
+              "metro",
+              "mcd",
+              "mck"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "destination": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Destination"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "index": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index"
+          },
+          "path": {
+            "items": {
+              "$ref": "#/components/schemas/Point"
+            },
+            "title": "Path",
+            "type": "array"
+          },
+          "seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seconds"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "title": "CategoryResult",
+        "type": "object"
+      },
       "CompactAnalysisScope": {
         "additionalProperties": false,
         "description": "Allowed request dimensions for one bounded static input profile.",
@@ -1129,6 +1346,182 @@
           "vehicle_constraints"
         ],
         "title": "DeliveryCargoProfile",
+        "type": "object"
+      },
+      "Destination": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "line": {
+            "title": "Line",
+            "type": "string"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lat",
+          "lon",
+          "id",
+          "name",
+          "location",
+          "line"
+        ],
+        "title": "Destination",
+        "type": "object"
+      },
+      "District": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "District",
+        "type": "object"
+      },
+      "DistrictResult": {
+        "properties": {
+          "boundary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PolygonGeometry"
+              },
+              {
+                "$ref": "#/components/schemas/MultiPolygonGeometry"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Boundary"
+          },
+          "categories": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "propertyNames": {
+              "enum": [
+                "hospital",
+                "school",
+                "kindergarten",
+                "college",
+                "university",
+                "metro",
+                "mcd",
+                "mck"
+              ]
+            },
+            "title": "Categories",
+            "type": "object"
+          },
+          "district": {
+            "$ref": "#/components/schemas/District"
+          },
+          "index": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index"
+          },
+          "overall_population_covered": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Population Covered"
+          },
+          "population": {
+            "title": "Population",
+            "type": "number"
+          },
+          "population_covered": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "propertyNames": {
+              "enum": [
+                "hospital",
+                "school",
+                "kindergarten",
+                "college",
+                "university",
+                "metro",
+                "mcd",
+                "mck"
+              ]
+            },
+            "title": "Population Covered",
+            "type": "object"
+          },
+          "sample_count": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sample Count"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "district",
+          "index",
+          "categories",
+          "population_covered",
+          "population",
+          "source"
+        ],
+        "title": "DistrictResult",
         "type": "object"
       },
       "ErrorDetail": {
@@ -3174,6 +3567,24 @@
         "title": "PipelineCargoProfile",
         "type": "object"
       },
+      "Point": {
+        "properties": {
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          }
+        },
+        "required": [
+          "lat",
+          "lon"
+        ],
+        "title": "Point",
+        "type": "object"
+      },
       "PointGeometry": {
         "additionalProperties": false,
         "properties": {
@@ -5008,6 +5419,597 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/address-access/addresses": {
+      "post": {
+        "operationId": "addresses_api_v1_address_access_addresses_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressQuery"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Address"
+                  },
+                  "title": "Response Addresses Api V1 Address Access Addresses Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Addresses"
+      }
+    },
+    "/api/v1/address-access/calculate": {
+      "post": {
+        "operationId": "calculate_api_v1_address_access_calculate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Calculate"
+      }
+    },
+    "/api/v1/address-access/districts": {
+      "get": {
+        "operationId": "districts_api_v1_address_access_districts_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/District"
+                  },
+                  "title": "Response Districts Api V1 Address Access Districts Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Districts"
+      }
+    },
+    "/api/v1/address-access/districts/{district_id}": {
+      "get": {
+        "operationId": "district_api_v1_address_access_districts__district_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "district_id",
+            "required": true,
+            "schema": {
+              "title": "District Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DistrictResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "District"
+      }
+    },
     "/api/v1/analyses": {
       "post": {
         "operationId": "analyse_api_v1_analyses_post",

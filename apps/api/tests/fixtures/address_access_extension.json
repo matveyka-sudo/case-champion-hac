@@ -1,0 +1,23 @@
+{
+  "reason": "Additive address and district API and read-only SQLite address catalogue",
+  "schemas": {
+    "manifest.json": "e3ea800e5c69d8c3e9960e2ea8b9932fccace493d9014acde977e69bfc97516f",
+    "openapi.json": "a6e9d793623c3f63a8bede344e713c8aa8228a371994a36a7a212ccbbcbe69f7"
+  },
+  "sql_literals": [
+    "SELECT id,label,region,lat,lon,h_seconds FROM address\n           WHERE NOT EXISTS (\n               SELECT 1 FROM json_each(?) WHERE instr(' ' || address.search || ' ', value) = 0\n           )\n           ORDER BY label,id LIMIT 12",
+    "SELECT id,label,region,lat,lon,h_seconds FROM address WHERE id=?",
+    "SELECT id,name,geometry FROM district ORDER BY name",
+    "SELECT value FROM metadata WHERE key GLOB 'walk-area:*'",
+    "SELECT id,name,lat,lon,location,line FROM destination\n           WHERE category=? AND lat BETWEEN ? AND ? AND lon BETWEEN ? AND ?\n           ORDER BY ((lat-?)*(lat-?))+?*((lon-?)*(lon-?)),\n                    CASE location WHEN 'mapped_entrance' THEN 0 ELSE 1 END, id LIMIT ?",
+    "SELECT value FROM metadata WHERE key=?"
+  ],
+  "sql_call_hashes": [
+    "0711e5b62c4a6420e621b60e633ba15f8240140bab34113d5fa61d716baee86f",
+    "157b41bb61e840aacc2b70218b6f5dfc536ee0626032dd6e7d98ab93c8d0e2d7",
+    "4e36d6f781e078c1e1ccf92c662371569624600eb225e39c4c8675d06a6ce865",
+    "610a2491969a0f932c78815f62d0eae463007488296daf832b2d026fcdaf60d7",
+    "886d7c35d292cac92d3016239ffca51e0196276db4d89ef6406a9d9def2ebe6f",
+    "b58a3181d9723b3498c18122c708bf511fe70bdc8eb780163120dce0cb7cf6c6"
+  ]
+}

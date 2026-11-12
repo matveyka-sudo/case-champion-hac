@@ -1,0 +1,16 @@
+[
+  {
+    "id": "reviewed:serebryanye-prudy:shkolnaya-4:hospital-entrance",
+    "locality_id": "plan:oblast-relation-1026234:Серебряные Пруды № 564/63 от 21.10.2020",
+    "category": "hospital",
+    "name": "Серебряно-Прудская больница, Школьная улица, 4",
+    "coordinates": [38.718206, 54.469583],
+    "location": "mapped_entrance",
+    "reviewed_on": "2026-11-13",
+    "facility_source": "https://base.garant.ru/411523059/",
+    "entrance_source": "https://yandex.com/maps/1/moscow-and-moscow-oblast/house/shkolnaya_ulitsa_4/Z0EYcQZoSE0PQFtufXh3eHhmZg%3D%3D/",
+    "routing_extract": "moscow-oblast-261107.osm.pbf",
+    "routing_way": "https://www.openstreetmap.org/way/60788210",
+    "scope": "Вход, обозначенный на карте для адреса Школьная, 4. Пеший граф привязывает точку к Школьной улице примерно в 22 м от входа. Отдельные двери отделений и путь по территории больницы не проверены."
+  }
+]

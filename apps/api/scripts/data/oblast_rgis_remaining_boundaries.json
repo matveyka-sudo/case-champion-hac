@@ -1,0 +1,94 @@
+[
+  {
+    "city": "Бронницы",
+    "municipality_id": "oblast-relation-1703085",
+    "anchor": [
+      38.2591,
+      55.422
+    ],
+    "rgis_layer": 380,
+    "feature_id": 6792988161,
+    "file": "oblast_bronnitsy_rgis.json",
+    "sha256": "ebd21377bd4586cf5659e6ba7564f78695c41807fc81e59ff4374899ac8e74cb",
+    "response_sha256": "97a3d94ccfd7bc75778979fc99a8661471b7a61622414db26a6b2bf19db4d7c8",
+    "retrieved_on": "2026-11-13",
+    "url": "https://rgis.mosreg.ru/v3/swagger/map/layer?layer=380&bbox=38.204100,55.385000,38.314100,55.459000"
+  },
+  {
+    "city": "Дмитров",
+    "municipality_id": "oblast-relation-173763",
+    "anchor": [
+      37.5200723,
+      56.3450695
+    ],
+    "rgis_layer": 380,
+    "feature_id": 6614779661,
+    "file": "oblast_dmitrov_rgis.json",
+    "sha256": "bc8761094f298372c3ff60abed1d4786284cc5fe6dd0173ab870adad8454569d",
+    "response_sha256": "6c9367aeed36ec8e8e8f21fed08a6f12a74d6f66a3c88ea7342361569296bc43",
+    "retrieved_on": "2026-11-13",
+    "url": "https://rgis.mosreg.ru/v3/swagger/map/layer?layer=380&bbox=37.465072,56.308070,37.575072,56.382070",
+    "repair_zero_area_lines": true
+  },
+  {
+    "city": "Павловский Посад",
+    "municipality_id": "oblast-relation-179639",
+    "anchor": [
+      38.6507838,
+      55.7813357
+    ],
+    "rgis_layer": 380,
+    "feature_id": 6403892531,
+    "file": "oblast_pavlovsky_posad_rgis.json",
+    "sha256": "9d1b66d01f10e4a1c667a65cedeb1caea1c418ea999022a90fd9d40f36378a42",
+    "response_sha256": "b8e576dd30f38da6cc08ead3ff06180a661d0c9210e8dd205de35472b1708818",
+    "retrieved_on": "2026-11-13",
+    "url": "https://rgis.mosreg.ru/v3/swagger/map/layer?layer=380&bbox=38.595784,55.744336,38.705784,55.818336"
+  },
+  {
+    "city": "Солнечногорск",
+    "municipality_id": "oblast-relation-180838",
+    "anchor": [
+      36.9781536,
+      56.1853501
+    ],
+    "rgis_layer": 380,
+    "feature_id": 5167147771,
+    "file": "oblast_solnechnogorsk_rgis.json",
+    "sha256": "2e9ecc7e6219fed412233ba5a19526796941e639ad4b487182f9b654ad915fb9",
+    "response_sha256": "2f8614d9f8fc2e7385c2f8cbd57acfc1a58367a35c6f349c5ad574ca5dc0eef0",
+    "retrieved_on": "2026-11-13",
+    "url": "https://rgis.mosreg.ru/v3/swagger/map/layer?layer=380&bbox=36.923154,56.148350,37.033154,56.222350",
+    "repair_zero_area_lines": true
+  },
+  {
+    "city": "Зарайск",
+    "municipality_id": "oblast-relation-184665",
+    "anchor": [
+      38.8818137,
+      54.7585694
+    ],
+    "rgis_layer": 380,
+    "feature_id": 6157026441,
+    "file": "oblast_zaraysk_rgis.json",
+    "sha256": "e4e123e1d5d23f60680305e90081da8d59755f1925896d7d7c52c28df43fda59",
+    "response_sha256": "337be6176fd122e39586bf42413c70d70efcadd1856f8ffb7cd6cff547b2bf69",
+    "retrieved_on": "2026-11-13",
+    "url": "https://rgis.mosreg.ru/v3/swagger/map/layer?layer=380&bbox=38.826814,54.721569,38.936814,54.795569"
+  },
+  {
+    "city": "Луховицы",
+    "municipality_id": "oblast-relation-184667",
+    "anchor": [
+      39.0277188,
+      54.9655573
+    ],
+    "rgis_layer": 380,
+    "feature_id": 6644018431,
+    "file": "oblast_lukhovitsy_rgis.json",
+    "sha256": "3c4bfc9abab3e7ff65754906c133c018e5bf41decb4e9b657b66e7a8189cceb1",
+    "response_sha256": "70b4bb3e80172fbaa95b576584c1e762d1068b2882cc86061ace2118c5150270",
+    "retrieved_on": "2026-11-13",
+    "url": "https://rgis.mosreg.ru/v3/swagger/map/layer?layer=380&bbox=38.972719,54.928557,39.082719,55.002557"
+  }
+]

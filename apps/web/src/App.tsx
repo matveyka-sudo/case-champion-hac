@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { LandingPage } from "./pages/LandingPage";
+import { AtlasProvider } from "./features/AtlasProvider";
 import { atlasLocation, subscribeAtlasLocation } from "./features/analysis/savedPointer";
 const requestedDataMode = new URLSearchParams(window.location.search).get("data") || import.meta.env.VITE_DATA_MODE || "demo";
 const dataMode = requestedDataMode === "training" ? "api" : requestedDataMode;
@@ -15,7 +16,7 @@ const AtlasPage = lazy(() => dataMode === "api"
   ? import("./pages/ApiAtlasPage").then(m => ({default:m.ApiAtlasPage}))
   : import("./pages/AtlasPage").then(m => ({default:m.AtlasPage})),
 );
-import { AtlasProvider } from "./features/AtlasProvider";
+const AddressAccessPage = lazy(() => import("./pages/AddressAccessPage"));
 class Boundary extends Component<{ children: ReactNode }, { error: boolean }> {
   state = { error: false };
   static getDerivedStateFromError() {
@@ -40,12 +41,13 @@ export default function App() {
       () => "",
     ),
     atlas = hash.startsWith("#atlas"),
+    addressAccess = hash === "#address-access",
     savedScroll = useRef(0);
   useEffect(() => {
-    document.title = atlas ? "Waydex — атлас" : "Waydex — связи территорий";
-  }, [atlas]);
+    document.title = addressAccess ? "Waydex — инфраструктура рядом с домом" : atlas ? "Waydex — атлас" : "Waydex — связи территорий";
+  }, [atlas, addressAccess]);
   useEffect(() => {
-    if (!atlas) {
+    if (!atlas && !addressAccess) {
       const el = document.getElementById(hash.slice(1));
       if (el) {
         const raf = requestAnimationFrame(() =>
@@ -58,30 +60,30 @@ export default function App() {
         return () => cancelAnimationFrame(raf);
       }
     }
-  }, [hash, atlas]);
+  }, [hash, atlas, addressAccess]);
   useEffect(() => {
-    if (atlas) {
+    if (atlas || addressAccess) {
       savedScroll.current = window.scrollY;
       window.scrollTo(0, 0);
       return () => window.scrollTo(0, savedScroll.current);
     }
-  }, [atlas]);
+  }, [atlas, addressAccess]);
   return (
     <Boundary>
       <AtlasProvider>
         <a
           className="visually-hidden-focusable"
-          href={atlas ? "#atlas" : "#main"}
+          href={addressAccess ? "#address-access" : atlas ? "#atlas" : "#main"}
           onClick={(e) => {
             e.preventDefault();
-            const el = document.getElementById(atlas ? "atlas" : "main");
+            const el = document.getElementById(addressAccess ? "address-access" : atlas ? "atlas" : "main");
             el?.setAttribute("tabindex", "-1");
             el?.focus();
           }}
         >
           Перейти к содержанию
         </a>
-        {atlas ? (
+        {addressAccess ? <Suspense fallback={<p role="status">Открываем поиск адреса…</p>}><AddressAccessPage /></Suspense> : atlas ? (
           <Suspense
             fallback={
               <div className="wrap" role="status" style={{ padding: 40 }}>

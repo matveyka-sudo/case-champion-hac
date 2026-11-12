@@ -1078,6 +1078,7 @@ export function ApiAtlasPage() {
   return (
     <AtlasShell className={demoModel ? "has-demo-model" : ""} label="Атлас Waydex — API"
       header={<AtlasHeader mode={draft.kind === "urban_passenger" ? "city" : draft.kind === "intercity_passenger" ? "pax" : "cargo"}
+        controls={<a className="iconbtn" href="#address-access">По адресу</a>}
         title={origin?.name || "Россия · выберите город"} theme={theme} onThemeChange={setTheme}
         onModeChange={(mode) => toggleMode(mode === "city" ? "urban_passenger" : mode === "pax" ? "intercity_passenger" : draft.kind.endsWith("cargo") ? draft.kind : "urban_cargo")}
         onFilters={() => { setFiltersOpen(true); setChatOpen(false); }} chatOpen={chatOpen}

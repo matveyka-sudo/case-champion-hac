@@ -1,0 +1,91 @@
+[
+  {
+    "id": "way/240372235",
+    "locality_id": "rgis:380:41228341",
+    "coordinates": [
+      36.4584572,
+      55.9760611
+    ],
+    "reviewed_on": "2026-11-13",
+    "geometry_source": "https://www.openstreetmap.org/way/240372235",
+    "routing_extract": "moscow-oblast-261107.osm.pbf",
+    "category": "school",
+    "name": "Средняя школа Восхода, дом 14",
+    "location": "object",
+    "facility_source": "https://go-voshod.ru/mun/school",
+    "status_source": "https://regions.ru/istra/obrazovanie/v-zato-voshod-shkolniki-otmetili-den-znanij-v-obnovlennoj-shkole",
+    "scope": "Подход к учебному зданию. Отдельный вход не подтверждён."
+  },
+  {
+    "id": "way/618055997",
+    "locality_id": "rgis:380:8434561851",
+    "coordinates": [
+      36.7814608,
+      55.3260374
+    ],
+    "reviewed_on": "2026-11-13",
+    "geometry_source": "https://www.openstreetmap.org/way/618055997",
+    "routing_extract": "moscow-oblast-261107.osm.pbf",
+    "category": "school",
+    "name": "Средняя школа Молодёжного, дом 24",
+    "location": "object",
+    "facility_source": "https://www.xn--d1aejfejdb4j9b.xn--p1ai/activities/mou-sosh-go-molodezhnyy-moskovskoy-oblasti",
+    "scope": "Подход к учебному зданию. Отдельный вход не подтверждён."
+  },
+  {
+    "id": "way/618056014",
+    "locality_id": "rgis:380:8434561851",
+    "coordinates": [
+      36.7825862,
+      55.3266229
+    ],
+    "reviewed_on": "2026-11-13",
+    "geometry_source": "https://www.openstreetmap.org/way/618056014",
+    "routing_extract": "moscow-oblast-261107.osm.pbf",
+    "address_label": "Молодёжный, 3",
+    "scope": "Жилой дом с addr:place без названия улицы."
+  },
+  {
+    "id": "way/48227589",
+    "locality_id": "rgis:380:6800025401",
+    "coordinates": [
+      38.1092594,
+      55.8758099
+    ],
+    "reviewed_on": "2026-11-13",
+    "geometry_source": "https://www.openstreetmap.org/way/48227589",
+    "routing_extract": "moscow-oblast-261107.osm.pbf",
+    "address_label": "Звёздный городок, 2",
+    "scope": "Жилой дом с addr:place без названия улицы."
+  },
+  {
+    "id": "way/240372191",
+    "locality_id": "rgis:380:41228341",
+    "coordinates": [
+      36.4516571,
+      55.9777183
+    ],
+    "reviewed_on": "2026-11-13",
+    "geometry_source": "https://www.openstreetmap.org/way/240372191",
+    "routing_extract": "moscow-oblast-261107.osm.pbf",
+    "address_label": "Восход, 7",
+    "scope": "Жилой дом с addr:place без названия улицы."
+  },
+  {
+    "id": "way/618055994",
+    "locality_id": "rgis:380:8434561851",
+    "coordinates": [
+      36.78145,
+      55.32472
+    ],
+    "reviewed_on": "2026-11-13",
+    "geometry_source": "https://www.openstreetmap.org/way/618055994",
+    "routing_extract": "moscow-oblast-261107.osm.pbf",
+    "category": "kindergarten",
+    "name": "Дошкольное отделение школы Молодёжного, дом 23",
+    "location": "object",
+    "facility_source": "https://meganorm.ru/mega_doc/dop1/15/postanovlenie_pravitelstva_mo_ot_04_10_2022_N_1064_35_red_ot/1/postanovlenie_pravitelstva_mo_ot_20_12_2022_N_1407_47_o.html",
+    "address_source": "https://yandex.com/maps/org/detskiy_sad_39/49461754392/",
+    "scope": "Подход к зданию дошкольного отделения. Отдельный вход не подтверждён."
+  }
+]

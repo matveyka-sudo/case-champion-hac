@@ -1,0 +1,16 @@
+[
+  {
+    "city": "Шаховская",
+    "settlement_kind": "settlement",
+    "registry_id": "50:06-4.250",
+    "municipality_id": "oblast-relation-184074",
+    "anchor": [
+      35.5102036,
+      56.031464
+    ],
+    "file": "Шаховская-35.5102036-intersect.json",
+    "sha256": "57698fb6f562731647663b94afea9dbb2342871e7b41f7eebab55f830795564f",
+    "registration_date": "2025-11-05T07:34:38+00:00",
+    "url": "https://nspd.gov.ru/map"
+  }
+]
