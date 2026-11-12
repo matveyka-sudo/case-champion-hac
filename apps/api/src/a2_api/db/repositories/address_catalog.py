@@ -6,10 +6,15 @@ import os
 import sqlite3
 from contextlib import closing
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Protocol, cast
 
 MAX_CANDIDATES = 12
 RADIUS_DEGREES = 0.20
+
+
+class Coordinates(Protocol):
+    lat: float
+    lon: float
 
 
 def catalogue_path() -> Path:
@@ -61,10 +66,10 @@ def restricted_walk_areas(db: sqlite3.Connection) -> list[dict[str, Any]]:
 
 
 def candidate_rows(
-    db: sqlite3.Connection, lat: float, lon: float, category: str, *, limit: int = MAX_CANDIDATES
+    db: sqlite3.Connection, point: Coordinates, category: str, *, limit: int = MAX_CANDIDATES
 ) -> list[sqlite3.Row]:
     # Longitude degree length varies with latitude.
-    longitude_scale = math.cos(math.radians(lat))
+    longitude_scale = math.cos(math.radians(point.lat))
     rows = db.execute(
         """SELECT id,name,lat,lon,location,line FROM destination
            WHERE category=? AND lat BETWEEN ? AND ? AND lon BETWEEN ? AND ?
@@ -72,15 +77,15 @@ def candidate_rows(
                     CASE location WHEN 'mapped_entrance' THEN 0 ELSE 1 END, id LIMIT ?""",
         (
             category,
-            lat - RADIUS_DEGREES,
-            lat + RADIUS_DEGREES,
-            lon - RADIUS_DEGREES / longitude_scale,
-            lon + RADIUS_DEGREES / longitude_scale,
-            lat,
-            lat,
+            point.lat - RADIUS_DEGREES,
+            point.lat + RADIUS_DEGREES,
+            point.lon - RADIUS_DEGREES / longitude_scale,
+            point.lon + RADIUS_DEGREES / longitude_scale,
+            point.lat,
+            point.lat,
             longitude_scale**2,
-            lon,
-            lon,
+            point.lon,
+            point.lon,
             limit,
         ),
     ).fetchall()

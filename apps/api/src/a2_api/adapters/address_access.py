@@ -318,8 +318,8 @@ def calculate_categories(
 
     def candidates(category: Category) -> list[sqlite3.Row]:
         if not areas:
-            return candidate_rows(db, point.lat, point.lon, category)
-        rows = candidate_rows(db, point.lat, point.lon, category, limit=-1)
+            return candidate_rows(db, point, category)
+        rows = candidate_rows(db, point, category, limit=-1)
         if scope is not None:
             return [item for item in rows if scope.covers(ShapePoint(item["lon"], item["lat"]))]
         return [
