@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { indexColor } from "../api/adapters/mapIndexColor";
 import { categoryLabels } from "../api/adapters/request";
-import { modeText } from "../api/adapters/result";
+import { modeText, timestampText } from "../api/adapters/result";
 import type { AnalysisResult, Schemas, Selection } from "../api/types";
 import { Icon } from "../shared/ui";
 
@@ -13,12 +13,18 @@ function duration(seconds: number) {
   return `${Math.floor(minutes / 60)} ч ${minutes % 60} мин`;
 }
 
-export function CompactResultSummary({ result, selection, score, time, metrics }: {
+const stationNames: Record<string, string> = {
+  s2000006: "Белорусский вокзал",
+  s2000003: "Казанский вокзал",
+};
+
+export function CompactResultSummary({ result, selection, score, time, metrics, originTimezone }: {
   result: AnalysisResult;
   selection: Selection | null;
   score?: Schemas["Score"] | null;
   time?: Schemas["Metric"] | null;
   metrics: Schemas["Metric"][];
+  originTimezone?: string;
 }) {
   const request = result.request;
   if (request.analysis_kind === "urban_passenger") {
@@ -50,10 +56,14 @@ export function CompactResultSummary({ result, selection, score, time, metrics }
         const car = mode === "private_car";
         const index = result.scores.find((item) => item.subject.mode === mode &&
           item.name === (car ? "private_car_index" : "passenger_index"));
-        const findTime = (name: string) => result.metrics.find((metric) =>
-          metric.subject.mode === mode && metric.name === name && metric.status === "available")?.value;
-        const travel = findTime(car ? "private_car_path_seconds" : "path_seconds");
-        const wait = car ? null : findTime("initial_wait_seconds");
+        const findMetric = (name: string) => result.metrics.find((metric) =>
+          metric.subject.mode === mode && metric.name === name && metric.status === "available");
+        const path = findMetric(car ? "private_car_path_seconds" : "path_seconds");
+        const travel = path?.value;
+        const wait = car ? null : findMetric("initial_wait_seconds")?.value;
+        const journey = result.journeys.find((item) => item.journey_id === path?.journey_id);
+        const transfers = journey?.legs.filter((leg) => leg.kind === "wait_transfer") ?? [];
+        const stationWalks = journey?.legs.filter((leg) => leg.kind === "walk") ?? [];
         const value = index?.status === "available" ? index.value : null;
         const reason = index?.reason_code;
         const missingReference = result.references.some((reference) => reference.status === "unknown");
@@ -68,6 +78,25 @@ export function CompactResultSummary({ result, selection, score, time, metrics }
           {wait != null && <div className="api-summary-fact">
             <span>До первого отправления</span><strong>{duration(wait)}</strong>
           </div>}
+          {journey && <details className="more">
+            <summary>Детали поездки</summary>
+            <div className="api-summary-fact">
+              <span>Время запроса</span><strong>{timestampText(request.departure_at, originTimezone, false)}</strong>
+            </div>
+            <div className="api-summary-fact">
+              <span>Первое отправление</span><strong>{timestampText(journey.departure_at, originTimezone, false)}</strong>
+            </div>
+            {transfers.length > 0 && <div className="api-summary-fact">
+              <span>Ожидание на пересадках</span>
+              <strong>{duration(transfers.reduce((total, leg) => total + leg.duration_seconds, 0))}</strong>
+            </div>}
+            {stationWalks.map((leg) => <div key={leg.start_at} className="api-summary-fact">
+              <span>{leg.from_node_id && leg.to_node_id && stationNames[leg.from_node_id] && stationNames[leg.to_node_id]
+                ? `${stationNames[leg.from_node_id]} → ${stationNames[leg.to_node_id]}`
+                : "Пеший переход"}</span>
+              <strong>{duration(leg.duration_seconds)}</strong>
+            </div>)}
+          </details>}
           {car && result.limitations.includes("ROAD_CHAIN_VIA_MOSCOW") &&
             <p className="api-summary-note">Маршрут через Москву.</p>}
           {reason === "NO_FEASIBLE_ROUTE" ? <p className="api-summary-note">В проверенной сети подходящего рейса нет.</p> :
@@ -76,6 +105,8 @@ export function CompactResultSummary({ result, selection, score, time, metrics }
               : "Недостаточно подтверждённых данных для расчёта."}</p>}
         </div>;
       })}
+      {result.evidence_refs.some((ref) => ref.source_id === "yandex-rasp") &&
+        <p className="api-summary-note"><a href="https://rasp.yandex.ru/" target="_blank" rel="noreferrer">Данные предоставлены сервисом Яндекс.Расписания</a></p>}
       {modes.length === 0 && <p className="api-summary-note">Недостаточно данных для подтверждения поездки.</p>}
     </section>;
   }

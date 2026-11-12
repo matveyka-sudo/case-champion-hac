@@ -6,6 +6,7 @@ entry is rejected rather than rounded into a different access restriction.
 
 import hashlib
 import json
+import re
 from dataclasses import asdict, dataclass, is_dataclass
 from datetime import UTC, date, datetime, timedelta
 from math import isclose
@@ -82,7 +83,10 @@ class RoadBuild:
     traffic_mode: Literal["static"] = "static"
 
     def __post_init__(self) -> None:
-        if self.engine_version != "3.5.1" or self.traffic_mode != "static":
+        supported = self.engine_version == "3.5.1" or (
+            self.costing == "auto" and re.fullmatch(r"3\.9\.1-[0-9a-f]{7,40}", self.engine_version)
+        )
+        if not supported or self.traffic_mode != "static":
             raise ValueError("UNSUPPORTED_ROAD_VERSION_OR_TRAFFIC")
         for value in (
             self.snapshot_id,
@@ -166,6 +170,10 @@ class RoadRequest:
             raise ValueError("CONNECTOR_DIRECTION_MISMATCH")
         if self.origin.build != self.destination.build:
             raise ValueError("ROAD_BUILD_MISMATCH")
+        # The prepared 3.9.1 reference receipts use a separate capture path.
+        # The timed request and response contract below remains pinned to 3.5.1.
+        if self.origin.build.engine_version != "3.5.1":
+            raise ValueError("UNSUPPORTED_TIMED_ROAD_REQUEST_VERSION")
         if not all(
             isinstance(v, str) and v.strip()
             for v in (self.origin_id, self.destination_id, self.search_parameters_id)
