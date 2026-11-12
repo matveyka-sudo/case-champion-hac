@@ -15,7 +15,6 @@ describe("saved calculated journey selection", () => {
     expect(detail.open).toBe(true);
     const choice = screen.getByRole("button", { name: /Синтетический аэропорт/ });
     expect(choice.textContent).toContain("10 мин · полное время");
-    expect(choice.textContent).toContain("Частичные данные");
     await user.click(choice);
     expect(onSelect).toHaveBeenCalledWith({ entity_kind: "sample_point", entity_id: result.journeys[0].point_id });
     expect(detail.open).toBe(false);

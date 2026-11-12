@@ -28,7 +28,6 @@ export function ExplanationFinding({ finding, result, onSelect }: {
           }}
         >
           {measureLabel(value.name)}: {measureText(value)}
-          {value.completeness === "partial" && " · частичная оценка"}
         </button>
       ) : (
         <span key={key}>{kind === "score" ? "Индекс недоступен" : "Метрика недоступна"}</span>

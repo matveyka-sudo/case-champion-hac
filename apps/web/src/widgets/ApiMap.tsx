@@ -4,11 +4,14 @@ import { feature } from "topojson-client";
 import type { GeometryCollection, Topology } from "topojson-specification";
 import type { GeoJsonObject } from "geojson";
 import type { AnalysisResult, Schemas, Selection } from "../api/types";
+import { indexColor } from "../api/adapters/mapIndexColor";
+import { sampledPointNames } from "../api/adapters/pointOverview";
+import { destinationCategoryLabels } from "../api/adapters/request";
 import { selectionText } from "../api/adapters/result";
 import { journeyLines, segmentGeometryNotice } from "../api/adapters/journeyGeometry";
 import { displayedCategory, pointScorePresentation, observedScoreLabel } from "../api/adapters/scorePresentation";
 import type { Category } from "../api/types";
-const moscowCamera = (result: AnalysisResult | null) => (result?.request.analysis_kind === "urban_passenger" || result?.request.analysis_kind === "urban_cargo") && result.request.city_id === "moscow";
+const moscowCamera = (result: AnalysisResult | null) => !result?.limitations.includes("BOUNDED_ANALYSIS_SCOPE") && (result?.request.analysis_kind === "urban_passenger" || result?.request.analysis_kind === "urban_cargo") && result.request.city_id === "moscow";
 
 // Map camera anchors for the three pilot cities, independent of routing inputs.
 const pilotCenters: Record<string, L.LatLngTuple> = {
@@ -17,11 +20,20 @@ const pilotCenters: Record<string, L.LatLngTuple> = {
   novorossiysk: [44.72, 37.77],
 };
 const showMoscowCenter = (map: L.Map) => map.setView(pilotCenters.moscow, 10, { animate: false });
-type FeatureLayer = { layer: L.GeoJSON; style: L.PathOptions; markers: L.CircleMarker[] };
+type FeatureLayer = { layer: L.GeoJSON; style: L.PathOptions; markers: L.CircleMarker[]; compact: boolean };
 const featureKey = (kind: string, id: string) => `${kind}:${id}`;
+const pointRadius = 7;
 function selectLayer(item: FeatureLayer, selected: boolean) {
-  item.layer.setStyle(selected ? { ...item.style, color: "#2f5bff", weight: 3 } : item.style);
-  for (const marker of item.markers) marker.setRadius(selected ? 10 : 7);
+  if (!item.compact || !item.markers.length)
+    item.layer.setStyle(selected ? { ...item.style, color: "#2f5bff", weight: 3 } : item.style);
+  for (const marker of item.markers) {
+    marker.setRadius(item.compact
+      ? selected ? 11 : marker.options.className === "api-map-point" ? pointRadius : 5
+      : selected ? 10 : 7);
+    if (!item.compact) continue;
+    marker.getElement()?.classList.toggle("api-map-point-selected", selected);
+    marker.getElement()?.setAttribute("aria-pressed", String(selected));
+  }
 }
 export function ApiMap({
   result,
@@ -52,6 +64,9 @@ export function ApiMap({
     map = useRef<L.Map | null>(null),
     layers = useRef<L.LayerGroup | null>(null),
     routeLayers = useRef<L.LayerGroup | null>(null),
+    overviewLayers = useRef<L.LayerGroup | null>(null),
+    pointRenderer = useRef<L.SVG | null>(null),
+    sampleBounds = useRef<L.LatLngBounds | null>(null),
     featureBounds = useRef<L.LatLngBounds | null>(null),
     last = useRef(""),
     lastAnalysis = useRef(""),
@@ -61,6 +76,9 @@ export function ApiMap({
     selectedLayers = useRef<FeatureLayer[]>([]);
   const [tileError, setTileError] = useState(false);
   const selectedKind = selection?.entity_kind, selectedId = selection?.entity_id;
+  const compactResult = result?.limitations.includes("BOUNDED_ANALYSIS_SCOPE") ?? false;
+  const compactSample = result?.limitations.includes("BOUNDED_URBAN_SAMPLE") ?? false;
+  const pointNames = useMemo(() => sampledPointNames(result), [result]);
   const activeCategory = result ? displayedCategory(result, category) : null;
   const inventory = useMemo(() => {
     const features = result?.map_data?.features || [];
@@ -143,6 +161,10 @@ export function ApiMap({
     })
       .on("tileerror", () => setTileError(true))
       .addTo(m);
+    const overviewPane = m.createPane("resultOverview");
+    overviewPane.style.zIndex = "390";
+    const pointPane = m.createPane("resultPoints");
+    pointPane.style.zIndex = "415";
     layers.current = L.layerGroup().addTo(m);
     routeLayers.current = L.layerGroup().addTo(m);
     const ro = new ResizeObserver(() => m.invalidateSize({ pan: false }));
@@ -154,6 +176,8 @@ export function ApiMap({
       map.current = null;
       layers.current = null;
       routeLayers.current = null;
+      overviewLayers.current = null;
+      pointRenderer.current = null;
     };
   }, []);
   useEffect(() => {
@@ -166,11 +190,17 @@ export function ApiMap({
     const m = map.current,
       g = layers.current;
     if (!m || !g) return;
+    if (compactResult && !pointRenderer.current) pointRenderer.current = L.svg({ pane: "resultPoints" });
+    if (compactSample && !overviewLayers.current) overviewLayers.current = L.layerGroup().addTo(m);
+    const overview = overviewLayers.current;
     g.clearLayers();
+    overview?.clearLayers();
     featureLayers.current.clear();
     selectedLayers.current = [];
     const bounds = L.latLngBounds([]);
     const foreground: L.GeoJSON[] = [];
+    const surveyed = L.latLngBounds([]);
+    const halos: L.CircleMarker[] = [];
     inventory.items.forEach(({ feature: f, candidates: linkedScores }) => {
       if (!f.geometry) return;
       const indexEntity = ["sample_point", "cell", "territory"].includes(f.entity_kind);
@@ -194,15 +224,33 @@ export function ApiMap({
       const value = score?.status === "available" ? score.value : null;
       const partial = score?.completeness === "partial";
       const dashArray = partial ? "1 4" : f.geometry_kind === "schematic" ? "5 5" : undefined;
-      const color = visibleLayers.pop && indexEntity ? f.population == null ? "#8990a7" : `hsl(250 45% ${90 - 55 * f.population / inventory.maxPopulation}%)` :
-        value == null
-          ? "#8990a7"
-          : value < 50
-            ? "#c72d44"
-            : value < 75
-              ? "#d49520"
-              : "#0b8a5c";
-      const style: L.PathOptions = {
+      const color = visibleLayers.pop && indexEntity && f.population != null
+        ? `hsl(250 45% ${90 - 55 * f.population / inventory.maxPopulation}%)`
+        : compactResult ? indexColor(visibleLayers.pop && indexEntity ? null : value)
+          : value == null || (visibleLayers.pop && indexEntity) ? "#8990a7"
+            : value < 50 ? "#c72d44" : value < 75 ? "#d49520" : "#0b8a5c";
+      const sample = f.entity_kind === "sample_point";
+      const destination = compactSample && f.entity_kind === "destination";
+      const name = pointNames.get(f.point_id || f.entity_id) || f.name ||
+        (destination && f.categories?.length ? f.categories.map((category) => destinationCategoryLabels[category]).join(" · ") : selectionText[f.entity_kind]);
+      const activate = () => onSelect({ entity_kind: f.entity_kind, entity_id: f.entity_id });
+      const tip = document.createElement("span");
+      tip.textContent =
+        name +
+        (f.geometry_kind === "schematic" ? " · схема" : "") +
+        (visibleLayers.pop && indexEntity
+          ? ` · ${f.population == null ? "Население неизвестно" : f.population.toLocaleString("ru") + " жит."}`
+          : compactResult ? indexEntity ? value == null ? " · нет индекса" : ` · ${value.toLocaleString("ru", { maximumFractionDigits: 1 })} из 100` : ""
+            : value == null ? " · нет индекса" : ` · ${value.toFixed(1)}`) +
+        (presentation.observed ? ` · ${observedScoreLabel}` : "");
+      const pointStyle: L.PathOptions = {
+        color: destination ? "#59647e" : "#fff",
+        weight: destination ? 2 : 2.5,
+        fillColor: destination ? "#fff" : color,
+        fillOpacity: sample || destination ? 0.98 : 0.8,
+        dashArray: f.geometry_kind === "schematic" ? "5 5" : undefined,
+      };
+      const style: L.PathOptions = compactResult && f.geometry.type === "Point" ? pointStyle : {
         color: partial ? "#59647e" : "white", weight: partial ? 2 : 1,
         fillColor: color, fillOpacity: partial ? 0.3 : 0.62, dashArray,
         lineCap: partial ? "round" : "butt",
@@ -217,36 +265,51 @@ export function ApiMap({
         {
           style,
           pointToLayer: (_, latlng) => {
-            const marker = L.circleMarker(latlng, {
-              radius: 7,
-              color: partial ? "#59647e" : "#fff",
-              weight: 2,
-              fillColor: color,
-              fillOpacity: partial ? 0.45 : 0.9,
-              dashArray,
-              lineCap: partial ? "round" : "butt",
+            const marker = L.circleMarker(latlng, compactResult ? {
+              pane: "resultPoints",
+              renderer: pointRenderer.current ?? undefined,
+              className: sample ? "api-map-point" : "api-map-object",
+              radius: sample ? pointRadius : 5,
+              ...pointStyle,
+            } : {
+              radius: 7, color: partial ? "#59647e" : "#fff", weight: 2,
+              fillColor: color, fillOpacity: partial ? 0.45 : 0.9,
+              dashArray, lineCap: partial ? "round" : "butt",
+            });
+            if (compactResult) marker.on("add", () => {
+              const element = marker.getElement();
+              if (!element) return;
+              element.setAttribute("tabindex", "0");
+              element.setAttribute("role", "button");
+              element.setAttribute("aria-label", tip.textContent || selectionText[f.entity_kind]);
+              element.setAttribute("aria-pressed", "false");
+              element.addEventListener("focus", () => marker.openTooltip());
+              element.addEventListener("blur", () => marker.closeTooltip());
+              element.addEventListener("keydown", (event) => {
+                if (event instanceof KeyboardEvent && (event.key === "Enter" || event.key === " ")) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  activate();
+                }
+              });
             });
             markers.push(marker);
+            if (sample) {
+              surveyed.extend(latlng);
+              if (compactSample && visibleLayers.index && !visibleLayers.pop && value !== null)
+                halos.push(L.circleMarker(latlng, {
+                  pane: "resultOverview", radius: 24, stroke: false,
+                  fillColor: color, fillOpacity: 0.22, interactive: false,
+                }));
+            }
             return marker;
           },
         },
       );
       const key = featureKey(f.entity_kind, f.entity_id), entries = featureLayers.current.get(key) || [];
-      entries.push({ layer, style, markers });
+      entries.push({ layer, style, markers, compact: compactResult });
       featureLayers.current.set(key, entries);
-      const tip = document.createElement("span");
-      tip.textContent =
-        (f.name || selectionText[f.entity_kind]) +
-        (f.geometry_kind === "schematic" ? " · схема" : "") +
-        (value == null ? " · нет индекса" : ` · ${value.toFixed(1)}`) +
-        (presentation.observed ? ` · ${observedScoreLabel}` : "") +
-        (visibleLayers.pop ? ` · население: ${f.population == null ? "неизвестно" : f.population.toLocaleString("ru")}` : "") +
-        (partial ? " · частичная оценка" : "");
-      layer
-        .bindTooltip(tip)
-        .on("click", () =>
-          onSelect({ entity_kind: f.entity_kind, entity_id: f.entity_id }),
-        )
+      layer.bindTooltip(tip).on("click", activate)
         .addTo(g);
       if (f.entity_kind === "territory") layer.bringToBack();
       if (f.entity_kind === "sample_point") foreground.push(layer);
@@ -254,7 +317,34 @@ export function ApiMap({
     });
     for (const layer of foreground) layer.bringToFront();
     featureBounds.current = bounds;
-  }, [result, inventory, onSelect, category, visibleLayers.index, visibleLayers.objects, visibleLayers.pop]);
+    sampleBounds.current = surveyed;
+    if (!overview || !compactSample) return;
+    const totals = scores.filter((score) => score.name === "territory_index" && score.status === "available" && score.value !== null);
+    const aggregate = totals.length === 1 && !category ? totals[0].value : null;
+    const zoneLabel = compactSample && surveyed.isValid() && aggregate !== null && visibleLayers.index && !visibleLayers.pop
+      ? (() => {
+        const label = document.createElement("span");
+        label.className = "api-map-zone-label";
+        label.style.setProperty("--zone-color", indexColor(aggregate));
+        label.textContent = `Зона расчёта · ${aggregate.toLocaleString("ru", { maximumFractionDigits: 1 })}`;
+        return L.marker(surveyed.getCenter(), {
+          icon: L.divIcon({ html: label, className: "api-map-zone-anchor", iconSize: [0, 0] }),
+          title: "Приблизить зону расчёта",
+        }).on("click", () => m.fitBounds(surveyed, { padding: [64, 64], maxZoom: 14 }));
+      })() : null;
+    const showOverview = () => {
+      const zoomedOut = m.getZoom() <= 12;
+      if (!zoomedOut) {
+        overview.clearLayers();
+        return;
+      }
+      for (const halo of halos) if (!overview.hasLayer(halo)) halo.addTo(overview);
+      if (zoneLabel && !overview.hasLayer(zoneLabel)) zoneLabel.addTo(overview);
+    };
+    showOverview();
+    m.on("zoomend", showOverview);
+    return () => { m.off("zoomend", showOverview); };
+  }, [result, scores, inventory, onSelect, category, compactResult, compactSample, pointNames, visibleLayers.index, visibleLayers.objects, visibleLayers.pop]);
   useEffect(() => {
     const m = map.current, g = routeLayers.current;
     if (!m || !g) return;
@@ -303,7 +393,15 @@ export function ApiMap({
       for (const item of featureLayers.current.get(featureKey(selectedKind, selectedId)) || []) item.layer.bringToFront();
     const shownView = `${result?.analysis_id}:${scenarioView ? viewId || "scenario" : "baseline"}`;
     if (result && last.current !== shownView) {
-      if (moscowCamera(result)) {
+      if (compactSample && sampleBounds.current?.isValid()) {
+        m.fitBounds(sampleBounds.current, {
+          paddingTopLeft: [48, 120],
+          paddingBottomRight: [window.innerWidth < 768 ? 48 : 330, window.innerWidth < 768 ? 260 : 122],
+          maxZoom: 14, animate: false,
+        });
+        last.current = shownView;
+        lastAnalysis.current = result.analysis_id;
+      } else if (moscowCamera(result)) {
         if (lastAnalysis.current !== result.analysis_id) showMoscowCenter(m);
         last.current = shownView;
         lastAnalysis.current = result.analysis_id;
@@ -318,7 +416,7 @@ export function ApiMap({
         lastAnalysis.current = result.analysis_id;
       }
     }
-  }, [result, inventory, onSelect, scenarioView, journeys, viewId, activeCategory, selectedKind, selectedId]);
+  }, [result, inventory, onSelect, scenarioView, journeys, viewId, activeCategory, selectedKind, selectedId, compactSample]);
   useEffect(() => {
     for (const item of selectedLayers.current) selectLayer(item, false);
     const next = selection ? featureLayers.current.get(featureKey(selection.entity_kind, selection.entity_id)) || [] : [];
@@ -382,12 +480,6 @@ export function ApiMap({
         className="map-layer"
         aria-label="Карта результатов API"
       />
-      {scores.some((s) => s.status === "available" && s.completeness === "partial") && (
-        <div className="api-map-key" aria-label="Условные обозначения карты">
-          <span className="api-partial-symbol" aria-hidden="true" />
-          Точечный контур — частичная оценка
-        </div>
-      )}
       {tileError && (
         <div className="api-map-note">
           Подложка недоступна. Полученные геометрии остаются видимыми.

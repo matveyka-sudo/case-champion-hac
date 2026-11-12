@@ -1,4 +1,5 @@
 import type { Schemas, Territory } from "../types";
+import { compactAvailability, compactSlots } from "./compactScopes";
 import { categoryIds, departureAt, eligibleSnapshots, passengerModes, resolvedSnapshotId, type ApiDraft } from "./request";
 import { scopeContainsTime, scopePreset, urbanScopeAvailability, type UrbanSelection } from "./urbanScopes";
 
@@ -23,6 +24,14 @@ export function boundSnapshotId(draft: ApiDraft, catalog: Territory[], caps: Sch
 export function initialSourceDraft(draft: ApiDraft, catalog: Territory[], caps: Schemas["Capabilities"]): ApiDraft {
   if (draft.cityId || draft.kind !== "urban_passenger") return draft;
   const city = catalog.find((place) => place.level === "city" && place.territory_id === "moscow");
+  if (city && caps.compact_scopes) {
+    const next: ApiDraft = {
+      ...draft, cityId: city.territory_id, travel: "walk", slot: compactSlots[0].slot,
+      cats: { c01: 3 },
+    };
+    const { dates } = compactAvailability(next, catalog, caps.compact_scopes, "");
+    return { ...next, date: dates.includes(next.date) ? next.date : dates[0] || next.date };
+  }
   return city ? clinicPreset(draft, city, catalog, caps, "walk", draft.date, draft.slot) || draft : draft;
 }
 

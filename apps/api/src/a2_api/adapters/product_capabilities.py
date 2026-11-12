@@ -4,10 +4,23 @@ from datetime import UTC, date, datetime, time, timedelta
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
-from a2_contracts.v2.api import AnalysisPreset, UrbanPassengerScope
+from a2_contracts.v2.api import AnalysisPreset, CompactAnalysisScope, UrbanPassengerScope
 from a2_contracts.v2.base import TrafficMode
-from a2_contracts.v2.requests import UrbanPassengerRequest
+from a2_contracts.v2.requests import (
+    AnalysisRequest,
+    IntercityCargoRequest,
+    IntercityPassengerRequest,
+    UrbanCargoRequest,
+    UrbanPassengerRequest,
+)
 
+from a2_api.adapters.product_inputs import (
+    DeliveryInputs,
+    EngineInputs,
+    IntercityInputs,
+    PipelineInputs,
+    UrbanCargoInputs,
+)
 from a2_api.adapters.product_scenario_inputs import ScenarioPlan, document_matches_request
 from a2_api.core.errors import DomainError
 from a2_api.core.registry import ProductRegistry
@@ -118,3 +131,56 @@ def urban_passenger_scopes(
             )
         )
     return scopes
+
+
+def compact_modes(inputs: EngineInputs | None) -> list[str]:
+    if isinstance(inputs, IntercityInputs):
+        scheduled = inputs.scope.applicable_modes if inputs.timetable.runs else ()
+        return sorted(set(scheduled) | ({"private_car"} if inputs.car is not None else set()))
+    if isinstance(inputs, DeliveryInputs):
+        return sorted(inputs.scope.allowed_modes)
+    if isinstance(inputs, PipelineInputs):
+        return ["pipeline"]
+    if isinstance(inputs, UrbanCargoInputs):
+        return sorted({node.analysis_type for node in inputs.nodes})
+    return []
+
+
+def compact_transport_supported(inputs: EngineInputs | None, request: AnalysisRequest) -> bool:
+    modes = set(compact_modes(inputs))
+    if isinstance(request, IntercityPassengerRequest):
+        return bool(modes) and set(request.passenger_modes or ()) <= modes
+    if isinstance(request, IntercityCargoRequest):
+        return bool(modes) and set(request.cargo_modes or ()) <= modes
+    if isinstance(request, UrbanCargoRequest):
+        return bool(modes) and set(request.freight_node_types or ()) <= modes
+    return True
+
+
+def compact_scopes(runtime: "Runtime") -> list[CompactAnalysisScope]:
+    return [
+        CompactAnalysisScope.model_validate(
+            {
+                **profile.model_dump(
+                    include={
+                        "analysis_kind",
+                        "snapshot_id",
+                        "valid_from",
+                        "valid_to",
+                        "city_id",
+                        "territory_level",
+                        "origin_id",
+                        "destination_id",
+                        "categories",
+                        "cargo_profile_id",
+                        "direction",
+                        "cargo_transport",
+                        "pipeline_product",
+                    }
+                ),
+                "modes": profile.passenger_modes or compact_modes(inputs),
+            }
+        )
+        for profile, inputs in runtime.profiles.values()
+        if profile.compact
+    ]

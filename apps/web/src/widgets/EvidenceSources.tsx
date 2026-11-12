@@ -3,7 +3,7 @@ import type { Schemas } from "../api/types";
 import { safeSource } from "../api/adapters/result";
 
 const pageSize = 20;
-export function EvidenceSources({ refs, resolveSources }: { refs: readonly Schemas["EvidenceRef"][]; resolveSources?: () => readonly Schemas["EvidenceRef"][] }) {
+export function EvidenceSources({ refs, resolveSources, label = "Источники и условия" }: { refs: readonly Schemas["EvidenceRef"][]; resolveSources?: () => readonly Schemas["EvidenceRef"][]; label?: string }) {
   const [expanded, setExpanded] = useState(false), [page, setPage] = useState(0);
   const resolved = useMemo(() => {
     try { return { refs: expanded && resolveSources ? resolveSources() : refs, invalid: false }; }
@@ -13,7 +13,7 @@ export function EvidenceSources({ refs, resolveSources }: { refs: readonly Schem
   const pages = Math.max(1, Math.ceil(sources.length / pageSize));
   const current = Math.min(page, pages - 1);
   return <details className="src" onToggle={(event) => setExpanded(event.currentTarget.open)}>
-    <summary>Источники и условия</summary>
+    <summary>{label}</summary>
     {expanded && <>
       {resolved.invalid ? <p>Источники для выбранного контекста недоступны.</p> : sources.length ? sources.slice(current * pageSize, (current + 1) * pageSize).map((e, index) => {
         const url = safeSource(e.url);

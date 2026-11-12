@@ -1,7 +1,7 @@
 import { Fragment, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { Icon } from "../shared/ui";
-export function ResultCardFrame({ children, compact = false, id, sectionRef }: { children: ReactNode; compact?: boolean; id?: string; sectionRef?: RefObject<HTMLElement | null> }) {
-  return <section className={`ctx panelc ${compact ? "compact" : ""}`} aria-label="Выбранный объект" id={id} ref={sectionRef}>{children}</section>;
+export function ResultCardFrame({ children, compact = false, id, sectionRef, label = "Выбранный объект" }: { children: ReactNode; compact?: boolean; id?: string; sectionRef?: RefObject<HTMLElement | null>; label?: string }) {
+  return <section className={`ctx panelc ${compact ? "compact" : ""}`} aria-label={label} id={id} ref={sectionRef}>{children}</section>;
 }
 export function ResultCardHeader({ label, title, onClose, titleRef }: { label: ReactNode; title: ReactNode; onClose: () => void; titleRef?: RefObject<HTMLHeadingElement | null> }) {
   return <div className="ctx-h"><div style={{ minWidth: 0 }}><span className="k">{label}</span><h3 ref={titleRef} tabIndex={titleRef ? -1 : undefined}>{title}</h3></div>
@@ -30,8 +30,8 @@ export function RouteBreakdown({ segments }: { segments: RouteSegmentView[] }) {
 export function ResultFigure({ title, value, wide = false }: { title: string; value: ReactNode; wide?: boolean }) {
   return <div className="kv" style={wide ? { gridColumn: "1/-1" } : undefined}><span>{title}</span><b>{value}</b></div>;
 }
-export function ResultCategoryTable({ rows, overall }: { rows: { id: string; label: string; priority?: string; time: ReactNode; value: ReactNode }[]; overall?: ReactNode }) {
-  return <table className="ctable tnum"><tbody>{rows.map((row) => <tr key={row.id}><td>{row.label}{row.priority && <span className="p">{row.priority}</span>}</td>
+export function ResultCategoryTable({ rows, overall, columns }: { rows: { id: string; label: string; priority?: string; time: ReactNode; value: ReactNode }[]; overall?: ReactNode; columns?: [string, string, string] }) {
+  return <table className="ctable tnum">{columns && <thead><tr>{columns.map((column) => <th key={column} scope="col">{column}</th>)}</tr></thead>}<tbody>{rows.map((row) => <tr key={row.id}><td>{row.label}{row.priority && <span className="p">{row.priority}</span>}</td>
     <td style={{ textAlign: "right", color: "var(--text-3)" }}>{row.time}</td><td>{row.value}</td></tr>)}
     {overall !== undefined && <tr><td><b>Общий индекс</b></td><td /><td>{overall}</td></tr>}
   </tbody></table>;

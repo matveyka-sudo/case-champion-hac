@@ -8,11 +8,13 @@ export function DatePicker({
   min,
   max,
   onChange,
+  dates,
 }: {
   id: string;
   value: string;
   min: string;
   max: string;
+  dates?: string[];
   onChange: (value: string) => void;
 }) {
   const { open, setOpen, trigger, popup } = usePopover(),
@@ -25,6 +27,7 @@ export function DatePicker({
     days = new Date(Date.UTC(year, m + 1, 0)).getUTCDate();
   const shift = (delta: number) =>
     iso(new Date(Date.UTC(year, m + delta, 1))).slice(0, 7);
+  const available = (date: string) => date >= min && date <= max && (!dates || dates.includes(date));
   const choose = (date: string) => {
     onChange(date);
     setOpen(false);
@@ -41,7 +44,7 @@ export function DatePicker({
     const next = new Date(`${date}T12:00:00Z`);
     next.setUTCDate(next.getUTCDate() + delta);
     const v = iso(next);
-    if (v < min || v > max) return;
+    if (!available(v)) return;
     setMonth(v.slice(0, 7));
     requestAnimationFrame(() =>
       popup.current?.querySelector<HTMLElement>(`[data-date="${v}"]`)?.focus(),
@@ -55,11 +58,12 @@ export function DatePicker({
         className="wx-date-trigger tnum"
         type="button"
         aria-label="Выбрать дату"
+        disabled={dates?.length === 0}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={dialogId}
         onClick={() => {
-          setMonth(value.slice(0, 7));
+          setMonth((available(value) ? value : dates?.[0] || min).slice(0, 7));
           setOpen(!open);
           if (!open) requestAnimationFrame(() =>
             (popup.current?.querySelector<HTMLElement>(`[data-date="${value}"]:not(:disabled)`)
@@ -124,7 +128,7 @@ export function DatePicker({
                   timeZone: "UTC",
                 }).format(new Date(`${date}T12:00:00Z`))}
                 aria-pressed={date === value}
-                disabled={date < min || date > max}
+                disabled={!available(date)}
                 onKeyDown={(e) => key(e, date)}
                 onClick={() => choose(date)}
               >

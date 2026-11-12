@@ -2192,6 +2192,11 @@ body.mode-atlas {
   gap: 4px;
   font-size: 11.5px;
 }
+.segc-single-line button {
+  padding-inline: 4px;
+  font-size: 11.5px;
+  white-space: nowrap;
+}
 .segc[aria-label="Город"] button > span,
 .segc[aria-label="Передвижение"] button > span {
   min-width: 0;

@@ -27,7 +27,7 @@ export function CalculatedJourneys({ result, onSelect }: {
                   setExpanded(false);
                   onSelect({ entity_kind: "sample_point", entity_id: journey.point_id! });
                 }}>
-                  <span>{label}{journey.completeness === "partial" && <small>Частичные данные</small>}</span>
+                  <span>{label}</span>
                   <b>{(journey.total_seconds! / 60).toLocaleString("ru", { maximumFractionDigits: 1 })} мин · полное время</b>
                 </button>
               </li>

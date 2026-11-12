@@ -14,7 +14,7 @@ from a2_engine.routing.timetable import (
 from a2_engine.routing.timetable_models import refs, utc
 from a2_engine.shared.config import UrbanJourneyRules
 from a2_engine.urban.journeys import summarize_urban_legs
-from a2_engine.urban.models import UrbanDestination, UrbanPoint
+from a2_engine.urban.models import BOUNDED_URBAN_SEARCH, UrbanDestination, UrbanPoint
 from a2_engine.urban.transit.journeys import check_urban_inputs, path_legs
 from a2_engine.urban.transit.models import (
     UrbanLastReturnResult,
@@ -49,6 +49,7 @@ def search_urban_last_return(
     passenger_mode: Literal["public_transport", "walk"] = "public_transport",
     resource_limit: int | None = None,
 ) -> UrbanLastReturnResult:
+    bounded = network.context.search_parameters_id == BOUNDED_URBAN_SEARCH
     check_limit(resource_limit)
     if type(local_day) is not date:
         raise ValueError("EXPLICIT_LOCAL_RETURN_DAY_REQUIRED")
@@ -99,6 +100,15 @@ def search_urban_last_return(
         for event in run.events[:-1]
         if event.pickup and event.departure_at.astimezone(zone).date() == local_day
     )
+    if bounded:
+        events.sort(
+            key=lambda event: (
+                event[0] - timedelta(microseconds=access[event[3]][0])
+                if event[3] in access
+                else scope.start_at
+            ),
+            reverse=True,
+        )
     for first_at, run_id, sequence, node in events:
         if interrupted:
             break
@@ -115,6 +125,8 @@ def search_urban_last_return(
             continue
         if leave < lower or leave > scope.end_at:
             continue
+        if bounded and best is not None and leave < best.leave_at:
+            break
         remaining = None if resource_limit is None else resource_limit - expanded
         result = solve_timetable(
             timetable,
@@ -163,13 +175,21 @@ def search_urban_last_return(
             best = journey
     if interrupted:
         reasons.add("RESOURCE_LIMIT_REACHED")
+    bounded_proven = (
+        bounded
+        and best is not None
+        and not interrupted
+        and "FIRST_BOARDING_DAY_NOT_FULLY_COVERED" not in reasons
+    )
     proven = not reasons
+    if bounded_proven:
+        reasons.add("BOUNDED_URBAN_SAMPLE")
     if best is not None:
         status: Literal["available", "unknown", "not_applicable"] = (
-            "available" if proven else "unknown"
+            "available" if proven or bounded_proven else "unknown"
         )
         state: Literal["reachable", "confirmed_unreachable", "unknown", "walk_only"] = (
-            "reachable" if proven else "unknown"
+            "reachable" if proven or bounded_proven else "unknown"
         )
     elif proven:
         status = "not_applicable" if target in access else "unknown"

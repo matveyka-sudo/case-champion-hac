@@ -25,7 +25,7 @@ export function AtlasLegend({ title, scale, open, onToggle, ticks, note, details
   return <div className={`legend panelc ${scale && open ? "open" : ""}`}><h3><span className="t" title={title}>{title}</span>{scale &&
     <button className="lg-toggle" aria-expanded={open} aria-label="Подробнее о легенде" onClick={onToggle}><Icon name={open ? "chevron-down" : "info"} /></button>}</h3>
     {scale ? <><div className="lg-bar" style={barStyle} /><div className="lg-ticks tnum">{ticks.map((tick, index) => <span key={index}>{tick}</span>)}</div>
-      <p className="lg-note" style={{ marginTop: 6 }}>{note}</p>{open && <div className="lg-more panelc">{details}</div>}</> : <div className="lg-items" style={{ marginTop: 10 }}>{items}</div>}
+      {note && <p className="lg-note" style={{ marginTop: 6 }}>{note}</p>}{open && <div className="lg-more panelc">{details}</div>}</> : <div className="lg-items" style={{ marginTop: 10 }}>{items}</div>}
   </div>;
 }
 export function AtlasMobileSheet({ title, description, tag, timeDock, onFilters, onChat, sheetRef, children }: {

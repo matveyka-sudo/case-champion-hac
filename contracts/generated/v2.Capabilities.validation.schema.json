@@ -92,6 +92,173 @@
       "title": "AreaOption",
       "type": "object"
     },
+    "CompactAnalysisScope": {
+      "additionalProperties": false,
+      "description": "Allowed request dimensions for one bounded static input profile.",
+      "properties": {
+        "analysis_kind": {
+          "enum": [
+            "urban_passenger",
+            "intercity_passenger",
+            "urban_cargo",
+            "intercity_cargo"
+          ],
+          "title": "Analysis Kind",
+          "type": "string"
+        },
+        "cargo_profile_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cargo Profile Id"
+        },
+        "cargo_transport": {
+          "default": "multimodal",
+          "enum": [
+            "multimodal",
+            "pipeline"
+          ],
+          "title": "Cargo Transport",
+          "type": "string"
+        },
+        "categories": {
+          "items": {
+            "enum": [
+              "adult_polyclinic",
+              "child_polyclinic",
+              "kindergarten",
+              "school",
+              "college_university",
+              "rail_terminal",
+              "bus_terminal",
+              "airport",
+              "shopping_center"
+            ],
+            "type": "string"
+          },
+          "title": "Categories",
+          "type": "array"
+        },
+        "city_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "City Id"
+        },
+        "destination_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Destination Id"
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "enum": [
+                "inbound",
+                "outbound"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Direction"
+        },
+        "modes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Modes",
+          "type": "array"
+        },
+        "origin_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Origin Id"
+        },
+        "pipeline_product": {
+          "anyOf": [
+            {
+              "enum": [
+                "oil",
+                "oil_products",
+                "gas"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pipeline Product"
+        },
+        "snapshot_id": {
+          "minLength": 1,
+          "title": "Snapshot Id",
+          "type": "string"
+        },
+        "territory_level": {
+          "default": "city",
+          "enum": [
+            "city",
+            "region"
+          ],
+          "title": "Territory Level",
+          "type": "string"
+        },
+        "valid_from": {
+          "format": "date-time",
+          "title": "Valid From",
+          "type": "string"
+        },
+        "valid_to": {
+          "format": "date-time",
+          "title": "Valid To",
+          "type": "string"
+        }
+      },
+      "required": [
+        "analysis_kind",
+        "snapshot_id",
+        "valid_from",
+        "valid_to"
+      ],
+      "title": "CompactAnalysisScope",
+      "type": "object"
+    },
     "DeliveryCargoProfile": {
       "additionalProperties": false,
       "properties": {
@@ -1142,6 +1309,21 @@
       },
       "title": "Categories",
       "type": "array"
+    },
+    "compact_scopes": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/CompactAnalysisScope"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Compact Scopes"
     },
     "default_traffic_mode": {
       "enum": [

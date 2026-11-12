@@ -1,3 +1,6 @@
+import { indexGradient } from "../api/adapters/mapIndexColor";
+import { CompactResultSummary } from "../widgets/CompactResultSummary";
+import { compactAvailability } from "../api/adapters/compactScopes";
 import {
   useCallback,
   useEffect,
@@ -27,6 +30,7 @@ import {
   DraftError,
   categoryIds,
   categoryLabels,
+  destinationCategoryLabels,
   isUrbanCity,
   pipelineProducts,
   passengerModes,
@@ -73,7 +77,7 @@ import { ExplanationFinding } from "../widgets/ExplanationFinding";
 import { JourneyDetails } from "../widgets/JourneyDetails";
 import { IndexLegend } from "../widgets/IndexLegend";
 import { CalculatedPoints } from "../widgets/CalculatedPoints";
-import { calculatedPoints, routeEstimatePoints, pointDisplayName } from "../api/adapters/pointOverview";
+import { calculatedPoints, routeEstimatePoints, pointDisplayName, sampledPointNames } from "../api/adapters/pointOverview";
 import { useModalFocus } from "../features/accessibility";
 import { AtlasShell } from "../widgets/AtlasShell";
 import { AtlasHeader } from "../widgets/AtlasHeader";
@@ -114,12 +118,7 @@ function Measure({ value }: { value: Schemas["Metric"] | Schemas["Score"] }) {
   ]
     .filter(Boolean)
     .join(" · ");
-  const note = [
-    value.completeness === "partial" ? "Частичная оценка" : null,
-    reasonText(value.reason_code),
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const note = reasonText(value.reason_code);
   return (
     <div className="api-measure">
       <span>
@@ -183,10 +182,6 @@ export function ApiAtlasPage() {
   const session = useAnalysisSession();
   const selectedPreset = caps?.analysis_presets?.find((preset) => preset.preset_id === selectedPresetId);
   const draftTouched = useRef(false);
-  const groupSubmission = useRef<{ controller: AbortController; key: string; fingerprint: string } | null>(null);
-  const groupPending = useRef(false);
-  const [submittingGroup, setSubmittingGroup] = useState(false);
-  useEffect(() => () => groupSubmission.current?.controller.abort(), []);
   const hash = useSyncExternalStore(subscribeAtlasLocation, atlasLocation, () => "");
   const handledPointer = useRef<string | null>(null);
   let groupId: string | null = null;
@@ -224,7 +219,10 @@ export function ApiAtlasPage() {
         if (alive) {
           setCaps(value);
           setCatalog([...cities, ...regions]);
-          setDraft((d) => draftTouched.current ? d : initialSourceDraft({ ...d, traffic: value.default_traffic_mode }, [...cities, ...regions], value));
+          setDraft((d) => {
+            if (draftTouched.current) return d;
+            return initialSourceDraft({ ...d, traffic: value.default_traffic_mode }, [...cities, ...regions], value);
+          });
         }
       })
       .catch((e) => {
@@ -268,7 +266,8 @@ export function ApiAtlasPage() {
     const value = snapshot.result;
     const restored = savedRequestDraft(value, catalog, caps);
     setDraft(restored.draft);
-    setCargoProfile(restored.cargoProfile || { group: "", handling: "", limits: {} });
+    if ("cargo_profile_id" in value.request)
+      setCargoProfile(restored.cargoProfile || { group: "", handling: "", limits: {} });
     setSavedWarning(restored.warning);
     setRestoreMode(false);
     setScenarioView(!!snapshot.scenario);
@@ -343,10 +342,6 @@ export function ApiAtlasPage() {
   const change = (patch: Partial<ApiDraft>) => {
     setSelectedPresetId("");
     draftTouched.current = true;
-    groupSubmission.current?.controller.abort();
-    groupSubmission.current = null;
-    groupPending.current = false;
-    setSubmittingGroup(false);
     const cityChanged = patch.cityId !== undefined && patch.cityId !== draft.cityId && !!draft.cityId && patch.kind === undefined;
     if (cityChanged) {
       session.reset();
@@ -364,7 +359,7 @@ export function ApiAtlasPage() {
     setInterfaceMessages([]);
     setDraft((d) => ({
       ...d,
-      ...(cityChanged ? { areaId: "", snapshotId: "", travel: "" as const } : {}),
+      ...(cityChanged ? { areaId: "", snapshotId: "", ...(caps?.compact_scopes ? {} : { travel: "" as const }) } : {}),
       ...patch,
       ...(["kind", "level", "cityId", "originId", "destinationId", "date", "slot", "travel", "cats", "traffic", "areaId"]
         .some((key) => key in patch && patch[key as keyof ApiDraft] !== d[key as keyof ApiDraft]) && !("snapshotId" in patch)
@@ -386,8 +381,8 @@ export function ApiAtlasPage() {
       resultTitleRef.current?.focus({ preventScroll: true });
     });
   };
-  const startAnalysis = (grouped: boolean) => {
-    if (!caps || unavailableReason || groupPending.current || phase === "running") return;
+  const start = () => {
+    if (!caps || unavailableReason || phase === "running") return;
     try {
       let request: AnalysisRequest;
       if (selectedPresetId) {
@@ -412,43 +407,14 @@ export function ApiAtlasPage() {
           ));
           return;
         }
-        request = toRequest({ ...draft, profileId, snapshotId: boundSnapshotId(draft, catalog, caps) }, catalog, caps);
+        request = toRequest({ ...draft, profileId, snapshotId: compact?.snapshotId || boundSnapshotId(draft, catalog, caps) }, catalog, caps);
       }
       setLocalError(null);
       setRestoreMode(false);
       setFiltersOpen(false);
       setScenarioView(false);
       setInterfaceMessages([]);
-      if (!grouped || selectedPresetId) {
-        void session.run(request, savedPointerWriter((hash) => { handledPointer.current = hash; }));
-        return;
-      }
-      if (request.analysis_kind !== "urban_passenger" || request.categories.length < 2) return;
-      const controller = new AbortController();
-      const fingerprint = JSON.stringify(request);
-      const previous = groupSubmission.current;
-      const key = previous?.fingerprint === fingerprint ? previous.key : crypto.randomUUID();
-      groupSubmission.current = { controller, key, fingerprint };
-      groupPending.current = true;
-      setSubmittingGroup(true);
-      const navigate = savedPointerWriter((value) => { handledPointer.current = value; });
-      void backend.submitGroup(request, key, controller.signal)
-        .then((value) => {
-          if (!controller.signal.aborted && navigate("group", value.group_id)) {
-            groupSubmission.current = null;
-            groupPending.current = false;
-            setSubmittingGroup(false);
-          }
-        })
-        .catch((error: unknown) => {
-          if (!controller.signal.aborted) setLocalError(new DraftError("request",
-            error instanceof ApiError && error.status === 404 ? "Сервер не поддерживает групповой расчёт. Запустите одну категорию." : error instanceof Error ? errorText(error) : "Не удалось запустить группу."));
-        })
-        .finally(() => {
-          if (groupSubmission.current?.controller !== controller) return;
-          groupPending.current = false;
-          setSubmittingGroup(false);
-        });
+      void session.run(request, savedPointerWriter((hash) => { handledPointer.current = hash; }));
     } catch (e) {
       setLocalError(
         e instanceof DraftError
@@ -460,7 +426,6 @@ export function ApiAtlasPage() {
       );
     }
   };
-  const start = () => startAnalysis(false);
   const uiError = localError || session.error || bootError;
   const inline = (field: string, aliases: string[] = []) => {
     const message =
@@ -503,7 +468,7 @@ export function ApiAtlasPage() {
       )
       .sort((a, b) => urban && caps ? caps.urban_city_names.indexOf(a.name) - caps.urban_city_names.indexOf(b.name) : 0)
       .map((t) => {
-        const reason = publishedScopes == null ? undefined
+        const reason = caps?.compact_scopes || publishedScopes == null ? undefined
           : !publishedScopes.some((s) => s.city_id === t.territory_id)
             ? "Для этого города нет зарегистрированного расчёта."
             : !publishedScopes.some((s) => s.city_id === t.territory_id && scopeContainsTime(s, scopeDeparture(t.territory_id)))
@@ -514,10 +479,10 @@ export function ApiAtlasPage() {
   const origin = catalog.find(
     (t) => t.territory_id === (urban ? draft.cityId : draft.originId),
   );
-  const walkPreset = caps && origin && draft.kind === "urban_passenger" ? clinicPreset(draft, origin, catalog, caps, "walk") : null;
-  const transitPreset = caps && origin && draft.kind === "urban_passenger" ? clinicPreset(draft, origin, catalog, caps, "pt") : null;
+  const walkPreset = !caps?.compact_scopes && caps && origin && draft.kind === "urban_passenger" ? clinicPreset(draft, origin, catalog, caps, "walk") : null;
+  const transitPreset = !caps?.compact_scopes && caps && origin && draft.kind === "urban_passenger" ? clinicPreset(draft, origin, catalog, caps, "pt") : null;
   const standardProfiles = draft.kind === "urban_cargo" && caps ? matchingCargoProfiles(caps.cargo_profiles, standardCargo) : [];
-  const roadPreset = caps && (draft.kind === "intercity_passenger" || standardProfiles.length === 1) ? staticPilotPreset(draft, catalog, caps) : null;
+  const roadPreset = !caps?.compact_scopes && caps && (draft.kind === "intercity_passenger" || standardProfiles.length === 1) ? staticPilotPreset(draft, catalog, caps) : null;
   const savedOriginId = result
     ? "city_id" in result.request
       ? result.request.city_id
@@ -585,13 +550,25 @@ export function ApiAtlasPage() {
       ) || [];
   const ready = caps?.analyses.find((a) => a.analysis_kind === draft.kind);
   const running = phase === "running";
-  const unavailableReason = !selectedPreset && ready?.calculation_available === false
+  const matchingProfiles = cargo && caps ? matchingCargoProfiles(caps.cargo_profiles, cargoProfile) : [];
+  const chosenCargoProfile = draft.profileId || (matchingProfiles.length === 1 ? matchingProfiles[0].profile_id : "");
+  const compact = caps?.compact_scopes ? compactAvailability(draft, catalog, caps.compact_scopes, chosenCargoProfile) : null;
+  const unavailableReason = compact && !compact.snapshotId ? "Нет данных для выбранных условий." :
+    !selectedPreset && ready?.calculation_available === false
     ? ready.reason_code === "RUNTIME_INPUTS_UNAVAILABLE"
       ? "На этом стенде нет входных данных для расчёта выбранного направления."
       : reasonText(ready.reason_code) || "Сервер пока не поддерживает расчёт этого направления."
     : null;
-  const runDisabled = !caps || running || submittingGroup || unavailableReason !== null;
+  const runDisabled = !caps || running || unavailableReason !== null;
   const executionExpired = uiError instanceof ApiError && uiError.message === "Approved execution validity expired";
+  const snapshotExpired = uiError?.message === "Unknown immutable snapshot";
+  const refreshInputs = () => {
+    session.changed();
+    setLocalError(null);
+    setSelectedPresetId("");
+    setCaps(null);
+    retryBootstrap();
+  };
   const unavailableRequest = uiError instanceof ApiError && uiError.message === "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST";
   const progressText = jobProgressText(session.job, phase);
   const runningTitle = restoreMode && !session.job ? "Открываю сохранённый расчёт"
@@ -599,7 +576,7 @@ export function ApiAtlasPage() {
     : session.job?.status === "succeeded" ? "Открываю результат"
     : session.job && "progress" in session.job && session.job.progress?.phase === "finalizing" ? "Сохраняем результат"
     : session.job ? "Вычисляется" : "Отправляем запрос";
-  const runLabel = urban ? "Рассчитать" : "Проанализировать";
+  const runLabel = urban || compact ? "Рассчитать" : "Проанализировать";
   const draftInstructions = !cargo
     ? urban ? "Выберите город, передвижение и категории" : "Выберите территории и виды транспорта"
     : urban ? "Выберите город, направление и профиль груза" : "Выберите территории и параметры грузовой связи";
@@ -613,6 +590,12 @@ export function ApiAtlasPage() {
       areaId: "",
       profileId: "",
       pipeline: false,
+      ...(compact ? {
+        level: kind === "intercity_cargo" ? "region" : "city",
+        paxModes: ["car"],
+        cargoModes: ["road"],
+        travel: "walk",
+      } : {}),
     });
   const selectedJourney =
     visibleJourneys.filter(
@@ -630,6 +613,10 @@ export function ApiAtlasPage() {
   const exactHeadlineCategories = headlineCategoryScores.filter((score) => score.name !== "observed_route_accessibility");
   const headlineCanonicalScore = headlinePointScores.length === 1 ? headlinePointScores[0] : !headlinePointScores.length && exactHeadlineCategories.length === 1 ? exactHeadlineCategories[0] : undefined;
   const headlineScore = result ? pointScorePresentation(result, shownScores, headlineCanonicalScore).score : undefined;
+  const compactResult = result?.limitations.includes("BOUNDED_ANALYSIS_SCOPE") ?? false;
+  const sampleResult = result?.limitations.includes("BOUNDED_URBAN_SAMPLE") ?? false;
+  const pointNames = useMemo(() => sampledPointNames(result), [result]);
+  const headlineTime = selection ? headlineMinimums.length === 1 ? headlineMinimums[0] : headlineObservedTimes.length === 1 ? headlineObservedTimes[0] : null : null;
   const territoryHeadline = !selection && pointOverview?.territoryScore?.status === "available" && pointOverview.territoryScore.value !== null ? pointOverview.territoryScore : null;
   const headlineDestination = selection?.entity_kind === "sample_point" && selectedJourney.length === 1
     ? result?.map_data?.features?.find((item) => item.entity_id === (selectedJourney[0].destination_object_id || selectedJourney[0].destination_node_id))?.name?.trim() || undefined
@@ -642,10 +629,10 @@ export function ApiAtlasPage() {
     const observed = shownMetrics.filter((metric) => metric.subject.category === category && ["best_observed_time", "best_observed_journey_seconds"].includes(metric.name) && metric.status === "available");
     const time = minimum.length === 1 ? minimum[0] : observed.length === 1 ? observed[0] : null;
     const priority = result.request.analysis_kind === "urban_passenger" ? result.request.priorities[category] : undefined;
-    return { id: category, label: categoryLabels[category] + (presentation.observed ? " · предварительно" : ""), priority: priority ? ({ low: "Н", medium: "С", high: "В" } as const)[priority] : undefined,
+    return { id: category, label: categoryLabels[category] + (presentation.observed ? " · предварительно" : ""), priority: !compactResult && priority ? ({ low: "Н", medium: "С", high: "В" } as const)[priority] : undefined,
       time: time ? measureText(time) : "Нет данных", value: presentation.score ? measureText(presentation.score) : "Нет данных" };
   }) : [];
-  const snapshotId = selectedPreset?.request.snapshot_id || (caps ? boundSnapshotId(draft, catalog, caps) : "");
+  const snapshotId = selectedPreset?.request.snapshot_id || compact?.snapshotId || (caps ? boundSnapshotId(draft, catalog, caps) : "");
   const savedDemoModel = isDemoModel(result);
   const selectedDemoLimitations = selectedPreset?.limitations || (demoModelSelection(snapshotId, caps?.analysis_presets) ? [demoModelMarker] : []);
   const demoModel = isDemoModel({ limitations: selectedDemoLimitations }) || savedDemoModel;
@@ -670,7 +657,7 @@ export function ApiAtlasPage() {
     categories: Object.keys(draft.cats).flatMap((id) => categoryIds[id as keyof typeof categoryIds] || []),
   };
   const scopeState = urbanScopeAvailability(scopeSelection, publishedScopes);
-  const requestErrorMessage = executionExpired ? "Срок действия расчётного профиля истёк. На стенде нужно обновить данные." : unavailableRequest
+  const requestErrorMessage = snapshotExpired ? "Набор данных на сервере обновился. Обновите данные страницы, затем нажмите «Рассчитать»." : executionExpired ? "Срок действия расчётного профиля истёк. На стенде нужно обновить данные." : unavailableRequest
     ? draft.kind === "urban_passenger" && scopeState.matching.length === 1
       ? "Сервер указал эти условия как доступные, но не смог запустить расчёт. Выбор сохранён."
       : "Для выбранных условий на стенде нет доступного набора расчёта. Выбор сохранён."
@@ -699,6 +686,13 @@ export function ApiAtlasPage() {
   };
   const readiness = caps && draft.kind === "urban_passenger" ? urbanReadiness(draft, catalog, caps, result, dirty) : null;
   const categoryReason = (category: Schemas["UrbanPassengerRequest"]["categories"][number]) => {
+    if (compact) {
+      const scopes = caps?.compact_scopes?.filter((scope) => scope.city_id === draft.cityId &&
+        scope.analysis_kind === "urban_passenger" && !!draft.travel && scope.modes?.includes(passengerModes[draft.travel]));
+      if (scopes?.length && !scopes.some((scope) => scope.categories?.includes(category)))
+        return "Для выбранного передвижения нет данных по категории.";
+      return undefined;
+    }
     if (!scopeState.published) return undefined;
     if (!scopeState.traffic.some((s) => s.categories.includes(category))) return "Категория недоступна для выбранных условий.";
     if (!scopeState.traffic.some((s) => [...new Set([...scopeSelection.categories, category])].every((c) => s.categories.includes(c))))
@@ -710,12 +704,11 @@ export function ApiAtlasPage() {
     selection,
     result?.map_data?.features || [],
   );
-  const hasRanking = result?.scores.some(
-    (s) =>
-      s.ranking_eligible &&
-      s.status === "available" &&
-      s.completeness === "full",
-  );
+  const selectionTitle = selection?.entity_kind === "sample_point"
+    ? pointNames.get(selection.entity_id) || pointOverview?.points.find((point) => point.pointId === selection.entity_id)?.name || pointDisplayName(selection.entity_id, feature)
+    : feature?.name || (compactResult && selection?.entity_kind === "destination" && feature?.categories?.length
+      ? feature.categories.map((category) => destinationCategoryLabels[category]).join(" · ")
+      : selection ? selectionText[selection.entity_kind] : requestTitle);
   const selectedSources = () => {
     const context = scenarioView && scenario ? scenario : result;
     if (!context) return [];
@@ -740,11 +733,36 @@ export function ApiAtlasPage() {
     }
     return evidenceResolver(context).sources(references());
   };
-  const renderResultCard = () => result && <ResultCardFrame id="apiResultCard" sectionRef={resultCard} compact={chatOpen && !filtersCollapsed && window.innerWidth < 1600}>
-              <ResultCardHeader label={savedDemoModel ? scenarioView ? "Демонстрационный сценарий" : "Демонстрационный анализ" : scenarioView ? "Сценарий" : "Сохранённый анализ"}
-                title={selection?.entity_kind === "sample_point" ? pointOverview?.points.find((point) => point.pointId === selection.entity_id)?.name || pointDisplayName(selection.entity_id, feature)
-                  : feature?.name || (selection ? selectionText[selection.entity_kind] : requestTitle)} onClose={() => setCardHidden(true)} titleRef={resultTitleRef} />
-              <div className="ctx-b">
+  const renderResultCard = () => result && <ResultCardFrame id="apiResultCard" sectionRef={resultCard} compact={chatOpen && !filtersCollapsed && window.innerWidth < 1600} label={compactResult ? "Результат расчёта" : undefined}>
+              <ResultCardHeader label={savedDemoModel ? scenarioView ? "Демонстрационный сценарий" : "Демонстрационный анализ" : scenarioView ? "Сценарий" : compactResult ? selection?.entity_kind === "destination" ? "Объект назначения" : selection ? requestTitle : "Результат расчёта" : "Сохранённый анализ"}
+                title={selectionTitle} onClose={() => setCardHidden(true)} titleRef={resultTitleRef} />
+              {compactResult ? <div className="ctx-b">
+                <CompactResultSummary result={result} selection={selection}
+                  score={selection?.entity_kind === "sample_point" ? headlineScore : territoryHeadline} time={headlineTime} metrics={shownMetrics} />
+                {selection?.entity_kind === "sample_point" && categoryRows.length > 1 && <div className="sect">
+                  <ResultCategoryTable rows={categoryRows} columns={["Объекты", "Время в пути", "Индекс"]} />
+                </div>}
+                {selection?.entity_kind === "sample_point" && shownReturns.length > 0 && <details className="more api-compact-returns">
+                  <summary>Последний обратный рейс</summary>
+                  {shownReturns.map((r) => {
+                    const destination = result.map_data?.features?.find((f) => f.entity_kind === "destination" && f.entity_id === r.destination_object_id);
+                    const name = destination?.name || destination?.categories?.map((category) => destinationCategoryLabels[category]).join(" · ");
+                    return <div key={r.destination_object_id || r.point_id}>
+                      {name && shownReturns.length > 1 && <b>{name}</b>}
+                      {r.status === "available" ? <dl>
+                        <div><dt>Выйти от объекта</dt><dd>{timestampText(r.leave_at, r.timezone, false)}</dd></div>
+                        <div><dt>Вернуться к точке</dt><dd>{timestampText(r.arrival_at, r.timezone, false)}</dd></div>
+                      </dl> : <p>Нет данных о последнем рейсе.</p>}
+                    </div>;
+                  })}
+                </details>}
+                {!selection && pointOverview && <CalculatedPoints overview={pointOverview} sample={sampleResult} showTerritory={false} selection={null} areaSelected={false} onSelect={chooseCalculatedPoint} />}
+                {selection && <button className="iconbtn api-result-back" onClick={() => setSelection(null)}>К общему результату</button>}
+                {result.limitations.includes("BOUNDED_KUDIKINA_ROUTE_DATE_SUBSET") && <p className="fhint">
+                  Расписание · <a href="https://kudikina.ru/" target="_blank" rel="noopener noreferrer">Кудыкина</a>
+                </p>}
+                <Sources refs={result.evidence_refs} label="Источники" resolveSources={selection && result.evidence_groups?.length ? selectedSources : undefined} />
+              </div> : <div className="ctx-b">
                 {!selection && <p className="fhint">Выберите точку или объект на карте для подробного результата.</p>}
                 {selection && (
                   <button
@@ -757,7 +775,7 @@ export function ApiAtlasPage() {
                 <ResultHeadline score={selection?.entity_kind === "sample_point"
                   ? headlineScore
                   : territoryHeadline}
-                  metric={selection ? headlineMinimums.length === 1 ? headlineMinimums[0] : headlineObservedTimes.length === 1 ? headlineObservedTimes[0] : null : null}
+                  metric={headlineTime}
                   destination={headlineDestination}
                   journey={selection && selectedJourney.length === 1 ? selectedJourney[0] : null} />
                 {scenario && <ScenarioComparison scenario={scenario} metrics={shownMetrics} scores={shownScores} selectionActive={!!selection} scenarioView={scenarioView} onViewChange={setScenarioView} />}
@@ -780,11 +798,6 @@ export function ApiAtlasPage() {
                   <Measure key={m.metric_id} value={m} />
                 ))}
                 </>}</ResultDetails>
-                {!hasRanking && result.status === "partial" && (
-                  <p className="fhint">
-                    Оценка неполная и не участвует в полном рейтинге территорий.
-                  </p>
-                )}
                 {feature?.population !== undefined &&
                   (feature.entity_kind === "cell" ||
                     feature.entity_kind === "sample_point" || feature.cell_id) && (
@@ -792,7 +805,7 @@ export function ApiAtlasPage() {
                       Население ячейки:{" "}
                       {feature.population === null
                         ? "неизвестно"
-                        : feature.population}{" "}
+                        : feature.population.toLocaleString("ru", { maximumFractionDigits: 1 })}{" "}
                       · {feature.population_year || "год неизвестен"} ·{" "}
                       <details className="more"><summary>Источник населения</summary>{feature.population_method || "метод неизвестен"}</details>
                     </div>
@@ -850,18 +863,16 @@ export function ApiAtlasPage() {
                     </details>
                   )}
                 {noticeTexts(result.limitations).map((text, i) => (
-                  <p className="fhint" key={i}>
-                    {text}
-                  </p>
+                  <p className="fhint" key={i}>{text}</p>
                 ))}
                 <Sources refs={scenarioView && scenario ? scenario.evidence_refs : result.evidence_refs}
                   resolveSources={selection && (scenarioView && scenario ? scenario.evidence_groups?.length : result.evidence_groups?.length) ? selectedSources : undefined} />
                 <div className="ctx-actions"><button className="iconbtn" onClick={() => { setChatOpen(true); if (window.innerWidth < 1520) setFiltersCollapsed(true); }}><Icon name="sparkles" />Спросить агента</button></div>
-              </div>
+              </div>}
             </ResultCardFrame>;
   const moscowView = (result ? result.request.analysis_kind === "urban_passenger" && result.request.city_id === "moscow" : urban && draft.cityId === "moscow");
-  const timeDock = (compact: boolean) => selectedPreset ? null : <TimeDockView date={draft.date} slot={draft.slot} timezoneLabel={origin?.timezone || "Выберите территорию"}
-    min="1900-01-01" max="2100-12-31" dateInputId={compact ? "apiMobileDate" : "apiDate"} timeInputId={compact ? "apiMobileTime" : "apiTime"} mobile={compact}
+  const timeDock = (mobileDock: boolean) => selectedPreset ? null : <TimeDockView date={draft.date} slot={draft.slot} timezoneLabel={origin?.timezone || "Выберите территорию"}
+    compact={!!compact} dates={compact?.dates} min={compact?.dates[0] || "1900-01-01"} max={compact?.dates.at(-1) || "2100-12-31"} runLabel={compact ? runLabel : undefined} dateInputId={mobileDock ? "apiMobileDate" : "apiDate"} timeInputId={mobileDock ? "apiMobileTime" : "apiTime"} mobile={mobileDock}
     onDateChange={(date) => change({ date })} onSlotChange={(slot) => change({ slot })} run={start} disabled={runDisabled} highlighted={dirty} />;
   if (groupId) return <AnalysisGroupPanel key={groupId} id={groupId} />;
 
@@ -918,7 +929,7 @@ export function ApiAtlasPage() {
               {cargo && field("Режим грузовых связей", <Seg name="Режим грузовых связей" value={urban ? "city" : "inter"}
                 items={[["city", "В городе", "building-2"], ["inter", "Между территориями", "waypoints"]]}
                 onChange={(value) => toggleMode(value === "city" ? "urban_cargo" : "intercity_cargo")} />)}
-              {!urban && !cargo && field("Масштаб", <Seg name="Масштаб" value={draft.level} items={[["city", "Город — город"], ["region", "Субъект — субъект"]]}
+              {!urban && field("Масштаб", <Seg name="Масштаб" singleLine value={draft.level} items={[["city", "Город — город"], ["region", "Субъект — субъект"]]}
                 onChange={(value) => change({ level: value as ApiDraft["level"], originId: "", destinationId: "" })} />)}
 
               {urban ? (
@@ -980,14 +991,8 @@ export function ApiAtlasPage() {
                   <CategoryChoices items={Object.entries(categoryIds).map(([id, category]) => ({ id, name: categoryLabels[category], reason: categoryReason(category) }))}
                     selected={draft.cats} onToggle={(id) => { const cats = { ...draft.cats }, key = id as keyof typeof categoryIds; if (cats[key]) delete cats[key]; else cats[key] = 2; change({ cats }); }}
                     onPriority={(id, priority) => change({ cats: { ...draft.cats, [id]: priority } })} />
-                  <div className="prio-legend"><span>Н — низкий · 1</span><span>С — средний · 2</span><span>В — высокий · 3</span></div>
+                  <div className="prio-legend"><span>Н — низкий</span><span>С — средний</span><span>В — высокий</span></div>
                   {inline("cats", ["categories", "priorities"])}
-                  {scopeSelection.categories.length > 1 && scopeState.matching.length === 1 && <div className="api-preset-options">
-                    <button type="button" className="iconbtn" disabled={runDisabled} onClick={() => startAnalysis(true)}>
-                      {submittingGroup ? "Отправляем запрос…" : "Рассчитать категории по очереди"}
-                    </button>
-                    <p className="fhint">Сервер сохранит отдельный результат по каждой категории.</p>
-                  </div>}
                 </>)}
               {filterIssue && <div className="fgroup api-filter-availability">
                 <p className="fhint">{filterIssue}</p>
@@ -1007,31 +1012,33 @@ export function ApiAtlasPage() {
                     values={cargoLayers} onChange={(key) => setCargoLayers((current) => ({ ...current, [key]: !current[key] }))} /></>)
                 : field("Виды транспорта", <ChoiceChips items={[["road", "Авто", "truck"], ["rail", "Ж/д", "train-front-tunnel"], ["air", "Воздух", "plane-takeoff"], ["water", "Вода", "anchor"], ["pipe", "Трубопровод", "droplet"]]}
                   values={{ ...Object.fromEntries(draft.cargoModes.map((mode) => [mode, true])), pipe: draft.pipeline }} onChange={(key) => key === "pipe" ? change({ pipeline: !draft.pipeline, profileId: "" }) : change({ cargoModes: draft.cargoModes.includes(key) ? draft.cargoModes.filter((mode) => mode !== key) : [...draft.cargoModes, key] })} />)}
-                <CargoProfileChoices value={cargoProfile} onChange={(profile) => { setCargoProfile(profile); change({ profileId: "", pipeline: profile.handling === "liquid" && draft.pipeline }); }} />
+                <CargoProfileChoices showNonurgent={!!compact && !urban} value={cargoProfile} onChange={(profile) => { setCargoProfile(profile); change({ profileId: "", pipeline: profile.handling === "liquid" && draft.pipeline }); }} />
                 {inline("profileId", ["cargo_profile_id"])}
                 {!urban ? field("Продукт трубопровода", <><Seg name="Продукт трубопровода" value={draft.pipelineProduct || null} items={[["oil", "Нефть", undefined, cargoProfile.handling !== "liquid" || !draft.pipeline], ["oilprod", "Нефтепродукты", undefined, cargoProfile.handling !== "liquid" || !draft.pipeline], ["gas", "Газ", undefined, cargoProfile.handling !== "liquid" || !draft.pipeline]]}
                   onChange={(value) => { const product = value as Exclude<ApiDraft["pipelineProduct"], "">; const profiles = caps.cargo_profiles.filter((profile) => profile.kind === "pipeline" && profile.product === pipelineProducts[product]); change({ pipelineProduct: product, profileId: profiles.length === 1 ? profiles[0].profile_id : "" }); }} />
                   <p className="fhint">Трубопровод применим к наливному грузу. Нефть, нефтепродукты и газ считаются отдельно.</p></>) : <div className="fgroup"><div className="disabled-note"><Icon name="info" />Трубопроводы учитываются только между территориями.</div></div>}
               </>}
-              <details className="more"><summary>Источники и условия данных</summary>
-                {readiness && <UrbanReadiness value={readiness} />}
-                <p className="fhint">Набор данных определяется по городу, дате, передвижению и выбранным категориям. {scopeState.problem?.message}</p>
-                {inline("snapshotId", ["snapshot_id"])}
-              </details>
-              <details className="more api-territory-search"><summary>Поиск по каталогу</summary>{field(
-                "Поиск территорий",
-                <>
-                  <input
-                    className="api-input"
-                    aria-label="Поиск территорий"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Название города или субъекта"
-                  />
-                  {searchError && <span role="alert">{searchError}</span>}
-                </>,
-              )}</details>
-              {field(
+              {!compact && <>
+                <details className="more"><summary>Источники и условия данных</summary>
+                  {readiness && <UrbanReadiness value={readiness} />}
+                  <p className="fhint">Набор данных определяется по городу, дате, передвижению и выбранным категориям. {scopeState.problem?.message}</p>
+                  {inline("snapshotId", ["snapshot_id"])}
+                </details>
+                <details className="more api-territory-search"><summary>Поиск по каталогу</summary>{field(
+                  "Поиск территорий",
+                  <>
+                    <input
+                      className="api-input"
+                      aria-label="Поиск территорий"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Название города или субъекта"
+                    />
+                    {searchError && <span role="alert">{searchError}</span>}
+                  </>,
+                )}</details>
+              </>}
+              {caps.traffic_modes.length > 1 && field(
                 "Дорожные условия",
                 <Select
                   label="Режим трафика"
@@ -1068,14 +1075,14 @@ export function ApiAtlasPage() {
             cityId={urban ? draft.cityId : undefined} viewId={scenario?.run_id}
             category={mapMetric === "overall" ? null : categoryIds[mapMetric as keyof typeof categoryIds]} layers={layers}
           /></MapCanvas>
-          <MapOverlay position="tl"><AtlasStatus kind={uiError ? "err" : running ? "run" : dirty || result?.status === "partial" ? "stale" : result ? "ok" : "nd"}
+          <MapOverlay position="tl"><AtlasStatus kind={uiError ? "err" : running ? "run" : dirty || (!compactResult && result?.status === "partial") ? "stale" : result ? "ok" : "nd"}
             title={running ? runningTitle : dirty ? "Параметры изменены — показан прежний результат" : phaseLabels[phase]}
-            subtitle={<>{result ? `${requestTitle} · ${timestampText(result.request.departure_at, savedOrigin?.timezone)} · ${trafficText[result.traffic_mode]} · ${statusText[result.status]}` : restoreMode ? "Исходные параметры появятся после получения результата." : draftInstructions}
+            subtitle={<>{result ? `${requestTitle} · ${timestampText(result.request.departure_at, savedOrigin?.timezone, !compactResult)}${compactResult ? "" : ` · ${trafficText[result.traffic_mode]} · ${statusText[result.status]}`}` : restoreMode ? "Исходные параметры появятся после получения результата." : draftInstructions}
               {progressText && <><br />{progressText}</>}</>}
             actions={session.job && ["queued", "running"].includes(session.job.status) && <button className="iconbtn" onClick={() => void session.cancel()}>Отменить</button>} /></MapOverlay>
           {uiError && <StateCard role="alert" icon="cloud-off" title={uiError instanceof ApiError && uiError.code === "stored_result_incompatible" ? "Сохранённый результат несовместим — требуется новый расчёт" : "Новый результат не получен"}
             description={requestErrorMessage} actions={<div className="api-preset-options">
-              <button className="iconbtn primary" onClick={bootError ? retryBootstrap : restoreMode ? retrySaved : start}>{result && !restoreMode && uiError instanceof ApiError && uiError.code === "incompatible_versions" ? "Пересчитать базу" : "Повторить"}</button>
+              <button className="iconbtn primary" onClick={snapshotExpired ? refreshInputs : bootError ? retryBootstrap : restoreMode ? retrySaved : start}>{snapshotExpired ? "Обновить данные" : result && !restoreMode && uiError instanceof ApiError && uiError.code === "incompatible_versions" ? "Пересчитать базу" : "Повторить"}</button>
               {(unavailableRequest || executionExpired) && <a className="iconbtn" href={trainingLink}>Учебный режим</a>}
             </div>} />}
           {!result && !uiError && <StateCard icon={running ? "loader-circle" : "circle-dashed"} loading={running}
@@ -1084,7 +1091,7 @@ export function ApiAtlasPage() {
           {result &&
             (!result.map_data ||
               result.map_data.status !== "available" ||
-              result.map_data.completeness === "partial" || segmentGeometry) && (
+              (!compactResult && result.map_data.completeness === "partial") || segmentGeometry) && (
               <div className="api-map-note">
                 {segmentGeometry ? "Геометрия маршрутов доступна частично." : hasRouteGeometry ? "Показана геометрия маршрута. Объекты территории доступны не полностью." : result.map_data?.status === "available"
                   ? "Геометрия доступна частично."
@@ -1108,18 +1115,19 @@ export function ApiAtlasPage() {
           )}
           <MapOverlay position="bottom">
             <AtlasLegend title={layers.pop ? "Население ячейки" : values?.scores.some((score) => score.name === "observed_route_accessibility" && score.status === "available") ? "Предварительная оценка по найденному маршруту" : "Индекс доступности"}
-              scale={!!values?.scores.some((score) => score.status === "available" && score.value != null) || layers.pop} open={legendOpen} onToggle={() => setLegendOpen((value) => !value)} ticks={layers.pop ? ["меньше жителей", "больше"] : [0, 25, 50, 75, 100]}
-              note={layers.pop ? "По данным источника · неизвестное нейтрально" : "Ниже 50 · 50–<75 · 75–100"}
-              barStyle={layers.pop ? undefined : { background: "linear-gradient(to right,#c72d44 0%,#c72d44 50%,#d49520 50%,#d49520 75%,#0b8a5c 75%,#0b8a5c 100%)" }}
-              details={<IndexLegend />} items={<span><i className="sw nd" />Нет подтверждённых данных</span>} />
+              scale={(!!compact && draft.kind === "urban_passenger") || !!values?.scores.some((score) => score.status === "available" && score.value != null) || layers.pop} open={legendOpen} onToggle={() => setLegendOpen((value) => !value)} ticks={layers.pop ? ["меньше жителей", "больше"] : [0, 25, 50, 75, 100]}
+              note={layers.pop ? "Оценка населения по исходным ячейкам" : undefined}
+              barStyle={{ background: layers.pop ? "linear-gradient(90deg, hsl(250 45% 90%), hsl(250 45% 35%))"
+                : compact ? indexGradient : "linear-gradient(to right,#c72d44 0%,#c72d44 50%,#d49520 50%,#d49520 75%,#0b8a5c 75%,#0b8a5c 100%)" }}
+              details={layers.pop ? <p className="fhint">Серый цвет — данных о населении нет.</p> : <IndexLegend continuous={!!compact} sample={sampleResult} />} items={<span><i className="sw nd" />Нет подтверждённых данных</span>} />
             {timeDock(false)}
-            <MapControls items={[["in", "plus", "Приблизить"], ["out", "minus", "Отдалить"], ["home", "globe", moscowView ? "Центр Москвы" : "Показать Россию"],
-              ...(moscowView ? [["all_points", "locate-fixed", "Все точки"]] : [])]} onAction={(kind) => setZoom((z) => ({ kind, id: z.id + 1 }))} />
+            <MapControls items={[["in", "plus", "Приблизить"], ["out", "minus", "Отдалить"], ["home", "globe", moscowView && !sampleResult ? "Центр Москвы" : "Показать Россию"],
+              ...(moscowView || sampleResult ? [["all_points", "locate-fixed", "Все точки"]] : [])]} onAction={(kind) => setZoom((z) => ({ kind, id: z.id + 1 }))} />
           </MapOverlay>
-          <AtlasMobileSheet sheetRef={mobileSheet} title={requestTitle} description={selection ? `${feature?.name || "Выбранная точка"}${headlineScore ? ` · ${measureLabel(headlineScore.name)} ${measureText(headlineScore)}` : ""}` : result ? (pointOverview?.inventoryCount != null && pointOverview.inventoryCount > 0 ? `${pointOverview.inventoryCount} точек · выберите точку на карте` : "Откройте показатели сохранённого результата") : "Для выбранных условий результата нет"}
+          <AtlasMobileSheet sheetRef={mobileSheet} title={requestTitle} description={selection ? `${selectionTitle}${headlineScore ? ` · ${measureLabel(headlineScore.name)} ${measureText(headlineScore)}` : ""}` : result ? (territoryHeadline && sampleResult ? `Доступность в зоне · ${measureText(territoryHeadline)}` : compactResult ? "Откройте результат расчёта" : pointOverview?.inventoryCount != null && pointOverview.inventoryCount > 0 ? `${pointOverview.inventoryCount} точек · выберите точку на карте` : "Откройте показатели сохранённого результата") : "Для выбранных условий результата нет"}
             tag={savedDemoModel ? <span className="badge-s">ДЕМО</span> : undefined} timeDock={timeDock(true)}
             onFilters={() => { setFiltersOpen(true); setChatOpen(false); }} onChat={() => { setChatOpen(true); setFiltersOpen(false); }}>
-            {mobile && result && <details className="more"><summary>Результат и рассчитанные точки</summary>{!cardHidden ? renderResultCard() : <button className="iconbtn" onClick={() => setCardHidden(false)}>Показать результат</button>}</details>}
+            {mobile && result && <details className="more"><summary>{compactResult ? "Подробности результата" : "Результат и рассчитанные точки"}</summary>{!cardHidden ? renderResultCard() : <button className="iconbtn" onClick={() => setCardHidden(false)}>Показать результат</button>}</details>}
           </AtlasMobileSheet>
         </MapViewport>
         <AgentChatView open={chatOpen} onClose={() => { setChatOpen(false); if (window.innerWidth < 1520) setFiltersCollapsed(false); }} onNewDialog={() => { setInterfaceMessages([]); session.clearExplanation(); }}

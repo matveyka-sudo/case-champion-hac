@@ -189,13 +189,18 @@ def calculate(
                 raise DomainError(409, "incompatible_versions", "Truck evidence identity collision")
             evidence[row.evidence_id] = row
     out = Projection(context, list(evidence.values()))
+    if profile.compact:
+        out.limitations.add("BOUNDED_ANALYSIS_SCOPE")
     if isinstance(inputs, UrbanInputs):
         assert isinstance(request, UrbanPassengerRequest)
         config, rules = load_urban_config(), load_urban_journey_rules()
         urban_context = replace(inputs.context, requested_departure_at=request.departure_at)
         population = replace(inputs.population_coverage, context=urban_context)
         coverage = tuple(
-            replace(row, scope=replace(row.scope, context=urban_context)) for row in inputs.coverage
+            replace(row, scope=replace(row.scope, context=urban_context))
+            for row in inputs.coverage
+            if row.scope.passenger_mode == request.passenger_mode
+            and row.scope.category in request.categories
         )
         candidates = []
         for candidate in inputs.candidates:
@@ -219,11 +224,18 @@ def calculate(
                     ),
                 )
             )
+        if profile.compact and request.passenger_mode != "public_transport":
+            from a2_api.adapters.compact_urban import bounded_coverage
+
+            coverage = bounded_coverage(coverage, inputs.destinations, candidates)
         if request.passenger_mode in ("walk", "public_transport") and inputs.timetable is not None:
             network = UrbanTransitNetwork(
                 urban_context, inputs.timetable, inputs.timetable.scope.evidence_refs
             )
+            from a2_api.adapters.compact_urban import bounded_network
+
             searched: dict[tuple[str, str], bool] = {}
+            stop_ids = frozenset(e.node_id for run in inputs.timetable.runs for e in run.events)
             for point in inputs.points:
                 for category in request.categories:
                     results = []
@@ -244,7 +256,9 @@ def calculate(
                             continue
                         results.append(
                             search_urban_transit(
-                                network,
+                                bounded_network(network, point, destination, stop_ids)
+                                if profile.compact
+                                else network,
                                 point,
                                 destination,
                                 category=category,
@@ -254,7 +268,10 @@ def calculate(
                             )
                         )
                     searched[(point.point_id, category)] = not missing_boundary and all(
-                        row.search_complete for row in results
+                        (not row.search.interrupted and row.best_known is not None)
+                        if profile.compact
+                        else row.search_complete
+                        for row in results
                     )
                     candidates.extend(
                         row.best_known.candidate for row in results if row.best_known is not None
@@ -266,6 +283,11 @@ def calculate(
                 )
                 for row in coverage
             )
+            if profile.compact:
+                from a2_api.adapters.compact_urban import bounded_coverage
+
+                coverage = bounded_coverage(coverage, inputs.destinations, candidates, searched)
+                out.limitations.update(inputs.timetable.scope.limitations)
             local_day = request.departure_at.astimezone(
                 ZoneInfo(inputs.timetable.scope.timezone)
             ).date()
@@ -299,7 +321,11 @@ def calculate(
             rules=rules,
             thresholds=inputs.thresholds,
         )
-        project_urban(out, analysis)
+        project_urban(out, analysis, bounded=profile.compact)
+        if profile.compact and request.passenger_mode == "public_transport" and inputs.timetable:
+            from a2_api.adapters.compact_urban import project_bounded_returns
+
+            project_bounded_returns(out, analysis, network, local_day, inputs, rules, stop_ids)
     elif isinstance(inputs, IntercityInputs):
         assert isinstance(request, IntercityPassengerRequest)
         reference_scope = inputs.reference_scope
@@ -358,6 +384,8 @@ def calculate(
                 accepted_car.chain_id, accepted_car.path_seconds, scalar, config=passenger_config
             )
             project_car(out, car_result, accepted_car, reference, geometry=inputs.car_geometry)
+            if profile.compact:
+                out.limitations.update(inputs.timetable.scope.limitations)
             if request.passenger_modes == ["private_car"]:
                 return finalize(out.finish())
         if inputs.public_timetable_unavailable:

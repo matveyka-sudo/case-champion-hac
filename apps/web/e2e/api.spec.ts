@@ -283,7 +283,7 @@ for (const population of [1234.5, 0, null]) {
     await page.getByRole("button", { name: "Отправить", exact: true }).click();
     await page.getByRole("button", { name: "Synthetic elapsed travel time: 30 мин", exact: true }).click();
     await expect(page.locator("#apiResultCard")).toContainText(
-      `Население ячейки: ${population === null ? "неизвестно" : population} · 2025 ·`,
+      `Население ячейки: ${population === null ? "неизвестно" : population.toLocaleString("ru", { maximumFractionDigits: 1 })} · 2025 ·`,
     );
     await page.getByText("Источник населения", { exact: true }).click();
     await expect(page.locator(".api-population")).toContainText("synthetic-test-only");
@@ -615,7 +615,7 @@ test("API: original pipeline product controls bind the exact registered product 
   expect(mock.request).toMatchObject({ cargo_profile_id: "pipe-gas", pipeline_product: "gas" });
 });
 
-test("API: selected point and destination scope return times and partial map assessments stay identified", async ({ page }) => {
+test("API: selected point and destination scope return times", async ({ page }) => {
   const data = returnContextFixture();
   await mockApi(page, { result: data, emptyProposals: true });
   await page.route("**/explanation", (route) => route.fulfill({ json: {
@@ -627,7 +627,6 @@ test("API: selected point and destination scope return times and partial map ass
   await page.goto("/?data=api#atlas");
   await cityRun(page);
   await expect(page.locator(".status")).toContainText("Результат получен");
-  await expect(page.getByLabel("Условные обозначения карты")).toContainText("частичная оценка");
   await page.getByRole("button", { name: "Агент", exact: true }).first().click();
   await page.getByLabel("Вопрос агенту").fill("Покажи контекст");
   await page.getByRole("button", { name: "Отправить", exact: true }).click();
@@ -636,7 +635,7 @@ test("API: selected point and destination scope return times and partial map ass
   await expect(page.locator("#apiResultCard")).toContainText("18:00");
   await expect(page.locator("#apiResultCard")).toContainText("20:00");
   await expect(page.locator("#apiResultCard")).not.toContainText("19:00");
-  await expect(page.locator("#apiResultCard")).toContainText("Частичная оценка");
+  await expect(page.locator("#apiResultCard")).not.toContainText(/частичная оценка/i);
   await page.getByRole("button", { name: "Synthetic destination time: 30 мин", exact: true }).click();
   await expect(page.locator("#apiResultCard")).toContainText("18:00");
   await expect(page.locator("#apiResultCard")).toContainText("19:00");
@@ -644,7 +643,7 @@ test("API: selected point and destination scope return times and partial map ass
   await expect(page.locator("#apiResultCard")).toContainText("Выбранная точка → Школа А");
 });
 
-test("API: score-only explanations use saved zero and partial labels, and null remains neutral", async ({ page }) => {
+test("API: score-only explanations use saved zero and null remains neutral", async ({ page }) => {
   const data = structuredClone(urban) as AnalysisResult;
   data.scores[0] = { ...data.scores[0], name: "urban_accessibility_index", value: 0, completeness: "partial", ranking_eligible: false };
   await mockApi(page, { result: data, emptyProposals: true });
@@ -661,7 +660,7 @@ test("API: score-only explanations use saved zero and partial labels, and null r
   await page.getByRole("button", { name: "Агент", exact: true }).first().click();
   await page.getByLabel("Вопрос агенту").fill("Объясни индекс");
   await page.getByRole("button", { name: "Отправить", exact: true }).click();
-  await expect(page.locator('.api-claim[data-score-band="low"]')).toHaveText("Индекс доступности: 0 из 100 · частичная оценка");
+  await expect(page.locator('.api-claim[data-score-band="low"]')).toHaveText("Индекс доступности: 0 из 100");
   await expect(page.locator(".ch-log")).not.toContainText("99 из 100");
   data.scores[0] = { ...data.scores[0], value: null, status: "unknown" };
   await page.route(`**/analyses/${data.analysis_id}`, (route) => route.fulfill({ json: data }));
@@ -793,8 +792,7 @@ test("API: partial point index stays numerical and scoped while the city total i
   const point = page.locator(".api-measure").filter({ hasText: "Точка анализа" });
   await expect(point.locator('b[data-score-band="medium"]')).toHaveText("72,5 из 100");
   await expect(page.locator(".api-measure").filter({ hasText: "Территория" }).locator('b[data-score-band="unknown"]')).toHaveText("Нет данных");
-  await expect(page.locator("#apiResultCard")).toContainText("Частичная оценка");
-  await expect(page.locator("#apiResultCard")).toContainText("не участвует в полном рейтинге");
+  await expect(page.locator("#apiResultCard")).not.toContainText(/частичная оценка/i);
   await page.screenshot({ path: "test-results/api-partial-point-index.png" });
   expect(mock.posts).toBe(1);
 });
@@ -897,7 +895,7 @@ for (const mobile of [false, true]) test(`API: calculated point overview reveals
   else await summary.click();
   const point = overview.getByRole("button", { name: /Точка · 54.71500, 20.51500/ });
   await expect(point).toContainText("0,5 из 100");
-  await expect(point).toContainText("Частичная оценка");
+  await expect(point).not.toContainText(/частичная оценка/i);
   await expect(card.locator("h3")).toHaveText("Калининград");
   if (mobile) { await point.focus(); await point.press("Enter"); }
   else await point.click();
@@ -972,7 +970,7 @@ test("API: calculated point reveals its partial walk route with a separate round
   await expect(card).toContainText("0,5 из 100");
   const route = card.locator(".api-journey");
   await expect(route).toHaveCount(1);
-  await expect(route.locator("summary")).toHaveText("Путь · Данные доступны · геометрия источника · частичные данные");
+  await expect(route.locator("summary")).toHaveText("Путь · Данные доступны · геометрия источника");
   await route.locator("summary").click();
   await expect(route).toContainText("Синтетический аэропорт · 10 мин");
   await expect(route).toContainText("Пеший участок · Пешком · 10 мин");
@@ -1066,7 +1064,7 @@ test("API: disjoint movement segments retain partial-route labels and clear on c
   await overview.getByRole("button", { name: /Точка · 54.50200, 20.30200/ }).click();
   const card = page.locator("#apiResultCard"), route = card.locator(".api-journey");
   await expect(card).toContainText("0,5 из 100");
-  await expect(route.locator("summary")).toHaveText("Путь · Данные доступны · геометрия участков · частичные данные");
+  await expect(route.locator("summary")).toHaveText("Путь · Данные доступны · геометрия участков");
   await route.locator("summary").click();
   await expect(route).toContainText("Показан участок маршрута; геометрия подходов не подтверждена");
   await expect(route.locator("li")).toHaveCount(5);

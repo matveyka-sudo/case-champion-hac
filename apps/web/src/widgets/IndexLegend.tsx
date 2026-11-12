@@ -1,4 +1,13 @@
-export function IndexLegend() {
+export function IndexLegend({ continuous = false, sample = false }: { continuous?: boolean; sample?: boolean } = {}) {
+  if (continuous) return (
+    <div className="api-index-legend" role="group" aria-label="Шкала индекса от 0 до 100">
+      {sample && <>
+        <p><span className="api-legend-start" aria-hidden="true" />Стартовая точка с индексом</p>
+        <p><span className="api-legend-destination" aria-hidden="true" />Объект назначения</p>
+      </>}
+      <p><span className="api-index-swatch" data-band="unknown" aria-hidden="true" />Нет индекса</p>
+    </div>
+  );
   return (
     <div className="api-index-legend" role="group" aria-label="Шкала индекса от 0 до 100">
       <ul aria-label="Цветовые диапазоны индекса">
@@ -19,7 +28,6 @@ export function IndexLegend() {
           Нет индекса
         </li>
       </ul>
-      <p><span className="api-partial-symbol" aria-hidden="true" />Точечный контур — частичная оценка</p>
     </div>
   );
 }

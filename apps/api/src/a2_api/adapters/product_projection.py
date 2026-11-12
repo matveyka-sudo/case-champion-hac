@@ -10,6 +10,7 @@ from a2_contracts.v2.journeys import (
     BoundaryNodeSets,
     CountResult,
     JourneyResult,
+    LastReturn,
     Leg,
     LineGeometry,
     ReferenceResult,
@@ -46,6 +47,7 @@ class Projection:
         self.journeys: list[JourneyResult] = []
         self.references: list[ReferenceResult] = []
         self.counts: list[CountResult] = []
+        self.last_returns: list[LastReturn] = []
         self.map_data = AnalysisMapData()
         self.limitations: set[str] = set()
 
@@ -164,7 +166,7 @@ class Projection:
             journeys=self.journeys,
             references=self.references,
             counts=self.counts,
-            last_returns=[],
+            last_returns=self.last_returns,
             map_data=self.map_data,
             result_hash="pending-publication",
         )
@@ -186,7 +188,11 @@ def known(value: float | None, reason: str = "DATA_UNAVAILABLE") -> MetricResult
 
 
 def project_urban(
-    out: Projection, analysis: Any, *, observed_score_ids: frozenset[str] | None = None
+    out: Projection,
+    analysis: Any,
+    *,
+    observed_score_ids: frozenset[str] | None = None,
+    bounded: bool = False,
 ) -> None:
     request = out.context.normalized_request
     assert isinstance(request, UrbanPassengerRequest)
@@ -284,36 +290,37 @@ def project_urban(
                     ),
                     s,
                     category.evidence_refs,
-                    full=category.minimum_proven,
+                    full=category.minimum_proven and not bounded,
                     journey_id=chosen.journey.candidate.journey_id if chosen else None,
                     time_kind="complete_chain",
                     population_basis=basis,
                     confirmed_absence=confirmed_absence,
                 )
-                count_id = out.metric(
-                    "urban-count-" + key,
-                    "accessible_object_count",
-                    category.count,
-                    s,
-                    category.evidence_refs,
-                    unit="objects",
-                    full=category.completeness == "full",
-                )
-                out.counts.append(
-                    CountResult(
-                        metric_id=count_id,
-                        threshold_seconds=category.threshold.seconds
-                        if category.threshold
-                        else None,
-                        value=int(category.count.value)
-                        if category.count.value is not None
-                        else None,
-                        status=category.count.status,
-                        reason_code=category.count.reason_code,
-                        dependency_job_id=None,
-                        evidence_refs=list(category.evidence_refs),
+                if not bounded:
+                    count_id = out.metric(
+                        "urban-count-" + key,
+                        "accessible_object_count",
+                        category.count,
+                        s,
+                        category.evidence_refs,
+                        unit="objects",
+                        full=category.completeness == "full",
                     )
-                )
+                    out.counts.append(
+                        CountResult(
+                            metric_id=count_id,
+                            threshold_seconds=category.threshold.seconds
+                            if category.threshold
+                            else None,
+                            value=int(category.count.value)
+                            if category.count.value is not None
+                            else None,
+                            status=category.count.status,
+                            reason_code=category.count.reason_code,
+                            dependency_job_id=None,
+                            evidence_refs=list(category.evidence_refs),
+                        )
+                    )
                 c_scores.append(
                     out.score(
                         "urban-category-" + key,
@@ -388,11 +395,13 @@ def project_urban(
         )
         basis = PopulationBasis(
             population=population,
-            population_method="accepted_original_cell_weights",
+            population_method="selected_original_cell_weights"
+            if bounded
+            else "accepted_original_cell_weights",
             year=None,
-            coverage=1 if population_full else 0,
+            coverage=1 if population_full or (bounded and population is not None) else 0,
             unit="persons",
-            unknown_positive_weight=not population_full,
+            unknown_positive_weight=population is None if bounded else not population_full,
         )
         out.score(
             "urban-territory-" + mode.passenger_mode,

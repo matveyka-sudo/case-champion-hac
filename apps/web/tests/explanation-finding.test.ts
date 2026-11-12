@@ -42,7 +42,7 @@ describe("saved score explanation references", () => {
     };
     const onSelect = vi.fn();
     render(createElement(ExplanationFinding, { finding, result, onSelect }));
-    expect(screen.getByRole("button").textContent).toContain("50 из 100 · частичная оценка");
+    expect(screen.getByRole("button").textContent).toContain("50 из 100");
     fireEvent.click(screen.getByRole("button"));
     expect(onSelect).toHaveBeenCalledWith({ entity_kind: "sample_point", entity_id: score.subject.point_id });
     expect(score.ranking_eligible).toBe(false);

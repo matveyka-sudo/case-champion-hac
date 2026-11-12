@@ -16,6 +16,7 @@ from a2_contracts.v2.api import (
     AnalysisPreset,
     AreaOption,
     Capabilities,
+    CompactAnalysisScope,
     TerritoryOption,
     UrbanPassengerScope,
 )
@@ -31,6 +32,7 @@ from a2_contracts.v2.requests import (
 )
 from a2_contracts.v2.results import EvidenceRef
 from a2_engine import scenario_hash
+from a2_engine.urban.models import BOUNDED_URBAN_SEARCH
 from pydantic import Field
 
 from a2_api.adapters.demo_transport import DEMO_SOURCE, verify_demo_snapshot
@@ -131,6 +133,7 @@ class Profile(ContractModel):
     demo_model: bool = Field(default=False, exclude_if=lambda value: value is False, strict=True)
     scenarios: list[FileRef] = Field(default_factory=list, max_length=16)
     evidence: list[EvidenceRef] = Field(default_factory=list)
+    compact: bool = Field(default=False, exclude_if=lambda value: value is False)
     static_observations: bool = False
     truck_routing: TruckRoutingBinding | None = Field(
         default=None, exclude_if=lambda value: value is None
@@ -147,6 +150,8 @@ class Manifest(ContractModel):
     profiles: list[Profile] = Field(max_length=128)
     national_catalog_complete: bool = False
     presets: list[AnalysisPreset] = Field(default_factory=list, max_length=128)
+    compact: bool = False
+    selection: FileRef | None = Field(default=None, exclude_if=lambda value: value is None)
 
 
 def unavailable(reason: str) -> DomainError:
@@ -220,6 +225,7 @@ def input_fingerprints(
             "traffic_modes": profile.traffic_modes,
             "static_observations": profile.static_observations,
             "passenger_modes": profile.passenger_modes,
+            **({"compact": True} if profile.compact else {}),
             **(
                 {"truck_routing": profile.truck_routing.model_dump(mode="json")}
                 if profile.truck_routing
@@ -317,6 +323,18 @@ def validate_inputs(
             if not proof or not proof <= verified_evidence:
                 raise ValueError("FULL_SCOPE_REQUIRES_VERIFIED_CANONICAL_EVIDENCE")
     if isinstance(inputs, UrbanInputs):
+        if profile.compact != (inputs.context.search_parameters_id == BOUNDED_URBAN_SEARCH):
+            raise ValueError("INVALID_COMPACT_SEARCH_IDENTITY")
+        if profile.compact and (
+            len(inputs.points) != 10
+            or any(
+                sum(c in d.categories for d in inputs.destinations) > 5 for c in profile.categories
+            )
+            or inputs.thresholds
+            or inputs.population_coverage.complete
+            or any(row.catalog_complete for row in inputs.coverage)
+        ):
+            raise ValueError("INVALID_COMPACT_URBAN_SCOPE")
         if inputs.timetable is not None:
             if demo_transport is not None:
                 from a2_api.adapters.demo_transport import verify_demo_model
@@ -751,6 +769,8 @@ class Runtime:
                 profile_matches(p, request, snapshot.snapshot_id) for p in self.manifest.profiles
             ):
                 raise unavailable("RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST")
+            if self.manifest.compact:
+                raise unavailable("RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST")
             raise unsupported_request(self.manifest.presets)
         if len(matches) != 1:
             raise unavailable("RUNTIME_PROFILE_SCOPE_AMBIGUOUS")
@@ -759,6 +779,24 @@ class Runtime:
             p.request == request for p in self.manifest.presets
         ):
             raise unsupported_request(self.manifest.presets)
+        if profile.compact:
+            from a2_api.adapters.product_capabilities import compact_transport_supported
+
+            origin_id = (
+                request.city_id
+                if isinstance(request, (UrbanPassengerRequest, UrbanCargoRequest))
+                else request.origin_id
+            )
+            origin = next(row for row in self.manifest.territories if row.territory_id == origin_id)
+            local = request.departure_at.astimezone(ZoneInfo(origin.timezone))
+            if (
+                local.hour not in (8, 13, 18, 23)
+                or local.minute
+                or local.second
+                or local.microsecond
+                or not compact_transport_supported(inputs, request)
+            ):
+                raise unavailable("RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST")
         if isinstance(inputs, UrbanInputs) and isinstance(request, UrbanPassengerRequest):
             destinations = [
                 d for d in inputs.destinations if set(request.categories) & d.categories
@@ -847,6 +885,8 @@ def load_runtime(
         source = Path(path)
         budget = [runtime_source_budget_bytes()]
         manifest = Manifest.model_validate(read_document(source, digest, budget))
+        if manifest.selection is not None:
+            _referenced(source.parent, manifest.selection, budget)
         snapshot_ids = [ref.snapshot_id for ref in manifest.snapshots]
         profile_ids = [profile.profile_id for profile in manifest.profiles]
         if len({p.preset_id for p in manifest.presets}) != len(manifest.presets):
@@ -1073,6 +1113,7 @@ class RuntimeRegistry(ProductRegistry):
     analysis_presets: list[AnalysisPreset] = []
     declared_presets: tuple[AnalysisPreset, ...] = ()
     ready_profile_ids: frozenset[str] = frozenset()
+    compact_scopes: list[CompactAnalysisScope] | None = None
 
     def resolve_snapshot(self, request: AnalysisRequest) -> AcceptedData:
         if request.snapshot_id is not None and request.snapshot_id not in self.snapshots:
@@ -1095,6 +1136,8 @@ class RuntimeRegistry(ProductRegistry):
             and profile_matches(profile, request, profile.snapshot_id)
         ]
         if not matches:
+            if self.compact_scopes is not None:
+                raise unavailable("RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST")
             raise unsupported_request(self.analysis_presets)
         identities = {profile.snapshot_id for profile in matches}
         if len(identities) != 1:
@@ -1128,6 +1171,7 @@ class RuntimeRegistry(ProductRegistry):
         result = super().capabilities()
         result.urban_passenger_scopes = list(self.urban_passenger_scopes)
         result.analysis_presets = list(self.analysis_presets)
+        result.compact_scopes = self.compact_scopes
         if self.snapshot_analysis_kinds is not None:
             for snapshot in result.snapshots or []:
                 snapshot.analysis_kinds = self.snapshot_analysis_kinds.get(snapshot.snapshot_id, [])
@@ -1161,6 +1205,10 @@ def registry() -> ProductRegistry:
     result.runtime_profiles = tuple(runtime.manifest.profiles)
     result.declared_presets = tuple(runtime.manifest.presets)
     result.ready_profile_ids = frozenset(runtime.profiles)
+    if runtime.manifest.compact:
+        from a2_api.adapters.product_capabilities import compact_scopes
+
+        result.compact_scopes = compact_scopes(runtime)
     result.snapshot_analysis_kinds = {
         snapshot_id: sorted(
             {p.analysis_kind for p, _ in runtime.profiles.values() if p.snapshot_id == snapshot_id}
