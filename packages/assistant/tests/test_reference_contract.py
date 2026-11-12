@@ -202,3 +202,48 @@ async def test_prompt_states_reference_and_clause_rules():
     assert "saved metric_id OR score_id (no placeholder)" in system
     assert "components: score + its component metric" in system
     assert payload["response_example"]["findings"] == [SCORE]
+
+
+def two_linked_scores():
+    raw = score_analysis(partial=True).model_dump(mode="json")
+    metric = analysis().metrics[0].model_dump(mode="json")
+    raw["metrics"] = [metric | {"metric_id": "m0"}, metric | {"metric_id": "m1"}]
+    first = raw["scores"][0] | {"score_id": "first"}
+    first["components"] = [{"kind": "metric", "id": "m0"}, {"kind": "metric", "id": "m1"}]
+    last = raw["scores"][0] | {"score_id": "last"}
+    last["components"] = [{"kind": "metric", "id": "m0"}]
+    raw["scores"] = [first, last]
+    return AnalysisResult.model_validate(raw)
+
+
+@pytest.mark.asyncio
+async def test_components_truncation_is_marked_per_score():
+    saved = two_linked_scores()
+    finding = {"score_id": "first", "explanation_code": "saved_value"}
+    for limit in range(12000, 1024, -50):
+        agent, transport, *_ = assistant(
+            [reply({"answer_mode": "explain", "findings": [finding]})],
+            config=FlashConfig(
+                api_key="TEST_ONLY",
+                folder_id="TEST_ONLY",
+                tools_enabled=False,
+                max_input_tokens=limit,
+            ),
+        )
+        await agent.explain(
+            saved,
+            access_scope=scope(saved),
+            registered_template_ids=set(),
+            request_id="components",
+            context=ExplanationRequest(question="Почему такой индекс?"),
+        )
+        if not transport.calls:
+            break
+        facts = json.loads(transport.calls[0]["messages"][1]["content"])["saved_facts"]
+        sent = {row["metric_id"] for row in facts["metrics"]}
+        rows = {row["score_id"]: row for row in facts["scores"]}
+        if "m1" not in sent and "first" in rows:
+            assert rows["first"]["components"] == [{"kind": "metric", "id": "m0"}]
+            assert rows["first"]["components_truncated"] is True
+            return
+    pytest.fail("no input limit dropped only the second component")

@@ -989,7 +989,7 @@ class FlashAssistant:
                 or (edge["kind"] == "score" and edge["id"] in allowed_scores)
             ]
             row["components_truncated"] = row["components_truncated"] or len(kept) != len(
-                components
+                row_components
             )
             row["components"] = kept
         prose_contract = prose_limits(
