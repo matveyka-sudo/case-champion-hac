@@ -76,9 +76,10 @@ export class ApiClient {
     path: string,
     schema: K,
     signal?: AbortSignal,
+    body?: unknown,
   ): Promise<Schemas[K][]> {
     await this.capabilities();
-    const data = await this.raw(path, { signal });
+    const data = await this.raw(path, { signal, body });
     if (!Array.isArray(data))
       throw new ApiError(0, "invalid_response", "Неверный ответ сервера");
     try {

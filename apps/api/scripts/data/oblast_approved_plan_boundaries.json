@@ -1,0 +1,76 @@
+[
+  {
+    "city": "Лобня",
+    "municipality_id": "oblast-relation-1703091",
+    "anchor": [
+      37.4670831,
+      56.0122
+    ],
+    "municipality_overlap_min": 0.97,
+    "decision": "Лобня № 25/75 от 25.03.2025",
+    "url": "https://www.xn--90athc1g.xn--p1ai/orgvl/documents/regulatory/index.php?ELEMENT_ID=66149",
+    "pdf_url": "https://www.xn--90athc1g.xn--p1ai/upload/iblock/97e/nqxwme4y0xc3of328bcqwklvhi5o4zj6/25.75-2.-Prilozhenie_1_Svedeniya_o_granitsakh_nasel_nnogo_punkta_gorod_Lobnya.pdf",
+    "crs": "MSK-50 zone 2",
+    "published_area_m2": 21206539,
+    "area_tolerance_m2": 1612,
+    "file": "oblast_lobnya_msk50.json",
+    "sha256": "214dddbb2d35c215c88d916c2b89129f4cc1a75971c74bebd5f27f6c741a4337",
+    "source_sha256": "f412252192f158dedb86522e3bde4670fc1eb176cde7c2db8c50a5b51449232c",
+    "source_format": "pdf"
+  },
+  {
+    "city": "Котельники",
+    "municipality_id": "oblast-relation-1028434",
+    "anchor": [
+      37.8673073,
+      55.658
+    ],
+    "decision": "Котельники № 1/26 от 13.03.2026",
+    "url": "https://kotelniki.ru/docs/doc/reshenie-soveta-deputatov-gorodskogo-okruga-kotelniki-moskovskoj-oblasti-ot-13-03-2026-no-1-26-ob-u-505260",
+    "pdf_url": "https://kotelniki.ru/files/2026/03/19/%D1%81%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D1%8F,%20%D0%BF%D1%80%D0%B5%D0%B4%D1%83%D1%81%D0%BC%D0%BE%D1%82%D1%80%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5%20%D0%BF.3.1%20%D1%81%D1%82.19,%20%D0%BF.5.1%20%D1%81%D1%82.23%20%D0%B8%20%D0%BF.6.1%20%D1%81%D1%82.30%20%D0%93%D1%80%D0%B0%D0%B4%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B8%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D0%BE%D0%B3%D0%BE%20%D0%BA%D0%BE%D0%B4%D0%B5%D0%BA%D1%81%D0%B0%20%D0%93%D0%9E%20%D0%9A%D0%9E%D0%A2%D0%95%D0%9B%D0%AC%D0%9D%D0%98%D0%9A%D0%98.pdf",
+    "source_format": "indexed PDF coordinate rows",
+    "source_sha256": "929489305cba4b6d2dad272c05a5e26b8a03366132ce4f3baa6318fc9610d0e1",
+    "crs": "MSK-50 zone 2",
+    "published_area_m2": 8747392,
+    "area_tolerance_m2": 1035,
+    "file": "oblast_kotelniki_msk50.json",
+    "sha256": "f9eebb91b5ce19b9f88bb755a37ce3c988055199f72ce679793e266bf60c5184"
+  },
+  {
+    "city": "Лосино-Петровский",
+    "municipality_id": "oblast-relation-184746",
+    "anchor": [
+      38.2032701,
+      55.871
+    ],
+    "decision": "Лосино-Петровский № 61/8 от 07.10.2026",
+    "url": "https://www.lospet.ru/ofitsialnaya-informatsiya/obshchedostupnaya-informatsiya/informatsiya-o-gradostroitelstve/",
+    "pdf_url": "https://www.lospet.ru/upload/iblock/229/v1bonefbnwa1ztnu57jmz3sdmryn020j.pdf",
+    "source_format": "pdf",
+    "source_sha256": "36e991325c3217a16b06e8dba7baff41f468644c4c976d3deaef542c1f019c88",
+    "crs": "MSK-50 zone 2",
+    "published_area_m2": 7345563,
+    "area_tolerance_m2": 949,
+    "file": "oblast_losino_petrovsky_msk50.json",
+    "sha256": "f78aa5bf36e212ff38ec338edadd2fca68784ff2dc5ebf7aa1bca0f468404411"
+  },
+  {
+    "city": "Серебряные Пруды",
+    "settlement_kind": "settlement",
+    "municipality_id": "oblast-relation-1026234",
+    "anchor": [
+      38.7223679,
+      54.469
+    ],
+    "decision": "Серебряные Пруды № 564/63 от 21.10.2020",
+    "url": "https://www.spadm.ru/city/master-plan/",
+    "pdf_url": "https://www.spadm.ru/upload/iblock/32f/%D0%93%D1%80%D0%B0%D1%84%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5%20%D0%BE%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%B8%D0%B5%20%D0%BC%D0%B5%D1%81%D1%82%D0%BE%D0%BF%D0%BE%D0%BB%D0%BE%D0%B6%D0%B5%D0%BD%D0%B8%D1%8F%20%D0%B3%D1%80%D0%B0%D0%BD%D0%B8%D1%86%20%D0%BD%D0%B0%D1%81%D0%B5%D0%BB%D1%91%D0%BD%D0%BD%D1%8B%D1%85%20%D0%BF%D1%83%D0%BD%D0%BA%D1%82%D0%BE%D0%B2.pdf",
+    "source_format": "pdf",
+    "source_sha256": "9520e277830c71072881ddb70e01b69733a7a275af3a800b368273a2c3c881ec",
+    "crs": "MSK-50 zone 2",
+    "published_area_m2": 10667700,
+    "area_tolerance_m2": 108400,
+    "file": "oblast_serebryanye_prudy_msk50.json",
+    "sha256": "f236dce0aa5a4e6f36dfbecd7673a5443521fb95997e3017ec40825c49cda779"
+  }
+]

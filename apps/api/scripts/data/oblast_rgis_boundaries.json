@@ -1,0 +1,19 @@
+[
+  {
+    "city": "Талдом",
+    "municipality_id": "oblast-relation-171929",
+    "anchor": [
+      37.5277966,
+      56.7310031
+    ],
+    "rgis_layer": 380,
+    "feature_id": 6416067201,
+    "file": "oblast_taldom_rgis.json",
+    "sha256": "2826eb8e59d8ce14583248fdcd24f3d584d8fab5334bb1eb7c6136148d753d96",
+    "response_sha256": "de9685717bd822ca02d86b661babe99b189e4f77e4f512c9825bac1574aed2b4",
+    "retrieved_on": "2026-11-13",
+    "url": "https://rgis.mosreg.ru/v3/swagger/map/layer?layer=380&bbox=37.48,56.695,37.59,56.766",
+    "legend_url": "https://rgis.mosreg.ru/v3/swagger/map/legend?layer=380",
+    "comparison_url": "https://taldom-okrug.ru/upload/arhitektura/%D0%A0%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%A1%D0%94%20%E2%84%9683%20.pdf#page=93"
+  }
+]

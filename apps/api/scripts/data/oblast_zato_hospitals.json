@@ -1,0 +1,133 @@
+[
+  {
+    "id": "mofoms:50202620300012110",
+    "locality_id": "rgis:380:41228341",
+    "category": "hospital",
+    "name": "Новопетровская поликлиника, дневной стационар · через КПП Восхода",
+    "coordinates": [
+      36.471331,
+      55.99361
+    ],
+    "location": "object",
+    "facility_source": "https://www.mofoms.ru/dokumenty/spravochniki/reestry/",
+    "registry_evidence": {
+      "published_on": "2026-10-14",
+      "sheet": "report",
+      "row": 2206,
+      "subdivision_code": "01025800011002110",
+      "workbook_sha256": "d34e5dcc36e60244188382955a5314660a74fbeb0e2d1c0cbae89a1ed35a0bb4"
+    },
+    "geometry_source": "https://yandex.com/maps/1/moscow-and-moscow-oblast/house/sovetskaya_ulitsa_2/Z08YcgBhSkYGQFtvfXV4cnpiZA%3D%3D/",
+    "pedestrian_exit": {
+      "source": "Подтверждение пользователя от 13.11.2026",
+      "eligibility": "Круглосуточный проход пешком для жителей Восхода по подтверждению пользователя. Время проверки документов не входит в статический пеший расчёт.",
+      "checkpoint_coordinates": [
+        36.449424,
+        55.9786852
+      ],
+      "checkpoint_source": "https://www.openstreetmap.org/node/1443486317",
+      "boundary_crossing": [
+        36.4492853545225,
+        55.978797302836774
+      ],
+      "corridor_source": "Пеший граф Valhalla и граница населённого пункта РГИС, слой 380, объект 41228341"
+    },
+    "scope": "Пеший подход от жилых адресов Восхода к дневному стационару по адресу с. Новопетровское, Советская улица, 2. Круглосуточность относится к КПП. Граф оценивает путь до подхода к зданию.",
+    "reviewed_on": "2026-11-13",
+    "routing_extract": "moscow-oblast-261107.osm.pbf"
+  },
+  {
+    "id": "way/72743595",
+    "locality_id": "rgis:380:6800025401",
+    "category": "hospital",
+    "name": "Медсанчасть № 2, дневной стационар, дом 21",
+    "coordinates": [
+      38.110712,
+      55.873528
+    ],
+    "location": "object",
+    "facility_source": "https://cmsch119.ru/struktura/msch/mediko-sanitarnaya-chast-2/",
+    "address_source": "https://e-ecolog.ru/crc/50.17.02.000.%D0%9C.000052.12.25",
+    "geometry_source": "https://yandex.com/maps/org/filial_fnkts_kmib_fmba_rossii_msch_2/1113244948/",
+    "scope": "Плановая помощь в дневном стационаре жителям ЗАТО. Объект лежит вне контура населённого пункта РГИС, внутри границы ЗАТО в каталоге. Оценка до подхода по графу, без последнего участка от графа до дверей.",
+    "reviewed_on": "2026-11-13",
+    "routing_extract": "moscow-oblast-261107.osm.pbf",
+    "medical_walk_municipality": "oblast-relation-1703084",
+    "avoid_gates": [
+      [
+        38.1078239,
+        55.8722446
+      ],
+      [
+        38.1113617,
+        55.8745535
+      ]
+    ],
+    "avoid_gate_sources": [
+      "https://www.openstreetmap.org/node/262467825",
+      "https://www.openstreetmap.org/node/701700130"
+    ]
+  },
+  {
+    "id": "node/6656964253",
+    "locality_id": "rgis:380:7986136571",
+    "category": "hospital",
+    "name": "Одинцовская областная больница, хирургический корпус · КПП № 2, для жителей с допуском",
+    "coordinates": [
+      37.2632802,
+      55.6856875
+    ],
+    "location": "mapped_entrance",
+    "facility_source": "https://minzdrav.gov.ru/en/regional_news/28858-v-odintsovo-posle-kapremonta-zarabotal-hirurgicheskiy-korpus",
+    "address_source": "https://base.garant.ru/412484636/53f89421bbdaf741eb2d1ecc4ddb4c33/",
+    "geometry_source": "https://www.openstreetmap.org/node/6656964253",
+    "pedestrian_exit": {
+      "source": "https://vlasiha-zato.ru/wp-content/uploads/2020/01/Instruktsiya-ZATO-2020-1.pdf",
+      "eligibility": "Житель с действительным допуском. Пешеходный КПП № 2 работает круглосуточно по опубликованной инструкции. Время проверки документов не входит в статический пеший расчёт.",
+      "checkpoint_coordinates": [
+        37.2051864,
+        55.6890859
+      ],
+      "checkpoint_source": "https://www.openstreetmap.org/node/1259104472",
+      "boundary_crossing": [
+        37.206362333166076,
+        55.68926411874896
+      ],
+      "corridor_source": "https://www.openstreetmap.org/way/156094719"
+    },
+    "scope": "Оценка пешего доступа жителя с допуском до входа хирургического корпуса, улица Маршала Бирюзова, 3Г.",
+    "reviewed_on": "2026-11-13",
+    "routing_extract": "moscow-oblast-261107.osm.pbf"
+  },
+  {
+    "id": "way/194900599",
+    "locality_id": "rgis:380:8434561851",
+    "category": "hospital",
+    "name": "Наро-Фоминская больница, терапевтический корпус · через КПП, для жителей с допуском",
+    "coordinates": [
+      36.717362,
+      55.38979
+    ],
+    "location": "object",
+    "facility_source": "https://nfreg.ru/wp-content/uploads/2017/04/naro-fominsk-om-t.1.pdf",
+    "status_source": "https://base.garant.ru/414705899/",
+    "geometry_source": "https://yandex.by/maps/org/naro_fominskaya_rayonnaya_bolnitsa_1_terapevticheskoye_otdeleniye_1/73174637508/",
+    "pedestrian_exit": {
+      "source": "https://xn--d1aejfejdb4j9b.xn--p1ai/files/bezopasnost-i-pravoporyadok/instruktsiya-zato-08.2024.rar",
+      "eligibility": "Житель с действительным пропуском. Инструкция от 08.08.2024 подтверждает круглосуточный пропуск пешеходов. Время проверки документов не входит в статический пеший расчёт.",
+      "checkpoint_coordinates": [
+        36.7804857,
+        55.3269662
+      ],
+      "checkpoint_source": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",
+      "boundary_crossing": [
+        36.78048569931667,
+        55.326966230482284
+      ],
+      "corridor_source": "https://www.openstreetmap.org/way/51881534"
+    },
+    "scope": "Пеший подход к терапевтическому корпусу, ул. Калинина, 23. КПП сопоставлен с действующей инструкцией, единственным пересечением на проверенном маршруте по 46Н-06016 и видимым пунктом контроля на спутниковом снимке.",
+    "reviewed_on": "2026-11-13",
+    "routing_extract": "moscow-oblast-261107.osm.pbf"
+  }
+]

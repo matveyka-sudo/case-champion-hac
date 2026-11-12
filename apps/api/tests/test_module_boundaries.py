@@ -57,6 +57,11 @@ DOCUMENT_RAG_EXTENSION = json.loads(
 )
 
 
+ADDRESS_ACCESS_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/address_access_extension.json").read_text()
+)
+
+
 def private_sources_counter(expected, kind):
     assert set(PRIVATE_SOURCES_EXTENSION["modules"]) == {
         "db/repositories/private_sources.py",
@@ -116,6 +121,7 @@ def approved_sql_counter(kind):
     assert removed <= expected
     expected.subtract(removed)
     expected.update(DOCUMENT_RAG_EXTENSION["added_" + kind])
+    expected.update(ADDRESS_ACCESS_EXTENSION[kind])
     return +expected
 
 
@@ -455,6 +461,8 @@ def test_exported_artifacts_match_baseline_and_approved_contract_extensions(tmp_
     }
     assert set(cargo_extension) <= expected.keys()
     expected.update(cargo_extension)
+    assert set(ADDRESS_ACCESS_EXTENSION["schemas"]) == {"manifest.json", "openapi.json"}
+    expected.update(ADDRESS_ACCESS_EXTENSION["schemas"])
     assert actual == expected
 
 

@@ -26,6 +26,7 @@ export function LandingPage({ dataMode = "demo" }: { dataMode?: "demo" | "api" }
           <NavigationLink className="nav-link-wx" to="features">
             {"Возможности"}
           </NavigationLink>
+          {dataMode === "api" && <a className="nav-link-wx" href="#address-access">Инфраструктура по адресу</a>}
           <NavigationLink className="wbtn wbtn-light" to="atlas">
             {"Открыть атлас "}
             <span className="arrow">

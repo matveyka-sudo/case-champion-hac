@@ -1,0 +1,34 @@
+[
+  {
+    "id": "way/252199764",
+    "locality_id": "rgis:380:6416067201",
+    "category": "school",
+    "name": "Школа № 1, улица Орлова, 5",
+    "coordinates": [
+      37.5312525,
+      56.724195
+    ],
+    "location": "object",
+    "reviewed_on": "2026-11-13",
+    "facility_source": "https://taldom-okrug.ru/offisialnie-documenty/offisialnie-documenty/437.pdf",
+    "geometry_source": "https://www.openstreetmap.org/way/252199764",
+    "routing_extract": "moscow-oblast-261107.osm.pbf",
+    "scope": "Точка внутри контура подтверждённого учебного корпуса. Граф оценивает подход к зданию."
+  },
+  {
+    "id": "way/503454197",
+    "locality_id": "rgis:380:6416067201",
+    "category": "school",
+    "name": "Школа № 2, микрорайон Юбилейный, 47",
+    "coordinates": [
+      37.5333845,
+      56.7409617
+    ],
+    "location": "object",
+    "reviewed_on": "2026-11-13",
+    "facility_source": "https://taldom-okrug.ru/offisialnie-documenty/offisialnie-documenty/437.pdf",
+    "geometry_source": "https://www.openstreetmap.org/way/503454197",
+    "routing_extract": "moscow-oblast-261107.osm.pbf",
+    "scope": "Точка внутри контура подтверждённого учебного корпуса. Граф оценивает подход к зданию."
+  }
+]

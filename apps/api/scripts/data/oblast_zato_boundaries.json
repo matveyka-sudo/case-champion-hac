@@ -1,0 +1,81 @@
+[
+  {
+    "city": "Восход",
+    "municipality_id": "oblast-relation-1028612",
+    "anchor": [
+      36.45897,
+      55.9738318
+    ],
+    "rgis_layer": 380,
+    "feature_id": 41228341,
+    "file": "asset_voshod_rgis.json",
+    "sha256": "013ed1a9dcda9a6925b7275c78db3b71af45cc272c84e5bbb2f7051897390fd3",
+    "response_sha256": "2cd943ca530ae4e63859fd0f7ec755f9fee5f8dccd592709ee62c53d0b046708",
+    "retrieved_on": "2026-11-13",
+    "url": "https://rgis.mosreg.ru/v3/swagger/map/layer?layer=380&bbox=36.403970,55.936832,36.513970,56.010832",
+    "pedestrian_access_source": "https://xn----dtbg3amauunf.xn--p1ai/regionalnye-uslugi.html",
+    "excluded_gates": [
+      {
+        "osm_id": "node/2688261903",
+        "coordinates": [
+          36.4550728,
+          55.9739561
+        ],
+        "source": "https://www.openstreetmap.org/node/2688261903",
+        "access": "private",
+        "routing_extract": "moscow-oblast-261107.osm.pbf"
+      }
+    ]
+  },
+  {
+    "city": "Власиха",
+    "municipality_id": "oblast-relation-1644065",
+    "anchor": [
+      37.1919786,
+      55.6838591
+    ],
+    "rgis_layer": 380,
+    "feature_id": 7986136571,
+    "file": "asset_vlasiha_rgis.json",
+    "sha256": "8ac61b5c193ec6da4295231e1f7c7b6ac50f2c852a0c560f55ae974df9a11106",
+    "response_sha256": "25f75288cef0f13af7fbe9e376d3d32dc27113c7be157af3c04e8746171e5726",
+    "retrieved_on": "2026-11-13",
+    "url": "https://rgis.mosreg.ru/v3/swagger/map/layer?layer=380&bbox=37.136979,55.646859,37.246979,55.720859",
+    "pedestrian_access_source": "https://vlasiha-zato.ru/wp-content/uploads/2020/01/Instruktsiya-ZATO-2020-1.pdf",
+    "repair_zero_area_lines": true
+  },
+  {
+    "city": "Звёздный городок",
+    "municipality_id": "oblast-relation-1703084",
+    "anchor": [
+      38.1130637,
+      55.8774221
+    ],
+    "rgis_layer": 380,
+    "feature_id": 6800025401,
+    "file": "asset_star_city_rgis.json",
+    "sha256": "bece2fc4bcb727e5005e3eb9d476a218b49a3ea57566c6d6ea1175b2f0974578",
+    "response_sha256": "c63c18efb9efc3306921e5cb61524e14e1ade256dc4b966b2555995562f52e68",
+    "retrieved_on": "2026-11-13",
+    "url": "https://rgis.mosreg.ru/v3/swagger/map/layer?layer=380&bbox=38.058064,55.840422,38.168064,55.914422",
+    "pedestrian_access_source": "https://xn----7sbhilcbr9ae7byh4c.xn--p1ai/article/vnimanie-novye-pravila-propusknogo-rezhima-v-zvyozdnom-gorodke-723292",
+    "municipality_overlap_min": 0.95
+  },
+  {
+    "city": "Молодёжный",
+    "municipality_id": "oblast-relation-184751",
+    "anchor": [
+      36.7847582,
+      55.325936
+    ],
+    "rgis_layer": 380,
+    "feature_id": 8434561851,
+    "file": "asset_molodezhny_rgis.json",
+    "sha256": "5b6fca273134b9b66d7c1339bae5248414d9333c99506789330a4fadc5501841",
+    "response_sha256": "03dda8acff8174dfdbc0cda59a69e2c6c08f415ea00813c2b6dea6e930fd4b4f",
+    "retrieved_on": "2026-11-13",
+    "url": "https://rgis.mosreg.ru/v3/swagger/map/layer?layer=380&bbox=36.729758,55.288936,36.839758,55.362936",
+    "pedestrian_access_source": "https://xn--d1aejfejdb4j9b.xn--p1ai/docs/bezopasnost-i-pravoporyadok",
+    "municipality_overlap_min": 0.97
+  }
+]

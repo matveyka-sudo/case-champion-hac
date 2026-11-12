@@ -1,0 +1,54 @@
+[
+  {
+    "city": "Волоколамск",
+    "registry_id": "50:07-4.27",
+    "municipality_id": "oblast-relation-178921",
+    "anchor": [
+      35.9583358,
+      56.0360129
+    ],
+    "file": "Волоколамск-35.9583358-intersect.json",
+    "sha256": "a134761ada592c114e3a348ca86e2d23806642dc4a56c0a6dfd9ca0a75283f69",
+    "registration_date": "2014-06-10T14:56:05+04:00",
+    "url": "https://nspd.gov.ru/map"
+  },
+  {
+    "city": "Можайск",
+    "registry_id": "50:18-4.384",
+    "municipality_id": "oblast-relation-184075",
+    "anchor": [
+      36.0213092,
+      55.506478
+    ],
+    "file": "Можайск-36.0213092-intersect.json",
+    "sha256": "0460ff2361af4471a40315ebc1034ed096a0e634b54f24a8fdb4b9afb3506ea9",
+    "registration_date": "2025-05-13T09:48:48+00:00",
+    "url": "https://nspd.gov.ru/map"
+  },
+  {
+    "city": "Черноголовка",
+    "registry_id": "50:16-4.156",
+    "municipality_id": "oblast-relation-186462",
+    "anchor": [
+      38.3835224,
+      56.0061165
+    ],
+    "file": "Черноголовка-38.3835224-intersect.json",
+    "sha256": "2c1fa00e39f8a10098ab79b18045c9e8b627b6ff7317bc078834c48525b7d10b",
+    "registration_date": "2026-08-25T09:00:00+00:00",
+    "url": "https://nspd.gov.ru/map"
+  },
+  {
+    "city": "Чехов",
+    "registry_id": "50:31-4.1",
+    "municipality_id": "oblast-relation-181165",
+    "anchor": [
+      37.4545328,
+      55.1426603
+    ],
+    "file": "Чехов-37.4545328-intersect.json",
+    "sha256": "a39f7cddf9c153a597f7ebdea87d96bc8c776c2fd7e7cd8e722b3ac03659f749",
+    "registration_date": "2022-07-14T07:51:30+00:00",
+    "url": "https://nspd.gov.ru/map"
+  }
+]
