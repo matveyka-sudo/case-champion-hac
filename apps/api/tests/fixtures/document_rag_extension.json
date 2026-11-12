@@ -1,0 +1,21 @@
+{
+  "module": "db/repositories/evidence.py",
+  "reason": "Document RAG: any-word Russian FTS query and published chunk counts for the publication CLI; server document retrieval switch",
+  "signatures": {
+    "a2_api.assistant.alice:AliceSettings": "(*, llm_enabled: bool = False, yandex_api_key: pydantic.types.SecretStr | None = None, yandex_folder_id: str | None = None, yandex_model: Literal['aliceai-llm-flash'] = 'aliceai-llm-flash', yandex_base_url: Literal['https://ai.api.cloud.yandex.net/v1'] = 'https://ai.api.cloud.yandex.net/v1', assistant_budget_hook: str | None = None, assistant_tools_enabled: bool = False, assistant_document_retrieval: bool = True, alice_billing_currency_confirmed: bool = False) -> None"
+  },
+  "removed_sql_literals": [
+    "WITH query AS (SELECT plainto_tsquery('russian'::regconfig,$1) AS q) SELECT payload,ts_rank_cd(search_vector,q) AS rank FROM evidence_chunks,query WHERE snapshot_hash=$2::jsonb->>snapshot_id AND source_id=ANY($3::text[]) AND territory_ids && $4::text[] AND ($5::text[] IS NULL OR source_id=ANY($5)) AND ($6::date IS NULL OR valid_to>=$6) AND ($7::date IS NULL OR valid_from<=$7) AND ($8::date IS NULL OR valid_to>=$8) AND ($9::date IS NULL OR valid_from<=$9) AND search_vector @@ q ORDER BY rank DESC,snapshot_id,chunk_id LIMIT 6"
+  ],
+  "added_sql_literals": [
+    "SELECT source_id,count(*) AS chunks FROM evidence_chunks WHERE snapshot_id=$1 AND snapshot_hash=$2 GROUP BY source_id ORDER BY source_id",
+    "WITH query AS (SELECT replace(plainto_tsquery('russian'::regconfig,$1)::text,' & ',' | ')::tsquery AS q) SELECT payload,ts_rank_cd(search_vector,q) AS rank FROM evidence_chunks,query WHERE snapshot_hash=$2::jsonb->>snapshot_id AND source_id=ANY($3::text[]) AND territory_ids && $4::text[] AND ($5::text[] IS NULL OR source_id=ANY($5)) AND ($6::date IS NULL OR valid_to>=$6) AND ($7::date IS NULL OR valid_from<=$7) AND ($8::date IS NULL OR valid_to>=$8) AND ($9::date IS NULL OR valid_from<=$9) AND search_vector @@ q ORDER BY rank DESC,snapshot_id,chunk_id LIMIT 6"
+  ],
+  "removed_sql_call_hashes": [
+    "3e21e9655012ef8ad7cc3826dc628678524f90ee25bdf26cc0ef239fb11fca95"
+  ],
+  "added_sql_call_hashes": [
+    "32058c0eb9ce193866430ead7b933fc680420f1ee8d378165df22ef798ab4eee",
+    "6fad9ca65860c1c3b5705fd8c9a9877fe50af7a2973b930ab9cbd2ab69ec1dfc"
+  ]
+}

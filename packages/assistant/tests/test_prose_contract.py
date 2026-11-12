@@ -49,7 +49,8 @@ def test_advertised_budget_renders_with_long_values_all_scope_warnings_and_each_
     tokens = " ".join(core.fact_placeholder(fact) for fact in facts) + " [[" + atom + "]]"
     # Fill every available qualitative character, or the raw 650-character cap.
     remaining = min(limits.qualitative_max_characters - 4, 650 - len(tokens) - 1)
-    paragraph = tokens + " " + "я" * remaining
+    # Saved-domain filler: model prose must stay within the grounded vocabulary.
+    paragraph = tokens + " " + ("данные " * remaining)[:remaining]
     finding = generated_finding(
         paragraph,
         saved,

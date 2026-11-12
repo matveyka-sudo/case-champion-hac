@@ -26,6 +26,7 @@ class AliceSettings(WaydexSettings):
     alias_pairs = (
         ("ASSISTANT_BUDGET_HOOK", "A2_ASSISTANT_BUDGET_HOOK"),
         ("ASSISTANT_TOOLS_ENABLED", "A2_ASSISTANT_TOOLS_ENABLED"),
+        ("ASSISTANT_DOCUMENT_RETRIEVAL", "A2_ASSISTANT_DOCUMENT_RETRIEVAL"),
         ("ALICE_BILLING_CURRENCY_CONFIRMED", "A2_ALICE_BILLING_CURRENCY_CONFIRMED"),
     )
 
@@ -43,6 +44,13 @@ class AliceSettings(WaydexSettings):
     assistant_tools_enabled: bool = Field(
         default=False,
         validation_alias=AliasChoices("ASSISTANT_TOOLS_ENABLED", "A2_ASSISTANT_TOOLS_ENABLED"),
+    )
+    # Server-side search of published documents; no extra model calls.
+    assistant_document_retrieval: bool = Field(
+        default=True,
+        validation_alias=AliasChoices(
+            "ASSISTANT_DOCUMENT_RETRIEVAL", "A2_ASSISTANT_DOCUMENT_RETRIEVAL"
+        ),
     )
     alice_billing_currency_confirmed: bool = Field(
         default=False,
@@ -89,6 +97,7 @@ def _build_assistant(
             model_id=settings.yandex_model,
             base_url=settings.yandex_base_url,
             tools_enabled=settings.assistant_tools_enabled,
+            document_retrieval=settings.assistant_document_retrieval,
             max_model_calls=4 if settings.assistant_tools_enabled else 1,
             max_retries=2 if settings.assistant_tools_enabled else 0,
         )

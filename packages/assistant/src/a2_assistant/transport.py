@@ -61,6 +61,9 @@ class FlashConfig(BaseModel):
     base_url: Literal["https://ai.api.cloud.yandex.net/v1"] = "https://ai.api.cloud.yandex.net/v1"
     model_id: Literal["aliceai-llm-flash"] = "aliceai-llm-flash"
     tools_enabled: bool = Field(default=False, strict=True)
+    # One bounded server-side document lookup before the model call; it adds
+    # no model tools and no model calls, so it also works with tools disabled.
+    document_retrieval: bool = Field(default=False, strict=True)
     max_model_calls: Annotated[int, Field(strict=True, ge=1, le=4)] = 4
     max_retries: Annotated[int, Field(strict=True, ge=0, le=2)] = 2
     max_tool_calls: Annotated[int, Field(strict=True, ge=1, le=8)] = 8
