@@ -307,15 +307,15 @@
       "a2_ref": "S17",
       "title": "Транспортная стратегия РФ (распоряжение 3363-р от 27.11.2021)",
       "publisher": "Правительство РФ",
-      "source_url": "https://government.ru/",
+      "source_url": "http://government.ru/docs/43708/",
       "role": "scenario_basis",
       "analysis_kinds": ["intercity_passenger", "intercity_cargo", "urban_passenger"],
-      "provides": "Цели и приоритеты для обоснования сценариев",
-      "limitations": "Целевой показатель не считается достигнутым фактом; точный документ фиксируется при ingest",
+      "provides": "Цели и приоритеты для обоснования сценариев; текст документа для поиска ассистента (data/documents/transport_strategy)",
+      "limitations": "Целевой показатель не считается достигнутым фактом; документ — контекст, не расчётная метрика; адрес PDF выведен из имени файла и требует перепроверки",
       "access_method": "manual",
       "geography": "РФ",
-      "license": {"name": null, "url": null, "status": "unknown"},
-      "status": "registered"
+      "license": {"name": "Официальный документ органа власти, не объект авторского права (п. 6 ст. 1259 ГК РФ)", "url": "http://government.ru/docs/43708/", "status": "permitted", "attribution": "Правительство Российской Федерации"},
+      "status": "accepted"
     },
     {
       "source_id": "government_projects",
