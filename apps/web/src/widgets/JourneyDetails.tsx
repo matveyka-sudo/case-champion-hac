@@ -20,7 +20,6 @@ export function JourneyDetails({ journey, features, originTimezone, destinationT
         {!journey.geometry || journey.geometry_kind === "none"
           ? segmentGeometry ? "геометрия участков" : "геометрия отсутствует"
           : journey.geometry_kind === "schematic" ? "схема" : "геометрия источника"}
-        {journey.completeness === "partial" && " · частичные данные"}
       </summary>
       {segmentGeometry && <p className="fhint">{segmentGeometryNotice}.</p>}
       <p>

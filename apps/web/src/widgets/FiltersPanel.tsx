@@ -116,9 +116,9 @@ export function FiltersPanel({ run }: { run: () => void }) {
                 set({ cats }); if (s.metric === category) dispatch({ type: "ui", patch: { metric: "overall" } });
               }} onPriority={(id, priority) => set({ cats: { ...p.cats, [id]: priority } })} />
               <div className="prio-legend">
-                <span>Н — низкий · 1</span>
-                <span>С — средний · 2</span>
-                <span>В — высокий · 3</span>
+                <span>Н — низкий</span>
+                <span>С — средний</span>
+                <span>В — высокий</span>
               </div>
               {!Object.keys(p.cats).length && (
                 <div className="disabled-note">
@@ -186,6 +186,7 @@ export function FiltersPanel({ run }: { run: () => void }) {
               "Масштаб",
               <Seg
                 name="Масштаб"
+                singleLine
                 items={[
                   ["city", "Город — город"],
                   ["subj", "Субъект — субъект"],

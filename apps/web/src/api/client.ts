@@ -178,6 +178,8 @@ export class ApiClient {
                 true,
               );
       }
+      if (failure.code === "unknown_id" && failure.message === "Unknown immutable snapshot")
+        this.bootstrap = undefined;
       if (
         !retryAllowed ||
         attempt >= 2 ||

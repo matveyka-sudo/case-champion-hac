@@ -16,6 +16,7 @@ from a2_engine.urban.analysis.validation import _check_candidate
 from a2_engine.urban.indices import point_index, select_h_seconds, territory_index
 from a2_engine.urban.journeys import UrbanJourneyTiming
 from a2_engine.urban.models import (
+    BOUNDED_URBAN_SEARCH,
     Completeness,
     UrbanArea,
     UrbanCandidate,
@@ -40,6 +41,7 @@ def _category_result(
     coverage: UrbanCoverage | None,
     threshold: UrbanThreshold | None,
     h_seconds: float | None,
+    bounded: bool,
 ) -> UrbanCategoryResult:
     objects = select_urban_objects(
         journeys, destinations, point_id=point_id, category=category, passenger_mode=mode
@@ -74,13 +76,15 @@ def _category_result(
         else "INCOMPLETE_COVERAGE"
     )
     best = objects[0] if objects else None
-    if not full:
+    if not full or (bounded and best is None):
         index = MetricResult(None, "unknown", reason)
     elif best is not None:
         index = category_index(best.journey.total_seconds, h_seconds)
     else:
         index = category_index(None, h_seconds, confirmed_no_route=True)
-    if threshold is None or threshold.seconds is None:
+    if bounded:
+        count = MetricResult(None, "not_applicable", "BOUNDED_URBAN_SAMPLE")
+    elif threshold is None or threshold.seconds is None:
         count = MetricResult(None, "unknown", "TAU_UNAVAILABLE")
     elif not full:
         count = MetricResult(None, "unknown", reason)
@@ -103,7 +107,9 @@ def _category_result(
     if threshold is not None:
         evidence.extend(threshold.evidence_refs)
     limitations = {
-        metric.reason_code for metric in (index, count) if metric.reason_code is not None
+        metric.reason_code
+        for metric in ((index,) if bounded else (index, count))
+        if metric.reason_code is not None
     }
     if best is not None and best.journey.candidate.geometry is None:
         limitations.add("GEOMETRY_UNAVAILABLE")
@@ -121,8 +127,8 @@ def _category_result(
         count,
         threshold,
         coverage,
-        full,
-        "full" if full and index.status != "unknown" else "partial",
+        full and (not bounded or best is not None),
+        "full" if not bounded and full and index.status != "unknown" else "partial",
         references(tuple(evidence)),
         tuple(sorted(limitations)),
     )
@@ -144,6 +150,7 @@ def analyze_urban_candidates(
     thresholds: Sequence[UrbanThreshold] = (),
 ) -> UrbanAnalysis:
     """Analyze one accepted context; missing coverage is never a completeness proof."""
+    bounded = context.search_parameters_id == BOUNDED_URBAN_SEARCH
     if (
         context.versions.methodology_version != config.methodology_version
         or rules.methodology_version != config.methodology_version
@@ -240,6 +247,7 @@ def analyze_urban_candidates(
                     coverage_map.get((point.point_id, category, mode)),
                     threshold_map.get(mode),
                     h.value,
+                    bounded,
                 )
                 for category in selection
             )
@@ -252,7 +260,7 @@ def analyze_urban_candidates(
                     mode,
                     categories,
                     index,
-                    "full" if index.status != "unknown" else "partial",
+                    "full" if not bounded and index.status != "unknown" else "partial",
                 )
             )
             all_metrics.append(index)
@@ -265,11 +273,13 @@ def analyze_urban_candidates(
             {p.point.point_id: p.index for p in point_results},
             {p.point_id: p.population for p in point_map.values()},
         )
-        if not population_full:
+        if not bounded and not population_full:
             aggregate = MetricResult(None, "unknown", "INCOMPLETE_POPULATION_COVERAGE")
         elif context.versions.population_version is None and aggregate.value is not None:
             aggregate = MetricResult(None, "unknown", "POPULATION_VERSION_UNAVAILABLE")
-        completeness: Completeness = "full" if aggregate.status != "unknown" else "partial"
+        completeness: Completeness = (
+            "full" if not bounded and aggregate.status != "unknown" else "partial"
+        )
         territory_results.append(
             UrbanTerritoryResult(
                 mode,
@@ -285,11 +295,13 @@ def analyze_urban_candidates(
             limitations.add(aggregate.reason_code)
     status: Literal["available", "partial", "unknown"] = (
         "available"
-        if all(m.status != "unknown" for m in all_metrics)
+        if not bounded and all(m.status != "unknown" for m in all_metrics)
         else "partial"
         if any(m.value is not None for m in all_metrics) or journeys
         else "unknown"
     )
+    if bounded:
+        limitations.add("BOUNDED_URBAN_SAMPLE")
     return UrbanAnalysis(
         context,
         area,

@@ -230,6 +230,25 @@ class AnalysisPreset(ContractModel):
     limitations: list[Identifier] = Field(default_factory=list)
 
 
+class CompactAnalysisScope(ContractModel):
+    """Allowed request dimensions for one bounded static input profile."""
+
+    analysis_kind: AnalysisKind
+    snapshot_id: Identifier
+    valid_from: Timestamp
+    valid_to: Timestamp
+    city_id: Identifier | None = None
+    territory_level: Literal["city", "region"] = "city"
+    origin_id: Identifier | None = None
+    destination_id: Identifier | None = None
+    modes: list[str] = Field(default_factory=list)
+    categories: list[Category] = Field(default_factory=list)
+    cargo_profile_id: Identifier | None = None
+    direction: Literal["inbound", "outbound"] | None = None
+    cargo_transport: Literal["multimodal", "pipeline"] = "multimodal"
+    pipeline_product: PipelineProduct | None = None
+
+
 class Capabilities(ContractModel):
     schema_version: Literal["2"]
     spec_version: Literal["2026-11-08.1"]
@@ -249,3 +268,6 @@ class Capabilities(ContractModel):
     # None: legacy registry does not publish detailed constraints; []: none registered.
     urban_passenger_scopes: list[UrbanPassengerScope] | None = None
     analysis_presets: list[AnalysisPreset] = Field(default_factory=list)
+    compact_scopes: list[CompactAnalysisScope] | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )

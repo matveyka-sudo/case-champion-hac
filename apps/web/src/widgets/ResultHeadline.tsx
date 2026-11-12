@@ -13,7 +13,7 @@ export function ResultHeadline({ score, journey, metric, destination }: { score?
     <ResultPrimary time={seconds == null ? null : (seconds / 60).toLocaleString("ru", { maximumFractionDigits: 1 })}
       score={score ? { value: measureText(score), color: colors[band], title: measureLabel(score.name), band } : undefined}
       caption={score?.subject.mode ? modeText[score.subject.mode] : "Полное время пути"}
-      qualification={<>{score && <>{measureLabel(score.name)}{score.completeness === "partial" && " · частичная оценка"}. </>}{seconds != null && found && "Показан найденный маршрут; минимум не подтверждён."}</>} />
+      qualification={<>{score && <>{measureLabel(score.name)}. </>}{seconds != null && found && "Показано время по найденному маршруту, минимум не подтверждён."}</>} />
     {timed && timed.legs.length > 0 && <RouteBreakdown segments={timed.legs.map((leg) => ({
       kind: leg.kind === "walk" ? "walk" : leg.kind === "ride" ? "ride" : leg.kind === "wait_transfer" ? "hot" : leg.kind === "wait_initial" ? "wait" : "xfer",
       minutes: leg.duration_seconds / 60, valueText: (leg.duration_seconds / 60).toLocaleString("ru", { maximumFractionDigits: 1 }), label: legText[leg.kind],

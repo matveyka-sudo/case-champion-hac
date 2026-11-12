@@ -34,8 +34,9 @@ export function savedRequestDraft(result: AnalysisResult, catalog: Territory[], 
     }
   }
   const profile = caps.cargo_profiles.find((value) => value.profile_id === draft.profileId);
-  const cargoProfile: CargoProfileChoice | null = profile?.kind === "delivery" && profile.handling_requirements.length === 1 && profile.urgency !== "nonurgent"
-    ? { group: profile.food_class, handling: profile.handling_requirements[0], limits: { temp: profile.temperature_requirements.controlled, urgent: profile.urgency === "urgent" } }
+  const cargoProfile: CargoProfileChoice | null = profile?.kind === "delivery" && profile.handling_requirements.length === 1 &&
+    (profile.urgency !== "nonurgent" || (!!caps.compact_scopes && r.analysis_kind === "intercity_cargo"))
+    ? { group: profile.food_class, handling: profile.handling_requirements[0], limits: { temp: profile.temperature_requirements.controlled, urgent: profile.urgency === "urgent", ...(profile.urgency === "nonurgent" ? { nonurgent: true } : {}) } }
     : null;
   return { draft, cargoProfile, warning: !origin || !exactSlot || ("cargo_profile_id" in r && (!profile || (profile.kind === "delivery" && !cargoProfile))) || (r.analysis_kind === "intercity_passenger" && !draft.paxModes.length)
     ? "Сохранённый результат открыт. Некоторые исходные условия нельзя точно представить текущими фильтрами; перед новым расчётом проверьте параметры."

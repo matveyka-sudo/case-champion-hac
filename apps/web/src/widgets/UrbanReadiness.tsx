@@ -28,11 +28,11 @@ export function UrbanReadiness({ value }: { value: Readiness }) {
         <dd>{!overview ? "Для этих условий результат ещё не получен."
           : !overview.points.length ? "Численные общие индексы точек не предоставлены."
           : <>Рассчитано точек: {overview.points.length}{overview.denominator === null ? "" : ` из ${overview.denominator}`}.
-            {point && <> Индекс: <b data-score-band={scoreBand(point)}>{measureText(point)}</b>{point.completeness === "partial" && " · частичная оценка"}.</>}</>}</dd>
+            {point && <> Индекс: <b data-score-band={scoreBand(point)}>{measureText(point)}</b>.</>}</>}</dd>
         <dt>{value.areaSelected ? "Индекс выбранной территории" : "Индекс города"}</dt>
         <dd>{!overview ? "Для этих условий результат ещё не получен."
           : !cityScore ? "Не предоставлен."
-          : <><b data-score-band={scoreBand(cityScore)}>{measureText(cityScore)}</b>{cityScore.completeness === "partial" && " · частичная оценка"}.</>}</dd>
+          : <><b data-score-band={scoreBand(cityScore)}>{measureText(cityScore)}</b>.</>}</dd>
       </dl>
       </details>
     </section>

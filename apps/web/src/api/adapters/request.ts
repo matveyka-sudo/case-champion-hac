@@ -31,6 +31,17 @@ export const categoryLabels: Record<Category, string> = {
   airport: "Аэропорты",
   shopping_center: "ТЦ",
 };
+export const destinationCategoryLabels: Record<Category, string> = {
+  adult_polyclinic: "Взрослая поликлиника",
+  child_polyclinic: "Детская поликлиника",
+  kindergarten: "Детский сад",
+  school: "Школа",
+  college_university: "Колледж или вуз",
+  rail_terminal: "Железнодорожный вокзал",
+  bus_terminal: "Автовокзал или автостанция",
+  airport: "Аэропорт",
+  shopping_center: "Торговый центр",
+};
 export class DraftError extends Error {
   readonly field: string;
   constructor(field: string, message: string) {

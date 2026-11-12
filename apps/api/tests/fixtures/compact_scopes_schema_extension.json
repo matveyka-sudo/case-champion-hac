@@ -1,0 +1,12 @@
+{
+  "added": {
+    "v2.CompactAnalysisScope.serialization.schema.json": "c06e605f3a9c73278e1097cfc03f427b6b6c6e2e84ee2a273fab7f93762ec6be",
+    "v2.CompactAnalysisScope.validation.schema.json": "c06e605f3a9c73278e1097cfc03f427b6b6c6e2e84ee2a273fab7f93762ec6be"
+  },
+  "replaced": {
+    "manifest.json": "30e926c1c520b8531a01846e99e1fd4ffa4b0338dde3b3b6418578d76a81bc19",
+    "openapi.json": "f6fc2ae14cf7bd7566b9355c53c72435195d4ff6adfe8a233c0dc7a66a1172f0",
+    "v2.Capabilities.serialization.schema.json": "40598776f9dc8bf6f26681b6ce10f5be0284ac4da7116a399f77a0e95166d1c8",
+    "v2.Capabilities.validation.schema.json": "40598776f9dc8bf6f26681b6ce10f5be0284ac4da7116a399f77a0e95166d1c8"
+  }
+}

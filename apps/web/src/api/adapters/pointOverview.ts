@@ -11,6 +11,13 @@ export function pointDisplayName(pointId: string, feature?: Schemas["MapFeature"
   return `Точка${ordinal === undefined ? "" : ` ${ordinal}`} · координаты не предоставлены`;
 }
 
+export function sampledPointNames(result: AnalysisResult | null) {
+  if (!result?.limitations.includes("BOUNDED_URBAN_SAMPLE")) return new Map<string, string>();
+  const ids = [...new Set((result.map_data?.features || []).filter((feature) =>
+    feature.entity_kind === "sample_point").map((feature) => feature.point_id || feature.entity_id))].sort();
+  return new Map(ids.map((id, index) => [id, `Точка ${index + 1}`]));
+}
+
 export function calculatedPoints(result: AnalysisResult, scores = result.scores) {
   const inventory = new Map<string, Schemas["MapFeature"]>();
   for (const feature of result.map_data?.features || []) {
@@ -24,12 +31,13 @@ export function calculatedPoints(result: AnalysisResult, scores = result.scores)
     if (score.subject.kind !== "sample_point" || !id || score.subject.category != null) continue;
     totals.set(id, [...(totals.get(id) || []), score]);
   }
+  const names = sampledPointNames(result);
   const points = [...totals].flatMap(([pointId, values]) => {
     if (values.length !== 1) return [];
     const score = values[0];
     if (score.status !== "available" || score.value === null || !Number.isFinite(score.value)) return [];
     return [{ pointId, score, feature: inventory.get(pointId) }];
-  }).map((point, i) => ({ ...point, name: pointDisplayName(point.pointId, point.feature, i + 1) }));
+  }).map((point, i) => ({ ...point, name: names.get(point.pointId) || pointDisplayName(point.pointId, point.feature, i + 1) }));
   const inventoryCount = inventory.size || null;
   const denominator = inventoryCount !== null && [...totals.keys()].every((id) => inventory.has(id)) ? inventoryCount : null;
   const territoryId = "city_id" in result.request ? result.request.area_id || result.request.city_id : null;
@@ -45,13 +53,14 @@ export function routeEstimatePoints(result: AnalysisResult, scores = result.scor
   const inventory = new Map((result.map_data?.features || []).filter((feature) => feature.entity_kind === "sample_point")
     .map((feature) => [feature.point_id || feature.entity_id, feature]));
   const tasks = new Set(scores.filter((score) => score.name === observedScoreName && score.subject.kind === "sample_point" && score.subject.point_id).map((score) => score.subject.point_id!));
+  const names = sampledPointNames(result);
   const points = [...tasks].flatMap((pointId) => {
     const candidates = scores.filter((score) => score.subject.kind === "sample_point" && score.subject.point_id === pointId);
     const totals = candidates.filter((score) => score.subject.category == null);
     const presentation = pointScorePresentation(result, candidates, totals.length === 1 ? totals[0] : undefined);
     if (!presentation.observed || !presentation.score) return [];
     const feature = inventory.get(pointId);
-    return [{ pointId, score: presentation.score, feature, name: pointDisplayName(pointId, feature) }];
+    return [{ pointId, score: presentation.score, feature, name: names.get(pointId) || pointDisplayName(pointId, feature) }];
   });
   return { ...canonical, points, denominator: canonical.denominator !== null && [...tasks].every((id) => inventory.has(id)) ? canonical.denominator : null };
 }

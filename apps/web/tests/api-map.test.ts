@@ -1,5 +1,5 @@
 import { createElement } from "react";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiMap } from "../src/widgets/ApiMap";
 import { decode } from "../src/api/validation";
@@ -354,7 +354,7 @@ describe("map score completeness", () => {
       result, scores: [city, point], selection: null, onSelect: vi.fn(), zoomAction: { id: 0, kind: "home" },
     }));
     expect(drawn.layers[0].marker?.fillColor).toBe("#d49520");
-    expect(drawn.layers[0].tooltip).toContain("72.5 · частичная оценка");
+    expect(drawn.layers[0].tooltip).toMatch(/ · 72\.5$/);
   });
   it.each([
     [0, "#c72d44"], [0.497, "#c72d44"], [49.9, "#c72d44"], [50, "#d49520"],
@@ -373,7 +373,7 @@ describe("map score completeness", () => {
     expect(drawn.layers[0].style?.fillColor).toBe(color);
     expect(drawn.layers[0].tooltip).toContain(value.toFixed(1));
   });
-  it.each(["full", "partial"] as const)("keeps zero numeric and distinguishes %s geometry and tooltips", (completeness) => {
+  it.each(["full", "partial"] as const)("keeps zero numeric with %s geometry", (completeness) => {
     const result = decode("AnalysisResult", structuredClone(resultRaw));
     const score = { ...result.scores[0], completeness, value: 0 };
     result.map_data = { status: "available", completeness: "full", features: [{
@@ -384,18 +384,14 @@ describe("map score completeness", () => {
       result, scores: [score], selection: null, onSelect: vi.fn(), zoomAction: { id: 0, kind: "home" },
     }));
     const feature = drawn.layers[0];
-    expect(feature.tooltip).toContain("0.0");
+    expect(feature.tooltip).toMatch(/ · 0\.0$/);
     expect(feature.marker?.fillColor).toBe("#c72d44");
     if (completeness === "partial") {
-      expect(feature.tooltip).toContain("частичная оценка");
       expect(feature.marker?.dashArray).toBe("1 4");
       expect(feature.style?.dashArray).toBe("1 4");
       expect(feature.marker?.fillOpacity).toBeLessThan(0.9);
-      expect(screen.getByLabelText("Условные обозначения карты").textContent).toContain("частичная оценка");
     } else {
-      expect(feature.tooltip).not.toContain("частичная оценка");
       expect(feature.marker?.dashArray).toBeUndefined();
-      expect(screen.queryByLabelText("Условные обозначения карты")).toBeNull();
     }
   });
   it("keeps an unknown score gray without fabricating zero", () => {

@@ -1,7 +1,7 @@
 import type { Schemas, Selection, Territory } from "../types";
 export const statusText: Record<string, string> = {
   available: "Данные доступны",
-  partial: "Частичные данные",
+  partial: "Есть результат",
   unknown: "Нет данных",
   not_applicable: "Неприменимо",
   pending: "Вычисляется",
@@ -124,6 +124,10 @@ export function reasonText(code: string | null | undefined) {
           "Область расчёта покрыта данными не полностью.",
         INCOMPLETE_POPULATION_COVERAGE:
           "Часть населения не охвачена расчётом; полный рейтинг города недоступен.",
+        BOUNDED_URBAN_SAMPLE: "Индекс и минимум относятся к выбранным исходным ячейкам, объектам и сети.",
+        BOUNDED_ANALYSIS_SCOPE: "Расчёт выполнен в пределах выбранного набора данных.",
+        ROAD_CHAIN_VIA_MOSCOW: "Автомобильная цепочка проходит через Москву. Время относится к этой цепочке.",
+        BOUNDED_GTFS_ROUTE_DATE_SUBSET: "Учтены выбранные наземные маршруты и даты московского расписания.",
         MINIMUM_TIME_UNPROVEN:
           "Показано найденное время пути. Минимальное время не подтверждено.",
         MINIMUM_NOT_PROVEN:
@@ -336,7 +340,7 @@ export function safeSource(url: string | null | undefined) {
   }
 }
 
-export function timestampText(value: string | null, zone?: string) {
+export function timestampText(value: string | null, zone?: string, showTimezone = true) {
   if (!value) return "Время неизвестно";
   if (!zone) return value + " · часовой пояс не указан";
   try {
@@ -349,9 +353,7 @@ export function timestampText(value: string | null, zone?: string) {
         hour: "2-digit",
         minute: "2-digit",
         hourCycle: "h23",
-      }).format(new Date(value)) +
-      " · " +
-      zone
+      }).format(new Date(value)) + (showTimezone ? ` · ${zone}` : "")
     );
   } catch {
     return value + " · часовой пояс не подтверждён";

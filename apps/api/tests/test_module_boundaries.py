@@ -410,6 +410,18 @@ def test_exported_artifacts_match_baseline_and_approved_contract_extensions(tmp_
     assert set(demo_extension["added"]).isdisjoint(expected)
     expected.update(demo_extension["replaced"])
     expected.update(demo_extension["added"])
+    compact_extension = json.loads(
+        (Path(__file__).parent / "fixtures/compact_scopes_schema_extension.json").read_text()
+    )
+    assert set(compact_extension["replaced"]) == {"manifest.json", "openapi.json"} | {
+        f"v2.Capabilities.{mode}.schema.json" for mode in ("serialization", "validation")
+    }
+    assert set(compact_extension["added"]) == {
+        f"v2.CompactAnalysisScope.{mode}.schema.json" for mode in ("serialization", "validation")
+    }
+    assert set(compact_extension["added"]).isdisjoint(expected)
+    expected.update(compact_extension["replaced"])
+    expected.update(compact_extension["added"])
     assert actual == expected
 
 

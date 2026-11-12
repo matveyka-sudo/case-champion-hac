@@ -30,6 +30,7 @@ from a2_engine import (
     urban_journey_rules_from_mapping,
     validate_urban_journey,
 )
+from a2_engine.urban.models import BOUNDED_URBAN_SEARCH
 
 Step = tuple[Literal["walk", "ride", "wait_initial", "wait_transfer"], float]
 
@@ -889,3 +890,33 @@ def test_bad_request_ids_and_duplicate_proofs_are_rejected(synthetic: SyntheticC
     for changes in cases:
         with pytest.raises(ValueError):
             synthetic.run(**changes)
+
+
+def test_bounded_population_uses_original_weights_and_leaves_absence_unknown(
+    synthetic: SyntheticCase,
+) -> None:
+    context = replace(synthetic.context, search_parameters_id=BOUNDED_URBAN_SEARCH)
+    candidates = [replace(candidate, context=context) for candidate in synthetic.candidates]
+    coverage = [
+        replace(row, scope=replace(row.scope, context=context)) for row in synthetic.coverage
+    ]
+    basis = replace(synthetic.population, context=context, complete=False, excluded_population=90)
+    result = synthetic.run(
+        context=context,
+        candidates=candidates,
+        coverage=coverage,
+        population_coverage=basis,
+        thresholds=(),
+    ).modes[0]
+    assert result.index.value == pytest.approx(0.9 * 50 + 0.1 * 25)
+    assert result.completeness == "partial" and not result.ranking_eligible
+    assert result.points[0].categories[0].count.status == "not_applicable"
+    missing = synthetic.run(
+        context=context,
+        candidates=candidates[:1],
+        coverage=coverage,
+        population_coverage=basis,
+        thresholds=(),
+    ).modes[0]
+    assert missing.points[1].categories[0].index.value is None
+    assert missing.index.value is None

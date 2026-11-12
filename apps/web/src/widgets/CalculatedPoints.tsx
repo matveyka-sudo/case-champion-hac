@@ -3,8 +3,9 @@ import type { Selection } from "../api/types";
 import type { CalculatedPointOverview } from "../api/adapters/pointOverview";
 import { measureText, scoreBand } from "../api/adapters/result";
 
-export function CalculatedPoints({ overview, selection, areaSelected, onSelect, estimate = false, showTerritory = !estimate }: {
+export function CalculatedPoints({ overview, selection, areaSelected, onSelect, estimate = false, showTerritory = !estimate, sample = false }: {
   estimate?: boolean;
+  sample?: boolean;
   showTerritory?: boolean;
   overview: CalculatedPointOverview;
   selection: Selection | null;
@@ -19,12 +20,11 @@ export function CalculatedPoints({ overview, selection, areaSelected, onSelect, 
     <div className="api-calculated-points" aria-label="Обзор рассчитанных точек">
       {showTerritory && <p className="api-point-territory">
         {areaSelected ? "Индекс выбранной территории" : "Индекс города"}: {territoryScore ? measureText(territoryScore) : "не предоставлен"}
-        {territoryScore?.completeness === "partial" && " · частичная оценка"}
       </p>}
       <details ref={details} onToggle={(event) => setExpanded(event.currentTarget.open)}>
-        <summary>{estimate ? "Точки с предварительной оценкой" : "Точки с общим индексом"} ({count})</summary>
-        <p className="fhint">{estimate ? "Предварительная оценка по найденному маршруту. Минимум не подтверждён; оценка не заменяет общий индекс точки или города." : "Общие численные индексы отдельных точек не заменяют индекс города. Неизвестные показатели остаются в общем результате."}</p>
-        {overview.denominator === null && <p className="fhint">{overview.inventoryCount === null
+        <summary>{estimate ? "Точки с предварительной оценкой" : sample ? "Выбрать стартовую точку" : "Точки с общим индексом"} ({count})</summary>
+        {!sample && <p className="fhint">{estimate ? "Индекс по найденному маршруту. Кратчайшее время в пути пока не подтверждено." : "Выберите точку, чтобы посмотреть её индекс."}</p>}
+        {!sample && overview.denominator === null && <p className="fhint">{overview.inventoryCount === null
           ? "Общее число точек для этого списка не предоставлено."
           : "Переданная карта содержит не все точки из результата. Соотношение не определено."}</p>}
         {expanded && (overview.points.length ? (
@@ -42,7 +42,7 @@ export function CalculatedPoints({ overview, selection, areaSelected, onSelect, 
                     onSelect({ entity_kind: "sample_point", entity_id: point.pointId });
                   }}
                 >
-                  <span>{point.name}{point.score.completeness === "partial" && <small>Частичная оценка</small>}</span>
+                  <span>{point.name}</span>
                   <b>{measureText(point.score)}</b>
                 </button>
               </li>

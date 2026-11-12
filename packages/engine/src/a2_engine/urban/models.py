@@ -10,6 +10,9 @@ from a2_engine.shared.results import finite_number
 Completeness = Literal["full", "partial"]
 
 
+BOUNDED_URBAN_SEARCH = "selected-original-cells-v1"
+
+
 def identifier(value: str, name: str) -> None:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{name} must be a nonempty identifier")
