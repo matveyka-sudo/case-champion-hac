@@ -41,14 +41,17 @@ async def prepare(day: date, cache: Path) -> int:
             if expires_at <= now:
                 path.unlink()
 
-        async with open_rasp_provider(settings) as provider:
+        async with open_rasp_provider(settings, cache_ttl_seconds=86400) as provider:
+            notices = None
             for origin, destination in permutations(CITIES, 2):
                 if origin not in bindings or destination not in bindings:
                     print(origin, destination, "STATION_BINDING_UNAVAILABLE")
                     failures += 1
                     continue
                 left, right = bindings[origin], bindings[destination]
-                identity = canonical_hash([origin, destination, day.isoformat(), list(MODES)])
+                identity = canonical_hash(
+                    ["display-v2", origin, destination, day.isoformat(), list(MODES)]
+                )
                 target = cache / f"compact-rasp-{identity}.json"
                 if target.exists():
                     print(origin, destination, "CACHE_HIT")
@@ -66,14 +69,15 @@ async def prepare(day: date, cache: Path) -> int:
                     print(origin, destination, exc.code)
                     failures += 1
                     continue
-                notices = await provider.copyright()
+                if notices is None:
+                    notices = await provider.copyright()
                 departures = []
-                unresolved = 0
+                unmapped = []
                 for row in rows.departures:
                     a = by_code.get(row.from_station.code, set()) & set(left.node_ids)
                     b = by_code.get(row.to_station.code, set()) & set(right.node_ids)
                     if len(a) != 1 or len(b) != 1:
-                        unresolved += 1
+                        unmapped.append(row.model_dump(mode="json"))
                         continue
                     departures.append(
                         {
@@ -88,7 +92,8 @@ async def prepare(day: date, cache: Path) -> int:
                     "origin_id": origin,
                     "destination_id": destination,
                     "departures": departures,
-                    "unresolved_station_rows": unresolved,
+                    "unresolved_station_rows": len(unmapped),
+                    "unmapped_departures": unmapped,
                     "copyright": notices.model_dump(mode="json"),
                     "limitations": [
                         "DIRECT_PROVIDER_OBSERVATIONS",
@@ -111,19 +116,39 @@ async def prepare(day: date, cache: Path) -> int:
     return failures
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--date", type=date.fromisoformat, required=True)
-    parser.add_argument("--cache", type=Path, required=True)
-    args = parser.parse_args()
-    cache = args.cache.resolve()
+async def probe() -> None:
+    """Check the credential through the quota-accounted copyright endpoint."""
+    async with open_rasp_provider() as provider:
+        await provider.copyright()
+    print("RASP_PROBE_OK")
+
+
+def cache_path(path: Path) -> Path:
+    cache = path.resolve()
     if any((p / ".git").exists() for p in (cache, *cache.parents)):
         raise SystemExit("RASP_CACHE_MUST_BE_OUTSIDE_REPOSITORY")
     cache.mkdir(mode=0o700, parents=True, exist_ok=True)
     if cache.stat().st_uid != os.getuid() or cache.stat().st_mode & 0o077:
         raise SystemExit("RASP_CACHE_REQUIRES_OWNER_ONLY_ACCESS")
+    return cache
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument("--date", type=date.fromisoformat)
+    action.add_argument(
+        "--probe", action="store_true", help="Verify access using the copyright endpoint"
+    )
+    parser.add_argument("--cache", type=Path)
+    args = parser.parse_args()
+    if args.date is not None and args.cache is None:
+        parser.error("--date requires --cache")
     try:
-        failures = asyncio.run(prepare(args.date, cache))
+        if args.probe:
+            asyncio.run(probe())
+            return
+        failures = asyncio.run(prepare(args.date, cache_path(args.cache)))
     except QuotaUnavailable:
         raise SystemExit("RASP_CONFIGURATION_OR_SHARED_QUOTA_UNAVAILABLE") from None
     except RaspError as exc:

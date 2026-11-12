@@ -127,11 +127,13 @@ export function ApiMap({
       minZoom: 1,
       maxZoom: 18,
       zoomControl: false,
+      attributionControl: false,
       preferCanvas: true,
     }).fitBounds([
       [40, 19],
       [82, 190],
     ]);
+    L.control.attribution({ position: "topright", prefix: false }).addTo(m);
     map.current = m;
     // Keep a neutral land outline visible when remote street tiles are slow or unavailable.
     const landRequest = new AbortController();
@@ -146,7 +148,6 @@ export function ApiMap({
           pane: "localLand",
           renderer: L.svg({ pane: "localLand" }),
           interactive: false,
-          attribution: "Natural Earth",
           className: "api-land-outline",
           weight: 1,
           fillOpacity: 1,
@@ -156,7 +157,7 @@ export function ApiMap({
       .catch(() => { /* Street tiles and result geometry are independent of this outline. */ });
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       className: "tl-osm",
-      attribution: "© OpenStreetMap",
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19,
     })
       .on("tileerror", () => setTileError(true))
@@ -477,7 +478,7 @@ export function ApiMap({
     <>
       <div
         ref={host}
-        className="map-layer"
+        className="map-layer api-map-layer"
         aria-label="Карта результатов API"
       />
       {tileError && (

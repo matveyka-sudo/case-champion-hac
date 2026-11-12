@@ -1,0 +1,16 @@
+{
+  "manifest.json": "7dacfe1ba175a9257ca7cf3a7f096467b260e7a243b761d0437dfa45423e44c4",
+  "openapi.json": "9a53c3159ef3e5347ba74df24cde693d85b370caa599600846e5938470164fc2",
+  "v2.AcceptedData.serialization.schema.json": "98a802387d60047febcb98185f3e7d511ce099426bbc243075fac13de60721a6",
+  "v2.AcceptedData.validation.schema.json": "98a802387d60047febcb98185f3e7d511ce099426bbc243075fac13de60721a6",
+  "v2.Capabilities.serialization.schema.json": "a1d7cd13b55792ec8b0abb2b98c46e9783d3be7468cf03351e8f273b96105b0e",
+  "v2.Capabilities.validation.schema.json": "a1d7cd13b55792ec8b0abb2b98c46e9783d3be7468cf03351e8f273b96105b0e",
+  "v2.CargoProfile.serialization.schema.json": "c8e719b23037815c383a2304e4a54e59ccb8eb5efae0ba7c697fa096d76163af",
+  "v2.CargoProfile.validation.schema.json": "c8e719b23037815c383a2304e4a54e59ccb8eb5efae0ba7c697fa096d76163af",
+  "v2.CompactAnalysisScope.serialization.schema.json": "9f305f7002d26211e0b13d2e88d4e0f654aaafc6cadfa89292d05fd9af780442",
+  "v2.CompactAnalysisScope.validation.schema.json": "9f305f7002d26211e0b13d2e88d4e0f654aaafc6cadfa89292d05fd9af780442",
+  "v2.DeliveryCargoProfile.serialization.schema.json": "63d53d6e16ec77829fa1961f2d394e88055db077fa88f1e4627b001de5f15052",
+  "v2.DeliveryCargoProfile.validation.schema.json": "63d53d6e16ec77829fa1961f2d394e88055db077fa88f1e4627b001de5f15052",
+  "v2.FreightCompatibility.serialization.schema.json": "e4e3dee454bd6b5a07c1bbe9508002a31334c3e76a1882146bbf73b9514eebdc",
+  "v2.FreightCompatibility.validation.schema.json": "e4e3dee454bd6b5a07c1bbe9508002a31334c3e76a1882146bbf73b9514eebdc"
+}

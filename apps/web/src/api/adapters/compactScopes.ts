@@ -55,7 +55,9 @@ export function compactAvailability(
   }
   const snapshots = dates.get(draft.date);
   return {
-    dates: [...dates.keys()].sort(),
+    dates: [...dates].filter(([, ids]) => ids.size === 1).map(([date]) => date).sort(),
     snapshotId: snapshots?.size === 1 ? [...snapshots][0] : "",
+    hasMatchingTerritory: matching.length > 0,
+    hasMatchingConditions: selected.length > 0,
   };
 }

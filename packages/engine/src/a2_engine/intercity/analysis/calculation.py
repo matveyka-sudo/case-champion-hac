@@ -24,7 +24,7 @@ from a2_engine.intercity.passenger import (
 from a2_engine.intercity.reference import ReferenceComparison, reference_time_from_result
 from a2_engine.routing.reference.search import ReferenceSearchResult
 from a2_engine.routing.road import road_hash
-from a2_engine.routing.scheduled import _search_scheduled_chains
+from a2_engine.routing.scheduled import ScheduledRoadAccess, _search_scheduled_chains
 from a2_engine.routing.timetable_models import Timetable, utc
 from a2_engine.shared.config import IntercityPassengerRules, PassengerConfig
 
@@ -44,6 +44,41 @@ def analyze_intercity_passenger(
     readiness: tuple[BoardingReadiness, ...] = (),
     car: AcceptedIntercityCar | None = None,
     resource_limit: int | None = None,
+) -> IntercityPassengerAnalysis:
+    """Evaluate the existing scheduled passenger scope."""
+    return analyze_intercity_passenger_with_access(
+        scope,
+        requested_at,
+        timetable,
+        transport_modes,
+        physical_services,
+        reference,
+        config=config,
+        rules=rules,
+        frequency_start_at=frequency_start_at,
+        frequency_end_at=frequency_end_at,
+        readiness=readiness,
+        car=car,
+        resource_limit=resource_limit,
+    )
+
+
+def analyze_intercity_passenger_with_access(
+    scope: IntercityAnalysisScope,
+    requested_at: datetime,
+    timetable: Timetable,
+    transport_modes: tuple[TransportModeBinding, ...],
+    physical_services: tuple[PhysicalService, ...],
+    reference: ReferenceSearchResult,
+    *,
+    config: PassengerConfig,
+    rules: IntercityPassengerRules,
+    frequency_start_at: datetime,
+    frequency_end_at: datetime,
+    readiness: tuple[BoardingReadiness, ...] = (),
+    car: AcceptedIntercityCar | None = None,
+    resource_limit: int | None = None,
+    road_access: tuple[ScheduledRoadAccess, ScheduledRoadAccess] | None = None,
 ) -> IntercityPassengerAnalysis:
     """Maximize the existing scalar index; missing A has no fabricated winner.
 
@@ -104,6 +139,7 @@ def analyze_intercity_passenger(
         selected_map,
         ready_at=tuple((r.node_id, r.ready_at) for r in readiness),
         resource_limit=resource_limit,
+        road_access=road_access,
     )
     search = search_details.result
     reasons = set(search.reasons)
@@ -122,7 +158,11 @@ def analyze_intercity_passenger(
         reasons.add("PARTIAL_REFERENCE")
     candidates = []
     for route in search.candidates:
-        first_at = route.path.boardings[0][2]
+        first_at = (
+            next(s.start_at for s in route.path.steps if s.kind == "ride")
+            if road_access
+            else route.path.boardings[0][2]
+        )
         path_seconds = (route.path.arrival_at - first_at).total_seconds()
         if path_seconds <= 0:
             reasons.add("NONPOSITIVE_PASSENGER_PATH")
@@ -206,6 +246,7 @@ def analyze_intercity_passenger(
             selected_map,
             ready_at=tuple((r.node_id, r.ready_at) for r in readiness),
             resource_limit=resource_limit,
+            road_access=road_access,
         )
     )
     frequencies = departure_frequencies(
@@ -259,6 +300,7 @@ def analyze_intercity_passenger(
             tuple(sorted(readiness, key=lambda r: r.node_id)),
             car,
             resource_limit,
+            *((road_access,) if road_access else ()),
         )
     )
     return IntercityPassengerAnalysis(

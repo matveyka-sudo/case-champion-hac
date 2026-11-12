@@ -9,12 +9,11 @@ import {
 } from "react";
 import { LandingPage } from "./pages/LandingPage";
 import { atlasLocation, subscribeAtlasLocation } from "./features/analysis/savedPointer";
-const dataMode = new URLSearchParams(window.location.search).get("data") || import.meta.env.VITE_DATA_MODE || "demo";
+const requestedDataMode = new URLSearchParams(window.location.search).get("data") || import.meta.env.VITE_DATA_MODE || "demo";
+const dataMode = requestedDataMode === "training" ? "api" : requestedDataMode;
 const AtlasPage = lazy(() => dataMode === "api"
   ? import("./pages/ApiAtlasPage").then(m => ({default:m.ApiAtlasPage}))
-  : dataMode === "training"
-    ? import("./pages/TrainingAtlasPage").then(m => ({default:m.TrainingAtlasPage}))
-    : import("./pages/AtlasPage").then(m => ({default:m.AtlasPage})),
+  : import("./pages/AtlasPage").then(m => ({default:m.AtlasPage})),
 );
 import { AtlasProvider } from "./features/AtlasProvider";
 class Boundary extends Component<{ children: ReactNode }, { error: boolean }> {

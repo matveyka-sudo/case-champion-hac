@@ -22,7 +22,6 @@ from a2_engine import (
     ReferenceComparison,
     UrbanTransitNetwork,
     analyze_intercity_cargo,
-    analyze_intercity_passenger,
     analyze_pipeline_connections,
     analyze_urban_candidates,
     analyze_urban_cargo,
@@ -37,6 +36,7 @@ from a2_engine import (
     reference_time_from_result,
     search_urban_transit,
 )
+from a2_engine.intercity.analysis.calculation import analyze_intercity_passenger_with_access
 
 from a2_api.adapters.demo_map import attach_demo_result
 from a2_api.adapters.demo_transport import DEMO_SOURCE
@@ -415,12 +415,13 @@ def calculate(
             readiness = tuple(
                 BoardingReadiness(
                     node,
-                    request.departure_at + timedelta(seconds=inputs.initial_airport_checkin_seconds),
+                    request.departure_at
+                    + timedelta(seconds=inputs.initial_airport_checkin_seconds),
                     inputs.scope.evidence_refs,
                 )
                 for node in scope.comparison_scope.origin_node_ids
             )
-        passenger_analysis = analyze_intercity_passenger(
+        passenger_analysis = analyze_intercity_passenger_with_access(
             scope,
             request.departure_at,
             inputs.timetable,
@@ -434,10 +435,29 @@ def calculate(
             readiness=readiness,
             car=accepted_car,
             resource_limit=inputs.resource_limit,
+            road_access=inputs.road_access,
         )
-        project_intercity(out, passenger_analysis, reference, accepted_car)
+        project_intercity(
+            out,
+            passenger_analysis,
+            reference,
+            accepted_car,
+            water_nodes=snapshot.access_nodes
+            if inputs.water_with_ground_access or inputs.road_access
+            else None,
+        )
+        if inputs.road_access:
+            out.limitations.add("STATIC_ROAD_ACCESS_TO_TERMINALS")
+        if "INTERNATIONAL_BUS_VIA_POLAND" in inputs.timetable.scope.limitations:
+            out.limitations.add("INTERNATIONAL_BUS_VIA_POLAND")
         if inputs.aviation_with_ground_access:
             out.limitations.add("AVIATION_WITH_GROUND_ACCESS")
+        if "REGIONAL_AIR_VIA_SVO" in inputs.timetable.scope.limitations:
+            out.limitations.add("REGIONAL_AIR_VIA_SVO")
+        if inputs.water_with_ground_access:
+            out.limitations.add("WATER_WITH_GROUND_ACCESS")
+            if "DON_PASSENGER_VESSEL" in inputs.timetable.scope.limitations:
+                out.limitations.add("DON_PASSENGER_VESSEL")
         if (
             request.passenger_modes is not None
             and "private_car" in request.passenger_modes
@@ -460,7 +480,16 @@ def calculate(
         assert isinstance(request, UrbanCargoRequest)
         if not profile.static_observations:
             raise unavailable("ACCEPTED_STATIC_TRUCK_OBSERVATION_PROOF_REQUIRED")
-        routes = tuple(replace(route, requested_at=request.departure_at) for route in inputs.routes)
+        bounded_cargo = profile.compact and bool(inputs.receipts)
+        if bounded_cargo:
+            from a2_api.adapters.truck_runtime import bind_prepared_routes
+
+            routes, receipts = bind_prepared_routes(inputs, request.departure_at)
+        else:
+            routes = tuple(
+                replace(route, requested_at=request.departure_at) for route in inputs.routes
+            )
+            receipts = inputs.receipts
         selected = tuple(
             request.freight_node_types
             or sorted({node.analysis_type for node in inputs.nodes})
@@ -472,13 +501,14 @@ def calculate(
             inputs.sites,
             inputs.nodes,
             routes,
-            inputs.receipts,
+            receipts,
             inputs.coverage,
             selected,
             inputs.area_km2,
             config=load_freight_config(),
+            bounded_selection=bounded_cargo,
         )
-        project_urban_cargo(out, urban_cargo_analysis)
+        project_urban_cargo(out, urban_cargo_analysis, bounded_selection=bounded_cargo)
     elif isinstance(inputs, DeliveryInputs):
         assert isinstance(request, IntercityCargoRequest)
         delivery_scope = inputs.scope
@@ -495,18 +525,26 @@ def calculate(
                     m for m in delivery_scope.allowed_modes if m in request.cargo_modes
                 ),
             )
+        prebooked = "m4-booking-model" in snapshot.source_versions
+        readiness = (
+            tuple(replace(item, ready_at=request.departure_at) for item in inputs.readiness)
+            if prebooked
+            else inputs.readiness
+        )
         delivery_analysis = analyze_intercity_cargo(
             delivery_scope,
             request.departure_at,
             inputs.profile,
             inputs.states,
             inputs.actions,
-            inputs.readiness,
+            readiness,
             config=load_freight_config(),
             rules=load_cargo_delivery_rules(),
             resource_limit=inputs.resource_limit,
         )
         project_delivery(out, delivery_analysis)
+        if prebooked:
+            out.limitations.add("MODELLED_PREBOOKED_TRUCK_DELIVERY")
     elif isinstance(inputs, PipelineInputs):
         assert isinstance(request, IntercityCargoRequest)
         pipeline_scope = inputs.scope

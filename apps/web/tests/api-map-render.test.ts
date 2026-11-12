@@ -7,7 +7,7 @@ import { pointOverviewFixture } from "./fixtures/point-overview";
 
 const fake = vi.hoisted(() => {
   const bounds = { extend: vi.fn(), isValid: () => true };
-  const map = { createPane: () => ({ style: {} }), fitBounds: vi.fn(), setView: vi.fn(), invalidateSize: vi.fn(), remove: vi.fn(), getZoom: () => 10, panInside: vi.fn(), setZoomAround: vi.fn() };
+  const map = { createPane: () => ({ style: {} }), fitBounds: vi.fn(), setView: vi.fn(), invalidateSize: vi.fn(), remove: vi.fn(), on: vi.fn(), off: vi.fn(), getZoom: () => 10, panInside: vi.fn(), setZoomAround: vi.fn() };
   map.fitBounds.mockReturnValue(map);
   const group = { addTo: vi.fn(), clearLayers: vi.fn() };
   group.addTo.mockReturnValue(group);
@@ -24,6 +24,7 @@ const fake = vi.hoisted(() => {
   return { map, group, bounds, geoJSON, circleMarker: vi.fn(() => ({ setRadius: vi.fn() })) };
 });
 vi.mock("leaflet", () => ({ default: {
+  control: { attribution: () => ({ addTo: vi.fn() }) },
   map: () => fake.map, layerGroup: () => fake.group, latLngBounds: () => fake.bounds,
   geoJSON: fake.geoJSON, circleMarker: fake.circleMarker,
   tileLayer: () => { const tile = { on: () => tile, addTo: () => tile }; return tile; },

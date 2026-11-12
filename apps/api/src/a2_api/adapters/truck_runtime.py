@@ -2,6 +2,7 @@
 
 import time
 from dataclasses import replace
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import httpx
@@ -9,7 +10,8 @@ from a2_contracts.common import canonical_hash
 from a2_contracts.v2.dataset import AcceptedData
 from a2_contracts.v2.requests import UrbanCargoRequest
 from a2_contracts.v2.results import EvidenceRef
-from a2_engine import CargoCompatibility, TruckRoute
+from a2_engine import CargoCompatibility, TruckRoute, TruckSearchReceipt
+from a2_engine.shared.normalized import content_hash
 from pydantic import HttpUrl
 
 from a2_api.adapters.product_inputs import UrbanCargoInputs
@@ -50,6 +52,46 @@ def validate_binding(profile: "Profile", inputs: UrbanCargoInputs, snapshot: Acc
         for n in inputs.nodes
     ):
         raise ValueError("TRUCK_EXECUTOR_PHYSICAL_LOCATION_REQUIRED")
+
+
+def route_scope_id(route: TruckRoute) -> str:
+    return content_hash(
+        (
+            route.context,
+            route.requirements_hash,
+            route.from_id,
+            route.to_id,
+            route.requested_at,
+            route.direction,
+        )
+    )
+
+
+def bind_prepared_routes(
+    inputs: UrbanCargoInputs, departure_at: datetime
+) -> tuple[tuple[TruckRoute, ...], tuple[TruckSearchReceipt, ...]]:
+    """Reuse accepted static costs, preserving the original compatibility interval."""
+    original = {route.route_id: route for route in inputs.routes}
+    routes = tuple(replace(route, requested_at=departure_at) for route in inputs.routes)
+    rebound = {route.route_id: route for route in routes}
+    receipts = []
+    for receipt in inputs.receipts:
+        route = original.get(receipt.route_id)
+        if (
+            route is None
+            or receipt.route_fingerprint != route.fingerprint
+            or receipt.search_scope_id != route_scope_id(route)
+        ):
+            raise ValueError("TRUCK_SEARCH_RECEIPT_MISMATCH")
+        current = rebound[receipt.route_id]
+        receipts.append(
+            replace(
+                receipt,
+                route_fingerprint=current.fingerprint,
+                search_scope_id=route_scope_id(current),
+            )
+        )
+    return routes, tuple(receipts)
 
 
 def hydrate_routes(

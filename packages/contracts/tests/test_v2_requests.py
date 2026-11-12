@@ -106,8 +106,16 @@ def test_independent_cargo_requirements_do_not_collapse_into_one_boolean():
         vehicle_constraints={"max_height_m": 4, "max_weight_tonnes": 20, "restrictions": []},
     )
     assert profile.urgency == "ordinary"
-    with pytest.raises(ValidationError):
-        DeliveryCargoProfile.model_validate(profile.model_dump() | {"food_class": "raw"})
+    assert profile.temperature_requirements.controlled
+    assert profile.perishable is False
+
+    raw = DeliveryCargoProfile.model_validate(
+        profile.model_dump() | {"food_class": "raw", "perishable": True}
+    )
+    assert raw.food_class == "raw"
+    assert raw.perishable is True
+    assert raw.urgency == "ordinary"
+    assert raw.temperature_requirements == profile.temperature_requirements
 
 
 @pytest.mark.parametrize(

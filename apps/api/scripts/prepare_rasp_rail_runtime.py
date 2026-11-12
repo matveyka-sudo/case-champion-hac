@@ -157,9 +157,11 @@ def prepare(
     air: bool = False,
     mixed: bool = False,
     aviation: bool = False,
+    regional_air_connections: bool = False,
     road: Path | None = None,
 ):
     mixed = mixed or aviation
+    air = air or regional_air_connections
     manifest = json.loads((base / "manifest.json").read_text())
     template = next(p for p in manifest["profiles"] if p["analysis_kind"] == "intercity_passenger")
     parent_ref = next(
@@ -205,9 +207,15 @@ def prepare(
         scopes = (("city", (("moscow", "novorossiysk"),)),)
     if aviation:
         scopes = (("city", (("moscow", "novorossiysk"), ("kaliningrad", "novorossiysk"))),)
+    if regional_air_connections:
+        scopes = (("region", (("kaliningrad", "krasnodar"),)),)
     for level, pairs in scopes:
         for pair in pairs:
-            if air and ("moscow" not in pair or "novorossiysk" in pair):
+            if (
+                air
+                and not regional_air_connections
+                and ("moscow" not in pair or "novorossiysk" in pair)
+            ):
                 continue
             for left, right in (pair, pair[::-1]):
                 chain = (
@@ -238,7 +246,7 @@ def prepare(
                 else:
                     leg_modes = (mode,) * len(chain)
                     groups = [observations[leg] for leg in chain]
-                svo_connection = aviation and len(chain) == 3
+                svo_connection = regional_air_connections or (aviation and len(chain) == 3)
                 if svo_connection:
                     # Accept only explicitly dated movements within the same SVO terminal.
                     for i, (leg, leg_mode) in enumerate(zip(chain, leg_modes, strict=True)):
@@ -274,7 +282,11 @@ def prepare(
                     f"rasp-{'aviation' if aviation else 'mixed' if mixed else mode}-" + digest[:24]
                 )
                 proof, walk_proof = sid + "-schedule", sid + "-walk"
-                refs = (proof, walk_proof) if len(chain) > 1 else (proof,)
+                refs = (
+                    (proof, walk_proof)
+                    if len(chain) > 1 and not regional_air_connections
+                    else (proof,)
+                )
                 if air or mixed:
                     refs += (sid + "-checkin",)
                 if svo_connection:
@@ -287,7 +299,11 @@ def prepare(
                     sid,
                     sid,
                     sid,
-                    "direct-air" if air else "rail-and-station-walk",
+                    "air-via-svo"
+                    if regional_air_connections
+                    else "direct-air"
+                    if air
+                    else "rail-and-station-walk",
                     sid,
                     "a2-methodology-v3",
                     "edge-calibrated-v1",
@@ -472,7 +488,7 @@ def prepare(
                                 b,
                                 "departure",
                             ) and (
-                                not aviation
+                                not (aviation or regional_air_connections)
                                 or pre.state_id.startswith(f"leg{i}-")
                                 and post.state_id.startswith(f"leg{i + 1}-")
                             ):
@@ -524,7 +540,9 @@ def prepare(
                         False,
                         False,
                         refs,
-                        ("SELECTED_DIRECT_AEROFLOT_FLIGHTS", "SCHEDULED_BLOCK_TIME_REFERENCE")
+                        ("REGIONAL_AIR_VIA_SVO", "SCHEDULED_BLOCK_TIME_REFERENCE")
+                        if regional_air_connections
+                        else ("SELECTED_DIRECT_AEROFLOT_FLIGHTS", "SCHEDULED_BLOCK_TIME_REFERENCE")
                         if air
                         else (
                             "SELECTED_AIR_RAIL_VIA_KRASNODAR",
@@ -576,7 +594,7 @@ def prepare(
                                     )
                                 ]
                             )
-                            if transfers
+                            if footpaths
                             else []
                         ),
                     ]
@@ -733,6 +751,7 @@ if __name__ == "__main__":
     mode_args.add_argument("--air", action="store_true")
     mode_args.add_argument("--mixed", action="store_true")
     mode_args.add_argument("--aviation", action="store_true")
+    mode_args.add_argument("--regional-air-connections", action="store_true")
     cli.add_argument("--road", type=Path)
     args = cli.parse_args()
     prepare(
@@ -743,5 +762,6 @@ if __name__ == "__main__":
         air=args.air,
         mixed=args.mixed,
         aviation=args.aviation,
+        regional_air_connections=args.regional_air_connections,
         road=args.road,
     )

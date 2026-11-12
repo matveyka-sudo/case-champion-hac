@@ -30,6 +30,41 @@ from a2_engine.routing.timetable_models import (
 
 
 @dataclass(frozen=True)
+class ScheduledRoadAccess:
+    from_node_id: str
+    to_node_id: str
+    seconds: float
+    terminal_seconds: float
+    evidence_refs: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if (
+            not self.from_node_id
+            or not self.to_node_id
+            or self.from_node_id == self.to_node_id
+            or duration_delta(self.seconds).total_seconds() <= 0
+            or not self.evidence_refs
+        ):
+            raise ValueError("INVALID_SCHEDULED_ROAD_ACCESS")
+        duration_delta(self.terminal_seconds)
+        object.__setattr__(self, "seconds", float(self.seconds))
+        object.__setattr__(self, "terminal_seconds", float(self.terminal_seconds))
+        object.__setattr__(self, "evidence_refs", refs(self.evidence_refs))
+
+    def ride(self, start: datetime) -> TimetableStep:
+        return TimetableStep(
+            "ride",
+            self.from_node_id,
+            self.to_node_id,
+            start,
+            start + duration_delta(self.seconds),
+            "road_access",
+            None,
+            self.evidence_refs,
+        )
+
+
+@dataclass(frozen=True)
 class ScheduledChain:
     path: TimetablePath
     modes: tuple[str, ...]
@@ -120,6 +155,7 @@ def _search_scheduled_chains(
     *,
     ready_at: tuple[tuple[str, datetime], ...],
     resource_limit: int | None,
+    road_access: tuple[ScheduledRoadAccess, ScheduledRoadAccess] | None = None,
 ) -> _ScheduledSearchWithDiagnostics:
     check_limit(resource_limit)
     requested, end = utc(requested_at), utc(first_departures_end_at)
@@ -138,6 +174,17 @@ def _search_scheduled_chains(
     readiness = {node: utc(at) for node, at in ready_at}
     if len(readiness) != len(ready_at) or set(readiness) - set(origin_node_ids):
         raise ValueError("INVALID_BOARDING_READINESS")
+    access, egress = road_access or (None, None)
+    if (
+        access
+        and egress
+        and (
+            access.from_node_id not in origin_node_ids
+            or egress.to_node_id not in destination_node_ids
+            or {access.to_node_id, egress.from_node_id} - timetable.scope.node_ids
+        )
+    ):
+        raise ValueError("ROAD_ACCESS_BOUNDARY_MISMATCH")
     reasons = data_reasons(timetable, True)
     if timetable.scope.end_at < end:
         reasons.add("FIRST_DEPARTURE_WINDOW_UNCOVERED")
@@ -180,10 +227,36 @@ def _search_scheduled_chains(
         if event.departure_at < at:
             return
         steps = state.steps if state is not None else ()
+        if access and state is None:
+            # Depart by car just in time for the real boarding. Initial waiting is
+            # counted before leaving the representative origin node.
+            start = (
+                event.departure_at
+                - duration_delta(access.seconds)
+                - duration_delta(access.terminal_seconds)
+            )
+            if start < requested:
+                return
+            if requested < start:
+                steps += (
+                    TimetableStep(
+                        "wait_initial",
+                        access.from_node_id,
+                        access.from_node_id,
+                        requested,
+                        start,
+                        run.transport_type,
+                        run_id,
+                        access.evidence_refs,
+                    ),
+                )
+            ride = access.ride(start)
+            steps += (ride,)
+            at = ride.end_at
         if at < event.departure_at:
             steps += (
                 TimetableStep(
-                    "wait_transfer" if state else "wait_initial",
+                    "wait_transfer" if state or access else "wait_initial",
                     event.node_id,
                     event.node_id,
                     at,
@@ -212,7 +285,12 @@ def _search_scheduled_chains(
         )
         first = state.first if state else (run_id, event.sequence)
         history = state.boardings if state else ()
-        used = tuple(sorted(set(state.modes if state else ()) | {modes[run.transport_type]}))
+        used = tuple(
+            sorted(
+                set(state.modes if state else ("road",) if access else ())
+                | {modes[run.transport_type]}
+            )
+        )
         actions = (state.actions if state else ()) + (f"board:{run_id}:{event.sequence}",)
         add(
             _State(
@@ -231,7 +309,7 @@ def _search_scheduled_chains(
     for run_id, run in sorted(runs.items()):
         for i, event in enumerate(run.events[:-1]):
             if (
-                event.node_id in origin_node_ids
+                event.node_id in ((access.to_node_id,) if access else origin_node_ids)
                 and event.pickup
                 and requested <= event.departure_at < end
                 and event.departure_at >= readiness.get(event.node_id, requested)
@@ -269,19 +347,51 @@ def _search_scheduled_chains(
                 valid_arrival = state.at > first_at
                 if state.node in destination_node_ids and not valid_arrival:
                     nonpositive_completions.add((first_at, state.modes))
-                if state.node in destination_node_ids and valid_arrival:
+                if (
+                    state.node in destination_node_ids
+                    or (egress and state.node == egress.from_node_id)
+                ) and valid_arrival:
                     first_node = state.steps[0].from_node_id
+                    end_node, arrival, steps, actions = (
+                        state.node,
+                        state.at,
+                        state.steps,
+                        off.actions,
+                    )
+                    if egress:
+                        end_node = egress.to_node_id
+                        start = arrival + duration_delta(egress.terminal_seconds)
+                        if start > arrival:
+                            steps += (
+                                TimetableStep(
+                                    "wait_transfer",
+                                    state.node,
+                                    state.node,
+                                    arrival,
+                                    start,
+                                    run.transport_type,
+                                    run_id,
+                                    egress.evidence_refs,
+                                ),
+                            )
+                        ride = egress.ride(start)
+                        arrival = ride.end_at
+                        if arrival > timetable.scope.end_at:
+                            reasons.add("CONTINUATION_OUTSIDE_HORIZON")
+                            continue
+                        steps += (ride,)
+                        actions += ("road-egress",)
                     candidate = ScheduledChain(
                         TimetablePath(
                             first_node,
-                            state.node,
+                            end_node,
                             requested,
-                            state.at,
-                            state.steps,
+                            arrival,
+                            steps,
                             state.boardings,
                         ),
                         state.modes,
-                        off.actions,
+                        actions,
                     )
                     key = state.first, state.modes
                     old = finals.get(key)
@@ -379,6 +489,8 @@ def _search_scheduled_chains(
                 continue
             board(state, run_id, index, rule.evidence_refs)
     evidence = set(timetable.scope.evidence_refs)
+    if road_access:
+        evidence.update(ref for leg in road_access for ref in leg.evidence_refs)
     for run in timetable.runs:
         evidence.update(run.calendar_evidence_refs)
         for event in run.events:

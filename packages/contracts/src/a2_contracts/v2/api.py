@@ -244,6 +244,9 @@ class CompactAnalysisScope(ContractModel):
     modes: list[str] = Field(default_factory=list)
     categories: list[Category] = Field(default_factory=list)
     cargo_profile_id: Identifier | None = None
+    cargo_example: str | None = Field(
+        default=None, min_length=1, max_length=120, exclude_if=lambda value: value is None
+    )
     direction: Literal["inbound", "outbound"] | None = None
     cargo_transport: Literal["multimodal", "pipeline"] = "multimodal"
     pipeline_product: PipelineProduct | None = None

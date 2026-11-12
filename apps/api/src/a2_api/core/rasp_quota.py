@@ -27,7 +27,7 @@ def credential_fingerprint(value: str) -> str:
 def request_fingerprint(host: str, path: str, params: Mapping[str, str]) -> str:
     if (
         host not in {"api.rasp.yandex-net.ru", "api.rasp.yandex.net"}
-        or path not in {"/v3.0/search/", "/v3.0/copyright/"}
+        or path not in {"/v3.0/search/", "/v3.0/copyright/", "/v3.0/thread/"}
         or any(key.lower() in {"apikey", "api_key", "authorization", "key"} for key in params)
     ):
         raise QuotaUnavailable()
