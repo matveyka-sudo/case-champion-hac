@@ -147,7 +147,7 @@ class Manifest(ContractModel):
     territories: list[TerritoryOption] = Field(max_length=10000)
     areas: list[AreaOption] = Field(default_factory=list, max_length=10000)
     cargo_profiles: list[CargoProfile] = Field(default_factory=list, max_length=128)
-    profiles: list[Profile] = Field(max_length=128)
+    profiles: list[Profile] = Field(max_length=256)
     national_catalog_complete: bool = False
     presets: list[AnalysisPreset] = Field(default_factory=list, max_length=128)
     compact: bool = False
@@ -217,7 +217,14 @@ def input_fingerprints(
     This hash is not a claim about a deployed routing tile store. Live executors
     must additionally verify their own physical build, as walk_pilot does.
     """
-    graph = scenario_hash(INPUT_ADAPTER.dump_python(inputs, mode="python"))
+    facts = INPUT_ADAPTER.dump_python(inputs, mode="python")
+    if isinstance(inputs, IntercityInputs) and inputs.initial_airport_checkin_seconds is None:
+        facts.pop("initial_airport_checkin_seconds", None)
+    if isinstance(inputs, IntercityInputs) and not inputs.mixed_only:
+        facts.pop("mixed_only", None)
+    if isinstance(inputs, IntercityInputs) and not inputs.aviation_with_ground_access:
+        facts.pop("aviation_with_ground_access", None)
+    graph = scenario_hash(facts)
     costing = canonical_hash(
         {
             "config_hash": registry.config_hash,
@@ -502,6 +509,22 @@ def validate_inputs(
         if "public_transport" in profile.passenger_modes and inputs.timetable is None:
             raise ValueError("DATED_TIMETABLE_REQUIRED_FOR_PUBLIC_TRANSPORT")
     elif isinstance(inputs, IntercityInputs):
+        if inputs.initial_airport_checkin_seconds is not None and (
+            (
+                inputs.scope.applicable_modes != ("air",)
+                and not (inputs.mixed_only and "air" in inputs.scope.applicable_modes)
+            )
+            or inputs.readiness
+        ):
+            raise ValueError("AIRPORT_CHECKIN_REQUIRES_SCHEDULED_AIR_INPUTS")
+        if inputs.mixed_only and (
+            len(inputs.scope.applicable_modes) < 2 or inputs.public_timetable_unavailable
+        ):
+            raise ValueError("MIXED_PROFILE_REQUIRES_MULTIPLE_SCHEDULED_MODES")
+        if inputs.aviation_with_ground_access and (
+            not inputs.mixed_only or "air" not in inputs.scope.applicable_modes
+        ):
+            raise ValueError("AVIATION_ACCESS_REQUIRES_A_MIXED_PROFILE_WITH_AIR")
         if inputs.car_geometry is not None:
             if inputs.car is None or not set(inputs.car_geometry.evidence_refs) <= set(
                 inputs.car.evidence_refs
@@ -828,6 +851,11 @@ class Runtime:
             ):
                 raise unavailable("STATIC_TRUCK_OBSERVATION_DEPARTURE_OR_INVARIANCE_UNAVAILABLE")
         if isinstance(inputs, IntercityInputs) and isinstance(request, IntercityPassengerRequest):
+            if inputs.mixed_only:
+                expected = "air" if inputs.aviation_with_ground_access else "mixed"
+                if request.passenger_modes != [expected]:
+                    raise unavailable("REQUESTED_MODE_SELECTION_INPUTS_UNAVAILABLE")
+                return profile, inputs
             wants_car = request.passenger_modes is None or "private_car" in request.passenger_modes
             if (
                 wants_car

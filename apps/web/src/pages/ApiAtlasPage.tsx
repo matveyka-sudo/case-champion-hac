@@ -580,6 +580,9 @@ export function ApiAtlasPage() {
   const draftInstructions = !cargo
     ? urban ? "Выберите город, передвижение и категории" : "Выберите территории и виды транспорта"
     : urban ? "Выберите город, направление и профиль груза" : "Выберите территории и параметры грузовой связи";
+  const resultOriginId = result?.request.analysis_kind === "intercity_passenger"
+    ? result.request.origin_id
+    : undefined;
   const requestTitle = result ? resultTitle(result, catalog) : origin?.name || "Россия";
   const toggleMode = (kind: AnalysisKind) =>
     change({
@@ -738,6 +741,7 @@ export function ApiAtlasPage() {
                 title={selectionTitle} onClose={() => setCardHidden(true)} titleRef={resultTitleRef} />
               {compactResult ? <div className="ctx-b">
                 <CompactResultSummary result={result} selection={selection}
+                  originTimezone={catalog.find((entry) => entry.territory_id === resultOriginId)?.timezone}
                   score={selection?.entity_kind === "sample_point" ? headlineScore : territoryHeadline} time={headlineTime} metrics={shownMetrics} />
                 {selection?.entity_kind === "sample_point" && categoryRows.length > 1 && <div className="sect">
                   <ResultCategoryTable rows={categoryRows} columns={["Объекты", "Время в пути", "Индекс"]} />

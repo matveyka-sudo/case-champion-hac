@@ -71,6 +71,9 @@ class IntercityInputs(ContractModel):
     frequency_start_at: Timestamp
     frequency_end_at: Timestamp
     readiness: tuple[BoardingReadiness, ...] = ()
+    initial_airport_checkin_seconds: int | None = Field(default=None, gt=0, le=86400)
+    mixed_only: bool = False
+    aviation_with_ground_access: bool = False
     car: AcceptedIntercityCar | None = None
     car_departure_at: Timestamp | None = None
     car_geometry: LineGeometry | None = None
