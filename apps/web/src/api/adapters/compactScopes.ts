@@ -57,5 +57,7 @@ export function compactAvailability(
   return {
     dates: [...dates.keys()].sort(),
     snapshotId: snapshots?.size === 1 ? [...snapshots][0] : "",
+    hasMatchingTerritory: matching.length > 0,
+    hasMatchingConditions: selected.length > 0,
   };
 }

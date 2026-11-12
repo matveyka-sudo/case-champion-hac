@@ -1,6 +1,7 @@
 import { indexGradient } from "../api/adapters/mapIndexColor";
 import { CompactResultSummary } from "../widgets/CompactResultSummary";
-import { compactAvailability } from "../api/adapters/compactScopes";
+import { PassengerSchedule } from "../widgets/PassengerSchedule";
+import { compactAvailability, compactSlots } from "../api/adapters/compactScopes";
 import {
   useCallback,
   useEffect,
@@ -553,7 +554,58 @@ export function ApiAtlasPage() {
   const matchingProfiles = cargo && caps ? matchingCargoProfiles(caps.cargo_profiles, cargoProfile) : [];
   const chosenCargoProfile = draft.profileId || (matchingProfiles.length === 1 ? matchingProfiles[0].profile_id : "");
   const compact = caps?.compact_scopes ? compactAvailability(draft, catalog, caps.compact_scopes, chosenCargoProfile) : null;
-  const unavailableReason = compact && !compact.snapshotId ? "Нет данных для выбранных условий." :
+  const compactScopes = caps?.compact_scopes;
+  const showSchedule = draft.kind === "intercity_passenger" && draft.level === "city" &&
+    draft.paxModes.some((mode) => mode !== "car") &&
+    !!compactScopes?.some((scope) => scope.analysis_kind === "intercity_passenger" &&
+      scope.origin_id === draft.originId && scope.destination_id === draft.destinationId);
+  const [scheduleState, setScheduleState] = useState<{
+    pair: string; value: Schemas["PassengerScheduleObservation"];
+  } | null>(null);
+  const schedulePair = showSchedule ? draft.originId + ":" + draft.destinationId : "";
+  useEffect(() => {
+    if (!showSchedule) return;
+    const controller = new AbortController();
+    let expiryTimer: ReturnType<typeof setTimeout> | undefined;
+    void backend.passengerSchedules(draft.originId, draft.destinationId, controller.signal).then(([value]) => {
+      if (controller.signal.aborted) return;
+      setScheduleState(value ? { pair: schedulePair, value } : null);
+      if (value) {
+        expiryTimer = setTimeout(() => setScheduleState(null),
+          Math.max(0, Date.parse(value.expires_at) - Date.now()));
+      }
+    }).catch(() => {
+      if (!controller.signal.aborted) setScheduleState(null);
+    });
+    return () => {
+      controller.abort();
+      clearTimeout(expiryTimer);
+    };
+  }, [showSchedule, draft.originId, draft.destinationId, schedulePair]);
+  const schedule = scheduleState?.pair === schedulePair ? scheduleState.value : null;
+  let scheduleDeparture: string | null = null;
+  if (schedule && origin) {
+    try { scheduleDeparture = departureAt(draft.date, draft.slot, origin.timezone); }
+    catch { /* No valid local date and time yet. */ }
+  }
+  let compactUnavailable = "Нет данных для выбранных условий.";
+  if (compact && draft.kind === "intercity_passenger") {
+    if (!draft.originId || !draft.destinationId || draft.originId === draft.destinationId) {
+      compactUnavailable = "Выберите разные пункты отправления и прибытия.";
+    } else if (!draft.paxModes.length) {
+      compactUnavailable = "Выберите вид транспорта.";
+    } else if (!compact.hasMatchingTerritory) {
+      compactUnavailable = "Для этого направления ещё не подготовлены маршруты для расчёта.";
+    } else if (!compact.hasMatchingConditions) {
+      compactUnavailable = draft.paxModes.length > 1
+        ? "Для этого сочетания нет общего набора для расчёта. Выберите один вид транспорта, чтобы проверить его отдельно."
+        : "Для этого вида транспорта пока нет расчётного набора маршрутов и эталонного времени.";
+    } else if (!compact.snapshotId) {
+      compactUnavailable = "Для выбранных даты и времени нет подходящего набора данных. Проверьте доступные даты в календаре.";
+    }
+  }
+
+  const unavailableReason = compact && !compact.snapshotId ? compactUnavailable :
     !selectedPreset && ready?.calculation_available === false
     ? ready.reason_code === "RUNTIME_INPUTS_UNAVAILABLE"
       ? "На этом стенде нет входных данных для расчёта выбранного направления."
@@ -590,6 +642,9 @@ export function ApiAtlasPage() {
       areaId: "",
       profileId: "",
       pipeline: false,
+      ...(kind === "intercity_passenger" && compact && !compactSlots.some(({ slot }) => slot === draft.slot)
+        ? { slot: compactSlots[0].slot }
+        : {}),
       ...(compact ? {
         level: kind === "intercity_cargo" ? "region" : "city",
         paxModes: ["car"],
@@ -985,6 +1040,9 @@ export function ApiAtlasPage() {
                     )
                   : field("Виды транспорта", <><ChoiceChips items={[["air", "Самолёт", "plane"], ["rail", "Поезд", "train-front"], ["bus", "Автобус", "bus-front"], ["car", "Автомобиль", "car-front"], ["sea", "Судно и паром", "ship"], ["mixed", "Смешанные", "route"]]}
                     values={Object.fromEntries(draft.paxModes.map((mode) => [mode, true]))} onChange={(id) => change({ paxModes: draft.paxModes.includes(id) ? draft.paxModes.filter((mode) => mode !== id) : [...draft.paxModes, id] })} />{inline("paxModes", ["passenger_modes"])}</>))}
+              {schedule && <PassengerSchedule schedule={schedule} selectedModes={draft.paxModes}
+                day={draft.date} departure={scheduleDeparture} fromTimezone={origin?.timezone}
+                toTimezone={catalog.find((item) => item.territory_id === draft.destinationId)?.timezone} />}
               {!cargo &&
                 urban &&
                 field("Категории", <>
