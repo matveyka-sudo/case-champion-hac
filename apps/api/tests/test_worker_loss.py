@@ -3,6 +3,7 @@ import os
 import signal
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -48,8 +49,10 @@ async def test_worker_parent_loss_cannot_leave_a_calculation_orphan(
     )
     child_pid = None
     try:
-        for _ in range(150):
-            if pid_file.exists():
+        # Bounded wait: a cold worker interpreter can need several seconds.
+        deadline = time.monotonic() + 30
+        while time.monotonic() < deadline and parent.poll() is None:
+            if pid_file.exists() and pid_file.read_text().strip():
                 child_pid = int(pid_file.read_text())
                 break
             await asyncio.sleep(0.02)

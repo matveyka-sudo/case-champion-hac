@@ -3,12 +3,30 @@ import os
 import socket
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import httpx
 import pytest
 from test_storage import request
 from test_v2_integration import request_body
+
+READY_SECONDS = 30.0
+
+
+async def wait_until_ready(client: httpx.AsyncClient, api: subprocess.Popen) -> None:
+    """Bounded readiness wait; a cold interpreter start can take several seconds."""
+    deadline = time.monotonic() + READY_SECONDS
+    while time.monotonic() < deadline:
+        if api.poll() is not None:
+            raise AssertionError(f"API process exited with code {api.returncode} before /health")
+        try:
+            if (await client.get("/health")).status_code == 200:
+                return
+        except httpx.TransportError:
+            pass
+        await asyncio.sleep(0.05)
+    raise AssertionError(f"API process did not answer /health in {READY_SECONDS:g} s")
 
 
 @pytest.mark.asyncio
@@ -59,13 +77,7 @@ async def test_separate_api_and_worker_processes_complete_a_synthetic_job(databa
     worker = None
     try:
         async with httpx.AsyncClient(base_url=f"http://127.0.0.1:{port}", timeout=5) as client:
-            for _ in range(100):
-                try:
-                    if (await client.get("/health")).status_code == 200:
-                        break
-                except httpx.ConnectError:
-                    pass
-                await asyncio.sleep(0.03)
+            await wait_until_ready(client, api)
             accepted = await client.post(
                 "/api/v1/analyses",
                 json=request().model_dump(mode="json") if contract == "legacy" else request_body(),
