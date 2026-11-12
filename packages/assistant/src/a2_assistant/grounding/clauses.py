@@ -20,9 +20,9 @@ CLAUSE_IDS = (*ANSWER_MODES, "components", "time_scope", "sources")
 # Deterministic hint for the response example only: the model still chooses.
 # Every suggested clause renders for any single saved fact.
 _INTENTS: tuple[tuple[ClauseId, tuple[str, ...]], ...] = (
-    ("sources", ("источник", "документ", "основан", "откуда", "source")),
+    ("methodology", ("методик", "формул", "как счита", "как рассчит", "норматив", "берётся")),
+    ("sources", ("источник", "документ", "основан", "откуда", "стратеги", "source")),
     ("compare", ("сравн",)),
-    ("methodology", ("методик", "формул", "как счита", "как рассчит", "норматив")),
     (
         "unsupported",
         ("задерж", "пробк", "очеред", "закрыт", "санкц", "виноват", "цен", "стоимост", "прогноз"),

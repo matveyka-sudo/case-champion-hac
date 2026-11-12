@@ -23,9 +23,21 @@ from ..tools import AccessScope, ToolBackend, validate_tool
 
 def needs_documents(context: ExplanationRequest | None) -> bool:
     question = (context.question or "").casefold() if context else ""
-    return any(
-        word in question for word in ("источник", "методик", "основан", "документ", "source")
-    )
+    return any(word in question for word in _DOCUMENT_WORDS)
+
+
+# Questions about provenance or official texts; everything else is answered from
+# the saved result alone. Extended only by reproducible examples (see tests).
+_DOCUMENT_WORDS = (
+    "источник",
+    "методик",
+    "основан",
+    "документ",
+    "стратеги",
+    "распоряжен",
+    "постановлен",
+    "source",
+)
 
 
 def document_ref(hit: Mapping[str, JsonValue]) -> EvidenceRef:

@@ -901,7 +901,13 @@ class FlashAssistant:
             if context is None
             else context.model_dump(mode="json"),
         }
-        first_fact = (initial_metrics or initial_scores or [None])[0]
+        asked = (context.question or "").casefold() if context else ""
+        # A question about the index itself starts from the saved score.
+        first_fact: Metric | Score | None = (
+            initial_scores[0]
+            if initial_scores and any(word in asked for word in ("индекс", "оценк", "результат"))
+            else (initial_metrics or initial_scores or [None])[0]
+        )
         if first_fact is not None:
             # Live Flash copies this shape, so it is one complete valid answer.
             user_payload["response_example"] = {

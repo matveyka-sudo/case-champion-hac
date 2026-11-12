@@ -196,6 +196,22 @@ def _journey(saved: AnalysisResult, facts: list[Metric | Score]) -> str:
     )
 
 
+def _explain_details(metrics: list[Metric], scores: list[Score]) -> str:
+    """What the saved structure itself says about the selected facts; no causes."""
+    parts = []
+    if any(score.components for score in scores):
+        parts.append(
+            "Значение собрано из сохранённых компонентов расчёта; "
+            "каждый можно выбрать и разобрать отдельно. "
+        )
+    kinds = {metric.time_kind for metric in metrics if metric.status == "available"}
+    if kinds == {"movement"}:
+        parts.append("Это время движения; полное время цепочки оно не подтверждает. ")
+    elif kinds == {"complete_chain"}:
+        parts.append("Это время полной цепочки в области этого расчёта. ")
+    return "".join(parts)
+
+
 def _proven_observed_auxiliary(fact: Metric | Score) -> bool:
     return (
         isinstance(fact, Score)
@@ -286,11 +302,15 @@ def conversational_finding(
         )
     else:
         text = (
-            "Оценка связана с полным временем в принятой модели: более долгий путь "
-            "снижает доступность при тех же условиях. "
-            if saved.analysis_kind == "urban_passenger" and selected_scores
-            else "Здесь показан выбранный сохранённый показатель. "
-        ) + _coverage(facts)
+            (
+                "Оценка связана с полным временем в принятой модели: более долгий путь "
+                "снижает доступность при тех же условиях. "
+                if saved.analysis_kind == "urban_passenger" and selected_scores
+                else "Здесь показан выбранный сохранённый показатель. "
+            )
+            + _explain_details(selected_metrics, selected_scores)
+            + _coverage(facts)
+        )
     text = " ".join(part for part in (text, _safety(saved, facts)) if part)
     refs = list(
         dict.fromkeys(
