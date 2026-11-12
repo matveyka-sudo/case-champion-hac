@@ -1,4 +1,4 @@
-"""Bounded sharing of one pending enqueue, never a cache of validated inputs."""
+"""Serialize a bounded queue of enqueues and share identical retries."""
 
 import asyncio
 from collections.abc import Callable, Coroutine
@@ -9,7 +9,8 @@ from a2_api.core.errors import DomainError
 
 T = TypeVar("T")
 _MAX_WAITERS = 16
-_WAIT_SECONDS = 30
+_MAX_FLIGHTS = 16
+_WAIT_SECONDS = 90
 
 
 def _busy() -> DomainError:
@@ -26,12 +27,16 @@ class _Flight(Generic[T]):
 
 class Admission(Generic[T]):
     def __init__(self) -> None:
-        self._active: _Flight[T] | None = None
+        self._flights: dict[tuple[str, str], _Flight[T]] = {}
         self._closed = False
 
+    @property
+    def _active(self) -> _Flight[T] | None:
+        return next(iter(self._flights.values()), None)
+
     def _finished(self, flight: _Flight[T]) -> None:
-        if self._active is flight:
-            self._active = None
+        if self._flights.get(flight.key) is flight:
+            del self._flights[flight.key]
         if not flight.task.cancelled():
             # Retrieve abandoned failures without logging messages or inputs.
             flight.task.exception()
@@ -44,13 +49,11 @@ class Admission(Generic[T]):
     ) -> T:
         if self._closed:
             raise _busy()
-        flight = self._active
+        flight = self._flights.get(key)
         if flight is not None and flight.task.done():
             self._finished(flight)
             flight = None
         if flight is not None:
-            if flight.key != key:
-                raise _busy()
             if flight.digest != digest:
                 raise DomainError(
                     409, "idempotency_conflict", "Idempotency key used for another request"
@@ -58,14 +61,23 @@ class Admission(Generic[T]):
             if flight.waiters >= _MAX_WAITERS:
                 raise _busy()
         else:
-            coroutine = work()
+            if len(self._flights) >= _MAX_FLIGHTS:
+                raise _busy()
+            previous = next(reversed(self._flights.values()), None)
+
+            async def enqueue() -> T:
+                if previous is not None:
+                    await asyncio.wait((previous.task,))
+                return await work()
+
+            coroutine = enqueue()
             try:
                 task = asyncio.create_task(coroutine)
             except BaseException:
                 coroutine.close()
                 raise
             flight = _Flight(key, digest, task)
-            self._active = flight
+            self._flights[key] = flight
             task.add_done_callback(lambda _: self._finished(flight))
         flight.waiters += 1
         try:
@@ -77,8 +89,9 @@ class Admission(Generic[T]):
 
     async def close(self) -> None:
         self._closed = True
-        flight = self._active
-        if flight is not None:
+        flights = tuple(self._flights.values())
+        for flight in flights:
             flight.task.cancel()
-            await asyncio.gather(flight.task, return_exceptions=True)
+        await asyncio.gather(*(flight.task for flight in flights), return_exceptions=True)
+        for flight in flights:
             self._finished(flight)
