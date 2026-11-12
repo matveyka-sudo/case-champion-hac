@@ -118,8 +118,11 @@ class EvidenceRepository:
             return empty
         year_start = date(request.year, 1, 1) if request.year else None
         year_end = date(request.year, 12, 31) if request.year else None
+        # A natural question rarely contains every word of a document fragment:
+        # match any lexeme and let ts_rank_cd order fragments by how many match.
         rows = await self.pool.fetch(
-            "WITH query AS (SELECT plainto_tsquery('russian'::regconfig,$1) AS q) "
+            "WITH query AS (SELECT replace(plainto_tsquery('russian'::regconfig,$1)::text,"
+            "' & ',' | ')::tsquery AS q) "
             "SELECT payload,ts_rank_cd(search_vector,q) AS rank FROM evidence_chunks,query "
             "WHERE snapshot_hash=$2::jsonb->>snapshot_id AND source_id=ANY($3::text[]) "
             "AND territory_ids && $4::text[] AND ($5::text[] IS NULL OR source_id=ANY($5)) "
