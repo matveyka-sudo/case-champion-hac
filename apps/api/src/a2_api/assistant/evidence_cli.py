@@ -49,16 +49,10 @@ async def publish(
 
 
 async def status(pool: asyncpg.Pool, snapshot: AcceptedData) -> dict[str, object]:
-    rows = await pool.fetch(
-        "SELECT source_id,count(*) AS chunks FROM evidence_chunks "
-        "WHERE snapshot_id=$1 AND snapshot_hash=$2 GROUP BY source_id ORDER BY source_id",
-        snapshot.snapshot_id,
-        canonical_hash(snapshot.model_dump(mode="json")),
+    counts = await EvidenceRepository(pool).published_counts(
+        snapshot.snapshot_id, canonical_hash(snapshot.model_dump(mode="json"))
     )
-    return {
-        "snapshot_id": snapshot.snapshot_id,
-        "sources": {row["source_id"]: row["chunks"] for row in rows},
-    }
+    return {"snapshot_id": snapshot.snapshot_id, "sources": counts}
 
 
 async def _execute(command: str, snapshot_path: Path, chunks_path: Path | None) -> object:

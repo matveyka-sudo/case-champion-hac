@@ -92,6 +92,16 @@ class EvidenceRepository:
                             "Accepted chunk identity already published",
                         )
 
+    async def published_counts(self, snapshot_id: str, snapshot_hash: str) -> dict[str, int]:
+        """Published chunks per source for one exact accepted snapshot version."""
+        rows = await self.pool.fetch(
+            "SELECT source_id,count(*) AS chunks FROM evidence_chunks "
+            "WHERE snapshot_id=$1 AND snapshot_hash=$2 GROUP BY source_id ORDER BY source_id",
+            snapshot_id,
+            snapshot_hash,
+        )
+        return {str(row["source_id"]): int(row["chunks"]) for row in rows}
+
     async def search(
         self,
         request: EvidenceSearchRequest,
