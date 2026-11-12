@@ -422,6 +422,11 @@ def test_exported_artifacts_match_baseline_and_approved_contract_extensions(tmp_
     assert set(compact_extension["added"]).isdisjoint(expected)
     expected.update(compact_extension["replaced"])
     expected.update(compact_extension["added"])
+    passenger_extension = json.loads(
+        (Path(__file__).parent / "fixtures/passenger_schedule_schema_extension.json").read_text()
+    )
+    assert set(passenger_extension) == {"manifest.json", "openapi.json"}
+    expected.update(passenger_extension)
     cargo_extension = json.loads(
         (Path(__file__).parent / "fixtures/urban_cargo_schema_extension.json").read_text()
     )

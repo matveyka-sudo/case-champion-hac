@@ -1,6 +1,6 @@
 {
-  "manifest.json": "7dacfe1ba175a9257ca7cf3a7f096467b260e7a243b761d0437dfa45423e44c4",
-  "openapi.json": "9a53c3159ef3e5347ba74df24cde693d85b370caa599600846e5938470164fc2",
+  "manifest.json": "0fcf4e6e6bfc0a3aa40128647393e50c469f07035957fafdb82a3e130f935f2c",
+  "openapi.json": "11da52822d2fa91c1e95ab41fa296fc86b359c8c6a80d311574a644bdda2fc7b",
   "v2.AcceptedData.serialization.schema.json": "98a802387d60047febcb98185f3e7d511ce099426bbc243075fac13de60721a6",
   "v2.AcceptedData.validation.schema.json": "98a802387d60047febcb98185f3e7d511ce099426bbc243075fac13de60721a6",
   "v2.Capabilities.serialization.schema.json": "a1d7cd13b55792ec8b0abb2b98c46e9783d3be7468cf03351e8f273b96105b0e",
