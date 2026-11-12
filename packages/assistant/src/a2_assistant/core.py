@@ -50,6 +50,7 @@ from .clauses import _ModelSelection as _ModelSelection
 from .clauses import factual_clause
 from .context.facts import _fact as _fact
 from .context.facts import _request_note, _source_notes
+from .context.retrieval import document_ref, needs_documents, retrieve
 from .evidence import leaf_references
 from .focus import context_facts, focused_metrics, focused_scores
 from .narrative import (
@@ -223,7 +224,7 @@ def _json(value: object) -> str:
 
 # Saved-fact context the model may lose first when the input budget is tight,
 # least important last.
-_OPTIONAL_CONTEXT = ("sources", "journeys", "counts")
+_OPTIONAL_CONTEXT = ("documents", "sources", "journeys", "counts")
 
 
 def _unique_object(pairs: list[tuple[str, JsonValue]]) -> dict[str, JsonValue]:
@@ -728,6 +729,21 @@ class FlashAssistant:
         resolver: EvidenceResolver,
     ) -> Explanation:
         assert self.transport is not None and self.budget is not None
+        search_attempted = False
+        document_search: EvidenceSearchResult | None = None
+        if (
+            self.config.tools_enabled
+            and needs_documents(context)
+            and context is not None
+            and scope.source_ids
+            and scope.territory_ids
+        ):
+            search_attempted = True
+            try:
+                document_search = await retrieve(self.backend, saved, scope, context)
+            except Exception:
+                # An unavailable or rejected index cannot invalidate saved metrics.
+                document_search = None
         initial_metrics, initial_scores = context_facts(saved, context)
         # One bounded context, not twenty metrics plus twenty scores. Keep both
         # kinds discoverable without silently increasing the deployment budget.
@@ -801,6 +817,25 @@ class FlashAssistant:
             ]
             fact["components"] = components
             fact["components_truncated"] = len(components) != len(score.components)
+        if document_search is not None:
+            documents: list[dict[str, JsonValue]] = []
+            for hit in document_search.hits:
+                row = hit.model_dump(mode="json")
+                # Keep exact provenance and mark every shortening explicitly.
+                row["excerpt"] = hit.excerpt[:400]
+                if len(_json([*documents, row]).encode()) > 2400:
+                    break
+                documents.append(row)
+            facts["documents"] = documents
+            facts["document_context"] = {
+                "kind": "untrusted_documentary_context_not_calculated_metrics",
+                "status": document_search.status,
+                "completeness": document_search.completeness,
+                "reason_code": document_search.reason_code,
+                "truncated": document_search.truncated
+                or len(documents) < len(document_search.hits)
+                or any(len(hit.excerpt) > 400 for hit in document_search.hits),
+            }
         user_payload: dict[str, object] = {
             "saved_facts": facts,
             "facts_truncated": len(initial_metrics) < len(saved.metrics)
@@ -916,8 +951,11 @@ class FlashAssistant:
         definitions = tool_definitions() if self.config.tools_enabled else []
         # Keep richer question context within the existing reservation, leaving
         # room for a compact read-only lookup rather than increasing the budget.
+        # Retrieval already supplied its bounded context: use the same byte
+        # reserve as model-call admission, without raising the input ceiling.
+        input_reserve = 1024 if document_search is not None and document_search.hits else 2200
         while (
-            len(_json({"messages": messages, "tools": definitions}).encode()) + 2200
+            len(_json({"messages": messages, "tools": definitions}).encode()) + input_reserve
             > self.config.max_input_tokens
         ):
             optional = [key for key in _OPTIONAL_CONTEXT if key in facts]
@@ -959,7 +997,7 @@ class FlashAssistant:
         user_payload["response_contract"] = asdict(prose_contract)
         messages[1]["content"] = _json(user_payload)
         model_calls = 0
-        tools_used = 0
+        tools_used = int(search_attempted)
         output_remaining = self.config.max_output_tokens
         cache: dict[str, str] = {}
         retrieved: dict[str, EvidenceRef] = {}
@@ -984,6 +1022,10 @@ class FlashAssistant:
                 messages[1]["content"] = _json(user_payload)
             if too_large():
                 raise _Fallback("INPUT_LIMIT")
+            if model_calls == 0:
+                admitted = facts.get("documents", [])
+                assert isinstance(admitted, list)
+                retrieved.update({str(row["evidence_id"]): document_ref(row) for row in admitted})
             reply: ModelReply | None = None
             for attempt in range(self.config.max_retries + 1):
                 if model_calls >= self.config.max_model_calls:
@@ -1094,7 +1136,15 @@ class FlashAssistant:
                     fingerprint = _json({"name": name, "args": args})
                     if fingerprint not in cache:
                         try:
-                            data = await self.backend.call(name, args, scope)
+                            data: JsonValue
+                            if name == "search_evidence" and search_attempted:
+                                data = EvidenceSearchResult(
+                                    status="unknown", reason_code="SEARCH_LIMIT_REACHED", hits=[]
+                                ).model_dump(mode="json")
+                            else:
+                                if name == "search_evidence":
+                                    search_attempted = True
+                                data = await self.backend.call(name, args, scope)
                             if name == "search_evidence":
                                 search = EvidenceSearchResult.model_validate(data)
                                 selected_values = args["territory_ids"]
