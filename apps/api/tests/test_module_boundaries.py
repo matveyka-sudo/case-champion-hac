@@ -52,6 +52,9 @@ RUNTIME_SOURCE_BUDGET_EXTENSION = json.loads(
 ANALYSIS_GROUPS_EXTENSION = json.loads(
     (Path(__file__).parent / "fixtures/analysis_groups_extension.json").read_text()
 )
+DOCUMENT_RAG_EXTENSION = json.loads(
+    (Path(__file__).parent / "fixtures/document_rag_extension.json").read_text()
+)
 
 
 def private_sources_counter(expected, kind):
@@ -107,7 +110,13 @@ def approved_sql_counter(kind):
     }
     for extension in ANALYSIS_GROUPS_EXTENSION["sql_by_module"].values():
         expected.update(extension[kind])
-    return expected
+    # Reviewed document RAG change: one replaced FTS query and one added count query.
+    assert DOCUMENT_RAG_EXTENSION["module"] == "db/repositories/evidence.py"
+    removed = collections.Counter(DOCUMENT_RAG_EXTENSION["removed_" + kind])
+    assert removed <= expected
+    expected.subtract(removed)
+    expected.update(DOCUMENT_RAG_EXTENSION["added_" + kind])
+    return +expected
 
 
 def sql_literals(tree):
@@ -261,6 +270,7 @@ def test_all_185_existing_signatures_and_defaults():
         "a2_api.core.walk_observations:observation_directory",
     }
     assert set(PRIVATE_SOURCES_EXTENSION["signatures"]) == {"a2_api.core.jobs:V2JobContext"}
+    assert set(DOCUMENT_RAG_EXTENSION["signatures"]) == {"a2_api.assistant.alice:AliceSettings"}
     assert set(BATCH_EXTENSION["signatures"]) == {
         "a2_api.core.jobs:V2JobContext",
         "a2_api.services.analyses:AnalysisService",
@@ -289,6 +299,7 @@ def test_all_185_existing_signatures_and_defaults():
         | RUNTIME_SOURCE_BUDGET_EXTENSION["signatures"]
         | JOB_PROGRESS_EXTENSION["signatures"]
         | ANALYSIS_GROUPS_EXTENSION["signatures"]
+        | DOCUMENT_RAG_EXTENSION["signatures"]
     ).items():
         module, qualified = path.split(":")
         obj = importlib.import_module(module)

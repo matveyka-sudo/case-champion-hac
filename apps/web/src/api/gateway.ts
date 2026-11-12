@@ -1,5 +1,7 @@
 import { ApiClient, pause, ApiError } from "./client";
 import type { AnalysisRequest, Schemas, AnalysisResult } from "./types";
+/** Backend explanation budget (FlashConfig.total_timeout_seconds = 90 s) plus a network margin. */
+export const EXPLANATION_TIMEOUT_MS = 95000;
 export class BackendGateway {
   readonly client: ApiClient;
   constructor(client = new ApiClient()) {
@@ -47,7 +49,9 @@ export class BackendGateway {
     this.client.request(
       "/analyses/" + encodeURIComponent(id) + "/explanation",
       "Explanation",
-      { body, signal },
+      // The backend may spend up to 90 s (FlashConfig.total_timeout_seconds)
+      // before it answers with a template; do not abort before that.
+      { body, signal, timeoutMs: EXPLANATION_TIMEOUT_MS },
     );
   async proposals(id: string, signal?: AbortSignal) {
     await this.client.capabilities();

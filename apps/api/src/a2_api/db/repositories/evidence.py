@@ -92,6 +92,16 @@ class EvidenceRepository:
                             "Accepted chunk identity already published",
                         )
 
+    async def published_counts(self, snapshot_id: str, snapshot_hash: str) -> dict[str, int]:
+        """Published chunks per source for one exact accepted snapshot version."""
+        rows = await self.pool.fetch(
+            "SELECT source_id,count(*) AS chunks FROM evidence_chunks "
+            "WHERE snapshot_id=$1 AND snapshot_hash=$2 GROUP BY source_id ORDER BY source_id",
+            snapshot_id,
+            snapshot_hash,
+        )
+        return {str(row["source_id"]): int(row["chunks"]) for row in rows}
+
     async def search(
         self,
         request: EvidenceSearchRequest,
@@ -118,8 +128,11 @@ class EvidenceRepository:
             return empty
         year_start = date(request.year, 1, 1) if request.year else None
         year_end = date(request.year, 12, 31) if request.year else None
+        # A natural question rarely contains every word of a document fragment:
+        # match any lexeme and let ts_rank_cd order fragments by how many match.
         rows = await self.pool.fetch(
-            "WITH query AS (SELECT plainto_tsquery('russian'::regconfig,$1) AS q) "
+            "WITH query AS (SELECT replace(plainto_tsquery('russian'::regconfig,$1)::text,"
+            "' & ',' | ')::tsquery AS q) "
             "SELECT payload,ts_rank_cd(search_vector,q) AS rank FROM evidence_chunks,query "
             "WHERE snapshot_hash=$2::jsonb->>snapshot_id AND source_id=ANY($3::text[]) "
             "AND territory_ids && $4::text[] AND ($5::text[] IS NULL OR source_id=ANY($5)) "

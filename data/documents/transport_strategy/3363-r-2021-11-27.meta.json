@@ -1,0 +1,22 @@
+{
+ "evidence_id": "transport_strategy:3363-r:2021-11-27",
+ "source_id": "transport_strategy",
+ "source_version": "3363-r-2021-11-27",
+ "url": "http://static.government.ru/media/files/7enYF2uL5kFZlOOpQhLl0nUT91RjCbeR.pdf",
+ "url_status": "inferred_from_file_name_not_rechecked",
+ "retrieved_at": "2026-11-12T17:26:00+03:00",
+ "title": "Транспортная стратегия Российской Федерации до 2030 года с прогнозом на период до 2035 года (распоряжение Правительства РФ от 27.11.2021 № 3363-р)",
+ "document_date": "2021-11-27",
+ "valid_from": "2021-11-27",
+ "valid_to": "2035-12-31",
+ "license": "official-act-not-copyrighted-gk-rf-1259-6",
+ "file_sha256": "909c861d2197a5e5b5fba5b55eb8faae72e386c52d8453e619227ac07676070d",
+ "file": "data/raw/transport_strategy/3363-r-2021-11-27.pdf",
+ "pages": 285,
+ "text": "data/documents/transport_strategy/3363-r-2021-11-27.txt",
+ "text_extraction": "macOS PDFKit PDFDocument.string per page; a2_data_pipeline.documents clean (1 line with a personal name removed)",
+ "start": "I. Общие положения",
+ "rejected_inputs": [
+  {"file_sha256": "78b98633536459df8b1d4621d59d00e365bd610868ab98883cce94374c1df6fe", "reason": "draft of 14.08.2021 marked ПРОЕКТ, not the approved act"}
+ ]
+}
