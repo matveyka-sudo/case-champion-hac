@@ -65,9 +65,11 @@ def test_walk_notes_cannot_be_copied_to_other_mode_or_missing_selected_facts():
 
 
 def test_saved_limitations_remain_bounded_with_readable_notes():
-    saved = analysis().model_copy(update={"limitations": [f"TEST_ONLY-{i}" for i in range(20)]})
+    saved = analysis().model_copy(update={"limitations": [f"TEST_ONLY-{i}" for i in range(15)]})
     answer = core.template_explanation(saved, "request", "DISABLED")
     assert len(answer.limitations) <= 20
+    # Saved limitations come first; readable notes fill the remaining places.
+    assert answer.limitations[:15] == saved.limitations
     assert core._URBAN_FORMULA_NOTE in answer.limitations
 
 
@@ -83,9 +85,10 @@ async def test_prompt_supplies_exact_saved_status_code_for_scores(value, partial
     assert answer.status == "generated"
     messages = transport.calls[0]["messages"]
     facts = json.loads(messages[1]["content"])["saved_facts"]
-    assert facts["scores"][0]["required_explanation_code"] == code
-    assert "COPY explanation_code EXACTLY" in messages[0]["content"]
-    assert "Never use completeness, reason_code" in messages[0]["content"]
+    # The server derives the code from the saved status; the model need not copy it.
+    assert facts["scores"][0]["status"] == ("available" if value is not None else "unknown")
+    assert "required_explanation_code" not in facts["scores"][0]
+    assert "explanation_code" not in messages[0]["content"]
 
 
 @pytest.mark.asyncio
@@ -108,7 +111,8 @@ async def test_prompt_supplies_exact_saved_status_code_for_metrics(status):
     answer = await explain_saved(agent, saved, point="point")
     assert answer.status == "generated"
     facts = json.loads(transport.calls[0]["messages"][1]["content"])["saved_facts"]
-    assert facts["metrics"][0]["required_explanation_code"] == code
+    assert facts["metrics"][0]["status"] == status
+    assert "required_explanation_code" not in facts["metrics"][0]
 
 
 @pytest.mark.asyncio

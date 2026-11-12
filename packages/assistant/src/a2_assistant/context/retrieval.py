@@ -1,9 +1,21 @@
-"""One gated, scoped documentary lookup through the existing read-only backend."""
+"""One gated, scoped documentary lookup through the existing read-only backend.
+
+Citation contract (shared with apps/web evidenceGroups.ts):
+
+* a document is identified by evidence_id, source_id, url and retrieved_at;
+* a chunk adds only its section, it never changes the document;
+* the answer carries one public reference per document. For a document the
+  saved result already cites, that reference is the saved leaf unchanged, so
+  the browser's five-field comparison (plus section and observed_at) holds;
+* documents are context found by search, never calculated metrics.
+"""
+
+from collections.abc import Iterable, Mapping
 
 from a2_contracts.v2.assistant import ExplanationRequest
 from a2_contracts.v2.evidence import EvidenceResolver
 from a2_contracts.v2.results import AnalysisResult, EvidenceRef
-from a2_contracts.v2.retrieval import EvidenceSearchRequest, EvidenceSearchResult
+from a2_contracts.v2.retrieval import EvidenceHit, EvidenceSearchRequest, EvidenceSearchResult
 from pydantic import JsonValue
 
 from ..tools import AccessScope, ToolBackend, validate_tool
@@ -16,11 +28,85 @@ def needs_documents(context: ExplanationRequest | None) -> bool:
     )
 
 
-def document_ref(hit: dict[str, JsonValue]) -> EvidenceRef:
+def document_ref(hit: Mapping[str, JsonValue]) -> EvidenceRef:
     return EvidenceRef.model_validate(
         {key: hit[key] for key in ("evidence_id", "source_id", "url", "retrieved_at", "section")}
         | {"observed_at": None}
     )
+
+
+def _cut(text: str, limit: int) -> str:
+    return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+
+
+class DocumentCitations:
+    """Chunks admitted for one answer, grouped into one reference per document."""
+
+    def __init__(self, saved: AnalysisResult) -> None:
+        self._saved = {ref.evidence_id: ref for ref in saved.evidence_refs}
+        self._documents: dict[str, EvidenceRef] = {}
+        self._chunks: dict[str, dict[str, tuple[str, str]]] = {}
+
+    def admit(self, hit: EvidenceHit | Mapping[str, JsonValue]) -> None:
+        row = hit.model_dump(mode="json") if isinstance(hit, EvidenceHit) else hit
+        ref = document_ref(row)
+        # A group is a local alias of the saved result, never a retrieved document.
+        EvidenceResolver((ref.evidence_id,))
+        for prior in (self._saved.get(ref.evidence_id), self._documents.get(ref.evidence_id)):
+            if prior is not None and (prior.source_id, prior.url, prior.retrieved_at) != (
+                ref.source_id,
+                ref.url,
+                ref.retrieved_at,
+            ):
+                raise ValueError("Conflicting document provenance")
+        if ref.evidence_id not in self._documents and len(self._documents) >= 50:
+            raise ValueError("Too many retrieved evidence references")
+        self._documents.setdefault(ref.evidence_id, ref)
+        self._chunks.setdefault(ref.evidence_id, {})[str(row["chunk_id"])] = (
+            str(row["title"]),
+            ref.section,
+        )
+
+    @property
+    def ids(self) -> frozenset[str]:
+        return frozenset(self._documents)
+
+    def sections(self, evidence_id: str) -> list[str]:
+        """Selected sections in chunk order, whatever order the index returned them in."""
+        chunks = self._chunks[evidence_id]
+        return list(dict.fromkeys(chunks[chunk_id][1] for chunk_id in sorted(chunks)))
+
+    def title(self, evidence_id: str) -> str:
+        chunks = self._chunks[evidence_id]
+        return chunks[min(chunks)][0]
+
+    def references(self) -> list[EvidenceRef]:
+        result = []
+        for evidence_id in sorted(self._documents):
+            known = self._saved.get(evidence_id)
+            result.append(
+                known
+                if known is not None
+                else self._documents[evidence_id].model_copy(
+                    update={"section": _cut("; ".join(self.sections(evidence_id)), 300)}
+                )
+            )
+        return result
+
+    def sentence(self, evidence_ids: Iterable[str], limit: int) -> str:
+        """Server-owned provenance wording: titles and sections, never document text."""
+        parts = []
+        for evidence_id in sorted(set(evidence_ids) & self.ids):
+            sections = self.sections(evidence_id)
+            parts.append(
+                f"«{self.title(evidence_id)}», "
+                + ("раздел: " if len(sections) == 1 else "разделы: ")
+                + "; ".join(sections)
+            )
+        if not parts:
+            return ""
+        text = "Документальный контекст, не расчётный показатель: " + " | ".join(parts) + "."
+        return _cut(text, limit) if limit >= 80 else ""
 
 
 async def retrieve(
@@ -38,9 +124,8 @@ async def retrieve(
     if saved.analysis_id not in scope.analysis_ids:
         raise ValueError("Unauthorized saved analysis")
     result = EvidenceSearchResult.model_validate(await backend.call(name, args, scope))
-    prior = {ref.evidence_id: ref for ref in saved.evidence_refs}
+    citations = DocumentCitations(saved)
     for hit in result.hits:
-        EvidenceResolver((hit.evidence_id,))
         if (
             hit.snapshot_id != saved.snapshot_id
             or hit.snapshot_id not in scope.snapshot_ids
@@ -49,13 +134,6 @@ async def retrieve(
             or not hit.valid_from <= day <= hit.valid_to
         ):
             raise ValueError("Document outside authorized scope or period")
-        ref = document_ref(hit.model_dump(mode="json"))
-        old = prior.get(ref.evidence_id)
-        if old is not None and (old.source_id, old.url, old.retrieved_at) != (
-            ref.source_id,
-            ref.url,
-            ref.retrieved_at,
-        ):
-            raise ValueError("Conflicting document provenance")
-        prior[ref.evidence_id] = ref
+        # Same provenance rule as the final citations: one identity per document.
+        citations.admit(hit)
     return result

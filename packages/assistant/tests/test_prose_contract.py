@@ -79,12 +79,9 @@ async def test_response_example_and_advertised_contract_round_trip_offline():
 
     async def echo_example():
         payload = json.loads(transport.calls[-1]["messages"][1]["content"])
-        contract = payload["response_contract"]
-        assert contract["max_optional_atoms"] == 1
-        assert contract["max_occurrences_per_placeholder"] == 1
-        assert contract["final_text_max_characters"] == 1000
-        assert 0 < contract["qualitative_max_characters"] < 650
-        assert "at most one optional atom" in transport.calls[-1]["messages"][0]["content"]
+        # The legacy prose budget is validated by the server, not advertised.
+        assert "response_contract" not in payload
+        assert "atom" not in transport.calls[-1]["messages"][0]["content"]
         return reply(payload["response_example"])
 
     transport.responses = [echo_example]

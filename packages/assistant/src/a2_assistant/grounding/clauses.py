@@ -5,15 +5,61 @@ Source text and the question cannot extend the accepted language.
 """
 
 import re
+from datetime import datetime
 from typing import Annotated, Literal, cast
 
 from a2_contracts.v2.assistant import Finding
 from a2_contracts.v2.results import AnalysisResult
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .narrative import AnswerMode, conversational_finding
+from .narrative import ANSWER_MODES, AnswerMode, conversational_finding
 
-ClauseId = AnswerMode | Literal["components", "time_scope"]
+ClauseId = AnswerMode | Literal["components", "time_scope", "sources"]
+CLAUSE_IDS = (*ANSWER_MODES, "components", "time_scope", "sources")
+
+# Deterministic hint for the response example only: the model still chooses.
+# Every suggested clause renders for any single saved fact.
+_INTENTS: tuple[tuple[ClauseId, tuple[str, ...]], ...] = (
+    ("sources", ("источник", "документ", "основан", "откуда", "source")),
+    ("compare", ("сравн",)),
+    ("methodology", ("методик", "формул", "как счита", "как рассчит", "норматив")),
+    (
+        "unsupported",
+        ("задерж", "пробк", "очеред", "закрыт", "санкц", "виноват", "цен", "стоимост", "прогноз"),
+    ),
+    ("journey", ("маршрут", "участ", "цепоч", "пересад", "ожидан")),
+    ("improve", ("улучш", "сценар", "измени", "ускор")),
+    ("coverage", ("неизвест", "нет данных", "отсутств", "частич", "покрыт", "полнот", "partial")),
+)
+
+
+def suggested_clause(question: str | None) -> ClauseId:
+    text = (question or "").casefold()
+    for clause, words in _INTENTS:
+        if any(word in text for word in words):
+            return clause
+    return "explain"
+
+
+def _sources(saved: AnalysisResult, refs: list[str]) -> str:
+    """Provenance of the selected facts from the saved result only."""
+    by_id = {ref.evidence_id: ref for ref in saved.evidence_refs}
+    rows = [by_id[ref] for ref in refs if ref in by_id]
+    if not rows:
+        return "У выбранных показателей в сохранённом расчёте нет привязанных источников."
+    grouped: dict[str, datetime] = {}
+    for row in rows:
+        grouped[row.source_id] = min(grouped.get(row.source_id, row.retrieved_at), row.retrieved_at)
+    shown = [
+        f"{source_id} (получено {when:%d.%m.%Y})" for source_id, when in list(grouped.items())[:3]
+    ]
+    more = len(grouped) - len(shown)
+    return (
+        "Выбранные показатели опираются на источники сохранённого расчёта: "
+        + "; ".join(shown)
+        + (f" и ещё {more}" if more else "")
+        + ". Это происхождение исходных данных, а не подтверждение полноты всех объектов и путей."
+    )
 
 
 def factual_clause(
@@ -24,7 +70,7 @@ def factual_clause(
     *,
     has_proposal: bool,
 ) -> Finding:
-    if mode in {"components", "time_scope"}:
+    if mode in {"components", "time_scope", "sources"}:
         result = conversational_finding(
             "help", saved, metric_ids, score_ids, has_proposal=has_proposal
         )
@@ -45,6 +91,8 @@ def factual_clause(
             ):
                 raise ValueError("No selected component relationship")
             text = "Выбранные показатели связаны сохранёнными компонентами расчёта."
+        elif mode == "sources":
+            text = _sources(saved, result.evidence_refs)
         else:
             if any(metrics[mid].status != "available" for mid in metric_ids):
                 raise ValueError("Unknown saved time")
@@ -147,9 +195,18 @@ class _FindingSelection(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     metric_id: Annotated[str, Field(min_length=1, max_length=200)] | None = None
     score_id: Annotated[str, Field(min_length=1, max_length=200)] | None = None
-    explanation_code: Literal[
-        "saved_value", "travel_time", "unknown", "not_applicable", "pending", "methodology_pending"
-    ]
+    # Optional: the server knows the saved status. A supplied code must still match it.
+    explanation_code: (
+        Literal[
+            "saved_value",
+            "travel_time",
+            "unknown",
+            "not_applicable",
+            "pending",
+            "methodology_pending",
+        ]
+        | None
+    ) = None
 
     @model_validator(mode="after")
     def one_reference(self) -> "_FindingSelection":
@@ -170,3 +227,15 @@ class _ModelSelection(BaseModel):
     template_ids: list[Annotated[str, Field(min_length=1, max_length=200)]] = Field(
         default_factory=list, max_length=10
     )
+
+    @model_validator(mode="after")
+    def one_format(self) -> "_ModelSelection":
+        if self.clause_id is not None and self.paragraph is not None:
+            raise ValueError("clause_id and paragraph are different answer formats")
+        if (
+            self.clause_id is not None
+            and self.answer_mode is not None
+            and self.clause_id != self.answer_mode
+        ):
+            raise ValueError("clause_id and answer_mode disagree")
+        return self

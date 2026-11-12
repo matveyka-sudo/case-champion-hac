@@ -4,7 +4,6 @@ from a2_contracts.v2.evidence import EvidenceResolver
 from a2_contracts.v2.results import AnalysisResult, Metric, Score
 
 from ..evidence import leaf_references
-from ..prose import fact_placeholder
 
 
 def _request_note(saved: AnalysisResult) -> dict[str, object]:
@@ -50,9 +49,7 @@ def _fact(value: Metric | Score, resolver: EvidenceResolver) -> dict[str, object
         "status": value.status,
         "completeness": value.completeness,
         "reason_code": value.reason_code,
-        "required_explanation_code": "saved_value" if value.status == "available" else value.status,
         "subject": value.subject.model_dump(mode="json", exclude_none=True),
-        "placeholder": fact_placeholder(value),
         "evidence_ids": leaf_references(
             value.source_refs if isinstance(value, Metric) else value.evidence_refs, resolver
         )[:5],

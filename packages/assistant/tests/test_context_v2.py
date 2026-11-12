@@ -58,7 +58,8 @@ async def test_context_preserves_edges_sources_limits_and_opaque_values():
     assert facts["limitations"] == saved.limitations
     assert facts["counts_state"] == "not_in_saved_result"
     assert facts["scores"][0]["components"] == [{"kind": "metric", "id": "late-component"}]
-    assert facts["metrics"][0]["placeholder"] == "[[metric:late-component]]"
+    assert facts["metrics"][0]["metric_id"] == "late-component"
+    assert "placeholder" not in facts["metrics"][0]
     assert "value" not in facts["metrics"][0]
     assert result.findings[0].score_claims[0].value == 25.0
     if "sources" in facts:
@@ -79,7 +80,7 @@ def test_movement_is_never_promoted_to_complete_delivery():
     metric = saved.metrics[0].model_copy(update={"time_kind": "movement"})
     fact = _fact(metric, require_result_evidence(saved))
     assert fact["time_kind"] == "movement"
-    assert fact["placeholder"] == "[[metric:travel-time]]"
+    assert fact["metric_id"] == "travel-time" and "placeholder" not in fact
 
 
 @pytest.mark.asyncio

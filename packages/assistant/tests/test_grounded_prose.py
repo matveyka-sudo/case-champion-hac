@@ -156,7 +156,8 @@ async def test_paragraph_second_point_requires_matching_scoped_saved_lookup(
         assert [claim.value for claim in result.findings[0].score_claims] == [25.0, other_value]
         assert ("Сравнение неполное" in text) == (other_value is None)
         exposed = json.loads(transport.calls[1]["messages"][-1]["content"])
-        assert exposed["untrusted_tool_data"]["scores"][0]["placeholder"] == "[[score:other]]"
+        assert exposed["untrusted_tool_data"]["scores"][0]["score_id"] == "other"
+        assert "placeholder" not in exposed["untrusted_tool_data"]["scores"][0]
     else:
         assert result.status == "template" and result.reason_code == "INVALID_EXPLANATION"
         assert result.findings[0].score_ids == ["accessibility"]
@@ -433,16 +434,18 @@ async def test_source_mutation_is_rejected_even_if_the_claimed_result_hash_is_un
 
 
 @pytest.mark.asyncio
-async def test_prompt_describes_bounded_paragraph_and_exposes_only_saved_opaque_tokens():
+async def test_prompt_describes_one_server_rendered_format_without_prose_tokens():
     saved, result = await generated_answer()
     _, transport, _, _ = await answer(saved, "Почему этот результат ограничен?", "coverage")
     sent = transport.calls[0]
     facts = json.loads(sent["messages"][1]["content"])
-    assert "paragraph" in sent["messages"][0]["content"]
-    assert "650 characters" in sent["messages"][0]["content"]
-    assert "[[comparison]]" in sent["messages"][0]["content"]
+    system = sent["messages"][0]["content"]
+    # The legacy paragraph stays accepted by the server but is no longer advertised.
+    assert "clause_id" in system and "the server writes every sentence" in system
+    assert "paragraph" not in system and "[[" not in system and "atom" not in system
+    assert "response_contract" not in facts
     fact = facts["saved_facts"]["scores"][0]
-    assert fact["placeholder"] == "[[score:accessibility]]"
+    assert "placeholder" not in fact and "required_explanation_code" not in fact
     assert fact["evidence_ids"] == ["evidence"]
     assert "value" not in fact and "claims" not in fact
     assert sent["max_tokens"] == 2000
