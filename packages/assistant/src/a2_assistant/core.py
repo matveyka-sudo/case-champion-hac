@@ -1143,6 +1143,17 @@ class FlashAssistant:
                             if (
                                 name == "get_analysis"
                                 and isinstance(data, dict)
+                                and (
+                                    data.get("analysis_id") != saved.analysis_id
+                                    or data.get("result_hash") != saved.result_hash
+                                )
+                            ):
+                                # Never forward an unbound saved-result payload. Besides
+                                # exposing stale data, it may exhaust the next input budget.
+                                data = {"status": "unknown", "reason_code": "SAVED_LOOKUP_MISMATCH"}
+                            if (
+                                name == "get_analysis"
+                                and isinstance(data, dict)
                                 and data.get("analysis_id") == saved.analysis_id
                                 and data.get("result_hash") == saved.result_hash
                             ):
