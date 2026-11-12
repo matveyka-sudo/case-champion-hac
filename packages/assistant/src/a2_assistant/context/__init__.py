@@ -1,0 +1,1 @@
+"""Internal assistant context implementation."""

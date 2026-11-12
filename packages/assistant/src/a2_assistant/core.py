@@ -22,7 +22,7 @@ import time
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict
 from decimal import Decimal
-from typing import Annotated, Literal, Protocol
+from typing import Protocol
 from uuid import uuid4
 
 from a2_contracts.v2.assistant import (
@@ -36,24 +36,24 @@ from a2_contracts.v2.assistant import (
 )
 from a2_contracts.v2.evidence import EvidenceResolver, require_result_evidence
 from a2_contracts.v2.requests import UrbanPassengerRequest
-from a2_contracts.v2.results import AnalysisResult, EvidenceRef, Metric, Score
+from a2_contracts.v2.results import AnalysisResult, EvidenceRef, Score
 from a2_contracts.v2.retrieval import EvidenceSearchResult
 from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
     JsonValue,
     TypeAdapter,
     ValidationError,
-    model_validator,
 )
 from pydantic_core import ErrorDetails
 
+from .clauses import _FindingSelection as _FindingSelection
+from .clauses import _ModelSelection as _ModelSelection
+from .clauses import factual_clause
+from .context.facts import _fact as _fact
+from .context.facts import _request_note, _source_notes
 from .evidence import leaf_references
 from .focus import context_facts, focused_metrics, focused_scores
 from .narrative import (
     ANSWER_MODES,
-    AnswerMode,
     conversational_finding,
     verified_conversational_finding,
 )
@@ -151,34 +151,6 @@ def _urban_passenger_notes(
     return notes
 
 
-class _FindingSelection(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
-    metric_id: Annotated[str, Field(min_length=1, max_length=200)] | None = None
-    score_id: Annotated[str, Field(min_length=1, max_length=200)] | None = None
-    explanation_code: Literal[
-        "saved_value", "travel_time", "unknown", "not_applicable", "pending", "methodology_pending"
-    ]
-
-    @model_validator(mode="after")
-    def one_reference(self) -> "_FindingSelection":
-        if (self.metric_id is None) == (self.score_id is None):
-            raise ValueError("Select exactly one saved metric or score")
-        return self
-
-
-class _ModelSelection(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
-    answer_mode: AnswerMode | None = None
-    paragraph: Annotated[str, Field(min_length=1, max_length=650)] | None = None
-    evidence_ids: list[Annotated[str, Field(min_length=1, max_length=200)]] = Field(
-        default_factory=list, max_length=15
-    )
-    findings: list[_FindingSelection] = Field(min_length=1, max_length=20)
-    template_ids: list[Annotated[str, Field(min_length=1, max_length=200)]] = Field(
-        default_factory=list, max_length=10
-    )
-
-
 class DeploymentBudget(Protocol):
     durable: bool
     currency: str
@@ -252,65 +224,6 @@ def _json(value: object) -> str:
 # Saved-fact context the model may lose first when the input budget is tight,
 # least important last.
 _OPTIONAL_CONTEXT = ("sources", "journeys", "counts")
-
-
-def _request_note(saved: AnalysisResult) -> dict[str, object]:
-    """What the user asked to calculate, without internal version fields."""
-
-    request = saved.request.model_dump(mode="json", exclude_none=True)
-    return {
-        key: value
-        for key, value in request.items()
-        if key not in {"schema_version", "methodology", "snapshot_id", "priorities"}
-    }
-
-
-def _source_notes(
-    saved: AnalysisResult, facts: list[Metric | Score], resolver: EvidenceResolver
-) -> list[dict[str, object]]:
-    """Short descriptions of the saved sources behind the selected facts (data only)."""
-
-    wanted: list[str] = []
-    for fact in facts:
-        refs = fact.source_refs if isinstance(fact, Metric) else fact.evidence_refs
-        wanted += [ref for ref in leaf_references(refs, resolver) if ref not in wanted]
-    by_id = {ref.evidence_id: ref for ref in saved.evidence_refs}
-    return [
-        {
-            "evidence_id": ref.evidence_id,
-            "source_id": ref.source_id,
-            "section": (ref.section or "")[:200],
-            "url": str(ref.url),
-            "retrieved_at": ref.retrieved_at.isoformat(),
-            "observed_at": ref.observed_at.isoformat() if ref.observed_at else None,
-        }
-        for ref in (by_id[item] for item in wanted[:10] if item in by_id)
-    ]
-
-
-def _fact(value: Metric | Score, resolver: EvidenceResolver) -> dict[str, object]:
-    result: dict[str, object] = {
-        "metric_id" if isinstance(value, Metric) else "score_id": (
-            value.metric_id if isinstance(value, Metric) else value.score_id
-        ),
-        "name": value.name,
-        "status": value.status,
-        "completeness": value.completeness,
-        "reason_code": value.reason_code,
-        "required_explanation_code": "saved_value" if value.status == "available" else value.status,
-        "subject": value.subject.model_dump(mode="json", exclude_none=True),
-        "placeholder": fact_placeholder(value),
-        "evidence_ids": leaf_references(
-            value.source_refs if isinstance(value, Metric) else value.evidence_refs, resolver
-        )[:5],
-    }
-    if isinstance(value, Metric):
-        result["unit"] = value.unit
-        result["journey_saved"] = value.journey_id is not None
-        result["time_kind"] = value.time_kind
-    else:
-        result["ranking_eligible"] = value.ranking_eligible
-    return result
 
 
 def _unique_object(pairs: list[tuple[str, JsonValue]]) -> dict[str, JsonValue]:
@@ -432,7 +345,22 @@ def _build_content(
         or not set(selection.template_ids) <= templates
     ):
         raise _ModelAnswerRejected("proposal_invalid")
-    if selection.paragraph is not None:
+    if selection.clause_id is not None:
+        if selection.paragraph is not None or selection.evidence_ids or len(findings) > 3:
+            raise _ModelAnswerRejected("schema_invalid")
+        try:
+            findings = [
+                factual_clause(
+                    selection.clause_id,
+                    saved,
+                    [identifier for finding in findings for identifier in finding.metric_ids],
+                    [identifier for finding in findings for identifier in finding.score_ids],
+                    has_proposal=bool(selection.template_ids),
+                )
+            ]
+        except ValueError:
+            raise _ModelAnswerRejected("reference_invalid") from None
+    elif selection.paragraph is not None:
         if len(findings) > 3:
             raise _ModelAnswerRejected("schema_invalid")
         try:
@@ -932,8 +860,9 @@ class FlashAssistant:
             }
         output_instructions = (
             "Return exactly one JSON object, no Markdown, code fences, or text outside JSON. "
-            "Answer the freeform question naturally in a Russian paragraph (at most 650 characters), "
-            "Use paragraph plus findings, evidence_ids and template_ids. "
+            "Russian freeform question. Legacy paragraph limit: 650 characters. "
+            "Prefer clause_id (answer_mode, components or time_scope) with findings/template_ids; server renders facts. "
+            "paragraph is legacy: use only presentation templates, never free factual assertions. "
             "answer_mode is an optional compatibility fallback: explain=why, methodology=formula/H, "
             "journey=which leg, coverage=unknown/limits, improve=saved scenario, compare=two facts, "
             "help=how to use, unsupported=missing facts/new calculations/prices/blame. "
@@ -951,10 +880,9 @@ class FlashAssistant:
             "Do not assert causes, forecasts, no-route conclusions, complete coverage, rankings, "
             "a proven minimum or a real-city interpretation of demo/observed data. "
             "Explain missing grounds plainly; the server always adds required scope warnings. "
-            "Use words of saved facts and limitations; anything else only as what these data cannot establish. "
             "Each finding has exactly one metric_id OR score_id plus explanation_code. "
             "COPY explanation_code EXACTLY from required_explanation_code on each selected saved fact. "
-            "Never use completeness, reason_code, a display label, or invented wording as explanation_code. "
+            "Never use completeness, reason_code as explanation_code. "
             "template_ids must be registered and relevant to improvement, otherwise []. "
             + (
                 "For comparison beyond this subset, get_analysis accepts a saved entity selection; "
@@ -1317,7 +1245,9 @@ class FlashAssistant:
                     saved,
                     templates,
                     retrieved_evidence=list(retrieved.values()),
-                    approved=content.findings[0] if selection.paragraph is not None else None,
+                    approved=content.findings[0]
+                    if selection.paragraph is not None or selection.clause_id is not None
+                    else None,
                 )
             except _ModelAnswerRejected as exc:
                 logger.warning(
@@ -1340,7 +1270,7 @@ class FlashAssistant:
             )
             return (
                 seal_explanation(explanation, saved)
-                if selection.paragraph is not None
+                if selection.paragraph is not None or selection.clause_id is not None
                 else explanation
             )
         raise _Fallback("MODEL_LIMIT")

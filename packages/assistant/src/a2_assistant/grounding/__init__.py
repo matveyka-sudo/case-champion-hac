@@ -1,0 +1,1 @@
+"""Internal assistant grounding implementation."""
