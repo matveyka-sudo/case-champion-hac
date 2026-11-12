@@ -120,6 +120,7 @@ def analyze_urban_cargo(
     area_km2: float | None,
     *,
     config: FreightConfig,
+    bounded_selection: bool = False,
 ) -> UrbanCargoAnalysis:
     at = utc(requested_at)
     kinds = ids(selected_node_types)
@@ -221,9 +222,9 @@ def analyze_urban_cargo(
             reasons = set()
             if site_id not in site_by_id:
                 reasons.add("EXPECTED_PHYSICAL_SITE_MISSING")
-            if not coverage.roster_complete:
+            if not (coverage.roster_complete or bounded_selection):
                 reasons.add("PHYSICAL_SITE_ROSTER_INCOMPLETE")
-            if kind not in coverage.complete_node_types:
+            if kind not in coverage.complete_node_types and not bounded_selection:
                 reasons.add("CARGO_NODE_CATALOGUE_INCOMPLETE")
             observed = []
             allowed = []
@@ -245,7 +246,9 @@ def analyze_urban_cargo(
                     if route.seconds is not None:
                         allowed.append((route.seconds, node.node_id, route.route_id, route))
             best = min(allowed, key=lambda item: item[:3]) if allowed else None
-            proven = not reasons
+            # A finite roster can establish a minimum among its members.
+            # An empty or incompatible subset cannot prove citywide absence.
+            proven = not reasons and (best is not None or not bounded_selection)
             evaluation = urban_cargo_site_index(
                 site_id,
                 best[0] if best is not None and proven else None,
@@ -268,14 +271,15 @@ def analyze_urban_cargo(
         index = urban_cargo_territory_index(
             tuple(s.evaluation for s in site_results), scope=cargo_scope
         )
-        if not coverage.roster_complete:
+        if not (coverage.roster_complete or bounded_selection):
             index = MetricResult(None, "unknown", "PHYSICAL_SITE_ROSTER_INCOMPLETE")
         results.append(
             UrbanCargoTypeAnalysis(
                 cargo_scope,
                 tuple(site_results),
                 index,
-                coverage.roster_complete
+                not bounded_selection
+                and coverage.roster_complete
                 and all(s.minimum_proven for s in site_results)
                 and index.value is not None,
             )
@@ -295,6 +299,7 @@ def analyze_urban_cargo(
             area_km2,
             config.methodology_version,
             config.area_h_bands,
+            *(("bounded-selection",) if bounded_selection else ()),
         )
     )
     return UrbanCargoAnalysis(

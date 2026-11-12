@@ -20,8 +20,9 @@ const drawn = vi.hoisted(() => ({
 }));
 vi.mock("leaflet", () => ({
   default: {
+    control: { attribution: () => ({ addTo: vi.fn() }) },
     map: () => {
-      const map = { createPane: () => ({ style: {} }), fitBounds: () => { drawn.commands.push("home"); return map; }, invalidateSize: vi.fn(), remove: vi.fn(), getZoom: () => 10,
+      const map = { createPane: () => ({ style: {} }), fitBounds: () => { drawn.commands.push("home"); return map; }, invalidateSize: vi.fn(), remove: vi.fn(), on: vi.fn(), off: vi.fn(), getZoom: () => 10,
         zoomIn: () => drawn.commands.push("in"), zoomOut: () => drawn.commands.push("out"),
         setZoomAround: (location: unknown, zoom: number) => drawn.zooms.push({ location, zoom }),
         setView: (center: unknown, zoom: number) => { drawn.views.push({ center, zoom }); drawn.commands.push("city"); return map; },

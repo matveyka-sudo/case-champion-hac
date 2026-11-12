@@ -26,7 +26,7 @@ class PassengerScheduleObservation(BaseModel):
     completed_dates: list[date]
     departures: list[RaspDeparture]
     copyright_banner_url: Literal["https://yandex.st/rasp/media/apicc/copyright_vert_mono.html"] = (
-        "https:" + _LOGO_PATH
+        "https://yandex.st/rasp/media/apicc/copyright_vert_mono.html"
     )
 
 
@@ -64,7 +64,7 @@ def read_schedule(
                 fetched_at=data["fetched_at"],
                 expires_at=data["expires_at"],
                 completed_dates=data["completed_dates"],
-                departures=rows,
+                departures=[RaspDeparture.model_validate(row) for row in rows],
             )
             if candidate.fetched_at <= now < candidate.expires_at and (
                 latest is None or candidate.fetched_at > latest.fetched_at

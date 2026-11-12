@@ -33,6 +33,8 @@ from a2_engine import (
     load_intercity_passenger_rules,
     load_passenger_config,
 )
+from a2_engine.intercity.analysis.calculation import analyze_intercity_passenger_with_access
+from a2_engine.routing.scheduled import ScheduledRoadAccess
 
 EXAMPLE = Path(__file__).resolve().parents[1] / "examples/synthetic_intercity.py"
 _spec = importlib.util.spec_from_file_location("synthetic_intercity", EXAMPLE)
@@ -127,7 +129,12 @@ def analyze(
         "reference",
         build_reference(_demo.demo_reference(scope, ref_seconds), scope.comparison_scope),
     )
-    return analyze_intercity_passenger(
+    calculation = (
+        analyze_intercity_passenger_with_access
+        if "road_access" in kwargs
+        else analyze_intercity_passenger
+    )
+    return calculation(
         scope,
         START,
         timetable,
@@ -177,6 +184,34 @@ def test_mixed_time_decomposition_and_alight_to_departure_minimum() -> None:
     assert best.evaluation.index.value == pytest.approx(50)
     assert best.category == "mixed" and best.boardings == 2 and best.transfers == 1
     assert result.frequency[-1].count == 1
+
+
+def test_road_access_catches_only_reachable_flights_and_counts_each_interval_once() -> None:
+    early = run("too-early", "X", 359, "Y", 650, "flight")
+    flight = run("reachable", "X", 900, "Y", 1260, "flight")
+    result = analyze(
+        table((early, flight)),
+        road_access=(
+            ScheduledRoadAccess("A", "X", 240, 120, PROOF),
+            ScheduledRoadAccess("Y", "B", 180, 60, PROOF),
+        ),
+    )
+    winner = result.public.best_known
+    assert winner is not None and len(result.candidates) == 1
+    assert winner.category == "mixed"
+    assert winner.initial_wait_seconds == 540
+    assert winner.path_seconds == 960
+    assert winner.total_seconds == 1500
+    assert winner.transfer_wait_seconds == 180
+    assert winner.boardings == 1
+    assert [(leg.kind, leg.transport_type) for leg in winner.route.path.steps] == [
+        ("wait_initial", "physical:air"),
+        ("ride", "road_access"),
+        ("wait_transfer", "physical:air"),
+        ("ride", "physical:air"),
+        ("wait_transfer", "physical:air"),
+        ("ride", "road_access"),
+    ]
 
 
 def test_first_window_half_open_and_continuations_beyond_seven_days() -> None:

@@ -60,18 +60,20 @@ class CargoVehicle:
 class CargoProfile:
     profile_id: str
     version: str
-    goods: Literal["food", "nonfood"]
+    goods: Literal["food", "nonfood", "raw"]
     urgency: str
     temperature: CargoTemperature
     handling_requirements: tuple[str, ...]
     access_requirements: tuple[str, ...]
     vehicle: CargoVehicle
+    perishable: bool = False
 
     def __post_init__(self) -> None:
         for value in (self.profile_id, self.version, self.urgency):
             checked_id(value)
         if (
-            self.goods not in ("food", "nonfood")
+            self.goods not in ("food", "nonfood", "raw")
+            or type(self.perishable) is not bool
             or not isinstance(self.vehicle, CargoVehicle)
             or not isinstance(self.temperature, CargoTemperature)
         ):
@@ -91,6 +93,7 @@ class CargoProfile:
                 self.handling_requirements,
                 self.access_requirements,
                 self.vehicle,
+                *(("perishable",) if self.perishable else ()),
             )
         )
 

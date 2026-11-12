@@ -39,6 +39,7 @@ from a2_engine import (
     UrbanPopulationCoverage,
     UrbanThreshold,
 )
+from a2_engine.routing.scheduled import ScheduledRoadAccess
 from pydantic import Field, TypeAdapter
 
 from a2_api.adapters.timetable_source import ServiceClock
@@ -73,10 +74,21 @@ class IntercityInputs(ContractModel):
     readiness: tuple[BoardingReadiness, ...] = ()
     initial_airport_checkin_seconds: int | None = Field(default=None, gt=0, le=86400)
     mixed_only: bool = False
+    aviation_with_ground_access: bool = False
+    water_with_ground_access: bool = False
+    road_access: tuple[ScheduledRoadAccess, ScheduledRoadAccess] | None = None
     car: AcceptedIntercityCar | None = None
     car_departure_at: Timestamp | None = None
     car_geometry: LineGeometry | None = None
     resource_limit: int | None = Field(default=None, gt=0)
+
+    @property
+    def mixed_request_mode(self) -> Literal["air", "water", "mixed"]:
+        if self.aviation_with_ground_access:
+            return "air"
+        if self.water_with_ground_access:
+            return "water"
+        return "mixed"
 
     @property
     def public_timetable_unavailable(self) -> bool:

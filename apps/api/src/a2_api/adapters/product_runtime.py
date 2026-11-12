@@ -114,6 +114,9 @@ class Profile(ContractModel):
     )
     categories: list[str] = Field(default_factory=list)
     cargo_profile_id: Identifier | None = None
+    cargo_example: str | None = Field(
+        default=None, min_length=1, max_length=120, exclude_if=lambda value: value is None
+    )
     direction: Literal["inbound", "outbound"] | None = None
     cargo_transport: Literal["multimodal", "pipeline"] = "multimodal"
     pipeline_product: Literal["oil", "oil_products", "gas"] | None = None
@@ -147,7 +150,8 @@ class Manifest(ContractModel):
     territories: list[TerritoryOption] = Field(max_length=10000)
     areas: list[AreaOption] = Field(default_factory=list, max_length=10000)
     cargo_profiles: list[CargoProfile] = Field(default_factory=list, max_length=128)
-    profiles: list[Profile] = Field(max_length=128)
+    # Compact manifests may publish several operating windows per cargo profile.
+    profiles: list[Profile] = Field(max_length=320)
     national_catalog_complete: bool = False
     presets: list[AnalysisPreset] = Field(default_factory=list, max_length=128)
     compact: bool = False
@@ -222,6 +226,15 @@ def input_fingerprints(
         facts.pop("initial_airport_checkin_seconds", None)
     if isinstance(inputs, IntercityInputs) and not inputs.mixed_only:
         facts.pop("mixed_only", None)
+    if isinstance(inputs, IntercityInputs) and not inputs.aviation_with_ground_access:
+        facts.pop("aviation_with_ground_access", None)
+    if isinstance(inputs, IntercityInputs) and not inputs.water_with_ground_access:
+        facts.pop("water_with_ground_access", None)
+    if isinstance(inputs, IntercityInputs) and inputs.road_access is None:
+        facts.pop("road_access", None)
+    if isinstance(inputs, (DeliveryInputs, UrbanCargoInputs)) and not inputs.profile.perishable:
+        # Legacy normalized inputs did not serialize a perishable flag.
+        facts["profile"].pop("perishable", None)
     graph = scenario_hash(facts)
     costing = canonical_hash(
         {
@@ -519,6 +532,31 @@ def validate_inputs(
             len(inputs.scope.applicable_modes) < 2 or inputs.public_timetable_unavailable
         ):
             raise ValueError("MIXED_PROFILE_REQUIRES_MULTIPLE_SCHEDULED_MODES")
+        if inputs.aviation_with_ground_access and (
+            not inputs.mixed_only or "air" not in inputs.scope.applicable_modes
+        ):
+            raise ValueError("AVIATION_ACCESS_REQUIRES_A_MIXED_PROFILE_WITH_AIR")
+        if inputs.water_with_ground_access and (
+            not inputs.mixed_only
+            or inputs.aviation_with_ground_access
+            or "water" not in inputs.scope.applicable_modes
+        ):
+            raise ValueError("WATER_ACCESS_REQUIRES_A_MIXED_PROFILE_WITH_WATER")
+        if inputs.road_access:
+            start, end = inputs.road_access
+            terminal_nodes = {node.node_id for node in snapshot.access_nodes}
+            scope = inputs.scope.comparison_scope
+            if (
+                not (inputs.aviation_with_ground_access or inputs.water_with_ground_access)
+                or "road" not in inputs.scope.applicable_modes
+                or inputs.initial_airport_checkin_seconds is not None
+                or inputs.readiness
+                or (start.from_node_id,) != scope.origin_node_ids
+                or (end.to_node_id,) != scope.destination_node_ids
+                or {start.from_node_id, start.to_node_id, end.from_node_id, end.to_node_id}
+                - terminal_nodes
+            ):
+                raise ValueError("ROAD_ACCESS_SCOPE_MISMATCH")
         if inputs.car_geometry is not None:
             if inputs.car is None or not set(inputs.car_geometry.evidence_refs) <= set(
                 inputs.car.evidence_refs
@@ -625,6 +663,35 @@ def validate_inputs(
             ]
             if not full_sources:
                 raise ValueError("PARTIAL_CARGO_SOURCE_CANNOT_CLAIM_COMPLETE_INVENTORY")
+        if profile.compact and inputs.receipts:
+            from a2_api.adapters.truck_runtime import bind_prepared_routes
+
+            if (
+                not profile.static_observations
+                or not inputs.sites
+                or not inputs.nodes
+                or len(inputs.sites) > 3
+                or len(inputs.nodes) > 3
+                or {site.site_id for site in inputs.sites} != accepted_ids
+                or set(inputs.coverage.expected_site_ids) != accepted_ids
+                or {node.node_id for node in inputs.nodes} != nodes.keys()
+                or inputs.coverage.roster_complete
+                or inputs.coverage.complete_node_types
+            ):
+                raise ValueError("INVALID_BOUNDED_TRUCK_SELECTION")
+            prepared = {receipt.route_id for receipt in inputs.receipts}
+            if len(prepared) != len(inputs.receipts) or len(
+                {(route.from_id, route.to_id) for route in inputs.routes}
+            ) != len(inputs.routes):
+                raise ValueError("DUPLICATE_BOUNDED_TRUCK_ROUTE_OR_RECEIPT")
+            for route in inputs.routes:
+                if route.compatibility.state != "unknown" and (
+                    route.route_id not in prepared
+                    or not set(route.compatibility.evidence_refs) <= verified_evidence
+                    or not set(route.evidence_refs) <= verified_evidence
+                ):
+                    raise ValueError("BOUNDED_TRUCK_ROUTE_REQUIRES_VERIFIED_EVIDENCE")
+            bind_prepared_routes(inputs, profile.valid_from)
         if any(route.requested_at != inputs.routes[0].requested_at for route in inputs.routes):
             raise ValueError("MIXED_STATIC_ROUTE_OBSERVATIONS")
     elif isinstance(inputs, (DeliveryInputs, PipelineInputs)):
@@ -695,6 +762,7 @@ def validate_inputs(
             or accepted_profile.kind != "delivery"
             or (
                 inputs.profile.goods,
+                inputs.profile.perishable,
                 inputs.profile.urgency,
                 inputs.profile.temperature.controlled,
                 inputs.profile.temperature.min_c,
@@ -703,6 +771,7 @@ def validate_inputs(
             )
             != (
                 accepted_profile.food_class,
+                accepted_profile.perishable,
                 accepted_profile.urgency,
                 accepted_profile.temperature_requirements.controlled,
                 accepted_profile.temperature_requirements.min_c,
@@ -841,13 +910,15 @@ class Runtime:
         if isinstance(inputs, UrbanCargoInputs):
             if not profile.static_observations or (
                 inputs.receipts
+                and not profile.compact
                 and any(route.requested_at != request.departure_at for route in inputs.routes)
             ):
                 raise unavailable("STATIC_TRUCK_OBSERVATION_DEPARTURE_OR_INVARIANCE_UNAVAILABLE")
         if isinstance(inputs, IntercityInputs) and isinstance(request, IntercityPassengerRequest):
             if inputs.mixed_only:
-                if request.passenger_modes != ["mixed"]:
-                    raise unavailable("MIXED_PROFILE_REQUIRES_MIXED_SELECTION")
+                expected = inputs.mixed_request_mode
+                if request.passenger_modes != [expected]:
+                    raise unavailable("REQUESTED_MODE_SELECTION_INPUTS_UNAVAILABLE")
                 return profile, inputs
             wants_car = request.passenger_modes is None or "private_car" in request.passenger_modes
             if (

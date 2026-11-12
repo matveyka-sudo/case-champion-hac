@@ -213,7 +213,8 @@ export function profileLabel(
   };
   const temperature = profile.temperature_requirements;
   const parts = [
-    profile.food_class === "food" ? "Продовольственный" : "Непродовольственный",
+    ({ food: "Продовольственный", nonfood: "Непродовольственный", raw: "Сырьё" })[profile.food_class],
+    ...(profile.perishable ? ["Скоропортящийся"] : []),
     { urgent: "Срочный", ordinary: "Обычный", nonurgent: "Несрочный" }[
       profile.urgency
     ],

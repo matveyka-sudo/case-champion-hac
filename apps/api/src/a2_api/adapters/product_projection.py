@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any, Literal
 
 from a2_contracts.common import canonical_hash
+from a2_contracts.v2.dataset import AccessNode
 from a2_contracts.v2.evidence import EVIDENCE_GROUP_PREFIX, MAX_GROUP_MEMBERS, EvidenceGroup
 from a2_contracts.v2.journeys import (
     BoundaryNodeSets,
@@ -591,13 +592,25 @@ def project_missing_public_timetable(out: Projection, reference: Any) -> None:
 
 
 def project_intercity(
-    out: Projection, analysis: Any, reference: Any, accepted_car: Any = None
+    out: Projection,
+    analysis: Any,
+    reference: Any,
+    accepted_car: Any = None,
+    *,
+    water_nodes: list[AccessNode] | None = None,
 ) -> None:
     request = out.context.normalized_request
     assert isinstance(request, IntercityPassengerRequest)
     project_reference(out, reference)
     mode_map = {binding.transport_type: binding.mode for binding in analysis.transport_modes}
     mode_map.update({"physical:" + mode: mode for mode in mode_map.values()})
+    mode_map["road_access"] = "private_car"
+    nodes = {node.node_id: node for node in water_nodes or ()}
+    water_winner = (
+        next((group.best_known for group in analysis.by_mode if group.category == "mixed"), None)
+        if nodes
+        else None
+    )
     for candidate in analysis.candidates:
         path = candidate.route.path
         legs = [
@@ -615,6 +628,23 @@ def project_intercity(
             for step in path.steps
         ]
         first_departure = next(step.start_at for step in path.steps if step.kind == "ride")
+        geometry = None
+        if water_winner and candidate.route.chain_id == water_winner.route.chain_id:
+            movement = [leg for leg in legs if leg.kind in {"ride", "walk"}]
+            node_ids = [movement[0].from_node_id, *(leg.to_node_id for leg in movement)]
+            if all(node_id in nodes for node_id in node_ids):
+                coordinates = [
+                    (nodes[node_id].location.lon, nodes[node_id].location.lat)
+                    for node_id in node_ids
+                ]
+                if len(set(coordinates)) > 1:
+                    geometry = LineGeometry(
+                        type="LineString",
+                        coordinates=coordinates,
+                        evidence_refs=sorted(
+                            {ref for node_id in node_ids for ref in nodes[node_id].source_refs}
+                        ),
+                    )
         out.journeys.append(
             JourneyResult(
                 journey_id=candidate.route.chain_id,
@@ -629,8 +659,8 @@ def project_intercity(
                 path_seconds=candidate.path_seconds,
                 total_wait_seconds=candidate.initial_wait_seconds + candidate.transfer_wait_seconds,
                 legs=legs,
-                geometry=None,
-                geometry_kind="none",
+                geometry=geometry,
+                geometry_kind="schematic" if geometry else "none",
                 status="available",
                 reason_code=None,
                 snapshot_id=out.context.snapshot_id,
@@ -820,7 +850,7 @@ def project_intercity(
         project_car(out, analysis.car, accepted_car, reference)
 
 
-def project_urban_cargo(out: Projection, analysis: Any) -> None:
+def project_urban_cargo(out: Projection, analysis: Any, *, bounded_selection: bool = False) -> None:
     request = out.context.normalized_request
     assert isinstance(request, UrbanCargoRequest)
     territory = SubjectRef(kind="territory", territory_id=request.city_id, mode="road")
@@ -874,10 +904,15 @@ def project_urban_cargo(out: Projection, analysis: Any) -> None:
             raw = out.metric(
                 "cargo-time-" + prefix,
                 "minimum_truck_access_seconds",
-                known(route.seconds if route else None, "MINIMUM_TIME_UNPROVEN"),
+                known(
+                    route.seconds
+                    if route and (site.minimum_proven or not bounded_selection)
+                    else None,
+                    "MINIMUM_TIME_UNPROVEN",
+                ),
                 subject,
                 shared_refs,
-                full=site.minimum_proven,
+                full=site.minimum_proven and not bounded_selection,
                 time_kind="movement",
             )
             site_scores.append(
@@ -887,7 +922,7 @@ def project_urban_cargo(out: Projection, analysis: Any) -> None:
                     site.evaluation.index,
                     subject,
                     shared_refs,
-                    full=site.minimum_proven,
+                    full=site.minimum_proven and not bounded_selection,
                     metrics=(raw, h),
                 )
             )

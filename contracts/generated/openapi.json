@@ -797,6 +797,19 @@
             "title": "Analysis Kind",
             "type": "string"
           },
+          "cargo_example": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cargo Example"
+          },
           "cargo_profile_id": {
             "anyOf": [
               {
@@ -1061,7 +1074,8 @@
           "food_class": {
             "enum": [
               "food",
-              "nonfood"
+              "nonfood",
+              "raw"
             ],
             "title": "Food Class",
             "type": "string"
@@ -1078,6 +1092,11 @@
             "const": "delivery",
             "title": "Kind",
             "type": "string"
+          },
+          "perishable": {
+            "default": false,
+            "title": "Perishable",
+            "type": "boolean"
           },
           "profile_id": {
             "minLength": 1,

@@ -65,6 +65,7 @@ from a2_engine import (
 from compact_kudikina import FIRST_DAY as KUDIKINA_FIRST_DAY
 from compact_kudikina import NEXT_DAY as KUDIKINA_NEXT_DAY
 from compact_kudikina import load_kudikina
+from pydantic import HttpUrl
 
 ROUTES = ("141500134", "4349")
 START, END = date(2026, 11, 10), date(2026, 11, 13)
@@ -436,7 +437,7 @@ def add_tonnelnaya(
         evidence_id="dzvr:tonnelnaya:2026-11-12",
         source_id="dzvr-tonnelnaya",
         source_version="2026-11-12",
-        url="https://tonnelnaya.dzvr.ru/",
+        url=HttpUrl("https://tonnelnaya.dzvr.ru/"),
         retrieved_at=datetime.fromisoformat("2026-11-12T06:07:25+00:00"),
         valid_period=parent.valid_period,
         license="Public factual station information",
@@ -821,12 +822,30 @@ def main() -> None:
     parser.add_argument("--kudikina-capture", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--handoff-manifest-sha256", required=True)
+    parser.add_argument("--verified-urban-cargo", type=Path, help="Verified cargo manifest file")
+    parser.add_argument("--verified-urban-cargo-sha256")
     args = parser.parse_args()
     if sha(args.handoff / "manifest.json") != args.handoff_manifest_sha256:
         raise ValueError("NOVEMBER_HANDOFF_MANIFEST_MISMATCH")
     source_manifest = Manifest.model_validate(load(args.handoff / "manifest.json"))
-    snapshots = {row.snapshot_id: row for row in source_manifest.snapshots}
-    base = ProductRegistry()
+    cargo_profiles_by_id = {row.profile_id: row for row in source_manifest.cargo_profiles}
+    verified_cargo = None
+    if args.verified_urban_cargo is not None:
+        if sha(args.verified_urban_cargo) != args.verified_urban_cargo_sha256:
+            raise ValueError("VERIFIED_CARGO_MANIFEST_MISMATCH")
+        verified_cargo = Manifest.model_validate(load(args.verified_urban_cargo))
+        if any(
+            row.analysis_kind != "urban_cargo"
+            or row.city_id not in ZONES
+            or row.executor != "accepted_inputs"
+            or row.scenarios
+            for row in verified_cargo.profiles
+        ):
+            raise ValueError("VERIFIED_CARGO_REQUIRES_URBAN_INPUTS")
+        for row in verified_cargo.cargo_profiles:
+            if cargo_profiles_by_id.setdefault(row.profile_id, row) != row:
+                raise ValueError("VERIFIED_CARGO_PROFILE_ID_COLLISION")
+    base = ProductRegistry(cargo_profiles=list(cargo_profiles_by_id.values()))
     out = args.output
     out.mkdir(parents=True, exist_ok=False)
     refs: dict[str, SnapshotRef] = {}
@@ -837,9 +856,13 @@ def main() -> None:
         "urban_cargo": {},
     }
 
-    def source_snapshot(profile: Profile) -> AcceptedData:
-        row = snapshots[profile.snapshot_id]
-        path = args.handoff / row.path
+    def source_snapshot(
+        profile: Profile, root: Path = args.handoff, manifest: Manifest = source_manifest
+    ) -> AcceptedData:
+        row = next(item for item in manifest.snapshots if item.snapshot_id == profile.snapshot_id)
+        path = (root / row.path).resolve()
+        if not path.is_relative_to(root.resolve()):
+            raise ValueError("PARENT_SNAPSHOT_OUTSIDE_HANDOFF")
         snapshot = AcceptedData.model_validate_json(path.read_bytes())
         if (
             sha(path) != row.sha256
@@ -850,13 +873,16 @@ def main() -> None:
 
     def add(snapshot: AcceptedData, profile: Profile, inputs: EngineInputs) -> None:
         index = len(profiles)
+        data = snapshot.model_dump(mode="json")
+        content_hash = canonical_hash(data)
+        if snapshot.snapshot_id in refs and refs[snapshot.snapshot_id].content_hash != content_hash:
+            raise ValueError("COMPACT_SNAPSHOT_ID_COLLISION")
         if snapshot.snapshot_id not in refs:
-            data = snapshot.model_dump(mode="json")
             refs[snapshot.snapshot_id] = SnapshotRef.model_validate(
                 {
                     **write(out, f"snapshot-{len(refs)}.json", data),
                     "snapshot_id": snapshot.snapshot_id,
-                    "content_hash": canonical_hash(data),
+                    "content_hash": content_hash,
                 }
             )
         profile = profile.model_copy(
@@ -883,17 +909,14 @@ def main() -> None:
                 "routing_profile_fingerprint": costing,
             }
         )
-        validate_inputs(
-            profile,
-            inputs,
-            snapshot,
-            ProductRegistry(cargo_profiles=source_manifest.cargo_profiles),
-        )
+        validate_inputs(profile, inputs, snapshot, base)
         profiles.append(profile)
 
-    def source_inputs(profile: Profile) -> EngineInputs:
+    def source_inputs(profile: Profile, root: Path = args.handoff) -> EngineInputs:
         assert profile.inputs is not None
-        path = args.handoff / profile.inputs.path
+        path = (root / profile.inputs.path).resolve()
+        if not path.is_relative_to(root.resolve()):
+            raise ValueError("PARENT_INPUT_OUTSIDE_HANDOFF")
         if sha(path) != profile.inputs.sha256:
             raise ValueError("PARENT_INPUT_IDENTITY_MISMATCH")
         return InputDocument.model_validate_json(path.read_bytes()).inputs
@@ -969,6 +992,44 @@ def main() -> None:
                     inputs,
                 )
             receipt["cities"][city] = report
+            accepted = (
+                [p for p in verified_cargo.profiles if p.city_id == city] if verified_cargo else []
+            )
+            if accepted:
+                assert verified_cargo is not None and args.verified_urban_cargo is not None
+                root = args.verified_urban_cargo.parent
+                prepared_scopes: list[dict[str, Any]] = []
+                for profile in accepted:
+                    snapshot = source_snapshot(profile, root, verified_cargo)
+                    prepared_cargo = source_inputs(profile, root)
+                    if (
+                        not isinstance(prepared_cargo, UrbanCargoInputs)
+                        or not prepared_cargo.receipts
+                    ):
+                        raise ValueError("VERIFIED_CARGO_REQUIRES_PREPARED_ROUTE_PROOFS")
+                    add(snapshot, profile, prepared_cargo)
+                    prepared_scopes.append(
+                        {
+                            "profile": profile.profile_id,
+                            "cargo_profile": profile.cargo_profile_id,
+                            "direction": profile.direction,
+                            "sites": [site.site_id for site in prepared_cargo.sites],
+                            "nodes": [node.node_id for node in prepared_cargo.nodes],
+                            "evidence": list(prepared_cargo.coverage.evidence_refs),
+                        }
+                    )
+                receipt["urban_cargo"][city] = {
+                    "verified_manifest_sha256": args.verified_urban_cargo_sha256,
+                    "scopes": prepared_scopes,
+                }
+                verified_keys = {(p.cargo_profile_id, p.direction) for p in accepted}
+                cargo_profiles = [
+                    p
+                    for p in cargo_profiles
+                    if (p.cargo_profile_id, p.direction) not in verified_keys
+                ]
+                if not cargo_profiles:
+                    continue
             freight_parent = source_snapshot(cargo_profiles[0])
             sites = {s.site_id for s in nearest(freight_parent.freight_sites, "site_id", city, 3)}
             cargo_inputs = source_inputs(cargo_profiles[0])
@@ -988,7 +1049,7 @@ def main() -> None:
                 )
             }
             freight = compact_snapshot(freight_parent, site_ids=sites, freight_node_ids=nodes)
-            receipt["urban_cargo"][city] = {
+            observed = {
                 "parent": freight_parent.snapshot_id,
                 "sites": sorted(sites),
                 "nodes": sorted(nodes),
@@ -998,6 +1059,10 @@ def main() -> None:
                 if nodes
                 else ["NO_ACCEPTED_FREIGHT_NODES"],
             }
+            if accepted:
+                receipt["urban_cargo"][city]["network_only"] = observed
+            else:
+                receipt["urban_cargo"][city] = observed
             for profile in cargo_profiles if nodes else ():
                 assert profile.inputs is not None and profile.truck_routing is not None
                 old = source_inputs(profile)
@@ -1088,6 +1153,7 @@ def main() -> None:
             "areas": [],
             "snapshots": list(refs.values()),
             "profiles": profiles,
+            "cargo_profiles": list(cargo_profiles_by_id.values()),
             "presets": [],
         }
     )

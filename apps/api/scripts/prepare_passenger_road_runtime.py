@@ -41,8 +41,35 @@ PAIRS = (
     ("region", "krasnodar", "moscow", "krasnodar-moscow", False),
     ("region", "moscow", "krasnodar", "salarievo-kras-bus", True),
 )
+TRANSIT_PAIRS = (
+    ("city", "moscow", "kaliningrad", "moscow-kaliningrad", False),
+    ("city", "kaliningrad", "moscow", "kaliningrad-moscow", False),
+    ("city", "novorossiysk", "kaliningrad", "novorossiysk-kaliningrad", False),
+    ("city", "kaliningrad", "novorossiysk", "kaliningrad-novorossiysk", False),
+)
+TRANSIT_ROUTE_PARTS = {
+    "novorossiysk-kaliningrad": ("novorossiysk-moscow", "moscow-kaliningrad"),
+    "kaliningrad-novorossiysk": ("kaliningrad-moscow", "moscow-novorossiysk"),
+}
+MEDININKAI = (25.7219, 54.5415)
+KYBARTAI = (22.74493, 54.64234)
+REVIEWED_TRANSIT_DAY = date(2026, 11, 16)
+TRANSIT_SOURCES = (
+    (
+        "lt-ftd",
+        "https://ru.mfa.lt/ru/konsulskaya-informatsiya/glavnaya-konsulskaya-informatsiya/uproshchennye-tranzitnye-dokumenty/182",
+    ),
+    ("lt-road-crossings", "https://pkpd.lrv.lt/en/borders-queues-info/"),
+    (
+        "lt-medininkai",
+        "https://vsat.lrv.lt/lt/naujienos/atidaromi-salcininku-ir-medininku-pasienio-kontroles-punktai/",
+    ),
+    ("ru-chernyshevskoye", "https://www.rosgranstroy.ru/checkpoints/360"),
+    ("lt-russian-plates", "https://www.gov.uk/foreign-travel-advice/lithuania/entry-requirements"),
+)
 IDS = {
     "moscow": ("moscow", "region-ru-mow"),
+    "kaliningrad": ("kaliningrad", "region-ru-kgd"),
     "novorossiysk": ("novorossiysk", ""),
     "krasnodar": ("city-q3646", "region-ru-kda"),
 }
@@ -75,35 +102,122 @@ def bus_rows(captures: Path, start: datetime):
     return rows
 
 
-def prepare(base: Path, road: Path, captures: Path, out: Path, day: date):
+def published_bus_rows(source: dict, start: datetime):
+    """Read dated observations from a reviewed terminal-to-terminal schedule."""
+    rows = {}
+    for entry in source["departures"]:
+        depart = datetime.fromisoformat(entry["departure"])
+        arrive = datetime.fromisoformat(entry["arrival"])
+        if depart.utcoffset() is None or arrive.utcoffset() is None:
+            raise ValueError("Bus schedule must include local UTC offsets")
+        if depart < start or depart >= start + timedelta(days=8) or arrive <= depart:
+            raise ValueError("Invalid dated bus departure")
+        key = (entry["number"], depart)
+        if key in rows:
+            raise ValueError("Duplicate published bus execution")
+        rows[key] = (depart, arrive, source["observed_at"], entry["record_id"])
+    return rows
+
+
+def route_costs(road: Path, route: str, *, transit: bool, to_kaliningrad: bool):
+    parts = TRANSIT_ROUTE_PARTS.get(route, (route,)) if transit else (route,)
+    receipts = [json.loads((road / f"{part}.json").read_text()) for part in parts]
+    status = receipts[0]["status"]
+    ref_options = {"speed_types": ["freeflow"]}
+    ref_seconds = path_seconds = 0.0
+    boundaries = []
+    for receipt in receipts:
+        request = receipt["reference_request"]
+        locations = request["locations"]
+        coords = [(p["lon"], p["lat"]) for p in locations]
+        if (
+            receipt["status"] != status
+            or locations != receipt["observation_request"]["locations"]
+            or request["costing"] != "auto"
+            or receipt["observation_request"]["costing"] != "auto"
+            or receipt["observation_request"].get("costing_options", {})
+            or request["costing_options"]["auto"] != ref_options
+        ):
+            raise ValueError("Road observation and reference build, mode or boundaries differ")
+        border = len(coords) == 4
+        if border:
+            ordered = (MEDININKAI, KYBARTAI) if to_kaliningrad else (KYBARTAI, MEDININKAI)
+            if not transit or tuple(coords[1:-1]) != ordered:
+                raise ValueError("Required border corridor does not match")
+        elif len(coords) != 2:
+            raise ValueError("Unsupported route boundary")
+        if boundaries and boundaries[-1][-1] != locations[0]:
+            raise ValueError("Disconnected route at the intermediate point")
+        boundaries.append(locations)
+        for key in ("reference", "observation"):
+            trip = receipt[key]["trip"]
+            summary = trip["summary"]
+            if (
+                [(p["lon"], p["lat"]) for p in trip["locations"]] != coords
+                or summary["time"] <= 0
+                or summary["has_ferry"]
+                or summary["has_time_restrictions"]
+            ):
+                raise ValueError("Route is outside the supported static scope")
+            if border:
+                if len(trip["legs"]) != 3 or not 0 < trip["legs"][1]["summary"]["time"] < 24 * 3600:
+                    raise ValueError("Lithuanian driving segment exceeds the FTD transit window")
+            if key == "reference":
+                ref_seconds += summary["time"]
+            else:
+                path_seconds += summary["time"]
+    if transit and sum(len(points) == 4 for points in boundaries) != 1:
+        raise ValueError("One confirmed border corridor is required")
+    return receipts, [boundaries[0][0], boundaries[-1][-1]], ref_seconds, path_seconds
+
+
+def prepare(
+    base: Path,
+    road: Path,
+    captures: Path,
+    out: Path,
+    day: date,
+    *,
+    transit: bool = False,
+    bus_corridors: Path | None = None,
+):
+    if transit and day != REVIEWED_TRANSIT_DAY:
+        raise ValueError("Transit rules must be reviewed for the selected date")
     manifest = json.loads((base / "manifest.json").read_text())
     template = next(p for p in manifest["profiles"] if p["analysis_kind"] == "intercity_passenger")
     snapshot = next(r for r in manifest["snapshots"] if r["snapshot_id"] == template["snapshot_id"])
     parent = json.loads((base / snapshot["path"]).read_text())
-    start = datetime.combine(day, time.min, ZONE)
-    end = start + timedelta(days=1)
     copytree(base, out)
-    for level, left, right, route, bus in PAIRS:
-        receipt = json.loads((road / f"{route}.json").read_text())
-        reference = receipt["reference"]["trip"]
-        observation = receipt["observation"]["trip"]
-        locations = receipt["reference_request"]["locations"]
-        if locations != receipt["observation_request"]["locations"]:
-            raise ValueError("Road observation and reference boundaries differ")
-        ref_options = receipt["reference_request"]["costing_options"]["auto"]
-        if ref_options != {"speed_types": ["freeflow"]}:
-            raise ValueError("Static free-flow reference required")
-        for trip in (reference, observation):
-            if (
-                len(trip["locations"]) != 2
-                or [(p["lon"], p["lat"]) for p in trip["locations"]]
-                != [(p["lon"], p["lat"]) for p in locations]
-                or trip["summary"]["time"] <= 0
-                or trip["summary"]["has_ferry"]
-                or trip["summary"]["has_time_restrictions"]
-            ):
-                raise ValueError("Route is outside the supported static domestic scope")
-        dated = bus_rows(captures, start) if bus else {}
+    published = json.loads(bus_corridors.read_text()) if bus_corridors else {}
+    pairs = (
+        tuple(
+            (row["level"], row["from"], row["to"], route, True) for route, row in published.items()
+        )
+        if bus_corridors
+        else TRANSIT_PAIRS
+        if transit
+        else PAIRS
+    )
+    for level, left, right, route, bus in pairs:
+        zone = ZoneInfo("Europe/Kaliningrad") if left == "kaliningrad" else ZONE
+        start = datetime.combine(day, time.min, zone)
+        end = start + timedelta(days=1)
+        receipts, locations, ref_seconds, path_seconds = route_costs(
+            road,
+            route,
+            transit=transit,
+            to_kaliningrad=right == "kaliningrad",
+        )
+        receipt = receipts[0]
+        ref_options = {"speed_types": ["freeflow"]}
+        source = published.get(route)
+        dated = (
+            published_bus_rows(source, start)
+            if source
+            else bus_rows(captures, start)
+            if bus
+            else {}
+        )
         if bus and not dated:
             raise ValueError("Dated bus departures required")
         digest = canonical_hash(
@@ -111,7 +225,9 @@ def prepare(base: Path, road: Path, captures: Path, out: Path, day: date):
                 level,
                 route,
                 day.isoformat(),
-                receipt,
+                receipts,
+                TRANSIT_SOURCES if transit else [],
+                *([source] if source else []),
                 [
                     (d.isoformat(), a.isoformat(), observed, uid)
                     for d, a, observed, uid in dated.values()
@@ -121,7 +237,25 @@ def prepare(base: Path, road: Path, captures: Path, out: Path, day: date):
         sid = "rasp-road-" + digest[:24]
         proof, schedule_proof = sid + "-freeflow", sid + "-bus"
         refs = (proof, schedule_proof) if bus else (proof,)
-        nodes = BUS_STATIONS if bus else (f"road-center-{left}", f"road-center-{right}")
+        transit_refs = tuple(sid + "-" + source for source, _ in TRANSIT_SOURCES) if transit else ()
+        refs += transit_refs
+        nodes = (
+            tuple(source["nodes"])
+            if source
+            else BUS_STATIONS
+            if bus
+            else (
+                f"road-center-{left}",
+                f"road-center-{right}",
+            )
+        )
+        if source and (
+            len(nodes) != 2
+            or nodes[0] == nodes[1]
+            or [(point["lon"], point["lat"]) for point in locations]
+            != [tuple(point) for point in source["coordinates"]]
+        ):
+            raise ValueError("Bus stops and road reference endpoints must match")
         cities = (IDS[left][0], IDS[right][0])
         orig, dest = (IDS[left][1], IDS[right][1]) if level == "region" else cities
         version = receipt["status"]["version"]
@@ -142,7 +276,7 @@ def prepare(base: Path, road: Path, captures: Path, out: Path, day: date):
             graph_version,
             sid,
             sid,
-            "bounded-domestic-road",
+            "bounded-ftd-road-movement" if transit else "bounded-domestic-road",
             sid,
             "a2-methodology-v3",
             "edge-calibrated-v1",
@@ -162,7 +296,7 @@ def prepare(base: Path, road: Path, captures: Path, out: Path, day: date):
             "start",
             "finish",
             network,
-            reference["summary"]["time"],
+            ref_seconds,
             "static_freeflow_elapsed",
             (proof,),
             road_build=build,
@@ -187,8 +321,8 @@ def prepare(base: Path, road: Path, captures: Path, out: Path, day: date):
         )
         runs, physical, services = [], [], []
         for (number, _), (depart, arrive, _, _) in sorted(dated.items()):
-            local_day = depart.astimezone(ZONE).date()
-            midnight = datetime.combine(local_day, time.min, ZONE)
+            local_day = depart.astimezone(zone).date()
+            midnight = datetime.combine(local_day, time.min, zone)
             trip_id = "bus-" + canonical_hash([number, depart.isoformat(), nodes])[:24]
             events = (
                 TimetableEvent(0, nodes[0], depart, depart, True, False, (schedule_proof,)),
@@ -196,10 +330,10 @@ def prepare(base: Path, road: Path, captures: Path, out: Path, day: date):
             )
             run = TimetableRun(
                 sid,
-                "yandex-rasp",
+                source["source_id"] if source else "yandex-rasp",
                 trip_id,
                 local_day,
-                str(ZONE),
+                str(zone),
                 "bus",
                 events,
                 True,
@@ -219,7 +353,7 @@ def prepare(base: Path, road: Path, captures: Path, out: Path, day: date):
                     service_id=trip_id,
                     trip_id=trip_id,
                     mode="road",
-                    timezone=str(ZONE),
+                    timezone=str(zone),
                     service_dates=[local_day.isoformat()],
                     trip_identity_confirmed=True,
                     source_refs=[schedule_proof],
@@ -245,7 +379,7 @@ def prepare(base: Path, road: Path, captures: Path, out: Path, day: date):
                 sid,
                 "not-collected",
                 sid,
-                str(ZONE),
+                str(zone),
                 start,
                 table_end,
                 frozenset(nodes),
@@ -257,6 +391,10 @@ def prepare(base: Path, road: Path, captures: Path, out: Path, day: date):
                 refs,
                 ("BOUNDED_STATIC_ROAD_CORRIDOR", "SELECTED_DATED_BUSES_ONLY")
                 if bus
+                else ("FTD_TRANSIT_ROAD_MOVEMENT_ONLY", "ROAD_CHAIN_VIA_MOSCOW")
+                if transit and route in TRANSIT_ROUTE_PARTS
+                else ("FTD_TRANSIT_ROAD_MOVEMENT_ONLY",)
+                if transit
                 else ("BOUNDED_STATIC_ROAD_CORRIDOR",),
             ),
             tuple(runs),
@@ -298,9 +436,9 @@ def prepare(base: Path, road: Path, captures: Path, out: Path, day: date):
                 scope,
                 nodes[0],
                 nodes[1],
-                observation["summary"]["time"],
+                path_seconds,
                 False,
-                (proof,),
+                refs,
             ),
             car_departure_at=None if bus else start,
         )
@@ -329,10 +467,12 @@ def prepare(base: Path, road: Path, captures: Path, out: Path, day: date):
                     [
                         (
                             schedule_proof,
-                            "yandex-rasp",
-                            "https://rasp.yandex.ru/",
+                            source["source_id"] if source else "yandex-rasp",
+                            source["url"] if source else "https://rasp.yandex.ru/",
                             max(row[2] for row in dated.values()),
-                            "Данные предоставлены сервисом Яндекс.Расписания",
+                            source["license"]
+                            if source
+                            else "Данные предоставлены сервисом Яндекс.Расписания",
                         )
                     ]
                     if bus
@@ -340,6 +480,21 @@ def prepare(base: Path, road: Path, captures: Path, out: Path, day: date):
                 ),
             ]
         ]
+        if transit:
+            for (source, url), eid in zip(TRANSIT_SOURCES, transit_refs, strict=True):
+                evidence.append(
+                    dict(
+                        evidence_id=eid,
+                        source_id=source,
+                        source_version=digest,
+                        url=url,
+                        retrieved_at=receipt["observed_at"],
+                        content_hash=digest,
+                        valid_period=valid,
+                        license="Public official transit information",
+                        verified=True,
+                    )
+                )
         required = set(cities) | {orig, dest}
         territories = list(parent["territories"])
         missing = required - {t["territory_id"] for t in territories}
@@ -415,14 +570,18 @@ def prepare(base: Path, road: Path, captures: Path, out: Path, day: date):
             snapshot_ref | dict(snapshot_id=sid, content_hash=profile.snapshot_hash)
         )
         doc = InputDocument(schema_version="waydex-engine-inputs/1", inputs=inputs)
+        input_document = doc.model_dump(mode="json")
+        if source:
+            input_document["inputs"]["timetable"]["scope"]["node_ids"].sort()
         manifest["profiles"].append(
             profile.model_dump(mode="json")
             | {
-                "inputs": write(out, sid + "-inputs.json", doc.model_dump(mode="json")),
+                "inputs": write(out, sid + "-inputs.json", input_document),
             }
         )
         print(level, route, "bus" if bus else "car")
-    # Supersede only the two diagnostic car profiles overlapping the new city profiles.
+    # Keep other modes and territory levels, replacing only matching old diagnostic car profiles.
+    city_directions = {(a, b) for level, a, b, _, bus in pairs if level == "city" and not bus}
     manifest["profiles"] = [
         profile
         for profile in manifest["profiles"]
@@ -430,8 +589,8 @@ def prepare(base: Path, road: Path, captures: Path, out: Path, day: date):
         or not (
             profile["analysis_kind"] == "intercity_passenger"
             and profile["static_observations"]
-            and (profile["origin_id"], profile["destination_id"])
-            in {("moscow", "novorossiysk"), ("novorossiysk", "moscow")}
+            and (profile["origin_id"], profile["destination_id"]) in city_directions
+            and profile["territory_level"] == "city"
         )
     ]
     write(out, "manifest.json", Manifest.model_validate(manifest).model_dump(mode="json"))
@@ -442,5 +601,16 @@ if __name__ == "__main__":
     for key in ("base", "road", "captures", "out"):
         parser.add_argument("--" + key, type=Path, required=True)
     parser.add_argument("--day", type=date.fromisoformat, required=True)
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--kaliningrad-transit", action="store_true")
+    modes.add_argument("--bus-corridors", type=Path)
     args = parser.parse_args()
-    prepare(args.base, args.road, args.captures, args.out, args.day)
+    prepare(
+        args.base,
+        args.road,
+        args.captures,
+        args.out,
+        args.day,
+        transit=args.kaliningrad_transit,
+        bus_corridors=args.bus_corridors,
+    )

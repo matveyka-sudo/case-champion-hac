@@ -53,6 +53,9 @@ AIRPORTS = {
 }
 CHECKIN_SECONDS = 40 * 60
 CHECKIN_SOURCE = "https://www.aeroflot.ru/info/checkin/"
+SVO_TRANSFER_SOURCE = "https://www.aeroflot.ru/info/transit/"
+# Separate tickets in terminal B, with a conservative airport reprocessing buffer.
+SVO_TRANSFER_SECONDS = 2 * 3600
 DIRECTORY = Path("data/directories/russia-intercity-nodes-2026-11-09.2/nodes.json")
 # Allow time for navigation, security and boarding beyond the routed exterior walk.
 # This is a conservative planning assumption, not a carrier-guaranteed connection.
@@ -153,8 +156,12 @@ def prepare(
     *,
     air: bool = False,
     mixed: bool = False,
+    aviation: bool = False,
+    regional_air_connections: bool = False,
     road: Path | None = None,
 ):
+    mixed = mixed or aviation
+    air = air or regional_air_connections
     manifest = json.loads((base / "manifest.json").read_text())
     template = next(p for p in manifest["profiles"] if p["analysis_kind"] == "intercity_passenger")
     parent_ref = next(
@@ -198,9 +205,17 @@ def prepare(
     )
     if mixed:
         scopes = (("city", (("moscow", "novorossiysk"),)),)
+    if aviation:
+        scopes = (("city", (("moscow", "novorossiysk"), ("kaliningrad", "novorossiysk"))),)
+    if regional_air_connections:
+        scopes = (("region", (("kaliningrad", "krasnodar"),)),)
     for level, pairs in scopes:
         for pair in pairs:
-            if air and ("moscow" not in pair or "novorossiysk" in pair):
+            if (
+                air
+                and not regional_air_connections
+                and ("moscow" not in pair or "novorossiysk" in pair)
+            ):
                 continue
             for left, right in (pair, pair[::-1]):
                 chain = (
@@ -208,7 +223,22 @@ def prepare(
                 )
                 if mixed:
                     chain = [(left, "krasnodar"), ("krasnodar", right)]
-                    leg_modes = ("air", "rail") if left == "moscow" else ("rail", "air")
+                    leg_modes = ("rail", "air") if left == "novorossiysk" else ("air", "rail")
+                    if aviation and "kaliningrad" in pair:
+                        if left == "kaliningrad":
+                            chain = [
+                                (left, "moscow"),
+                                ("moscow", "krasnodar"),
+                                ("krasnodar", right),
+                            ]
+                            leg_modes = ("air", "air", "rail")
+                        else:
+                            chain = [
+                                (left, "krasnodar"),
+                                ("krasnodar", "moscow"),
+                                ("moscow", right),
+                            ]
+                            leg_modes = ("rail", "air", "air")
                     groups = [
                         (flights if leg_mode == "air" else observations)[leg]
                         for leg, leg_mode in zip(chain, leg_modes, strict=True)
@@ -216,6 +246,16 @@ def prepare(
                 else:
                     leg_modes = (mode,) * len(chain)
                     groups = [observations[leg] for leg in chain]
+                svo_connection = regional_air_connections or (aviation and len(chain) == 3)
+                if svo_connection:
+                    # Accept only explicitly dated movements within the same SVO terminal.
+                    for i, (leg, leg_mode) in enumerate(zip(chain, leg_modes, strict=True)):
+                        if leg_mode != "air":
+                            continue
+                        terminal = (
+                            "departure_terminal" if leg[0] == "moscow" else "arrival_terminal"
+                        )
+                        groups[i] = [(r, p) for r, p in groups[i] if r["row"].get(terminal) == "B"]
                 allowed_modes = tuple(sorted(set(leg_modes)))
                 starts_at_airport = leg_modes[0] == "air"
                 if not all(groups):
@@ -230,14 +270,27 @@ def prepare(
                         right,
                         day.isoformat(),
                         source,
+                        *(
+                            [{"aviation": True, "svo_transfer": SVO_TRANSFER_SECONDS}]
+                            if aviation
+                            else []
+                        ),
                         {"checkin": CHECKIN_SECONDS, "source": CHECKIN_SOURCE} if air else walk,
                     ]
                 )
-                sid = f"rasp-{'mixed' if mixed else mode}-" + digest[:24]
+                sid = (
+                    f"rasp-{'aviation' if aviation else 'mixed' if mixed else mode}-" + digest[:24]
+                )
                 proof, walk_proof = sid + "-schedule", sid + "-walk"
-                refs = (proof, walk_proof) if len(chain) == 2 else (proof,)
+                refs = (
+                    (proof, walk_proof)
+                    if len(chain) > 1 and not regional_air_connections
+                    else (proof,)
+                )
                 if air or mixed:
                     refs += (sid + "-checkin",)
+                if svo_connection:
+                    refs += (sid + "-svo-transfer",)
                 orig, dest = (REGIONS[left], REGIONS[right]) if level == "region" else (left, right)
                 zone = ZoneInfo("Europe/Kaliningrad" if left == "kaliningrad" else "Europe/Moscow")
                 start = datetime.combine(day, time.min, zone)
@@ -246,7 +299,11 @@ def prepare(
                     sid,
                     sid,
                     sid,
-                    "direct-air" if air else "rail-and-station-walk",
+                    "air-via-svo"
+                    if regional_air_connections
+                    else "direct-air"
+                    if air
+                    else "rail-and-station-walk",
                     sid,
                     "a2-methodology-v3",
                     "edge-calibrated-v1",
@@ -381,37 +438,47 @@ def prepare(
                                 ],
                             )
                         )
-                footpaths, transfers = (), ()
-                if len(ends) == 2:
-                    a, b = ends[0][1], ends[1][0]
-                    walk_record = walk["directions"][f"{a}-{b}"]
-                    walk_trip = walk_record["reference" if mixed else "response"]["trip"]
-                    walk_seconds = walk_trip["summary"]["time"]
-                    allowance = (
-                        CHECKIN_SECONDS
-                        if mixed and leg_modes[1] == "air"
-                        else STATION_BUFFER_SECONDS
-                    )
-                    minimum = walk_seconds + allowance
-                    footpaths = (
-                        TimetableFootpath(
-                            "station-walk" if mixed else "moscow-walk",
-                            a,
-                            b,
-                            walk_seconds,
-                            True,
-                            (walk_proof,),
-                        ),
-                    )
-                    transfers = (
+                footpaths, transfers = [], []
+                for i, ((_, a), (b, _)) in enumerate(zip(ends, ends[1:])):
+                    prefix = "station" if mixed else "moscow"
+                    suffix = f"-{i}" if aviation else ""
+                    if a == b:
+                        if not svo_connection or a != AIRPORTS["moscow"][0]:
+                            raise ValueError("Unreviewed same-terminal connection")
+                        minimum = SVO_TRANSFER_SECONDS
+                        transfer_proof = sid + "-svo-transfer"
+                        operation = "same_terminal_reprocessing_allowance"
+                    else:
+                        walk_record = walk["directions"][f"{a}-{b}"]
+                        walk_trip = walk_record["reference" if mixed else "response"]["trip"]
+                        walk_seconds = walk_trip["summary"]["time"]
+                        allowance = (
+                            CHECKIN_SECONDS
+                            if mixed and leg_modes[i + 1] == "air"
+                            else STATION_BUFFER_SECONDS
+                        )
+                        minimum = walk_seconds + allowance
+                        transfer_proof = walk_proof
+                        operation = "routed_walk_and_boarding_allowance"
+                        footpaths.append(
+                            TimetableFootpath(
+                                f"{prefix}-walk{suffix}",
+                                a,
+                                b,
+                                walk_seconds,
+                                True,
+                                (walk_proof,),
+                            )
+                        )
+                    transfers.append(
                         TimetableTransfer(
-                            "station-transfer" if mixed else "moscow-transfer",
+                            f"{prefix}-transfer{suffix}",
                             a,
                             b,
                             minimum,
                             True,
-                            (walk_proof,),
-                        ),
+                            (transfer_proof,),
+                        )
                     )
                     for pre in states:
                         for post in states:
@@ -420,6 +487,10 @@ def prepare(
                                 "arrival",
                                 b,
                                 "departure",
+                            ) and (
+                                not (aviation or regional_air_connections)
+                                or pre.state_id.startswith(f"leg{i}-")
+                                and post.state_id.startswith(f"leg{i + 1}-")
                             ):
                                 ops.append(
                                     ReferenceOperation(
@@ -428,8 +499,8 @@ def prepare(
                                         post.state_id,
                                         network,
                                         minimum,
-                                        "routed_walk_and_boarding_allowance",
-                                        (walk_proof,),
+                                        operation,
+                                        (transfer_proof,),
                                         compatible=True,
                                     )
                                 )
@@ -469,11 +540,15 @@ def prepare(
                         False,
                         False,
                         refs,
-                        ("SELECTED_DIRECT_AEROFLOT_FLIGHTS", "SCHEDULED_BLOCK_TIME_REFERENCE")
+                        ("REGIONAL_AIR_VIA_SVO", "SCHEDULED_BLOCK_TIME_REFERENCE")
+                        if regional_air_connections
+                        else ("SELECTED_DIRECT_AEROFLOT_FLIGHTS", "SCHEDULED_BLOCK_TIME_REFERENCE")
                         if air
                         else (
                             "SELECTED_AIR_RAIL_VIA_KRASNODAR",
                             "ROUTED_WALK_BETWEEN_AIRPORT_AND_STATION",
+                            *(("AVIATION_WITH_GROUND_ACCESS",) if aviation else ()),
+                            *(("SVO_TERMINAL_B_TRANSFER_ALLOWANCE",) if svo_connection else ()),
                         )
                         if mixed
                         else (
@@ -485,8 +560,8 @@ def prepare(
                         ),
                     ),
                     tuple(runs),
-                    footpaths,
-                    transfers,
+                    tuple(footpaths),
+                    tuple(transfers),
                 )
                 valid = dict(start=day.isoformat(), end=table_end.date().isoformat())
                 evidence = [
@@ -519,7 +594,7 @@ def prepare(
                                     )
                                 ]
                             )
-                            if transfers
+                            if footpaths
                             else []
                         ),
                     ]
@@ -535,6 +610,20 @@ def prepare(
                             content_hash=digest,
                             valid_period=valid,
                             license="Published carrier boarding conditions",
+                            verified=True,
+                        )
+                    )
+                if svo_connection:
+                    evidence.append(
+                        dict(
+                            evidence_id=sid + "-svo-transfer",
+                            source_id="aeroflot-transit",
+                            source_version=digest,
+                            url=SVO_TRANSFER_SOURCE,
+                            retrieved_at=max(r["observed_at"] for r in source),
+                            content_hash=digest,
+                            valid_period=valid,
+                            license="Carrier terminal guidance; two-hour self-transfer planning allowance",
                             verified=True,
                         )
                     )
@@ -602,6 +691,7 @@ def prepare(
                     ),
                     initial_airport_checkin_seconds=CHECKIN_SECONDS if starts_at_airport else None,
                     mixed_only=mixed,
+                    aviation_with_ground_access=aviation,
                     physical_services=tuple(identities),
                     reference_graph=ReferenceGraph(
                         network, tuple(states), tuple(edges), tuple(ops), "partial", refs
@@ -637,14 +727,14 @@ def prepare(
                 manifest["snapshots"].append(
                     snapshot_ref | dict(snapshot_id=sid, content_hash=profile.snapshot_hash)
                 )
-                input_ref = write(
-                    out,
-                    sid + "-inputs.json",
-                    InputDocument(
-                        schema_version="waydex-engine-inputs/1",
-                        inputs=inputs,
-                    ).model_dump(mode="json"),
-                )
+                input_document = InputDocument(
+                    schema_version="waydex-engine-inputs/1",
+                    inputs=inputs,
+                ).model_dump(mode="json")
+                if aviation:
+                    node_ids = input_document["inputs"]["timetable"]["scope"]["node_ids"]
+                    node_ids.sort()
+                input_ref = write(out, sid + "-inputs.json", input_document)
                 manifest["profiles"].append(
                     profile.model_dump(mode="json") | dict(inputs=input_ref)
                 )
@@ -660,8 +750,18 @@ if __name__ == "__main__":
     mode_args = cli.add_mutually_exclusive_group()
     mode_args.add_argument("--air", action="store_true")
     mode_args.add_argument("--mixed", action="store_true")
+    mode_args.add_argument("--aviation", action="store_true")
+    mode_args.add_argument("--regional-air-connections", action="store_true")
     cli.add_argument("--road", type=Path)
     args = cli.parse_args()
     prepare(
-        args.base, args.capture, args.out, args.day, air=args.air, mixed=args.mixed, road=args.road
+        args.base,
+        args.capture,
+        args.out,
+        args.day,
+        air=args.air,
+        mixed=args.mixed,
+        aviation=args.aviation,
+        regional_air_connections=args.regional_air_connections,
+        road=args.road,
     )

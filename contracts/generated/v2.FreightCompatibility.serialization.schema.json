@@ -29,7 +29,8 @@
       "items": {
         "enum": [
           "food",
-          "nonfood"
+          "nonfood",
+          "raw"
         ],
         "type": "string"
       },
@@ -48,6 +49,11 @@
       },
       "title": "Handling Requirements",
       "type": "array"
+    },
+    "perishable": {
+      "default": false,
+      "title": "Perishable",
+      "type": "boolean"
     },
     "site_id": {
       "minLength": 1,

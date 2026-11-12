@@ -12,6 +12,20 @@
       "title": "Analysis Kind",
       "type": "string"
     },
+    "cargo_example": {
+      "anyOf": [
+        {
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cargo Example"
+    },
     "cargo_profile_id": {
       "anyOf": [
         {

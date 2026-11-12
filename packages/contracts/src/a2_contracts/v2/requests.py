@@ -153,7 +153,8 @@ class VehicleConstraints(ContractModel):
 class DeliveryCargoProfile(ContractModel):
     profile_id: Identifier
     kind: Literal["delivery"]
-    food_class: Literal["food", "nonfood"]
+    food_class: Literal["food", "nonfood", "raw"]
+    perishable: bool = Field(default=False, strict=True, exclude_if=lambda value: not value)
     urgency: Literal["urgent", "ordinary", "nonurgent"]
     temperature_requirements: TemperatureRequirements
     handling_requirements: list[Identifier]

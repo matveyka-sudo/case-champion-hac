@@ -2,6 +2,7 @@ import { indexGradient } from "../api/adapters/mapIndexColor";
 import { CompactResultSummary } from "../widgets/CompactResultSummary";
 import { PassengerSchedule } from "../widgets/PassengerSchedule";
 import { compactAvailability, compactSlots } from "../api/adapters/compactScopes";
+import { timeLabel } from "../shared/format";
 import {
   useCallback,
   useEffect,
@@ -42,6 +43,7 @@ import {
   measureText,
   errorText,
   measureLabel,
+  profileLabel,
   subjectMatches,
   timestampText,
   statusText,
@@ -86,7 +88,7 @@ import { TimeDockView } from "../widgets/TimeDockView";
 import { Seg } from "../widgets/SegmentedControl";
 import { FiltersPanelView } from "../widgets/FiltersPanelView";
 import { CategoryChoices } from "../widgets/CategoryChoices";
-import { matchingCargoProfiles } from "../api/adapters/cargoBinding";
+import { compactCargoOptions, matchingCargoProfiles } from "../api/adapters/cargoBinding";
 import { ChoiceChips, TerritoryPair, CargoProfileChoices } from "../widgets/FilterControlViews";
 import { boundSnapshotId, clinicPreset, initialSourceDraft, staticPilotPreset } from "../api/adapters/sourceBinding";
 import { AnalysisGroupPanel } from "../widgets/AnalysisGroupPanel";
@@ -94,6 +96,21 @@ import { AgentChatView } from "../widgets/AgentChatView";
 import { evidenceResolver, explanationSources, journeyEvidenceReferences } from "../api/adapters/evidenceGroups";
 import { jobProgressText } from "../api/adapters/jobProgress";
 import { MapViewport, MapCanvas, MapOverlay, MapControls, AtlasLegend, AtlasMobileSheet, AtlasStatus, StateCard } from "../widgets/AtlasMapView";
+const passengerModeChoices = [
+  ["air", "Самолёт", "plane"],
+  ["rail", "Поезд", "train-front"],
+  ["bus", "Автобус", "bus-front"],
+  ["car", "Автомобиль", "car-front"],
+  ["sea", "Судно и паром", "ship"],
+];
+const kaliningradSurfaceModes = ["rail", "bus", "car"];
+const kaliningradSurfaceNote = "Для Калининграда доступны самолёт и водный маршрут. Поезд, автобус и автомобиль отключены для этого направления, поскольку наземные маршруты требуют международного транзита.";
+
+function isKaliningradPair({ originId, destinationId }: ApiDraft) {
+  return Boolean(originId && destinationId && originId !== destinationId &&
+    [originId, destinationId].some((id) => id === "kaliningrad" || id === "region-ru-kgd"));
+}
+
 const standardCargo = { group: "nonfood", handling: "container", limits: {} as Record<string, boolean> };
 const phaseLabels: Record<string, string> = {
   idle: "Выберите условия и запустите анализ",
@@ -157,6 +174,7 @@ export function ApiAtlasPage() {
     [bootError, setBootError] = useState<Error | null>(null),
     [reload, setReload] = useState(0),
     [draft, setDraft] = useState(initialDraft),
+    [automaticDate, setAutomaticDate] = useState(""),
     [selectedPresetId, setSelectedPresetId] = useState(""),
     [restoreAttempt, setRestoreAttempt] = useState(0),
     [restoreMode, setRestoreMode] = useState(false),
@@ -266,10 +284,23 @@ export function ApiAtlasPage() {
     if (!snapshot || handledPointer.current !== hash || window.location.hash !== hash) return;
     const value = snapshot.result;
     const restored = savedRequestDraft(value, catalog, caps);
-    setDraft(restored.draft);
-    if ("cargo_profile_id" in value.request)
-      setCargoProfile(restored.cargoProfile || { group: "", handling: "", limits: {} });
-    setSavedWarning(restored.warning);
+    setAutomaticDate("");
+    const restoredCargo = restored.cargoProfile;
+    const removedCargoLimits = !!(restoredCargo?.limits.temp || restoredCargo?.limits.perish);
+    const paxModes = restored.draft.paxModes.filter((mode) => mode !== "mixed");
+    setDraft({
+      ...restored.draft,
+      paxModes,
+      profileId: removedCargoLimits ? "" : restored.draft.profileId,
+    });
+    if ("cargo_profile_id" in value.request) {
+      setCargoProfile(restoredCargo
+        ? { ...restoredCargo, limits: { ...restoredCargo.limits, temp: false, perish: false } }
+        : { group: "", handling: "", limits: {} });
+    }
+    setSavedWarning(restored.warning || (removedCargoLimits || paxModes.length !== restored.draft.paxModes.length
+      ? "В сохранённом результате есть условия, которых больше нет в фильтрах. Перед новым расчётом проверьте параметры."
+      : ""));
     setRestoreMode(false);
     setScenarioView(!!snapshot.scenario);
     const pointer: SavedPointer = snapshot.scenario ? { kind: "scenario", id: snapshot.scenario.run_id } : { kind: "analysis", id: value.analysis_id };
@@ -341,6 +372,20 @@ export function ApiAtlasPage() {
     return () => window.removeEventListener("keydown", key);
   }, []);
   const change = (patch: Partial<ApiDraft>) => {
+    if (patch.date !== undefined || patch.kind !== undefined) setAutomaticDate("");
+    const passengerFiltersChanged = ["originId", "destinationId", "paxModes", "level"].some((key) => key in patch);
+    if (caps?.compact_scopes && passengerFiltersChanged && patch.date === undefined) {
+      const next = { ...draft, ...patch };
+      if (next.kind === "intercity_passenger" && next.originId && next.destinationId &&
+          next.originId !== next.destinationId && next.paxModes.length === 1) {
+        const { dates } = compactAvailability(next, catalog, caps.compact_scopes, "");
+        if (dates.length && !dates.includes(next.date)) {
+          const date = dates.find((available) => available >= next.date) ?? dates[dates.length - 1];
+          patch = { ...patch, date };
+          setAutomaticDate(date);
+        }
+      }
+    }
     setSelectedPresetId("");
     draftTouched.current = true;
     const cityChanged = patch.cityId !== undefined && patch.cityId !== draft.cityId && !!draft.cityId && patch.kind === undefined;
@@ -358,15 +403,29 @@ export function ApiAtlasPage() {
     setScenarioView(false);
     setQuestion("");
     setInterfaceMessages([]);
-    setDraft((d) => ({
-      ...d,
-      ...(cityChanged ? { areaId: "", snapshotId: "", ...(caps?.compact_scopes ? {} : { travel: "" as const }) } : {}),
-      ...patch,
-      ...(["kind", "level", "cityId", "originId", "destinationId", "date", "slot", "travel", "cats", "traffic", "areaId"]
-        .some((key) => key in patch && patch[key as keyof ApiDraft] !== d[key as keyof ApiDraft]) && !("snapshotId" in patch)
-        ? { snapshotId: "" }
-        : {}),
-    }));
+    setDraft((d) => {
+      const next = {
+        ...d,
+        ...(cityChanged ? { areaId: "", snapshotId: "", ...(caps?.compact_scopes ? {} : { travel: "" as const }) } : {}),
+        ...patch,
+        ...(["kind", "level", "cityId", "originId", "destinationId", "date", "slot", "travel", "cats", "traffic", "areaId"]
+          .some((key) => key in patch && patch[key as keyof ApiDraft] !== d[key as keyof ApiDraft]) && !("snapshotId" in patch)
+          ? { snapshotId: "" }
+          : {}),
+      };
+      if (caps?.compact_scopes && next.kind === "intercity_passenger" && isKaliningradPair(next)) {
+        next.paxModes = next.paxModes.filter((mode) => !kaliningradSurfaceModes.includes(mode));
+      }
+      return next;
+    });
+  };
+  const selectCargoHandling = (profile: typeof cargoProfile, nextDraft: ApiDraft) => {
+    if (!caps || !["kaliningrad", "moscow"].includes(nextDraft.cityId) || profile.group !== "raw") return profile;
+    const options = compactCargoOptions(nextDraft, catalog, caps, profile);
+    if (!options?.length || options.some(({ handling }) => handling === profile.handling)) return profile;
+    const availableNow = options.find(({ times }) =>
+      times.some(({ time, onSelectedDate }) => onSelectedDate && time === timeLabel(nextDraft.slot)));
+    return { ...profile, handling: (availableNow ?? options[0]).handling };
   };
   const choose = useCallback((value: Selection) => {
     setSelection(value);
@@ -399,8 +458,7 @@ export function ApiAtlasPage() {
           ));
           return;
         }
-        const profiles = matchingCargoProfiles(caps.cargo_profiles, cargoProfile);
-        const profileId = cargo && !draft.pipeline ? draft.profileId || (profiles.length === 1 ? profiles[0].profile_id : "") : draft.profileId;
+        const profileId = cargo ? chosenCargoProfile : draft.profileId;
         if (cargo && !draft.pipeline && !profileId) {
           setLocalError(new DraftError(
             "profileId",
@@ -524,6 +582,8 @@ export function ApiAtlasPage() {
   );
   const visibleJourneys = scenarioView ? scenarioPaths?.journeys || [] : result?.journeys || [];
   const segmentGeometry = visibleJourneys.some((j) => journeyLines(j).some((part) => part.segment));
+  const terminalRouteScheme = result?.limitations.some((item) => item === "WATER_WITH_GROUND_ACCESS" || item === "STATIC_ROAD_ACCESS_TO_TERMINALS") &&
+    visibleJourneys.some((journey) => journey.geometry_kind === "schematic");
   const hasRouteGeometry = visibleJourneys.some((j) => journeyLines(j).length > 0);
   const scenarioGeometryCount = scenarioPaths?.journeys.filter((j) => journeyLines(j).length > 0).length || 0;
   const scenarioMapNotice = !scenarioPaths?.journeys.length
@@ -551,10 +611,32 @@ export function ApiAtlasPage() {
       ) || [];
   const ready = caps?.analyses.find((a) => a.analysis_kind === draft.kind);
   const running = phase === "running";
+  const availableCargo = caps ? compactCargoOptions(draft, catalog, caps, cargoProfile) : null;
   const matchingProfiles = cargo && caps ? matchingCargoProfiles(caps.cargo_profiles, cargoProfile) : [];
-  const chosenCargoProfile = draft.profileId || (matchingProfiles.length === 1 ? matchingProfiles[0].profile_id : "");
-  const compact = caps?.compact_scopes ? compactAvailability(draft, catalog, caps.compact_scopes, chosenCargoProfile) : null;
+  const cityProfiles = draft.kind === "urban_cargo" && caps?.compact_scopes
+    ? matchingProfiles.filter((profile) => caps.compact_scopes?.some((scope) =>
+        scope.analysis_kind === "urban_cargo" && scope.city_id === draft.cityId &&
+        scope.direction === (draft.direction === "out" ? "outbound" : "inbound") &&
+        scope.cargo_profile_id === profile.profile_id))
+    : matchingProfiles;
   const compactScopes = caps?.compact_scopes;
+  const deliveryScopes = draft.kind === "intercity_cargo" && compactScopes
+    ? compactScopes.filter((scope) => scope.analysis_kind === draft.kind &&
+      scope.territory_level === draft.level && scope.origin_id === draft.originId &&
+      scope.destination_id === draft.destinationId && scope.cargo_transport === "multimodal" &&
+      draft.cargoModes.length > 0 && draft.cargoModes.every((mode) => scope.modes?.includes(mode)))
+    : null;
+  const deliveryProfiles = deliveryScopes
+    ? matchingProfiles.filter((profile) => deliveryScopes.some((scope) => scope.cargo_profile_id === profile.profile_id))
+    : matchingProfiles;
+  const chosenCargoProfile = draft.kind === "urban_cargo"
+    ? cityProfiles.find((profile) => profile.profile_id === draft.profileId)?.profile_id ??
+      (cityProfiles.length === 1 ? cityProfiles[0].profile_id : "")
+    : draft.pipeline ? draft.profileId :
+      deliveryProfiles.find((profile) => profile.profile_id === draft.profileId)?.profile_id ??
+      (deliveryProfiles.length === 1 ? deliveryProfiles[0].profile_id : "");
+  const kaliningradPassenger = !!compactScopes && draft.kind === "intercity_passenger" && isKaliningradPair(draft);
+  const compact = compactScopes ? compactAvailability(draft, catalog, compactScopes, chosenCargoProfile) : null;
   const showSchedule = draft.kind === "intercity_passenger" && draft.level === "city" &&
     draft.paxModes.some((mode) => mode !== "car") &&
     !!compactScopes?.some((scope) => scope.analysis_kind === "intercity_passenger" &&
@@ -583,15 +665,37 @@ export function ApiAtlasPage() {
     };
   }, [showSchedule, draft.originId, draft.destinationId, schedulePair]);
   const schedule = scheduleState?.pair === schedulePair ? scheduleState.value : null;
+  const calculationDates = compact?.dates;
+  const suggestedDate = !compact?.snapshotId && compact?.dates.length
+    ? compact.dates.find((date) => date >= draft.date) ?? compact.dates.at(-1)
+    : undefined;
+  const dateSuggestion = suggestedDate && <button className="iconbtn" type="button" onClick={() => change({ date: suggestedDate })}>
+    Выбрать {suggestedDate.split("-").reverse().join(".")}
+  </button>;
   let scheduleDeparture: string | null = null;
   if (schedule && origin) {
     try { scheduleDeparture = departureAt(draft.date, draft.slot, origin.timezone); }
     catch { /* No valid local date and time yet. */ }
   }
+  const compatibleCargoSlots = cargo && chosenCargoProfile && compactScopes && !compact?.snapshotId
+    ? compactSlots.filter(({ slot }) =>
+        compactAvailability({ ...draft, slot }, catalog, compactScopes, chosenCargoProfile).dates.includes(draft.date))
+    : [];
+  const cargoExample = cargo ? compactScopes?.find((scope) =>
+    scope.analysis_kind === draft.kind && (draft.kind === "urban_cargo" ? scope.city_id === draft.cityId :
+      scope.origin_id === draft.originId && scope.destination_id === draft.destinationId) &&
+    scope.cargo_profile_id === chosenCargoProfile &&
+    (!compact?.snapshotId || scope.snapshot_id === compact.snapshotId) && scope.cargo_example)?.cargo_example : undefined;
+  const resultRequest = result?.request;
+  const resultCargoExample = resultRequest && "cargo_profile_id" in resultRequest ? compactScopes?.find((scope) =>
+    scope.analysis_kind === resultRequest.analysis_kind && scope.snapshot_id === resultRequest.snapshot_id &&
+    scope.cargo_profile_id === resultRequest.cargo_profile_id)?.cargo_example : undefined;
   let compactUnavailable = "Нет данных для выбранных условий.";
   if (compact && draft.kind === "intercity_passenger") {
     if (!draft.originId || !draft.destinationId || draft.originId === draft.destinationId) {
       compactUnavailable = "Выберите разные пункты отправления и прибытия.";
+    } else if (kaliningradPassenger && draft.paxModes.some((mode) => kaliningradSurfaceModes.includes(mode))) {
+      compactUnavailable = kaliningradSurfaceNote;
     } else if (!draft.paxModes.length) {
       compactUnavailable = "Выберите вид транспорта.";
     } else if (!compact.hasMatchingTerritory) {
@@ -604,8 +708,41 @@ export function ApiAtlasPage() {
       compactUnavailable = "Для выбранных даты и времени нет подходящего набора данных. Проверьте доступные даты в календаре.";
     }
   }
-
-  const unavailableReason = compact && !compact.snapshotId ? compactUnavailable :
+  if (compact && cargo) {
+    if (deliveryScopes?.length && !chosenCargoProfile) {
+      compactUnavailable = "Для этой пары доступна модель автодоставки генерального груза. Выберите «Непрод.» или «Продовольствие» и обработку «Генеральный».";
+    } else if (!compact.hasMatchingTerritory && draft.kind === "urban_cargo" && draft.cityId === "moscow") {
+      compactUnavailable = "Нет данных: для Москвы ещё не подтверждены грузовые въезды и доступ площадок к совместимому терминалу.";
+    } else if (!compact.hasMatchingTerritory) {
+      compactUnavailable = urban
+        ? "Нет данных: для этого города не подготовлены грузовые площадки и узлы для расчёта."
+        : "Нет данных: для этого направления не подготовлена полная грузовая цепочка.";
+    } else if (draft.kind === "urban_cargo" && cityProfiles.length > 1 && !chosenCargoProfile) {
+      compactUnavailable = "Выберите конкретный профиль груза.";
+    } else if (urban && !chosenCargoProfile && availableCargo?.length) {
+      compactUnavailable = "Для выбранной обработки нет расчёта. Выберите доступный вариант в разделе «Обработка».";
+    } else if (urban && !chosenCargoProfile && cargoProfile.handling === "liquid") {
+      compactUnavailable = "Нет данных: нужны совместимые точки налива и слива и проверенный маршрут для автоцистерны.";
+    } else if (urban && !chosenCargoProfile && cargoProfile.handling === "bulk") {
+      compactUnavailable = "Нет данных: нужен подтверждённый вид навалочного груза и допуск подходящего грузовика на обоих концах.";
+    } else if (urban && !chosenCargoProfile) {
+      compactUnavailable = "Нет данных: не подтверждены операции с выбранным грузом на площадке и в грузовом узле.";
+    } else if (!compact.hasMatchingConditions) {
+      compactUnavailable = urban
+        ? "Нет данных для выбранного груза и направления в этом городе."
+        : "Нет данных для этого сочетания груза, направления и транспорта.";
+    } else if (draft.kind === "urban_cargo" && !compact.dates.length) {
+      const scopes = caps?.compact_scopes ?? [];
+      const availableSlots = compactSlots.filter(({ slot }) =>
+        compactAvailability({ ...draft, slot }, catalog, scopes, chosenCargoProfile).dates.length > 0);
+      const labels = availableSlots.map(({ label }) => `«${label}»`).join(", ");
+      if (labels) compactUnavailable = `Для этого груза выберите время: ${labels}.`;
+    } else if (compact.dates.length && !compact.dates.includes(draft.date)) {
+      compactUnavailable = "Нет данных на выбранную дату. Выберите доступную дату в календаре.";
+    }
+  }
+  const blockedPassengerMode = kaliningradPassenger && draft.paxModes.some((mode) => kaliningradSurfaceModes.includes(mode));
+  const unavailableReason = compact && (!compact.snapshotId || blockedPassengerMode) ? compactUnavailable :
     !selectedPreset && ready?.calculation_available === false
     ? ready.reason_code === "RUNTIME_INPUTS_UNAVAILABLE"
       ? "На этом стенде нет входных данных для расчёта выбранного направления."
@@ -633,7 +770,11 @@ export function ApiAtlasPage() {
     ? urban ? "Выберите город, передвижение и категории" : "Выберите территории и виды транспорта"
     : urban ? "Выберите город, направление и профиль груза" : "Выберите территории и параметры грузовой связи";
   const requestTitle = result ? resultTitle(result, catalog) : origin?.name || "Россия";
-  const toggleMode = (kind: AnalysisKind) =>
+  const toggleMode = (kind: AnalysisKind) => {
+    const cityCargo = kind === "urban_cargo";
+    if (cityCargo && cargoProfile.limits.nonurgent) {
+      setCargoProfile({ ...cargoProfile, limits: { ...cargoProfile.limits, nonurgent: false } });
+    }
     change({
       kind,
       cityId: "",
@@ -642,7 +783,8 @@ export function ApiAtlasPage() {
       areaId: "",
       profileId: "",
       pipeline: false,
-      ...(kind === "intercity_passenger" && (!caps || compact) && !compactSlots.some(({ slot }) => slot === draft.slot)
+      ...((cityCargo || kind === "intercity_passenger") && (!caps || compact) &&
+        !compactSlots.some(({ slot }) => slot === draft.slot)
         ? { slot: compactSlots[0].slot }
         : {}),
       ...(compact ? {
@@ -653,6 +795,7 @@ export function ApiAtlasPage() {
       } : {}),
       ...(kind === "intercity_passenger" && !caps ? { level: "city", paxModes: ["car"] } : {}),
     });
+  };
   const selectedJourney =
     visibleJourneys.filter(
       (j) =>
@@ -721,11 +864,6 @@ export function ApiAtlasPage() {
   const agentResult = result && !dirty && !running ? result : null;
   const destination = catalog.find((item) => item.territory_id === draft.destinationId);
   const draftTerritory = [origin?.name, !urban && destination?.name].filter(Boolean).join(" → ");
-  const trainingParams = new URLSearchParams({
-    data: "training", kind: draft.kind, city: draft.cityId || draft.originId,
-    destination: draft.destinationId, travel: draft.travel, category: scopeSelection.categories[0] || "",
-  });
-  const trainingLink = "?" + trainingParams + hash;
   const filterIssue = unavailableReason || (unavailableRequest && requestErrorMessage) || (draft.kind === "urban_passenger" ? scopeState.problem?.message : null);
   const sendQuestion = () => {
     const text = question.trim();
@@ -789,7 +927,6 @@ export function ApiAtlasPage() {
     }
     return evidenceResolver(context).sources(references());
   };
-  const resultRequest = result?.request;
   const renderResultCard = () => result && <ResultCardFrame id="apiResultCard" sectionRef={resultCard} compact={chatOpen && !filtersCollapsed && window.innerWidth < 1600} label={compactResult ? "Результат расчёта" : undefined}>
               <ResultCardHeader label={savedDemoModel ? scenarioView ? "Демонстрационный сценарий" : "Демонстрационный анализ" : scenarioView ? "Сценарий" : compactResult ? selection?.entity_kind === "destination" ? "Объект назначения" : selection ? requestTitle : "Результат расчёта" : "Сохранённый анализ"}
                 title={selectionTitle} onClose={() => setCardHidden(true)} titleRef={resultTitleRef} />
@@ -798,7 +935,8 @@ export function ApiAtlasPage() {
                   originTimezone={resultRequest?.analysis_kind === "intercity_passenger"
                     ? catalog.find((entry) => entry.territory_id === resultRequest.origin_id)?.timezone
                     : undefined}
-                  score={selection?.entity_kind === "sample_point" ? headlineScore : territoryHeadline} time={headlineTime} metrics={shownMetrics} />
+                  score={selection?.entity_kind === "sample_point" ? headlineScore : territoryHeadline}
+                  time={headlineTime} metrics={shownMetrics} scores={shownScores} cargoExample={resultCargoExample} />
                 {selection?.entity_kind === "sample_point" && categoryRows.length > 1 && <div className="sect">
                   <ResultCategoryTable rows={categoryRows} columns={["Объекты", "Время в пути", "Индекс"]} />
                 </div>}
@@ -932,9 +1070,10 @@ export function ApiAtlasPage() {
             </ResultCardFrame>;
   const moscowView = (result ? result.request.analysis_kind === "urban_passenger" && result.request.city_id === "moscow" : urban && draft.cityId === "moscow");
   const timeDock = (mobileDock: boolean) => selectedPreset ? null : <TimeDockView date={draft.date} slot={draft.slot} timezoneLabel={origin?.timezone || "Выберите территорию"}
-    compact={!!compact} dates={compact?.dates} min={compact?.dates[0] || "1900-01-01"} max={compact?.dates.at(-1) || "2100-12-31"} runLabel={compact ? runLabel : undefined} dateInputId={mobileDock ? "apiMobileDate" : "apiDate"} timeInputId={mobileDock ? "apiMobileTime" : "apiTime"} mobile={mobileDock}
+    compact={!!compact} dates={calculationDates} min={calculationDates?.[0] || "1900-01-01"} max={calculationDates?.at(-1) || "2100-12-31"} runLabel={compact ? runLabel : undefined} dateInputId={mobileDock ? "apiMobileDate" : "apiDate"} timeInputId={mobileDock ? "apiMobileTime" : "apiTime"} mobile={mobileDock}
     onDateChange={(date) => change({ date })} onSlotChange={(slot) => change({ slot })} run={start} disabled={runDisabled} highlighted={dirty} />;
   if (groupId) return <AnalysisGroupPanel key={groupId} id={groupId} />;
+
 
   return (
     <AtlasShell className={demoModel ? "has-demo-model" : ""} label="Атлас Waydex — API"
@@ -948,8 +1087,8 @@ export function ApiAtlasPage() {
           onToggle={() => { setFiltersCollapsed((value) => !value); if (filtersCollapsed && window.innerWidth < 1360) setChatOpen(false); }}
           railIcons={!cargo && urban ? ["map-pin", draft.travel === "pt" ? "tram-front" : draft.travel === "walk" ? "footprints" : "car-front", "list-checks"] : ["sliders-horizontal"]}
           footer={<><button className="iconbtn primary runbtn" disabled={runDisabled} onClick={start}><Icon name="play" /><span>{runLabel}</span></button>
-            <small>{unavailableReason || (caps ? "Данные проверяются для выбранных условий" : "Проверяем доступность расчёта")}</small></>}>
-          <div className="fgroup"><a className="iconbtn" href={trainingLink}>Учебный пример</a></div>
+            <small>{unavailableReason || (caps ? "Данные проверяются для выбранных условий" : "Проверяем доступность расчёта")}</small>
+            {unavailableReason && dateSuggestion}</>}>
           {!caps && (
             <div className="stmsg">
               <span>
@@ -997,7 +1136,13 @@ export function ApiAtlasPage() {
                   "Город",
                   <>
                     <Seg name="Город" value={draft.cityId || null} items={catalogOptions("city").filter((option) => option.value).map((option) => [option.value, option.label, undefined, false, "reason" in option ? option.reason : undefined])}
-                      onChange={(cityId) => change({ cityId, areaId: "" })} />
+                      onChange={(cityId) => {
+                        if (draft.kind === "urban_cargo") {
+                          const profile = selectCargoHandling(cargoProfile, { ...draft, cityId, areaId: "" });
+                          if (profile !== cargoProfile) setCargoProfile(profile);
+                          change({ cityId, areaId: "", profileId: "" });
+                        } else change({ cityId, areaId: "" });
+                      }} />
                     {inline("cityId", ["city_id"])}
                   </>,
                 )
@@ -1043,8 +1188,20 @@ export function ApiAtlasPage() {
                         {inline("travel", ["passenger_mode"])}</>,
 
                     )
-                  : field("Виды транспорта", <><ChoiceChips items={[["air", "Самолёт", "plane"], ["rail", "Поезд", "train-front"], ["bus", "Автобус", "bus-front"], ["car", "Автомобиль", "car-front"], ["sea", "Судно и паром", "ship"], ["mixed", "Смешанные", "route"]]}
-                    values={Object.fromEntries(draft.paxModes.map((mode) => [mode, true]))} onChange={(id) => change({ paxModes: draft.paxModes.includes(id) ? draft.paxModes.filter((mode) => mode !== id) : [...draft.paxModes, id] })} />{inline("paxModes", ["passenger_modes"])}</>))}
+                  : field(compact ? "Вид транспорта" : "Виды транспорта", <>
+                    <ChoiceChips items={passengerModeChoices}
+                      disabled={kaliningradPassenger ? kaliningradSurfaceModes : undefined}
+                      descriptionId={kaliningradPassenger ? "kaliningrad-passenger-modes-note" : undefined}
+                      values={Object.fromEntries(draft.paxModes.map((mode) => [mode, true]))}
+                      onChange={(id) => change({ paxModes: compact ? [id] : draft.paxModes.includes(id)
+                        ? draft.paxModes.filter((mode) => mode !== id)
+                        : [...draft.paxModes, id] })} />
+                    {kaliningradPassenger && <p className="fhint" id="kaliningrad-passenger-modes-note">{kaliningradSurfaceNote}</p>}
+                    {automaticDate === draft.date && compact?.snapshotId && <p className="fhint" role="status">
+                      Выбрана доступная дата {automaticDate.split("-").reverse().join(".")}. Её можно изменить в календаре.
+                    </p>}
+                    {inline("paxModes", ["passenger_modes"])}
+                  </>))}
               {schedule && <PassengerSchedule schedule={schedule} selectedModes={draft.paxModes}
                 day={draft.date} departure={scheduleDeparture} fromTimezone={origin?.timezone}
                 toTimezone={catalog.find((item) => item.territory_id === draft.destinationId)?.timezone} />}
@@ -1059,7 +1216,6 @@ export function ApiAtlasPage() {
                 </>)}
               {filterIssue && <div className="fgroup api-filter-availability">
                 <p className="fhint">{filterIssue}</p>
-                <a href={trainingLink}>Открыть учебный режим</a>
               </div>}
               {!cargo && urban && field("Цвет карты", <>
                 <div className="fsel"><span className="k"><Icon name="palette" /></span><Select label="Показатель, которым окрашена карта" value={mapMetric}
@@ -1075,7 +1231,23 @@ export function ApiAtlasPage() {
                     values={cargoLayers} onChange={(key) => setCargoLayers((current) => ({ ...current, [key]: !current[key] }))} /></>)
                 : field("Виды транспорта", <ChoiceChips items={[["road", "Авто", "truck"], ["rail", "Ж/д", "train-front-tunnel"], ["air", "Воздух", "plane-takeoff"], ["water", "Вода", "anchor"], ["pipe", "Трубопровод", "droplet"]]}
                   values={{ ...Object.fromEntries(draft.cargoModes.map((mode) => [mode, true])), pipe: draft.pipeline }} onChange={(key) => key === "pipe" ? change({ pipeline: !draft.pipeline, profileId: "" }) : change({ cargoModes: draft.cargoModes.includes(key) ? draft.cargoModes.filter((mode) => mode !== key) : [...draft.cargoModes, key] })} />)}
-                <CargoProfileChoices showNonurgent={!!compact && !urban} value={cargoProfile} onChange={(profile) => { setCargoProfile(profile); change({ profileId: "", pipeline: profile.handling === "liquid" && draft.pipeline }); }} />
+                <CargoProfileChoices showNonurgent={!!compact && !urban} value={cargoProfile} available={availableCargo} onChange={(choice, field) => {
+                  const profile = field === "group" ? selectCargoHandling(choice, draft) : choice;
+                  setCargoProfile(profile);
+                  change({ profileId: "", pipeline: profile.handling === "liquid" && draft.pipeline });
+                }} />
+                {draft.kind === "urban_cargo" && cityProfiles.length > 1 && field("Профиль груза",
+                  <Select label="Профиль груза" value={chosenCargoProfile}
+                    options={[{ value: "", label: "Выберите профиль" }, ...cityProfiles.map((profile) => {
+                      const example = caps.compact_scopes?.find((scope) =>
+                        scope.analysis_kind === "urban_cargo" && scope.city_id === draft.cityId &&
+                        scope.cargo_profile_id === profile.profile_id && scope.cargo_example)?.cargo_example;
+                      return { value: profile.profile_id, label: example ? `${example} · ${profileLabel(profile)}` : profileLabel(profile) };
+                    })]}
+                    onChange={(profileId) => change({ profileId })} />)}
+                {cargoExample && <p className="fhint">Пример груза: {cargoExample}</p>}
+                {compatibleCargoSlots.map(({ slot }) => <button key={slot} type="button" className="iconbtn"
+                  onClick={() => change({ slot })}>Выбрать {timeLabel(slot)}</button>)}
                 {inline("profileId", ["cargo_profile_id"])}
                 {!urban ? field("Продукт трубопровода", <><Seg name="Продукт трубопровода" value={draft.pipelineProduct || null} items={[["oil", "Нефть", undefined, cargoProfile.handling !== "liquid" || !draft.pipeline], ["oilprod", "Нефтепродукты", undefined, cargoProfile.handling !== "liquid" || !draft.pipeline], ["gas", "Газ", undefined, cargoProfile.handling !== "liquid" || !draft.pipeline]]}
                   onChange={(value) => { const product = value as Exclude<ApiDraft["pipelineProduct"], "">; const profiles = caps.cargo_profiles.filter((profile) => profile.kind === "pipeline" && profile.product === pipelineProducts[product]); change({ pipelineProduct: product, profileId: profiles.length === 1 ? profiles[0].profile_id : "" }); }} />
@@ -1146,12 +1318,12 @@ export function ApiAtlasPage() {
           {uiError && <StateCard role="alert" icon="cloud-off" title={uiError instanceof ApiError && uiError.code === "stored_result_incompatible" ? "Сохранённый результат несовместим — требуется новый расчёт" : "Новый результат не получен"}
             description={requestErrorMessage} actions={<div className="api-preset-options">
               <button className="iconbtn primary" onClick={snapshotExpired ? refreshInputs : bootError ? retryBootstrap : restoreMode ? retrySaved : start}>{snapshotExpired ? "Обновить данные" : result && !restoreMode && uiError instanceof ApiError && uiError.code === "incompatible_versions" ? "Пересчитать базу" : "Повторить"}</button>
-              {(unavailableRequest || executionExpired) && <a className="iconbtn" href={trainingLink}>Учебный режим</a>}
             </div>} />}
           {!result && !uiError && <StateCard icon={running ? "loader-circle" : "circle-dashed"} loading={running}
             title={running ? runningTitle : unavailableReason ? "Расчёт пока недоступен" : "Расчёт ещё не выполнялся"} description={running ? restoreMode && !session.job ? "Получаю результат с сервера без повторного запуска расчёта." : "Карту можно двигать — результат появится после завершения расчёта." : unavailableReason || `${draftInstructions}, затем нажмите «${runLabel}». До расчёта карта не окрашивается.`}
-            actions={!unavailableReason && <button className="iconbtn primary" disabled={runDisabled} onClick={start}>{runLabel}</button>} />}
-          {result &&
+            actions={unavailableReason ? dateSuggestion : <button className="iconbtn primary" disabled={runDisabled} onClick={start}>{runLabel}</button>} />}
+          {terminalRouteScheme && <div className="api-map-note">Пунктир показывает порядок остановок и терминалов. Точная траектория движения недоступна.</div>}
+          {result && !terminalRouteScheme &&
             (!result.map_data ||
               result.map_data.status !== "available" ||
               (!compactResult && result.map_data.completeness === "partial") || segmentGeometry) && (

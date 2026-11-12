@@ -5,6 +5,7 @@ import json
 import os
 import time
 from dataclasses import replace
+from datetime import timedelta
 
 import httpx
 import pytest
@@ -14,9 +15,10 @@ from a2_api.adapters.truck_graph import verify_graph
 from a2_api.core.truck_routing import TruckRoutingBinding
 from a2_api.providers import road_observations as road
 from a2_contracts.common import canonical_hash
+from a2_contracts.v2.api import TerritoryOption
 from a2_contracts.v2.requests import UrbanCargoRequest
 from a2_contracts.v2.results import AnalysisResult
-from a2_engine import CargoNode
+from a2_engine import CargoCompatibility, CargoNode, TruckRoute, TruckSearchReceipt
 from test_product_runtime import claim_for
 from test_product_runtime import transport_facts as transport_facts
 from test_product_source_guards import cargo_inputs
@@ -283,3 +285,100 @@ def test_dispatcher_computes_missing_pairs_then_reuses_cache_without_inventing_i
         "lat": snapshot.freight_sites[0].location.lat,
         "lon": snapshot.freight_sites[0].location.lon,
     }
+
+
+def test_bounded_prepared_pairs_produce_scores_at_requested_time(
+    binding, transport_facts, monkeypatch
+):
+    runtime, snapshot, inputs, profile, claim = configure_worker(
+        binding, transport_facts, monkeypatch
+    )
+    _, _, _, registry = cargo_inputs(transport_facts)
+    request = claim.context.normalized_request
+    assert isinstance(request, UrbanCargoRequest)
+    runtime.manifest.territories.append(
+        TerritoryOption(territory_id=request.city_id, level="city", name="Test", timezone="UTC")
+    )
+    request = request.model_copy(update={"departure_at": request.departure_at + timedelta(hours=8)})
+    claim = claim_for(snapshot, request)
+    prepared_at = profile.valid_from
+    node = inputs.nodes[0]
+    routes, receipts = [], []
+    for index, site in enumerate(inputs.sites, start=1):
+        compatibility = CargoCompatibility(
+            f"compat-{index}",
+            site.context,
+            inputs.profile.profile_id,
+            inputs.profile.version,
+            inputs.profile.requirements_hash,
+            site.site_id,
+            node.node_id,
+            "static-truck",
+            request.direction,
+            profile.valid_from,
+            profile.valid_to,
+            "confirmed",
+            ("e-1",),
+        )
+        route = TruckRoute(
+            f"truck-{index}",
+            site.context,
+            inputs.profile.requirements_hash,
+            inputs.profile.vehicle,
+            site.site_id,
+            node.node_id,
+            "static-truck",
+            request.direction,
+            prepared_at,
+            600 * index,
+            30,
+            30,
+            "reachable",
+            compatibility,
+            ("e-1",),
+        )
+        routes.append(route)
+        receipts.append(
+            TruckSearchReceipt(
+                route.route_id,
+                route.fingerprint,
+                truck_runtime.route_scope_id(route),
+                True,
+                True,
+                ("e-1",),
+            )
+        )
+
+    def calculate(routes, receipts):
+        prepared = inputs.model_copy(update={"routes": tuple(routes), "receipts": tuple(receipts)})
+        bounded = profile.model_copy(update={"compact": True, "truck_routing": None})
+        graph, costing = input_fingerprints(bounded, prepared, registry)
+        bounded = bounded.model_copy(
+            update={
+                "graph_fingerprint": graph,
+                "routing_profile_fingerprint": costing,
+            }
+        )
+        validate_inputs(bounded, prepared, snapshot, registry)
+        runtime.profiles[bounded.profile_id] = (bounded, prepared)
+        return product.calculate(claim)
+
+    result = calculate(routes, receipts)
+    h = next(m.value for m in result.metrics if m.name == "urban_h_seconds")
+    assert h is not None
+    expected = sum(100 * 2 ** (-r.seconds / h) for r in routes) / len(routes)
+    aggregate = next(s for s in result.scores if s.name == "cargo_access_index")
+    assert aggregate.value == pytest.approx(expected)
+    assert aggregate.completeness == "partial"
+    assert all(not s.ranking_eligible for s in result.scores)
+    assert result.status == "partial"
+    assert AnalysisResult.model_validate_json(result.model_dump_json()) == result
+
+    with pytest.raises(ValueError, match="TRUCK_SEARCH_RECEIPT_MISMATCH"):
+        calculate(routes, [replace(receipts[0], route_fingerprint="0" * 64), *receipts[1:]])
+
+    route = replace(routes[0], origin_access_seconds=None)
+    changed = replace(receipts[0], route_fingerprint=route.fingerprint)
+    incomplete = calculate([route, *routes[1:]], [changed, *receipts[1:]])
+    assert next(s for s in incomplete.scores if s.name == "cargo_access_index").value is None
+    assert "TRUCK_ACCESS_UNKNOWN" in incomplete.limitations

@@ -20,7 +20,7 @@ it("displays a saved rail index, travel time and initial wait for the same mode"
       subject: { ...metric.subject, mode: "private_car" } },
   ];
   render(createElement(CompactResultSummary, {
-    result, selection: null, metrics: result.metrics,
+    result, selection: null, scores: result.scores, metrics: result.metrics,
   }));
   expect(screen.getByText("Железнодорожный транспорт")).toBeTruthy();
   expect(screen.getByText("50")).toBeTruthy();

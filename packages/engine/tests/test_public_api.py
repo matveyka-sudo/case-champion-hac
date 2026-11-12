@@ -12,7 +12,7 @@ import sys
 from collections.abc import Callable
 from dataclasses import is_dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import a2_engine
 import pytest
@@ -38,6 +38,27 @@ def historical_signature(obj: Any) -> inspect.Signature:
                 for name, p in signature.parameters.items()
             ]
         )
+    if obj is a2_engine.CargoProfile:
+        assert signature.parameters["perishable"].default is False
+        assert signature.parameters["perishable"].annotation is bool
+        signature = signature.replace(
+            parameters=[
+                parameter.replace(
+                    annotation=historical_type("CargoProfile", name, parameter.annotation)
+                )
+                for name, parameter in signature.parameters.items()
+                if historical_field("CargoProfile", name)
+            ]
+        )
+    if obj is a2_engine.analyze_urban_cargo:
+        selection = signature.parameters["bounded_selection"]
+        assert selection.kind == inspect.Parameter.KEYWORD_ONLY
+        assert selection.annotation is bool and selection.default is False
+        signature = signature.replace(
+            parameters=[
+                p for name, p in signature.parameters.items() if name != "bounded_selection"
+            ]
+        )
     return signature
 
 
@@ -50,10 +71,15 @@ def historical_type(name: str, field_name: str, annotation: Any) -> Any:
     }:
         assert annotation == float | None
         return float
+    if name == "CargoProfile" and field_name == "goods":
+        assert annotation == Literal["food", "nonfood", "raw"]
+        return Literal["food", "nonfood"]
     return annotation
 
 
 def historical_field(name: str, field_name: str) -> bool:
+    if name == "CargoProfile" and field_name == "perishable":
+        return False
     return name != "ValhallaCorrelation" or field_name not in {
         "coordinate_precision_digits",
         "serialization_evidence_refs",

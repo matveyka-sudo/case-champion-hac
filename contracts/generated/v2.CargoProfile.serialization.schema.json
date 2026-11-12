@@ -6,7 +6,8 @@
         "food_class": {
           "enum": [
             "food",
-            "nonfood"
+            "nonfood",
+            "raw"
           ],
           "title": "Food Class",
           "type": "string"
@@ -23,6 +24,11 @@
           "const": "delivery",
           "title": "Kind",
           "type": "string"
+        },
+        "perishable": {
+          "default": false,
+          "title": "Perishable",
+          "type": "boolean"
         },
         "profile_id": {
           "minLength": 1,

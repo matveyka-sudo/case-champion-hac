@@ -315,7 +315,8 @@
       "access_method": "manual",
       "geography": "РФ",
       "license": {"name": "Официальный документ органа власти, не объект авторского права (п. 6 ст. 1259 ГК РФ)", "url": "http://government.ru/docs/43708/", "status": "permitted", "attribution": "Правительство Российской Федерации"},
-      "status": "accepted"
+      "status": "fetched",
+      "notes": "Текст получен для справочного поиска. Принятый расчётный набор данных для источника не опубликован."
     },
     {
       "source_id": "government_projects",

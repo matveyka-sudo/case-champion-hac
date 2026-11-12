@@ -233,7 +233,8 @@ class FreightCompatibility(SourceLinked):
     site_id: Identifier
     freight_node_id: Identifier
     direction: Literal["inbound", "outbound"]
-    food_classes: list[Literal["food", "nonfood"]]
+    food_classes: list[Literal["food", "nonfood", "raw"]]
+    perishable: StrictBool = Field(default=False, exclude_if=lambda value: not value)
     temperature_requirements: list[Identifier]
     handling_requirements: list[Identifier]
     vehicle_constraints: list[Identifier]

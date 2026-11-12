@@ -535,11 +535,13 @@ class RaspProvider:
         except (ValueError, ValidationError):
             raise RaspError("invalid_response") from None
 
-    async def dated_journeys(self, origin: str, destination: str, day: date) -> tuple[dict, ...]:
+    async def dated_journeys(
+        self, origin: str, destination: str, day: date
+    ) -> tuple[dict[str, object], ...]:
         """Capture provider itineraries including their individual transfer segments."""
         if self._key is None:
             raise RaspError("disabled")
-        pages = []
+        pages: list[dict[str, object]] = []
         offset = 0
         total = None
         for _ in range(self._page_limit):
@@ -556,6 +558,8 @@ class RaspProvider:
                 "limit": str(self._page_size),
             }
             body = await self._request_json("/v3.0/search/", params)
+            if not isinstance(body, dict):
+                raise RaspError("invalid_response")
             try:
                 page = _Page.model_validate(body)
             except ValidationError:
@@ -580,7 +584,7 @@ class RaspProvider:
                 raise RaspError("invalid_response")
         raise RaspError("invalid_response")
 
-    async def dated_thread(self, uid: str, day: date) -> dict:
+    async def dated_thread(self, uid: str, day: date) -> dict[str, object]:
         """Fetch the dated stop sequence for a thread from a search response."""
         if self._key is None:
             raise RaspError("disabled")

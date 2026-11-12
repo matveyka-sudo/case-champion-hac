@@ -438,6 +438,23 @@ def test_exported_artifacts_match_baseline_and_approved_contract_extensions(tmp_
     )
     assert set(passenger_extension) == {"manifest.json", "openapi.json"}
     expected.update(passenger_extension)
+    cargo_extension = json.loads(
+        (Path(__file__).parent / "fixtures/urban_cargo_schema_extension.json").read_text()
+    )
+    assert set(cargo_extension) == {"manifest.json", "openapi.json"} | {
+        f"v2.{model}.{mode}.schema.json"
+        for model in (
+            "AcceptedData",
+            "Capabilities",
+            "CargoProfile",
+            "CompactAnalysisScope",
+            "DeliveryCargoProfile",
+            "FreightCompatibility",
+        )
+        for mode in ("serialization", "validation")
+    }
+    assert set(cargo_extension) <= expected.keys()
+    expected.update(cargo_extension)
     assert actual == expected
 
 
