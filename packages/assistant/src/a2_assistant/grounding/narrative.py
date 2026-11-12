@@ -167,6 +167,17 @@ def _comparison(facts: list[Metric | Score]) -> str:
     )
 
 
+# Every Leg.kind of the v2 journey contract; an unknown future kind stays generic.
+_LEG_KINDS = {
+    "walk": "пеший участок",
+    "ride": "поездка",
+    "wait_initial": "ожидание первого отправления",
+    "wait_transfer": "ожидание при пересадке",
+    "transfer_operation": "пересадка",
+    "handling": "обработка",
+}
+
+
 def _journey(saved: AnalysisResult, facts: list[Metric | Score]) -> str:
     ids = {f.journey_id for f in facts if isinstance(f, Metric) and f.journey_id is not None}
     linked = [journey for journey in saved.journeys if journey.journey_id in ids]
@@ -177,14 +188,7 @@ def _journey(saved: AnalysisResult, facts: list[Metric | Score]) -> str:
             "нельзя определить, где возникло ожидание или задержка."
         )
     leg = max(linked[0].legs, key=lambda item: item.duration_seconds)
-    description = {
-        "walk": "пеший участок",
-        "ride": "поездка",
-        "wait": "ожидание",
-        "transfer": "пересадка",
-        "preparation": "подготовка",
-        "handling": "обработка",
-    }.get(leg.kind, "участок транспортной цепочки")
+    description = _LEG_KINDS.get(leg.kind, "участок транспортной цепочки")
     return (
         f"Среди записанных участков этой цепочки наибольшую продолжительность имеет {description}. "
         "Это описание сохранённого пути, а не прогноз задержек и не доказательство "
