@@ -116,14 +116,14 @@ def request(module, modes, *, offset=0):
 
 def test_public_only_request_does_not_pass_or_return_private_car(configured_intercity, monkeypatch):
     module, snapshot, _ = configured_intercity
-    actual = product.analyze_intercity_passenger
+    actual = product.analyze_intercity_passenger_with_access
     received = []
 
     def observe(*args, **kwargs):
         received.append(kwargs["car"])
         return actual(*args, **kwargs)
 
-    monkeypatch.setattr(product, "analyze_intercity_passenger", observe)
+    monkeypatch.setattr(product, "analyze_intercity_passenger_with_access", observe)
     result = product.calculate(claim_for(snapshot, request(module, ["rail"])))
     assert received == [None]
     assert all(score.subject.mode != "private_car" for score in result.scores)
@@ -138,7 +138,7 @@ def test_private_car_uses_own_public_engine_path_without_scheduled_search(
     def forbidden(*args, **kwargs):
         raise AssertionError("Private-car selection must not run the scheduled solver")
 
-    monkeypatch.setattr(product, "analyze_intercity_passenger", forbidden)
+    monkeypatch.setattr(product, "analyze_intercity_passenger_with_access", forbidden)
     result = product.calculate(claim_for(snapshot, request(module, ["private_car"])))
     assert len(result.scores) == 1 and result.scores[0].value == 50
     assert result.scores[0].subject.mode == "private_car"
