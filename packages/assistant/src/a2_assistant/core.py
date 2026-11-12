@@ -738,7 +738,7 @@ class FlashAssistant:
         search_attempted = False
         document_search: EvidenceSearchResult | None = None
         if (
-            self.config.tools_enabled
+            (self.config.tools_enabled or self.config.document_retrieval)
             and needs_documents(context)
             and context is not None
             and scope.source_ids
