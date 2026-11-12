@@ -36,7 +36,8 @@ _INTENTS: tuple[tuple[ClauseId, tuple[str, ...]], ...] = (
 def suggested_clause(question: str | None) -> ClauseId:
     text = (question or "").casefold()
     for clause, words in _INTENTS:
-        if any(word in text for word in words):
+        # Match stems at word starts: "цен" must not match "оценка" or "сценарий".
+        if any(re.search(r"\b" + re.escape(word), text) for word in words):
             return clause
     return "explain"
 

@@ -22,6 +22,20 @@ services:
     environment:
       A2_DATABASE_URL: postgresql://waydex:${POSTGRES_PASSWORD:?}@postgres:5432/waydex
       A2_DATABASE_SCHEMA: waydex
+      ASSISTANT_HOOK: ${ASSISTANT_HOOK:-a2_api.assistant.alice:build_assistant}
+      ASSISTANT_BUDGET_HOOK: ${ASSISTANT_BUDGET_HOOK:-a2_api.assistant.budget:build_budget}
+      ASSISTANT_TOOLS_ENABLED: ${ASSISTANT_TOOLS_ENABLED:-false}
+      ASSISTANT_DOCUMENT_RETRIEVAL: ${ASSISTANT_DOCUMENT_RETRIEVAL:-true}
+      LLM_ENABLED: ${LLM_ENABLED:-false}
+      YANDEX_API_KEY: ${YANDEX_API_KEY:-}
+      YANDEX_FOLDER_ID: ${YANDEX_FOLDER_ID:-}
+      YANDEX_MODEL: ${YANDEX_MODEL:-aliceai-llm-flash}
+      YANDEX_BASE_URL: ${YANDEX_BASE_URL:-https://ai.api.cloud.yandex.net/v1}
+      ALICE_CURRENCY: ${ALICE_CURRENCY:-RUB}
+      ALICE_TARIFF_ID: ${ALICE_TARIFF_ID:-aliceai-llm-flash-sync-rub-2026-11-09}
+      ALICE_BUDGET_LIMIT: ${ALICE_BUDGET_LIMIT:-10}
+      ALICE_TOKEN_LIMIT: ${ALICE_TOKEN_LIMIT:-50000}
+      ALICE_BILLING_CURRENCY_CONFIRMED: ${ALICE_BILLING_CURRENCY_CONFIRMED:-false}
     depends_on:
       postgres:
         condition: service_healthy

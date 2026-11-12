@@ -19,6 +19,12 @@ from test_assistant import analysis, assistant, reply, score_analysis
 SCORE = {"score_id": "accessibility"}
 QUESTIONS = {
     "Почему такой индекс?": "explain",
+    "Почему такая оценка?": "explain",
+    "Объясни оценку доступности": "explain",
+    "Какой сценарий можно проверить?": "improve",
+    "Как улучшить сценарий?": "improve",
+    "Какая цена поездки?": "unsupported",
+    "Какие цены на билеты?": "unsupported",
     "Что сильнее влияет на результат?": "explain",
     "Какие источники использованы?": "sources",
     "На каком документе основан расчёт?": "sources",
