@@ -62,11 +62,11 @@ from .prose import (
     ProseLimits,
     ProseRejected,
     approved_finding,
-    fact_placeholder,
     generated_finding,
     prose_limits,
     seal_explanation,
 )
+from .prose import fact_placeholder as fact_placeholder  # compatibility facade
 from .tools import AccessScope, ToolBackend, ToolRejected, tool_definitions, validate_tool
 from .transport import FlashConfig, ModelFailure, ModelReply, ModelTransport
 
@@ -863,12 +863,11 @@ class FlashAssistant:
                     }
                 ],
                 "template_ids": [],
-                **({"answer_mode": "explain"} if context is not None and context.question else {}),
+                # Live Flash copies this shape: a server clause, not free prose.
                 **(
                     {
-                        "paragraph": "Для выбранного показателя сохранено "
-                        + fact_placeholder(metric)
-                        + ". [[coverage]]",
+                        "answer_mode": "explain",
+                        "clause_id": "explain",
                         "evidence_ids": leaf_references(metric.source_refs, resolver)[:5],
                     }
                     if context is not None and context.question
@@ -887,12 +886,10 @@ class FlashAssistant:
                     }
                 ],
                 "template_ids": [],
-                **({"answer_mode": "explain"} if context is not None and context.question else {}),
                 **(
                     {
-                        "paragraph": "Для выбранной оценки сохранено "
-                        + fact_placeholder(score)
-                        + ". [[coverage]]",
+                        "answer_mode": "explain",
+                        "clause_id": "explain",
                         "evidence_ids": leaf_references(score.evidence_refs, resolver)[:5],
                     }
                     if context is not None and context.question
@@ -902,9 +899,9 @@ class FlashAssistant:
         output_instructions = (
             "Return exactly one JSON object, no Markdown, code fences, or text outside JSON. "
             "Russian freeform question. Legacy paragraph limit: 650 characters. "
-            "Prefer clause_id (answer_mode, components or time_scope) with findings/template_ids; server renders facts. "
+            "Set clause_id to one answer_modes value, components or time_scope; the server writes the text. "
             "components: score + its component metric; time_scope: available time metrics. "
-            "paragraph is legacy: use only presentation templates, never free factual assertions. "
+            "paragraph is legacy and optional, top level only, never inside findings. "
             "answer_mode is an optional compatibility fallback: explain=why, methodology=formula/H, "
             "journey=which leg, coverage=unknown/limits, improve=saved scenario, compare=two facts, "
             "help=how to use, unsupported=missing facts/new calculations/prices/blame. "
