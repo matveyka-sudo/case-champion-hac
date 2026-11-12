@@ -16,6 +16,19 @@
  "text": "data/documents/transport_strategy/3363-r-2021-11-27.txt",
  "text_extraction": "macOS PDFKit PDFDocument.string per page; a2_data_pipeline.documents clean (1 line with a personal name removed)",
  "start": "I. Общие положения",
+ "acceptance": {
+  "status": "pending",
+  "accepted_by": null,
+  "accepted_at": null,
+  "source_url_checked_at": null,
+  "privacy_reviewed_at": null,
+  "text_sha256": "daacfd05daa4fd2cfdc4c2d962038b772fc92a1b8b679c0730296548a1160a34",
+  "open_items": [
+   "Открыть официальный адрес и сверить sha256 файла: url выведен из имени файла и не перепроверен",
+   "Прочитать текст на персональные данные: фильтр ФИО — эвристика, а не проверка",
+   "После этого владелец данных ставит status=accepted; источник в реестре получает accepted и манифест набора данных"
+  ]
+ },
  "rejected_inputs": [
   {"file_sha256": "78b98633536459df8b1d4621d59d00e365bd610868ab98883cce94374c1df6fe", "reason": "draft of 14.08.2021 marked ПРОЕКТ, not the approved act"}
  ]

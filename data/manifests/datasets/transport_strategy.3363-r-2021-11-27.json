@@ -1,0 +1,38 @@
+{
+  "dataset_id": "transport_strategy.3363-r-2021-11-27",
+  "source_id": "transport_strategy",
+  "source_url": "http://static.government.ru/media/files/7enYF2uL5kFZlOOpQhLl0nUT91RjCbeR.pdf",
+  "retrieved_at": "2026-11-12T14:26:05Z",
+  "publication_date": "2021-11-27",
+  "valid_from": "2021-11-27",
+  "valid_to": "2035-12-31",
+  "geography": "Российская Федерация",
+  "license": {
+    "name": "Официальный документ органа власти, не объект авторского права (п. 6 ст. 1259 ГК РФ)",
+    "url": "http://government.ru/docs/43708/",
+    "status": "permitted",
+    "attribution": "Правительство Российской Федерации"
+  },
+  "access_method": "manual",
+  "raw_path": "transport_strategy/3363-r-2021-11-27.pdf",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "909c861d2197a5e5b5fba5b55eb8faae72e386c52d8453e619227ac07676070d",
+    "size_bytes": 1616103
+  },
+  "upstream_checksum": null,
+  "schema_mapping": {
+    "pdf:pages1-285": "data/documents/transport_strategy/3363-r-2021-11-27.txt (PDFKit text, a2_data_pipeline.documents clean)",
+    "text:from 'I. Общие положения'": "EvidenceChunk sections and chunks (a2_data_pipeline.documents build)"
+  },
+  "coverage": "Утверждённый текст распоряжения от 27.11.2021 № 3363-р, 285 страниц; документальный контекст, не расчётные метрики",
+  "limitations": [
+    "Целевые показатели стратегии не считаются достигнутыми фактами",
+    "Адрес PDF выведен из имени файла и требует перепроверки: до сверки набор не принят",
+    "Текст не прочитан человеком на персональные данные: фильтр ФИО — эвристика",
+    "Строка подписи с ФИО удалена из текста; другие персональные данные не найдены",
+    "Проект стратегии от 14.08.2021 (sha256 78b98633…) отклонён как неутверждённый"
+  ],
+  "status": "fetched",
+  "qa_report": null
+}
