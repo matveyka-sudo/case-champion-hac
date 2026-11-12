@@ -2,6 +2,7 @@
 
 import asyncio
 from dataclasses import replace
+from datetime import timedelta
 from zoneinfo import ZoneInfo
 
 from a2_contracts.common import canonical_hash
@@ -16,6 +17,7 @@ from a2_contracts.v2.requests import (
 from a2_contracts.v2.results import AnalysisResult, EvidenceRef, SubjectRef
 from a2_contracts.v2.scenarios import ScenarioResult
 from a2_engine import (
+    BoardingReadiness,
     MetricResult,
     ReferenceComparison,
     UrbanTransitNetwork,
@@ -338,6 +340,7 @@ def calculate(
         scope = replace(inputs.scope, comparison_scope=reference_scope)
         if (
             not inputs.public_timetable_unavailable
+            and not inputs.mixed_only
             and request.passenger_modes is not None
             and request.passenger_modes != ["private_car"]
         ):
@@ -407,6 +410,16 @@ def calculate(
                     kind="reference_ratio",
                 )
             return finalize(out.finish())
+        readiness = inputs.readiness
+        if inputs.initial_airport_checkin_seconds is not None:
+            readiness = tuple(
+                BoardingReadiness(
+                    node,
+                    request.departure_at + timedelta(seconds=inputs.initial_airport_checkin_seconds),
+                    inputs.scope.evidence_refs,
+                )
+                for node in scope.comparison_scope.origin_node_ids
+            )
         passenger_analysis = analyze_intercity_passenger(
             scope,
             request.departure_at,
@@ -418,7 +431,7 @@ def calculate(
             rules=load_intercity_passenger_rules(),
             frequency_start_at=inputs.frequency_start_at,
             frequency_end_at=inputs.frequency_end_at,
-            readiness=inputs.readiness,
+            readiness=readiness,
             car=accepted_car,
             resource_limit=inputs.resource_limit,
         )

@@ -535,6 +535,69 @@ class RaspProvider:
         except (ValueError, ValidationError):
             raise RaspError("invalid_response") from None
 
+    async def dated_journeys(self, origin: str, destination: str, day: date) -> tuple[dict, ...]:
+        """Capture provider itineraries including their individual transfer segments."""
+        if self._key is None:
+            raise RaspError("disabled")
+        pages = []
+        offset = 0
+        total = None
+        for _ in range(self._page_limit):
+            params = {
+                "from": origin,
+                "to": destination,
+                "date": day.isoformat(),
+                "format": "json",
+                "lang": "ru_RU",
+                "system": "yandex",
+                "result_timezone": "UTC",
+                "transfers": "true",
+                "offset": str(offset),
+                "limit": str(self._page_size),
+            }
+            body = await self._request_json("/v3.0/search/", params)
+            try:
+                page = _Page.model_validate(body)
+            except ValidationError:
+                raise RaspError("invalid_response") from None
+            p = page.pagination
+            if (
+                page.search.origin.code != origin
+                or page.search.destination.code != destination
+                or page.search.date != day
+                or p.offset != offset
+                or len(page.segments) > p.limit
+                or offset + len(page.segments) > p.total
+                or (total is not None and p.total != total)
+            ):
+                raise RaspError("invalid_response")
+            pages.append(body)
+            offset += len(page.segments)
+            total = p.total
+            if offset == total:
+                return tuple(pages)
+            if not page.segments:
+                raise RaspError("invalid_response")
+        raise RaspError("invalid_response")
+
+    async def dated_thread(self, uid: str, day: date) -> dict:
+        """Fetch the dated stop sequence for a thread from a search response."""
+        if self._key is None:
+            raise RaspError("disabled")
+        body = await self._request_json(
+            "/v3.0/thread/",
+            {
+                "uid": uid,
+                "date": day.isoformat(),
+                "format": "json",
+                "lang": "ru_RU",
+                "result_timezone": "UTC",
+            },
+        )
+        if not isinstance(body, dict) or body.get("uid") != uid or not body.get("stops"):
+            raise RaspError("invalid_response")
+        return body
+
     async def copyright(self) -> RaspCopyright:
         """Copyright is a real API request and consumes the same shared allowance."""
         if self._key is None:
@@ -557,7 +620,7 @@ class RaspProvider:
 
     async def _request_json(self, path: str, params: dict[str, str]) -> object:
         assert self._key is not None
-        if path not in {"/v3.0/search/", "/v3.0/copyright/"}:
+        if path not in {"/v3.0/search/", "/v3.0/copyright/", "/v3.0/thread/"}:
             raise RaspError("invalid_request")
         for attempt in range(3):
             async with self._semaphore:

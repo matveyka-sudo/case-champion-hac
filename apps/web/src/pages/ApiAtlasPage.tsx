@@ -642,7 +642,7 @@ export function ApiAtlasPage() {
       areaId: "",
       profileId: "",
       pipeline: false,
-      ...(kind === "intercity_passenger" && compact && !compactSlots.some(({ slot }) => slot === draft.slot)
+      ...(kind === "intercity_passenger" && (!caps || compact) && !compactSlots.some(({ slot }) => slot === draft.slot)
         ? { slot: compactSlots[0].slot }
         : {}),
       ...(compact ? {
@@ -651,6 +651,7 @@ export function ApiAtlasPage() {
         cargoModes: ["road"],
         travel: "walk",
       } : {}),
+      ...(kind === "intercity_passenger" && !caps ? { level: "city", paxModes: ["car"] } : {}),
     });
   const selectedJourney =
     visibleJourneys.filter(
@@ -788,11 +789,15 @@ export function ApiAtlasPage() {
     }
     return evidenceResolver(context).sources(references());
   };
+  const resultRequest = result?.request;
   const renderResultCard = () => result && <ResultCardFrame id="apiResultCard" sectionRef={resultCard} compact={chatOpen && !filtersCollapsed && window.innerWidth < 1600} label={compactResult ? "Результат расчёта" : undefined}>
               <ResultCardHeader label={savedDemoModel ? scenarioView ? "Демонстрационный сценарий" : "Демонстрационный анализ" : scenarioView ? "Сценарий" : compactResult ? selection?.entity_kind === "destination" ? "Объект назначения" : selection ? requestTitle : "Результат расчёта" : "Сохранённый анализ"}
                 title={selectionTitle} onClose={() => setCardHidden(true)} titleRef={resultTitleRef} />
               {compactResult ? <div className="ctx-b">
                 <CompactResultSummary result={result} selection={selection}
+                  originTimezone={resultRequest?.analysis_kind === "intercity_passenger"
+                    ? catalog.find((entry) => entry.territory_id === resultRequest.origin_id)?.timezone
+                    : undefined}
                   score={selection?.entity_kind === "sample_point" ? headlineScore : territoryHeadline} time={headlineTime} metrics={shownMetrics} />
                 {selection?.entity_kind === "sample_point" && categoryRows.length > 1 && <div className="sect">
                   <ResultCategoryTable rows={categoryRows} columns={["Объекты", "Время в пути", "Индекс"]} />

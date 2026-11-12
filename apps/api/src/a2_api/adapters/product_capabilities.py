@@ -135,6 +135,8 @@ def urban_passenger_scopes(
 
 def compact_modes(inputs: EngineInputs | None) -> list[str]:
     if isinstance(inputs, IntercityInputs):
+        if inputs.mixed_only:
+            return ["mixed"]
         scheduled = inputs.scope.applicable_modes if inputs.timetable.runs else ()
         return sorted(set(scheduled) | ({"private_car"} if inputs.car is not None else set()))
     if isinstance(inputs, DeliveryInputs):
