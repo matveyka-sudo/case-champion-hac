@@ -41,12 +41,42 @@ export function CompactResultSummary({ result, selection, score, time, metrics }
     </section>;
   }
   if (request.analysis_kind === "intercity_passenger") {
-    const road = metrics.find((metric) => metric.name === "private_car_path_seconds" && metric.status === "available");
+    const modes = request.passenger_modes ?? [...new Set(result.scores
+      .filter((item) => item.name === "passenger_index" || item.name === "private_car_index")
+      .map((item) => item.subject.mode).filter((mode) => mode != null))];
     return <section className="api-result-summary">
-      <div className="api-summary-label">Время в пути на автомобиле</div>
-      <div className="api-summary-value tnum">{road?.value == null ? <span>Нет данных</span> : <strong>{duration(road.value)}</strong>}</div>
-      {result.limitations.includes("ROAD_CHAIN_VIA_MOSCOW") && <p className="api-summary-mode"><Icon name="route" />Маршрут через Москву</p>}
-      <p className="api-summary-note">Для индекса нужно эталонное время в пути.</p>
+      <div className="api-summary-label">Индекс пассажирской связи</div>
+      {modes.map((mode) => {
+        const car = mode === "private_car";
+        const index = result.scores.find((item) => item.subject.mode === mode &&
+          item.name === (car ? "private_car_index" : "passenger_index"));
+        const findTime = (name: string) => result.metrics.find((metric) =>
+          metric.subject.mode === mode && metric.name === name && metric.status === "available")?.value;
+        const travel = findTime(car ? "private_car_path_seconds" : "path_seconds");
+        const wait = car ? null : findTime("initial_wait_seconds");
+        const value = index?.status === "available" ? index.value : null;
+        const reason = index?.reason_code;
+        const missingReference = result.references.some((reference) => reference.status === "unknown");
+        return <div key={mode}>
+          <p className="api-summary-mode">{mode === "road" ? "Автобус" : modeText[mode]}</p>
+          <div className="api-summary-value tnum">
+            {value == null ? <span>Индекс не рассчитан</span> : <><strong>{number.format(value)}</strong><span>из 100</span></>}
+          </div>
+          {travel != null && <div className="api-summary-fact">
+            <span>Время в пути</span><strong>{duration(travel)}</strong>
+          </div>}
+          {wait != null && <div className="api-summary-fact">
+            <span>До первого отправления</span><strong>{duration(wait)}</strong>
+          </div>}
+          {car && result.limitations.includes("ROAD_CHAIN_VIA_MOSCOW") &&
+            <p className="api-summary-note">Маршрут через Москву.</p>}
+          {reason === "NO_FEASIBLE_ROUTE" ? <p className="api-summary-note">В проверенной сети подходящего рейса нет.</p> :
+            value == null && <p className="api-summary-note">{travel != null && missingReference
+              ? "Для индекса нужно эталонное время в пути."
+              : "Недостаточно подтверждённых данных для расчёта."}</p>}
+        </div>;
+      })}
+      {modes.length === 0 && <p className="api-summary-note">Недостаточно данных для подтверждения поездки.</p>}
     </section>;
   }
   if (request.analysis_kind === "urban_cargo") {

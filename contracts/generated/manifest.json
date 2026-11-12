@@ -104,7 +104,7 @@
     "ValidityPeriod.serialization.schema.json": "960927c676a9b55585120f958454f0a78aac2ad5c923a2a27675ae80de0448a9",
     "ValidityPeriod.validation.schema.json": "960927c676a9b55585120f958454f0a78aac2ad5c923a2a27675ae80de0448a9",
     "legacy-openapi.json": "15ca917ce4f160ccbe42b162b2a493169335a7113180c89c9c8d247ee32d5541",
-    "openapi.json": "f6fc2ae14cf7bd7566b9355c53c72435195d4ff6adfe8a233c0dc7a66a1172f0",
+    "openapi.json": "b62b36793b02f79e74913eacbcaf2fc568220810c4000fb3dbb08f720cc27cf1",
     "v2.AcceptedData.serialization.schema.json": "c37943b823ddaa03c118700d7e25e97c519a0bdd848280b0e768de286581ee30",
     "v2.AcceptedData.validation.schema.json": "c37943b823ddaa03c118700d7e25e97c519a0bdd848280b0e768de286581ee30",
     "v2.AccessNode.serialization.schema.json": "214ecc338e91d1f2d1f21c6e34e61455a642795a3b294986c209d53af843c2a3",

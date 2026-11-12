@@ -8,6 +8,9 @@ export class BackendGateway {
   capabilities = () => this.client.capabilities();
   territories = (level: "city" | "region", query = "", signal?: AbortSignal) =>
     this.client.territories(level, query, signal);
+  passengerSchedules = (origin: string, destination: string, signal: AbortSignal) =>
+    this.client.list("/passenger-schedules?" + new URLSearchParams({ origin, destination }),
+      "PassengerScheduleObservation", signal);
   submit = (request: AnalysisRequest, key: string, signal?: AbortSignal) =>
     this.client.request("/analyses", "JobAccepted", {
       body: request,

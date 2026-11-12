@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import asyncpg  # type: ignore[import-untyped]
@@ -30,6 +31,7 @@ class RaspSettings(WaydexSettings):
     quota_database_schema: str = Field(pattern=r"^[a-z][a-z0-9_]{0,62}$")
     account_id: str = Field(pattern=r"^[a-zA-Z0-9_.:-]{1,128}$")
     quota_timezone: str
+    observation_cache_dir: Path | None = None
 
     @field_validator("quota_timezone")
     @classmethod
@@ -78,6 +80,7 @@ async def open_rasp_provider(
     *,
     transport: httpx.MockTransport | None = None,
     on_page_capture: CaptureCallback | None = None,
+    cache_ttl_seconds: float = 300,
 ) -> AsyncIterator[RaspProvider]:
     """Owned nonretrying HTTP transport; injection is limited to offline mocks."""
     config = settings or load_settings()
@@ -107,4 +110,5 @@ async def open_rasp_provider(
                 pool, account_id=config.account_id, quota_timezone=config.quota_timezone
             ),
             on_page_capture=on_page_capture,
+            cache_ttl_seconds=cache_ttl_seconds,
         )

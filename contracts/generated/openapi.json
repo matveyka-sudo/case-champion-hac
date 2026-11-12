@@ -3069,6 +3069,61 @@
         "title": "NumericClaim",
         "type": "object"
       },
+      "PassengerScheduleObservation": {
+        "properties": {
+          "accepted_snapshot": {
+            "const": false,
+            "default": false,
+            "title": "Accepted Snapshot",
+            "type": "boolean"
+          },
+          "completed_dates": {
+            "items": {
+              "format": "date",
+              "type": "string"
+            },
+            "title": "Completed Dates",
+            "type": "array"
+          },
+          "copyright_banner_url": {
+            "const": "https://yandex.st/rasp/media/apicc/copyright_vert_mono.html",
+            "default": "https://yandex.st/rasp/media/apicc/copyright_vert_mono.html",
+            "title": "Copyright Banner Url",
+            "type": "string"
+          },
+          "departures": {
+            "items": {
+              "$ref": "#/components/schemas/RaspDeparture"
+            },
+            "title": "Departures",
+            "type": "array"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "title": "Fetched At",
+            "type": "string"
+          },
+          "source": {
+            "const": "yandex_rasp",
+            "default": "yandex_rasp",
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "fetched_at",
+          "expires_at",
+          "completed_dates",
+          "departures"
+        ],
+        "title": "PassengerScheduleObservation",
+        "type": "object"
+      },
       "PipelineCargoProfile": {
         "additionalProperties": false,
         "properties": {
@@ -3234,6 +3289,80 @@
           "unknown_positive_weight"
         ],
         "title": "PopulationBasis",
+        "type": "object"
+      },
+      "RaspDeparture": {
+        "additionalProperties": false,
+        "properties": {
+          "arrival_at": {
+            "format": "date-time",
+            "title": "Arrival At",
+            "type": "string"
+          },
+          "departure_at": {
+            "format": "date-time",
+            "title": "Departure At",
+            "type": "string"
+          },
+          "duration_seconds": {
+            "minimum": 0.0,
+            "title": "Duration Seconds",
+            "type": "number"
+          },
+          "from_station": {
+            "$ref": "#/components/schemas/RaspStation"
+          },
+          "service_uid": {
+            "minLength": 1,
+            "title": "Service Uid",
+            "type": "string"
+          },
+          "to_station": {
+            "$ref": "#/components/schemas/RaspStation"
+          },
+          "transport_type": {
+            "enum": [
+              "plane",
+              "train",
+              "suburban",
+              "bus",
+              "water",
+              "helicopter"
+            ],
+            "title": "Transport Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "service_uid",
+          "transport_type",
+          "from_station",
+          "to_station",
+          "departure_at",
+          "arrival_at",
+          "duration_seconds"
+        ],
+        "title": "RaspDeparture",
+        "type": "object"
+      },
+      "RaspStation": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "pattern": "^[sc][0-9]+$",
+            "title": "Code",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "title"
+        ],
+        "title": "RaspStation",
         "type": "object"
       },
       "ReferenceResult": {
@@ -6856,6 +6985,178 @@
           }
         },
         "summary": "Cancel"
+      }
+    },
+    "/api/v1/passenger-schedules": {
+      "get": {
+        "operationId": "passenger_schedules_api_v1_passenger_schedules_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "origin",
+            "required": true,
+            "schema": {
+              "enum": [
+                "moscow",
+                "kaliningrad",
+                "novorossiysk"
+              ],
+              "title": "Origin",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "destination",
+            "required": true,
+            "schema": {
+              "enum": [
+                "moscow",
+                "kaliningrad",
+                "novorossiysk"
+              ],
+              "title": "Destination",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PassengerScheduleObservation"
+                  },
+                  "title": "Response Passenger Schedules Api V1 Passenger Schedules Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Passenger Schedules"
       }
     },
     "/api/v1/scenario-runs/{run_id}": {
