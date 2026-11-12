@@ -146,3 +146,65 @@ def _focused(
             if len(result) == 20:
                 break
     return result
+
+
+def context_facts(
+    saved: AnalysisResult, context: ExplanationRequest | None
+) -> tuple[list[Metric], list[Score]]:
+    """Prioritize explicit subjects, then real component edges; never infer edges."""
+    metrics, scores = focused_metrics(saved, context), focused_scores(saved, context)
+    question = (context.question or "") if context is not None else ""
+    compare = any(word in question.casefold() for word in ("сравн", "compare", "сопостав"))
+    if compare:
+        # The public request has one selection. A second entity must be named
+        # explicitly by its saved ID; substring matches must not broaden scope.
+        tokens = set(re.findall(r"[\w:.-]+", question))
+
+        def add_explicit(collection: list[SavedFact], selected: list[SavedFact]) -> None:
+            for item in collection:
+                identifiers = item.subject.model_dump(exclude_none=True)
+                if any(
+                    str(value) in tokens
+                    for key, value in identifiers.items()
+                    if key.endswith("_id")
+                ):
+                    if item not in selected:
+                        selected.insert(1 if selected else 0, item)
+
+        add_explicit(saved.metrics, metrics)
+        add_explicit(saved.scores, scores)
+    metric_by_id = {item.metric_id: item for item in saved.metrics}
+    score_by_id = {item.score_id: item for item in saved.scores}
+    if any(word in question.casefold() for word in ("почему", "причин", "индекс", "оценк")):
+        related_metrics: list[Metric] = []
+        related_scores: list[Score] = []
+        queue = list(scores[:3])
+        seen: set[str] = set()
+        while queue and len(seen) < 20:
+            score = queue.pop(0)
+            if score.score_id in seen:
+                continue
+            seen.add(score.score_id)
+            for component in score.components:
+                if component.kind == "metric" and component.id in metric_by_id:
+                    item = metric_by_id[component.id]
+                    if item not in related_metrics:
+                        related_metrics.append(item)
+                elif component.kind == "score" and component.id in score_by_id:
+                    child = score_by_id[component.id]
+                    if child not in related_scores:
+                        related_scores.append(child)
+                        queue.append(child)
+        metrics = related_metrics + [item for item in metrics if item not in related_metrics]
+        scores = (
+            scores[:3]
+            + [item for item in related_scores if item not in scores[:3]]
+            + [item for item in scores[3:] if item not in related_scores]
+        )
+    if any(word in question.casefold() for word in ("маршрут", "путь", "участ", "цепоч")):
+        metrics.sort(key=lambda item: item.journey_id is None)
+    if any(word in question.casefold() for word in ("τ", "порог", "количеств", "объектов")):
+        count_ids = {item.metric_id for item in saved.counts}
+        counts = [item for item in saved.metrics if item.metric_id in count_ids]
+        metrics = counts + [item for item in metrics if item not in counts]
+    return metrics[:20], scores[:20]

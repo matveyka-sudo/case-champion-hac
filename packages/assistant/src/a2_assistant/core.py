@@ -50,7 +50,7 @@ from pydantic import (
 from pydantic_core import ErrorDetails
 
 from .evidence import leaf_references
-from .focus import focused_metrics, focused_scores
+from .focus import context_facts, focused_metrics, focused_scores
 from .narrative import (
     ANSWER_MODES,
     AnswerMode,
@@ -251,7 +251,7 @@ def _json(value: object) -> str:
 
 # Saved-fact context the model may lose first when the input budget is tight,
 # least important last.
-_OPTIONAL_CONTEXT = ("limitations", "request", "sources")
+_OPTIONAL_CONTEXT = ("sources", "journeys", "counts")
 
 
 def _request_note(saved: AnalysisResult) -> dict[str, object]:
@@ -280,6 +280,9 @@ def _source_notes(
             "evidence_id": ref.evidence_id,
             "source_id": ref.source_id,
             "section": (ref.section or "")[:200],
+            "url": str(ref.url),
+            "retrieved_at": ref.retrieved_at.isoformat(),
+            "observed_at": ref.observed_at.isoformat() if ref.observed_at else None,
         }
         for ref in (by_id[item] for item in wanted[:10] if item in by_id)
     ]
@@ -304,6 +307,7 @@ def _fact(value: Metric | Score, resolver: EvidenceResolver) -> dict[str, object
     if isinstance(value, Metric):
         result["unit"] = value.unit
         result["journey_saved"] = value.journey_id is not None
+        result["time_kind"] = value.time_kind
     else:
         result["ranking_eligible"] = value.ranking_eligible
     return result
@@ -796,19 +800,7 @@ class FlashAssistant:
         resolver: EvidenceResolver,
     ) -> Explanation:
         assert self.transport is not None and self.budget is not None
-        initial_metrics = focused_metrics(saved, context)
-        initial_scores = focused_scores(saved, context)
-        if (
-            context is not None
-            and context.selection is not None
-            and context.selection.entity_kind != "territory"
-        ):
-            initial_scores.sort(
-                key=lambda score: (score.subject.category is not None, score.status != "available")
-            )
-            initial_metrics.sort(
-                key=lambda metric: (metric.journey_id is None, metric.status != "available")
-            )
+        initial_metrics, initial_scores = context_facts(saved, context)
         # One bounded context, not twenty metrics plus twenty scores. Keep both
         # kinds discoverable without silently increasing the deployment budget.
         if initial_metrics and initial_scores:
@@ -826,11 +818,44 @@ class FlashAssistant:
             "territory_ids": sorted(scope.territory_ids),
             "source_ids": sorted(scope.source_ids)[:20],
             "request": _request_note(saved),
-            "limitations": [text[:300] for text in _saved_limitations(saved)[:8]],
+            "limitations": _saved_limitations(saved),
+            "analysis_kind": saved.analysis_kind,
+            "status": saved.status,
+            "methodology_version": saved.methodology_version,
+            "context_scope": "selected_saved_subset",
+            "counts_state": "saved" if saved.counts else "not_in_saved_result",
+            "journeys": [
+                {
+                    "journey_id": journey.journey_id,
+                    "status": journey.status,
+                    "completeness": journey.completeness,
+                    "reason_code": journey.reason_code,
+                    "time_kind": journey.time_kind,
+                    "origin_node_id": journey.origin_node_id,
+                    "destination_node_id": journey.destination_node_id,
+                    "legs": [{"kind": leg.kind, "mode": leg.mode} for leg in journey.legs[:4]],
+                    "legs_truncated": len(journey.legs) > 4,
+                }
+                for journey in saved.journeys
+                if journey.journey_id in {m.journey_id for m in initial_metrics}
+            ][:2]
+            if context
+            and any(
+                word in (context.question or "").casefold()
+                for word in ("маршрут", "путь", "участ", "цепоч")
+            )
+            else [],
             # With tools the model reads sources itself; keep that budget for results.
             **(
                 {}
                 if self.config.tools_enabled
+                and not (
+                    context
+                    and any(
+                        word in (context.question or "").casefold()
+                        for word in ("источник", "доказатель", "source")
+                    )
+                )
                 else {
                     "sources": _source_notes(saved, [*initial_metrics, *initial_scores], resolver)
                 }
@@ -839,8 +864,19 @@ class FlashAssistant:
             "scores": score_facts,
             "registered_template_ids": sorted(templates),
         }
+        for score, fact in zip(initial_scores, score_facts, strict=True):
+            components = [
+                component.model_dump(mode="json")
+                for component in score.components
+                if (component.kind == "metric" and component.id in allowed_metrics)
+                or (component.kind == "score" and component.id in allowed_scores)
+            ]
+            fact["components"] = components
+            fact["components_truncated"] = len(components) != len(score.components)
         user_payload: dict[str, object] = {
             "saved_facts": facts,
+            "facts_truncated": len(initial_metrics) < len(saved.metrics)
+            or len(initial_scores) < len(saved.scores),
             "response_contract": asdict(prose_limits(saved, [*initial_metrics, *initial_scores])),
             "untrusted_question_context": None
             if context is None
@@ -897,7 +933,6 @@ class FlashAssistant:
         output_instructions = (
             "Return exactly one JSON object, no Markdown, code fences, or text outside JSON. "
             "Answer the freeform question naturally in a Russian paragraph (at most 650 characters), "
-            "specific to what the user asks; do not merely repeat an intent template. "
             "Use paragraph plus findings, evidence_ids and template_ids. "
             "answer_mode is an optional compatibility fallback: explain=why, methodology=formula/H, "
             "journey=which leg, coverage=unknown/limits, improve=saved scenario, compare=two facts, "
@@ -909,11 +944,10 @@ class FlashAssistant:
             "evidence_ids may copy only selected facts' or search_evidence evidence_ids, otherwise []. "
             "For factual comparisons use [[comparison]], coverage/status use [[coverage]], "
             "methodology/formula/H use [[methodology]], saved chain/longest leg use [[journey]]. "
-            "These exact optional atoms are expanded by the server. Surround them with relevant prose. "
+            "The server expands atoms. "
             "Use at most one optional atom in the entire paragraph. Follow response_contract: "
             "qualitative_max_characters counts all remaining characters, including spaces and punctuation, "
-            "after removing exact fact placeholders and the optional atom. The server reserves the rest "
-            "of the final text limit for saved values, atom expansion and complete scope warnings. "
+            "excluding placeholders and the atom; room for saved facts and scope warnings is reserved. "
             "Do not assert causes, forecasts, no-route conclusions, complete coverage, rankings, "
             "a proven minimum or a real-city interpretation of demo/observed data. "
             "Explain missing grounds plainly; the server always adds required scope warnings. "
@@ -958,6 +992,12 @@ class FlashAssistant:
             len(_json({"messages": messages, "tools": definitions}).encode()) + 2200
             > self.config.max_input_tokens
         ):
+            optional = [key for key in _OPTIONAL_CONTEXT if key in facts]
+            if optional:
+                del facts[optional[-1]]
+                user_payload["context_truncated"] = True
+                messages[1]["content"] = _json(user_payload)
+                continue
             candidates = [rows for rows in (metric_facts, score_facts) if len(rows) > 1]
             if not candidates:
                 break
@@ -966,6 +1006,19 @@ class FlashAssistant:
             messages[1]["content"] = _json(user_payload)
         allowed_metrics = {str(row["metric_id"]) for row in metric_facts}
         allowed_scores = {str(row["score_id"]) for row in score_facts}
+        for row in score_facts:
+            row_components = row["components"]
+            assert isinstance(row_components, list)
+            kept = [
+                edge
+                for edge in row_components
+                if (edge["kind"] == "metric" and edge["id"] in allowed_metrics)
+                or (edge["kind"] == "score" and edge["id"] in allowed_scores)
+            ]
+            row["components_truncated"] = row["components_truncated"] or len(kept) != len(
+                components
+            )
+            row["components"] = kept
         prose_contract = prose_limits(
             saved,
             [
