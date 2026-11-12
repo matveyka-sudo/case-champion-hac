@@ -1,16 +1,16 @@
 """Address search and pedestrian assessment over the local catalogue."""
 
 import sqlite3
-from threading import BoundedSemaphore
 
 import httpx
+from anyio import CapacityLimiter, to_thread
 from fastapi import APIRouter
 
 from a2_api.adapters import address_access as access
 from a2_api.core.errors import DomainError
 
 router = APIRouter(prefix="/address-access")
-route_slots = BoundedSemaphore(2)
+route_slots = CapacityLimiter(2)
 
 
 @router.post("/addresses")
@@ -22,21 +22,15 @@ def addresses(request: access.AddressQuery) -> list[access.Address]:
 
 
 @router.post("/calculate")
-def calculate(request: access.AddressRequest) -> access.AddressResult:
-    if not route_slots.acquire(blocking=False):
-        raise DomainError(
-            429, "budget_exceeded", "Пеший маршрутизатор занят. Повторите расчёт.", retryable=True
-        )
+async def calculate(request: access.AddressRequest) -> access.AddressResult:
     try:
-        result = access.address_result(request)
+        result = await to_thread.run_sync(access.address_result, request, limiter=route_slots)
     except sqlite3.OperationalError as exc:
         raise DomainError(503, "engine_unavailable", "Каталог адресов не подключён.") from exc
     except (httpx.HTTPError, ValueError, KeyError) as exc:
         raise DomainError(
             503, "engine_unavailable", "Пеший маршрутизатор не вернул результат. Повторите расчёт."
         ) from exc
-    finally:
-        route_slots.release()
     if result is None:
         raise DomainError(404, "unknown_id", "Адрес отсутствует в каталоге.")
     return result

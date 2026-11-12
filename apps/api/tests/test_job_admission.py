@@ -49,7 +49,7 @@ async def test_identical_retry_shares_whole_operation_after_original_caller_abor
 
 
 @pytest.mark.asyncio
-async def test_conflicting_body_and_other_scope_or_key_cannot_share_pending_job():
+async def test_conflicting_body_is_rejected_and_distinct_requests_queue():
     admission = module.Admission[str]()
     release = asyncio.Event()
 
@@ -59,16 +59,18 @@ async def test_conflicting_body_and_other_scope_or_key_cannot_share_pending_job(
 
     first = asyncio.create_task(admission.run(("owner", "key"), "digest", work))
     await until(lambda: admission._active is not None)
-    for key, digest, status in [
-        (("owner", "key"), "different", 409),
-        (("stranger", "key"), "digest", 503),
-        (("owner", "other"), "digest", 503),
-    ]:
-        with pytest.raises(DomainError) as rejected:
-            await admission.run(key, digest, work)
-        assert rejected.value.status_code == status
+    with pytest.raises(DomainError) as rejected:
+        await admission.run(("owner", "key"), "different", work)
+    assert rejected.value.status_code == 409
+    distinct = [
+        asyncio.create_task(admission.run(key, "digest", AsyncMock(return_value=value)))
+        for key, value in [(("stranger", "key"), "foreign"), (("owner", "other"), "other")]
+    ]
+    await until(lambda: len(admission._flights) == 3)
+    assert all(not caller.done() for caller in distinct)
     release.set()
     assert await first == "private"
+    assert await asyncio.gather(*distinct) == ["foreign", "other"]
 
 
 @pytest.mark.asyncio
@@ -214,16 +216,21 @@ async def test_public_HTTP_retry_recovers_one_job_through_preflight_and_enqueue(
             "/api/v1/analyses", json=payload | {"passenger_mode": "private_car"}, headers=headers
         )
         assert conflict.status_code == 409
-        foreign = await stranger.post("/api/v1/analyses", json=payload, headers=headers)
-        assert foreign.status_code == 503 and "job_id" not in foreign.json()
+        foreign = asyncio.create_task(
+            stranger.post("/api/v1/analyses", json=payload, headers=headers)
+        )
+        await until(lambda: len(service._admission._flights) == 2)
         insert_allowed.set()
         responses = await asyncio.gather(second, third)
         assert [r.status_code for r in responses] == [202, 202]
         assert responses[0].json()["job_id"] == responses[1].json()["job_id"]
         assert responses[0].json()["request_id"] != responses[1].json()["request_id"]
         assert all(r.json()["request_id"] == r.headers["x-request-id"] for r in responses)
-        assert preflight_calls == [True]
-        assert await pool.fetchval("SELECT count(*) FROM jobs") == 1
+        foreign_result = await foreign
+        assert foreign_result.status_code == 202
+        assert foreign_result.json()["job_id"] != responses[0].json()["job_id"]
+        assert preflight_calls == [True, True]
+        assert await pool.fetchval("SELECT count(*) FROM jobs") == 2
         saved = json.loads(await pool.fetchval("SELECT payload FROM jobs"))
         assert saved["request"] == parse_analysis_request(payload).model_dump(mode="json")
         assert saved["context"]["normalized_request"]["city_id"] == "city-1"
