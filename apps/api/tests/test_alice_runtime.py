@@ -88,6 +88,8 @@ class FakeSDKTransport:
 
 def _alice_env(monkeypatch, *, enabled=True, key=True, budget_hook=True):
     # Explicit values override any developer-local .env read by AliceSettings.
+    # These tests cover the previous assistant, kept behind CONSULTANT_ENABLED=false.
+    monkeypatch.setenv("CONSULTANT_ENABLED", "false")
     monkeypatch.setenv("LLM_ENABLED", str(enabled).lower())
     monkeypatch.setenv("YANDEX_API_KEY", "SYNTHETIC-SECRET-DO-NOT-LOG" if key else "")
     monkeypatch.setenv("YANDEX_FOLDER_ID", "synthetic-folder")

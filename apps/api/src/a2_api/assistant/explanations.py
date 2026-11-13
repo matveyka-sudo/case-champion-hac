@@ -25,6 +25,13 @@ async def explain(
     body: ExplanationRequest | None = None,
 ) -> Explanation:
     result = await service.analysis(analysis_id, scope)
+    consultant = getattr(service, "consultant", None)
+    if consultant is not None:
+        # The Waydex consultant answers every question from the saved numbers.
+        answer: Explanation = await consultant.explain(
+            service, result, body or ExplanationRequest(), request_id
+        )
+        return answer
     require_result_evidence(result)
     context = body or ExplanationRequest()
     if context.selection is not None:
