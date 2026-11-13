@@ -26,13 +26,6 @@ async def explain(
     body: ExplanationRequest | None = None,
 ) -> Explanation:
     result = await service.analysis(analysis_id, scope)
-    consultant = getattr(service, "consultant", None)
-    if consultant is not None:
-        # The Waydex consultant answers every question from the saved numbers.
-        answer: Explanation = await consultant.explain(
-            service, result, body or ExplanationRequest(), request_id
-        )
-        return answer
     require_result_evidence(result)
     context = body or ExplanationRequest()
     if context.selection is not None:
@@ -79,25 +72,30 @@ async def explain(
             raise DomainError(
                 404, "unknown_id", "Selected entity is not part of the saved analysis"
             )
-    if service.assistant is None:
-        explanation = template_explanation(result, request_id, "DISABLED", context=context)
-        if (
-            getattr(service, "document_corpora", None)
-            and getattr(service, "repository", None) is not None
-            and not await service._repository().private_source_bindings(analysis_id, scope)
-        ):
-            explanation = await _with_documents(
-                service, result, await _access(service, result, scope), context, explanation
-            )
-        await service.analysis(analysis_id, scope)
-        return explanation
-    bindings = await service._repository().private_source_bindings(analysis_id, scope)
-    # A grant opt-in cannot fence budget waits, retries and every model attempt.
-    # Keep all private facts local until that separate egress gate is reviewed.
+    repository = getattr(service, "repository", None)
+    bindings = (
+        await service._repository().private_source_bindings(analysis_id, scope)
+        if repository is not None
+        else ()
+    )
     if bindings:
         explanation = template_explanation(
             result, request_id, "PRIVATE_SOURCE_EXTERNAL_MODEL_DISABLED", context=context
         )
+        await service.analysis(analysis_id, scope)
+        return explanation
+    has_documents = bool(getattr(service, "document_corpora", None))
+    consultant = getattr(service, "consultant", None)
+    if consultant is not None and not (has_documents and needs_documents(context)):
+        answer: Explanation = await consultant.explain(service, result, context, request_id)
+        await service.analysis(analysis_id, scope)
+        return answer
+    if service.assistant is None:
+        explanation = template_explanation(result, request_id, "DISABLED", context=context)
+        if has_documents and repository is not None:
+            explanation = await _with_documents(
+                service, result, await _access(service, result, scope), context, explanation
+            )
         await service.analysis(analysis_id, scope)
         return explanation
     access = await _access(service, result, scope)
