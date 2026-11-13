@@ -128,6 +128,7 @@ class CategoryFact:
     index: float | None = None
     destination: str | None = None
     time_id: str | None = None
+    route_mode: str | None = None
     count_id: str | None = None
     score_id: str | None = None
 
@@ -282,12 +283,17 @@ def build_facts(
             fact = point(subject.point_id, subject.mode).categories.setdefault(
                 subject.category, CategoryFact(subject.category)
             )
-            if metric.name == "minimum_journey_seconds":
+            journey = journeys.get(metric.journey_id or "")
+            observed = journey is not None and metric.unit == "seconds" and value is not None
+            if metric.name == "minimum_journey_seconds" or (observed and fact.minutes is None):
                 fact.minutes = minutes(value)
                 fact.time_id = metric.metric_id
-                journey = journeys.get(metric.journey_id or "")
-                if journey is not None and journey.destination_object_id:
-                    fact.destination = destination_names.get(journey.destination_object_id)
+                if journey is not None:
+                    fact.destination = destination_names.get(journey.destination_object_id or "")
+                    if journey.legs and all(leg.kind == "walk" for leg in journey.legs):
+                        fact.route_mode = MODE_LABELS["walk"]
+                    else:
+                        fact.route_mode = MODE_LABELS.get(subject.mode or "")
             elif metric.name == "accessible_object_count":
                 fact.count = value
                 fact.count_id = metric.metric_id
@@ -484,6 +490,8 @@ def _point_line(item: PointFact) -> str:
         parts.append(f"жителей ≈ {whole(item.population)}")
     for fact in item.categories.values():
         text = f"{fact.label} — {fmt_minutes(fact.minutes)}"
+        if fact.route_mode:
+            text += f" {fact.route_mode}"
         if fact.destination:
             text += f" ({fact.destination})"
         if fact.count is not None:

@@ -14,8 +14,8 @@ import {
   useSyncExternalStore,
 } from "react";
 import { EvidenceSources as Sources } from "../widgets/EvidenceSources";
-import { backend } from "../api/gateway";
-import { ApiError } from "../api/client";
+import { backend as defaultBackend, BackendGateway } from "../api/gateway";
+import { ApiClient, ApiError } from "../api/client";
 import type {
   AnalysisKind,
   AnalysisRequest,
@@ -60,8 +60,8 @@ import { useAnalysisSession } from "../features/analysis/useAnalysisSession";
 import { atlasLocation, parseSavedPointer, savedPointerHash, savedPointerWriter, subscribeAtlasLocation, writeSavedPointer, type SavedPointer } from "../features/analysis/savedPointer";
 import { savedRequestDraft } from "../api/adapters/savedRequest";
 import { scenarioJourneys } from "../api/adapters/scenario";
-import { scopeContainsTime, urbanScopeAvailability, type UrbanSelection } from "../api/adapters/urbanScopes";
-import { journeyLines } from "../api/adapters/journeyGeometry";
+import { scopeAllowsArea, scopeContainsTime, scopePreset, urbanScopeAvailability, type UrbanSelection } from "../api/adapters/urbanScopes";
+import { journeyLines, transitLegend } from "../api/adapters/journeyGeometry";
 import { urbanReadiness } from "../api/adapters/urbanReadiness";
 import { UrbanReadiness } from "../widgets/UrbanReadiness";
 import { CalculatedJourneys } from "../widgets/CalculatedJourneys";
@@ -169,12 +169,17 @@ function ResultDetails({ summary, initialOpen, className, children }: { summary:
   const [open, setOpen] = useState(initialOpen);
   return <details className={`more ${className}`} open={open} onToggle={(event) => setOpen(event.currentTarget.open)}><summary>{summary}</summary>{open && children()}</details>;
 }
-const isAddressLink = (hash: string) => hash === "#atlas/address" || hash === "#address-access";
+const isAddressLink = (hash: string) => hash === "#atlas/address" || hash === "#address-access" || hash === "#atlas/districts";
 const viewportSubscribe = (cb: () => void) => {
   window.addEventListener("resize", cb);
   return () => window.removeEventListener("resize", cb);
 };
-export function ApiAtlasPage() {
+const districtBackend = new BackendGateway(new ApiClient(fetch, "/cao-api/v1"));
+export function DistrictAtlasPage() {
+  return <ApiAtlasPage caoDistrict />;
+}
+export function ApiAtlasPage({ caoDistrict = false }: { caoDistrict?: boolean } = {}) {
+  const backend = caoDistrict ? districtBackend : defaultBackend;
   const [caps, setCaps] = useState<Schemas["Capabilities"] | null>(null),
     [catalog, setCatalog] = useState<Territory[]>([]),
     [bootError, setBootError] = useState<Error | null>(null),
@@ -204,18 +209,20 @@ export function ApiAtlasPage() {
     [cargoLayers, setCargoLayers] = useState<Record<string, boolean>>({ ent: true, wh: true, port: true, term: true, rail: true }),
     [layers, setLayers] = useState({ index: true, objects: true, pop: false }),
     [zoom, setZoom] = useState({ kind: "home", id: 0 });
-  const session = useAnalysisSession();
+  const session = useAnalysisSession(backend);
   const selectedPreset = caps?.analysis_presets?.find((preset) => preset.preset_id === selectedPresetId);
   const draftTouched = useRef(false);
   const hash = useSyncExternalStore(subscribeAtlasLocation, atlasLocation, () => "");
   const handledPointer = useRef<string | null>(null);
   const [addressSelected, setAddressSelected] = useState(false);
+  const [lifeMessages, setLifeMessages] = useState<{question: string; text: string; generated?: boolean}[]>([]);
+  const [lifeChatBusy, setLifeChatBusy] = useState(false);
   const [addressCardHidden, setAddressCardHidden] = useState(false);
   const [districtReports, setDistrictReports] = useState<Schemas["DistrictResult"][]>([]);
   const [districtMetric, setDistrictMetric] = useState("overall");
   const [districtReport, setDistrictReport] = useState<Schemas["DistrictResult"] | null>(null);
   const access = useAddressAccess();
-  const [lifeTab, setLifeTab] = useState<"address" | "district">("address");
+  const [lifeTab, setLifeTab] = useState<"address" | "district">(() => hash === "#atlas/districts" ? "district" : "address");
   const addressMode = draft.kind === "urban_passenger" && (isAddressLink(hash) || addressSelected);
   const { setPicking } = access;
   let groupId: string | null = null;
@@ -266,7 +273,16 @@ export function ApiAtlasPage() {
     return () => {
       alive = false;
     };
-  }, [reload]);
+  }, [backend, reload]);
+  const requestedConnection = useRef(caoDistrict ? "" : new URLSearchParams(window.location.search).get("connections"));
+  useEffect(() => {
+    if (!caps || !requestedConnection.current) return;
+    const mode = requestedConnection.current;
+    requestedConnection.current = "";
+    if (mode === "pax" || mode === "cargo") {
+      setDraft((d) => ({ ...d, kind: mode === "pax" ? "intercity_passenger" : "urban_cargo" }));
+    }
+  }, [caps]);
   const restoreSaved = useEffectEvent(async () => {
     if (!caps || handledPointer.current === hash || isAddressLink(hash)) return;
     const previous = handledPointer.current;
@@ -354,7 +370,7 @@ export function ApiAtlasPage() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [caps, search, level]);
+  }, [backend, caps, search, level]);
   useEffect(() => {
     document.body.classList.add("mode-atlas");
     return () => document.body.classList.remove("mode-atlas");
@@ -681,7 +697,7 @@ export function ApiAtlasPage() {
       controller.abort();
       clearTimeout(expiryTimer);
     };
-  }, [showSchedule, draft.originId, draft.destinationId, schedulePair]);
+  }, [backend, showSchedule, draft.originId, draft.destinationId, schedulePair]);
   const schedule = scheduleState?.pair === schedulePair ? scheduleState.value : null;
   const calculationDates = compact?.dates;
   const suggestedDate = !compact?.snapshotId && compact?.dates.length
@@ -883,6 +899,14 @@ export function ApiAtlasPage() {
   const destination = catalog.find((item) => item.territory_id === draft.destinationId);
   const draftTerritory = [origin?.name, !urban && destination?.name].filter(Boolean).join(" → ");
   const filterIssue = unavailableReason || (unavailableRequest && requestErrorMessage) || (draft.kind === "urban_passenger" ? scopeState.problem?.message : null);
+  const changeTravel = (travel: ApiDraft["travel"]) => {
+    const scope = travel === "pt" ? publishedScopes?.find((candidate) =>
+      candidate.scope_id === "cao-transit-500m" && candidate.city_id === draft.cityId &&
+      scopeAllowsArea(candidate, draft.areaId)) : undefined;
+    const preset = scope && scopePreset(scope,
+      { ...scopeSelection, mode: "public_transport" }, publishedScopes ?? [], catalog, caps?.areas ?? []);
+    change(preset ? { travel, date: preset.date, slot: preset.slot, snapshotId: preset.selection.snapshotId } : { travel });
+  };
   const sendQuestion = () => {
     const text = question.trim();
     if (!text || text.length > 2000 || session.chatBusy) return;
@@ -1035,6 +1059,15 @@ export function ApiAtlasPage() {
                     originTimezone={savedOrigin?.timezone}
                     destinationTimezone={savedDestination?.timezone}
                     scenario={scenarioView}
+                    comparison={(() => {
+                      if (!result.analysis_id.startsWith("cao-transit-500m")) return undefined;
+                      const walk = shownMetrics.find((m) => m.metric_id === journey.journey_id.replace(/-transit$/, "-walk"));
+                      const transit = shownMetrics.find((m) => m.metric_id === journey.journey_id.replace(/-transit$/, "-pt-option"));
+                      const transfers = shownMetrics.find((m) => m.metric_id === journey.journey_id.replace(/-transit$/, "-transfers"));
+                      if (walk?.value == null || transit?.value == null || transfers?.value == null) return undefined;
+                      return { walk: walk.value, transit: transit.value, transfers: transfers.value,
+                        sameDestination: transit.subject.destination_id === journey.destination_object_id };
+                    })()}
                   />
                 ))}
                 </>}</ResultDetails>}
@@ -1119,18 +1152,49 @@ export function ApiAtlasPage() {
     onAsk={openLifeAgent} onClose={() => setAddressCardHidden(true)} />;
   const activeDistrict = addressMode && lifeTab === "district" ? districtReport : null;
   const districtCard = activeDistrict && <DistrictResultCard onAsk={openLifeAgent} metric={districtMetric} result={activeDistrict} onClose={() => setDistrictReport(null)} />;
-  const addressScope = addressMode && <div className="fgroup">
+  const sendLifeQuestion = async () => {
+    const text = question.trim();
+    if (!text || lifeChatBusy) return;
+    setQuestion("");
+    setLifeChatBusy(true);
+    try {
+      const response = await fetch("/api/v1/address-access/explanation", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: text, city: "Москва",
+          ...(activeDistrict ? {district: {...activeDistrict, boundary: null, sample_points: [], destinations: []}}
+            : lifeTab === "address" && access.result && !access.stale ? {
+              address: {...access.result, categories: access.result.categories.map(item => ({...item, path: []}))}
+            } : {}) }),
+      });
+      if (!response.ok) throw new Error("Объяснение временно недоступно.");
+      const answer = await response.json();
+      setLifeMessages(old => [...old, {question: text, text: answer.text, generated: answer.status === "generated"}]);
+    } catch {
+      setLifeMessages(old => [...old, {question: text, text: "Объяснение временно недоступно. Повторите вопрос."}]);
+    } finally {
+      setLifeChatBusy(false);
+    }
+  };
+  const addressScope = (addressMode || caoDistrict) && <div className="fgroup">
     <p className="flabel">Для жизни</p>
-    <Seg name="Область расчёта" value={lifeTab} items={[["address", "Адрес или точка"], ["district", "Район"]]}
-      onChange={(value) => { access.setPicking(false); setLifeTab(value as "address" | "district"); }} />
+    <Seg name="Область расчёта" value={caoDistrict ? "district" : lifeTab} items={[["address", "Адрес или точка"], ["district", "Район"]]}
+      onChange={(value) => {
+        if (caoDistrict && value === "address") window.location.assign("/map#atlas/address");
+        else if (!caoDistrict && value === "district" && lifeTab !== "district") window.location.assign("/district");
+        else if (!caoDistrict) { access.setPicking(false); setLifeTab("address"); }
+      }} />
   </div>;
 
 
   return (
     <AtlasShell className={demoModel ? "has-demo-model" : ""} label="Атлас Waydex — API"
-      header={<AtlasHeader life={addressMode} onLife={() => { if (draft.kind !== "urban_passenger") toggleMode("urban_passenger"); setAddressMode(true); window.location.hash = "atlas/address"; }} mode={draft.kind === "urban_passenger" ? "city" : draft.kind === "intercity_passenger" ? "pax" : "cargo"}
+      header={<AtlasHeader life={addressMode || caoDistrict} onLife={() => { if (caoDistrict) { window.location.assign("/map#atlas/address"); return; } if (draft.kind !== "urban_passenger") toggleMode("urban_passenger"); setAddressMode(true); window.location.hash = "atlas/address"; }} mode={draft.kind === "urban_passenger" ? "city" : draft.kind === "intercity_passenger" ? "pax" : "cargo"}
         title={addressMode ? "Москва и Московская область" : origin?.name || "Россия · выберите город"} theme={theme} onThemeChange={setTheme}
         onModeChange={(mode) => {
+          if (caoDistrict) {
+            window.location.assign("/map?connections=" + mode + "#atlas");
+            return;
+          }
           setAddressMode(false);
           if (mode === "city" && draft.kind === "urban_passenger") return;
           toggleMode(mode === "city" ? "urban_passenger" : mode === "pax" ? "intercity_passenger" : draft.kind.endsWith("cargo") ? draft.kind : "urban_cargo");
@@ -1145,6 +1209,8 @@ export function ApiAtlasPage() {
             <small>{unavailableReason || (caps ? "Данные проверяются для выбранных условий" : "Проверяем доступность расчёта")}</small>
             {unavailableReason && dateSuggestion}</>}>
           {addressScope}
+          {caoDistrict && <div className="fgroup"><a className="iconbtn" href="/map#atlas/districts">Сравнить другие районы</a></div>}
+          {addressMode && lifeTab === "district" && <div className="fgroup"><a className="iconbtn" href="/district">Расчёт по сетке ЦАО</a></div>}
           {addressMode && lifeTab === "district" ? <DistrictAccess results={districtReports} metric={districtMetric} onMetric={setDistrictMetric} onSelect={setDistrictReport} onRemove={(id) => { setDistrictReports((reports) => reports.filter((report) => report.district.id !== id)); if (districtReport?.district.id === id) setDistrictReport(null); }} onResult={(report) => { if (!report) return; setDistrictReports((reports) => [...reports.filter((item) => item.district.id !== report.district.id), report]); setDistrictReport(report); }} /> : addressMode ? <AddressFilters access={access} onPick={() => {
             if (!access.picking) { setFiltersOpen(false); setChatOpen(false); }
             access.setPicking(!access.picking);
@@ -1244,7 +1310,7 @@ export function ApiAtlasPage() {
                       "Передвижение",
                       <><Seg name="Передвижение" value={draft.travel || null}
                         items={urbanMovement}
-                        onChange={(travel) => change({ travel: travel as ApiDraft["travel"] })} />
+                        onChange={(travel) => changeTravel(travel as ApiDraft["travel"])} />
                         {!draft.travel && <p className="fhint">Выберите способ передвижения для выбранного города.</p>}
                         {inline("travel", ["passenger_mode"])}</>,
 
@@ -1380,11 +1446,29 @@ export function ApiAtlasPage() {
             category={mapMetric === "overall" ? null : categoryIds[mapMetric as keyof typeof categoryIds]} layers={layers}
           /></MapCanvas>
           {addressMode && lifeTab === "district" ? <>
-            <MapOverlay position="tl"><AtlasStatus kind={activeDistrict ? "ok" : "nd"} title={activeDistrict?.district.name || "Индексы районов и муниципалитетов"} subtitle="Пешком · точки — начала маршрутов, иконки — объекты назначения" /></MapOverlay>
+            {result?.analysis_id.startsWith("cao-transit-500m") && <MapOverlay position="tl">
+            <div aria-label="Цвета маршрутов" style={{background: "var(--surface, #fff)", borderRadius: 10,
+              padding: "8px 12px", color: "#101a31", display: "flex", gap: 12, flexWrap: "wrap"}}>
+              {transitLegend.map(({color, label}) => <span key={label} style={{whiteSpace: "nowrap"}}>
+                <span aria-hidden style={{display: "inline-block", width: 15, borderTop: `3px solid ${color}`,
+                  marginRight: 5, verticalAlign: "middle"}} />{label}
+              </span>)}
+            </div>
+          </MapOverlay>}
+          <MapOverlay position="tl"><AtlasStatus kind={activeDistrict ? "ok" : "nd"} title={activeDistrict?.district.name || "Индексы районов и муниципалитетов"} subtitle="Пешком · точки — начала маршрутов, иконки — объекты назначения" /></MapOverlay>
             {activeDistrict && (mobile ? <div className="m-sheet api-address-sheet"><details className="more" open><summary>Результат по территории</summary>{districtCard}</details></div> : <MapOverlay position="r">{districtCard}</MapOverlay>)}
             <MapOverlay position="bottom"><CategoryMapLegend categoryIds={districtReports.flatMap((report) => (report.destinations || []).filter((item) => districtMetric === "overall" || item.category === districtMetric).map((item) => item.category))} /><AtlasLegend title="Индекс доступности" scale open={legendOpen} onToggle={() => setLegendOpen((value) => !value)} ticks={[0, 25, 50, 75, 100]} barStyle={{background: indexGradient}} note={<>Розовый — ниже · мятный — выше<br />Серый — недостаточно данных</>} details={<div className="district-legend-explanation"><p>Менее 40 — низкая доступность.<br />40–59 — средняя.<br />60–79 — хорошая.<br />80–100 — высокая.</p><p>Переходы цветов плавные. Полупрозрачная заливка соответствует выбранному показателю. Синий контур выделяет открытый район.</p></div>} /><MapControls items={[["in", "plus", "Приблизить"], ["out", "minus", "Отдалить"], ["home", "globe", "Центр Москвы"]]} onAction={(kind) => setZoom((value) => ({ kind, id: value.id + 1 }))} /></MapOverlay>
           </> : addressMode ? <>
-            <MapOverlay position="tl"><AtlasStatus
+            {result?.analysis_id.startsWith("cao-transit-500m") && <MapOverlay position="tl">
+            <div aria-label="Цвета маршрутов" style={{background: "var(--surface, #fff)", borderRadius: 10,
+              padding: "8px 12px", color: "#101a31", display: "flex", gap: 12, flexWrap: "wrap"}}>
+              {transitLegend.map(({color, label}) => <span key={label} style={{whiteSpace: "nowrap"}}>
+                <span aria-hidden style={{display: "inline-block", width: 15, borderTop: `3px solid ${color}`,
+                  marginRight: 5, verticalAlign: "middle"}} />{label}
+              </span>)}
+            </div>
+          </MapOverlay>}
+          <MapOverlay position="tl"><AtlasStatus
               kind={access.error ? "err" : access.running ? "run" : access.stale ? "stale" : access.result ? "ok" : "nd"}
               title={access.picking ? "Нажмите на карту, чтобы выбрать место" : access.running ? "Считаем маршруты…" : access.error ? "Расчёт не выполнен" : access.result && !access.stale ? "Результат получен" : "Доступность по адресу или точке"}
               subtitle={`${access.place?.label || "Москва и Московская область"} · ${addressModeLabels[access.mode]}`}
@@ -1406,6 +1490,15 @@ export function ApiAtlasPage() {
               </div>
             </div>}
           </> : <>
+          {result?.analysis_id.startsWith("cao-transit-500m") && <MapOverlay position="tl">
+            <div aria-label="Цвета маршрутов" style={{background: "var(--surface, #fff)", borderRadius: 10,
+              padding: "8px 12px", color: "#101a31", display: "flex", gap: 12, flexWrap: "wrap"}}>
+              {transitLegend.map(({color, label}) => <span key={label} style={{whiteSpace: "nowrap"}}>
+                <span aria-hidden style={{display: "inline-block", width: 15, borderTop: `3px solid ${color}`,
+                  marginRight: 5, verticalAlign: "middle"}} />{label}
+              </span>)}
+            </div>
+          </MapOverlay>}
           <MapOverlay position="tl"><AtlasStatus kind={activeDistrict ? activeDistrict.index == null ? "stale" : "ok" : uiError ? "err" : running ? "run" : dirty || (!compactResult && result?.status === "partial") ? "stale" : result ? "ok" : "nd"}
             title={activeDistrict ? activeDistrict.district.name : running ? runningTitle : dirty ? "Параметры изменены — показан прежний результат" : phaseLabels[phase]}
             subtitle={<>{activeDistrict ? "Синие точки — места расчёта, фиолетовые — цели маршрутов" : result ? `${requestTitle} · ${timestampText(result.request.departure_at, savedOrigin?.timezone, !compactResult)}${compactResult ? "" : ` · ${trafficText[result.traffic_mode]} · ${statusText[result.status]}`}` : restoreMode ? "Исходные параметры появятся после получения результата." : draftInstructions}
@@ -1463,7 +1556,7 @@ export function ApiAtlasPage() {
           </AtlasMobileSheet>
           </>}
         </MapViewport>
-        {addressMode ? <AgentChatView open={chatOpen} onClose={() => { setChatOpen(false); setFiltersCollapsed(false); }} onNewDialog={() => setQuestion("")}
+        {addressMode ? <AgentChatView open={chatOpen} onClose={() => { setChatOpen(false); setFiltersCollapsed(false); }} onNewDialog={() => { setQuestion(""); setLifeMessages([]); }}
           subtitle="Вопрос о выбранном результате"
           contextLabel={lifeTab === "district" ? activeDistrict?.district.name || "Выберите район" : access.result?.address.label || "Выберите адрес"}
           contextRows={lifeTab === "district" && activeDistrict ? [
@@ -1471,9 +1564,13 @@ export function ApiAtlasPage() {
             {label: "Показатель", value: districtMetric === "overall" ? "Общий индекс" : addressCategoryLabels[districtMetric as keyof typeof addressCategoryLabels]},
             {label: "Индекс", value: String((districtMetric === "overall" ? activeDistrict.index : activeDistrict.categories[districtMetric]) ?? "Недостаточно данных")},
           ] : access.result ? [{label: "Место", value: access.result.address.label}, {label: "Передвижение", value: addressModeLabels[access.result.mode as keyof typeof addressModeLabels]}, {label: "Индекс", value: String(access.result.index ?? "Недостаточно данных")}] : []}
-          messages={<div className="life-agent-notice"><Icon name="message-circle-question" /><h3>Контекст результата подготовлен</h3><p>Объяснения Алисы для адресов и районов пока не подключены на сервере. Здесь появится ответ о выбранной оценке после подключения этого режима.</p></div>}
-          hasMessages suggestions={[]} onSuggestion={setQuestion} draft="Объясни этот индекс и какие объекты доступны рядом" onDraftChange={setQuestion} onSend={() => {}} disabled busy={false}
-          note="Сервер агента сейчас поддерживает сохранённые расчёты транспортных связей." /> :
+          messages={lifeMessages.map((message, index) => <div key={index}>
+            <div className="msg u">{message.question}</div>
+            <div className="msg a"><small>{message.generated ? "Объяснение модели" : "Шаблонное объяснение"}</small><p>{message.text}</p></div>
+          </div>)}
+          hasMessages={lifeMessages.length > 0 || lifeChatBusy} suggestions={["Какой общий индекс?", "Какие объекты доступны рядом?"]}
+          onSuggestion={setQuestion} draft={question} onDraftChange={setQuestion}
+          onSend={() => void sendLifeQuestion()} disabled={false} busy={lifeChatBusy} note="Ответ использует выбранный результат." /> :
         <AgentChatView open={!addressMode && chatOpen} onClose={() => { setChatOpen(false); if (window.innerWidth < 1520) setFiltersCollapsed(false); }} onNewDialog={() => { setInterfaceMessages([]); session.clearExplanation(); }}
           subtitle={agentResult ? "Задайте Алисе вопрос о результате" : "Для вопросов к Алисе сначала выполните расчёт"}
           error={session.explanationError ? <div role="alert">

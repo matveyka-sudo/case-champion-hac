@@ -5,6 +5,7 @@ from fastapi import APIRouter
 
 from a2_api.api.v2 import (
     address_access,
+    life_consultant,
     analyses,
     analysis_groups,
     catalog,
@@ -33,6 +34,7 @@ def build_router() -> APIRouter:
     )
     router.include_router(catalog.router)
     router.include_router(address_access.router)
+    router.include_router(life_consultant.router)
     router.include_router(analyses.router)
     router.include_router(analysis_groups.router)
     router.include_router(jobs.router)

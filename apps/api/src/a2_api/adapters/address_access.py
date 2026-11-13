@@ -561,7 +561,8 @@ def address_result(request: AddressRequest) -> AddressResult | None:
             transit_url = os.getenv("A2_ADDRESS_TRANSIT_ROUTER_URL")
             assert request.departure_at is not None
             day = request.departure_at.date().isoformat()
-            if not transit_url:
+            cao_routing = os.getenv("WAYDEX_CAO_ROUTING_DIR")
+            if not transit_url and not cao_routing:
                 raise TransitAccessUnavailable(
                     "К стенду не подключён адресный граф общественного транспорта."
                 )
@@ -574,10 +575,17 @@ def address_result(request: AddressRequest) -> AddressResult | None:
                     "На выбранную дату нет проверенного расписания пилота."
                 )
             departure = request.departure_at.isoformat(timespec="minutes")
-            with httpx.Client(base_url=transit_url, timeout=6) as transit:
-                categories = transit_categories(
-                    db, transit, address, request.categories, departure, address.h_seconds
+            if cao_routing:
+                from importlib import import_module
+
+                categories = import_module("live_address").calculate(
+                    db, client, address, request.categories, request.departure_at
                 )
+            else:
+                with httpx.Client(base_url=transit_url, timeout=6) as transit:
+                    categories = transit_categories(
+                        db, transit, address, request.categories, departure, address.h_seconds
+                    )
         else:
             categories = calculate_categories(
                 db,
@@ -606,7 +614,11 @@ def address_result(request: AddressRequest) -> AddressResult | None:
             departure_local=departure,
             index=index,
             categories=categories,
-            source=f"{source}; mos-ground-transport-gtfs-20261110 (пилот)" if departure else source,
+            source=(
+                f"{source}; ЦАО, Valhalla, GTFS, метро и МЦК"
+                if departure and os.getenv("WAYDEX_CAO_ROUTING_DIR")
+                else f"{source}; mos-ground-transport-gtfs-20261110 (пилот)" if departure else source
+            ),
         )
 
 

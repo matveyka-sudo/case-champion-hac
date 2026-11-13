@@ -16,6 +16,7 @@ const AtlasPage = lazy(() => dataMode === "api"
   ? import("./pages/ApiAtlasPage").then(m => ({default:m.ApiAtlasPage}))
   : import("./pages/AtlasPage").then(m => ({default:m.AtlasPage})),
 );
+const DistrictAtlas = lazy(() => import("./pages/ApiAtlasPage").then(m => ({default:m.DistrictAtlasPage})));
 const AddressAtlas = lazy(() => import("./pages/ApiAtlasPage").then(m => ({default:m.ApiAtlasPage})));
 class Boundary extends Component<{ children: ReactNode }, { error: boolean }> {
   state = { error: false };
@@ -40,9 +41,16 @@ export default function App() {
       atlasLocation,
       () => "",
     ),
-    addressAccess = hash === "#address-access" || hash === "#atlas/address",
-    atlas = hash.startsWith("#atlas") || addressAccess,
+    addressAccess = hash === "#address-access" || hash === "#atlas/address" || hash === "#atlas/districts",
+    caoDistrict = window.location.pathname === "/district",
+    atlas = caoDistrict || hash.startsWith("#atlas") || addressAccess,
     savedScroll = useRef(0);
+  useEffect(() => {
+    if (caoDistrict && !hash) {
+      window.history.replaceState(null, "", "#atlas?analysis=cao-walk-500m");
+      window.dispatchEvent(new Event("waydex:navigate"));
+    }
+  }, [caoDistrict, hash]);
   useEffect(() => {
     if (hash !== "#address-access") return;
     window.history.replaceState(null, "", "#atlas/address");
@@ -96,7 +104,7 @@ export default function App() {
               </div>
             }
           >
-            {dataMode === "api" ? <AtlasPage /> : addressAccess ? <AddressAtlas /> : <AtlasPage />}
+            {caoDistrict ? <DistrictAtlas /> : dataMode === "api" ? <AtlasPage /> : addressAccess ? <AddressAtlas /> : <AtlasPage />}
           </Suspense>
         ) : (
           <LandingPage dataMode={dataMode === "api" ? "api" : "demo"} />

@@ -353,7 +353,7 @@ def _time(facts: Facts, categories: list[str]) -> Answer | None:
                 continue
             name = f" ({fact.destination})" if fact.destination else ""
             lines.append(
-                f"До {NEAREST_LABELS[category]}{name} — {fmt_minutes(fact.minutes)} {facts.mode_label}."
+                f"До {NEAREST_LABELS[category]}{name} — {fmt_minutes(fact.minutes)} {fact.route_mode or facts.mode_label}."
             )
             if fact.time_id:
                 metric_ids.append(fact.time_id)

@@ -87,8 +87,8 @@ export function AddressResultCard({ access, result, stale, onClose, onAsk }: {
         <strong className="district-category-label"><span className="category-card-icon" style={{"--category-color": accessCategoryColors[item.category]} as CSSProperties}><Icon name={accessIcons[item.category]} /></span>{labels[item.category]}</strong>
         <span>{item.destination?.name}{item.destination?.line && ` · ${item.destination.line}`}</span>
         <span>{item.seconds == null
-          ? item.unavailable_reason === "no_destination" ? "В зоне поиска нет объектов этой категории" : transit ? "Поездка с автобусным участком по расписанию не найдена" : "Маршрут по выбранной сети не найден"
-          : `${number.format(item.seconds / 60)} мин ${movement}`}
+          ? item.unavailable_reason === "no_destination" ? "В зоне поиска нет объектов этой категории" : transit ? "Маршрут в режиме ОТ не найден" : "Маршрут по выбранной сети не найден"
+          : `${number.format(item.seconds / 60)} мин ${transit && result.source.includes("ЦАО, Valhalla") && !item.transit_lines?.length ? "пешком" : movement}`}
           {!!item.transit_lines?.length && ` · ${item.transit_lines.join(" → ")}`}
           {item.index != null && ` · индекс ${number.format(item.index)}`}</span>
       </li>)}</ul>

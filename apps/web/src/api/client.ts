@@ -51,8 +51,10 @@ type RequestOptions = {
 export class ApiClient {
   private bootstrap: Promise<Schemas["Capabilities"]> | undefined;
   private readonly fetcher: typeof fetch;
-  constructor(fetcher: typeof fetch = fetch) {
+  private readonly apiPrefix: string;
+  constructor(fetcher: typeof fetch = fetch, apiPrefix = "/api/v1") {
     this.fetcher = fetcher;
+    this.apiPrefix = apiPrefix;
   }
   capabilities() {
     this.bootstrap ??= this.send("/capabilities", "Capabilities").catch(
@@ -136,7 +138,7 @@ export class ApiClient {
       let failure: ApiError;
       try {
         const fetcher = this.fetcher;
-        const response = await fetcher("/api/v1" + path, {
+        const response = await fetcher(this.apiPrefix + path, {
           method: body === undefined ? "GET" : "POST",
           credentials: "same-origin",
           signal,
