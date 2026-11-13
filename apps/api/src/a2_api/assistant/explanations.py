@@ -5,10 +5,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from a2_assistant import AccessScope
+from a2_assistant.context.retrieval import DocumentCitations, needs_documents, retrieve
 from a2_assistant.core import template_explanation
 from a2_contracts.v2.assistant import Explanation, ExplanationRequest
 from a2_contracts.v2.evidence import require_result_evidence
-from a2_contracts.v2.results import Metric, Score
+from a2_contracts.v2.results import AnalysisResult, Metric, Score
 
 from a2_api.core.errors import DomainError
 from a2_api.core.scope import territory_ids
@@ -73,6 +74,13 @@ async def explain(
             )
     if service.assistant is None:
         explanation = template_explanation(result, request_id, "DISABLED", context=context)
+        if (
+            service.repository is not None
+            and not await service._repository().private_source_bindings(analysis_id, scope)
+        ):
+            explanation = await _with_documents(
+                service, result, await _access(service, result, scope), context, explanation
+            )
         await service.analysis(analysis_id, scope)
         return explanation
     bindings = await service._repository().private_source_bindings(analysis_id, scope)
@@ -84,6 +92,22 @@ async def explain(
         )
         await service.analysis(analysis_id, scope)
         return explanation
+    access = await _access(service, result, scope)
+    proposals = await service.proposals(analysis_id, scope)
+    explanation = await service.assistant.explain(
+        result,
+        access_scope=access,
+        registered_template_ids={p.template_id for p in proposals},
+        request_id=request_id,
+        context=context,
+    )
+    if explanation.status == "template":
+        explanation = await _with_documents(service, result, access, context, explanation)
+    await service.analysis(analysis_id, scope)
+    return explanation
+
+
+async def _access(service: AnalysisService, result: AnalysisResult, scope: str) -> AccessScope:
     snapshot = await service.accepted_snapshot(result, scope)
     permitted_sources = {e.source_id for e in result.evidence_refs}
     snapshot_ids = {result.snapshot_id}
@@ -94,20 +118,44 @@ async def explain(
         if corpus is not None:
             snapshot_ids.add(corpus.snapshot_id)
             permitted_sources.update(corpus.source_ids)
-    access = AccessScope(
+    return AccessScope(
         principal_id=scope,
-        analysis_ids=frozenset({analysis_id}),
+        analysis_ids=frozenset({result.analysis_id}),
         territory_ids=territory_ids(result.request),
         source_ids=frozenset(permitted_sources),
         snapshot_ids=frozenset(snapshot_ids),
     )
-    proposals = await service.proposals(analysis_id, scope)
-    explanation = await service.assistant.explain(
-        result,
-        access_scope=access,
-        registered_template_ids={p.template_id for p in proposals},
-        request_id=request_id,
-        context=context,
-    )
-    await service.analysis(analysis_id, scope)
-    return explanation
+
+
+async def _with_documents(
+    service: AnalysisService,
+    result: AnalysisResult,
+    access: AccessScope,
+    context: ExplanationRequest,
+    explanation: Explanation,
+) -> Explanation:
+    """A template answer still lists the found documents under its sources.
+
+    The same bounded, scoped server search as the model path; the documents stay
+    context and never change the template's findings or numbers.
+    """
+    if (
+        explanation.retrieved_evidence
+        or not service.document_corpora
+        or not needs_documents(context)
+        or not access.source_ids
+        or not access.territory_ids
+    ):
+        return explanation
+    from a2_api.assistant.tools import SavedTools
+
+    try:
+        found = await retrieve(SavedTools(service), result, access, context)
+        citations = DocumentCitations(result)
+        for hit in found.hits:
+            citations.admit(hit)
+    except Exception:
+        return explanation
+    if not citations.ids:
+        return explanation
+    return explanation.model_copy(update={"retrieved_evidence": citations.references()})

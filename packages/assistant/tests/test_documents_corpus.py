@@ -213,3 +213,56 @@ async def test_retrieval_accepts_only_this_snapshot_or_its_own_corpus():
         else:
             with pytest.raises(ValueError):
                 await retrieve(backend, saved, scope, question)
+
+
+@pytest.mark.asyncio
+async def test_without_a_model_the_template_answer_still_lists_found_documents(database):
+    """LLM_ENABLED=false on a stand: no model answer, the documents are still shown."""
+    import httpx
+    from a2_api.api.application import create_app
+    from a2_api.db.repositories.jobs import JobRepository
+    from a2_api.services.analyses import AnalysisService
+    from a2_api.workers.runner import Worker
+
+    pool, _, _ = database
+    catalog = registry()
+    corpora = build_corpora(catalog, DOCUMENTS)
+    await publish_corpora(pool, corpora)
+    repository = JobRepository(pool)
+    service = AnalysisService(catalog, repository, code_version="demo-code", engine_enabled=True)
+    service.document_corpora = corpora
+    assert service.assistant is None
+    body = json.loads(
+        (ROOT / "packages/contracts/fixtures/v2/urban_passenger-request.json").read_text()
+    )["payload"] | {"city_id": "city-1"}
+    app = create_app(service)
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        submitted = await client.post(
+            "/api/v1/analyses", json=body, headers={"Idempotency-Key": "documents-template"}
+        )
+        worker = Worker(
+            repository,
+            handler="test_postgres_retrieval:matching_evidence_result",
+            code_version="demo-code",
+            timeout_seconds=5,
+        )
+        assert await worker.run_once()
+        job = (await client.get("/api/v1/jobs/" + submitted.json()["job_id"])).json()
+        endpoint = "/api/v1/analyses/" + job["analysis_id"] + "/explanation"
+        with_topic = (
+            await client.post(endpoint, json={"question": "Что говорит стратегия о пересадках?"})
+        ).json()
+        no_topic = (await client.post(endpoint, json={"question": "Почему такой индекс?"})).json()
+    assert with_topic["status"] == "template" and with_topic["reason_code"] == "DISABLED"
+    assert [ref["evidence_id"] for ref in with_topic["retrieved_evidence"]] == [
+        "transport_strategy:3363-r:2021-11-27"
+    ]
+    # The template's own findings and numbers are untouched by the document.
+    assert all(
+        "transport_strategy" not in ref
+        for f in with_topic["findings"]
+        for ref in f["evidence_refs"]
+    )
+    assert no_topic["status"] == "template" and no_topic["retrieved_evidence"] == []
