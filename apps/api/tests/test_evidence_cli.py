@@ -1,5 +1,6 @@
 """Opt-in PostgreSQL: ML2 document build -> publication CLI -> Russian FTS search."""
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -37,6 +38,14 @@ def built(tmp_path):
                 "valid_to": "2026-11-30",
                 "license": "public-domain-official-act",
                 "file_sha256": "0" * 64,
+                "acceptance": {
+                    "status": "accepted",
+                    "accepted_by": "ML2",
+                    "accepted_at": "2026-11-12",
+                    "source_url_checked_at": "2026-11-12T00:00:00+00:00",
+                    "privacy_reviewed_at": "2026-11-12",
+                    "text_sha256": hashlib.sha256(TEXT.encode()).hexdigest(),
+                },
             }
         )
     )

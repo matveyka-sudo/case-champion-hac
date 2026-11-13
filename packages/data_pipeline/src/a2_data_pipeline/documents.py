@@ -1,10 +1,15 @@
-"""Reviewed public documents as snapshot evidence and FTS chunks (ML2).
+"""Accepted public documents as snapshot evidence and FTS chunks (ML2).
 
 Input is a plain-text extract of one official document and its provenance. The
 output is a new AcceptedData version that carries the document as verified
 evidence, plus EvidenceChunk JSON lines for the backend publication CLI.
-Nothing is fetched here. Lines that look like a person's name (signatures,
-initials) are dropped: personal data never enters chunks.
+Nothing is fetched here.
+
+Nothing becomes verified by being built. The metadata must carry an explicit
+acceptance record of the data owner: the official URL was opened and returned
+this very file, and a person read this very text for personal data. The name
+filter below is only a safety net (signatures, initials); it is a heuristic and
+never counts as that review.
 """
 
 import argparse
@@ -19,6 +24,8 @@ from a2_contracts.common import canonical_hash
 from a2_contracts.v2.dataset import AcceptedData, Evidence, Period
 from a2_contracts.v2.retrieval import EvidenceChunk
 
+from .manifest import Registry, load_registry
+
 CHUNK_CHARACTERS = 700
 # "IV. Цели" or "2. Проблемы": a numbered heading starts with a capital letter;
 # "12 процентов на ..." is a table or list line, not a heading.
@@ -27,6 +34,70 @@ _ROMAN = re.compile(r"^[IVXLC]+\.\s")
 _PERSON = re.compile(
     r"\b[А-ЯЁ]\.\s?(?:[А-ЯЁ]\.\s?)?[А-ЯЁ][а-яё]+|\b[А-ЯЁ][а-яё]+\s[А-ЯЁ]\.\s?[А-ЯЁ]\.(?!\w)"
 )
+
+
+@dataclass(frozen=True)
+class Acceptance:
+    """The data owner's explicit decision; no field is inferred from the file."""
+
+    status: str
+    accepted_by: str | None
+    accepted_at: date | None
+    source_url_checked_at: datetime | None
+    privacy_reviewed_at: date | None
+    text_sha256: str | None
+
+    @classmethod
+    def load(cls, raw: object) -> "Acceptance":
+        row = raw if isinstance(raw, dict) else {}
+
+        def day(key: str) -> date | None:
+            return date.fromisoformat(row[key]) if row.get(key) else None
+
+        return cls(
+            status=str(row.get("status", "pending")),
+            accepted_by=row.get("accepted_by") or None,
+            accepted_at=day("accepted_at"),
+            source_url_checked_at=datetime.fromisoformat(row["source_url_checked_at"])
+            if row.get("source_url_checked_at")
+            else None,
+            privacy_reviewed_at=day("privacy_reviewed_at"),
+            text_sha256=row.get("text_sha256") or None,
+        )
+
+    def missing(self) -> list[str]:
+        """What still separates this document from verified evidence."""
+        return [
+            reason
+            for absent, reason in (
+                (self.status != "accepted", "acceptance.status is not 'accepted'"),
+                (not self.accepted_by, "acceptance.accepted_by (owner role) is empty"),
+                (self.accepted_at is None, "acceptance.accepted_at is empty"),
+                (
+                    self.source_url_checked_at is None,
+                    "source URL was not re-checked against the file hash",
+                ),
+                (
+                    self.privacy_reviewed_at is None,
+                    "the text was not read by a person for personal data",
+                ),
+                (not self.text_sha256, "acceptance.text_sha256 of the reviewed text is empty"),
+            )
+            if absent
+        ]
+
+
+def require_accepted(meta: "DocumentMeta", text: bytes | None = None) -> None:
+    """Fail closed: operator input alone never becomes verified evidence."""
+    missing = meta.acceptance.missing()
+    if (
+        not missing
+        and text is not None
+        and hashlib.sha256(text).hexdigest() != meta.acceptance.text_sha256
+    ):
+        missing = ["the text differs from the reviewed text (acceptance.text_sha256)"]
+    if missing:
+        raise ValueError("Document is not accepted: " + "; ".join(missing))
 
 
 @dataclass(frozen=True)
@@ -42,6 +113,7 @@ class DocumentMeta:
     valid_to: date
     license: str
     file_sha256: str
+    acceptance: Acceptance
 
     @classmethod
     def load(cls, path: Path) -> "DocumentMeta":
@@ -58,6 +130,7 @@ class DocumentMeta:
             valid_to=date.fromisoformat(raw["valid_to"]),
             license=raw["license"],
             file_sha256=raw["file_sha256"],
+            acceptance=Acceptance.load(raw.get("acceptance")),
         )
 
 
@@ -156,6 +229,7 @@ def document_evidence(meta: DocumentMeta) -> Evidence:
 
 def attach(snapshot: AcceptedData, meta: DocumentMeta, snapshot_id: str) -> AcceptedData:
     """A new snapshot version that also cites the document; existing rows are untouched."""
+    require_accepted(meta)
     if snapshot_id == snapshot.snapshot_id:
         raise ValueError("A changed snapshot needs a new snapshot_id")
     known = snapshot.source_versions.get(meta.source_id)
@@ -173,6 +247,7 @@ def attach(snapshot: AcceptedData, meta: DocumentMeta, snapshot_id: str) -> Acce
 def chunks(
     snapshot: AcceptedData, meta: DocumentMeta, parts: list[tuple[str, str]]
 ) -> list[EvidenceChunk]:
+    require_accepted(meta)
     rows: list[EvidenceChunk] = []
     for title, body in parts:
         for piece in _pieces(body, CHUNK_CHARACTERS):
@@ -208,8 +283,12 @@ def build(
     snapshot_id: str,
     out: Path,
     start: str | None = None,
+    registry: Registry | None = None,
 ) -> dict[str, object]:
     meta = DocumentMeta.load(meta_path)
+    require_accepted(meta, text_path.read_bytes())
+    if registry is not None and registry.get(meta.source_id).status != "accepted":
+        raise ValueError("Document source is not accepted in the source registry")
     lines, dropped = clean_lines(text_path.read_text(encoding="utf-8"))
     parts = sections(lines, start)
     if not parts:
@@ -252,7 +331,15 @@ def main() -> None:
         args.out.write_text("\n".join(lines) + "\n", encoding="utf-8")
         print(json.dumps({"lines": len(lines), "dropped_name_lines": dropped}))
         return
-    report = build(args.text, args.meta, args.snapshot, args.snapshot_id, args.out, args.start)
+    report = build(
+        args.text,
+        args.meta,
+        args.snapshot,
+        args.snapshot_id,
+        args.out,
+        args.start,
+        registry=load_registry(),
+    )
     print(json.dumps(report, ensure_ascii=False, sort_keys=True))
 
 
