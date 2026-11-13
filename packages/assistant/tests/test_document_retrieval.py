@@ -54,7 +54,7 @@ async def run(*, retrieval, question, response=None, hits=None):
 @pytest.mark.asyncio
 async def test_documents_are_found_without_model_tools():
     saved, result, transport, backend, budget = await run(
-        retrieval=True, question="На каком документе основана оценка?"
+        retrieval=True, question="На каком документе основаны цели по пересадкам?"
     )
     assert [call[0] for call in backend.calls] == ["search_evidence"]
     assert len(transport.calls) == len(budget.reservations) == 1
@@ -71,7 +71,7 @@ async def test_documents_are_found_without_model_tools():
 
 @pytest.mark.asyncio
 async def test_copied_document_id_is_accepted_and_foreign_one_is_not():
-    question = "Какой документ лежит в основе?"
+    question = "Какой документ лежит в основе пересадок?"
     *_, ok, _, _, _ = await run(
         retrieval=True,
         question=question,
@@ -100,7 +100,7 @@ async def test_no_lookup_when_switched_off_or_not_asked(retrieval, question):
 @pytest.mark.asyncio
 async def test_empty_index_still_answers_from_saved_facts():
     _, result, transport, backend, _ = await run(
-        retrieval=True, question="Какой источник у оценки?", hits=[]
+        retrieval=True, question="Какой источник о пересадках?", hits=[]
     )
     assert len(backend.calls) == 1 and len(transport.calls) == 1
     assert result.status == "generated" and result.retrieved_evidence == []

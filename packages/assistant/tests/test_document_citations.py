@@ -15,7 +15,7 @@ from a2_contracts.v2.assistant import ExplanationRequest
 from test_assistant import Backend, assistant, reply, retrieved_hit, score_analysis
 
 SCORE = {"score_id": "accessibility"}
-QUESTION = "На каком документе основана оценка?"
+QUESTION = "На каком документе основаны цели по пересадкам?"
 
 
 def hit(chunk, section, **change):

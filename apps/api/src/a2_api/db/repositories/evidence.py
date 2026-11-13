@@ -128,17 +128,31 @@ class EvidenceRepository:
             return empty
         year_start = date(request.year, 1, 1) if request.year else None
         year_end = date(request.year, 12, 31) if request.year else None
-        # A natural question rarely contains every word of a document fragment:
-        # match any lexeme and let ts_rank_cd order fragments by how many match.
+        # A natural question rarely contains every word of a fragment, so any word
+        # may match. Fragments are ordered by the rarity of the matched words
+        # inside the authorized scope (an IDF weight), so words common to the
+        # whole corpus ("транспорт") do not outrank the specific ones.
         rows = await self.pool.fetch(
             "WITH query AS (SELECT replace(plainto_tsquery('russian'::regconfig,$1)::text,"
-            "' & ',' | ')::tsquery AS q) "
-            "SELECT payload,ts_rank_cd(search_vector,q) AS rank FROM evidence_chunks,query "
+            "' & ',' | ')::tsquery AS q,"
+            "tsvector_to_array(to_tsvector('russian'::regconfig,$1)) AS terms),"
+            "scoped AS (SELECT snapshot_id,chunk_id,payload,search_vector FROM evidence_chunks "
             "WHERE snapshot_hash=$2::jsonb->>snapshot_id AND source_id=ANY($3::text[]) "
             "AND territory_ids && $4::text[] AND ($5::text[] IS NULL OR source_id=ANY($5)) "
             "AND ($6::date IS NULL OR valid_to>=$6) AND ($7::date IS NULL OR valid_from<=$7) "
-            "AND ($8::date IS NULL OR valid_to>=$8) AND ($9::date IS NULL OR valid_from<=$9) "
-            "AND search_vector @@ q ORDER BY rank DESC,snapshot_id,chunk_id LIMIT 6",
+            "AND ($8::date IS NULL OR valid_to>=$8) AND ($9::date IS NULL OR valid_from<=$9)),"
+            "total AS (SELECT count(*)::float8 AS n FROM scoped),"
+            "df AS (SELECT u.term,count(*)::float8 AS n FROM scoped "
+            "CROSS JOIN LATERAL unnest(tsvector_to_array(scoped.search_vector)) AS u(term),query "
+            "WHERE u.term=ANY(query.terms) GROUP BY u.term),"
+            "scores AS (SELECT s.snapshot_id,s.chunk_id,sum(ln((total.n+1)/(df.n+0.5))) AS score "
+            "FROM scoped s CROSS JOIN total "
+            "CROSS JOIN LATERAL unnest(tsvector_to_array(s.search_vector)) AS u(term) "
+            "JOIN df ON df.term=u.term GROUP BY s.snapshot_id,s.chunk_id) "
+            "SELECT s.payload,sc.score,ts_rank_cd(s.search_vector,query.q) AS rank "
+            "FROM scores sc JOIN scoped s USING (snapshot_id,chunk_id) CROSS JOIN query "
+            "WHERE s.search_vector @@ query.q "
+            "ORDER BY sc.score DESC,rank DESC,s.snapshot_id,s.chunk_id LIMIT 6",
             request.query,
             hashes,
             sorted(source_ids),
