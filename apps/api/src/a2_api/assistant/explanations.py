@@ -75,7 +75,8 @@ async def explain(
     if service.assistant is None:
         explanation = template_explanation(result, request_id, "DISABLED", context=context)
         if (
-            service.repository is not None
+            getattr(service, "document_corpora", None)
+            and getattr(service, "repository", None) is not None
             and not await service._repository().private_source_bindings(analysis_id, scope)
         ):
             explanation = await _with_documents(
