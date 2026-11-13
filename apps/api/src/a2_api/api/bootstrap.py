@@ -2,6 +2,7 @@
 
 import importlib
 import inspect
+import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, cast
@@ -18,6 +19,8 @@ from a2_api.services.legacy import Services
 
 if TYPE_CHECKING:
     from a2_api.services.analyses import AnalysisService
+
+logger = logging.getLogger("a2_api.documents")
 
 
 def load_prepare(settings: RuntimeSettings) -> Prepare | None:
@@ -93,7 +96,7 @@ def build_analysis_service(
     if bool(config.calculation_handler) != bool(config.code_version):
         raise ValueError("Configure calculation handler and code version together")
 
-    return AnalysisService(
+    service = AnalysisService(
         registry,
         repository,
         code_version=config.code_version,
@@ -101,6 +104,11 @@ def build_analysis_service(
         preflight=preflight,
         registered_template_ids=getattr(registry, "scenario_template_ids", DEFAULT_TEMPLATES),
     )
+    if config.documents_dir is not None:
+        from a2_api.assistant.documents_runtime import build_corpora
+
+        service.document_corpora = build_corpora(registry, config.documents_dir)
+    return service
 
 
 def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
@@ -115,6 +123,10 @@ def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
         return build_legacy_app(config)
 
     configured = build_analysis_service(config)
+    from a2_api.assistant.consultant import Consultant
+    from a2_api.assistant.consultant.model import consultant_enabled
+
+    consultant = Consultant.from_env() if consultant_enabled() else None
 
     def service(
         repository: JobRepository | None = None, *, configure_assistant: bool = True
@@ -127,6 +139,8 @@ def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
             preflight=configured.preflight,
             registered_template_ids=configured.registered_template_ids,
         )
+        result.consultant = consultant
+        result.document_corpora = configured.document_corpora
         if config.assistant_hook and configure_assistant:
             factory = cast(
                 Callable[[AnalysisService], FlashAssistant], configured_hook(config.assistant_hook)
@@ -155,12 +169,23 @@ def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
             ) from None
         try:
             active_service = service(JobRepository(pool))
+            if active_service.document_corpora:
+                from a2_api.assistant.documents_runtime import publish_corpora
+
+                try:
+                    published = await publish_corpora(pool, active_service.document_corpora)
+                    logger.info("documents_published corpora=%s", len(published))
+                except Exception as error:
+                    # Search then finds no documents; calculations are unaffected.
+                    logger.warning("documents_not_published reason=%s", type(error).__name__)
             app.state.services = active_service
             try:
                 yield
             finally:
                 await active_service.close_admission()
                 await close_assistant(active_service)
+                if consultant is not None:
+                    await consultant.aclose()
         finally:
             await pool.close()
 

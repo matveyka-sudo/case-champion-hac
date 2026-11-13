@@ -60,8 +60,8 @@ import { useAnalysisSession } from "../features/analysis/useAnalysisSession";
 import { atlasLocation, parseSavedPointer, savedPointerHash, savedPointerWriter, subscribeAtlasLocation, writeSavedPointer, type SavedPointer } from "../features/analysis/savedPointer";
 import { savedRequestDraft } from "../api/adapters/savedRequest";
 import { scenarioJourneys } from "../api/adapters/scenario";
-import { scopeContainsTime, urbanScopeAvailability, type UrbanSelection } from "../api/adapters/urbanScopes";
-import { journeyLines } from "../api/adapters/journeyGeometry";
+import { scopeAllowsArea, scopeContainsTime, scopePreset, urbanScopeAvailability, type UrbanSelection } from "../api/adapters/urbanScopes";
+import { journeyLines, transitLegend } from "../api/adapters/journeyGeometry";
 import { urbanReadiness } from "../api/adapters/urbanReadiness";
 import { UrbanReadiness } from "../widgets/UrbanReadiness";
 import { CalculatedJourneys } from "../widgets/CalculatedJourneys";
@@ -94,7 +94,8 @@ import { boundSnapshotId, clinicPreset, initialSourceDraft, staticPilotPreset } 
 import { AnalysisGroupPanel } from "../widgets/AnalysisGroupPanel";
 import { AgentChatView } from "../widgets/AgentChatView";
 import { evidenceResolver, explanationSources, journeyEvidenceReferences } from "../api/adapters/evidenceGroups";
-import { explanationLabel } from "../api/adapters/explanationStatus";
+import { agentContextNotice, explanationLabel } from "../api/adapters/explanationStatus";
+import { askConsultant } from "../api/adapters/consultant";
 import { jobProgressText } from "../api/adapters/jobProgress";
 import { MapViewport, MapCanvas, MapOverlay, MapControls, AtlasLegend, AtlasMobileSheet, AtlasStatus, StateCard } from "../widgets/AtlasMapView";
 const passengerModeChoices = [
@@ -190,7 +191,8 @@ export function ApiAtlasPage() {
     [cardHidden, setCardHidden] = useState(false),
     [question, setQuestion] = useState(""),
     [lastQuestion, setLastQuestion] = useState(""),
-    [interfaceMessages, setInterfaceMessages] = useState<{ question: string; text: string }[]>([]),
+    [interfaceMessages, setInterfaceMessages] = useState<{ question: string; text: string; agent?: boolean }[]>([]),
+    [helpBusy, setHelpBusy] = useState(false),
     [scenarioView, setScenarioView] = useState(false),
     [theme, setTheme] = useState<"auto" | "light" | "dark">("auto"),
     [legendOpen, setLegendOpen] = useState(false),
@@ -866,6 +868,14 @@ export function ApiAtlasPage() {
   const destination = catalog.find((item) => item.territory_id === draft.destinationId);
   const draftTerritory = [origin?.name, !urban && destination?.name].filter(Boolean).join(" → ");
   const filterIssue = unavailableReason || (unavailableRequest && requestErrorMessage) || (draft.kind === "urban_passenger" ? scopeState.problem?.message : null);
+  const changeTravel = (travel: ApiDraft["travel"]) => {
+    const scope = travel === "pt" ? publishedScopes?.find((candidate) =>
+      candidate.scope_id === "cao-transit-500m" && candidate.city_id === draft.cityId &&
+      scopeAllowsArea(candidate, draft.areaId)) : undefined;
+    const preset = scope && scopePreset(scope,
+      { ...scopeSelection, mode: "public_transport" }, publishedScopes ?? [], catalog, caps?.areas ?? []);
+    change(preset ? { travel, date: preset.date, slot: preset.slot, snapshotId: preset.selection.snapshotId } : { travel });
+  };
   const sendQuestion = () => {
     const text = question.trim();
     if (!text || text.length > 2000 || session.chatBusy) return;
@@ -875,7 +885,17 @@ export function ApiAtlasPage() {
     } else {
       const guidance = atlasFilterHelp({ caps, selection: scopeSelection, territory: draftTerritory, date: draft.date,
         kind: draft.kind, issue: filterIssue || null, question: text });
-      setInterfaceMessages((messages) => [...messages, { question: text, text: guidance }]);
+      const asksAboutControls = /^(как запустить расч[её]т|какие условия сейчас доступны)[?!. ]*$/i.test(text);
+      if (filterIssue || helpBusy || asksAboutControls) {
+        setInterfaceMessages((messages) => [...messages, { question: text, text: guidance }]);
+      } else {
+        // Before a run the consultant answers about districts; local help stays the fallback.
+        setHelpBusy(true);
+        void askConsultant(backend.client, text, { city: origin?.name ?? "" })
+          .then((answer) => setInterfaceMessages((messages) => [...messages, { question: text, text: answer.text, agent: true }]))
+          .catch(() => setInterfaceMessages((messages) => [...messages, { question: text, text: guidance }]))
+          .finally(() => setHelpBusy(false));
+      }
     }
     setQuestion("");
   };
@@ -1018,6 +1038,15 @@ export function ApiAtlasPage() {
                     originTimezone={savedOrigin?.timezone}
                     destinationTimezone={savedDestination?.timezone}
                     scenario={scenarioView}
+                    comparison={(() => {
+                      if (!result.analysis_id.startsWith("cao-transit-500m")) return undefined;
+                      const walk = shownMetrics.find((m) => m.metric_id === journey.journey_id.replace(/-transit$/, "-walk"));
+                      const transit = shownMetrics.find((m) => m.metric_id === journey.journey_id.replace(/-transit$/, "-pt-option"));
+                      const transfers = shownMetrics.find((m) => m.metric_id === journey.journey_id.replace(/-transit$/, "-transfers"));
+                      if (walk?.value == null || transit?.value == null || transfers?.value == null) return undefined;
+                      return { walk: walk.value, transit: transit.value, transfers: transfers.value,
+                        sameDestination: transit.subject.destination_id === journey.destination_object_id };
+                    })()}
                   />
                 ))}
                 </>}</ResultDetails>}
@@ -1185,7 +1214,7 @@ export function ApiAtlasPage() {
                       "Передвижение",
                       <><Seg name="Передвижение" value={draft.travel || null}
                         items={[["pt", "Общ. транспорт", "tram-front"], ["walk", "Пешком", "footprints"], ["car", "Авто", "car-front"]]}
-                        onChange={(travel) => change({ travel: travel as ApiDraft["travel"] })} />
+                        onChange={(travel) => changeTravel(travel as ApiDraft["travel"])} />
                         {!draft.travel && <p className="fhint">Выберите способ передвижения для выбранного города.</p>}
                         {inline("travel", ["passenger_mode"])}</>,
 
@@ -1312,6 +1341,27 @@ export function ApiAtlasPage() {
             cityId={urban ? draft.cityId : undefined} viewId={scenario?.run_id}
             category={mapMetric === "overall" ? null : categoryIds[mapMetric as keyof typeof categoryIds]} layers={layers}
           /></MapCanvas>
+          {result && /^cao-(walk|transit)-500m/.test(result.analysis_id) &&
+            caps?.urban_passenger_scopes?.some((scope) => scope.scope_id === "cao-transit-500m") &&
+            <MapOverlay position="tl">
+              <nav aria-label="Готовые расчёты ЦАО" style={{display: "flex", gap: 6}}>
+                {([["cao-walk-500m", "Пешком"], ["cao-transit-500m", "Общ. транспорт"]] as const).map(([id, label]) =>
+                  <button type="button" key={id} className="iconbtn"
+                    style={{background: "var(--surface, #fff)"}}
+                    aria-pressed={result.analysis_id.startsWith(id)}
+                    onClick={() => writeSavedPointer({kind: "analysis", id}, false)}>{label}</button>
+                )}
+              </nav>
+            </MapOverlay>}
+          {result?.analysis_id.startsWith("cao-transit-500m") && <MapOverlay position="tl">
+            <div aria-label="Цвета маршрутов" style={{background: "var(--surface, #fff)", borderRadius: 10,
+              padding: "8px 12px", color: "#101a31", display: "flex", gap: 12, flexWrap: "wrap"}}>
+              {transitLegend.map(({color, label}) => <span key={label} style={{whiteSpace: "nowrap"}}>
+                <span aria-hidden style={{display: "inline-block", width: 15, borderTop: `3px solid ${color}`,
+                  marginRight: 5, verticalAlign: "middle"}} />{label}
+              </span>)}
+            </div>
+          </MapOverlay>}
           <MapOverlay position="tl"><AtlasStatus kind={uiError ? "err" : running ? "run" : dirty || (!compactResult && result?.status === "partial") ? "stale" : result ? "ok" : "nd"}
             title={running ? runningTitle : dirty ? "Параметры изменены — показан прежний результат" : phaseLabels[phase]}
             subtitle={<>{result ? `${requestTitle} · ${timestampText(result.request.departure_at, savedOrigin?.timezone, !compactResult)}${compactResult ? "" : ` · ${trafficText[result.traffic_mode]} · ${statusText[result.status]}`}` : restoreMode ? "Исходные параметры появятся после получения результата." : draftInstructions}
@@ -1378,11 +1428,13 @@ export function ApiAtlasPage() {
           contextRows={[{ label: "Контекст", value: agentResult ? requestTitle : draftTerritory || "Территория не выбрана" },
             { label: "Условия", value: agentResult ? timestampText(agentResult.request.departure_at, savedOrigin?.timezone) : `${draft.date} · ${trafficText[draft.traffic]}` },
             { label: "Результат", value: agentResult ? statusText[agentResult.status] : running ? runningTitle : "Для выбранных условий ещё не получен" }]}
-          messages={<>{!agentResult && interfaceMessages.map((message, index) => <div key={`help-${index}`}>
+          messages={<>{agentContextNotice({ hasResult: !!result, dirty, running }) && <p className="fhint" role="status">{agentContextNotice({ hasResult: !!result, dirty, running })}</p>}
+            {!agentResult && interfaceMessages.map((message, index) => <div key={`help-${index}`}>
             <div className="msg u">{message.question}</div>
-            <div className="msg a"><small>Помощь по интерфейсу · локально</small><p>{message.text}</p>
+            {message.agent ? <div className="msg a"><small>Консультант Waydex</small><p>{message.text}</p></div>
+              : <div className="msg a"><small>Помощь по интерфейсу · локально</small><p>{message.text}</p>
               <p>Эта справка не запускает расчёт. Объяснение показателей и проверка сценария доступны после получения результата.</p>
-            </div>
+            </div>}
           </div>)}{agentResult && session.messages.map((m, i) => (
               <div key={i}>
                 <div className="msg u">{m.question}</div>
@@ -1406,7 +1458,7 @@ export function ApiAtlasPage() {
                 </div>
               </div>
             ))}
-            {session.chatBusy && <p role="status">Получаю объяснение…</p>}
+            {(session.chatBusy || helpBusy) && <p role="status">{helpBusy ? "Консультант отвечает…" : "Получаю объяснение…"}</p>}
             {savedWarning && <p role="alert">{savedWarning}</p>}
             {session.warning && <p role="alert">{session.warning}</p>}
             {agentResult && session.messages.length > 0 && !session.proposals.length && !session.warning && <p className="fhint">Для этого результата сервер не предложил сценарий.</p>}
@@ -1446,11 +1498,11 @@ export function ApiAtlasPage() {
                 )}
               </div>
             ))}
-</>} hasMessages={agentResult ? session.messages.length > 0 || session.chatBusy || session.proposals.length > 0 : interfaceMessages.length > 0}
-          suggestions={agentResult ? ["Объясни выбранную точку и ограничения результата", "Какая часть пути занимает больше всего времени?", "Какие изменения можно проверить?"] : ["Как запустить расчёт?", "Какие условия сейчас доступны?", "Когда появится объяснение результата?"]}
+</>} hasMessages={agentResult ? session.messages.length > 0 || session.chatBusy || session.proposals.length > 0 : interfaceMessages.length > 0 || helpBusy}
+          suggestions={agentResult ? ["Какой общий индекс?", "Где хуже всего доступность?", "Как улучшить доступность?"] : ["Какой район Москвы самый доступный?", "Как запустить расчёт?", "Какие условия сейчас доступны?"]}
           onSuggestion={(value) => { setQuestion(value); chatInput.current?.focus(); }} draft={question} onDraftChange={setQuestion}
-          onSend={sendQuestion} disabled={false} busy={session.chatBusy}
-          inputRef={chatInput} maxLength={2000} notice={mobile && demoModel ? demoModelWarning : undefined} note={agentResult ? "Числа берутся только из сохранённого расчёта. Сценарий запускается отдельно по кнопке." : "До расчёта доступна локальная помощь по интерфейсу. Вопросы к модели доступны после получения результата."} />
+          onSend={sendQuestion} disabled={false} busy={session.chatBusy || helpBusy}
+          inputRef={chatInput} maxLength={2000} notice={mobile && demoModel ? demoModelWarning : undefined} note={agentResult ? "Числа берутся только из сохранённого расчёта. Сценарий запускается отдельно по кнопке." : "До расчёта агент отвечает про районы Москвы и помогает с условиями. После расчёта — по его индексам."} />
     </AtlasShell>
   );
 }

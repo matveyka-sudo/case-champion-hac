@@ -373,15 +373,15 @@ export function ApiMap({
         : destination ? { entity_kind: destination.entity_kind, entity_id: destination.entity_id } : undefined;
       journeyLines(j).forEach((part) => {
         const tip = document.createElement("span");
-        tip.textContent =
+        tip.textContent = part.style ? part.style.label + (part.schematic ? " · схема" : "") :
           (part.segment ? "Участок маршрута" : part.schematic ? "Схема пути" : "Маршрут") +
           (scenarioView ? " сценария" : "") +
           (part.segment ? ` · ${segmentGeometryNotice}` : "");
         const route = L.geoJSON(part.geometry as GeoJsonObject, {
           style: {
-            color: "#7a52ff",
+            color: part.style?.color || "#7a52ff",
             weight: 4,
-            dashArray: part.schematic ? "6 8" : undefined,
+            dashArray: part.schematic || part.style?.label === "Пешком" ? "6 8" : undefined,
           },
         })
           .bindTooltip(tip)

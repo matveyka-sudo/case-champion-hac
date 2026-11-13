@@ -1290,8 +1290,8 @@ def test_score_claim_contract_and_renderer_reject_unbound_or_forged_values():
     from a2_contracts.v2.assistant import Finding
     from pydantic import ValidationError
 
-    with pytest.raises(ValidationError):
-        Finding(text="test", metric_ids=[], claims=[], evidence_refs=[], score_ids=[])
+    # A plain consultant sentence may cite no saved measure.
+    assert Finding(text="test", metric_ids=[], claims=[], evidence_refs=[], score_ids=[]).text
     with pytest.raises(ValidationError):
         Finding(
             text="test",

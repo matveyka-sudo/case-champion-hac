@@ -13,7 +13,7 @@ async def run_search(
     hits=None,
     *,
     enabled=True,
-    question="Какой источник у оценки?",
+    question="Какой источник о пересадках у оценки?",
     status="available",
     reason=None,
     response=None,
@@ -176,7 +176,7 @@ async def test_server_lookup_and_model_lookup_share_one_search_allowance():
         ),
         registered_template_ids=set(),
         request_id="one-search",
-        context=ExplanationRequest(question="Какой источник?"),
+        context=ExplanationRequest(question="Какой источник о пересадках?"),
     )
     assert result.status == "generated" and len(backend.calls) == 1
     response = json.loads(transport.calls[1]["messages"][-1]["content"])

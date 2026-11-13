@@ -48,3 +48,13 @@ describe("document citations of a generated answer", () => {
     expect(() => explanationSources(data, answer({ findings: [{ text: "Synthetic finding", metric_ids: [data.metrics[0].metric_id], claims: [], evidence_refs: ["missing-document"] }] }))).toThrow();
   });
 });
+
+describe("what the chat says before a question", () => {
+  it("separates no result, a running calculation, changed conditions and a current result", async () => {
+    const { agentContextNotice } = await import("../src/api/adapters/explanationStatus");
+    expect(agentContextNotice({ hasResult: false, dirty: false, running: false })).toContain("Расчёта ещё нет");
+    expect(agentContextNotice({ hasResult: true, dirty: false, running: true })).toContain("Идёт расчёт");
+    expect(agentContextNotice({ hasResult: true, dirty: true, running: false })).toContain("Условия изменены после расчёта");
+    expect(agentContextNotice({ hasResult: true, dirty: false, running: false })).toBeNull();
+  });
+});

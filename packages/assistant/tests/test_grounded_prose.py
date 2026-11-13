@@ -13,6 +13,11 @@ from test_assistant import Backend, assistant, reply, scope, score_analysis, too
 from test_freeform import answer
 
 
+def only_document_search(calls):
+    """Server-side routing may run one bounded document search; no other tool."""
+    return [call[0] for call in calls] in ([], ["search_evidence"])
+
+
 def prose_reply(paragraph, *, findings=None, evidence_ids=None, **extra):
     return reply(
         {
@@ -49,7 +54,8 @@ async def test_question_specific_prose_is_not_replaced_by_an_intent_paragraph():
     assert "25" in result.findings[0].text
     assert "Полнота данных ограничена" in result.findings[0].text
     assert result.findings[0].score_claims[0].value == 25
-    assert len(transport.calls) == len(budget.reservations) == 1 and not backend.calls
+    assert len(transport.calls) == len(budget.reservations) == 1
+    assert only_document_search(backend.calls)
     assert render_explanation(result, saved)
     assert render_explanation(deepcopy(result), saved)
     assert Explanation.model_validate_json(result.model_dump_json()).findings == result.findings
@@ -91,7 +97,8 @@ async def test_two_saved_points_get_question_specific_tradeoff_and_server_compar
     assert "Выбор места требует понять" in text and "У второго" in text
     assert "25 из 100 и 75 из 100" in text and "50" not in text
     assert [claim.value for claim in result.findings[0].score_claims] == [25.0, 75.0]
-    assert len(transport.calls) == len(budget.reservations) == 1 and not backend.calls
+    assert len(transport.calls) == len(budget.reservations) == 1
+    assert only_document_search(backend.calls)
 
 
 @pytest.mark.asyncio
@@ -147,7 +154,8 @@ async def test_paragraph_second_point_requires_matching_scoped_saved_lookup(
             selection={"entity_kind": "sample_point", "entity_id": "point"},
         ),
     )
-    assert backend.calls[0][:2] == ("get_analysis", lookup)
+    lookups = [call for call in backend.calls if call[0] != "search_evidence"]
+    assert lookups[0][:2] == ("get_analysis", lookup)
     assert len(transport.calls) == len(budget.reservations) == 2
     if correct_hash:
         assert result.status == "generated"
@@ -290,7 +298,8 @@ async def test_unsafe_model_prose_falls_back_without_retry_or_source_mutation(pa
         responses=[prose_reply("Сохранено [[score:accessibility]]. " + paragraph)],
     )
     assert result.status == "template" and result.reason_code == "INVALID_EXPLANATION"
-    assert len(transport.calls) == len(budget.reservations) == 1 and not backend.calls
+    assert len(transport.calls) == len(budget.reservations) == 1
+    assert only_document_search(backend.calls)
     assert saved.model_dump_json() == original
     assert result.findings[0].score_claims[0].value == 25.0
 
@@ -342,7 +351,8 @@ async def test_model_cannot_supply_provenance_status_claims_or_unbounded_text(ex
         saved, "Объясни по исходным данным", "explain", responses=[reply(data | extra)]
     )
     assert result.status == "template" and result.reason_code == "INVALID_EXPLANATION"
-    assert len(transport.calls) == len(budget.reservations) == 1 and not backend.calls
+    assert len(transport.calls) == len(budget.reservations) == 1
+    assert only_document_search(backend.calls)
 
 
 @pytest.mark.asyncio

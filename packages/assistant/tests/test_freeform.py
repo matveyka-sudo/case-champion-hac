@@ -11,6 +11,11 @@ from a2_contracts.v2.results import AnalysisResult
 from test_assistant import assistant, reply, score_analysis
 
 
+def only_document_search(calls):
+    """Server-side routing may run one bounded document search; no other tool."""
+    return [call[0] for call in calls] in ([], ["search_evidence"])
+
+
 async def answer(saved, question, mode, *, findings=None, templates=(), responses=None):
     findings = findings or [
         {"score_id": saved.scores[0].score_id, "explanation_code": "saved_value"}
@@ -81,7 +86,7 @@ async def test_unprompted_russian_questions_get_different_grounded_natural_answe
     assert "полнота данных ограничена" in result.findings[0].text.lower()
     assert result.findings[0].score_claims[0].value == 25
     assert len(transport.calls) == len(budget.reservations) == 1
-    assert not backend.calls and not result.proposals
+    assert only_document_search(backend.calls) and not result.proposals
     assert saved.model_dump_json() == frozen
     assert render_explanation(result, saved)
 
