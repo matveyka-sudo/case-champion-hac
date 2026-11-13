@@ -463,11 +463,6 @@ def test_exported_artifacts_match_baseline_and_approved_contract_extensions(tmp_
     expected.update(cargo_extension)
     assert set(ADDRESS_ACCESS_EXTENSION["schemas"]) == {"manifest.json", "openapi.json"}
     expected.update(ADDRESS_ACCESS_EXTENSION["schemas"])
-    consultant = json.loads(
-        (Path(__file__).parent / "fixtures/consultant_extension.json").read_text()
-    )
-    assert set(consultant["schemas"]) == {"manifest.json", "openapi.json"}
-    expected.update(consultant["schemas"])
     assert actual == expected
 
 

@@ -203,6 +203,11 @@ def _names(service: Any, result: AnalysisResult) -> tuple[str, str | None, dict[
     snapshots = getattr(registry, "snapshots", {}) or {}
     snapshot = snapshots.get(result.snapshot_id)
     territories = {t.territory_id: t.name for t in getattr(snapshot, "territories", []) or []}
+    # The public catalogue name wins over the snapshot's internal one.
+    catalog = getattr(registry, "catalog", {}) or {}
+    territories |= {
+        tid: option.name for tid, option in catalog.items() if getattr(option, "name", None)
+    }
     city_id = getattr(request, "city_id", None) or getattr(request, "origin_id", None) or ""
     city = territories.get(city_id) or city_id
     area_id = getattr(request, "area_id", None)

@@ -95,7 +95,6 @@ import { AnalysisGroupPanel } from "../widgets/AnalysisGroupPanel";
 import { AgentChatView } from "../widgets/AgentChatView";
 import { evidenceResolver, explanationSources, journeyEvidenceReferences } from "../api/adapters/evidenceGroups";
 import { explanationLabel } from "../api/adapters/explanationStatus";
-import { askConsultant } from "../api/adapters/consultant";
 import { jobProgressText } from "../api/adapters/jobProgress";
 import { MapViewport, MapCanvas, MapOverlay, MapControls, AtlasLegend, AtlasMobileSheet, AtlasStatus, StateCard } from "../widgets/AtlasMapView";
 const passengerModeChoices = [
@@ -191,8 +190,7 @@ export function ApiAtlasPage() {
     [cardHidden, setCardHidden] = useState(false),
     [question, setQuestion] = useState(""),
     [lastQuestion, setLastQuestion] = useState(""),
-    [interfaceMessages, setInterfaceMessages] = useState<{ question: string; text: string; agent?: boolean }[]>([]),
-    [helpBusy, setHelpBusy] = useState(false),
+    [interfaceMessages, setInterfaceMessages] = useState<{ question: string; text: string }[]>([]),
     [scenarioView, setScenarioView] = useState(false),
     [theme, setTheme] = useState<"auto" | "light" | "dark">("auto"),
     [legendOpen, setLegendOpen] = useState(false),
@@ -877,16 +875,7 @@ export function ApiAtlasPage() {
     } else {
       const guidance = atlasFilterHelp({ caps, selection: scopeSelection, territory: draftTerritory, date: draft.date,
         kind: draft.kind, issue: filterIssue || null, question: text });
-      if (filterIssue || helpBusy) {
-        setInterfaceMessages((messages) => [...messages, { question: text, text: guidance }]);
-      } else {
-        // Before a run the consultant answers about districts; local help stays the fallback.
-        setHelpBusy(true);
-        void askConsultant(backend.client, text, { city: origin?.name ?? "" })
-          .then((answer) => setInterfaceMessages((messages) => [...messages, { question: text, text: answer.text, agent: true }]))
-          .catch(() => setInterfaceMessages((messages) => [...messages, { question: text, text: guidance }]))
-          .finally(() => setHelpBusy(false));
-      }
+      setInterfaceMessages((messages) => [...messages, { question: text, text: guidance }]);
     }
     setQuestion("");
   };
@@ -1391,10 +1380,9 @@ export function ApiAtlasPage() {
             { label: "Результат", value: agentResult ? statusText[agentResult.status] : running ? runningTitle : "Для выбранных условий ещё не получен" }]}
           messages={<>{!agentResult && interfaceMessages.map((message, index) => <div key={`help-${index}`}>
             <div className="msg u">{message.question}</div>
-            {message.agent ? <div className="msg a"><small>Консультант Waydex</small><p>{message.text}</p></div>
-              : <div className="msg a"><small>Помощь по интерфейсу · локально</small><p>{message.text}</p>
+            <div className="msg a"><small>Помощь по интерфейсу · локально</small><p>{message.text}</p>
               <p>Эта справка не запускает расчёт. Объяснение показателей и проверка сценария доступны после получения результата.</p>
-            </div>}
+            </div>
           </div>)}{agentResult && session.messages.map((m, i) => (
               <div key={i}>
                 <div className="msg u">{m.question}</div>
@@ -1418,7 +1406,7 @@ export function ApiAtlasPage() {
                 </div>
               </div>
             ))}
-            {(session.chatBusy || helpBusy) && <p role="status">{helpBusy ? "Консультант отвечает…" : "Получаю объяснение…"}</p>}
+            {session.chatBusy && <p role="status">Получаю объяснение…</p>}
             {savedWarning && <p role="alert">{savedWarning}</p>}
             {session.warning && <p role="alert">{session.warning}</p>}
             {agentResult && session.messages.length > 0 && !session.proposals.length && !session.warning && <p className="fhint">Для этого результата сервер не предложил сценарий.</p>}
@@ -1458,11 +1446,11 @@ export function ApiAtlasPage() {
                 )}
               </div>
             ))}
-</>} hasMessages={agentResult ? session.messages.length > 0 || session.chatBusy || session.proposals.length > 0 : interfaceMessages.length > 0 || helpBusy}
-          suggestions={agentResult ? ["Какой общий индекс?", "Где хуже всего доступность?", "Как улучшить доступность?"] : ["Какой район Москвы самый доступный?", "Как запустить расчёт?", "Какие условия сейчас доступны?"]}
+</>} hasMessages={agentResult ? session.messages.length > 0 || session.chatBusy || session.proposals.length > 0 : interfaceMessages.length > 0}
+          suggestions={agentResult ? ["Объясни выбранную точку и ограничения результата", "Какая часть пути занимает больше всего времени?", "Какие изменения можно проверить?"] : ["Как запустить расчёт?", "Какие условия сейчас доступны?", "Когда появится объяснение результата?"]}
           onSuggestion={(value) => { setQuestion(value); chatInput.current?.focus(); }} draft={question} onDraftChange={setQuestion}
-          onSend={sendQuestion} disabled={false} busy={session.chatBusy || helpBusy}
-          inputRef={chatInput} maxLength={2000} notice={mobile && demoModel ? demoModelWarning : undefined} note={agentResult ? "Числа берутся только из сохранённого расчёта. Сценарий запускается отдельно по кнопке." : "До расчёта агент отвечает про районы Москвы и помогает с условиями. После расчёта — по его индексам."} />
+          onSend={sendQuestion} disabled={false} busy={session.chatBusy}
+          inputRef={chatInput} maxLength={2000} notice={mobile && demoModel ? demoModelWarning : undefined} note={agentResult ? "Числа берутся только из сохранённого расчёта. Сценарий запускается отдельно по кнопке." : "До расчёта доступна локальная помощь по интерфейсу. Вопросы к модели доступны после получения результата."} />
     </AtlasShell>
   );
 }

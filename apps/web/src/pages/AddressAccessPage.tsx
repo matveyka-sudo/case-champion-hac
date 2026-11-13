@@ -3,8 +3,6 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { ApiClient } from "../api/client";
 import type { Schemas } from "../api/types";
-import { ConsultantChat } from "../widgets/ConsultantChat";
-import { compactAddress, compactDistrict } from "../api/adapters/consultant";
 import "./address-access.css";
 
 const api = new ApiClient();
@@ -256,16 +254,6 @@ export default function AddressAccessPage() {
       <AccessMap address={mode === "address" ? address : null} result={mode === "address" ? result : null}
         boundary={mode !== "address" ? districtResult?.boundary : null} />
     </div>
-    <ConsultantChat client={api}
-      context={mode === "address" ? { address: compactAddress(result) } : { district: compactDistrict(districtResult) }}
-      hint={mode === "address"
-        ? result ? `Отвечает по адресу «${result.address.label}»` : "Посчитайте адрес или спросите про районы"
-        : districtResult ? `Отвечает по территории «${districtResult.district.name}»` : "Выберите территорию или спросите про районы"}
-      suggestions={mode === "address"
-        ? result ? ["Сколько идти до ближайшей больницы?", "Насколько доступны школы?", "Какой индекс у этого адреса?"]
-          : ["Какой район Москвы самый доступный?", "Какой район самый недоступный?", "Что такое индекс доступности?"]
-        : districtResult ? ["Как здесь с метро?", "Что здесь хуже всего?", "Какой район Москвы самый доступный?"]
-          : ["Какой район Москвы самый доступный?", "Какой городской округ области самый доступный?", "Какой район лучше всего со школами?"]} />
     {mode === "address" && comparison.length > 0 && <section className="address-access__comparison" aria-labelledby="compare-addresses">
       <h2 id="compare-addresses">Сравнение адресов</h2>
       <p>До трёх адресов с одинаковыми категориями и приоритетами. Шкала индекса учитывает площадь населённого пункта.</p>

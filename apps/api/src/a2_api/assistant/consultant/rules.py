@@ -578,7 +578,7 @@ def _address_answer(result: object, q: str) -> Answer:
     if not has(q, *TIME) and (has(q, *ACCESS) or has(q, *INDEX)):
         parts = [
             f"{ADDRESS_LABELS.get(i.category, i.category)} — "
-            + ("нет данных" if i.index is None else f"{whole(i.index)} ({band(i.index)})")
+            + ("нет маршрута" if i.index is None else f"{whole(i.index)} ({band(i.index)})")
             for i in items
         ]
         text = f"{result.address.label}: " + ", ".join(parts) + "."
@@ -587,7 +587,7 @@ def _address_answer(result: object, q: str) -> Answer:
             for i in items:
                 label = ADDRESS_LABELS.get(i.category, i.category).capitalize()
                 if i.index is None or i.seconds is None:
-                    lines.append(f"{label}: нет данных.")
+                    lines.append(f"{label}: пешего маршрута поблизости не нашлось.")
                     continue
                 name = f" ({i.destination.name})" if i.destination is not None else ""
                 lines.append(
@@ -600,11 +600,22 @@ def _address_answer(result: object, q: str) -> Answer:
                 f"Общий индекс адреса {result.address.label} — {whole(result.index)} из 100, "
                 f"{band(result.index)} доступность. По категориям: " + ", ".join(parts) + "."
             )
+        elif not wanted:
+            missing = [ADDRESS_LABELS.get(i.category, i.category) for i in items if i.index is None]
+            if missing:
+                text += (
+                    " Общий индекс не посчитан: нет пешего маршрута до категории "
+                    + ", ".join(missing)
+                    + ". Снимите её и пересчитайте."
+                )
         return Answer(text)
     lines = []
     for item in items:
         if item.seconds is None:
-            lines.append(f"до {ADDRESS_NEAREST.get(item.category, item.category)} — нет данных")
+            lines.append(
+                f"до {ADDRESS_NEAREST.get(item.category, item.category)} пешего маршрута "
+                "поблизости не нашлось"
+            )
             continue
         name = f" ({item.destination.name})" if item.destination is not None else ""
         lines.append(

@@ -336,22 +336,3 @@ async def test_address_page_questions(districts):
     assert (await answer("Сколько идти до больницы?", city="Москва")).startswith(
         "Выберите территорию и нажмите «Рассчитать»"
     )
-
-
-@pytest.mark.asyncio
-async def test_consultant_ask_endpoint(districts):
-    import httpx
-    from a2_api.api.application import create_app
-    from a2_api.services.analyses import AnalysisService
-
-    service = AnalysisService()
-    service.consultant = Consultant()
-    async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=create_app(service)), base_url="http://test"
-    ) as client:
-        response = await client.post(
-            "/api/v1/consultant/ask", json={"question": "Какой район самый недоступный?"}
-        )
-    assert response.status_code == 200, response.text
-    body = response.json()
-    assert body["status"] == "template" and body["text"].startswith("Хуже всего — район Вороново")
