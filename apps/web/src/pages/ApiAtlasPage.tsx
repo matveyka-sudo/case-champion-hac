@@ -60,8 +60,8 @@ import { useAnalysisSession } from "../features/analysis/useAnalysisSession";
 import { atlasLocation, parseSavedPointer, savedPointerHash, savedPointerWriter, subscribeAtlasLocation, writeSavedPointer, type SavedPointer } from "../features/analysis/savedPointer";
 import { savedRequestDraft } from "../api/adapters/savedRequest";
 import { scenarioJourneys } from "../api/adapters/scenario";
-import { scopeContainsTime, urbanScopeAvailability, type UrbanSelection } from "../api/adapters/urbanScopes";
-import { journeyLines } from "../api/adapters/journeyGeometry";
+import { scopeAllowsArea, scopeContainsTime, scopePreset, urbanScopeAvailability, type UrbanSelection } from "../api/adapters/urbanScopes";
+import { journeyLines, transitLegend } from "../api/adapters/journeyGeometry";
 import { urbanReadiness } from "../api/adapters/urbanReadiness";
 import { UrbanReadiness } from "../widgets/UrbanReadiness";
 import { CalculatedJourneys } from "../widgets/CalculatedJourneys";
@@ -868,6 +868,14 @@ export function ApiAtlasPage() {
   const destination = catalog.find((item) => item.territory_id === draft.destinationId);
   const draftTerritory = [origin?.name, !urban && destination?.name].filter(Boolean).join(" → ");
   const filterIssue = unavailableReason || (unavailableRequest && requestErrorMessage) || (draft.kind === "urban_passenger" ? scopeState.problem?.message : null);
+  const changeTravel = (travel: ApiDraft["travel"]) => {
+    const scope = travel === "pt" ? publishedScopes?.find((candidate) =>
+      candidate.scope_id === "cao-transit-500m" && candidate.city_id === draft.cityId &&
+      scopeAllowsArea(candidate, draft.areaId)) : undefined;
+    const preset = scope && scopePreset(scope,
+      { ...scopeSelection, mode: "public_transport" }, publishedScopes ?? [], catalog, caps?.areas ?? []);
+    change(preset ? { travel, date: preset.date, slot: preset.slot, snapshotId: preset.selection.snapshotId } : { travel });
+  };
   const sendQuestion = () => {
     const text = question.trim();
     if (!text || text.length > 2000 || session.chatBusy) return;
@@ -877,7 +885,8 @@ export function ApiAtlasPage() {
     } else {
       const guidance = atlasFilterHelp({ caps, selection: scopeSelection, territory: draftTerritory, date: draft.date,
         kind: draft.kind, issue: filterIssue || null, question: text });
-      if (filterIssue || helpBusy) {
+      const asksAboutControls = /^(как запустить расч[её]т|какие условия сейчас доступны)[?!. ]*$/i.test(text);
+      if (filterIssue || helpBusy || asksAboutControls) {
         setInterfaceMessages((messages) => [...messages, { question: text, text: guidance }]);
       } else {
         // Before a run the consultant answers about districts; local help stays the fallback.
@@ -1029,6 +1038,15 @@ export function ApiAtlasPage() {
                     originTimezone={savedOrigin?.timezone}
                     destinationTimezone={savedDestination?.timezone}
                     scenario={scenarioView}
+                    comparison={(() => {
+                      if (!result.analysis_id.startsWith("cao-transit-500m")) return undefined;
+                      const walk = shownMetrics.find((m) => m.metric_id === journey.journey_id.replace(/-transit$/, "-walk"));
+                      const transit = shownMetrics.find((m) => m.metric_id === journey.journey_id.replace(/-transit$/, "-pt-option"));
+                      const transfers = shownMetrics.find((m) => m.metric_id === journey.journey_id.replace(/-transit$/, "-transfers"));
+                      if (walk?.value == null || transit?.value == null || transfers?.value == null) return undefined;
+                      return { walk: walk.value, transit: transit.value, transfers: transfers.value,
+                        sameDestination: transit.subject.destination_id === journey.destination_object_id };
+                    })()}
                   />
                 ))}
                 </>}</ResultDetails>}
@@ -1196,7 +1214,7 @@ export function ApiAtlasPage() {
                       "Передвижение",
                       <><Seg name="Передвижение" value={draft.travel || null}
                         items={[["pt", "Общ. транспорт", "tram-front"], ["walk", "Пешком", "footprints"], ["car", "Авто", "car-front"]]}
-                        onChange={(travel) => change({ travel: travel as ApiDraft["travel"] })} />
+                        onChange={(travel) => changeTravel(travel as ApiDraft["travel"])} />
                         {!draft.travel && <p className="fhint">Выберите способ передвижения для выбранного города.</p>}
                         {inline("travel", ["passenger_mode"])}</>,
 
@@ -1323,6 +1341,27 @@ export function ApiAtlasPage() {
             cityId={urban ? draft.cityId : undefined} viewId={scenario?.run_id}
             category={mapMetric === "overall" ? null : categoryIds[mapMetric as keyof typeof categoryIds]} layers={layers}
           /></MapCanvas>
+          {result && /^cao-(walk|transit)-500m/.test(result.analysis_id) &&
+            caps?.urban_passenger_scopes?.some((scope) => scope.scope_id === "cao-transit-500m") &&
+            <MapOverlay position="tl">
+              <nav aria-label="Готовые расчёты ЦАО" style={{display: "flex", gap: 6}}>
+                {([["cao-walk-500m", "Пешком"], ["cao-transit-500m", "Общ. транспорт"]] as const).map(([id, label]) =>
+                  <button type="button" key={id} className="iconbtn"
+                    style={{background: "var(--surface, #fff)"}}
+                    aria-pressed={result.analysis_id.startsWith(id)}
+                    onClick={() => writeSavedPointer({kind: "analysis", id}, false)}>{label}</button>
+                )}
+              </nav>
+            </MapOverlay>}
+          {result?.analysis_id.startsWith("cao-transit-500m") && <MapOverlay position="tr">
+            <div aria-label="Цвета маршрутов" style={{background: "var(--surface, #fff)", borderRadius: 10,
+              padding: "8px 12px", color: "#101a31", display: "flex", gap: 12, flexWrap: "wrap"}}>
+              {transitLegend.map(({color, label}) => <span key={label} style={{whiteSpace: "nowrap"}}>
+                <span aria-hidden style={{display: "inline-block", width: 15, borderTop: `3px solid ${color}`,
+                  marginRight: 5, verticalAlign: "middle"}} />{label}
+              </span>)}
+            </div>
+          </MapOverlay>}
           <MapOverlay position="tl"><AtlasStatus kind={uiError ? "err" : running ? "run" : dirty || (!compactResult && result?.status === "partial") ? "stale" : result ? "ok" : "nd"}
             title={running ? runningTitle : dirty ? "Параметры изменены — показан прежний результат" : phaseLabels[phase]}
             subtitle={<>{result ? `${requestTitle} · ${timestampText(result.request.departure_at, savedOrigin?.timezone, !compactResult)}${compactResult ? "" : ` · ${trafficText[result.traffic_mode]} · ${statusText[result.status]}`}` : restoreMode ? "Исходные параметры появятся после получения результата." : draftInstructions}
