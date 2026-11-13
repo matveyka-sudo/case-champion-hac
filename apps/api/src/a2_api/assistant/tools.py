@@ -86,7 +86,15 @@ class SavedTools:
         )
         if not access_scope.territory_ids <= allowed_territories:
             raise ToolRejected()
-        if not access_scope.snapshot_ids <= {result.snapshot_id for result in saved}:
+        corpora = {
+            result.snapshot_id: corpus
+            for result in saved
+            if (corpus := self.service.document_corpora.get(result.snapshot_id)) is not None
+        }
+        allowed_snapshots = {result.snapshot_id for result in saved} | {
+            corpus.snapshot_id for corpus in corpora.values()
+        }
+        if not access_scope.snapshot_ids <= allowed_snapshots:
             raise ToolRejected()
         snapshots: list[AcceptedData] = []
         for result in saved:
@@ -94,6 +102,10 @@ class SavedTools:
             if snapshot is not None and snapshot.snapshot_id in access_scope.snapshot_ids:
                 if all(item.snapshot_id != snapshot.snapshot_id for item in snapshots):
                     snapshots.append(snapshot)
+                corpus = corpora.get(snapshot.snapshot_id)
+                if corpus is not None and corpus.snapshot_id in access_scope.snapshot_ids:
+                    if all(item.snapshot_id != corpus.snapshot_id for item in snapshots):
+                        snapshots.append(corpus.snapshot)
         permitted_sources = {ref.source_id for result in saved for ref in result.evidence_refs}
         permitted_sources.update(
             e.source_id for snapshot in snapshots for e in snapshot.evidence if e.verified

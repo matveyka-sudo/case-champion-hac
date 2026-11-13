@@ -86,14 +86,20 @@ async def explain(
         return explanation
     snapshot = await service.accepted_snapshot(result, scope)
     permitted_sources = {e.source_id for e in result.evidence_refs}
+    snapshot_ids = {result.snapshot_id}
     if snapshot is not None:
         permitted_sources.update(e.source_id for e in snapshot.evidence if e.verified)
+        # Accepted documents of this very snapshot, never of another one.
+        corpus = service.document_corpora.get(snapshot.snapshot_id)
+        if corpus is not None:
+            snapshot_ids.add(corpus.snapshot_id)
+            permitted_sources.update(corpus.source_ids)
     access = AccessScope(
         principal_id=scope,
         analysis_ids=frozenset({analysis_id}),
         territory_ids=territory_ids(result.request),
         source_ids=frozenset(permitted_sources),
-        snapshot_ids=frozenset({result.snapshot_id}),
+        snapshot_ids=frozenset(snapshot_ids),
     )
     proposals = await service.proposals(analysis_id, scope)
     explanation = await service.assistant.explain(

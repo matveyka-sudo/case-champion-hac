@@ -217,8 +217,9 @@ async def retrieve(
     result = EvidenceSearchResult.model_validate(await backend.call(name, args, scope))
     citations = DocumentCitations(saved)
     for hit in result.hits:
+        # The analysis snapshot or its own documents corpus, as scoped by the server.
         if (
-            hit.snapshot_id != saved.snapshot_id
+            hit.snapshot_id not in {saved.snapshot_id, saved.snapshot_id + ":documents"}
             or hit.snapshot_id not in scope.snapshot_ids
             or hit.source_id not in (request.source_ids or [])
             or not set(hit.territory_ids) <= set(request.territory_ids)
