@@ -244,3 +244,47 @@ def test_repository_document_is_not_accepted_yet():
             documents.require_accepted(info, text.read_bytes())
     else:
         documents.require_accepted(info, text.read_bytes())
+
+
+@pytest.mark.parametrize(
+    "acceptance,ok",
+    [
+        (
+            {
+                "source_url_checked_at": None,
+                "waived": ["source_url_check"],
+                "waived_reason": "owner",
+            },
+            True,
+        ),
+        (
+            {"privacy_reviewed_at": None, "waived": ["privacy_review"], "waived_reason": "owner"},
+            True,
+        ),
+        ({"privacy_reviewed_at": None, "waived": ["privacy_review"]}, False),
+        (
+            {
+                "privacy_reviewed_at": None,
+                "waived": ["privacy_review"],
+                "waived_reason": "owner",
+                "accepted_by": None,
+            },
+            False,
+        ),
+        ({"privacy_reviewed_at": None, "waived": ["everything"], "waived_reason": "owner"}, False),
+        (
+            {"privacy_reviewed_at": None, "waived": ["source_url_check"], "waived_reason": "owner"},
+            False,
+        ),
+    ],
+    ids=["url_waived", "privacy_waived", "no_reason", "no_owner", "unknown_waiver", "wrong_waiver"],
+)
+def test_owner_waiver_is_explicit_and_limited(tmp_path, acceptance, ok):
+    text = tmp_path / "document.txt"
+    text.write_text(TEXT)
+    info = documents.DocumentMeta.load(meta(tmp_path, text, acceptance=acceptance))
+    if ok:
+        documents.require_accepted(info, text.read_bytes())
+    else:
+        with pytest.raises(ValueError, match="not accepted"):
+            documents.require_accepted(info, text.read_bytes())

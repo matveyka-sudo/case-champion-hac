@@ -36,6 +36,9 @@ _PERSON = re.compile(
 )
 
 
+_WAIVABLE = frozenset({"source_url_check", "privacy_review"})
+
+
 @dataclass(frozen=True)
 class Acceptance:
     """The data owner's explicit decision; no field is inferred from the file."""
@@ -46,6 +49,10 @@ class Acceptance:
     source_url_checked_at: datetime | None
     privacy_reviewed_at: date | None
     text_sha256: str | None
+    # The owner may waive the URL comparison or the privacy reading, by name and
+    # with a reason. A waiver is recorded as such; it never pretends the check ran.
+    waived: frozenset[str] = frozenset()
+    waived_reason: str | None = None
 
     @classmethod
     def load(cls, raw: object) -> "Acceptance":
@@ -63,10 +70,17 @@ class Acceptance:
             else None,
             privacy_reviewed_at=day("privacy_reviewed_at"),
             text_sha256=row.get("text_sha256") or None,
+            waived=frozenset(row.get("waived") or ()),
+            waived_reason=row.get("waived_reason") or None,
         )
 
     def missing(self) -> list[str]:
         """What still separates this document from verified evidence."""
+        unknown = sorted(self.waived - _WAIVABLE)
+        if unknown:
+            return [f"unknown waiver: {', '.join(unknown)}"]
+        if self.waived and (not self.waived_reason or not self.accepted_by):
+            return ["a waiver needs acceptance.waived_reason and acceptance.accepted_by"]
         return [
             reason
             for absent, reason in (
@@ -74,11 +88,11 @@ class Acceptance:
                 (not self.accepted_by, "acceptance.accepted_by (owner role) is empty"),
                 (self.accepted_at is None, "acceptance.accepted_at is empty"),
                 (
-                    self.source_url_checked_at is None,
+                    self.source_url_checked_at is None and "source_url_check" not in self.waived,
                     "source URL was not re-checked against the file hash",
                 ),
                 (
-                    self.privacy_reviewed_at is None,
+                    self.privacy_reviewed_at is None and "privacy_review" not in self.waived,
                     "the text was not read by a person for personal data",
                 ),
                 (not self.text_sha256, "acceptance.text_sha256 of the reviewed text is empty"),

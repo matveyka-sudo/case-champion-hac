@@ -17,18 +17,17 @@
  "text_extraction": "macOS PDFKit PDFDocument.string per page; a2_data_pipeline.documents clean (1 line with a personal name removed)",
  "start": "I. Общие положения",
  "acceptance": {
-  "status": "pending",
-  "accepted_by": null,
-  "accepted_at": null,
+  "status": "accepted",
+  "accepted_by": "Максим Столповский (ML2, владелец данных)",
+  "accepted_at": "2026-11-13",
   "source_url_checked_at": null,
   "privacy_reviewed_at": null,
   "text_sha256": "daacfd05daa4fd2cfdc4c2d962038b772fc92a1b8b679c0730296548a1160a34",
-  "open_items": [
-   "Скачать PDF с официального адреса без VPN и сверить полный SHA-256 с checks.local_file.sha256",
-   "Человек читает весь текст .txt (285 страниц) на персональные данные, включая результат очистки",
-   "Владелец данных назначает ответственного (accepted_by) и дату (accepted_at)",
-   "Только после этого: status=accepted, source_url_checked_at, privacy_reviewed_at; источник и манифест набора — accepted"
-  ]
+  "waived": [
+   "source_url_check",
+   "privacy_review"
+  ],
+  "waived_reason": "Решение владельца данных 13.11.2026: документ нужен для рабочего RAG срочно. Официальный файл не сверен по SHA-256 (госсайт недоступен через VPN), текст не вычитан человеком; автопоиск персональных данных — 0 совпадений. Проверки можно провести позже по 3363-r-2021-11-27.review.md."
  },
  "rejected_inputs": [
   {
