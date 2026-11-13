@@ -203,7 +203,7 @@ async def test_district_ranking_and_one_district(districts):
         "Район Арбат: индекс 83 из 100, отличная пешая доступность."
     )
     assert text(await ask("Как в Тверском районе с метро?")) == (
-        "Тверской район: метро — 92 (индекс 0–100, пешком)."
+        "Тверской район: метро — 92 из 100, отличная пешая доступность."
     )
     oblast = text(await ask("Какой городской округ в области самый доступный?"))
     assert oblast.startswith("Лучше всего — городской округ Балашиха")
@@ -265,3 +265,93 @@ def test_address_is_found_in_a_question():
         "ленинский проспект 32а"
     )
     assert address_query("Какой район лучше за 15 минут?") is None
+
+
+def address_result():
+    from a2_api.adapters.address_access import AddressResult
+
+    def place(name):
+        return {
+            "id": name,
+            "name": name,
+            "lat": 0,
+            "lon": 0,
+            "location": "mapped_entrance",
+            "line": "",
+        }
+
+    return AddressResult.model_validate(
+        {
+            "address": {
+                "id": "way/1",
+                "label": "Тверская улица, 12",
+                "region": "Москва",
+                "lat": 55.76,
+                "lon": 37.6,
+                "h_seconds": 2400,
+            },
+            "index": 84.2,
+            "source": "osm",
+            "categories": [
+                {
+                    "category": "hospital",
+                    "seconds": 720,
+                    "index": 81.0,
+                    "destination": place("ГКБ №1"),
+                },
+                {
+                    "category": "school",
+                    "seconds": 300,
+                    "index": 91.7,
+                    "destination": place("Школа №1239"),
+                },
+            ],
+        }
+    )
+
+
+@pytest.mark.asyncio
+async def test_address_page_questions(districts):
+    from a2_api.assistant.consultant.service import ConsultantQuestion
+
+    consultant = Consultant()
+
+    async def answer(question, **context):
+        return (await consultant.ask(ConsultantQuestion(question=question, **context))).text
+
+    address = address_result()
+    assert await answer("Сколько идти до ближайшей больницы?", address=address) == (
+        "От адреса Тверская улица, 12: до ближайшей больницы (ГКБ №1) — 12 мин пешком."
+    )
+    assert await answer("Насколько доступны школы?", address=address) == (
+        "Школа: индекс 92 из 100, отличная доступность; ближайший объект (Школа №1239) — 5 мин пешком."
+    )
+    assert (await answer("Сколько до детского сада?", address=address)).startswith(
+        "Для этого адреса не посчитана категория: детский сад."
+    )
+    assert (await answer("Какой район самый доступный?", address=address)).startswith(
+        "Лучше всего — район Арбат"
+    )
+    assert (await answer("Сколько идти до больницы?")).startswith("Найдите адрес")
+    assert (await answer("Сколько идти до больницы?", city="Москва")).startswith(
+        "Выберите территорию и нажмите «Рассчитать»"
+    )
+
+
+@pytest.mark.asyncio
+async def test_consultant_ask_endpoint(districts):
+    import httpx
+    from a2_api.api.application import create_app
+    from a2_api.services.analyses import AnalysisService
+
+    service = AnalysisService()
+    service.consultant = Consultant()
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=create_app(service)), base_url="http://test"
+    ) as client:
+        response = await client.post(
+            "/api/v1/consultant/ask", json={"question": "Какой район самый недоступный?"}
+        )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["status"] == "template" and body["text"].startswith("Хуже всего — район Вороново")

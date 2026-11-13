@@ -260,6 +260,14 @@ def _one_district(item: DistrictFact, q: str) -> Answer:
             v = item.categories.get(category)
             label = ADDRESS_LABELS.get(category, category)
             parts.append(f"{label} — {'нет данных' if v is None else whole(v)}")
+        if len(categories) == 1:
+            v = item.categories.get(categories[0])
+            label = ADDRESS_LABELS.get(categories[0], categories[0])
+            if v is None:
+                return Answer(f"{_title(item.name)}: по категории «{label}» данных нет.")
+            return Answer(
+                f"{_title(item.name)}: {label} — {whole(v)} из 100, {band(v)} пешая доступность."
+            )
         return Answer(f"{_title(item.name)}: " + ", ".join(parts) + " (индекс 0–100, пешком).")
     value = item.value
     if value is None:
@@ -289,6 +297,14 @@ def _strong_weak(facts: Facts) -> tuple[str | None, str | None]:
 
 
 def _overall(facts: Facts) -> Answer:
+    known = [
+        x for x in facts.summaries.values() if x.index is not None or x.median_minutes is not None
+    ]
+    if facts.territory_index is None and facts.summaries and not known:
+        return Answer(
+            f"Для {facts.place} в этом расчёте индексы не посчитаны: нет данных о времени "
+            "до объектов. Попробуйте другие условия, категории или способ передвижения."
+        )
     if facts.territory_index is None and not facts.summaries:
         if facts.other:
             shown = facts.other[:3]
@@ -312,8 +328,8 @@ def _overall(facts: Facts) -> Answer:
             f" Лучше всего {with_(strong)} (индекс {fmt_index(s.index)}), "
             f"хуже всего — {with_(weak)} ({fmt_index(w.index)})."
         )
-    elif len(facts.summaries) == 1:
-        summary = next(iter(facts.summaries.values()))
+    elif len(known) == 1:
+        summary = known[0]
         text += f" До ближайшего объекта ({summary.label}) обычно {fmt_minutes(summary.median_minutes)}."
     ids = [facts.territory_score_id] if facts.territory_score_id else []
     return Answer(text.strip(), score_ids=ids)
@@ -470,20 +486,19 @@ def answer(
     facts: Facts,
     catalog: list[DistrictFact],
     address: object | None = None,
+    district: DistrictFact | None = None,
 ) -> Answer:
     q = " " + norm(question) + " "
     categories = categories_in(q)
     worst = has(q, *WORST)
-    if address is not None:
-        return _address_answer(address, q)
     if has(q, *HELLO) and len(q) < 60:
         return hello(facts)
     if has(q, *METHOD) and has(q, "индекс", "оценк", "балл", "доступност", "h "):
         return method(facts)
     lookup = catalog and (has(q, *DISTRICT) or not (categories or has(q, *TIME)))
-    district = find_district(q, catalog) if lookup else None
-    if district is not None:
-        return _one_district(district, q)
+    named = find_district(q, catalog) if lookup else None
+    if named is not None and (district is None or named.district_id != district.district_id):
+        return _one_district(named, q)
     if (
         catalog
         and has(q, *DISTRICT)
@@ -492,6 +507,20 @@ def answer(
         found = _district_answer(q, facts, catalog, worst)
         if found is not None:
             return found
+    if address is not None:
+        return _address_answer(address, q)
+    if district is not None:
+        return _one_district(district, q)
+    if facts.kind == "address":
+        return Answer(
+            "Найдите адрес и нажмите «Рассчитать пешком» — тогда скажу, сколько идти до больницы, "
+            "школы или метро. Ещё можно спросить, какой район Москвы самый доступный."
+        )
+    if facts.kind == "atlas":
+        return Answer(
+            "Выберите территорию и нажмите «Рассчитать» — тогда отвечу по индексам и времени до "
+            "объектов. Уже сейчас могу сказать, какие районы Москвы самые доступные пешком."
+        )
     if has(q, *IMPROVE):
         return _improve(facts)
     if categories and has(q, *TIME):
@@ -541,6 +570,37 @@ def _address_answer(result: object, q: str) -> Answer:
     assert isinstance(result, AddressResult)
     wanted = address_categories_in(q)
     items = [i for i in result.categories if not wanted or i.category in wanted]
+    if wanted and not items:
+        names = ", ".join(ADDRESS_LABELS.get(c, c) for c in wanted)
+        return Answer(
+            f"Для этого адреса не посчитана категория: {names}. Отметьте её и пересчитайте."
+        )
+    if not has(q, *TIME) and (has(q, *ACCESS) or has(q, *INDEX)):
+        parts = [
+            f"{ADDRESS_LABELS.get(i.category, i.category)} — "
+            + ("нет данных" if i.index is None else f"{whole(i.index)} ({band(i.index)})")
+            for i in items
+        ]
+        text = f"{result.address.label}: " + ", ".join(parts) + "."
+        if wanted:
+            lines = []
+            for i in items:
+                label = ADDRESS_LABELS.get(i.category, i.category).capitalize()
+                if i.index is None or i.seconds is None:
+                    lines.append(f"{label}: нет данных.")
+                    continue
+                name = f" ({i.destination.name})" if i.destination is not None else ""
+                lines.append(
+                    f"{label}: индекс {whole(i.index)} из 100, {band(i.index)} доступность; "
+                    f"ближайший объект{name} — {fmt_minutes(i.seconds / 60)} пешком."
+                )
+            text = " ".join(lines)
+        if not wanted and result.index is not None:
+            text = (
+                f"Общий индекс адреса {result.address.label} — {whole(result.index)} из 100, "
+                f"{band(result.index)} доступность. По категориям: " + ", ".join(parts) + "."
+            )
+        return Answer(text)
     lines = []
     for item in items:
         if item.seconds is None:

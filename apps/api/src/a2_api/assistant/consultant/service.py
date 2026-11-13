@@ -5,17 +5,34 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
-from typing import Any
+from typing import Any, Literal
 
 from a2_contracts.v2.assistant import Explanation, ExplanationRequest, Finding
 from a2_contracts.v2.results import AnalysisResult
+from pydantic import BaseModel, Field
 
+from a2_api.adapters.address_access import AddressResult, DistrictResult
 from a2_api.assistant.consultant import catalog, rules
-from a2_api.assistant.consultant.facts import build_facts, describe
+from a2_api.assistant.consultant.facts import build_facts, describe, empty_facts
 from a2_api.assistant.consultant.model import ModelClient, settings_from_env
 
 logger = logging.getLogger("a2_api.consultant")
 _REF = re.compile(r"\s*\[[^\]]{1,120}\]")
+
+
+class ConsultantQuestion(BaseModel):
+    """A question asked without a saved analysis: address page or atlas before a run."""
+
+    question: str = Field(min_length=1, max_length=2000)
+    city: str | None = Field(default=None, max_length=200)
+    address: AddressResult | None = None
+    district: DistrictResult | None = None
+
+
+class ConsultantAnswer(BaseModel):
+    text: str
+    status: Literal["generated", "template"]
+    model_id: str | None = None
 
 
 class Consultant:
@@ -65,6 +82,49 @@ class Consultant:
             )
         reason = "DISABLED" if self.model is None else "PROVIDER_UNAVAILABLE"
         return _explanation(result, request_id, draft, None, reason)
+
+    async def ask(self, body: ConsultantQuestion) -> ConsultantAnswer:
+        question = body.question.strip()
+        place = (
+            body.address.address.label
+            if body.address is not None
+            else body.district.district.name
+            if body.district is not None
+            else body.city or "Москва"
+        )
+        # The atlas always sends its city, empty before a territory is chosen.
+        atlas = body.city is not None and body.address is None and body.district is None
+        facts = empty_facts(place, body.city or "Москва", "atlas" if atlas else "address")
+        districts = catalog.districts()
+        district = None
+        if body.district is not None:
+            district = next(
+                (d for d in districts if d.district_id == body.district.district.id),
+                catalog.from_result(body.district),
+            )
+        q = " " + rules.norm(question) + " "
+        address = body.address
+        if address is None and catalog.address_query(question) is not None:
+            address = await asyncio.to_thread(
+                catalog.walk_from_address, question, rules.address_categories_in(q)
+            )
+        draft = rules.answer(question, facts, districts, address, district)
+        if self.model is not None:
+            context = describe(
+                facts,
+                districts=_relevant_districts(q, facts, districts),
+                address=catalog.address_text(address) if address is not None else None,
+            )
+            if district is not None:
+                context += "\nВыбранная территория: " + district.line()
+            text = await self.model.ask(question, context, draft.text)
+            if text:
+                return ConsultantAnswer(
+                    text=_REF.sub("", text).replace("**", "").strip(),
+                    status="generated",
+                    model_id=self.model.model_id,
+                )
+        return ConsultantAnswer(text=draft.text, status="template")
 
 
 def _relevant_districts(

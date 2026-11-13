@@ -67,6 +67,19 @@ class DistrictFact:
 _cache: dict[Path, tuple[float, list[DistrictFact]]] = {}
 
 
+def from_result(result: access.DistrictResult) -> DistrictFact:
+    district_id = result.district.id
+    return DistrictFact(
+        district_id=district_id,
+        name=result.district.name,
+        index=result.index,
+        categories={str(key): value for key, value in result.categories.items()},
+        population=result.population,
+        municipal=not district_id.startswith("moscow"),
+        okrug="административный округ" in result.district.name.lower(),
+    )
+
+
 def districts() -> list[DistrictFact]:
     """All district reports, cached by file time; empty when the catalogue is absent."""
     path = catalogue_path().with_name("districts.json")

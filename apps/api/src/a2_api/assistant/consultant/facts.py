@@ -77,6 +77,8 @@ KIND_LABELS = {
     "intercity_passenger": "пассажирская связь между городами",
     "urban_cargo": "грузовая доступность в городе",
     "intercity_cargo": "грузовая связь между городами",
+    "address": "пешая доступность по адресу",
+    "atlas": "атлас до расчёта, есть только районные индексы",
 }
 
 
@@ -394,6 +396,28 @@ def build_facts(
         selected_destination=selected_destination,
         destination_names=destination_names,
         other=other,
+    )
+
+
+def empty_facts(place: str, city: str = "Москва", kind: str = "address") -> Facts:
+    """Context without a saved analysis: the address page or the atlas before a run."""
+    return Facts(
+        kind=kind,
+        place=place,
+        city=city,
+        area=None,
+        mode="walk",
+        categories=[],
+        departure=None,
+        territory_index=None,
+        territory_score_id=None,
+        h_minutes=None,
+        points=[],
+        summaries={},
+        selected=None,
+        selected_destination=None,
+        destination_names={},
+        other=[],
     )
 
 
