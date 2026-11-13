@@ -139,6 +139,9 @@ def _comparison(facts: list[Metric | Score]) -> str:
         type(first) is not type(second)
         or first.name != second.name
         or getattr(first, "unit", None) != getattr(second, "unit", None)
+        or getattr(first, "time_kind", None) != getattr(second, "time_kind", None)
+        or getattr(first, "methodology_version", None)
+        != getattr(second, "methodology_version", None)
         or first.subject.kind != second.subject.kind
         or first.subject.category != second.subject.category
         or first.subject.mode != second.subject.mode
@@ -311,7 +314,15 @@ def conversational_finding(
                     "Для предметной рекомендации нужны подтверждённая цепочка пути "
                     "с составляющими времени и отдельный сценарный расчёт."
                 )
-            text += " После подготовки сценария эффект проверяется отдельно."
+            text += (
+                " Гипотеза для проверки: можно ли сократить подтверждённую составляющую "
+                "полного времени пути, не ухудшив остальные условия? "
+                "Сначала проверьте составляющие времени и ограничения, затем подготовьте "
+                "допустимый сценарий. Это не доказанная причина и не обещание эффекта. "
+                "После подготовки сценария эффект проверяется отдельно."
+                if getattr(saved.request, "cargo_transport", None) != "pipeline"
+                else " После подготовки сценария эффект проверяется отдельно."
+            )
     elif mode == "help":
         text = (
             "Можно спросить своими словами о сохранённой оценке, методике, времени по участкам "

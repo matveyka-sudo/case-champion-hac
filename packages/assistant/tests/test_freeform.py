@@ -267,7 +267,7 @@ async def test_prompt_explains_the_internal_freeform_plan_without_expanding_budg
     assert result.status == "generated"
     sent = transport.calls[0]
     facts = json.loads(sent["messages"][1]["content"])
-    assert facts["response_example"]["clause_id"] == "explain"
+    assert facts["response_example"]["clause_id"] == "improve"
     assert "answer_mode" not in facts["response_example"]
     assert facts["saved_facts"]["scores"][0]["subject"]["point_id"] == "point"
     assert facts["saved_facts"]["analysis_id"] == saved.analysis_id

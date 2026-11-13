@@ -59,7 +59,7 @@ async def ask(saved, question, *, selection=None, second=None, hits=()):
     async def echo():
         payload = json.loads(transport.calls[-1]["messages"][1]["content"])
         example = payload["response_example"]
-        if second is not None:
+        if second is not None and second not in example["findings"]:
             example = example | {"findings": [*example["findings"], second]}
         return reply(example)
 

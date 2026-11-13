@@ -49,6 +49,7 @@ from .clauses import _FindingSelection as _FindingSelection
 from .clauses import _ModelSelection as _ModelSelection
 from .context.facts import _fact as _fact
 from .context.facts import _request_note, _source_notes
+from .context.focus import answer_intent, planned_facts
 from .context.retrieval import DocumentCitations, needs_documents, retrieve
 from .evidence import leaf_references
 from .focus import context_facts, focused_metrics, focused_scores
@@ -901,27 +902,41 @@ class FlashAssistant:
             if context is None
             else context.model_dump(mode="json"),
         }
-        asked = (context.question or "").casefold() if context else ""
-        # A question about the index itself starts from the saved score.
-        first_fact: Metric | Score | None = (
-            initial_scores[0]
-            if initial_scores and any(word in asked for word in ("индекс", "оценк", "результат"))
-            else (initial_metrics or initial_scores or [None])[0]
-        )
-        if first_fact is not None:
-            # Live Flash copies this shape, so it is one complete valid answer.
+        question = context.question if context else None
+        plan_metrics, plan_scores = planned_facts(initial_metrics, initial_scores, question)
+        intent = answer_intent(question)
+        clause = suggested_clause(question)
+        if intent == "explain_difference" and clause in {"explain", "compare"}:
+            clause = "compare"
+        elif intent == "improvement_hypotheses" and clause in {"explain", "improve"}:
+            clause = "improve"
+        elif intent == "clarify_unknown" and clause == "explain":
+            clause = "coverage"
+        if intent == "area_overview" and clause == "explain":
+            clause = "area_overview"
+        user_payload["answer_plan"] = {
+            "intent": intent,
+            "scope": "selected_saved_subset",
+            "causes": "only_explicit_component_or_journey_links; otherwise_unknown",
+        }
+        planned: list[Metric | Score] = [*plan_scores, *plan_metrics]
+        recommended = [
+            *({"score_id": score.score_id} for score in plan_scores),
+            *({"metric_id": metric.metric_id} for metric in plan_metrics),
+        ]
+        if recommended:
             user_payload["response_example"] = {
-                "clause_id": suggested_clause(context.question if context else None),
-                "findings": [
-                    {"metric_id": first_fact.metric_id}
-                    if isinstance(first_fact, Metric)
-                    else {"score_id": first_fact.score_id}
-                ],
-                "evidence_ids": leaf_references(
-                    first_fact.source_refs
-                    if isinstance(first_fact, Metric)
-                    else first_fact.evidence_refs,
-                    resolver,
+                "clause_id": clause,
+                "findings": recommended,
+                "evidence_ids": list(
+                    dict.fromkeys(
+                        ref
+                        for fact in planned
+                        for ref in leaf_references(
+                            fact.source_refs if isinstance(fact, Metric) else fact.evidence_refs,
+                            resolver,
+                        )
+                    )
                 )[:5],
                 "template_ids": [],
             }
@@ -933,12 +948,15 @@ class FlashAssistant:
             "clause_id is exactly one of clause_ids: explain=why this value, "
             "methodology=formula/H, journey=which leg of a saved chain, "
             "coverage=unknown/partial/limits, improve=saved scenario, compare=two saved facts, "
-            "sources=which sources or documents, components=a score with its component metric, "
+            "sources=which sources or documents, area_overview=bounded overview of saved facts, "
+            "components=a score with its component metric, "
             "time_scope=what an available time metric covers, help=how to use, "
             "unsupported=causes, blame, prices, forecasts or new calculations absent from saved "
             "facts. findings holds one to three objects (two for compare), each exactly "
             '{"metric_id": "..."} or {"score_id": "..."} with an id copied from saved_facts: '
             "never both, never an evidence id, no other keys. Select only relevant facts. "
+            "Use answer_plan and response_example for the question. Prefer one to three saved facts, "
+            "never a catalogue of values. No invented causes or inferred component links. "
             "evidence_ids copies evidence_ids of the selected facts; add a documents evidence_id "
             "only when that document answers the question; otherwise []. "
             "template_ids is top level only: registered ids relevant to improvement, otherwise []. "

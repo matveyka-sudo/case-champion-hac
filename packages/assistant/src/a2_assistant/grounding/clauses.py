@@ -14,8 +14,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .narrative import ANSWER_MODES, AnswerMode, conversational_finding
 
-ClauseId = AnswerMode | Literal["components", "time_scope", "sources"]
-CLAUSE_IDS = (*ANSWER_MODES, "components", "time_scope", "sources")
+ClauseId = AnswerMode | Literal["components", "time_scope", "sources", "area_overview"]
+CLAUSE_IDS = (*ANSWER_MODES, "components", "time_scope", "sources", "area_overview")
 
 # Deterministic hint for the response example only: the model still chooses.
 # Every suggested clause renders for any single saved fact.
@@ -71,7 +71,7 @@ def factual_clause(
     *,
     has_proposal: bool,
 ) -> Finding:
-    if mode in {"components", "time_scope", "sources"}:
+    if mode in {"components", "time_scope", "sources", "area_overview"}:
         result = conversational_finding(
             "help", saved, metric_ids, score_ids, has_proposal=has_proposal
         )
@@ -92,6 +92,12 @@ def factual_clause(
             ):
                 raise ValueError("No selected component relationship")
             text = "Выбранные показатели связаны сохранёнными компонентами расчёта."
+        elif mode == "area_overview":
+            text = (
+                "Вот что можно сказать по выбранной области: ниже приведены сохранённые "
+                "показатели для принятых условий. Они не описывают все объекты района. "
+                "Конкретные причины и сведения о других местах из этих записей не следуют."
+            )
         elif mode == "sources":
             text = _sources(saved, result.evidence_refs)
         else:

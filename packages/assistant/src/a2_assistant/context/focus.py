@@ -208,3 +208,68 @@ def context_facts(
         counts = [item for item in saved.metrics if item.metric_id in count_ids]
         metrics = counts + [item for item in metrics if item not in counts]
     return metrics[:20], scores[:20]
+
+
+def answer_intent(question: str | None) -> str:
+    """Internal question plan; never a new tool, fact or public response field."""
+    text = (question or "").casefold()
+    if any(word in text for word in ("источник", "основан", "откуда", "документ", "методик")):
+        return "sources"
+    if any(word in text for word in ("улучш", "изменить", "ускор", "проверить дальше")):
+        return "improvement_hypotheses"
+    if any(word in text for word in ("разные", "различ", "ниже", "выше", "сравн", "сопостав")):
+        return "explain_difference"
+    if any(word in text for word in ("unknown", "partial", "неизвест", "нет данных", "покрыт")):
+        return "clarify_unknown"
+    if any(word in text for word in ("район", "рассказать", "обзор", "территори")):
+        return "area_overview"
+    return "explain_score"
+
+
+def planned_facts(
+    metrics: list[Metric], scores: list[Score], question: str | None
+) -> tuple[list[Metric], list[Score]]:
+    """At most three recommended atoms, drawn only from the admitted context.
+
+    A general difference question can use two saved points only when every
+    subject dimension other than point_id and the score semantics coincide.
+    Explicit selections are kept first. No index or numerical delta is computed.
+    """
+    intent = answer_intent(question)
+    if intent == "explain_difference":
+        for first in scores:
+            for second in scores:
+                if (
+                    first.score_id != second.score_id
+                    and first.subject.point_id is not None
+                    and second.subject.point_id is not None
+                    and first.subject.point_id != second.subject.point_id
+                    and first.subject.model_dump(exclude={"point_id"})
+                    == second.subject.model_dump(exclude={"point_id"})
+                    and first.name == second.name
+                    and first.methodology_version == second.methodology_version
+                    and first.calculation_kind == second.calculation_kind
+                ):
+                    return [], [first, second]
+        for first_metric in metrics:
+            for second_metric in metrics:
+                if (
+                    first_metric.metric_id != second_metric.metric_id
+                    and first_metric.subject.point_id is not None
+                    and second_metric.subject.point_id is not None
+                    and first_metric.subject.point_id != second_metric.subject.point_id
+                    and first_metric.subject.model_dump(exclude={"point_id"})
+                    == second_metric.subject.model_dump(exclude={"point_id"})
+                    and first_metric.name == second_metric.name
+                    and first_metric.unit == second_metric.unit
+                    and first_metric.time_kind == second_metric.time_kind
+                ):
+                    return [first_metric, second_metric], []
+        # Do not invent a comparator, even when the user presupposes a difference.
+        return ([], scores[:1]) if scores else (metrics[:1], [])
+    if scores:
+        first = scores[0]
+        component_ids = {c.id for c in first.components if c.kind == "metric"}
+        components = [m for m in metrics if m.metric_id in component_ids]
+        return components[:2], [first]
+    return metrics[:3], []
