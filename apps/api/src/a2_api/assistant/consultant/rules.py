@@ -353,7 +353,7 @@ def _time(facts: Facts, categories: list[str]) -> Answer | None:
                 continue
             name = f" ({fact.destination})" if fact.destination else ""
             lines.append(
-                f"До {NEAREST_LABELS[category]}{name} — {fmt_minutes(fact.minutes)} {facts.mode_label}."
+                f"До {NEAREST_LABELS[category]}{name} — {fmt_minutes(fact.minutes)} {fact.route_mode or facts.mode_label}."
             )
             if fact.time_id:
                 metric_ids.append(fact.time_id)
@@ -364,7 +364,8 @@ def _time(facts: Facts, categories: list[str]) -> Answer | None:
         if summary.median_minutes is None:
             lines.append(f"Время до {NEAREST_LABELS[category]} в этом расчёте неизвестно.")
             continue
-        text = f"До {NEAREST_LABELS[category]} {facts.mode_label} обычно {fmt_minutes(summary.median_minutes)}"
+        mode = "в режиме ОТ" if facts.mode == "public_transport" else facts.mode_label
+        text = f"До {NEAREST_LABELS[category]} {mode} обычно {fmt_minutes(summary.median_minutes)}"
         if summary.points > 1 and summary.best_minutes != summary.worst_minutes:
             text += (
                 f": от {fmt_minutes(summary.best_minutes)} до {fmt_minutes(summary.worst_minutes)}"
