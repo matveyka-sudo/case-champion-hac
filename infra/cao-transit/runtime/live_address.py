@@ -5,7 +5,6 @@ import os
 from functools import lru_cache
 from pathlib import Path
 
-import httpx
 from a2_api.adapters import address_access as address
 from a2_api.db.repositories.address_catalog import candidate_rows
 from a2_engine.shared.scoring import category_index
@@ -50,11 +49,12 @@ def nearby(client, point, locations, *, reverse=False):
             "targets": [place] if reverse else nearby_locations,
         })
         if matrix is None:
-            for key, (lon, lat) in batch:
-                stop = address.Destination(id=key, name="", line="", location="approach", lat=lat, lon=lon)
-                path = address._route(client, stop, point) if reverse else address._route(client, point, stop)
-                if path is not None and path[0] <= MAX_LINK_SECONDS:
-                    result.append([key, path[0]])
+            matches = address._router_post(client, "/locate", {"locations": [place, *nearby_locations]})
+            if isinstance(matches, list) and matches[0].get("edges"):
+                filtered = {key: position for (key, position), match in zip(batch, matches[1:], strict=True)
+                            if match.get("edges")}
+                if len(filtered) < len(batch):
+                    result.extend(nearby(client, point, filtered, reverse=reverse))
             continue
         rows = matrix["sources_to_targets"]
         entries = [row[0] for row in rows] if reverse else rows[0]

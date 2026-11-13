@@ -1180,7 +1180,7 @@ export function ApiAtlasPage({ caoDistrict = false }: { caoDistrict?: boolean } 
     <Seg name="Область расчёта" value={caoDistrict ? "district" : lifeTab} items={[["address", "Адрес или точка"], ["district", "Район"]]}
       onChange={(value) => {
         if (caoDistrict && value === "address") window.location.assign("/map#atlas/address");
-        else if (!caoDistrict && value === "district" && lifeTab !== "district") window.location.assign("/district");
+        else if (!caoDistrict && value === "district") { if (lifeTab !== "district") window.location.assign("/district"); }
         else if (!caoDistrict) { access.setPicking(false); setLifeTab("address"); }
       }} />
   </div>;
