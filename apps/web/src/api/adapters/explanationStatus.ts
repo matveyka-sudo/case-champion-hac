@@ -24,3 +24,12 @@ export function explanationLabel(answer: Pick<Schemas["Explanation"], "status" |
   const reason = fallbackReasons[answer.reason_code || ""];
   return reason ? `Шаблонное объяснение: ${reason}` : "Шаблонное объяснение";
 }
+
+// What the chat says about the result it would explain, before any question is sent.
+export function agentContextNotice(state: { hasResult: boolean; dirty: boolean; running: boolean }) {
+  if (state.running) return "Идёт расчёт: агент ответит по результату, когда он будет сохранён.";
+  if (state.hasResult && state.dirty)
+    return "Условия изменены после расчёта. Агент объясняет только сохранённый результат; чтобы спросить о новых условиях, нажмите «Рассчитать».";
+  if (!state.hasResult) return "Расчёта ещё нет: сначала нажмите «Рассчитать», затем спросите агента о результате.";
+  return null;
+}

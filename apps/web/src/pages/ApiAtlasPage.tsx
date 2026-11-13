@@ -94,7 +94,7 @@ import { boundSnapshotId, clinicPreset, initialSourceDraft, staticPilotPreset } 
 import { AnalysisGroupPanel } from "../widgets/AnalysisGroupPanel";
 import { AgentChatView } from "../widgets/AgentChatView";
 import { evidenceResolver, explanationSources, journeyEvidenceReferences } from "../api/adapters/evidenceGroups";
-import { explanationLabel } from "../api/adapters/explanationStatus";
+import { agentContextNotice, explanationLabel } from "../api/adapters/explanationStatus";
 import { jobProgressText } from "../api/adapters/jobProgress";
 import { MapViewport, MapCanvas, MapOverlay, MapControls, AtlasLegend, AtlasMobileSheet, AtlasStatus, StateCard } from "../widgets/AtlasMapView";
 const passengerModeChoices = [
@@ -1377,7 +1377,8 @@ export function ApiAtlasPage() {
           contextRows={[{ label: "Контекст", value: agentResult ? requestTitle : draftTerritory || "Территория не выбрана" },
             { label: "Условия", value: agentResult ? timestampText(agentResult.request.departure_at, savedOrigin?.timezone) : `${draft.date} · ${trafficText[draft.traffic]}` },
             { label: "Результат", value: agentResult ? statusText[agentResult.status] : running ? runningTitle : "Для выбранных условий ещё не получен" }]}
-          messages={<>{!agentResult && interfaceMessages.map((message, index) => <div key={`help-${index}`}>
+          messages={<>{agentContextNotice({ hasResult: !!result, dirty, running }) && <p className="fhint" role="status">{agentContextNotice({ hasResult: !!result, dirty, running })}</p>}
+            {!agentResult && interfaceMessages.map((message, index) => <div key={`help-${index}`}>
             <div className="msg u">{message.question}</div>
             <div className="msg a"><small>Помощь по интерфейсу · локально</small><p>{message.text}</p>
               <p>Эта справка не запускает расчёт. Объяснение показателей и проверка сценария доступны после получения результата.</p>
