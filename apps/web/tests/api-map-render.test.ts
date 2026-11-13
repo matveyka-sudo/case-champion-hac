@@ -38,6 +38,21 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 describe("saved map rendering", () => {
+  it("preserves Leaflet container classes when point picking changes", () => {
+    const props = { result: null, scores: [], selection: null, onSelect: vi.fn(), zoomAction: { id: 0, kind: "home" } };
+    const view = render(createElement(ApiMap, props));
+    const host = view.container.querySelector(".api-map-layer")!;
+    host.classList.add("leaflet-container", "leaflet-touch", "leaflet-grab");
+    view.rerender(createElement(ApiMap, { ...props, onAddressPick: vi.fn() }));
+    expect(host.classList.contains("is-picking-address")).toBe(true);
+    expect(host.classList.contains("leaflet-container")).toBe(true);
+    expect(host.classList.contains("leaflet-touch")).toBe(true);
+    view.rerender(createElement(ApiMap, props));
+    expect(host.classList.contains("is-picking-address")).toBe(false);
+    expect(host.classList.contains("leaflet-container")).toBe(true);
+    expect(host.classList.contains("leaflet-grab")).toBe(true);
+  });
+
   it("retains every feature and disjoint route geometry when selection changes without rebuilding layers", () => {
     const result = legGeometryFixture(), onSelect = vi.fn(), zoomAction = { id: 0, kind: "home" };
     const props = { result, scores: result.scores, onSelect, zoomAction, selection: { entity_kind: "sample_point" as const, entity_id: result.journeys[0].point_id! } };

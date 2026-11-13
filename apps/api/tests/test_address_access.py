@@ -1,9 +1,14 @@
 """Regression coverage for category offsets and missing walking routes."""
 
+import json
+import sqlite3
+from contextlib import closing
+
 import httpx
 import pytest
 from a2_api.adapters import address_access as access
-from shapely.geometry import box
+from pydantic import ValidationError
+from shapely.geometry import box, mapping
 
 
 def test_batched_walk_scores_stay_bound_to_their_category(monkeypatch):
@@ -146,3 +151,38 @@ def test_unmatched_endpoint_keeps_routes_to_other_candidates():
         assert access._matrix_times(client, access.Point(lat=55.75, lon=37.6), destinations) == {
             1: 240
         }
+
+
+@pytest.mark.parametrize(
+    "location", [{}, {"lat": 55}, {"address_id": "node/1", "lat": 55, "lon": 37}]
+)
+def test_address_request_requires_exactly_one_origin(location):
+    with pytest.raises(ValidationError):
+        access.AddressRequest.model_validate({**location, "categories": ["school"]})
+
+
+def test_point_stays_at_selected_coordinates_and_uses_published_boundaries(monkeypatch, tmp_path):
+    catalogue = tmp_path / "catalog.sqlite"
+    catalogue.with_name("localities.json").write_text(
+        json.dumps([{"h_seconds": 1200, "geometry": mapping(box(36, 55, 37, 56))}])
+    )
+    monkeypatch.setattr(access, "catalogue_path", lambda: catalogue)
+    monkeypatch.setattr(access, "metadata", lambda _db, _key: "3600")
+    monkeypatch.setattr(
+        access,
+        "district_rows",
+        lambda _db: [
+            {"id": "oblast-1", "geometry": json.dumps(mapping(box(35, 54, 39, 57)))},
+            {"id": "moscow-1", "geometry": json.dumps(mapping(box(37, 55, 38, 56)))},
+        ],
+    )
+    with closing(sqlite3.connect(":memory:")) as db:
+        moscow = access.address_at_point(db, 55.5, 37.5)
+        assert moscow is not None
+        assert (moscow.lat, moscow.lon, moscow.h_seconds) == (55.5, 37.5, 3600)
+        oblast = access.address_at_point(db, 55.5, 36.5)
+        assert oblast is not None
+        assert (oblast.lat, oblast.lon, oblast.h_seconds) == (55.5, 36.5, 1200)
+        without_area = access.address_at_point(db, 54.5, 36.5)
+        assert without_area is not None and without_area.h_seconds is None
+        assert access.address_at_point(db, 59.9, 30.3) is None

@@ -115,6 +115,10 @@ def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
         return build_legacy_app(config)
 
     configured = build_analysis_service(config)
+    from a2_api.assistant.consultant import Consultant
+    from a2_api.assistant.consultant.model import consultant_enabled
+
+    consultant = Consultant.from_env() if consultant_enabled() else None
 
     def service(
         repository: JobRepository | None = None, *, configure_assistant: bool = True
@@ -127,6 +131,7 @@ def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
             preflight=configured.preflight,
             registered_template_ids=configured.registered_template_ids,
         )
+        result.consultant = consultant
         if config.assistant_hook and configure_assistant:
             factory = cast(
                 Callable[[AnalysisService], FlashAssistant], configured_hook(config.assistant_hook)
@@ -161,6 +166,8 @@ def build_app(settings: RuntimeSettings | None = None) -> FastAPI:
             finally:
                 await active_service.close_admission()
                 await close_assistant(active_service)
+                if consultant is not None:
+                    await consultant.aclose()
         finally:
             await pool.close()
 

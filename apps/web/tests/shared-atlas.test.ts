@@ -17,13 +17,14 @@ describe("shared atlas presentation", () => {
     expect(view.container.querySelector("aside")?.hasAttribute("inert")).toBe(false);
   });
 
-  it("uses the incumbent three tabs and keyboard navigation without a data source dependency", () => {
-    const onModeChange = vi.fn();
-    render(createElement(AtlasHeader, { mode: "city", title: "Москва", theme: "light", onModeChange,
+  it("separates life tools and the transport navigation", () => {
+    const onModeChange = vi.fn(), onLife = vi.fn();
+    render(createElement(AtlasHeader, { mode: "city", title: "Москва", theme: "light", onModeChange, onLife,
       onThemeChange: vi.fn(), onFilters: vi.fn(), chatOpen: false, onChat: vi.fn() }));
-    expect(screen.getAllByRole("tab")).toHaveLength(3);
-    fireEvent.keyDown(screen.getByRole("tablist"), { key: "ArrowRight" });
-    expect(onModeChange).toHaveBeenCalledWith("pax");
+    fireEvent.click(screen.getByRole("button", { name: "Для жизни" }));
+    expect(onLife).toHaveBeenCalledOnce();
+    expect(screen.getByRole("button", { name: "Транспортные связи" }).getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByRole("tablist")).toBeNull();
   });
   it("keeps the same shell slots and original time dock with controller-owned values", () => {
     const onSlotChange = vi.fn(), run = vi.fn();

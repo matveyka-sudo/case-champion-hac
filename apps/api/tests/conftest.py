@@ -10,6 +10,8 @@ import pytest_asyncio
 from apps.api.tests.migration_support import migrate
 
 ROOT = Path(__file__).resolve().parents[3]
+# Tests never call the live consultant model, even with a developer's key in .env.
+os.environ.setdefault("CONSULTANT_MODEL_ENABLED", "false")
 
 
 @pytest.fixture

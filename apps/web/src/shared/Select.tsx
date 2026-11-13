@@ -124,7 +124,7 @@ export function Select({
         onKeyDown={keyboard}
       >
         {searchable && <div className="wx-select-search"><input ref={searchInput} className="api-input" type="search"
-          aria-label={`${label}: поиск`} placeholder="Найти город или субъект" value={query}
+          aria-label={`${label}: поиск`} placeholder="Поиск по названию" value={query}
           onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => {
             if (event.key === "ArrowDown") {
               event.preventDefault();

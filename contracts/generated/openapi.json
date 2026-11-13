@@ -64,9 +64,16 @@
       "AddressRequest": {
         "properties": {
           "address_id": {
-            "pattern": "^(node|way|relation)/[0-9]+$",
-            "title": "Address Id",
-            "type": "string"
+            "anyOf": [
+              {
+                "pattern": "^(node|way|relation)/[0-9]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address Id"
           },
           "categories": {
             "items": {
@@ -78,14 +85,64 @@
                 "university",
                 "metro",
                 "mcd",
-                "mck"
+                "mck",
+                "mall",
+                "bus_stop"
               ],
               "type": "string"
             },
-            "maxItems": 8,
+            "maxItems": 10,
             "minItems": 1,
             "title": "Categories",
             "type": "array"
+          },
+          "departure_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Departure At"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "maximum": 90.0,
+                "minimum": -90.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "lon": {
+            "anyOf": [
+              {
+                "maximum": 180.0,
+                "minimum": -180.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lon"
+          },
+          "mode": {
+            "default": "walk",
+            "enum": [
+              "walk",
+              "car",
+              "pt"
+            ],
+            "title": "Mode",
+            "type": "string"
           },
           "priorities": {
             "additionalProperties": {
@@ -105,7 +162,9 @@
                 "university",
                 "metro",
                 "mcd",
-                "mck"
+                "mck",
+                "mall",
+                "bus_stop"
               ]
             },
             "title": "Priorities",
@@ -113,7 +172,6 @@
           }
         },
         "required": [
-          "address_id",
           "categories"
         ],
         "title": "AddressRequest",
@@ -131,6 +189,17 @@
             "title": "Categories",
             "type": "array"
           },
+          "departure_local": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Departure Local"
+          },
           "index": {
             "anyOf": [
               {
@@ -141,6 +210,16 @@
               }
             ],
             "title": "Index"
+          },
+          "mode": {
+            "default": "walk",
+            "enum": [
+              "walk",
+              "car",
+              "pt"
+            ],
+            "title": "Mode",
+            "type": "string"
           },
           "source": {
             "title": "Source",
@@ -949,7 +1028,9 @@
               "university",
               "metro",
               "mcd",
-              "mck"
+              "mck",
+              "mall",
+              "bus_stop"
             ],
             "title": "Category",
             "type": "string"
@@ -992,6 +1073,28 @@
               }
             ],
             "title": "Seconds"
+          },
+          "transit_lines": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Transit Lines",
+            "type": "array"
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "no_destination",
+                  "no_route"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Reason"
           }
         },
         "required": [
@@ -1404,6 +1507,61 @@
         "title": "District",
         "type": "object"
       },
+      "DistrictDestination": {
+        "properties": {
+          "category": {
+            "enum": [
+              "hospital",
+              "school",
+              "kindergarten",
+              "college",
+              "university",
+              "metro",
+              "mcd",
+              "mck",
+              "mall",
+              "bus_stop"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "line": {
+            "title": "Line",
+            "type": "string"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lat",
+          "lon",
+          "id",
+          "name",
+          "location",
+          "line",
+          "category"
+        ],
+        "title": "DistrictDestination",
+        "type": "object"
+      },
       "DistrictResult": {
         "properties": {
           "boundary": {
@@ -1440,11 +1598,20 @@
                 "university",
                 "metro",
                 "mcd",
-                "mck"
+                "mck",
+                "mall",
+                "bus_stop"
               ]
             },
             "title": "Categories",
             "type": "object"
+          },
+          "destinations": {
+            "items": {
+              "$ref": "#/components/schemas/DistrictDestination"
+            },
+            "title": "Destinations",
+            "type": "array"
           },
           "district": {
             "$ref": "#/components/schemas/District"
@@ -1490,7 +1657,9 @@
                 "university",
                 "metro",
                 "mcd",
-                "mck"
+                "mck",
+                "mall",
+                "bus_stop"
               ]
             },
             "title": "Population Covered",
@@ -1507,6 +1676,13 @@
               }
             ],
             "title": "Sample Count"
+          },
+          "sample_points": {
+            "items": {
+              "$ref": "#/components/schemas/Point"
+            },
+            "title": "Sample Points",
+            "type": "array"
           },
           "source": {
             "title": "Source",

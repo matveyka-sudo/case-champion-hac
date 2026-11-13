@@ -1,8 +1,8 @@
 {
   "reason": "Additive address and district API and read-only SQLite address catalogue",
   "schemas": {
-    "manifest.json": "e3ea800e5c69d8c3e9960e2ea8b9932fccace493d9014acde977e69bfc97516f",
-    "openapi.json": "a6e9d793623c3f63a8bede344e713c8aa8228a371994a36a7a212ccbbcbe69f7"
+    "manifest.json": "e06ec3886577eb47eb76487ceeb1ed58f41d1d0c1da58e62a7af967013da4fae",
+    "openapi.json": "21f607e88df409cb15d60c73e4fb6105fbe2bb63c29f4b6bd2869d5939a862f6"
   },
   "sql_literals": [
     "SELECT id,label,region,lat,lon,h_seconds FROM address\n           WHERE NOT EXISTS (\n               SELECT 1 FROM json_each(?) WHERE instr(' ' || address.search || ' ', value) = 0\n           )\n           ORDER BY label,id LIMIT 12",

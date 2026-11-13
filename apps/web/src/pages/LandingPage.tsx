@@ -26,7 +26,7 @@ export function LandingPage({ dataMode = "demo" }: { dataMode?: "demo" | "api" }
           <NavigationLink className="nav-link-wx" to="features">
             {"Возможности"}
           </NavigationLink>
-          {dataMode === "api" && <a className="nav-link-wx" href="#address-access">Инфраструктура по адресу</a>}
+          {dataMode === "api" && <a className="nav-link-wx" href="#atlas/address">Проверить адрес</a>}
           <NavigationLink className="wbtn wbtn-light" to="atlas">
             {"Открыть атлас "}
             <span className="arrow">
@@ -275,6 +275,16 @@ export function LandingPage({ dataMode = "demo" }: { dataMode?: "demo" | "api" }
             </div>
           </div>
         </section>
+        {dataMode === "api" && <section className="sec address-landing" aria-labelledby="addressLandingTitle">
+          <div className="wrap address-landing-inner">
+            <div>
+              <p className="eyebrow">Москва и Московская область</p>
+              <h2 id="addressLandingTitle">Проверьте доступность перед покупкой или арендой жилья</h2>
+              <p>Введите адрес или выберите точку на карте, чтобы оценить время до больниц, учебных заведений, станций, торговых центров и автобусных остановок.</p>
+            </div>
+            <a className="wbtn wbtn-primary" href="#atlas/address"><Icon name="map-pin" />Проверить адрес</a>
+          </div>
+        </section>}
         <section
           className="sec stage"
           id="features"

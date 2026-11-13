@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { Icon } from "../shared/ui";
+import { accessIcons, accessAssessment, accessNumber, accessCategoryColors } from "../shared/accessibilityPresentation";
 import { feature } from "topojson-client";
 import type { GeometryCollection, Topology } from "topojson-specification";
 import type { GeoJsonObject } from "geojson";
@@ -10,6 +14,7 @@ import { destinationCategoryLabels } from "../api/adapters/request";
 import { selectionText } from "../api/adapters/result";
 import { journeyLines, segmentGeometryNotice } from "../api/adapters/journeyGeometry";
 import { displayedCategory, pointScorePresentation, observedScoreLabel } from "../api/adapters/scorePresentation";
+import { labels as addressCategoryLabels, type AddressPlace } from "../features/useAddressAccess";
 import type { Category } from "../api/types";
 const moscowCamera = (result: AnalysisResult | null) => !result?.limitations.includes("BOUNDED_ANALYSIS_SCOPE") && (result?.request.analysis_kind === "urban_passenger" || result?.request.analysis_kind === "urban_cargo") && result.request.city_id === "moscow";
 
@@ -46,6 +51,14 @@ export function ApiMap({
   viewId,
   cityId,
   category = null,
+  addressMode = false,
+  district,
+  districts,
+  districtMetric = "overall",
+  onDistrictSelect,
+  addressPlace,
+  addressResult,
+  onAddressPick,
   layers: visibleLayers = { index: true, objects: true, pop: false },
 }: {
   result: AnalysisResult | null;
@@ -58,6 +71,14 @@ export function ApiMap({
   viewId?: string;
   cityId?: string;
   category?: Category | null;
+  addressMode?: boolean;
+  district?: Schemas["DistrictResult"] | null;
+  districts?: Schemas["DistrictResult"][];
+  districtMetric?: string;
+  onDistrictSelect?: (district: Schemas["DistrictResult"]) => void;
+  addressPlace?: AddressPlace | null;
+  addressResult?: Schemas["AddressResult"] | null;
+  onAddressPick?: (point: { lat: number; lon: number }) => void;
   layers?: { index: boolean; objects: boolean; pop: boolean };
 }) {
   const host = useRef<HTMLDivElement>(null),
@@ -155,9 +176,9 @@ export function ApiMap({
         L.geoJSON(feature(topology, topology.objects.land), landOptions).addTo(m);
       })
       .catch(() => { /* Street tiles and result geometry are independent of this outline. */ });
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
       className: "tl-osm",
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      attribution: 'Tiles © Esri — Esri, HERE, Garmin, USGS, NGA, EPA, NPS',
       maxZoom: 19,
     })
       .on("tileerror", () => setTileError(true))
@@ -373,15 +394,15 @@ export function ApiMap({
         : destination ? { entity_kind: destination.entity_kind, entity_id: destination.entity_id } : undefined;
       journeyLines(j).forEach((part) => {
         const tip = document.createElement("span");
-        tip.textContent =
+        tip.textContent = part.style ? part.style.label + (part.schematic ? " · схема" : "") :
           (part.segment ? "Участок маршрута" : part.schematic ? "Схема пути" : "Маршрут") +
           (scenarioView ? " сценария" : "") +
           (part.segment ? ` · ${segmentGeometryNotice}` : "");
         const route = L.geoJSON(part.geometry as GeoJsonObject, {
           style: {
-            color: "#7a52ff",
+            color: part.style?.color || "#7a52ff",
             weight: 4,
-            dashArray: part.schematic ? "6 8" : undefined,
+            dashArray: part.schematic || part.style?.label === "Пешком" ? "6 8" : undefined,
           },
         })
           .bindTooltip(tip)
@@ -474,6 +495,106 @@ export function ApiMap({
         { animate: false },
       );
   }, [zoomAction, result, selection, cityId]);
+  useEffect(() => {
+    const instance = map.current;
+    host.current?.classList.toggle("is-picking-address", !!onAddressPick);
+    if (!instance || !onAddressPick) return;
+    const click = ({ latlng }: L.LeafletMouseEvent) => onAddressPick({ lat: latlng.lat, lon: latlng.wrap().lng });
+    instance.on("click", click);
+    return () => { instance.off("click", click); };
+  }, [onAddressPick]);
+  useEffect(() => {
+    const instance = map.current;
+    const reports = districts ?? (district ? [district] : []);
+    if (!instance || !reports.length) return;
+    const renderer = L.svg();
+    const group = L.featureGroup().addTo(instance);
+    const bounds = L.latLngBounds([]);
+    const targets = new Set<string>();
+    for (const report of reports) {
+      const value = districtMetric === "overall" ? report.index : report.categories[districtMetric] ?? null;
+      if (report.boundary) {
+        const boundary = L.geoJSON(report.boundary, {
+          renderer, style: { color: report.district.id === district?.district.id ? "#2f5bff" : "#67728f", weight: report.district.id === district?.district.id ? 3 : 1.5, fillColor: indexColor(value), fillOpacity: value == null ? 0.16 : 0.3, dashArray: value == null ? "5 5" : undefined },
+        } as L.GeoJSONOptions & L.PathOptions).addTo(group);
+        const caption = document.createElement("span");
+        caption.textContent = `${report.district.name} · ${value == null ? "Недостаточно данных" : accessNumber.format(value) + " из 100"}`;
+        boundary.bindTooltip(caption).on("click", () => onDistrictSelect?.(report));
+        bounds.extend(boundary.getBounds());
+        if (value != null) {
+          const label = document.createElement("span");
+          label.className = "district-index-label";
+          label.style.color = accessAssessment(value).color;
+          label.textContent = accessNumber.format(value);
+          L.marker(boundary.getBounds().getCenter(), { interactive: false, icon: L.divIcon({ className: "district-label-host", html: label, iconSize: [56, 28], iconAnchor: [28, 14] }) }).addTo(group);
+        }
+      }
+      for (const point of report.sample_points || []) {
+        L.circleMarker([point.lat, point.lon], {
+          renderer, radius: 3, color: "#fff", fillColor: "#59668b", fillOpacity: 0.85, weight: 1, className: "api-district-origin",
+        }).bindTooltip("Исходная точка: отсюда считали путь до объектов").addTo(group);
+      }
+      for (const target of report.destinations || []) {
+        if (districtMetric !== "overall" && target.category !== districtMetric) continue;
+        const key = `${target.category}:${target.lat}:${target.lon}`;
+        if (targets.has(key)) continue;
+        targets.add(key);
+        const label = document.createElement("span");
+        label.textContent = `${addressCategoryLabels[target.category]} · ${target.name}`;
+        L.marker([target.lat, target.lon], { title: label.textContent || target.name, alt: label.textContent || target.name, icon: L.divIcon({ className: `district-place-icon category-icon-host category-${target.category}`, html: renderToStaticMarkup(createElement("span", { className: "category-map-symbol", style: { "--category-color": accessCategoryColors[target.category] } as import("react").CSSProperties }, createElement(Icon, { name: accessIcons[target.category] }))), iconSize: [28, 28], iconAnchor: [14, 14] }) })
+          .bindTooltip(label).bindPopup(label.cloneNode(true) as HTMLElement).addTo(group);
+      }
+    }
+    if (bounds.isValid()) instance.fitBounds(bounds, { paddingTopLeft: [32, 96], paddingBottomRight: [window.innerWidth < 768 ? 32 : 340, window.innerWidth < 768 ? 250 : 130], maxZoom: 14, animate: false });
+    return () => { group.remove(); renderer.remove(); };
+  }, [district, districts, districtMetric, onDistrictSelect]);
+  useEffect(() => {
+    const instance = map.current;
+    if (!instance || !addressMode) return;
+    const frame = requestAnimationFrame(() => instance.invalidateSize({ pan: false }));
+    return () => cancelAnimationFrame(frame);
+  }, [addressMode]);
+  useEffect(() => {
+    const instance = map.current;
+    if (!addressMode || !instance) return;
+    if (!addressPlace) {
+      showMoscowCenter(instance);
+      return;
+    }
+    const group = L.featureGroup().addTo(instance);
+    const renderer = L.svg();
+    const marker = L.circleMarker([addressPlace.lat, addressPlace.lon], {
+      renderer, radius: 8, color: "#ffffff", fillColor: "#2856e4", fillOpacity: 1, weight: 2, className: "api-address-marker",
+    });
+    const caption = document.createElement("span");
+    caption.textContent = addressPlace.label;
+    marker.bindTooltip(caption).addTo(group);
+    addressResult?.categories.forEach((item) => {
+      const color = accessCategoryColors[item.category];
+      const label = document.createElement("span");
+      label.textContent = `${addressCategoryLabels[item.category]} · ${item.destination?.name || "Маршрут"}`;
+      if (item.path && item.path.length > 1) L.polyline(item.path.map((point) => [point.lat, point.lon]), {
+        renderer, color, weight: 4, className: "api-address-route",
+      }).bindTooltip(label).addTo(group);
+      if (item.destination) {
+        const icon = document.createElement("span");
+        icon.className = "category-map-symbol";
+        icon.style.setProperty("--category-color", color);
+        icon.innerHTML = renderToStaticMarkup(createElement(Icon, { name: accessIcons[item.category] }));
+        L.marker([item.destination.lat, item.destination.lon], {
+          title: label.textContent || item.destination.name, alt: label.textContent || item.destination.name,
+          icon: L.divIcon({ className: "api-address-destination category-icon-host", html: icon, iconSize: [32, 32], iconAnchor: [16, 16] }),
+        }).bindTooltip(label.cloneNode(true) as HTMLElement).bindPopup(label.cloneNode(true) as HTMLElement).addTo(group);
+      }
+    });
+    marker.bringToFront();
+    if (addressResult) {
+      instance.fitBounds(group.getBounds(), { paddingTopLeft: [32, 76], paddingBottomRight: [window.innerWidth < 768 ? 32 : 340, 100], maxZoom: 16, animate: false });
+    } else if (addressPlace.addressId) {
+      instance.setView([addressPlace.lat, addressPlace.lon], Math.max(instance.getZoom(), 14), { animate: false });
+    }
+    return () => { group.remove(); renderer.remove(); };
+  }, [addressMode, addressPlace, addressResult]);
   return (
     <>
       <div

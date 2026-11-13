@@ -26,6 +26,10 @@ const blankTile = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aCMsAAAAASUVORK5CYII=",
   "base64",
 );
+async function connectionMode(page: Page, name: string) {
+  await page.getByRole("button", { name: "Транспортные связи", exact: true }).click();
+  await page.getByRole("button", { name, exact: true }).click();
+}
 async function choose(page: Page, label: string, option: string) {
   const group = page.getByRole("group", { name: label, exact: true });
   await group.or(page.getByRole("combobox", { name: label, exact: true })).first().waitFor();
@@ -400,7 +404,7 @@ test("API: explicit cancel stops a durable job, parameter changes do not apply o
   expect(mock.requests.some((r) => r.url.endsWith("/cancel"))).toBe(true);
   await expect(page.locator("#apiResultCard")).toHaveCount(0);
 });
-test("API: four analysis kinds send canonical requests including independent pipeline", async ({
+test("API: four analysis kinds send canonical requests through the connection menu", async ({
   page,
 }) => {
   const mock = await mockApi(page, { emptyProposals: true });
@@ -411,9 +415,7 @@ test("API: four analysis kinds send canonical requests including independent pip
     analysis_kind: "urban_passenger",
     city_id: "city-1",
   });
-  await page
-    .getByRole("tab", { name: "Пассажирские связи", exact: true })
-    .click();
+  await connectionMode(page, "Пассажирские связи");
   await choose(page, "Территория А", "Москва");
   await choose(page, "Территория Б", "Калининград");
   await page
@@ -426,9 +428,7 @@ test("API: four analysis kinds send canonical requests including independent pip
     origin_id: "city-1",
     destination_id: "city-2",
   });
-  await page
-    .getByRole("tab", { name: "Грузовые связи", exact: true })
-    .click();
+  await connectionMode(page, "Грузовые связи");
   await choose(page, "Город", "Калининград");
 
   await page
@@ -440,15 +440,11 @@ test("API: four analysis kinds send canonical requests including independent pip
     analysis_kind: "urban_cargo",
     city_id: "city-2",
   });
-  await page
-    .getByRole("tab", { name: "Грузовые связи", exact: true })
-    .click();
+  await connectionMode(page, "Грузовые связи");
   await choose(page, "Режим грузовых связей", "Между территориями");
   await choose(page, "Территория А", "Москва");
   await choose(page, "Территория Б", "Калининград");
-  await choose(page, "Обработка", "Наливной");
-  await page.getByRole("button", { name: "Трубопровод", exact: true }).click();
-  await choose(page, "Продукт трубопровода", "Нефть");
+  await choose(page, "Обработка", "Контейнер");
 
   await page
     .getByRole("button", { name: "Рассчитать", exact: true })
@@ -457,9 +453,8 @@ test("API: four analysis kinds send canonical requests including independent pip
   await expect(page.locator(".status")).toContainText("Результат получен");
   expect(mock.request).toMatchObject({
     analysis_kind: "intercity_cargo",
-    cargo_modes: ["pipeline"],
-    cargo_transport: "pipeline",
-    pipeline_product: "oil",
+    cargo_transport: "multimodal",
+    cargo_profile_id: "demo-general",
   });
 });
 test("API: mobile filters and chat are keyboard accessible without overflow", async ({
@@ -554,7 +549,7 @@ test("API: urban choices follow capabilities while intercity retains the nationa
   const mock = await mockApi(page, { territories: [...territories, extra] as Territory[], emptyProposals: true });
   await page.goto("/?data=api#atlas");
   await expect(page.getByRole("group", { name: "Город", exact: true }).getByRole("button", { name: "Казань" })).toHaveCount(0);
-  await page.getByRole("tab", { name: "Пассажирские связи", exact: true }).click();
+  await connectionMode(page, "Пассажирские связи");
   await page.getByRole("combobox", { name: "Территория А", exact: true }).click();
   await expect(page.getByRole("option", { name: "Казань", exact: true })).toBeVisible();
   expect(mock.posts).toBe(0);
@@ -597,22 +592,20 @@ test("API: unknown snapshot dates cannot be submitted and sole coverage needs no
   expect(mock.posts).toBe(1);
 });
 
-test("API: original pipeline product controls bind the exact registered product profile", async ({ page }) => {
-  const c = structuredClone(capabilities) as Schemas["Capabilities"];
-  c.cargo_profiles.push({ kind: "pipeline", product: "gas", profile_id: "pipe-gas" });
-  const mock = await mockApi(page, { capabilities: c, emptyProposals: true });
+test("API: unsupported cargo processing stays hidden while container requests work", async ({ page }) => {
+  const mock = await mockApi(page, { emptyProposals: true });
   await page.goto("/?data=api#atlas");
-  await page.getByRole("tab", { name: "Грузовые связи", exact: true }).click();
+  await connectionMode(page, "Грузовые связи");
   await choose(page, "Режим грузовых связей", "Между территориями");
   await choose(page, "Территория А", "Москва");
   await choose(page, "Территория Б", "Калининград");
-  await choose(page, "Обработка", "Наливной");
-  await page.getByRole("button", { name: "Трубопровод", exact: true }).click();
-  await choose(page, "Продукт трубопровода", "Нефть");
-  await choose(page, "Продукт трубопровода", "Газ");
+  const handling = page.getByRole("group", { name: "Обработка", exact: true });
+  await expect(handling.getByRole("button", { name: "Наливной", exact: true })).toHaveCount(0);
+  await expect(handling.getByRole("button", { name: "Навалочный", exact: true })).toHaveCount(0);
+  await choose(page, "Обработка", "Контейнер");
   await page.getByRole("button", { name: "Рассчитать", exact: true }).first().click();
   await expect(page.locator(".status")).toContainText("Результат получен");
-  expect(mock.request).toMatchObject({ cargo_profile_id: "pipe-gas", pipeline_product: "gas" });
+  expect(mock.request).toMatchObject({ cargo_profile_id: "demo-general", cargo_transport: "multimodal" });
 });
 
 test("API: selected point and destination scope return times", async ({ page }) => {
@@ -1305,7 +1298,7 @@ test("API: a unique real-source Moscow default uses the original controls withou
   await expect(page.getByRole("group", { name: "Передвижение", exact: true }).getByRole("button", { name: "Пешком", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator(".cat-tog[aria-pressed=true]")).toHaveCount(1);
   await expect(page.getByRole("button", { name: "Взрослые поликлиники", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("tab")).toHaveCount(3);
+  await expect(page.getByRole("navigation", { name: "Разделы Waydex" })).toBeVisible();
   await expect(page.getByRole("combobox", { name: "Набор данных", exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Использовать доступные параметры", exact: true })).toHaveCount(0);
   expect(mock.posts).toBe(0);
@@ -1419,7 +1412,7 @@ test("API: mobile interface help respects empty scopes and unavailable calculati
   await expect(answer).toContainText("Для городского расчёта нет зарегистрированных наборов параметров");
   await expect(answer).not.toContainText(/индекс.{0,20}99|Объяснение модели|Шаблонное объяснение/i);
   await page.getByRole("button", { name: "Свернуть чат", exact: true }).click();
-  await page.getByRole("tab").nth(1).click();
+  await connectionMode(page, "Пассажирские связи");
   await page.getByRole("button", { name: "Агент", exact: true }).first().click();
   await expect(answer).toHaveCount(0);
   await page.getByRole("button", { name: "Какие условия сейчас доступны?", exact: true }).click();
@@ -1436,7 +1429,7 @@ test("API: mobile empty-state action stays clear of the sheet and map controls",
   const mock = await mockApi(page, { emptyProposals: true });
   await page.goto("/?data=api#atlas");
   for (const [mode, intercityCargo] of [[0, false], [1, false], [2, false], [2, true]] as const) {
-    await page.getByRole("tab").nth(mode).click();
+    await connectionMode(page, ["В городе", "Пассажирские связи", "Грузовые связи"][mode]);
     if (intercityCargo) {
       await page.getByRole("button", { name: "Фильтры", exact: true }).first().click();
       await page.getByRole("group", { name: "Режим грузовых связей", exact: true })

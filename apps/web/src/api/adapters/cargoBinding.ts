@@ -16,7 +16,7 @@ export function matchingCargoProfiles(profiles: Schemas["Capabilities"]["cargo_p
 export function compactCargoOptions(draft: ApiDraft, catalog: Territory[], caps: Schemas["Capabilities"], choice: CargoProfileChoice) {
   if (draft.kind !== "urban_cargo" || !caps.compact_scopes || !choice.group) return null;
   const scopes = caps.compact_scopes;
-  return cargoHandling.flatMap(([handling, label]) => {
+  return cargoHandling.filter(([handling]) => handling === "container" || handling === "general").flatMap(([handling, label]) => {
     const profiles = matchingCargoProfiles(caps.cargo_profiles, { ...choice, handling });
     const times = compactSlots.flatMap(({ slot }) => {
       const dates = profiles.flatMap(({ profile_id }) =>

@@ -71,17 +71,29 @@ async def explain(
             raise DomainError(
                 404, "unknown_id", "Selected entity is not part of the saved analysis"
             )
-    if service.assistant is None:
-        explanation = template_explanation(result, request_id, "DISABLED", context=context)
-        await service.analysis(analysis_id, scope)
-        return explanation
-    bindings = await service._repository().private_source_bindings(analysis_id, scope)
+    repository = getattr(service, "repository", None)
+    bindings = (
+        await service._repository().private_source_bindings(analysis_id, scope)
+        if repository is not None
+        else ()
+    )
     # A grant opt-in cannot fence budget waits, retries and every model attempt.
     # Keep all private facts local until that separate egress gate is reviewed.
     if bindings:
         explanation = template_explanation(
             result, request_id, "PRIVATE_SOURCE_EXTERNAL_MODEL_DISABLED", context=context
         )
+        await service.analysis(analysis_id, scope)
+        return explanation
+    consultant = getattr(service, "consultant", None)
+    if consultant is not None:
+        # The Waydex consultant answers every question from the saved numbers.
+        answer: Explanation = await consultant.explain(
+            service, result, body or ExplanationRequest(), request_id
+        )
+        return answer
+    if service.assistant is None:
+        explanation = template_explanation(result, request_id, "DISABLED", context=context)
         await service.analysis(analysis_id, scope)
         return explanation
     snapshot = await service.accepted_snapshot(result, scope)
