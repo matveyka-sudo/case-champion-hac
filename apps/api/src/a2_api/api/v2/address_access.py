@@ -1,4 +1,4 @@
-"""Address search and pedestrian assessment over the local catalogue."""
+"""Address search and accessibility assessment over the local catalogue."""
 
 import sqlite3
 
@@ -27,12 +27,26 @@ async def calculate(request: access.AddressRequest) -> access.AddressResult:
         result = await to_thread.run_sync(access.address_result, request, limiter=route_slots)
     except sqlite3.OperationalError as exc:
         raise DomainError(503, "engine_unavailable", "Каталог адресов не подключён.") from exc
+    except access.TransitAccessUnavailable as exc:
+        raise DomainError(422, "data_unavailable", str(exc)) from exc
+    except access.DrivingAccessUnavailable as exc:
+        raise DomainError(
+            422,
+            "data_unavailable",
+            "Для выбранной точки не подтверждён автомобильный проезд через КПП.",
+        ) from exc
     except (httpx.HTTPError, ValueError, KeyError) as exc:
         raise DomainError(
-            503, "engine_unavailable", "Пеший маршрутизатор не вернул результат. Повторите расчёт."
+            503, "engine_unavailable", "Маршрутизатор не вернул результат. Повторите расчёт."
         ) from exc
     if result is None:
-        raise DomainError(404, "unknown_id", "Адрес отсутствует в каталоге.")
+        raise DomainError(
+            404,
+            "unknown_id",
+            "Точка вне покрытия. Выберите место в Москве или Московской области."
+            if request.address_id is None
+            else "Адрес отсутствует в каталоге.",
+        )
     return result
 
 

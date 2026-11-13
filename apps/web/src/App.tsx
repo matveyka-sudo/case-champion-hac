@@ -16,7 +16,7 @@ const AtlasPage = lazy(() => dataMode === "api"
   ? import("./pages/ApiAtlasPage").then(m => ({default:m.ApiAtlasPage}))
   : import("./pages/AtlasPage").then(m => ({default:m.AtlasPage})),
 );
-const AddressAccessPage = lazy(() => import("./pages/AddressAccessPage"));
+const AddressAtlas = lazy(() => import("./pages/ApiAtlasPage").then(m => ({default:m.ApiAtlasPage})));
 class Boundary extends Component<{ children: ReactNode }, { error: boolean }> {
   state = { error: false };
   static getDerivedStateFromError() {
@@ -40,9 +40,14 @@ export default function App() {
       atlasLocation,
       () => "",
     ),
-    atlas = hash.startsWith("#atlas"),
-    addressAccess = hash === "#address-access",
+    addressAccess = hash === "#address-access" || hash === "#atlas/address",
+    atlas = hash.startsWith("#atlas") || addressAccess,
     savedScroll = useRef(0);
+  useEffect(() => {
+    if (hash !== "#address-access") return;
+    window.history.replaceState(null, "", "#atlas/address");
+    window.dispatchEvent(new Event("waydex:navigate"));
+  }, [hash]);
   useEffect(() => {
     document.title = addressAccess ? "Waydex — инфраструктура рядом с домом" : atlas ? "Waydex — атлас" : "Waydex — связи территорий";
   }, [atlas, addressAccess]);
@@ -73,17 +78,17 @@ export default function App() {
       <AtlasProvider>
         <a
           className="visually-hidden-focusable"
-          href={addressAccess ? "#address-access" : atlas ? "#atlas" : "#main"}
+          href={atlas ? "#atlas" : "#main"}
           onClick={(e) => {
             e.preventDefault();
-            const el = document.getElementById(addressAccess ? "address-access" : atlas ? "atlas" : "main");
+            const el = document.getElementById(atlas ? "atlas" : "main");
             el?.setAttribute("tabindex", "-1");
             el?.focus();
           }}
         >
           Перейти к содержанию
         </a>
-        {addressAccess ? <Suspense fallback={<p role="status">Открываем поиск адреса…</p>}><AddressAccessPage /></Suspense> : atlas ? (
+        {atlas ? (
           <Suspense
             fallback={
               <div className="wrap" role="status" style={{ padding: 40 }}>
@@ -91,7 +96,7 @@ export default function App() {
               </div>
             }
           >
-            <AtlasPage />
+            {dataMode === "api" ? <AtlasPage /> : addressAccess ? <AddressAtlas /> : <AtlasPage />}
           </Suspense>
         ) : (
           <LandingPage dataMode={dataMode === "api" ? "api" : "demo"} />

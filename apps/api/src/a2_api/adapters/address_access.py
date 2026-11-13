@@ -1,9 +1,10 @@
-"""Static pedestrian accessibility on a versioned local OSM catalogue."""
+"""Address accessibility on a versioned OSM catalogue and a scheduled transit pilot."""
 
 import json
 import os
 import sqlite3
 from collections.abc import Sequence
+from datetime import datetime
 from typing import Any, Literal, Self
 
 import httpx
@@ -29,10 +30,24 @@ from a2_api.db.repositories.address_catalog import (
     search_rows,
 )
 
-Category = Literal[
-    "hospital", "school", "kindergarten", "college", "university", "metro", "mcd", "mck"
-]
 CATEGORIES = ("hospital", "school", "kindergarten", "college", "university", "metro", "mcd", "mck")
+Category = Literal[
+    "hospital",
+    "school",
+    "kindergarten",
+    "college",
+    "university",
+    "metro",
+    "mcd",
+    "mck",
+    "mall",
+    "bus_stop",
+]
+AddressMode = Literal["walk", "car", "pt"]
+TRANSIT_FROM = "2026-11-01"
+TRANSIT_TO = "2026-11-30"
+TRANSIT_EXCLUDED = "2026-11-04"
+ADDRESS_CATEGORIES = (*CATEGORIES, "mall", "bus_stop")
 WalkRoute = tuple[float, list[tuple[float, float]]]
 ROUTER = "http://valhalla:8002"
 OPTIONS = {
@@ -65,6 +80,8 @@ class CategoryResult(BaseModel):
     seconds: float | None = None
     index: float | None = None
     destination: Destination | None = None
+    unavailable_reason: Literal["no_destination", "no_route"] | None = None
+    transit_lines: list[str] = Field(default_factory=list)
     path: list[Point] = Field(default_factory=list)
 
 
@@ -73,12 +90,26 @@ class AddressQuery(BaseModel):
 
 
 class AddressRequest(BaseModel):
-    address_id: str = Field(pattern=r"^(node|way|relation)/[0-9]+$")
-    categories: list[Category] = Field(min_length=1, max_length=len(CATEGORIES))
+    address_id: str | None = Field(default=None, pattern=r"^(node|way|relation)/[0-9]+$")
+    lat: float | None = Field(default=None, ge=-90, le=90)
+    lon: float | None = Field(default=None, ge=-180, le=180)
+    mode: AddressMode = "walk"
+    departure_at: datetime | None = None
+    categories: list[Category] = Field(min_length=1, max_length=len(ADDRESS_CATEGORIES))
     priorities: dict[Category, Priority] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def unique_categories(self) -> Self:
+        if self.address_id is None:
+            if self.lat is None or self.lon is None:
+                raise ValueError("Provide an address ID or both coordinates")
+        elif self.lat is not None or self.lon is not None:
+            raise ValueError("Provide an address ID or coordinates, not both")
+        if self.mode == "pt":
+            if self.departure_at is None or self.departure_at.tzinfo is not None:
+                raise ValueError("Use a local Moscow departure time for public transport")
+        elif self.departure_at is not None:
+            raise ValueError("Departure time applies only to public transport")
         if len(set(self.categories)) != len(self.categories):
             raise ValueError("Categories must be unique")
         if not self.priorities.keys() <= set(self.categories):
@@ -88,9 +119,15 @@ class AddressRequest(BaseModel):
 
 class AddressResult(BaseModel):
     address: Address
+    mode: AddressMode = "walk"
+    departure_local: str | None = None
     index: float | None
     categories: list[CategoryResult]
     source: str
+
+
+class DistrictDestination(Destination):
+    category: Category
 
 
 class District(BaseModel):
@@ -107,6 +144,8 @@ class DistrictResult(BaseModel):
     population: float
     overall_population_covered: float | None = Field(default=None, ge=0, le=1)
     sample_count: int | None = Field(default=None, ge=0)
+    sample_points: list[Point] = Field(default_factory=list)
+    destinations: list[DistrictDestination] = Field(default_factory=list)
     source: str
 
 
@@ -122,9 +161,18 @@ def address_search(query: str) -> list[Address]:
         return [Address.model_validate(dict(row)) for row in search_rows(db, parts)]
 
 
-def _router_post(client: httpx.Client, path: str, body: dict[str, Any]) -> Any:
-    response = client.post(path, json={**OPTIONS, **body})
-    if response.status_code == 400 and response.json().get("error_code") in {170, 171, 442}:
+def _router_post(
+    client: httpx.Client, path: str, body: dict[str, Any], mode: AddressMode = "walk"
+) -> Any:
+    options = OPTIONS if mode == "walk" else {"costing": "auto"}
+    response = client.post(path, json={**options, **body})
+    if response.status_code == 400 and response.json().get("error_code") in {
+        170,
+        171,
+        440,
+        441,
+        442,
+    }:
         return None
     response.raise_for_status()
     return response.json()
@@ -135,7 +183,12 @@ def _location(point: Point) -> dict[str, float]:
 
 
 def _matrix_times(
-    client: httpx.Client, point: Point, destinations: list[Destination], *, recover: bool = True
+    client: httpx.Client,
+    point: Point,
+    destinations: list[Destination],
+    *,
+    recover: bool = True,
+    mode: AddressMode = "walk",
 ) -> dict[int, float] | None:
     if not destinations:
         return {}
@@ -143,6 +196,7 @@ def _matrix_times(
         client,
         "/sources_to_targets",
         {"sources": [_location(point)], "targets": [_location(item) for item in destinations]},
+        mode,
     )
     if matrix is not None:
         return {
@@ -159,7 +213,7 @@ def _matrix_times(
     matched: list[int] = []
     for offset in range(0, len(locations), 40):
         batch = locations[offset : offset + 40]
-        matches = _router_post(client, "/locate", {"locations": batch})
+        matches = _router_post(client, "/locate", {"locations": batch}, mode)
         if not isinstance(matches, list) or len(matches) != len(batch):
             return None
         matched.extend(offset + index for index, row in enumerate(matches) if row.get("edges"))
@@ -169,7 +223,7 @@ def _matrix_times(
     if len(indexes) == len(destinations):
         return None
     filtered = _matrix_times(
-        client, point, [destinations[index] for index in indexes], recover=False
+        client, point, [destinations[index] for index in indexes], recover=False, mode=mode
     )
     return (
         {indexes[index]: value for index, value in filtered.items()}
@@ -178,13 +232,14 @@ def _matrix_times(
     )
 
 
-def _walk_route(
+def _route(
     client: httpx.Client,
     point: Point,
     destination: Destination,
     excluded_gates: Sequence[ShapePoint] = (),
     *,
     via: ShapePoint | None = None,
+    mode: AddressMode = "walk",
 ) -> WalkRoute | None:
     locations = [_location(point)]
     if via is not None:
@@ -195,7 +250,7 @@ def _walk_route(
         body["exclude_locations"] = [
             {"lon": gate.x, "lat": gate.y, "search_cutoff": 15} for gate in excluded_gates
         ]
-    route = _router_post(client, "/route", body)
+    route = _router_post(client, "/route", body, mode)
     if route is None:
         return None
     trip = route["trip"]
@@ -205,6 +260,17 @@ def _walk_route(
         for lon, lat in _polyline6(leg["shape"], ("valhalla",)).coordinates
     ]
     return float(trip["summary"]["time"]), coordinates
+
+
+def _walk_route(
+    client: httpx.Client,
+    point: Point,
+    destination: Destination,
+    excluded_gates: Sequence[ShapePoint] = (),
+    *,
+    via: ShapePoint | None = None,
+) -> WalkRoute | None:
+    return _route(client, point, destination, excluded_gates, via=via)
 
 
 def _walk_to_reviewed_hospital(
@@ -290,7 +356,80 @@ def _internal_walk(
                 row.index = category_index(row.seconds, h_seconds).value
                 if geometry:
                     row.path = [Point(lon=lon, lat=lat) for lon, lat in coordinates]
+        if row.seconds is None:
+            row.unavailable_reason = (
+                "no_route"
+                if destinations or (category == "hospital" and reviewed_hospitals)
+                else "no_destination"
+            )
     return results
+
+
+class TransitAccessUnavailable(Exception):
+    """The selected point, date, or deployment is outside the validated transit pilot."""
+
+
+def transit_categories(
+    db: sqlite3.Connection,
+    client: httpx.Client,
+    point: Point,
+    categories: Sequence[Category],
+    departure: str,
+    h_seconds: float | None,
+) -> list[CategoryResult]:
+    results = []
+    for category in categories:
+        destinations = candidate_rows(db, point, category, limit=4)
+        row = CategoryResult(
+            category=category, unavailable_reason="no_route" if destinations else "no_destination"
+        )
+        results.append(row)
+        for candidate in destinations:
+            destination = Destination.model_validate(dict(candidate))
+            response = _router_post(
+                client,
+                "/route",
+                {
+                    "locations": [_location(point), _location(destination)],
+                    "costing": "multimodal",
+                    "date_time": {"type": 1, "value": departure},
+                },
+            )
+            if response is None:
+                continue
+            trip = response["trip"]
+            boardings = [
+                step["transit_info"]
+                for leg in trip["legs"]
+                for step in leg["maneuvers"]
+                if step.get("travel_mode") == "transit" and step.get("transit_info")
+            ]
+            if not boardings or any(
+                stop.get("assumed_schedule")
+                for board in boardings
+                for stop in board["transit_stops"]
+            ):
+                continue
+            seconds = float(trip["summary"]["time"])
+            if row.seconds is not None and row.seconds <= seconds:
+                continue
+            row.destination = destination
+            row.seconds = seconds
+            row.index = category_index(seconds, h_seconds).value
+            row.unavailable_reason = None
+            row.transit_lines = [
+                board.get("short_name", "") for board in boardings if board.get("short_name")
+            ]
+            row.path = [
+                Point(lon=lon, lat=lat)
+                for leg in trip["legs"]
+                for lon, lat in _polyline6(leg["shape"], ("valhalla",)).coordinates
+            ]
+    return results
+
+
+class DrivingAccessUnavailable(Exception):
+    """A public driving graph does not confirm vehicle access inside a gated locality."""
 
 
 def calculate_categories(
@@ -301,6 +440,7 @@ def calculate_categories(
     h_seconds: float | None,
     *,
     geometry: bool = False,
+    mode: AddressMode = "walk",
 ) -> list[CategoryResult]:
     # The public walking graph does not establish permission to cross a ZATO checkpoint.
     origin = ShapePoint(point.lon, point.lat)
@@ -333,10 +473,14 @@ def calculate_categories(
         for category in categories
     }
     if scope is not None:
+        if mode == "car":
+            raise DrivingAccessUnavailable
         return _internal_walk(
             client, point, grouped, scope, gates, h_seconds, geometry, reviewed_hospitals
         )
-    matrix = _matrix_times(client, point, [item for items in grouped.values() for item in items])
+    matrix = _matrix_times(
+        client, point, [item for items in grouped.values() for item in items], mode=mode
+    )
     results = []
     offset = 0
     for category, destinations in grouped.items():
@@ -344,7 +488,7 @@ def calculate_categories(
         results.append(row)
         # If the router cannot correlate a batch, retry its categories separately.
         if matrix is None:
-            times = _matrix_times(client, point, destinations) or {}
+            times = _matrix_times(client, point, destinations, mode=mode) or {}
         else:
             times = {
                 index: matrix[offset + index]
@@ -353,16 +497,50 @@ def calculate_categories(
             }
         offset += len(destinations)
         if not times:
+            row.unavailable_reason = "no_route" if destinations else "no_destination"
             continue
         best = min(times, key=lambda index: (times[index], index))
         row.destination = destinations[best]
         row.seconds = times[best]
         if geometry:
-            route = _walk_route(client, point, row.destination)
+            route = _route(client, point, row.destination, mode=mode)
             if route is not None:
                 row.path = [Point(lon=lon, lat=lat) for lon, lat in route[1]]
         row.index = category_index(row.seconds, h_seconds).value
     return results
+
+
+def address_at_point(db: sqlite3.Connection, lat: float, lon: float) -> Address | None:
+    point = ShapePoint(lon, lat)
+    region = None
+    for row in district_rows(db):
+        if not shape(json.loads(row["geometry"])).covers(point):
+            continue
+        candidate = "Москва" if row["id"].startswith("moscow-") else "Московская область"
+        if candidate == "Москва":
+            region = candidate
+            break
+        region = candidate
+    if region is None:
+        return None
+    h_seconds = float(metadata(db, "moscow_h_seconds")) if region == "Москва" else None
+    localities = catalogue_path().with_name("localities.json")
+    if region != "Москва" and localities.is_file():
+        matches = {
+            locality["h_seconds"]
+            for locality in json.loads(localities.read_text())
+            if shape(locality["geometry"]).covers(point)
+        }
+        if len(matches) == 1:
+            h_seconds = matches.pop()
+    return Address(
+        id=f"point:{lat}:{lon}",
+        label="Выбранная точка",
+        region=region,
+        lat=lat,
+        lon=lon,
+        h_seconds=h_seconds,
+    )
 
 
 def address_result(request: AddressRequest) -> AddressResult | None:
@@ -370,13 +548,46 @@ def address_result(request: AddressRequest) -> AddressResult | None:
         catalogue() as db,
         httpx.Client(base_url=os.getenv("A2_ADDRESS_ROUTER_URL", ROUTER), timeout=12) as client,
     ):
-        row = find_address(db, request.address_id)
-        if row is None:
+        if request.address_id is not None:
+            row = find_address(db, request.address_id)
+            address = Address.model_validate(dict(row)) if row is not None else None
+        else:
+            assert request.lat is not None and request.lon is not None
+            address = address_at_point(db, request.lat, request.lon)
+        if address is None:
             return None
-        address = Address.model_validate(dict(row))
-        categories = calculate_categories(
-            db, client, address, request.categories, address.h_seconds, geometry=True
-        )
+        departure = None
+        if request.mode == "pt":
+            transit_url = os.getenv("A2_ADDRESS_TRANSIT_ROUTER_URL")
+            assert request.departure_at is not None
+            day = request.departure_at.date().isoformat()
+            if not transit_url:
+                raise TransitAccessUnavailable(
+                    "К стенду не подключён адресный граф общественного транспорта."
+                )
+            if address.region != "Москва":
+                raise TransitAccessUnavailable(
+                    "Пилот наземного транспорта охватывает отдельные маршруты Москвы."
+                )
+            if not TRANSIT_FROM <= day <= TRANSIT_TO or day == TRANSIT_EXCLUDED:
+                raise TransitAccessUnavailable(
+                    "На выбранную дату нет проверенного расписания пилота."
+                )
+            departure = request.departure_at.isoformat(timespec="minutes")
+            with httpx.Client(base_url=transit_url, timeout=6) as transit:
+                categories = transit_categories(
+                    db, transit, address, request.categories, departure, address.h_seconds
+                )
+        else:
+            categories = calculate_categories(
+                db,
+                client,
+                address,
+                request.categories,
+                address.h_seconds,
+                geometry=True,
+                mode=request.mode,
+            )
         weights = load_urban_config().priority_weights
         values = [
             (item.index, weights[request.priorities.get(item.category, "medium")])
@@ -389,7 +600,14 @@ def address_result(request: AddressRequest) -> AddressResult | None:
             else None
         )
         source = metadata(db, "source")
-        return AddressResult(address=address, index=index, categories=categories, source=source)
+        return AddressResult(
+            address=address,
+            mode=request.mode,
+            departure_local=departure,
+            index=index,
+            categories=categories,
+            source=f"{source}; mos-ground-transport-gtfs-20261110 (пилот)" if departure else source,
+        )
 
 
 def districts() -> list[District]:

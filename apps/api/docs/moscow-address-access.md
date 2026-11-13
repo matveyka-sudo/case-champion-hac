@@ -293,3 +293,35 @@ A2_ADDRESS_CATALOGUE="$staged/catalog.sqlite" \
 ```
 
 Локальный API использует `A2_ADDRESS_CATALOGUE=/src/data/processed/moscow-oblast-zato-voshod/catalog.sqlite`.
+
+## Адресный атлас и расчёт по границе
+
+Режим «По адресу или точке» в атласе принимает `mode=walk`, `mode=car` или `mode=pt`. По умолчанию сохраняется пеший расчёт. Для авто используется статическое время движения без пробок и поиска парковки. Для точек в ЗАТО необходимы подтверждённые условия автомобильного доступа. Пеший индекс ЗАТО по-прежнему использует правила КПП.
+
+Для категорий «Торговые центры» и «Автобусные остановки» расширьте рабочую копию каталога из того же экстракта OSM. Утилита проверяет SHA-256 снимка и заменяет только записи двух новых категорий. Остановки берутся из обозначений остановок и пассажирских платформ. Пешее время считается по сети до подхода к остановке.
+
+```sh
+base=data/processed/moscow-oblast-zato-voshod
+staged=data/processed/moscow-oblast-address-v2
+mkdir -p "$staged"
+cp "$base"/{catalog.sqlite,localities.json,districts.json} "$staged/"
+python apps/api/scripts/extend_address_destinations.py "$staged/catalog.sqlite"   data/processed/moscow-oblast/moscow-oblast-261107.osm.pbf
+A2_ADDRESS_CATALOGUE="$staged/catalog.sqlite"   python apps/api/scripts/prepare_moscow_district_access.py data/bundles/moscow-urban-2026-11-10.4 --all
+```
+
+Укажите путь к расширенному каталогу через `A2_ADDRESS_CATALOGUE`. Для районов учитываются только исходные точки внутри границы. Доля населения пограничной ячейки сохраняется в знаменателе, даже если её исходная точка снаружи. Цели маршрутов могут находиться в соседнем районе. Городской районный индекс сохраняет исходный набор категорий. Новые категории доступны в адресном расчёте.
+
+### Пилот адресного общественного транспорта
+
+Нужен отдельный Valhalla 3.5.1 с графом из того же OSM-снимка и принятым GTFS наземного транспорта Москвы `mos-ground-transport-gtfs-20261110`. Обрабатываются только выбранные автобусные маршруты. Окно расписания 1–30 ноября 2026 года, 4 ноября исключено. Время отправления принимается как местное московское. По каждой категории проверяются четыре ближайшие записи каталога. В результат входят поездки с подтверждённым автобусным участком. Полное время берётся из ответа маршрутизатора. Сравнение с другими маршрутами Москвы и области ограничено покрытием графа.
+
+Для воспроизведения создайте отдельный рабочий каталог, чтобы не перезаписывать пеший граф. В конфигурации Valhalla укажите разные `mjolnir.tile_dir`, `mjolnir.transit_dir` и `mjolnir.transit_feeds_dir`. По возможности подключите базу часовых поясов через `mjolnir.timezone`.
+
+```sh
+python apps/api/scripts/prepare_address_transit_feed.py   data/processed/gtfs/mos_ground_transport.gtfs-20261110.gtfs-repair-v1.zip   /path/to/pilot/feeds/moscow
+valhalla_ingest_transit -c /path/to/pilot/valhalla.json -j 2
+valhalla_convert_transit -c /path/to/pilot/valhalla.json -j 2
+valhalla_build_tiles -c /path/to/pilot/valhalla.json /path/to/moscow-oblast-261107.osm.pbf
+```
+
+Запустите сервис с этим конфигом и задайте `A2_ADDRESS_TRANSIT_ROUTER_URL` для API. Без этого профиля API вернёт причину недоступности. Подмосковье, метро, МЦД и МЦК как виды передвижения в пилоте отсутствуют. Станции метро, МЦД и МЦК доступны как цели поездки. Источник расписания — [манифест GTFS](../../../data/manifests/timetables/mos-ground-transport-gtfs-20261110.json).
