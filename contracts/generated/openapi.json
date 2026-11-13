@@ -1198,6 +1198,87 @@
         "title": "ComponentRef",
         "type": "object"
       },
+      "ConsultantAnswer": {
+        "properties": {
+          "model_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Id"
+          },
+          "status": {
+            "enum": [
+              "generated",
+              "template"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "status"
+        ],
+        "title": "ConsultantAnswer",
+        "type": "object"
+      },
+      "ConsultantQuestion": {
+        "description": "A question asked without a saved analysis: address page or atlas before a run.",
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AddressResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "city": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "district": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DistrictResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "question": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "ConsultantQuestion",
+        "type": "object"
+      },
       "CountResult": {
         "additionalProperties": false,
         "properties": {
@@ -7698,6 +7779,154 @@
           }
         },
         "summary": "Capabilities"
+      }
+    },
+    "/api/v1/consultant/ask": {
+      "post": {
+        "operationId": "ask_api_v1_consultant_ask_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsultantQuestion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsultantAnswer"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "recalculate": {
+                    "summary": "Explicitly recalculate the saved baseline",
+                    "value": {
+                      "error": {
+                        "code": "incompatible_versions",
+                        "field_errors": [],
+                        "message": "SCENARIO_SOURCE_BINDING_MISMATCH",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unsupported": {
+                    "summary": "Choose a request from capabilities.analysis_presets",
+                    "value": {
+                      "error": {
+                        "code": "invalid_request",
+                        "field_errors": [
+                          {
+                            "code": "SUPPORTED_PRESETS",
+                            "location": [
+                              "request"
+                            ],
+                            "message": "Select capabilities.analysis_presets"
+                          }
+                        ],
+                        "message": "REQUEST_OUTSIDE_SUPPORTED_PRESETS",
+                        "request_id": "demo-request",
+                        "retryable": false
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "retry": {
+                    "summary": "Registered inputs temporarily unavailable",
+                    "value": {
+                      "error": {
+                        "code": "data_unavailable",
+                        "field_errors": [],
+                        "message": "RUNTIME_INPUTS_UNAVAILABLE_FOR_REQUEST",
+                        "request_id": "demo-request",
+                        "retryable": true
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Ask"
       }
     },
     "/api/v1/jobs/{job_id}": {

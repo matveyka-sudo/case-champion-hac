@@ -19,6 +19,7 @@ from a2_contracts.v2.scenarios import (
     ScenarioRunOptions,
 )
 
+from a2_api.assistant.consultant import Consultant
 from a2_api.assistant.explanations import explain as _explain
 from a2_api.core.analysis_groups import GroupAdmission
 from a2_api.core.batches import BatchExecution, BatchPlan
@@ -54,6 +55,8 @@ class AnalysisService:
         self.engine_enabled = engine_enabled
         self.preflight = preflight
         self.assistant = assistant
+        # Set by build_app; when present it answers every explanation request.
+        self.consultant: Consultant | None = None
         self.registered_template_ids = registered_template_ids
         self._admission: Admission[JobAccepted] = Admission()
 

@@ -60,8 +60,7 @@ class Finding(ContractModel):
             raise ValueError("Claims require unique referenced metric identities")
         if len(set(self.metric_ids)) != len(self.metric_ids):
             raise ValueError("Duplicate metric reference")
-        if not self.metric_ids and not self.score_ids:
-            raise ValueError("Finding requires saved metric or score references")
+        # A plain consultant sentence may cite no measure: no chip is shown then.
         score_ids = [claim.score_id for claim in self.score_claims]
         if len(set(score_ids)) != len(score_ids) or not set(score_ids) <= set(self.score_ids):
             raise ValueError("Score claims require unique referenced score identities")

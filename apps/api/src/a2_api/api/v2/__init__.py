@@ -8,6 +8,7 @@ from a2_api.api.v2 import (
     analyses,
     analysis_groups,
     catalog,
+    consultant,
     explanations,
     jobs,
     passenger_schedules,
@@ -37,6 +38,7 @@ def build_router() -> APIRouter:
     router.include_router(analysis_groups.router)
     router.include_router(jobs.router)
     router.include_router(explanations.router)
+    router.include_router(consultant.router)
     router.include_router(scenarios.router)
     router.include_router(passenger_schedules.router)
     return router

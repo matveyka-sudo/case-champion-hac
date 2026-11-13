@@ -30,3 +30,12 @@
 .address-access__table table { width: 100%; border-collapse: collapse; text-align: left; }
 .address-access__table th, .address-access__table td { min-width: 110px; padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .address-access__table button { display: block; margin-top: 5px; }
+.consultant { margin-top: 16px; border: 1px solid var(--line); border-radius: var(--r-md); padding: 16px; display: grid; gap: 12px; }
+.consultant__head { display: flex; align-items: center; gap: 10px; }
+.consultant__head > div { flex: 1; min-width: 0; display: grid; }
+.consultant__head span:not(.ch-ava) { color: var(--text-2); font-size: .9rem; }
+.consultant__log { display: grid; gap: 10px; max-height: 420px; overflow-y: auto; }
+.consultant__log:empty { display: none; }
+.consultant__pair { display: flex; flex-direction: column; gap: 8px; }
+.consultant__busy { color: var(--text-2); margin: 0; }
+.consultant .sugs { display: flex; flex-wrap: wrap; gap: 8px; }
