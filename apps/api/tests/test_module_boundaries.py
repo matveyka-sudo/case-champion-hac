@@ -276,7 +276,10 @@ def test_all_185_existing_signatures_and_defaults():
         "a2_api.core.walk_observations:observation_directory",
     }
     assert set(PRIVATE_SOURCES_EXTENSION["signatures"]) == {"a2_api.core.jobs:V2JobContext"}
-    assert set(DOCUMENT_RAG_EXTENSION["signatures"]) == {"a2_api.assistant.alice:AliceSettings"}
+    assert set(DOCUMENT_RAG_EXTENSION["signatures"]) == {
+        "a2_api.assistant.alice:AliceSettings",
+        "a2_api.core.config:RuntimeSettings",
+    }
     assert set(BATCH_EXTENSION["signatures"]) == {
         "a2_api.core.jobs:V2JobContext",
         "a2_api.services.analyses:AnalysisService",

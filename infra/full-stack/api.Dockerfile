@@ -11,6 +11,8 @@ COPY config/ config/
 COPY data/bundles/ data/bundles/
 COPY data/manifests/ data/manifests/
 COPY data/directories/ data/directories/
+# Accepted documents for the assistant's search (DOCUMENTS_DIR).
+COPY data/documents/ data/documents/
 COPY infra/real-e2e/runtime.py infra/real-e2e/runtime.py
 COPY infra/full-stack/runtime.py infra/full-stack/runtime.py
 COPY infra/full-stack/bundle.py infra/full-stack/bundle.py

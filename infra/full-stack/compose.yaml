@@ -23,6 +23,8 @@ x-runtime: &runtime
     DATABASE_URL: postgresql://waydex:${POSTGRES_PASSWORD:?}@postgres:5432/waydex
     DATABASE_SCHEMA: waydex_full
     A2_DATA_DIR: /app/data
+    # Accepted documents, published for the assistant at API start.
+    DOCUMENTS_DIR: ${DOCUMENTS_DIR:-/app/data/documents}
     A2_CONTRACT_VERSION: "2"
     A2_REGISTRY_HOOK: ${A2_REGISTRY_HOOK:-a2_api.adapters.walk_pilot:registry}
     A2_PREFLIGHT_HOOK: ${A2_PREFLIGHT_HOOK:-a2_api.adapters.walk_pilot:preflight}

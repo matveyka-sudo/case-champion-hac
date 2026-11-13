@@ -94,7 +94,7 @@ import { boundSnapshotId, clinicPreset, initialSourceDraft, staticPilotPreset } 
 import { AnalysisGroupPanel } from "../widgets/AnalysisGroupPanel";
 import { AgentChatView } from "../widgets/AgentChatView";
 import { evidenceResolver, explanationSources, journeyEvidenceReferences } from "../api/adapters/evidenceGroups";
-import { explanationLabel } from "../api/adapters/explanationStatus";
+import { agentContextNotice, explanationLabel } from "../api/adapters/explanationStatus";
 import { askConsultant } from "../api/adapters/consultant";
 import { jobProgressText } from "../api/adapters/jobProgress";
 import { MapViewport, MapCanvas, MapOverlay, MapControls, AtlasLegend, AtlasMobileSheet, AtlasStatus, StateCard } from "../widgets/AtlasMapView";
@@ -1353,7 +1353,7 @@ export function ApiAtlasPage() {
                 )}
               </nav>
             </MapOverlay>}
-          {result?.analysis_id.startsWith("cao-transit-500m") && <MapOverlay position="tr">
+          {result?.analysis_id.startsWith("cao-transit-500m") && <MapOverlay position="tl">
             <div aria-label="Цвета маршрутов" style={{background: "var(--surface, #fff)", borderRadius: 10,
               padding: "8px 12px", color: "#101a31", display: "flex", gap: 12, flexWrap: "wrap"}}>
               {transitLegend.map(({color, label}) => <span key={label} style={{whiteSpace: "nowrap"}}>
@@ -1428,7 +1428,8 @@ export function ApiAtlasPage() {
           contextRows={[{ label: "Контекст", value: agentResult ? requestTitle : draftTerritory || "Территория не выбрана" },
             { label: "Условия", value: agentResult ? timestampText(agentResult.request.departure_at, savedOrigin?.timezone) : `${draft.date} · ${trafficText[draft.traffic]}` },
             { label: "Результат", value: agentResult ? statusText[agentResult.status] : running ? runningTitle : "Для выбранных условий ещё не получен" }]}
-          messages={<>{!agentResult && interfaceMessages.map((message, index) => <div key={`help-${index}`}>
+          messages={<>{agentContextNotice({ hasResult: !!result, dirty, running }) && <p className="fhint" role="status">{agentContextNotice({ hasResult: !!result, dirty, running })}</p>}
+            {!agentResult && interfaceMessages.map((message, index) => <div key={`help-${index}`}>
             <div className="msg u">{message.question}</div>
             {message.agent ? <div className="msg a"><small>Консультант Waydex</small><p>{message.text}</p></div>
               : <div className="msg a"><small>Помощь по интерфейсу · локально</small><p>{message.text}</p>

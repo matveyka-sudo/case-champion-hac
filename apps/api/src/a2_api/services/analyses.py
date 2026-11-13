@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from a2_assistant import FlashAssistant
@@ -27,6 +28,9 @@ from a2_api.core.errors import DomainError, unavailable
 from a2_api.core.job_admission import Admission
 from a2_api.core.jobs import V2JobContext, batch_context_fingerprint, request_hash
 from a2_api.core.registry import ProductRegistry
+
+if TYPE_CHECKING:
+    from a2_api.assistant.documents_runtime import DocumentCorpus
 from a2_api.core.scope import territory_ids as territory_ids
 from a2_api.db.repositories.jobs import JobRepository
 from a2_api.services.scenarios import proposals as _proposals
@@ -58,6 +62,8 @@ class AnalysisService:
         # Set by build_app; when present it answers every explanation request.
         self.consultant: Consultant | None = None
         self.registered_template_ids = registered_template_ids
+        # Accepted documents beside each calculation snapshot (DOCUMENTS_DIR).
+        self.document_corpora: dict[str, DocumentCorpus] = {}
         self._admission: Admission[JobAccepted] = Admission()
 
     def capabilities(self) -> Capabilities:

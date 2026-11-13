@@ -1,0 +1,215 @@
+{
+ "new_document": {
+  "analysis_id": "demo-urban_passenger",
+  "analysis_result_hash": "demo-hash",
+  "evidence_refs": [
+   "demo-evidence",
+   "strategy-document"
+  ],
+  "findings": [
+   {
+    "claims": [
+     {
+      "metric_id": "demo-time",
+      "unit": "seconds",
+      "value": 1800.0
+     }
+    ],
+    "evidence_refs": [
+     "demo-evidence",
+     "strategy-document"
+    ],
+    "metric_ids": [
+     "demo-time"
+    ],
+    "text": "Выбранные показатели опираются на источники сохранённого расчёта: demo-source (получено 08.11.2026). Это происхождение исходных данных, а не подтверждение полноты всех объектов и путей. Это синтетическая демонстрационная модель, не рейтинг реального города. Документальный контекст, не расчётный показатель: «Синтетическая стратегия», разделы: Раздел A; Раздел B; Раздел C."
+   }
+  ],
+  "limitations": [
+   "synthetic_only",
+   "Объяснение ограничено сохранёнными данными."
+  ],
+  "model_id": "synthetic-model",
+  "proposals": [],
+  "reason_code": null,
+  "request_id": "web-fixture",
+  "retrieved_evidence": [
+   {
+    "evidence_id": "strategy-document",
+    "observed_at": null,
+    "retrieved_at": "2026-11-08T09:00:00Z",
+    "section": "Раздел A; Раздел B; Раздел C",
+    "source_id": "demo-source",
+    "url": "https://example.org/strategy.pdf"
+   }
+  ],
+  "schema_version": "2",
+  "status": "generated"
+ },
+ "result": {
+  "analysis_id": "demo-urban_passenger",
+  "analysis_kind": "urban_passenger",
+  "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+  "counts": [],
+  "evidence_refs": [
+   {
+    "evidence_id": "demo-evidence",
+    "observed_at": null,
+    "retrieved_at": "2026-11-08T09:00:00Z",
+    "section": "Synthetic test only",
+    "source_id": "demo-source",
+    "url": "https://example.org/synthetic"
+   }
+  ],
+  "journeys": [],
+  "last_returns": [],
+  "limitations": [
+   "synthetic_only"
+  ],
+  "methodology_version": "a2-methodology-v3",
+  "metrics": [
+   {
+    "completeness": "full",
+    "dependency_job_id": null,
+    "journey_id": null,
+    "metric_id": "demo-time",
+    "name": "Synthetic elapsed travel time",
+    "population_basis": null,
+    "reason_code": null,
+    "site_basis": null,
+    "source_refs": [
+     "demo-evidence"
+    ],
+    "status": "available",
+    "subject": {
+     "category": "school",
+     "destination_id": null,
+     "kind": "sample_point",
+     "mode": "walk",
+     "node_id": null,
+     "origin_id": null,
+     "point_id": "demo-point",
+     "site_id": null,
+     "territory_id": null
+    },
+    "time_kind": null,
+    "unit": "seconds",
+    "value": 1800.0
+   }
+  ],
+  "references": [],
+  "request": {
+   "analysis_kind": "urban_passenger",
+   "area_id": null,
+   "categories": [
+    "school"
+   ],
+   "city_id": "demo-city",
+   "departure_at": "2026-11-09T08:15:00+03:00",
+   "methodology": {
+    "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+    "reference_profile": "edge-calibrated-v1",
+    "version": "a2-methodology-v3"
+   },
+   "passenger_mode": "walk",
+   "priorities": {
+    "school": "high"
+   },
+   "schema_version": "2",
+   "snapshot_id": "demo-snapshot",
+   "traffic_mode": "static"
+  },
+  "result_hash": "demo-hash",
+  "schema_version": "2",
+  "scores": [
+   {
+    "aggregation_basis": null,
+    "completeness": "full",
+    "components": [
+     {
+      "id": "demo-time",
+      "kind": "metric"
+     }
+    ],
+    "evidence_refs": [
+     "demo-evidence"
+    ],
+    "methodology_version": "a2-methodology-v3",
+    "name": "Synthetic category index",
+    "ranking_eligible": false,
+    "reason_code": null,
+    "score_id": "demo-score",
+    "status": "available",
+    "subject": {
+     "category": "school",
+     "destination_id": null,
+     "kind": "sample_point",
+     "mode": "walk",
+     "node_id": null,
+     "origin_id": null,
+     "point_id": "demo-point",
+     "site_id": null,
+     "territory_id": null
+    },
+    "value": 50.0
+   }
+  ],
+  "snapshot_id": "demo-snapshot",
+  "status": "available",
+  "traffic_mode": "static",
+  "versions": {
+   "calendar_version": "demo-calendar",
+   "code_version": "demo-code",
+   "config_hash": "de48211883fe826978554436e644a8d9038cd5f6a2aa05b30126619ace4c9b96",
+   "graph_version": "demo-graph",
+   "methodology_version": "a2-methodology-v3",
+   "population_version": null,
+   "snapshot_id": "demo-snapshot"
+  }
+ },
+ "saved_document": {
+  "analysis_id": "demo-urban_passenger",
+  "analysis_result_hash": "demo-hash",
+  "evidence_refs": [
+   "demo-evidence"
+  ],
+  "findings": [
+   {
+    "claims": [
+     {
+      "metric_id": "demo-time",
+      "unit": "seconds",
+      "value": 1800.0
+     }
+    ],
+    "evidence_refs": [
+     "demo-evidence"
+    ],
+    "metric_ids": [
+     "demo-time"
+    ],
+    "text": "Выбранные показатели опираются на источники сохранённого расчёта: demo-source (получено 08.11.2026). Это происхождение исходных данных, а не подтверждение полноты всех объектов и путей. Это синтетическая демонстрационная модель, не рейтинг реального города. Документальный контекст, не расчётный показатель: «Синтетическая стратегия», раздел: Другой раздел сохранённого источника."
+   }
+  ],
+  "limitations": [
+   "synthetic_only",
+   "Объяснение ограничено сохранёнными данными."
+  ],
+  "model_id": "synthetic-model",
+  "proposals": [],
+  "reason_code": null,
+  "request_id": "web-fixture",
+  "retrieved_evidence": [
+   {
+    "evidence_id": "demo-evidence",
+    "observed_at": null,
+    "retrieved_at": "2026-11-08T09:00:00Z",
+    "section": "Synthetic test only",
+    "source_id": "demo-source",
+    "url": "https://example.org/synthetic"
+   }
+  ],
+  "schema_version": "2",
+  "status": "generated"
+ }
+}

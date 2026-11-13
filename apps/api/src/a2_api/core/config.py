@@ -21,6 +21,7 @@ class RuntimeSettings(WaydexSettings):
         ("DATABASE_URL", "A2_DATABASE_URL"),
         ("DATABASE_SCHEMA", "A2_DATABASE_SCHEMA"),
         ("ASSISTANT_HOOK", "A2_ASSISTANT_HOOK"),
+        ("DOCUMENTS_DIR", "A2_DOCUMENTS_DIR"),
     )
     contract_version: Literal["2", "legacy"] = "2"
     registry_hook: str | None = None
@@ -39,6 +40,10 @@ class RuntimeSettings(WaydexSettings):
         ),
     ] = "a2_backend"
     catalog_path: Path | None = None
+    # Accepted documents for the assistant's search (a2_data_pipeline.documents).
+    documents_dir: Path | None = Field(
+        default=None, validation_alias=AliasChoices("DOCUMENTS_DIR", "A2_DOCUMENTS_DIR")
+    )
     code_version: str | None = None
     preflight_hook: str | None = None
     calculation_handler: str | None = None

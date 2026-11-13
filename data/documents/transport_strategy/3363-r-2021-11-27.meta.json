@@ -2,8 +2,8 @@
  "evidence_id": "transport_strategy:3363-r:2021-11-27",
  "source_id": "transport_strategy",
  "source_version": "3363-r-2021-11-27",
- "url": "http://static.government.ru/media/files/7enYF2uL5kFZlOOpQhLl0nUT91RjCbeR.pdf",
- "url_status": "inferred_from_file_name_not_rechecked",
+ "url": "https://static.government.ru/media/files/7enYF2uL5kFZlOOpQhLl0nUT91RjCbeR.pdf",
+ "url_status": "named_by_owner_2026-11-13_not_downloaded_for_comparison",
  "retrieved_at": "2026-11-12T17:26:00+03:00",
  "title": "Транспортная стратегия Российской Федерации до 2030 года с прогнозом на период до 2035 года (распоряжение Правительства РФ от 27.11.2021 № 3363-р)",
  "document_date": "2021-11-27",
@@ -17,19 +17,59 @@
  "text_extraction": "macOS PDFKit PDFDocument.string per page; a2_data_pipeline.documents clean (1 line with a personal name removed)",
  "start": "I. Общие положения",
  "acceptance": {
-  "status": "pending",
-  "accepted_by": null,
-  "accepted_at": null,
+  "status": "accepted",
+  "accepted_by": "Максим Столповский (ML2, владелец данных)",
+  "accepted_at": "2026-11-13",
   "source_url_checked_at": null,
   "privacy_reviewed_at": null,
   "text_sha256": "daacfd05daa4fd2cfdc4c2d962038b772fc92a1b8b679c0730296548a1160a34",
-  "open_items": [
-   "Открыть официальный адрес и сверить sha256 файла: url выведен из имени файла и не перепроверен",
-   "Прочитать текст на персональные данные: фильтр ФИО — эвристика, а не проверка",
-   "После этого владелец данных ставит status=accepted; источник в реестре получает accepted и манифест набора данных"
-  ]
+  "waived": [
+   "source_url_check",
+   "privacy_review"
+  ],
+  "waived_reason": "Решение владельца данных 13.11.2026: документ нужен для рабочего RAG срочно. Официальный файл не сверен по SHA-256 (госсайт недоступен через VPN), текст не вычитан человеком; автопоиск персональных данных — 0 совпадений. Проверки можно провести позже по 3363-r-2021-11-27.review.md."
  },
  "rejected_inputs": [
-  {"file_sha256": "78b98633536459df8b1d4621d59d00e365bd610868ab98883cce94374c1df6fe", "reason": "draft of 14.08.2021 marked ПРОЕКТ, not the approved act"}
- ]
+  {
+   "file_sha256": "78b98633536459df8b1d4621d59d00e365bd610868ab98883cce94374c1df6fe",
+   "reason": "draft of 14.08.2021 marked ПРОЕКТ, not the approved act"
+  }
+ ],
+ "checks": {
+  "note": "Machine checks only. None of them is an acceptance; see the .review.md checklist.",
+  "local_file": {
+   "sha256": "909c861d2197a5e5b5fba5b55eb8faae72e386c52d8453e619227ac07676070d",
+   "size_bytes": 1616103,
+   "pages": 285,
+   "pdf_version": "1.5",
+   "pdf_created": "2021-12-01T21:30:41Z",
+   "first_page": "распоряжение Правительства РФ от 27 ноября 2021 г. № 3363-р",
+   "approved_text": "приложение с пометкой «УТВЕРЖДЕНА» тем же распоряжением"
+  },
+  "official_url_comparison": {
+   "status": "not_done",
+   "attempted_at": "2026-11-13T11:23:00+03:00",
+   "reason": "static.government.ru did not answer from this machine (VPN); compare again without it"
+  },
+  "text_cleaning": {
+   "removed_lines": 1,
+   "removed": "signature line of an official (initials and surname)",
+   "also_removed": "page-number lines and whitespace; no other content"
+  },
+  "personal_data_scan": {
+   "scanned_at": "2026-11-13",
+   "patterns": [
+    "email",
+    "phone",
+    "patronymic",
+    "initials+surname",
+    "surname+initials",
+    "street/house/flat",
+    "passport/INN/SNILS",
+    "url"
+   ],
+   "hits": 0,
+   "is_review": false
+  }
+ }
 }

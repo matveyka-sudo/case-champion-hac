@@ -1,21 +1,22 @@
 {
   "module": "db/repositories/evidence.py",
-  "reason": "Document RAG: any-word Russian FTS query and published chunk counts for the publication CLI; server document retrieval switch",
+  "reason": "Document RAG: any-word Russian FTS query and published chunk counts for the publication CLI; server document retrieval switch; rarity-weighted FTS ranking within the authorized scope; DOCUMENTS_DIR setting for the assistant's documents corpus",
   "signatures": {
-    "a2_api.assistant.alice:AliceSettings": "(*, llm_enabled: bool = False, yandex_api_key: pydantic.types.SecretStr | None = None, yandex_folder_id: str | None = None, yandex_model: Literal['aliceai-llm-flash'] = 'aliceai-llm-flash', yandex_base_url: Literal['https://ai.api.cloud.yandex.net/v1'] = 'https://ai.api.cloud.yandex.net/v1', assistant_budget_hook: str | None = None, assistant_tools_enabled: bool = False, assistant_document_retrieval: bool = True, alice_billing_currency_confirmed: bool = False) -> None"
+    "a2_api.assistant.alice:AliceSettings": "(*, llm_enabled: bool = False, yandex_api_key: pydantic.types.SecretStr | None = None, yandex_folder_id: str | None = None, yandex_model: Literal['aliceai-llm-flash'] = 'aliceai-llm-flash', yandex_base_url: Literal['https://ai.api.cloud.yandex.net/v1'] = 'https://ai.api.cloud.yandex.net/v1', assistant_budget_hook: str | None = None, assistant_tools_enabled: bool = False, assistant_document_retrieval: bool = True, alice_billing_currency_confirmed: bool = False) -> None",
+    "a2_api.core.config:RuntimeSettings": "(*, contract_version: Literal['2', 'legacy'] = '2', registry_hook: str | None = None, assistant_hook: str | None = None, secure_cookies: bool = False, database_url: str | None = None, database_schema: Annotated[str, _PydanticGeneralMetadata(pattern='^[a-z][a-z0-9_]{0,62}$')] = 'a2_backend', catalog_path: pathlib.Path | None = None, documents_dir: pathlib.Path | None = None, code_version: str | None = None, preflight_hook: str | None = None, calculation_handler: str | None = None, job_timeout_seconds: Annotated[float, Gt(gt=0), Le(le=600)] = 600, worker_poll_seconds: Annotated[float, Gt(gt=0), Le(le=60)] = 0.5, worker_result_decoded_mib: Annotated[int, Ge(ge=16), Le(le=32)] = 16, runtime_source_budget_mib: Annotated[int, Ge(ge=96), Le(le=160)] = 96) -> None"
   },
   "removed_sql_literals": [
     "WITH query AS (SELECT plainto_tsquery('russian'::regconfig,$1) AS q) SELECT payload,ts_rank_cd(search_vector,q) AS rank FROM evidence_chunks,query WHERE snapshot_hash=$2::jsonb->>snapshot_id AND source_id=ANY($3::text[]) AND territory_ids && $4::text[] AND ($5::text[] IS NULL OR source_id=ANY($5)) AND ($6::date IS NULL OR valid_to>=$6) AND ($7::date IS NULL OR valid_from<=$7) AND ($8::date IS NULL OR valid_to>=$8) AND ($9::date IS NULL OR valid_from<=$9) AND search_vector @@ q ORDER BY rank DESC,snapshot_id,chunk_id LIMIT 6"
   ],
   "added_sql_literals": [
     "SELECT source_id,count(*) AS chunks FROM evidence_chunks WHERE snapshot_id=$1 AND snapshot_hash=$2 GROUP BY source_id ORDER BY source_id",
-    "WITH query AS (SELECT replace(plainto_tsquery('russian'::regconfig,$1)::text,' & ',' | ')::tsquery AS q) SELECT payload,ts_rank_cd(search_vector,q) AS rank FROM evidence_chunks,query WHERE snapshot_hash=$2::jsonb->>snapshot_id AND source_id=ANY($3::text[]) AND territory_ids && $4::text[] AND ($5::text[] IS NULL OR source_id=ANY($5)) AND ($6::date IS NULL OR valid_to>=$6) AND ($7::date IS NULL OR valid_from<=$7) AND ($8::date IS NULL OR valid_to>=$8) AND ($9::date IS NULL OR valid_from<=$9) AND search_vector @@ q ORDER BY rank DESC,snapshot_id,chunk_id LIMIT 6"
+    "WITH query AS (SELECT replace(plainto_tsquery('russian'::regconfig,$1)::text,' & ',' | ')::tsquery AS q,tsvector_to_array(to_tsvector('russian'::regconfig,$1)) AS terms),scoped AS (SELECT snapshot_id,chunk_id,payload,search_vector FROM evidence_chunks WHERE snapshot_hash=$2::jsonb->>snapshot_id AND source_id=ANY($3::text[]) AND territory_ids && $4::text[] AND ($5::text[] IS NULL OR source_id=ANY($5)) AND ($6::date IS NULL OR valid_to>=$6) AND ($7::date IS NULL OR valid_from<=$7) AND ($8::date IS NULL OR valid_to>=$8) AND ($9::date IS NULL OR valid_from<=$9)),total AS (SELECT count(*)::float8 AS n FROM scoped),df AS (SELECT u.term,count(*)::float8 AS n FROM scoped CROSS JOIN LATERAL unnest(tsvector_to_array(scoped.search_vector)) AS u(term),query WHERE u.term=ANY(query.terms) GROUP BY u.term),scores AS (SELECT s.snapshot_id,s.chunk_id,sum(ln((total.n+1)/(df.n+0.5))) AS score FROM scoped s CROSS JOIN total CROSS JOIN LATERAL unnest(tsvector_to_array(s.search_vector)) AS u(term) JOIN df ON df.term=u.term GROUP BY s.snapshot_id,s.chunk_id) SELECT s.payload,sc.score,ts_rank_cd(s.search_vector,query.q) AS rank FROM scores sc JOIN scoped s USING (snapshot_id,chunk_id) CROSS JOIN query WHERE s.search_vector @@ query.q ORDER BY sc.score DESC,rank DESC,s.snapshot_id,s.chunk_id LIMIT 6"
   ],
   "removed_sql_call_hashes": [
     "3e21e9655012ef8ad7cc3826dc628678524f90ee25bdf26cc0ef239fb11fca95"
   ],
   "added_sql_call_hashes": [
     "32058c0eb9ce193866430ead7b933fc680420f1ee8d378165df22ef798ab4eee",
-    "6fad9ca65860c1c3b5705fd8c9a9877fe50af7a2973b930ab9cbd2ab69ec1dfc"
+    "9fd47954b0b1bbc0445f1b4a44555943c186250a89af674af208f4ab035e2505"
   ]
 }
