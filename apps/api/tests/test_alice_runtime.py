@@ -18,6 +18,8 @@ from a2_contracts.v2.results import AnalysisResult
 from fastapi.testclient import TestClient
 from test_v2_integration import request_body
 
+pytestmark = pytest.mark.usefixtures("no_local_dotenv")
+
 
 class SyntheticDurableBudget:
     """Test double only; production needs an atomic shared ledger."""

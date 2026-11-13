@@ -167,6 +167,17 @@ def _comparison(facts: list[Metric | Score]) -> str:
     )
 
 
+# Every Leg.kind of the v2 journey contract; an unknown future kind stays generic.
+_LEG_KINDS = {
+    "walk": "пеший участок",
+    "ride": "поездка",
+    "wait_initial": "ожидание первого отправления",
+    "wait_transfer": "ожидание при пересадке",
+    "transfer_operation": "пересадка",
+    "handling": "обработка",
+}
+
+
 def _journey(saved: AnalysisResult, facts: list[Metric | Score]) -> str:
     ids = {f.journey_id for f in facts if isinstance(f, Metric) and f.journey_id is not None}
     linked = [journey for journey in saved.journeys if journey.journey_id in ids]
@@ -177,19 +188,28 @@ def _journey(saved: AnalysisResult, facts: list[Metric | Score]) -> str:
             "нельзя определить, где возникло ожидание или задержка."
         )
     leg = max(linked[0].legs, key=lambda item: item.duration_seconds)
-    description = {
-        "walk": "пеший участок",
-        "ride": "поездка",
-        "wait": "ожидание",
-        "transfer": "пересадка",
-        "preparation": "подготовка",
-        "handling": "обработка",
-    }.get(leg.kind, "участок транспортной цепочки")
+    description = _LEG_KINDS.get(leg.kind, "участок транспортной цепочки")
     return (
         f"Среди записанных участков этой цепочки наибольшую продолжительность имеет {description}. "
         "Это описание сохранённого пути, а не прогноз задержек и не доказательство "
         "минимального времени. Другие цепочки с ним не смешиваются."
     )
+
+
+def _explain_details(metrics: list[Metric], scores: list[Score]) -> str:
+    """What the saved structure itself says about the selected facts; no causes."""
+    parts = []
+    if any(score.components for score in scores):
+        parts.append(
+            "Значение собрано из сохранённых компонентов расчёта; "
+            "каждый можно выбрать и разобрать отдельно. "
+        )
+    kinds = {metric.time_kind for metric in metrics if metric.status == "available"}
+    if kinds == {"movement"}:
+        parts.append("Это время движения; полное время цепочки оно не подтверждает. ")
+    elif kinds == {"complete_chain"}:
+        parts.append("Это время полной цепочки в области этого расчёта. ")
+    return "".join(parts)
 
 
 def _proven_observed_auxiliary(fact: Metric | Score) -> bool:
@@ -208,6 +228,7 @@ def _safety(saved: AnalysisResult, facts: list[Metric | Score]) -> str:
     if (
         saved.snapshot_id.startswith("demo-")
         or "DEMO_SYNTHETIC_TRANSPORT_MODEL" in saved.limitations
+        or "synthetic_only" in saved.limitations
     ):
         notes.append("Это синтетическая демонстрационная модель, не рейтинг реального города.")
     observed = [f for f in facts if f.name == "observed_route_accessibility"]
@@ -259,15 +280,38 @@ def conversational_finding(
     elif mode == "journey":
         text = _journey(saved, facts)
     elif mode == "improve":
-        text = (
-            "К ответу приложен разрешённый сохранённый сценарий; его можно проверить отдельно. "
-            if has_proposal
-            else "К этому ответу разрешённый сценарий не приложен. "
-        ) + (
-            "Согласование пересадки требует конкретных расписаний и проверки ухудшений, "
-            "оборота и ресурсов. Эффект проверяется отдельно по кнопке сценарного расчёта. "
-            "Я не запускаю его из чата и не обещаю сокращение времени."
-        )
+        if has_proposal:
+            text = (
+                "К ответу приложен разрешённый сохранённый сценарий; его можно проверить отдельно. "
+                "Эффект проверяется отдельным сценарным расчётом. "
+                "Я не запускаю его из чата и не обещаю повышения индекса."
+            )
+        else:
+            text = (
+                "В этом сохранённом результате нет разрешённого сценария улучшения. "
+                "По одному значению индекса нельзя подтвердить, какое изменение поможет "
+                "и насколько. "
+            )
+            linked_ids = {metric.journey_id for metric in selected_metrics}
+            if getattr(saved.request, "cargo_transport", None) == "pipeline":
+                text += (
+                    "Для рекомендации нужны подтверждённые данные о направлении, продукте, "
+                    "объёме и мощности и отдельная допустимая проверка изменения."
+                )
+            elif any(
+                journey.journey_id in linked_ids and journey.status == "available" and journey.legs
+                for journey in saved.journeys
+            ):
+                text += (
+                    "Можно разобрать длительность участков выбранной сохранённой цепочки. "
+                    "Причины задержек и эффект изменений требуют отдельных оснований."
+                )
+            else:
+                text += (
+                    "Для предметной рекомендации нужны подтверждённая цепочка пути "
+                    "с составляющими времени и отдельный сценарный расчёт."
+                )
+            text += " После подготовки сценария эффект проверяется отдельно."
     elif mode == "help":
         text = (
             "Можно спросить своими словами о сохранённой оценке, методике, времени по участкам "
@@ -282,11 +326,15 @@ def conversational_finding(
         )
     else:
         text = (
-            "Оценка связана с полным временем в принятой модели: более долгий путь "
-            "снижает доступность при тех же условиях. "
-            if saved.analysis_kind == "urban_passenger" and selected_scores
-            else "Здесь показан выбранный сохранённый показатель. "
-        ) + _coverage(facts)
+            (
+                "Оценка связана с полным временем в принятой модели: более долгий путь "
+                "снижает доступность при тех же условиях. "
+                if saved.analysis_kind == "urban_passenger" and selected_scores
+                else "Здесь показан выбранный сохранённый показатель. "
+            )
+            + _explain_details(selected_metrics, selected_scores)
+            + _coverage(facts)
+        )
     text = " ".join(part for part in (text, _safety(saved, facts)) if part)
     refs = list(
         dict.fromkeys(
@@ -351,6 +399,7 @@ def verified_conversational_finding(
             "Среди записанных",
             "К ответу",
             "К этому ответу",
+            "В этом сохранённом результате",
             "Можно спросить",
             "В сохранённом расчёте",
             "Оценка связана",

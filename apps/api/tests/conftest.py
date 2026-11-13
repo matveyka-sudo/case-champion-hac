@@ -13,6 +13,16 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 @pytest.fixture
+def no_local_dotenv(monkeypatch, tmp_path):
+    """Offline tests must not read a developer's checkout .env.
+
+    Settings resolve ".env" against the working directory. Production keeps
+    its fail-closed conflict check; tests of that check write their own file.
+    """
+    monkeypatch.chdir(tmp_path)
+
+
+@pytest.fixture
 def database_sync_config():
     url = os.environ.get("A2_TEST_DATABASE_URL")
     if not url:

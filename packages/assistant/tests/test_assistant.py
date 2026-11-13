@@ -284,7 +284,9 @@ async def test_prompt_supplies_a_valid_saved_fact_json_example():
     assert "no Markdown" in messages[0]["content"]
     example = json.loads(messages[1]["content"])["response_example"]
     assert example == {
-        "findings": [{"metric_id": "travel-time", "explanation_code": "saved_value"}],
+        "clause_id": "explain",
+        "findings": [{"metric_id": "travel-time"}],
+        "evidence_ids": ["evidence"],
         "template_ids": [],
     }
     checked = module()._ModelSelection.model_validate(example)

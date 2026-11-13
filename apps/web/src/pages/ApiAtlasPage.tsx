@@ -97,6 +97,7 @@ import { boundSnapshotId, clinicPreset, initialSourceDraft, staticPilotPreset } 
 import { AnalysisGroupPanel } from "../widgets/AnalysisGroupPanel";
 import { AgentChatView } from "../widgets/AgentChatView";
 import { evidenceResolver, explanationSources, journeyEvidenceReferences } from "../api/adapters/evidenceGroups";
+import { explanationLabel } from "../api/adapters/explanationStatus";
 import { jobProgressText } from "../api/adapters/jobProgress";
 import { MapViewport, MapCanvas, MapOverlay, MapControls, AtlasLegend, AtlasMobileSheet, AtlasStatus, StateCard } from "../widgets/AtlasMapView";
 const passengerModeChoices = [
@@ -1494,9 +1495,7 @@ export function ApiAtlasPage() {
                 <div className="msg u">{m.question}</div>
                 <div className="msg a">
                   <small>
-                    {m.answer.status === "template"
-                      ? "Шаблонное объяснение"
-                      : "Объяснение модели"}
+                    {explanationLabel(m.answer)}
                   </small>
                   {m.answer.findings.map((finding, j) => (
                     <ExplanationFinding key={j} finding={finding} result={result} onSelect={choose} />

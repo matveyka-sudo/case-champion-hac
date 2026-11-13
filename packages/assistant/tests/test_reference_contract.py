@@ -199,9 +199,10 @@ async def test_prompt_states_reference_and_clause_rules():
         context=ExplanationRequest(question="Почему индекс такой?"),
     )
     system = transport.calls[0]["messages"][0]["content"]
-    assert "saved metric_id OR score_id (no placeholder)" in system
-    assert "components: score + its component metric" in system
-    assert payload["response_example"]["findings"] == [SCORE]
+    assert "never both, never an evidence id, no other keys" in system
+    assert "components=a score with its component metric" in system
+    assert "template_ids is top level only" in system
+    assert payload["response_example"]["findings"] == [{"score_id": "accessibility"}]
 
 
 def two_linked_scores():

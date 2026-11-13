@@ -6,6 +6,8 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 from test_storage import request
 
+pytestmark = pytest.mark.usefixtures("no_local_dotenv")
+
 
 @pytest.mark.parametrize("schema", ["public;DROP TABLE x", "x.y", "UPPER", ""])
 def test_runtime_rejects_unsafe_database_schema_before_connecting(schema):
