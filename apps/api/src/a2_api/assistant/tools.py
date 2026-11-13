@@ -86,10 +86,12 @@ class SavedTools:
         )
         if not access_scope.territory_ids <= allowed_territories:
             raise ToolRejected()
+        # A service without document corpora (older wiring, tests) behaves as before.
+        available = getattr(self.service, "document_corpora", None) or {}
         corpora = {
             result.snapshot_id: corpus
             for result in saved
-            if (corpus := self.service.document_corpora.get(result.snapshot_id)) is not None
+            if (corpus := available.get(result.snapshot_id)) is not None
         }
         allowed_snapshots = {result.snapshot_id for result in saved} | {
             corpus.snapshot_id for corpus in corpora.values()

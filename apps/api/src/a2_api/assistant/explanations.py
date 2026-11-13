@@ -114,7 +114,7 @@ async def _access(service: AnalysisService, result: AnalysisResult, scope: str) 
     if snapshot is not None:
         permitted_sources.update(e.source_id for e in snapshot.evidence if e.verified)
         # Accepted documents of this very snapshot, never of another one.
-        corpus = service.document_corpora.get(snapshot.snapshot_id)
+        corpus = (getattr(service, "document_corpora", None) or {}).get(snapshot.snapshot_id)
         if corpus is not None:
             snapshot_ids.add(corpus.snapshot_id)
             permitted_sources.update(corpus.source_ids)
@@ -141,7 +141,7 @@ async def _with_documents(
     """
     if (
         explanation.retrieved_evidence
-        or not service.document_corpora
+        or not getattr(service, "document_corpora", None)
         or not needs_documents(context)
         or not access.source_ids
         or not access.territory_ids
