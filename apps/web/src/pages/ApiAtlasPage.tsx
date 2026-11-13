@@ -1524,15 +1524,6 @@ export function ApiAtlasPage({ caoDistrict = false }: { caoDistrict?: boolean } 
             {activeDistrict && (mobile ? <div className="m-sheet api-address-sheet"><details className="more" open><summary>Результат по территории</summary>{districtCard}</details></div> : <MapOverlay position="r">{districtCard}</MapOverlay>)}
             <MapOverlay position="bottom"><CategoryMapLegend categoryIds={districtReports.flatMap((report) => (report.destinations || []).filter((item) => districtMetric === "overall" || item.category === districtMetric).map((item) => item.category))} /><AtlasLegend title="Индекс доступности" scale open={legendOpen} onToggle={() => setLegendOpen((value) => !value)} ticks={[0, 25, 50, 75, 100]} barStyle={{background: indexGradient}} note={<>Розовый — ниже · мятный — выше<br />Серый — недостаточно данных</>} details={<div className="district-legend-explanation"><p>Менее 40 — низкая доступность.<br />40–59 — средняя.<br />60–79 — хорошая.<br />80–100 — высокая.</p><p>Переходы цветов плавные. Полупрозрачная заливка соответствует выбранному показателю. Синий контур выделяет открытый район.</p></div>} /><MapControls items={[["in", "plus", "Приблизить"], ["out", "minus", "Отдалить"], ["home", "globe", "Центр Москвы"]]} onAction={(kind) => setZoom((value) => ({ kind, id: value.id + 1 }))} /></MapOverlay>
           </> : addressMode ? <>
-            {result?.analysis_id.startsWith("cao-transit-500m") && <MapOverlay position="tl">
-            <div aria-label="Цвета маршрутов" style={{background: "var(--surface, #fff)", borderRadius: 10,
-              padding: "8px 12px", color: "#101a31", display: "flex", gap: 12, flexWrap: "wrap"}}>
-              {transitLegend.map(({color, label}) => <span key={label} style={{whiteSpace: "nowrap"}}>
-                <span aria-hidden style={{display: "inline-block", width: 15, borderTop: `3px solid ${color}`,
-                  marginRight: 5, verticalAlign: "middle"}} />{label}
-              </span>)}
-            </div>
-          </MapOverlay>}
           <MapOverlay position="tl"><AtlasStatus
               kind={access.error ? "err" : access.running ? "run" : access.stale ? "stale" : access.result ? "ok" : "nd"}
               title={access.picking ? "Нажмите на карту, чтобы выбрать место" : access.running ? "Считаем маршруты…" : access.error ? "Расчёт не выполнен" : access.result && !access.stale ? "Результат получен" : "Доступность по адресу или точке"}
@@ -1555,15 +1546,6 @@ export function ApiAtlasPage({ caoDistrict = false }: { caoDistrict?: boolean } 
               </div>
             </div>}
           </> : <>
-          {result?.analysis_id.startsWith("cao-transit-500m") && <MapOverlay position="tl">
-            <div aria-label="Цвета маршрутов" style={{background: "var(--surface, #fff)", borderRadius: 10,
-              padding: "8px 12px", color: "#101a31", display: "flex", gap: 12, flexWrap: "wrap"}}>
-              {transitLegend.map(({color, label}) => <span key={label} style={{whiteSpace: "nowrap"}}>
-                <span aria-hidden style={{display: "inline-block", width: 15, borderTop: `3px solid ${color}`,
-                  marginRight: 5, verticalAlign: "middle"}} />{label}
-              </span>)}
-            </div>
-          </MapOverlay>}
           <MapOverlay position="tl"><AtlasStatus kind={activeDistrict ? activeDistrict.index == null ? "stale" : "ok" : uiError ? "err" : running ? "run" : dirty || (!caoDistrict && !compactResult && result?.status === "partial") ? "stale" : result ? "ok" : "nd"}
             title={activeDistrict ? activeDistrict.district.name : running ? runningTitle : dirty ? "Параметры изменены — показан прежний результат" : phaseLabels[phase]}
             subtitle={<>{caoDistrict ? `ЦАО · ${districtMovement}` : activeDistrict ? "Синие точки — места расчёта, фиолетовые — цели маршрутов" : result ? `${requestTitle} · ${timestampText(result.request.departure_at, savedOrigin?.timezone, !compactResult)}${compactResult ? "" : ` · ${trafficText[result.traffic_mode]} · ${statusText[result.status]}`}` : restoreMode ? "Исходные параметры появятся после получения результата." : draftInstructions}
