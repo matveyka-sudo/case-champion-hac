@@ -10,6 +10,7 @@ Citation contract (shared with apps/web evidenceGroups.ts):
 * documents are context found by search, never calculated metrics.
 """
 
+import re
 from collections.abc import Iterable, Mapping
 
 from a2_contracts.v2.assistant import ExplanationRequest
@@ -20,24 +21,102 @@ from pydantic import JsonValue
 
 from ..tools import AccessScope, ToolBackend, validate_tool
 
+# Which questions get one bounded document search. Reproducible word rules, no
+# extra model call. Each intent is covered by examples in test_retrieval_routing.
+_INTENTS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("sources", ("источник", "документ", "основан", "откуда", "на чём", "на чем", "source")),
+    ("official", ("стратеги", "распоряжен", "постановлен", "программ", "закон", "нормативн")),
+    ("methodology", ("методик", "формул", "как счита", "как рассчит", "норматив")),
+    ("overview", ("обзор", "расскажи", "что известно", "в целом", "ситуаци", "район")),
+    ("causes", ("почему", "причин", "из-за", "чем объясн", "влия")),
+    ("context", ("контекст", "огранич", "учитыва", "полнот", "покрыт", "неизвест", "частич")),
+)
+
+
+def document_intent(context: ExplanationRequest | None) -> str | None:
+    """The first matching intent, or None when the saved result alone answers.
+
+    A plain numeric comparison ("сравни", "больше") matches no intent: the saved
+    AnalysisResult answers it and the search would only add unrelated text.
+    """
+    question = (context.question or "").casefold() if context else ""
+    for intent, words in _INTENTS:
+        if any(word in question for word in words):
+            return intent
+    return None
+
 
 def needs_documents(context: ExplanationRequest | None) -> bool:
-    question = (context.question or "").casefold() if context else ""
-    return any(word in question for word in _DOCUMENT_WORDS)
+    """One search only for a document-type question that names something to look for."""
+    question = context.question if context else None
+    return document_intent(context) is not None and bool(content_words(question or ""))
 
 
-# Questions about provenance or official texts; everything else is answered from
-# the saved result alone. Extended only by reproducible examples (see tests).
-_DOCUMENT_WORDS = (
-    "источник",
-    "методик",
-    "основан",
-    "документ",
-    "стратеги",
-    "распоряжен",
-    "постановлен",
-    "source",
+# Question and request words carry no document content; with any-word matching
+# they only pull in unrelated fragments. Measured on 3363-r (scripts in the PR).
+_QUERY_FILLER = frozenset(
+    """
+    а ли же бы ну вот это этот эта эти тот та те то там тут здесь сейчас
+    что чем чего чему кто кого как какой какая какое какие каком какую каких каким
+    какими почему зачем отчего где куда откуда когда сколько который которая которые
+    ли разве можно нужно надо стоит будет будут есть был была были
+    говорит говорят сказано указано написано известно расскажи расскажите объясни
+    объясните покажи подскажи скажи опиши поясни планируется предусмотрено
+    про о об обо по в во на для из от до у с со к ко при над под между и или но не
+    мне нам вам тебе вы ты я мы этого этом этой этих
+    """.split()
 )
+
+
+# Words about the saved result itself ("this index"), and the intent words of
+# the question ("which sources", "what limits"): they name no document topic.
+_RESULT_PREFIXES = (
+    "индекс",
+    "оценк",
+    "значени",
+    "показател",
+    "результат",
+    "расчёт",
+    "расчет",
+    "источник",
+    "документ",
+    "основан",
+    "использ",
+    "взят",
+    "методик",
+    "формул",
+    "огранич",
+    "контекст",
+    "причин",
+    "влия",
+    "обзор",
+    "сведени",
+    "информаци",
+    "данн",
+)
+_RESULT_WORDS = frozenset(
+    """
+    такой такая такое такие такого такую низкий низкая низкое низкие высокий высокая высокое
+    высокие маленький большой хороший плохой слабый сильный
+    """.split()
+)
+
+
+def content_words(question: str) -> list[str]:
+    words = re.findall(r"[\wё-]+", question.casefold())
+    return [
+        word
+        for word in words
+        if len(word) > 1
+        and word not in _QUERY_FILLER
+        and word not in _RESULT_WORDS
+        and not word.startswith(_RESULT_PREFIXES)
+    ]
+
+
+def search_query(question: str) -> str:
+    """Content words of the question for the document index."""
+    return " ".join(content_words(question)) or question
 
 
 def document_ref(hit: Mapping[str, JsonValue]) -> EvidenceRef:
@@ -126,7 +205,7 @@ async def retrieve(
 ) -> EvidenceSearchResult:
     day = saved.request.departure_at.date()
     request = EvidenceSearchRequest(
-        query=(context.question or "")[:500],
+        query=search_query(context.question or "")[:500],
         territory_ids=sorted(scope.territory_ids)[:20],
         source_ids=sorted(scope.source_ids)[:20],
         start_date=day,

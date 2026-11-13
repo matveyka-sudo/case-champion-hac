@@ -11,6 +11,11 @@ from a2_contracts.v2.results import AnalysisResult
 from test_assistant import analysis, assistant, reply, scope, score_analysis
 
 
+def only_document_search(calls):
+    """Server-side routing may run one bounded document search; no other tool."""
+    return [call[0] for call in calls] in ([], ["search_evidence"])
+
+
 def observed_saved(*, long_ids=False):
     raw = score_analysis(value=84.05771144540653, partial=True).model_dump(mode="json")
     raw["limitations"] = ["DEMO_SYNTHETIC_TRANSPORT_MODEL"]
@@ -96,7 +101,8 @@ async def test_response_example_and_advertised_contract_round_trip_offline():
         ),
     )
     assert result.status == "generated" and len(result.findings[0].text) <= 1000
-    assert len(transport.calls) == len(budget.reservations) == 1 and not backend.calls
+    assert len(transport.calls) == len(budget.reservations) == 1
+    assert only_document_search(backend.calls)
 
 
 @pytest.mark.asyncio

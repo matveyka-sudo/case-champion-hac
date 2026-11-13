@@ -107,6 +107,7 @@ async def test_why_this_index_names_structure_and_partial_coverage():
     saved, _, text, backend = await ask(linked_result(), "Почему такой индекс?")
     assert "Значение собрано из сохранённых компонентов расчёта" in text
     assert "полнота данных ограничена" in text
+    # Nothing to look up in documents: "такой индекс" names only the saved result.
     assert not backend.calls and not re.search(r"\d", text)
 
 
@@ -121,7 +122,9 @@ async def test_what_matters_most_stays_within_saved_structure():
 @pytest.mark.asyncio
 async def test_which_sources_lists_saved_provenance_and_found_documents():
     saved, result, text, backend = await ask(
-        score_analysis(partial=True), "Какие источники использованы?", hits=[retrieved_hit()]
+        score_analysis(partial=True),
+        "Какие источники о пересадках использованы?",
+        hits=[retrieved_hit()],
     )
     assert [call[0] for call in backend.calls] == ["search_evidence"]
     assert "источники сохранённого расчёта: source (получено 08.11.2026)" in text
@@ -135,7 +138,8 @@ async def test_sources_without_documents_still_answers_from_the_saved_result():
     _, result, text, backend = await ask(
         score_analysis(partial=True), "Какие источники использованы?"
     )
-    assert len(backend.calls) == 1 and result.retrieved_evidence == []
+    # Only the saved result is named: no search, saved provenance only.
+    assert not backend.calls and result.retrieved_evidence == []
     assert "источники сохранённого расчёта" in text and "Документальный контекст" not in text
 
 
@@ -170,10 +174,12 @@ async def test_compare_uses_only_two_compatible_saved_facts():
 
 @pytest.mark.asyncio
 async def test_border_delay_without_evidence_is_declined():
-    _, _, text, backend = await ask(movement(), "Почему задержка на границе?")
+    _, result, text, backend = await ask(movement(), "Почему задержка на границе?")
     assert text.startswith("В сохранённом расчёте нет оснований для такого вывода.")
     assert "границ" not in text and "задержк" not in text
-    assert not backend.calls
+    # A cause question gets one bounded search; an empty index changes nothing.
+    assert [call[0] for call in backend.calls] == ["search_evidence"]
+    assert result.retrieved_evidence == []
 
 
 @pytest.mark.asyncio
@@ -186,17 +192,27 @@ async def test_what_is_known_about_moscow_reports_the_saved_time_scope():
 @pytest.mark.parametrize(
     "question,expected",
     [
-        ("Какие источники использованы?", True),
-        ("На каком документе основана оценка?", True),
+        ("На каком документе основаны цели по времени в пути?", True),
+        ("Какие источники о пересадках в Калининграде?", True),
         ("Что говорит транспортная стратегия о времени в пути?", True),
         ("Какое распоряжение это регулирует?", True),
-        ("Какая методика расчёта?", True),
+        ("Какая методика оценки доступности агломераций в стратегии?", True),
+        ("Расскажи про транспортную ситуацию в районе", True),
+        ("Почему задержка на границе?", True),
+        ("Что ограничивает доступность поликлиник?", True),
+        ("А H откуда берётся — из размера участка или всего города?", True),
+        # Only the saved result is named: nothing to look up in documents.
         ("Почему такой индекс?", False),
-        ("А H откуда берётся — из размера участка или всего города?", False),
+        ("Какая методика расчёта?", False),
+        # Sources of the saved result itself are answered from the result.
+        ("Какие источники у этого показателя?", False),
+        ("Какие источники использованы?", False),
+        ("На каком документе основана оценка?", False),
         ("Сравни два результата", False),
-        ("Почему задержка на границе?", False),
+        ("Сравни point и other-point", False),
+        ("У какой точки индекс выше?", False),
         ("", False),
     ],
 )
-def test_document_search_is_triggered_only_by_provenance_questions(question, expected):
+def test_document_search_is_triggered_by_reproducible_intents(question, expected):
     assert needs_documents(ExplanationRequest(question=question or None)) is expected
