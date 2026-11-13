@@ -213,6 +213,16 @@ def _pieces(body: str, limit: int) -> list[str]:
     return [piece for piece in pieces if piece.strip()]
 
 
+def reviewed_pieces(text: str, start: str | None = None) -> list[tuple[str, str]]:
+    """(section, chunk text) pairs exactly as build() cuts the reviewed text."""
+    lines, _ = clean_lines(text)
+    return [
+        (title, piece)
+        for title, body in sections(lines, start)
+        for piece in _pieces(body, CHUNK_CHARACTERS)
+    ]
+
+
 def document_evidence(meta: DocumentMeta) -> Evidence:
     return Evidence(
         evidence_id=meta.evidence_id,
