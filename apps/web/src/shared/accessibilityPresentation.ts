@@ -12,3 +12,14 @@ export const accessCategoryColors: Record<string, string> = {
   hospital: "#88b9ad", school: "#d89dbb", kindergarten: "#ddb18f", college: "#a99bcc", university: "#97a9d0",
   metro: "#98b7d2", mcd: "#b7bc8c", mck: "#bc9bbf", mall: "#cea589", bus_stop: "#91b9bf",
 };
+
+const districtCategoryStyles: Record<string, string> = {
+  adult_polyclinic: "hospital", child_polyclinic: "hospital",
+  college_university: "college", rail_terminal: "metro",
+  bus_terminal: "bus_stop", shopping_center: "mall",
+};
+
+export function accessCategoryStyle(category: string) {
+  const key = districtCategoryStyles[category] ?? category;
+  return { icon: accessIcons[key] ?? "map-pin", color: accessCategoryColors[key] ?? "#8990a7" };
+}
