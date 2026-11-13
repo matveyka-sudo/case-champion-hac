@@ -3,7 +3,7 @@ import L from "leaflet";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Icon } from "../shared/ui";
-import { accessIcons, accessAssessment, accessNumber, accessCategoryColors } from "../shared/accessibilityPresentation";
+import { accessIcons, accessAssessment, accessNumber, accessCategoryColors, accessCategoryStyle } from "../shared/accessibilityPresentation";
 import { feature } from "topojson-client";
 import type { GeometryCollection, Topology } from "topojson-specification";
 import type { GeoJsonObject } from "geojson";
@@ -35,6 +35,10 @@ function selectLayer(item: FeatureLayer, selected: boolean) {
     marker.setRadius(item.compact
       ? selected ? 11 : marker.options.className === "api-map-point" ? pointRadius : 5
       : selected ? 10 : 7);
+    if (marker.options?.className === "api-district-point") {
+      marker.setRadius(selected ? 8 : 4);
+      marker.setStyle({ fillColor: selected ? "#2856e4" : item.style.fillColor, fillOpacity: selected ? 1 : 0.8 });
+    }
     if (!item.compact) continue;
     marker.getElement()?.classList.toggle("api-map-point-selected", selected);
     marker.getElement()?.setAttribute("aria-pressed", String(selected));
@@ -52,6 +56,7 @@ export function ApiMap({
   cityId,
   category = null,
   addressMode = false,
+  lifeDistrict = false,
   district,
   districts,
   districtMetric = "overall",
@@ -72,6 +77,7 @@ export function ApiMap({
   cityId?: string;
   category?: Category | null;
   addressMode?: boolean;
+  lifeDistrict?: boolean;
   district?: Schemas["DistrictResult"] | null;
   districts?: Schemas["DistrictResult"][];
   districtMetric?: string;
@@ -212,7 +218,7 @@ export function ApiMap({
     const m = map.current,
       g = layers.current;
     if (!m || !g) return;
-    if (compactResult && !pointRenderer.current) pointRenderer.current = L.svg({ pane: "resultPoints" });
+    if ((compactResult || lifeDistrict) && !pointRenderer.current) pointRenderer.current = L.svg({ pane: "resultPoints" });
     if (compactSample && !overviewLayers.current) overviewLayers.current = L.layerGroup().addTo(m);
     const overview = overviewLayers.current;
     g.clearLayers();
@@ -221,12 +227,17 @@ export function ApiMap({
     selectedLayers.current = [];
     const bounds = L.latLngBounds([]);
     const foreground: L.GeoJSON[] = [];
+    const districtTargets = new Set(lifeDistrict ?
+      result?.metrics.filter((metric) => metric.journey_id && (!activeCategory || metric.subject.category === activeCategory))
+        .flatMap((metric) => metric.subject.destination_id ? [metric.subject.destination_id] : []) : [],
+    );
     const surveyed = L.latLngBounds([]);
     const halos: L.CircleMarker[] = [];
     inventory.items.forEach(({ feature: f, candidates: linkedScores }) => {
       if (!f.geometry) return;
       const indexEntity = ["sample_point", "cell", "territory"].includes(f.entity_kind);
       if (indexEntity ? !visibleLayers.index && !visibleLayers.pop : !visibleLayers.objects) return;
+      if (lifeDistrict && f.entity_kind === "destination" && !districtTargets.has(f.entity_id)) return;
       const totalKind = f.entity_kind === "territory" ? "territory"
         : f.entity_kind === "sample_point" || f.entity_kind === "cell" ? "sample_point" : null;
       const candidates = linkedScores.filter(
@@ -245,14 +256,14 @@ export function ApiMap({
       const score = presentation.score;
       const value = score?.status === "available" ? score.value : null;
       const partial = score?.completeness === "partial";
-      const dashArray = partial ? "1 4" : f.geometry_kind === "schematic" ? "5 5" : undefined;
+      const dashArray = partial && !lifeDistrict ? "1 4" : f.geometry_kind === "schematic" ? "5 5" : undefined;
       const color = visibleLayers.pop && indexEntity && f.population != null
         ? `hsl(250 45% ${90 - 55 * f.population / inventory.maxPopulation}%)`
-        : compactResult ? indexColor(visibleLayers.pop && indexEntity ? null : value)
+        : compactResult || lifeDistrict ? indexColor(visibleLayers.pop && indexEntity ? null : value)
           : value == null || (visibleLayers.pop && indexEntity) ? "#8990a7"
             : value < 50 ? "#c72d44" : value < 75 ? "#d49520" : "#0b8a5c";
       const sample = f.entity_kind === "sample_point";
-      const destination = compactSample && f.entity_kind === "destination";
+      const destination = (compactSample || lifeDistrict) && f.entity_kind === "destination";
       const name = pointNames.get(f.point_id || f.entity_id) || f.name ||
         (destination && f.categories?.length ? f.categories.map((category) => destinationCategoryLabels[category]).join(" · ") : selectionText[f.entity_kind]);
       const activate = () => onSelect({ entity_kind: f.entity_kind, entity_id: f.entity_id });
@@ -262,7 +273,7 @@ export function ApiMap({
         (f.geometry_kind === "schematic" ? " · схема" : "") +
         (visibleLayers.pop && indexEntity
           ? ` · ${f.population == null ? "Население неизвестно" : f.population.toLocaleString("ru") + " жит."}`
-          : compactResult ? indexEntity ? value == null ? " · нет индекса" : ` · ${value.toLocaleString("ru", { maximumFractionDigits: 1 })} из 100` : ""
+          : compactResult || lifeDistrict ? indexEntity ? value == null ? " · нет индекса" : ` · ${value.toLocaleString("ru", { maximumFractionDigits: 1 })} из 100` : ""
             : value == null ? " · нет индекса" : ` · ${value.toFixed(1)}`) +
         (presentation.observed ? ` · ${observedScoreLabel}` : "");
       const pointStyle: L.PathOptions = {
@@ -272,9 +283,10 @@ export function ApiMap({
         fillOpacity: sample || destination ? 0.98 : 0.8,
         dashArray: f.geometry_kind === "schematic" ? "5 5" : undefined,
       };
-      const style: L.PathOptions = compactResult && f.geometry.type === "Point" ? pointStyle : {
-        color: partial ? "#59647e" : "white", weight: partial ? 2 : 1,
-        fillColor: color, fillOpacity: partial ? 0.3 : 0.62, dashArray,
+      const style: L.PathOptions = (compactResult || (lifeDistrict && sample)) && f.geometry.type === "Point" ? pointStyle : {
+        color: lifeDistrict ? "#67728f" : partial ? "#59647e" : "white",
+        weight: lifeDistrict ? 1 : partial ? 2 : 1,
+        fillColor: color, fillOpacity: lifeDistrict ? f.entity_kind === "cell" ? 0.45 : 0 : partial ? 0.3 : 0.62, dashArray,
         lineCap: partial ? "round" : "butt",
       };
       const markers: L.CircleMarker[] = [];
@@ -287,18 +299,30 @@ export function ApiMap({
         {
           style,
           pointToLayer: (_, latlng) => {
-            const marker = L.circleMarker(latlng, compactResult ? {
+            if (lifeDistrict && destination) {
+              const id = activeCategory ?? f.categories?.[0];
+              const { icon, color } = accessCategoryStyle(id || "");
+              const symbol = document.createElement("span");
+              symbol.className = "category-map-symbol";
+              symbol.style.setProperty("--category-color", color);
+              symbol.innerHTML = renderToStaticMarkup(createElement(Icon, { name: icon }));
+              return L.marker(latlng, {
+                title: name, alt: name,
+                icon: L.divIcon({ className: "category-icon-host api-district-destination", html: symbol, iconSize: [28, 28], iconAnchor: [14, 14] }),
+              });
+            }
+            const marker = L.circleMarker(latlng, compactResult || (lifeDistrict && sample) ? {
               pane: "resultPoints",
               renderer: pointRenderer.current ?? undefined,
-              className: sample ? "api-map-point" : "api-map-object",
-              radius: sample ? pointRadius : 5,
+              className: lifeDistrict ? "api-district-point" : sample ? "api-map-point" : "api-map-object",
+              radius: lifeDistrict ? 4 : sample ? pointRadius : 5,
               ...pointStyle,
             } : {
               radius: 7, color: partial ? "#59647e" : "#fff", weight: 2,
               fillColor: color, fillOpacity: partial ? 0.45 : 0.9,
               dashArray, lineCap: partial ? "round" : "butt",
             });
-            if (compactResult) marker.on("add", () => {
+            if (compactResult || lifeDistrict) marker.on("add", () => {
               const element = marker.getElement();
               if (!element) return;
               element.setAttribute("tabindex", "0");
@@ -329,7 +353,7 @@ export function ApiMap({
         },
       );
       const key = featureKey(f.entity_kind, f.entity_id), entries = featureLayers.current.get(key) || [];
-      entries.push({ layer, style, markers, compact: compactResult });
+      entries.push({ layer, style, markers, compact: compactResult || lifeDistrict });
       featureLayers.current.set(key, entries);
       layer.bindTooltip(tip).on("click", activate)
         .addTo(g);
@@ -366,7 +390,7 @@ export function ApiMap({
     showOverview();
     m.on("zoomend", showOverview);
     return () => { m.off("zoomend", showOverview); };
-  }, [result, scores, inventory, onSelect, category, compactResult, compactSample, pointNames, visibleLayers.index, visibleLayers.objects, visibleLayers.pop]);
+  }, [result, scores, inventory, onSelect, category, compactResult, compactSample, pointNames, visibleLayers.index, visibleLayers.objects, visibleLayers.pop, activeCategory, lifeDistrict]);
   useEffect(() => {
     const m = map.current, g = routeLayers.current;
     if (!m || !g) return;
@@ -392,6 +416,9 @@ export function ApiMap({
       const parentSelection: Selection | undefined = j.point_id
         ? { entity_kind: "sample_point", entity_id: point?.entity_id || j.point_id }
         : destination ? { entity_kind: destination.entity_kind, entity_id: destination.entity_id } : undefined;
+      const routeCategory = inventory.journeyCategories.get(j.journey_id)?.values().next().value;
+      const walkingOnly = j.legs.length > 0 && j.legs.every((leg) => leg.kind === "walk");
+      const lifeRouteColor = lifeDistrict && walkingOnly && routeCategory ? accessCategoryStyle(routeCategory).color : undefined;
       journeyLines(j).forEach((part) => {
         const tip = document.createElement("span");
         tip.textContent = part.style ? part.style.label + (part.schematic ? " · схема" : "") :
@@ -400,9 +427,9 @@ export function ApiMap({
           (part.segment ? ` · ${segmentGeometryNotice}` : "");
         const route = L.geoJSON(part.geometry as GeoJsonObject, {
           style: {
-            color: part.style?.color || "#7a52ff",
+            color: lifeRouteColor ?? part.style?.color ?? "#7a52ff",
             weight: 4,
-            dashArray: part.schematic || part.style?.label === "Пешком" ? "6 8" : undefined,
+            dashArray: part.schematic || (!lifeRouteColor && part.style?.label === "Пешком") ? "6 8" : undefined,
           },
         })
           .bindTooltip(tip)
@@ -415,7 +442,7 @@ export function ApiMap({
       for (const item of featureLayers.current.get(featureKey(selectedKind, selectedId)) || []) item.layer.bringToFront();
     const shownView = `${result?.analysis_id}:${scenarioView ? viewId || "scenario" : "baseline"}`;
     if (result && last.current !== shownView) {
-      if (compactSample && sampleBounds.current?.isValid()) {
+      if ((compactSample || lifeDistrict) && sampleBounds.current?.isValid()) {
         m.fitBounds(sampleBounds.current, {
           paddingTopLeft: [48, 120],
           paddingBottomRight: [window.innerWidth < 768 ? 48 : 330, window.innerWidth < 768 ? 260 : 122],
@@ -438,7 +465,7 @@ export function ApiMap({
         lastAnalysis.current = result.analysis_id;
       }
     }
-  }, [result, inventory, onSelect, scenarioView, journeys, viewId, activeCategory, selectedKind, selectedId, compactSample]);
+  }, [result, inventory, onSelect, scenarioView, journeys, viewId, activeCategory, selectedKind, selectedId, compactSample, lifeDistrict]);
   useEffect(() => {
     for (const item of selectedLayers.current) selectLayer(item, false);
     const next = selection ? featureLayers.current.get(featureKey(selection.entity_kind, selection.entity_id)) || [] : [];
@@ -457,6 +484,9 @@ export function ApiMap({
           ? [[feature.geometry.coordinates[1], feature.geometry.coordinates[0]]] : []);
       const bounds = L.latLngBounds(positions);
       if (bounds.isValid()) m.fitBounds(bounds, { padding: [30, 30], maxZoom: 14, animate: false });
+    }
+    else if (zoomAction.kind === "home" && lifeDistrict && sampleBounds.current?.isValid()) {
+      m.fitBounds(sampleBounds.current, { padding: [36, 100], maxZoom: 14, animate: false });
     }
     else if (zoomAction.kind === "home" && moscowCamera(result)) showMoscowCenter(m);
     else if (zoomAction.kind === "home" && !result && cityId && pilotCenters[cityId]) {
@@ -494,7 +524,7 @@ export function ApiMap({
         ],
         { animate: false },
       );
-  }, [zoomAction, result, selection, cityId]);
+  }, [zoomAction, result, selection, cityId, lifeDistrict]);
   useEffect(() => {
     const instance = map.current;
     host.current?.classList.toggle("is-picking-address", !!onAddressPick);

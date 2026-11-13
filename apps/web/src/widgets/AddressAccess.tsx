@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { Schemas } from "../api/types";
-import { accessAssessment, accessIcons, accessCategoryColors } from "../shared/accessibilityPresentation";
+import { accessAssessment, accessIcons, accessCategoryColors, accessCategoryStyle } from "../shared/accessibilityPresentation";
 import { indexColor } from "../api/adapters/mapIndexColor";
 import { Icon } from "../shared/ui";
 import { CategoryChoices } from "./CategoryChoices";
@@ -204,12 +204,17 @@ export function DistrictResultCard({ result, onClose, onAsk, metric = "overall" 
   </ResultCardFrame>;
 }
 
-export function CategoryMapLegend({ categoryIds }: { categoryIds: string[] }) {
-  const shown = [...new Set(categoryIds)].filter((id) => id in accessIcons);
+export function CategoryMapLegend({ categoryIds, names = labels, note = "Цвет линии совпадает с иконкой объекта. Синяя точка — выбранное место." }: {
+  categoryIds: string[]; names?: Record<string, string>; note?: string;
+}) {
+  const shown = [...new Set(categoryIds)].filter((id) => id in names);
   if (!shown.length) return null;
   return <details className="panelc category-map-legend" open>
     <summary>Объекты и маршруты</summary>
-    <ul>{shown.map((id) => <li key={id} style={{"--category-color": accessCategoryColors[id]} as CSSProperties}><span className="category-legend-line" /><span className="category-card-icon"><Icon name={accessIcons[id]} /></span><span>{labels[id as Category]}</span></li>)}</ul>
-    <p>Цвет линии совпадает с иконкой объекта. Синяя точка — выбранное место.</p>
+    <ul>{shown.map((id) => {
+      const { icon, color } = accessCategoryStyle(id);
+      return <li key={id} style={{"--category-color": color} as CSSProperties}><span className="category-legend-line" /><span className="category-card-icon"><Icon name={icon} /></span><span>{names[id]}</span></li>;
+    })}</ul>
+    <p>{note}</p>
   </details>;
 }

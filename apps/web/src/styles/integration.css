@@ -589,3 +589,8 @@
 .category-legend-line { height: 3px; width: 15px; border-radius: 4px; background: var(--category-color); flex-shrink: 0; }
 .category-map-legend p { font-size: 10px; line-height: 1.5; color: var(--text-3); margin: 0; }
 @media (max-width: 700px) { .category-map-legend { width: min(240px, calc(100vw - 32px)); max-height: 210px; overflow-y: auto; } }
+
+@media (max-width: 767px) {
+  .life-district-map .ov-bottom { flex-wrap: wrap; }
+  .life-district-map .category-map-legend:not(:focus-within) { max-height: 96px; }
+}
