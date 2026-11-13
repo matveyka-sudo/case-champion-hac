@@ -26,7 +26,7 @@ def test_calculation_snapshots_stay_identical_and_get_a_corpus():
     corpora = build_corpora(catalog, DOCUMENTS)
     assert {sid: snapshot_hash(s) for sid, s in catalog.snapshots.items()} == before
     corpus = corpora["synthetic-snapshot"]
-    assert corpus.snapshot_id == "synthetic-snapshot" + SUFFIX
+    assert corpus.snapshot_id.startswith("synthetic-snapshot" + SUFFIX + ":")
     assert corpus.snapshot.geographic_scope == ["city-1"]
     assert corpus.source_ids == {"transport_strategy"}
     assert len(corpus.chunks) > 100
@@ -89,11 +89,12 @@ async def test_started_api_answers_with_the_published_document(database):
     catalog = registry()
     corpora = build_corpora(catalog, DOCUMENTS)
     published = await publish_corpora(pool, corpora)
-    assert published == {"synthetic-snapshot" + SUFFIX: len(corpora["synthetic-snapshot"].chunks)}
+    corpus_id = corpora["synthetic-snapshot"].snapshot_id
+    assert published == {corpus_id: len(corpora["synthetic-snapshot"].chunks)}
     # A second start publishes nothing new.
     assert await publish_corpora(pool, corpora) == published
     rows = await pool.fetchval(
-        "SELECT count(*) FROM evidence_chunks WHERE snapshot_id=$1", "synthetic-snapshot" + SUFFIX
+        "SELECT count(*) FROM evidence_chunks WHERE snapshot_id=$1", corpus_id
     )
     assert rows == len(corpora["synthetic-snapshot"].chunks)
 
@@ -153,6 +154,62 @@ async def test_started_api_answers_with_the_published_document(database):
     assert "Документальный контекст, не расчётный показатель" in finding["text"]
     assert finding["claims"][0]["value"] == metric["value"]
     sent = json.loads(transport.calls[0]["messages"][1]["content"])["saved_facts"]
-    assert sent["documents"] and all(
-        doc["snapshot_id"] == "synthetic-snapshot" + SUFFIX for doc in sent["documents"]
-    )
+    assert sent["documents"] and all(doc["snapshot_id"] == corpus_id for doc in sent["documents"])
+
+
+@pytest.mark.asyncio
+async def test_a_changed_document_version_publishes_beside_the_old_one(database, tmp_path):
+    pool, _, _ = database
+    first = build_corpora(registry(), DOCUMENTS)["synthetic-snapshot"]
+    await publish_corpora(pool, {"synthetic-snapshot": first})
+    copy = tmp_path / "documents"
+    shutil.copytree(DOCUMENTS, copy)
+    meta = next(copy.rglob("*.meta.json"))
+    raw = json.loads(meta.read_text())
+    raw["acceptance"]["accepted_at"] = "2026-11-14"
+    meta.write_text(json.dumps(raw, ensure_ascii=False))
+    second = build_corpora(registry(), copy)["synthetic-snapshot"]
+    assert second.snapshot_id != first.snapshot_id
+    # No identity conflict with the chunks already published for the old version.
+    assert await publish_corpora(pool, {"synthetic-snapshot": second}) == {
+        second.snapshot_id: len(second.chunks)
+    }
+
+
+@pytest.mark.asyncio
+async def test_retrieval_accepts_only_this_snapshot_or_its_own_corpus():
+    from a2_assistant.context.retrieval import retrieve
+    from a2_assistant.tools import AccessScope
+    from a2_contracts.v2.assistant import ExplanationRequest
+    from test_assistant import Backend, retrieved_hit, score_analysis
+
+    saved = score_analysis(partial=True)
+    question = ExplanationRequest(question="Что говорит стратегия о пересадках?")
+    for snapshot_id, ok in (
+        (saved.snapshot_id + SUFFIX + ":abc123def456", True),
+        (saved.snapshot_id, True),
+        ("other-snapshot" + SUFFIX + ":abc123def456", False),
+        (saved.snapshot_id + "-documents", False),
+    ):
+        hit = retrieved_hit() | {"snapshot_id": snapshot_id}
+        backend = Backend(
+            dict(
+                status="available",
+                completeness="partial",
+                reason_code=None,
+                hits=[hit],
+                truncated=False,
+            )
+        )
+        scope = AccessScope(
+            principal_id="owner",
+            analysis_ids={saved.analysis_id},
+            territory_ids={"city"},
+            snapshot_ids={saved.snapshot_id, snapshot_id},
+            source_ids={"source"},
+        )
+        if ok:
+            assert (await retrieve(backend, saved, scope, question)).hits
+        else:
+            with pytest.raises(ValueError):
+                await retrieve(backend, saved, scope, question)

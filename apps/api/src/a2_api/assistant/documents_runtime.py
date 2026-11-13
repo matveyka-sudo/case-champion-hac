@@ -2,7 +2,7 @@
 
 Calculation snapshots stay byte-identical: their hashes are pinned by runtime
 profiles and bindings. Each snapshot gets its own documents-only AcceptedData
-(``<snapshot_id>:documents``) with the snapshot's territories, the evidence those
+(``<snapshot_id>:documents:<content hash>``) with the snapshot's territories, the evidence those
 territories cite and the accepted documents (DOCUMENTS_DIR, see
 a2_data_pipeline.documents). Chunks are published through evidence_cli with the
 same acceptance checks; search covers the analysis snapshot and its corpus.
@@ -104,7 +104,7 @@ def corpus_snapshot(snapshot: AcceptedData, accepted: list[AcceptedDocument]) ->
     empty: dict[str, list[object]] = {
         key: [] for key, value in raw.items() if isinstance(value, list)
     }
-    return AcceptedData.model_validate(
+    draft = AcceptedData.model_validate(
         raw
         | empty
         | {
@@ -120,6 +120,12 @@ def corpus_snapshot(snapshot: AcceptedData, accepted: list[AcceptedDocument]) ->
                 "checks": ["accepted_documents_only", "no_calculated_metrics"],
             },
         }
+    )
+    # Every content version is its own corpus: a changed document or acceptance
+    # never collides with chunks already published for the previous version.
+    version = canonical_hash(draft.model_dump(mode="json"))[:12]
+    return AcceptedData.model_validate(
+        draft.model_dump(mode="json") | {"snapshot_id": f"{draft.snapshot_id}:{version}"}
     )
 
 

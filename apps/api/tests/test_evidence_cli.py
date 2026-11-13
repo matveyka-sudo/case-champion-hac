@@ -164,7 +164,7 @@ def test_publication_refuses_documents_without_owner_acceptance(tmp_path, change
 
 
 def test_repository_corpus_is_not_publishable_until_accepted(tmp_path):
-    """3363-r in data/documents has acceptance status pending: publication must refuse."""
+    """3363-r in data/documents: refused while pending, published once accepted."""
     path = ROOT / "data/documents/transport_strategy/3363-r-2021-11-27.meta.json"
     meta = documents.DocumentMeta.load(path)
     text = path.with_name("3363-r-2021-11-27.txt").read_text(encoding="utf-8")
@@ -192,4 +192,8 @@ def test_repository_corpus_is_not_publishable_until_accepted(tmp_path):
     )
     if meta.acceptance.status != "accepted":
         with pytest.raises(ValueError, match="not accepted"):
+            evidence_cli.require_accepted_documents(snapshot, [chunk], ROOT / "data/documents")
+    else:
+        # Accepted: the gate passes once the snapshot cites the document as verified.
+        with pytest.raises(ValueError, match="as verified"):
             evidence_cli.require_accepted_documents(snapshot, [chunk], ROOT / "data/documents")

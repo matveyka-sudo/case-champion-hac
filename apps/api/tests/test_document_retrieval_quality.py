@@ -1,8 +1,8 @@
 """Opt-in PostgreSQL: retrieval quality on fixed questions over the 3363-r candidate text.
 
-TEST ONLY. 3363-r is not accepted (data/documents/.../meta.json, acceptance pending),
-so it is published here into a throwaway test schema under a synthetic snapshot,
-never through evidence_cli and never into a working database. The thresholds
+TEST ONLY: the text is published into a throwaway test schema under a synthetic
+snapshot, never into a working database. Production publication goes through
+evidence_cli and the documents corpus (a2_api.assistant.documents_runtime). The thresholds
 record the measured quality (13.11.2026) so ranking regressions are visible.
 
 Measured on 945 chunks, 14 questions (relevant = the chunk contains the topic):

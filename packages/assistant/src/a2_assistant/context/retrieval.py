@@ -219,7 +219,10 @@ async def retrieve(
     for hit in result.hits:
         # The analysis snapshot or its own documents corpus, as scoped by the server.
         if (
-            hit.snapshot_id not in {saved.snapshot_id, saved.snapshot_id + ":documents"}
+            not (
+                hit.snapshot_id == saved.snapshot_id
+                or hit.snapshot_id.startswith(saved.snapshot_id + ":documents:")
+            )
             or hit.snapshot_id not in scope.snapshot_ids
             or hit.source_id not in (request.source_ids or [])
             or not set(hit.territory_ids) <= set(request.territory_ids)
